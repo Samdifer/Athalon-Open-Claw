@@ -1,0 +1,14 @@
+{
+  "artifactId": "AT-17",
+  "auditedAtUtc": "2026-02-22T16:11:30Z",
+  "missingTags": 0,
+  "policy": "RET-QUAL-90D",
+  "recordsChecked": 29,
+  "runId": "WS11A-R3-FINAL-20260222T1602Z",
+  "signedBy": {
+    "signatureId": "GOV-RET-JHARKER-20260222T161140Z",
+    "signedAtUtc": "2026-02-22T16:11:40Z",
+    "signerId": "jonas-harker"
+  },
+  "status": "PASS"
+}

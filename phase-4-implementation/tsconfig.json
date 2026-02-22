@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "commonjs",
+    "lib": ["ES2020"],
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "moduleResolution": "node",
+    "paths": {
+      "convex/values": ["./shim/convex/values"],
+      "./_generated/server": ["./shim/_generated/server"],
+      "./_generated/dataModel": ["./shim/_generated/dataModel"]
+    },
+    "baseUrl": "."
+  },
+  "include": ["convex/**/*.ts"]
+}

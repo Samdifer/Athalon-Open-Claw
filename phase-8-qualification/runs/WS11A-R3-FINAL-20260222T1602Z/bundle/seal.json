@@ -1,0 +1,28 @@
+{
+  "bundleHash": "079428185599d59470e97dfef5896ff191db91c94293d3321924c141dc52efbb",
+  "indexPath": "bundle/index.json",
+  "indexSha256": "1b17b1b8c02418b95aff2fffb64b4bd8a0c01d71803141a46f21a8b9fbe624da",
+  "indexedAtUtc": "2026-02-22T16:02:00Z",
+  "runId": "WS11A-R3-FINAL-20260222T1602Z",
+  "sealSignature": {
+    "algorithm": "ed25519",
+    "payload": {
+      "bundleHash": "079428185599d59470e97dfef5896ff191db91c94293d3321924c141dc52efbb",
+      "indexSha256": "1b17b1b8c02418b95aff2fffb64b4bd8a0c01d71803141a46f21a8b9fbe624da",
+      "runId": "WS11A-R3-FINAL-20260222T1602Z",
+      "sealedAtUtc": "2026-02-22T16:13:00Z",
+      "sealedBy": "jonas-harker",
+      "witness": "marcus-webb"
+    },
+    "payloadCanonicalization": "json-sort-keys-no-whitespace",
+    "payloadSha256": "dd6e45a75a66231046755058ad589c9b28f1fe6e18c1146f862a06a0222312ae",
+    "publicKeyPem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAmWx2rPi67lR14sH0PKDm5ZaGaISiB/nWgUN3zO0Tja8=\n-----END PUBLIC KEY-----\n",
+    "signature": "+I6ggc3Zggcwvk8+iGiK/w5QdsL4pA6iFHOnaGGHFI50Sq/ey5Qxu6CxYkAPU95732SBQwX4jwWz5diWPLnrAg==",
+    "signatureEncoding": "base64",
+    "signatureId": "SEAL-SIGN-WS11A-R3-FINAL-20260222T1602Z",
+    "signerId": "jonas-harker"
+  },
+  "sealedAtUtc": "2026-02-22T16:13:00Z",
+  "sealedBy": "jonas-harker",
+  "witness": "marcus-webb"
+}

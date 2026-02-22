@@ -1,0 +1,18 @@
+{
+  "artifactId": "AT-07",
+  "assertedAtUtc": "2026-02-22T16:06:55Z",
+  "converged": true,
+  "deltaErrorRate": 0.0,
+  "deltaLatencyMs": 2,
+  "qaWitness": {
+    "signatureId": "WIT-AT07-MW-20260222T160705Z",
+    "witnessId": "marcus-webb",
+    "witnessedAtUtc": "2026-02-22T16:07:05Z"
+  },
+  "runId": "WS11A-R3-FINAL-20260222T1602Z",
+  "signedBy": {
+    "signatureId": "CONV-AT07-DA-20260222T160700Z",
+    "signedAtUtc": "2026-02-22T16:07:00Z",
+    "signerId": "devraj-anand"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "artifactId": "AT-12",
+  "ciRunId": "ci-4412",
+  "decision": "CI_FAIL",
+  "executedBy": {
+    "signatureId": "CI-AT12-SIGN-DANAND-20260222T160825Z",
+    "signedAtUtc": "2026-02-22T16:08:25Z",
+    "signerId": "devraj-anand"
+  },
+  "missingField": "required.signatureId",
+  "runId": "WS11A-R3-FINAL-20260222T1602Z",
+  "triggeredAtUtc": "2026-02-22T16:08:20Z",
+  "witness": {
+    "signatureId": "WIT-AT12-MW-20260222T160830Z",
+    "witnessId": "marcus-webb",
+    "witnessedAtUtc": "2026-02-22T16:08:30Z"
+  }
+}

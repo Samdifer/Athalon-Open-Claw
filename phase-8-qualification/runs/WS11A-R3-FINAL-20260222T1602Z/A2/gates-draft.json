@@ -1,0 +1,52 @@
+{
+  "artifactId": "AT-03",
+  "draftedAtUtc": "2026-02-22T16:03:00Z",
+  "gates": [
+    {
+      "gateId": "G1",
+      "status": "PASS"
+    },
+    {
+      "gateId": "G2",
+      "status": "PASS"
+    },
+    {
+      "gateId": "G3",
+      "status": "PASS"
+    },
+    {
+      "gateId": "G4",
+      "status": "PASS"
+    },
+    {
+      "gateId": "G5",
+      "status": "PASS"
+    },
+    {
+      "gateId": "G6",
+      "status": "PASS"
+    },
+    {
+      "gateId": "G7",
+      "status": "PASS"
+    },
+    {
+      "gateId": "G8",
+      "status": "PASS_WITH_NOTE"
+    },
+    {
+      "gateId": "G9",
+      "status": "PASS"
+    },
+    {
+      "gateId": "G10",
+      "status": "PASS"
+    }
+  ],
+  "runId": "WS11A-R3-FINAL-20260222T1602Z",
+  "signedBy": {
+    "signatureId": "DRAFT-AT03-CO-20260222T160320Z",
+    "signedAtUtc": "2026-02-22T16:03:20Z",
+    "signerId": "cilla-oduya"
+  }
+}

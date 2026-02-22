@@ -1,0 +1,736 @@
+# Athelon — Unified CI/CD Pipeline
+# Author: Jonas Harker, DevOps / Platform
+# Date: 2026-02-22
+# Phase: 4 — Alpha Sprint
+#
+# This file is CODEOWNERS-protected. Changes require @athelon/jonas-harker approval.
+# See: phase-1-data-model/vercel-deployment-architecture.md §4 for design rationale.
+#
+# Jobs overview:
+#   lint          — ESLint (@typescript-eslint/strict) + Prettier format check
+#   typecheck     — tsc --noEmit across all packages (via Turborepo)
+#   test          — Vitest unit tests + convex-test function tests + coverage upload
+#   security      — pnpm audit + Semgrep SAST + license compliance check
+#   deploy-preview — Convex push (preview/staging) + Vercel preview deploy (PR only)
+#   deploy-staging — Convex deploy to athelon-staging on merge to main
+#   deploy-prod   — Manual trigger with GitHub environment approval gate
+#
+# Concurrency: cancel in-progress runs for the same ref (avoids queued CI pile-ups
+# during rapid pushes). Production deploys are NOT subject to cancellation — the
+# concurrency key for deploy-prod is unique per SHA.
+
+name: CI / CD
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      deploy_target:
+        description: "Deploy target (must be 'production')"
+        required: true
+        type: choice
+        options:
+          - production
+      sha_confirm:
+        description: "Confirm SHA being deployed (copy from git log)"
+        required: true
+        type: string
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name != 'workflow_dispatch' }}
+
+# Minimal default permissions. Each job explicitly elevates only what it needs.
+permissions:
+  contents: read
+
+env:
+  # Pinned versions — update these explicitly, never let Dependabot auto-merge
+  # version bumps for tools that touch secrets or deploy keys.
+  PNPM_VERSION: "9"
+  NODE_VERSION: "20"
+  # Turborepo remote cache (Vercel). Set TURBO_TOKEN and TURBO_TEAM in repo secrets.
+  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+  TURBO_TEAM: ${{ vars.TURBO_TEAM }}
+
+# ─────────────────────────────────────────────────────────────────────────────
+# JOB: lint
+# ESLint with @typescript-eslint/strict + Prettier check.
+# Runs on every PR and every push to main.
+# ─────────────────────────────────────────────────────────────────────────────
+jobs:
+  lint:
+    name: Lint & Format
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: ESLint
+        run: pnpm turbo lint
+        # turbo lint runs: pnpm eslint --max-warnings=0 across apps/* and packages/*
+        # @typescript-eslint/strict rules — see eslint.config.mjs at repo root.
+        # Aviation-specific additions: no-floating-promises (error), no-explicit-any (error).
+
+      - name: Prettier format check
+        run: pnpm run format:check
+        # pnpm prettier --check "**/*.{ts,tsx,json,md,yaml,yml}" --ignore-path .gitignore
+
+# ─────────────────────────────────────────────────────────────────────────────
+# JOB: typecheck
+# tsc --noEmit across all workspaces via Turborepo.
+# Separate job from lint so failures surface independently.
+# ─────────────────────────────────────────────────────────────────────────────
+  typecheck:
+    name: TypeScript
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: TypeScript (tsc --noEmit)
+        run: pnpm turbo typecheck
+        # turbo.json task: dependsOn ["^build"] so packages/types is compiled first,
+        # then apps/web and convex/ typecheck against the built types.
+        # tsconfig.base.json: strict, noUncheckedIndexedAccess, exactOptionalPropertyTypes.
+
+# ─────────────────────────────────────────────────────────────────────────────
+# JOB: test
+# Vitest unit tests (apps/web, packages/*) + convex-test Convex function tests.
+# Coverage uploaded to Codecov.
+# ─────────────────────────────────────────────────────────────────────────────
+  test:
+    name: Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Vitest — unit tests
+        run: pnpm turbo test --filter=!convex
+        # Runs vitest in apps/web and packages/types.
+        # --filter=!convex excludes the convex workspace, which uses convex-test instead.
+        env:
+          CI: true
+
+      - name: convex-test — Convex function tests
+        run: pnpm --filter convex run test:convex
+        # convex-test spins up an in-memory Convex runtime. No network calls.
+        # See convex/vitest.config.ts for configuration.
+        # All 43 test cases in workOrders.test.ts, taskCards.test.ts, adCompliance.test.ts.
+        # Every mutation must pass the invariant checks defined in the Phase 2 specs.
+        env:
+          CI: true
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        if: always()
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage/lcov.info,./convex/coverage/lcov.info
+          flags: unit,convex
+          fail_ci_if_error: false
+          # Coverage failure doesn't block CI — report only. We enforce coverage
+          # thresholds in the vitest.config.ts (statements: 80, functions: 80, lines: 80).
+          # If thresholds aren't met, the test job itself will fail, not this upload step.
+
+# ─────────────────────────────────────────────────────────────────────────────
+# JOB: security
+# Three-layer security scan:
+#   1. pnpm audit — dependency vulnerability check (fail on high/critical)
+#   2. Semgrep SAST — TypeScript + OWASP Top 10 + secrets pattern detection
+#   3. License compliance — reject GPL/LGPL/AGPL in a commercial SaaS product
+# ─────────────────────────────────────────────────────────────────────────────
+  security:
+    name: Security
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      security-events: write   # Required to upload SARIF results to GitHub Security tab
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Dependency vulnerability audit
+        run: |
+          pnpm audit --audit-level=high --json > audit-results.json || true
+          # Parse and fail on high/critical only. Moderate/low are informational.
+          node -e "
+            const fs = require('fs');
+            const results = JSON.parse(fs.readFileSync('audit-results.json', 'utf8'));
+            const vulns = results.metadata?.vulnerabilities ?? {};
+            const critical = (vulns.critical ?? 0);
+            const high = (vulns.high ?? 0);
+            if (critical > 0 || high > 0) {
+              console.error('FAIL: ' + critical + ' critical, ' + high + ' high severity vulnerabilities found.');
+              console.error('Run: pnpm audit --audit-level=high for details.');
+              process.exit(1);
+            }
+            console.log('OK: No high or critical vulnerabilities. Moderate: ' + (vulns.moderate ?? 0) + ', Low: ' + (vulns.low ?? 0));
+          "
+
+      - name: Semgrep SAST scan
+        uses: semgrep/semgrep-action@v1
+        with:
+          config: >-
+            p/typescript
+            p/owasp-top-ten
+            p/secrets
+            p/nodejs
+          generateSarif: "1"
+        env:
+          SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
+        # Semgrep scans for:
+        # - TypeScript anti-patterns (sql injection via template literals, prototype pollution)
+        # - OWASP Top 10 (injection, broken auth, sensitive data exposure)
+        # - Hardcoded secrets (API keys, tokens, private keys in source)
+        # - Node.js security patterns (path traversal, SSRF)
+
+      - name: Upload Semgrep SARIF to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: semgrep.sarif
+        # Populates the Security > Code Scanning tab in GitHub.
+        # Findings are tracked across PRs. New findings on a PR block merge.
+
+      - name: License compliance check
+        run: |
+          pnpm dlx license-checker \
+            --production \
+            --onlyAllow "MIT;ISC;Apache-2.0;BSD-2-Clause;BSD-3-Clause;0BSD;CC0-1.0;Python-2.0;Unlicense;BlueOak-1.0.0" \
+            --excludePackages "athelon-web;@athelon/types;convex-backend" \
+            --out license-report.json
+        # GPL, LGPL, AGPL, MPL are not permitted in a commercial SaaS product.
+        # If a dependency introduces a copyleft license, this job fails immediately.
+        # Exception list (--excludePackages) covers our own internal packages.
+
+# ─────────────────────────────────────────────────────────────────────────────
+# JOB: convex-schema-diff
+# On PRs: detect whether convex/schema.ts or any convex/*.ts changed.
+# Posts a sticky PR comment warning reviewers that schema review is required.
+# Also checks for schema.ts changes specifically to require codeowner approval.
+# ─────────────────────────────────────────────────────────────────────────────
+  convex-schema-diff:
+    name: Convex Schema Diff
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: github.event_name == 'pull_request'
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Checkout (full history for diff)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect Convex changes
+        id: convex_diff
+        run: |
+          CHANGED_FILES=$(git diff origin/main...HEAD --name-only | grep -E '^convex/' || true)
+          SCHEMA_CHANGED=$(git diff origin/main...HEAD --name-only | grep -E '^convex/schema\.ts$' || true)
+
+          if [ -n "$CHANGED_FILES" ]; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "files<<EOF" >> $GITHUB_OUTPUT
+            echo "$CHANGED_FILES" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+          fi
+
+          if [ -n "$SCHEMA_CHANGED" ]; then
+            echo "schema_changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "schema_changed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Post Convex diff comment
+        if: steps.convex_diff.outputs.changed == 'true'
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: convex-diff
+          message: |
+            ## ⚠️ Convex Backend Changed
+
+            This PR modifies files under `convex/`. A Convex deployment diff is required before merge.
+
+            ${{ steps.convex_diff.outputs.schema_changed == 'true' && '### 🔴 `schema.ts` Modified — Schema Codeowner Approval Required\n\nChanges to `convex/schema.ts` require explicit approval from **@athelon/rafael-mendoza** or **@athelon/jonas-harker** per CODEOWNERS.\n\nBefore approving, verify:\n- [ ] All new fields have `v.optional()` wrappers if adding to existing tables (backward compat)\n- [ ] New indexes do not introduce full-table-scan regressions\n- [ ] Immutable tables (`maintenanceRecords`, `inspectionRecords`, `returnToService`, `partInstallationHistory`) have no `updatedAt` field added\n- [ ] Rollback plan is documented if migration is destructive\n' || '' }}
+
+            **Changed files:**
+            ```
+            ${{ steps.convex_diff.outputs.files }}
+            ```
+
+            **Reviewer checklist:**
+            - [ ] New mutations follow `requireAuth → requireOrgContext → business logic → auditLog` pattern
+            - [ ] Every new mutation that touches compliance data has a corresponding test
+            - [ ] No breaking schema changes without a documented migration path
+
+# ─────────────────────────────────────────────────────────────────────────────
+# JOB: deploy-preview
+# Runs on PRs only. Deploys Convex functions to staging project (preview context).
+# Vercel preview deployment is handled automatically by the Vercel GitHub integration
+# — this job only handles the Convex side and posts status back to the PR.
+# ─────────────────────────────────────────────────────────────────────────────
+  deploy-preview:
+    name: Deploy Preview (Convex → Staging)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    if: github.event_name == 'pull_request'
+    needs: [lint, typecheck, test, security]
+    environment:
+      name: preview
+      url: ${{ steps.vercel_url.outputs.url }}
+    permissions:
+      contents: read
+      pull-requests: write
+      statuses: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Deploy Convex to staging (preview)
+        id: convex_deploy
+        run: |
+          npx convex deploy \
+            --cmd "echo 'convex deploy for PR preview'" \
+            --yes
+        env:
+          CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_STAGING_DEPLOY_KEY }}
+        # All PR preview deployments share the athelon-staging Convex project.
+        # Per architecture doc §2: "Preview deployments hit the staging Convex project —
+        # not a per-PR Convex instance." This is a Phase 1 simplification.
+        # When concurrent feature branches need schema isolation, revisit Convex branches.
+
+      - name: Get Vercel preview URL
+        id: vercel_url
+        run: |
+          # Vercel GitHub integration automatically builds preview deployments.
+          # We derive the expected URL from the branch slug — Vercel's naming convention.
+          BRANCH_SLUG=$(echo "${{ github.head_ref }}" | tr '/' '-' | tr '_' '-' | tr '[:upper:]' '[:lower:]' | cut -c1-60)
+          PREVIEW_URL="https://athelon-git-${BRANCH_SLUG}-athelon-team.vercel.app"
+          echo "url=${PREVIEW_URL}" >> $GITHUB_OUTPUT
+
+      - name: Post preview deployment comment
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: preview-deployment
+          message: |
+            ## 🚀 Preview Deployment
+
+            | | |
+            |---|---|
+            | **Vercel Preview** | ${{ steps.vercel_url.outputs.url }} |
+            | **Convex Project** | `athelon-staging` (shared staging) |
+            | **Convex Deploy** | ${{ steps.convex_deploy.outcome == 'success' && '✅ Deployed' || '❌ Failed' }} |
+            | **Commit** | `${{ github.sha }}` |
+
+            > Preview deployments use the **staging** Convex project and Clerk's **test** instance.
+            > Data written here may be seen by other PRs targeting the same staging environment.
+
+# ─────────────────────────────────────────────────────────────────────────────
+# JOB: deploy-staging
+# Runs on merge to main (push event). Deploys Convex to athelon-staging.
+# Vercel handles the production build automatically on main pushes via GitHub integration.
+# Post-deploy: runs smoke tests and notifies Slack on failure.
+# ─────────────────────────────────────────────────────────────────────────────
+  deploy-staging:
+    name: Deploy Staging
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [lint, typecheck, test, security]
+    environment:
+      name: staging
+      url: https://staging.athelon.app
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2   # Need HEAD~1 for schema migration diff check
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check for schema migrations
+        id: schema_check
+        run: |
+          # Detect if schema.ts changed in this push. If it did, diff and print for log.
+          SCHEMA_CHANGED=$(git diff HEAD~1 HEAD -- convex/schema.ts | wc -l)
+          if [ "$SCHEMA_CHANGED" -gt "0" ]; then
+            echo "schema_changed=true" >> $GITHUB_OUTPUT
+            echo "=== Schema diff (HEAD~1 → HEAD) ==="
+            git diff HEAD~1 HEAD -- convex/schema.ts
+            echo "==================================="
+          else
+            echo "schema_changed=false" >> $GITHUB_OUTPUT
+            echo "No schema changes in this push."
+          fi
+
+      - name: Deploy Convex to staging
+        run: npx convex deploy --yes
+        env:
+          CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_STAGING_DEPLOY_KEY }}
+        # CONVEX_DEPLOY_KEY for staging is scoped to the `athelon-staging` project.
+        # It is stored in GitHub Actions secrets (repo level, not org level — scoped).
+
+      - name: Run smoke tests against staging
+        id: smoke_tests
+        run: pnpm run test:smoke
+        env:
+          SMOKE_TEST_BASE_URL: https://staging.athelon.app
+          SMOKE_TEST_USER_TOKEN: ${{ secrets.SMOKE_TEST_USER_TOKEN }}
+          SMOKE_TEST_ORG_ID: ${{ secrets.SMOKE_TEST_ORG_ID }}
+        # Smoke tests cover the 5 critical paths:
+        # 1. Sign-in flow (Clerk session creation)
+        # 2. Create work order (mutation, requires auth + org context)
+        # 3. Sign task card step (completeStep with signatureAuthEvent)
+        # 4. View dashboard (listWorkOrders query, org-scoped)
+        # 5. Org context switch (JWT refresh, Convex re-auth)
+
+      - name: Notify Slack on smoke test failure
+        if: failure() && steps.smoke_tests.outcome == 'failure'
+        uses: slackapi/slack-github-action@v1.27.0
+        with:
+          channel-id: ${{ secrets.SLACK_INCIDENTS_CHANNEL_ID }}
+          payload: |
+            {
+              "text": "🚨 *Staging smoke tests failed after deploy*",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "🚨 *Staging smoke tests failed after deploy to `athelon-staging`*\n\n*Commit:* `${{ github.sha }}`\n*Author:* ${{ github.actor }}\n*Message:* ${{ github.event.head_commit.message }}\n\n<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View run>"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+
+      - name: Notify Slack on successful staging deploy
+        if: success()
+        uses: slackapi/slack-github-action@v1.27.0
+        with:
+          channel-id: ${{ secrets.SLACK_DEPLOYS_CHANNEL_ID }}
+          payload: |
+            {
+              "text": "✅ Staging deploy complete",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "✅ *Staging deploy complete*\n\n*Commit:* `${{ github.sha }}`\n*Author:* ${{ github.actor }}\n*Preview:* https://staging.athelon.app\n${{ steps.schema_check.outputs.schema_changed == 'true' && '\n⚠️ *Schema was changed in this deploy.*' || '' }}"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+
+# ─────────────────────────────────────────────────────────────────────────────
+# JOB: deploy-prod
+# Manual trigger only (workflow_dispatch). Requires:
+#   1. Human to dispatch with deploy_target = "production"
+#   2. SHA confirmation input (prevents accidental deploys)
+#   3. GitHub Environment "production" approval gate (1 required reviewer)
+#
+# This job deploys:
+#   - Convex to athelon-prod (CONVEX_PROD_DEPLOY_KEY)
+#   - Vercel promotion is NOT automated here — Vercel promotion to production
+#     happens via `vercel promote <deployment-url>` using the Vercel CLI,
+#     triggered after Convex deploy succeeds and smoke tests pass.
+# ─────────────────────────────────────────────────────────────────────────────
+  deploy-prod:
+    name: Deploy Production
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.deploy_target == 'production'
+    environment:
+      name: production
+      url: https://app.athelon.app
+    permissions:
+      contents: read
+    steps:
+      - name: Validate SHA confirmation
+        run: |
+          ACTUAL_SHA="${{ github.sha }}"
+          CONFIRMED_SHA="${{ github.event.inputs.sha_confirm }}"
+          if [ "$ACTUAL_SHA" != "$CONFIRMED_SHA" ]; then
+            echo "ERROR: SHA mismatch."
+            echo "  Expected (current HEAD): $ACTUAL_SHA"
+            echo "  Provided:                $CONFIRMED_SHA"
+            echo ""
+            echo "Copy the exact SHA from 'git log --oneline -1' on the main branch."
+            echo "Do not abbreviate the SHA."
+            exit 1
+          fi
+          echo "SHA confirmed: $ACTUAL_SHA"
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Detect schema migration risk
+        id: migration_risk
+        run: |
+          # Check if schema.ts changed vs the previous production deploy.
+          # This is a heuristic — for a more accurate check, compare against the
+          # last tagged release rather than HEAD~1.
+          SCHEMA_CHANGED=$(git diff HEAD~1 HEAD -- convex/schema.ts | wc -l)
+          REMOVALS=$(git diff HEAD~1 HEAD -- convex/schema.ts | grep '^-.*v\.' | wc -l)
+
+          if [ "$REMOVALS" -gt "0" ]; then
+            echo "risk=breaking" >> $GITHUB_OUTPUT
+            echo "WARNING: Detected field/table removals in schema.ts. This may be a breaking migration."
+            git diff HEAD~1 HEAD -- convex/schema.ts | grep '^-.*v\.'
+          elif [ "$SCHEMA_CHANGED" -gt "0" ]; then
+            echo "risk=additive" >> $GITHUB_OUTPUT
+            echo "INFO: Schema changed (additive only — no field removals detected)."
+          else
+            echo "risk=none" >> $GITHUB_OUTPUT
+            echo "INFO: No schema changes."
+          fi
+
+      - name: Block on breaking migration without override
+        if: steps.migration_risk.outputs.risk == 'breaking'
+        run: |
+          echo "ERROR: Breaking schema migration detected."
+          echo ""
+          echo "Field removals or table renames in convex/schema.ts require:"
+          echo "  1. A documented rollback plan in the infrastructure changelog"
+          echo "  2. Rafael Mendoza sign-off on the migration strategy"
+          echo "  3. A backup of production data (convex export) before this deploy"
+          echo ""
+          echo "If these conditions are met and this block is a false positive,"
+          echo "contact Jonas Harker to run a manual override deploy."
+          exit 1
+        # This catches the most dangerous class of production deploy: removing a field
+        # that still has live data. Convex does not automatically migrate data on schema
+        # field removal — it silently drops the field from new document reads, but
+        # existing documents still have the data. If the mutation layer then writes back
+        # without the field, data is silently lost. This guard surfaces that risk.
+
+      - name: Deploy Convex to production
+        id: convex_prod_deploy
+        run: npx convex deploy --yes
+        env:
+          CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_PROD_DEPLOY_KEY }}
+
+      - name: Run production smoke tests
+        id: prod_smoke
+        run: pnpm run test:smoke
+        env:
+          SMOKE_TEST_BASE_URL: https://app.athelon.app
+          SMOKE_TEST_USER_TOKEN: ${{ secrets.PROD_SMOKE_TEST_USER_TOKEN }}
+          SMOKE_TEST_ORG_ID: ${{ secrets.PROD_SMOKE_TEST_ORG_ID }}
+        # Production smoke tests run against the real production URL with a
+        # dedicated smoke-test user account (read-only + limited write scope).
+        # This account is NOT a real customer account. Its data is isolated.
+
+      - name: Promote Vercel deployment to production
+        if: steps.prod_smoke.outcome == 'success'
+        run: |
+          # Promote the staging Vercel deployment (which was built from this same
+          # commit when it merged to main) to production.
+          # Vercel re-uses the cached build — no rebuild needed.
+          STAGING_DEPLOYMENT_URL=$(npx vercel ls --scope athelon --token ${{ secrets.VERCEL_TOKEN }} --json | jq -r '[.[] | select(.state == "READY" and .target == "preview")] | sort_by(.createdAt) | last | .url')
+          npx vercel promote "$STAGING_DEPLOYMENT_URL" \
+            --scope athelon \
+            --token ${{ secrets.VERCEL_TOKEN }} \
+            --yes
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+      - name: Notify Slack — production deploy success
+        if: success()
+        uses: slackapi/slack-github-action@v1.27.0
+        with:
+          channel-id: ${{ secrets.SLACK_DEPLOYS_CHANNEL_ID }}
+          payload: |
+            {
+              "text": "🚀 Production deploy complete",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "🚀 *Production deploy complete*\n\n*SHA:* `${{ github.sha }}`\n*Deployed by:* ${{ github.actor }}\n*Convex:* `athelon-prod`\n*Vercel:* https://app.athelon.app\n*Schema migration:* `${{ steps.migration_risk.outputs.risk }}`\n\n<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View run>"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+
+      - name: Notify Slack — production deploy FAILED
+        if: failure()
+        uses: slackapi/slack-github-action@v1.27.0
+        with:
+          channel-id: ${{ secrets.SLACK_INCIDENTS_CHANNEL_ID }}
+          payload: |
+            {
+              "text": "🚨 PRODUCTION DEPLOY FAILED",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "🚨 *PRODUCTION DEPLOY FAILED*\n\n*SHA:* `${{ github.sha }}`\n*Deployed by:* ${{ github.actor }}\n*Failed step:* Check run logs\n*Convex deploy:* `${{ steps.convex_prod_deploy.outcome }}`\n*Smoke tests:* `${{ steps.prod_smoke.outcome }}`\n\n*Rollback:* Run `vercel rollback --scope athelon` immediately if production is degraded.\n\n<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View run>"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+
+# ─────────────────────────────────────────────────────────────────────────────
+# NOTES FOR REVIEWERS
+#
+# Required GitHub repository secrets (Settings → Secrets → Actions):
+#   TURBO_TOKEN                   — Turborepo remote cache token (Vercel)
+#   CODECOV_TOKEN                 — Codecov upload token
+#   SEMGREP_APP_TOKEN             — Semgrep Cloud Platform token
+#   CONVEX_STAGING_DEPLOY_KEY     — Convex deploy key for athelon-staging project
+#   CONVEX_PROD_DEPLOY_KEY        — Convex deploy key for athelon-prod project
+#   SMOKE_TEST_USER_TOKEN         — Clerk session token for staging smoke test user
+#   SMOKE_TEST_ORG_ID             — Convex org ID for staging smoke test org
+#   PROD_SMOKE_TEST_USER_TOKEN    — Clerk session token for production smoke test user
+#   PROD_SMOKE_TEST_ORG_ID        — Convex org ID for production smoke test org
+#   VERCEL_TOKEN                  — Vercel CLI token for promotion step
+#   VERCEL_ORG_ID                 — Vercel team/org ID
+#   VERCEL_PROJECT_ID             — Vercel project ID for athelon-web
+#   SLACK_BOT_TOKEN               — Slack bot OAuth token (channels:write)
+#   SLACK_INCIDENTS_CHANNEL_ID    — Slack channel ID for #incidents
+#   SLACK_DEPLOYS_CHANNEL_ID      — Slack channel ID for #deploys
+#
+# Required GitHub repository variables (Settings → Variables → Actions):
+#   TURBO_TEAM                    — Vercel team slug for Turborepo remote cache
+#
+# Required GitHub Environments (Settings → Environments):
+#   preview     — No approval gate. Used by deploy-preview (all PRs).
+#   staging     — No approval gate. Auto-deploys on merge to main.
+#   production  — Required reviewers: @athelon/jonas-harker (1 approver minimum).
+#                 Wait timer: 0 minutes (don't add artificial delay — approval is the gate).
+#                 Deployment branches: main only.
+# ─────────────────────────────────────────────────────────────────────────────

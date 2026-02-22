@@ -1,0 +1,12 @@
+{
+  "artifactId": "AT-15",
+  "runId": "WS11A-R3-FINAL-20260222T1602Z",
+  "signature": {
+    "algorithm": "ed25519",
+    "signatureId": "REPLAY-SIGNOFF-WS11A-R3-FINAL-20260222T1602Z",
+    "signerId": "marcus-webb"
+  },
+  "signedAtUtc": "2026-02-22T16:10:30Z",
+  "signer": "Marcus Webb",
+  "signoff": "APPROVED"
+}

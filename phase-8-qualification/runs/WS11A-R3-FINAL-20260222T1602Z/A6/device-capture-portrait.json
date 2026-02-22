@@ -1,0 +1,13 @@
+{
+  "artifactId": "AT-08",
+  "capture": "OK",
+  "capturedAtUtc": "2026-02-22T16:07:20Z",
+  "device": "qual-rig-01",
+  "orientation": "portrait",
+  "runId": "WS11A-R3-FINAL-20260222T1602Z",
+  "signedBy": {
+    "signatureId": "CAP-P-AT08-CO-20260222T160725Z",
+    "signedAtUtc": "2026-02-22T16:07:25Z",
+    "signerId": "cilla-oduya"
+  }
+}

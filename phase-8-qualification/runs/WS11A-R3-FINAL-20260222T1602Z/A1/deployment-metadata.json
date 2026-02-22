@@ -1,0 +1,20 @@
+{
+  "artifactId": "AT-02",
+  "build": {
+    "commit": "a13f9c8",
+    "pipelineId": "qual-ws11a-r3-8841",
+    "version": "v1.0.0-rc3"
+  },
+  "generatedAtUtc": "2026-02-22T16:02:30Z",
+  "runId": "WS11A-R3-FINAL-20260222T1602Z",
+  "signedBy": {
+    "signatureId": "DEPLOY-AT02-CO-20260222T160240Z",
+    "signedAtUtc": "2026-02-22T16:02:40Z",
+    "signerId": "cilla-oduya"
+  },
+  "witness": {
+    "signatureId": "WIT-AT02-MW-20260222T160245Z",
+    "witnessId": "marcus-webb",
+    "witnessedAtUtc": "2026-02-22T16:02:45Z"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "artifactId": "AT-13",
+  "decision": "SEV1_HARD_STOP",
+  "executedBy": {
+    "signatureId": "EXEC-AT13-DA-20260222T160845Z",
+    "signedAtUtc": "2026-02-22T16:08:45Z",
+    "signerId": "devraj-anand"
+  },
+  "expectedHash": "abababababababababababababababababababababababababababababababab",
+  "observedHash": "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+  "runId": "WS11A-R3-FINAL-20260222T1602Z",
+  "triggeredAtUtc": "2026-02-22T16:08:40Z",
+  "witness": {
+    "signatureId": "WIT-AT13-MWEBB-20260222T160850Z",
+    "witnessId": "marcus-webb",
+    "witnessedAtUtc": "2026-02-22T16:08:50Z"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "artifactId": "AT-06",
+  "executedAtUtc": "2026-02-22T16:05:00Z",
+  "records": 128,
+  "result": "INGEST_OK",
+  "runId": "WS11A-R3-FINAL-20260222T1602Z",
+  "scenario": "SUCCESS_PATH",
+  "signedBy": {
+    "signatureId": "A4S-AT06-DA-20260222T160510Z",
+    "signedAtUtc": "2026-02-22T16:05:10Z",
+    "signerId": "devraj-anand"
+  }
+}

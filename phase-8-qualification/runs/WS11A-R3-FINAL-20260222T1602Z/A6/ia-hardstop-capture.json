@@ -1,0 +1,12 @@
+{
+  "artifactId": "AT-08",
+  "capturedAtUtc": "2026-02-22T16:07:45Z",
+  "result": "HARD_STOP_CONFIRMED",
+  "runId": "WS11A-R3-FINAL-20260222T1602Z",
+  "signedBy": {
+    "signatureId": "CAP-IA-AT08-CO-20260222T160750Z",
+    "signedAtUtc": "2026-02-22T16:07:50Z",
+    "signerId": "cilla-oduya"
+  },
+  "trigger": "IA_POLICY_BLOCK"
+}

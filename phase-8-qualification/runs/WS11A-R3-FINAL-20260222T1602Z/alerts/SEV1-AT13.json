@@ -1,0 +1,13 @@
+{
+  "acknowledgedBy": {
+    "signatureId": "ALERT-ACK-NOC-20260222T160900Z",
+    "signedAtUtc": "2026-02-22T16:09:00Z",
+    "signerId": "noc-oncall"
+  },
+  "alertId": "SEV1-AT13",
+  "artifactId": "AT-13",
+  "runId": "WS11A-R3-FINAL-20260222T1602Z",
+  "severity": "SEV1",
+  "status": "ACKNOWLEDGED",
+  "triggeredAtUtc": "2026-02-22T16:08:55Z"
+}

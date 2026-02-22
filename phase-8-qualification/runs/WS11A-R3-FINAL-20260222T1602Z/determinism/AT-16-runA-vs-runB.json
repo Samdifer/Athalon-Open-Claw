@@ -1,0 +1,14 @@
+{
+  "artifactId": "AT-16",
+  "decision": "COMPLIANT",
+  "diffSummary": "Naming-only delta; behavior equivalent",
+  "runA": "WS11A-R3-A",
+  "runB": "WS11A-R3-B",
+  "runId": "WS11A-R3-FINAL-20260222T1602Z",
+  "signedBy": {
+    "signatureId": "DET-JHARKER-20260222T161110Z",
+    "signedAtUtc": "2026-02-22T16:11:10Z",
+    "signerId": "jonas-harker"
+  },
+  "verifiedAtUtc": "2026-02-22T16:11:00Z"
+}

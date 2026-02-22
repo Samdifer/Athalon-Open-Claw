@@ -1,0 +1,18 @@
+{
+  "artifactId": "AT-11",
+  "condition": "MISSING_ARTIFACT_A5",
+  "decision": "NO_GO",
+  "enforced": true,
+  "executedBy": {
+    "signatureId": "EXEC-AT11-DA-20260222T160805Z",
+    "signedAtUtc": "2026-02-22T16:08:05Z",
+    "signerId": "devraj-anand"
+  },
+  "runId": "WS11A-R3-FINAL-20260222T1602Z",
+  "triggeredAtUtc": "2026-02-22T16:08:00Z",
+  "witness": {
+    "signatureId": "WIT-AT11-MWEBB-20260222T160810Z",
+    "witnessId": "marcus-webb",
+    "witnessedAtUtc": "2026-02-22T16:08:10Z"
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "approvedBy": {
+    "approvedAtUtc": "2026-02-22T16:04:00Z",
+    "approverId": "cilla-oduya",
+    "signatureId": "FINAL-AT04-CO-20260222T160400Z"
+  },
+  "artifactId": "AT-04",
+  "decision": "GO",
+  "finalizedAtUtc": "2026-02-22T16:03:45Z",
+  "gates": [
+    {
+      "gateId": "G1",
+      "status": "PASS"
+    },
+    {
+      "gateId": "G2",
+      "status": "PASS"
+    },
+    {
+      "gateId": "G3",
+      "status": "PASS"
+    },
+    {
+      "gateId": "G4",
+      "status": "PASS"
+    },
+    {
+      "gateId": "G5",
+      "status": "PASS"
+    },
+    {
+      "gateId": "G6",
+      "status": "PASS"
+    },
+    {
+      "gateId": "G7",
+      "status": "PASS"
+    },
+    {
+      "gateId": "G8",
+      "status": "PASS"
+    },
+    {
+      "gateId": "G9",
+      "status": "PASS"
+    },
+    {
+      "gateId": "G10",
+      "status": "PASS"
+    }
+  ],
+  "qaWitness": {
+    "signatureId": "QA-AT04-MW-20260222T160405Z",
+    "witnessId": "marcus-webb",
+    "witnessedAtUtc": "2026-02-22T16:04:05Z"
+  },
+  "runId": "WS11A-R3-FINAL-20260222T1602Z"
+}

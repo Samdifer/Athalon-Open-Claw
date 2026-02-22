@@ -1,0 +1,14 @@
+{
+  "artifactId": "AT-07",
+  "errorRate": 0.001,
+  "latencyMsP95": 212,
+  "run1AtUtc": "2026-02-22T16:06:00Z",
+  "runId": "WS11A-R3-FINAL-20260222T1602Z",
+  "runLabel": "run-1",
+  "signedBy": {
+    "signatureId": "RT1-AT07-DA-20260222T160610Z",
+    "signedAtUtc": "2026-02-22T16:06:10Z",
+    "signerId": "devraj-anand"
+  },
+  "status": "PASS"
+}

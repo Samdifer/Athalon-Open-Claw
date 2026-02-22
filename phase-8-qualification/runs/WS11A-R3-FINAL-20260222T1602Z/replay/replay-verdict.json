@@ -1,0 +1,12 @@
+{
+  "artifactId": "AT-15",
+  "notes": "Replay completed from sealed artifacts only.",
+  "replayedAtUtc": "2026-02-22T16:10:20Z",
+  "runId": "WS11A-R3-FINAL-20260222T1602Z",
+  "signedBy": {
+    "signatureId": "REPLAY-VERDICT-MWEBB-20260222T161025Z",
+    "signedAtUtc": "2026-02-22T16:10:25Z",
+    "signerId": "marcus-webb"
+  },
+  "verdict": "PASS"
+}

@@ -1,0 +1,14 @@
+{
+  "artifactId": "AT-01",
+  "createdAtUtc": "2026-02-22T16:02:00Z",
+  "environment": "qualification",
+  "generatedBy": "Cilla Oduya",
+  "runId": "WS11A-R3-FINAL-20260222T1602Z",
+  "signature": {
+    "algorithm": "ed25519",
+    "signatureId": "INIT-AT01-CO-20260222T160210Z",
+    "signedAtUtc": "2026-02-22T16:02:10Z",
+    "signerId": "cilla-oduya"
+  },
+  "status": "INITIALIZED"
+}

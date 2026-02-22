@@ -1,0 +1,13 @@
+{
+  "artifactId": "AT-06",
+  "errorCode": "EXPORT_SCHEMA_MISMATCH",
+  "executedAtUtc": "2026-02-22T16:05:30Z",
+  "result": "HARD_STOP",
+  "runId": "WS11A-R3-FINAL-20260222T1602Z",
+  "scenario": "FAILURE_PATH",
+  "signedBy": {
+    "signatureId": "A4F-AT06-DA-20260222T160540Z",
+    "signedAtUtc": "2026-02-22T16:05:40Z",
+    "signerId": "devraj-anand"
+  }
+}

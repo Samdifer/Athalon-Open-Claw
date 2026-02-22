@@ -1,0 +1,24 @@
+{
+  "artifactId": "AT-18",
+  "entries": [
+    {
+      "action": "WRITE",
+      "actor": "cilla-oduya",
+      "object": "A1/deployment-metadata.json",
+      "timestampUtc": "2026-02-22T16:02:30Z"
+    },
+    {
+      "action": "SIGN",
+      "actor": "marcus-webb",
+      "object": "replay/replay-signoff-marcus-webb.json",
+      "timestampUtc": "2026-02-22T16:10:30Z"
+    }
+  ],
+  "exportedAtUtc": "2026-02-22T16:12:00Z",
+  "runId": "WS11A-R3-FINAL-20260222T1602Z",
+  "witness": {
+    "signatureId": "GOV-ACCESS-MWEBB-20260222T161210Z",
+    "witnessId": "marcus-webb",
+    "witnessedAtUtc": "2026-02-22T16:12:10Z"
+  }
+}

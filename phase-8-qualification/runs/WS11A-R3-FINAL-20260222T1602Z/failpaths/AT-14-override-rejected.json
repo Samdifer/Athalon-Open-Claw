@@ -1,0 +1,18 @@
+{
+  "artifactId": "AT-14",
+  "attemptedOverride": true,
+  "decision": "REJECTED_OVERRIDE",
+  "enforced": true,
+  "executedBy": {
+    "signatureId": "EXEC-AT14-DA-20260222T160915Z",
+    "signedAtUtc": "2026-02-22T16:09:15Z",
+    "signerId": "devraj-anand"
+  },
+  "regulatoryWitness": {
+    "signatureId": "REG-AT14-MWEBB-20260222T160920Z",
+    "witnessId": "marcus-webb",
+    "witnessedAtUtc": "2026-02-22T16:09:20Z"
+  },
+  "runId": "WS11A-R3-FINAL-20260222T1602Z",
+  "triggeredAtUtc": "2026-02-22T16:09:10Z"
+}

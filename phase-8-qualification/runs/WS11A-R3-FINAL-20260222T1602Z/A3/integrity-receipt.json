@@ -1,0 +1,13 @@
+{
+  "artifactId": "AT-05",
+  "match": "MATCH",
+  "recomputedHash": "9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f",
+  "reviewSignature": {
+    "signatureId": "INT-AT05-MW-20260222T160430Z",
+    "signedAtUtc": "2026-02-22T16:04:30Z",
+    "signerId": "marcus-webb"
+  },
+  "runId": "WS11A-R3-FINAL-20260222T1602Z",
+  "storedHash": "9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f9f",
+  "verifiedAtUtc": "2026-02-22T16:04:20Z"
+}
