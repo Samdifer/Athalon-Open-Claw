@@ -44,6 +44,33 @@ export const getSelf = query({
 });
 
 /**
+ * Bootstrap query: get the current user's technician record AND organization
+ * WITHOUT requiring an organizationId as input. Uses the Clerk JWT subject to
+ * find the technician record, then resolves the organization from that.
+ *
+ * This is the entry-point query for the client — call it once on mount to get
+ * the org context for all subsequent queries.
+ */
+export const getMyContext = query({
+  args: {},
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) return null;
+
+    // Find the technician record for this Clerk user (across all orgs)
+    const tech = await ctx.db
+      .query("technicians")
+      .filter((q) => q.eq(q.field("userId"), identity.subject))
+      .first();
+
+    if (!tech) return null;
+
+    const org = await ctx.db.get(tech.organizationId);
+    return { tech, org };
+  },
+});
+
+/**
  * List technicians with expiring certifications (within 90 days).
  */
 export const listWithExpiringCerts = query({
