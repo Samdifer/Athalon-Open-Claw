@@ -21,6 +21,8 @@ import {
   ChevronDown,
   ChevronUp,
   User,
+  Lock,
+  Info,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -531,6 +533,21 @@ export default function MaintenanceRecordsPage() {
       : "skip",
   );
 
+  // FEAT-021: Fetch full records (with signatureHash) for immutability indicator
+  const fullRecords = useQuery(
+    api.maintenanceRecords.listForWorkOrder,
+    orgId && workOrderId
+      ? { workOrderId, organizationId: orgId }
+      : "skip",
+  );
+
+  // Build signatureHash lookup map: recordId → hash
+  const hashMap = new Map<string, string>(
+    (fullRecords ?? [])
+      .filter((r) => r.signatureHash)
+      .map((r) => [r._id as string, r.signatureHash as string]),
+  );
+
   function handleSuccess() {
     setShowForm(false);
     setCorrectionTarget(null);
@@ -704,46 +721,74 @@ export default function MaintenanceRecordsPage() {
                 completionDate?: number;
                 isSigned: boolean;
                 isBlocking: boolean;
-              }, idx: number) => (
-                <div key={record.recordId}>
-                  {idx > 0 && <Separator className="opacity-30 my-1" />}
-                  <div className="flex items-start gap-3 py-3">
-                    <div className="flex-shrink-0 mt-0.5">
-                      <RecordStatusBadge isSigned={record.isSigned} isBlocking={record.isBlocking} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-0.5">
-                        <RecordTypeBadge recordType={record.recordType} />
-                        <span className="font-mono text-[10px] text-muted-foreground/60">
-                          {record.recordId.slice(0, 12)}…
-                        </span>
+              }, idx: number) => {
+                const sigHash = hashMap.get(record.recordId);
+                const hashPreview = sigHash ? sigHash.slice(0, 8) : null;
+
+                return (
+                  <div key={record.recordId}>
+                    {idx > 0 && <Separator className="opacity-30 my-1" />}
+                    <div className="flex items-start gap-3 py-3">
+                      <div className="flex-shrink-0 mt-0.5">
+                        <RecordStatusBadge isSigned={record.isSigned} isBlocking={record.isBlocking} />
                       </div>
-                      {record.completionDate && (
-                        <p className="text-[11px] text-muted-foreground">
-                          Completion:{" "}
-                          {new Date(record.completionDate).toLocaleDateString("en-US", {
-                            year: "numeric",
-                            month: "short",
-                            day: "numeric",
-                            timeZone: "UTC",
-                          })}
-                        </p>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-7 text-[10px] gap-1 px-2"
-                        onClick={() => handleCorrect(record.recordId)}
-                      >
-                        <RotateCcw className="w-3 h-3" />
-                        Correct
-                      </Button>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                          <RecordTypeBadge recordType={record.recordType} />
+                          <span className="font-mono text-[10px] text-muted-foreground/60">
+                            {record.recordId.slice(0, 12)}…
+                          </span>
+                          {/* FEAT-021: Immutability indicator for signed records */}
+                          {record.isSigned && hashPreview && (
+                            <span
+                              title="This record is cryptographically sealed and cannot be modified."
+                              className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded border border-amber-500/40 bg-amber-500/10 text-amber-400 text-[10px] font-mono cursor-help"
+                            >
+                              <Lock className="w-2.5 h-2.5 flex-shrink-0" />
+                              {hashPreview}
+                            </span>
+                          )}
+                        </div>
+                        {record.completionDate && (
+                          <p className="text-[11px] text-muted-foreground">
+                            Completion:{" "}
+                            {new Date(record.completionDate).toLocaleDateString("en-US", {
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                              timeZone: "UTC",
+                            })}
+                          </p>
+                        )}
+                        {/* FEAT-021: Correction required notice for signed records */}
+                        {record.isSigned && (
+                          <div className="mt-1.5 flex items-start gap-1.5 p-2 rounded border border-amber-500/20 bg-amber-500/5">
+                            <Info className="w-3 h-3 text-amber-400/70 flex-shrink-0 mt-0.5" />
+                            <p className="text-[10px] text-amber-400/70 leading-relaxed">
+                              <span className="font-semibold text-amber-400">CORRECTION REQUIRED?</span>{" "}
+                              This record is sealed. Errors must be corrected via the
+                              append-only correction chain — create a Correction Record
+                              referencing this record&apos;s ID. The original record is
+                              preserved unchanged per 14 CFR 43.9 and AC 43-9C.
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-7 text-[10px] gap-1 px-2"
+                          onClick={() => handleCorrect(record.recordId)}
+                        >
+                          <RotateCcw className="w-3 h-3" />
+                          Correct
+                        </Button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </CardContent>

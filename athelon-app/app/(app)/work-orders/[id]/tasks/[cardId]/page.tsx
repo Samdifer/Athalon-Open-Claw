@@ -95,6 +95,24 @@ function SignStepDialog({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // FEAT-018: Fetch IA cert status for the signing technician
+  const expiringCerts = useQuery(
+    api.technicians.listWithExpiringCerts,
+    orgId ? { organizationId: orgId, withinDays: 365 } : "skip",
+  );
+  const myExpiryEntry = expiringCerts?.find(
+    (e) => e.technician?._id === techId,
+  );
+  const iaCertExpiry = myExpiryEntry?.cert.iaExpiryDate ?? null;
+  const iaDaysRemaining =
+    iaCertExpiry !== null
+      ? Math.ceil((iaCertExpiry - Date.now()) / (1000 * 60 * 60 * 24))
+      : null;
+  const iaIsExpired = iaDaysRemaining !== null && iaDaysRemaining <= 0;
+  const iaExpiringSoon =
+    iaDaysRemaining !== null && iaDaysRemaining > 0 && iaDaysRemaining <= 30;
+  const certNumber = myExpiryEntry?.cert.certificateNumber ?? null;
+
   const createAuthEvent = useMutation(api.workOrders.createSignatureAuthEvent);
   const completeStep = useMutation(api.taskCards.completeStep);
 
@@ -155,6 +173,41 @@ function SignStepDialog({
                 This step requires an IA sign-off. Your Inspection Authorization
                 must be current.
               </p>
+            </div>
+          )}
+
+          {/* FEAT-018: IA currency enforcement */}
+          {requiresIa && iaIsExpired && (
+            <div className="flex items-start gap-2 p-2.5 rounded-md bg-red-500/10 border border-red-500/40">
+              <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <p className="text-xs font-semibold text-red-400">
+                  IA Certificate Expired — Sign-off Blocked
+                </p>
+                <p className="text-[11px] text-red-400/80">
+                  Your Inspection Authorization
+                  {certNumber ? ` (${certNumber})` : ""} expired{" "}
+                  {Math.abs(iaDaysRemaining ?? 0)}d ago. This step requires a
+                  current IA. Renewal must be completed before sign-off per
+                  14 CFR 65.93.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {requiresIa && iaExpiringSoon && (
+            <div className="flex items-start gap-2 p-2.5 rounded-md bg-amber-500/10 border border-amber-500/40">
+              <AlertTriangle className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <p className="text-xs font-semibold text-amber-400">
+                  IA Certificate Expiring in {iaDaysRemaining}d
+                </p>
+                <p className="text-[11px] text-amber-400/80">
+                  Cert{certNumber ? ` #${certNumber}` : ""} expires in{" "}
+                  {iaDaysRemaining} days. Sign-off permitted, but schedule
+                  renewal immediately per 14 CFR 65.93.
+                </p>
+              </div>
             </div>
           )}
 
@@ -238,7 +291,7 @@ function SignStepDialog({
           </Button>
           <Button
             onClick={handleSign}
-            disabled={isSubmitting || pin.length < 4}
+            disabled={isSubmitting || pin.length < 4 || (requiresIa && iaIsExpired)}
             className="gap-2"
             size="sm"
           >

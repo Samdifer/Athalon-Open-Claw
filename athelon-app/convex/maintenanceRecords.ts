@@ -1795,6 +1795,31 @@ export const getWorkOrderCloseReadinessV2 = query({
 // Audit log: record_created event.
 // ─────────────────────────────────────────────────────────────────────────────
 
+// ─── FEAT-021: List maintenance records for a work order (with signatureHash) ──
+
+export const listForWorkOrder = query({
+  args: {
+    workOrderId: v.id("workOrders"),
+    organizationId: v.id("organizations"),
+  },
+  handler: async (ctx, args) => {
+    const records = await ctx.db
+      .query("maintenanceRecords")
+      .withIndex("by_work_order", (q) => q.eq("workOrderId", args.workOrderId))
+      .collect();
+
+    return records.map((r) => ({
+      _id: r._id,
+      recordType: r.recordType,
+      completionDate: r.completionDate,
+      workPerformed: r.workPerformed,
+      signatureHash: r.signatureHash ?? null,
+      isSigned: !!r.signatureHash?.trim(),
+      corrects: r.corrects ?? null,
+    }));
+  },
+});
+
 export const receiveTestEquipment = mutation({
   args: {
     organizationId: v.id("organizations"),
