@@ -1,0 +1,549 @@
+import {
+  AlertTriangle,
+  ClipboardList,
+  Package,
+  ShieldAlert,
+  Wrench,
+  TrendingUp,
+  Clock,
+  ChevronRight,
+  CheckCircle2,
+  Circle,
+  Timer,
+} from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { Separator } from "@/components/ui/separator";
+import Link from "next/link";
+
+// ─── Demo data (will be replaced with Convex queries) ────────────────────────
+
+const stats = [
+  {
+    title: "Open Work Orders",
+    value: "4",
+    sub: "3 active, 1 on hold",
+    icon: ClipboardList,
+    href: "/work-orders",
+    color: "text-sky-400",
+    bgColor: "bg-sky-500/10",
+  },
+  {
+    title: "Active Squawks",
+    value: "1",
+    sub: "1 blocking WO close",
+    icon: AlertTriangle,
+    href: "/squawks",
+    color: "text-red-400",
+    bgColor: "bg-red-500/10",
+  },
+  {
+    title: "Parts On Order",
+    value: "3",
+    sub: "2 WOs affected",
+    icon: Package,
+    href: "/parts/requests",
+    color: "text-amber-400",
+    bgColor: "bg-amber-500/10",
+  },
+  {
+    title: "Certs Expiring",
+    value: "1",
+    sub: "Within 30 days",
+    icon: ShieldAlert,
+    href: "/compliance/certificates",
+    color: "text-orange-400",
+    bgColor: "bg-orange-500/10",
+  },
+];
+
+const attentionItems = [
+  {
+    id: "attn-1",
+    type: "cert_expiring",
+    severity: "critical",
+    title: "IA Certificate Expiring",
+    description:
+      "Sandra Mercado — IA-2019-CO-00847 expires in 8 days (Mar 2, 2026)",
+    action: "Renew Now",
+    href: "/compliance/certificates",
+    icon: ShieldAlert,
+  },
+  {
+    id: "attn-2",
+    type: "squawk_blocking",
+    severity: "warning",
+    title: "Open Squawk Blocking WO Close",
+    description:
+      "SQ-2026-041-001 on WO-2026-0041 (N192AK) requires customer authorization",
+    action: "View Squawk",
+    href: "/squawks",
+    icon: AlertTriangle,
+  },
+  {
+    id: "attn-3",
+    type: "parts_on_hold",
+    severity: "info",
+    title: "AOG — Waiting on Parts",
+    description: "N76LS Bell 206B — Main rotor blade P/N 206-015-191-013. ETA 5 days",
+    action: "View WO",
+    href: "/work-orders",
+    icon: Package,
+  },
+];
+
+const activeWorkOrders = [
+  {
+    id: "wo-1",
+    number: "WO-2026-0041",
+    aircraft: "N192AK",
+    type: "Cessna 172S",
+    description: "100-hour Inspection",
+    status: "in_progress",
+    statusLabel: "In Progress",
+    priority: "normal",
+    tasksComplete: 2,
+    tasksTotal: 4,
+    openSquawks: 1,
+    partsOnOrder: 1,
+    daysOpen: 3,
+    href: "/work-orders/WO-2026-0041",
+  },
+  {
+    id: "wo-2",
+    number: "WO-2026-0040",
+    aircraft: "N416AB",
+    type: "Cessna 208B",
+    description: "Oil Change & Engine Trend",
+    status: "pending_signoff",
+    statusLabel: "Pending Sign-Off",
+    priority: "normal",
+    tasksComplete: 3,
+    tasksTotal: 3,
+    openSquawks: 0,
+    partsOnOrder: 0,
+    daysOpen: 5,
+    href: "/work-orders/WO-2026-0040",
+  },
+  {
+    id: "wo-3",
+    number: "WO-2026-0039",
+    aircraft: "N76LS",
+    type: "Bell 206B-III",
+    description: "Main Rotor Blade AOG",
+    status: "on_hold",
+    statusLabel: "On Hold",
+    priority: "aog",
+    tasksComplete: 0,
+    tasksTotal: 2,
+    openSquawks: 0,
+    partsOnOrder: 1,
+    daysOpen: 7,
+    href: "/work-orders/WO-2026-0039",
+  },
+  {
+    id: "wo-4",
+    number: "WO-2026-0042",
+    aircraft: "N416AB",
+    type: "Cessna 208B",
+    description: "Fuel Selector Valve ALS",
+    status: "draft",
+    statusLabel: "Draft",
+    priority: "normal",
+    tasksComplete: 0,
+    tasksTotal: 0,
+    openSquawks: 0,
+    partsOnOrder: 0,
+    daysOpen: 0,
+    href: "/work-orders/WO-2026-0042",
+  },
+];
+
+const fleetStatus = [
+  {
+    tail: "N192AK",
+    type: "Cessna 172S",
+    status: "in_maintenance",
+    statusLabel: "In Maintenance",
+    statusColor: "text-sky-400",
+    statusDot: "bg-sky-400",
+    openWos: 1,
+    href: "/fleet/N192AK",
+  },
+  {
+    tail: "N76LS",
+    type: "Bell 206B-III",
+    status: "in_maintenance",
+    statusLabel: "AOG / On Hold",
+    statusColor: "text-red-400",
+    statusDot: "bg-red-500",
+    openWos: 1,
+    href: "/fleet/N76LS",
+  },
+  {
+    tail: "N416AB",
+    type: "Cessna 208B",
+    status: "in_maintenance",
+    statusLabel: "In Maintenance",
+    statusColor: "text-sky-400",
+    statusDot: "bg-sky-400",
+    openWos: 2,
+    href: "/fleet/N416AB",
+  },
+];
+
+// ─── Status helpers ───────────────────────────────────────────────────────────
+
+function getStatusBadge(status: string, label: string, priority?: string) {
+  if (priority === "aog")
+    return (
+      <Badge className="bg-red-500/15 text-red-400 border border-red-500/30 font-medium text-[10px]">
+        AOG
+      </Badge>
+    );
+  const map: Record<string, string> = {
+    in_progress:
+      "bg-sky-500/15 text-sky-400 border border-sky-500/30",
+    pending_signoff:
+      "bg-amber-500/15 text-amber-400 border border-amber-500/30",
+    on_hold: "bg-orange-500/15 text-orange-400 border border-orange-500/30",
+    draft: "bg-slate-500/15 text-slate-400 border border-slate-500/30",
+    closed: "bg-green-500/15 text-green-400 border border-green-500/30",
+  };
+  return (
+    <Badge
+      variant="outline"
+      className={`font-medium text-[10px] ${map[status] ?? "bg-muted text-muted-foreground"}`}
+    >
+      {label}
+    </Badge>
+  );
+}
+
+function getSeverityStyles(severity: string) {
+  const map: Record<string, { border: string; icon: string; bg: string }> = {
+    critical: {
+      border: "border-l-red-500",
+      icon: "text-red-400",
+      bg: "bg-red-500/5",
+    },
+    warning: {
+      border: "border-l-amber-500",
+      icon: "text-amber-400",
+      bg: "bg-amber-500/5",
+    },
+    info: {
+      border: "border-l-sky-500",
+      icon: "text-sky-400",
+      bg: "bg-sky-500/5",
+    },
+  };
+  return map[severity] ?? map["info"]!;
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
+
+export default function DashboardPage() {
+  return (
+    <div className="space-y-6">
+      {/* Page Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-xl font-semibold text-foreground">Dashboard</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            Rocky Mountain Turbine Service — Mon, Feb 23, 2026
+          </p>
+        </div>
+        <Button asChild size="sm">
+          <Link href="/work-orders/new">
+            <Wrench className="w-3.5 h-3.5 mr-1.5" />
+            New Work Order
+          </Link>
+        </Button>
+      </div>
+
+      {/* Stats Row */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        {stats.map((stat) => (
+          <Link key={stat.title} href={stat.href}>
+            <Card className="hover:bg-card/80 transition-colors cursor-pointer border-border/60">
+              <CardContent className="p-4">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-xs text-muted-foreground font-medium">
+                      {stat.title}
+                    </p>
+                    <p className="text-2xl font-bold text-foreground mt-1">
+                      {stat.value}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                      {stat.sub}
+                    </p>
+                  </div>
+                  <div className={`p-2 rounded-lg ${stat.bgColor}`}>
+                    <stat.icon className={`w-4 h-4 ${stat.color}`} />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left: Attention Queue + Work Orders */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Attention Queue */}
+          <Card className="border-border/60">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4 text-amber-400" />
+                  Attention Required
+                  <Badge
+                    variant="secondary"
+                    className="text-[10px] bg-amber-500/15 text-amber-400 border border-amber-500/30"
+                  >
+                    {attentionItems.length}
+                  </Badge>
+                </CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-0 space-y-2">
+              {attentionItems.map((item) => {
+                const styles = getSeverityStyles(item.severity);
+                return (
+                  <div
+                    key={item.id}
+                    className={`flex items-start gap-3 p-3 rounded-lg border-l-2 ${styles.border} ${styles.bg} border border-border/40`}
+                  >
+                    <item.icon
+                      className={`w-4 h-4 mt-0.5 flex-shrink-0 ${styles.icon}`}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-medium text-foreground">
+                        {item.title}
+                      </p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">
+                        {item.description}
+                      </p>
+                    </div>
+                    <Button
+                      asChild
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 px-2 text-[11px] flex-shrink-0"
+                    >
+                      <Link href={item.href}>{item.action}</Link>
+                    </Button>
+                  </div>
+                );
+              })}
+            </CardContent>
+          </Card>
+
+          {/* Active Work Orders */}
+          <Card className="border-border/60">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                  <ClipboardList className="w-4 h-4 text-muted-foreground" />
+                  Active Work Orders
+                </CardTitle>
+                <Button asChild variant="ghost" size="sm" className="h-7 text-xs">
+                  <Link href="/work-orders" className="flex items-center gap-1">
+                    View All
+                    <ChevronRight className="w-3 h-3" />
+                  </Link>
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-0 space-y-1">
+              {activeWorkOrders.map((wo, i) => (
+                <div key={wo.id}>
+                  {i > 0 && <Separator className="my-1 opacity-40" />}
+                  <Link href={wo.href}>
+                    <div
+                      className={`flex items-center gap-3 p-2.5 rounded-lg hover:bg-muted/40 transition-colors cursor-pointer ${wo.priority === "aog" ? "aog-indicator pl-3" : ""}`}
+                    >
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <span className="font-mono text-xs text-muted-foreground font-medium">
+                            {wo.number}
+                          </span>
+                          {getStatusBadge(wo.status, wo.statusLabel, wo.priority)}
+                          {wo.openSquawks > 0 && (
+                            <Badge className="bg-red-500/15 text-red-400 border-red-500/30 text-[9px] h-4 px-1">
+                              {wo.openSquawks} squawk
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-mono text-sm font-semibold text-foreground">
+                            {wo.aircraft}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            {wo.type}
+                          </span>
+                          <span className="text-muted-foreground text-xs">·</span>
+                          <span className="text-xs text-muted-foreground truncate">
+                            {wo.description}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex-shrink-0 text-right min-w-[80px]">
+                        {wo.tasksTotal > 0 ? (
+                          <>
+                            <div className="flex items-center justify-end gap-1.5 mb-1">
+                              {wo.tasksComplete === wo.tasksTotal ? (
+                                <CheckCircle2 className="w-3 h-3 text-green-400" />
+                              ) : (
+                                <Circle className="w-3 h-3 text-muted-foreground" />
+                              )}
+                              <span className="text-[11px] text-muted-foreground">
+                                {wo.tasksComplete}/{wo.tasksTotal} tasks
+                              </span>
+                            </div>
+                            <Progress
+                              value={(wo.tasksComplete / wo.tasksTotal) * 100}
+                              className="h-1 w-20"
+                            />
+                          </>
+                        ) : (
+                          <span className="text-[11px] text-muted-foreground">
+                            No tasks yet
+                          </span>
+                        )}
+                        <div className="flex items-center justify-end gap-1 mt-1">
+                          <Timer className="w-3 h-3 text-muted-foreground/60" />
+                          <span className="text-[10px] text-muted-foreground/60">
+                            {wo.daysOpen}d open
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Right: Fleet Status */}
+        <div className="space-y-6">
+          <Card className="border-border/60">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                  <TrendingUp className="w-4 h-4 text-muted-foreground" />
+                  Fleet Status
+                </CardTitle>
+                <Button asChild variant="ghost" size="sm" className="h-7 text-xs">
+                  <Link href="/fleet" className="flex items-center gap-1">
+                    View All
+                    <ChevronRight className="w-3 h-3" />
+                  </Link>
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-0 space-y-1">
+              {fleetStatus.map((aircraft, i) => (
+                <div key={aircraft.tail}>
+                  {i > 0 && <Separator className="my-1 opacity-40" />}
+                  <Link href={aircraft.href}>
+                    <div className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-muted/40 transition-colors cursor-pointer">
+                      <div
+                        className={`w-2 h-2 rounded-full flex-shrink-0 ${aircraft.statusDot}`}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-mono font-semibold text-sm text-foreground">
+                            {aircraft.tail}
+                          </span>
+                          {aircraft.openWos > 0 && (
+                            <Badge
+                              variant="secondary"
+                              className="text-[9px] h-4 px-1 bg-muted"
+                            >
+                              {aircraft.openWos} WO
+                            </Badge>
+                          )}
+                        </div>
+                        <span className="text-[11px] text-muted-foreground">
+                          {aircraft.type}
+                        </span>
+                      </div>
+                      <span
+                        className={`text-[10px] font-medium flex-shrink-0 ${aircraft.statusColor}`}
+                      >
+                        {aircraft.statusLabel}
+                      </span>
+                    </div>
+                  </Link>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+
+          {/* Quick Actions */}
+          <Card className="border-border/60">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                <Clock className="w-4 h-4 text-muted-foreground" />
+                Quick Actions
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0 space-y-2">
+              <Button
+                asChild
+                variant="outline"
+                className="w-full justify-start h-9 text-xs gap-2 border-border/60"
+                size="sm"
+              >
+                <Link href="/work-orders/new">
+                  <Wrench className="w-3.5 h-3.5" />
+                  New Work Order
+                </Link>
+              </Button>
+              <Button
+                asChild
+                variant="outline"
+                className="w-full justify-start h-9 text-xs gap-2 border-border/60"
+                size="sm"
+              >
+                <Link href="/squawks">
+                  <AlertTriangle className="w-3.5 h-3.5" />
+                  Log Squawk
+                </Link>
+              </Button>
+              <Button
+                asChild
+                variant="outline"
+                className="w-full justify-start h-9 text-xs gap-2 border-border/60"
+                size="sm"
+              >
+                <Link href="/parts/requests">
+                  <Package className="w-3.5 h-3.5" />
+                  View Parts Queue
+                </Link>
+              </Button>
+              <Button
+                asChild
+                variant="outline"
+                className="w-full justify-start h-9 text-xs gap-2 border-border/60"
+                size="sm"
+              >
+                <Link href="/compliance/audit-trail">
+                  <ShieldAlert className="w-3.5 h-3.5" />
+                  Audit Trail
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+}
