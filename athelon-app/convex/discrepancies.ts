@@ -41,7 +41,7 @@
 // If the system allows a discrepancy to be dispositioned without documentation,
 // that is a compliance failure, not a UX preference.
 
-import { mutation } from "./_generated/server";
+import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 
@@ -820,5 +820,39 @@ export const deferDiscrepancy = mutation({
       discrepancyId: args.discrepancyId,
       melExpiryDate,
     };
+  },
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// QUERY: listDiscrepancies
+//
+// Lists discrepancies for an organization, optionally filtered by status.
+// Used by the Squawks page and Dashboard.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const listDiscrepancies = query({
+  args: {
+    organizationId: v.id("organizations"),
+    status: v.optional(
+      v.union(
+        v.literal("open"),
+        v.literal("under_evaluation"),
+        v.literal("dispositioned"),
+      ),
+    ),
+  },
+  handler: async (ctx, args) => {
+    const discrepancies = await ctx.db
+      .query("discrepancies")
+      .withIndex("by_status", (q) =>
+        args.status
+          ? q
+              .eq("organizationId", args.organizationId)
+              .eq("status", args.status)
+          : q.eq("organizationId", args.organizationId),
+      )
+      .collect();
+
+    return discrepancies;
   },
 });

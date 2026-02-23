@@ -1217,3 +1217,206 @@ export const getCloseReadiness = query({
     };
   },
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MUTATION: createSignatureAuthEvent
+//
+// MVP implementation: creates a 5-minute re-authentication token that authorizes
+// a single signing action (step sign-off, card sign-off, WO close, or RTS).
+//
+// In production this would be triggered by a Clerk webhook after PIN/biometric
+// re-authentication. For the MVP demo, the UI collects the technician PIN and
+// passes it here — the mutation issues the token (PIN validation is a TODO).
+//
+// Per signoff-rts-flow.md §1.2:
+//   A signatureAuthEvent must be created immediately before the signing action.
+//   It is single-use (INV-05): consumed atomically with the signing mutation.
+//   TTL is 5 minutes (300_000 ms). Expired events are rejected by all consumers.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const createSignatureAuthEvent = mutation({
+  args: {
+    organizationId: v.id("organizations"),
+    technicianId: v.id("technicians"),
+
+    // The intended signing context (for audit trail)
+    intendedTable: v.string(), // e.g. "taskCardSteps", "taskCards", "workOrders", "returnToService"
+    intendedRecordHash: v.optional(v.string()),
+
+    // MVP: PIN is accepted but not cryptographically verified in this phase.
+    // Phase 2.1 TODO: verify PIN hash against technician.pinHash using bcrypt.
+    pin: v.string(),
+
+    callerIpAddress: v.optional(v.string()),
+  },
+
+  handler: async (ctx, args): Promise<{ eventId: Id<"signatureAuthEvents">; expiresAt: number }> => {
+    const now = Date.now();
+    const callerUserId = await requireAuth(ctx);
+
+    // Validate technician exists and belongs to org
+    const tech = await ctx.db.get(args.technicianId);
+    if (!tech) {
+      throw new Error(`Technician ${args.technicianId} not found.`);
+    }
+    if (tech.organizationId !== args.organizationId) {
+      throw new Error(
+        `Technician ${args.technicianId} does not belong to organization ${args.organizationId}.`,
+      );
+    }
+    if (tech.status !== "active") {
+      throw new Error(
+        `Technician ${args.technicianId} (${tech.legalName}) is not active. ` +
+        `Only active technicians may create signature auth events.`,
+      );
+    }
+
+    // Validate PIN length (basic format check — real validation in Phase 2.1)
+    if (!args.pin || args.pin.trim().length < 4) {
+      throw new Error(
+        `PIN must be at least 4 digits. ` +
+        `For the MVP, any 4+ digit PIN is accepted. ` +
+        `Phase 2.1 will enforce the stored PIN hash.`,
+      );
+    }
+
+    // Look up the technician's active certificate for the auth record
+    const cert = await ctx.db
+      .query("certificates")
+      .withIndex("by_technician", (q) => q.eq("technicianId", args.technicianId))
+      .filter((q) => q.eq(q.field("active"), true))
+      .first();
+
+    const expiresAt = now + 5 * 60 * 1000; // 5-minute TTL
+
+    const eventId = await ctx.db.insert("signatureAuthEvents", {
+      clerkEventId: `mvp_evt_${now}_${args.technicianId}`,
+      clerkSessionId: callerUserId,
+      userId: callerUserId,
+      technicianId: args.technicianId,
+      authenticatedLegalName: tech.legalName,
+      authenticatedCertNumber: cert?.certificateNumber ?? "PENDING",
+      authMethod: "pin",
+      intendedTable: args.intendedTable,
+      intendedRecordHash: args.intendedRecordHash,
+      ipAddress: args.callerIpAddress,
+      authenticatedAt: now,
+      expiresAt,
+      consumed: false,
+    });
+
+    // Audit log
+    await ctx.db.insert("auditLog", {
+      organizationId: args.organizationId,
+      eventType: "record_created",
+      tableName: "signatureAuthEvents",
+      recordId: eventId,
+      userId: callerUserId,
+      technicianId: args.technicianId,
+      ipAddress: args.callerIpAddress,
+      notes:
+        `Signature auth event created for ${tech.legalName}. ` +
+        `Intended table: ${args.intendedTable}. ` +
+        `Expires: ${new Date(expiresAt).toISOString()}. ` +
+        `Auth method: PIN (MVP — hash verification TODO Phase 2.1).`,
+      timestamp: now,
+    });
+
+    return { eventId, expiresAt };
+  },
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// QUERY: countActive
+//
+// Returns the count of active (non-terminal) work orders for an org.
+// Used by the Dashboard stats panel.
+// Active statuses: open, in_progress, on_hold, pending_inspection,
+//                  pending_signoff, open_discrepancies
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const countActive = query({
+  args: {
+    organizationId: v.id("organizations"),
+  },
+  handler: async (ctx, args) => {
+    const activeStatuses = [
+      "open",
+      "in_progress",
+      "on_hold",
+      "pending_inspection",
+      "pending_signoff",
+      "open_discrepancies",
+    ] as const;
+
+    let total = 0;
+    for (const status of activeStatuses) {
+      const rows = await ctx.db
+        .query("workOrders")
+        .withIndex("by_status", (q) =>
+          q.eq("organizationId", args.organizationId).eq("status", status),
+        )
+        .collect();
+      total += rows.length;
+    }
+    return total;
+  },
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// QUERY: listActive
+//
+// Returns up to `limit` active (non-terminal) work orders for an org,
+// enriched with aircraft data. Used by the Dashboard active WO panel.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const listActive = query({
+  args: {
+    organizationId: v.id("organizations"),
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const activeStatuses = [
+      "open",
+      "in_progress",
+      "on_hold",
+      "pending_inspection",
+      "pending_signoff",
+      "open_discrepancies",
+    ] as const;
+
+    const limit = args.limit ?? 10;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const results: any[] = [];
+
+    for (const status of activeStatuses) {
+      if (results.length >= limit) break;
+      const rows = await ctx.db
+        .query("workOrders")
+        .withIndex("by_status", (q) =>
+          q.eq("organizationId", args.organizationId).eq("status", status),
+        )
+        .take(limit - results.length);
+
+      for (const wo of rows) {
+        const aircraft = await ctx.db.get(wo.aircraftId);
+        results.push({
+          _id: wo._id,
+          workOrderNumber: wo.workOrderNumber,
+          status: wo.status,
+          description: wo.description,
+          openedAt: wo.openedAt,
+          aircraft: aircraft
+            ? {
+                currentRegistration: aircraft.currentRegistration,
+                make: aircraft.make,
+                model: aircraft.model,
+              }
+            : null,
+        });
+      }
+    }
+
+    return results.slice(0, limit);
+  },
+});

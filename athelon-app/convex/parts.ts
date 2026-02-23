@@ -44,7 +44,7 @@
 // 14 CFR 43.9(a)(1) — approved data reference in maintenance records
 // FAA Order 8120.11 — suspected unapproved parts reporting
 
-import { mutation } from "./_generated/server";
+import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 
@@ -1202,5 +1202,108 @@ export const tagPartUnserviceable = mutation({
     });
 
     return { partId: args.partId, quarantinedAt: now };
+  },
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// QUERY: listParts
+//
+// Lists parts for an organization, optionally filtered by location.
+// Used by the Parts Requests page and Dashboard.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const listParts = query({
+  args: {
+    organizationId: v.id("organizations"),
+    location: v.optional(
+      v.union(
+        v.literal("pending_inspection"),
+        v.literal("inventory"),
+        v.literal("installed"),
+        v.literal("removed_pending_disposition"),
+        v.literal("quarantine"),
+        v.literal("scrapped"),
+        v.literal("returned_to_vendor"),
+      ),
+    ),
+  },
+  handler: async (ctx, args) => {
+    if (args.location) {
+      return ctx.db
+        .query("parts")
+        .withIndex("by_location", (q) =>
+          q
+            .eq("organizationId", args.organizationId)
+            .eq("location", args.location!),
+        )
+        .collect();
+    }
+    return ctx.db
+      .query("parts")
+      .withIndex("by_organization", (q) =>
+        q.eq("organizationId", args.organizationId),
+      )
+      .collect();
+  },
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MUTATION: createPart
+//
+// Creates a bare part record without 8130-3 tag (for demand / requisition
+// tracking).  Call receivePart afterwards to complete the receiving process
+// and attach documentation.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const createPart = mutation({
+  args: {
+    organizationId: v.id("organizations"),
+    partNumber: v.string(),
+    partName: v.string(),
+    description: v.optional(v.string()),
+    quantity: v.number(),
+    supplier: v.optional(v.string()),
+    workOrderId: v.optional(v.id("workOrders")),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Not authenticated");
+
+    const now = Date.now();
+
+    // Create one part record per unit for serialized tracking.
+    // For bulk/unserialized parts the caller typically passes quantity = 1.
+    const ids: Id<"parts">[] = [];
+    for (let i = 0; i < Math.max(1, args.quantity); i++) {
+      const partId = await ctx.db.insert("parts", {
+        organizationId: args.organizationId,
+        partNumber: args.partNumber,
+        partName: args.partName,
+        description: args.description,
+        isSerialized: false,
+        isLifeLimited: false,
+        hasShelfLifeLimit: false,
+        condition: "new",
+        location: "pending_inspection",
+        isOwnerSupplied: false,
+        supplier: args.supplier,
+        receivingWorkOrderId: args.workOrderId,
+        createdAt: now,
+        updatedAt: now,
+      });
+      ids.push(partId);
+    }
+
+    await ctx.db.insert("auditLog", {
+      organizationId: args.organizationId,
+      eventType: "record_created",
+      tableName: "parts",
+      recordId: ids[0],
+      userId: identity.subject,
+      timestamp: now,
+      notes: `Part ${args.partNumber} (${args.partName}) created — qty ${args.quantity}`,
+    });
+
+    return ids;
   },
 });

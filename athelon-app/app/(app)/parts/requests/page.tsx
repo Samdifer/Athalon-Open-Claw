@@ -1,134 +1,229 @@
+"use client";
+
+import Link from "next/link";
 import { Package, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useQuery } from "convex/react";
+import { useOrganization } from "@clerk/nextjs";
+import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
 
-const demoRequests = [
-  {
-    id: "pr-1",
-    partNumber: "MIL-PRF-5606-QT",
-    name: "Hydraulic Fluid MIL-PRF-5606 — 1qt",
-    qty: "1 qt",
-    wo: "WO-2026-0041",
-    aircraft: "N192AK",
-    requestedBy: "Ray Kowalski",
-    requestedDate: "Feb 22, 2026",
-    status: "pending",
-    statusLabel: "Pending",
-    urgency: "normal",
-  },
-  {
-    id: "pr-2",
-    partNumber: "206-015-191-013",
-    name: "Main Rotor Blade Assembly — Bell 206B",
-    qty: "1 ea",
-    wo: "WO-2026-0039",
-    aircraft: "N76LS",
-    requestedBy: "Ray Kowalski",
-    requestedDate: "Feb 16, 2026",
-    status: "ordered",
-    statusLabel: "Ordered — ETA 5 days",
-    urgency: "aog",
-  },
-  {
-    id: "pr-3",
-    partNumber: "9924721-1",
-    name: "Fuel Selector Valve — Cessna 208B",
-    qty: "1 ea",
-    wo: "WO-2026-0042",
-    aircraft: "N416AB",
-    requestedBy: "Sandra Mercado",
-    requestedDate: "Feb 23, 2026",
-    status: "pending",
-    statusLabel: "Pending",
-    urgency: "normal",
-  },
-];
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+function getLocationStyle(location: string): {
+  label: string;
+  color: string;
+} {
+  const map: Record<string, { label: string; color: string }> = {
+    pending_inspection: {
+      label: "Pending Inspection",
+      color: "text-amber-400 border-amber-500/30 bg-amber-500/10",
+    },
+    inventory: {
+      label: "In Stock",
+      color: "text-green-400 border-green-500/30 bg-green-500/10",
+    },
+    installed: {
+      label: "Installed",
+      color: "text-sky-400 border-sky-500/30 bg-sky-500/10",
+    },
+    removed_pending_disposition: {
+      label: "Removed — Pending",
+      color: "text-orange-400 border-orange-500/30 bg-orange-500/10",
+    },
+    quarantine: {
+      label: "Quarantine",
+      color: "text-red-400 border-red-500/30 bg-red-500/10",
+    },
+    scrapped: {
+      label: "Scrapped",
+      color: "text-slate-400 border-slate-500/30 bg-slate-500/10",
+    },
+    returned_to_vendor: {
+      label: "Returned to Vendor",
+      color: "text-muted-foreground border-border/30 bg-muted",
+    },
+  };
+  return (
+    map[location] ?? {
+      label: location,
+      color: "text-muted-foreground border-border/30 bg-muted",
+    }
+  );
+}
+
+// ─── Skeleton ─────────────────────────────────────────────────────────────────
+
+function PartsSkeleton() {
+  return (
+    <div className="space-y-2">
+      {[1, 2, 3].map((i) => (
+        <Card key={i} className="border-border/60">
+          <CardContent className="p-4">
+            <div className="flex items-start gap-3">
+              <Skeleton className="w-4 h-4 mt-0.5" />
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-4 w-48" />
+                <Skeleton className="h-3 w-64" />
+                <Skeleton className="h-3 w-40" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function PartsRequestsPage() {
+  const { organization } = useOrganization();
+  const orgId = organization?.id as Id<"organizations"> | undefined;
+
+  // Show parts in pending_inspection (received, awaiting inspection) and
+  // removed_pending_disposition (removed from aircraft, awaiting decision)
+  const pendingParts = useQuery(
+    api.parts.listParts,
+    orgId ? { organizationId: orgId, location: "pending_inspection" } : "skip",
+  );
+
+  const removedParts = useQuery(
+    api.parts.listParts,
+    orgId
+      ? { organizationId: orgId, location: "removed_pending_disposition" }
+      : "skip",
+  );
+
+  const isLoading = pendingParts === undefined || removedParts === undefined;
+
+  const allParts = [...(pendingParts ?? []), ...(removedParts ?? [])];
+
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-semibold text-foreground">
-            Parts Requests
+            Parts Queue
           </h1>
           <p className="text-sm text-muted-foreground mt-0.5">
-            {demoRequests.length} outstanding requests
+            {isLoading ? (
+              <Skeleton className="h-3 w-32 inline-block" />
+            ) : (
+              `${allParts.length} part${allParts.length !== 1 ? "s" : ""} pending`
+            )}
           </p>
         </div>
-        <Button size="sm">
-          <Plus className="w-3.5 h-3.5 mr-1.5" />
-          Request Part
+        <Button size="sm" asChild>
+          <Link href="/parts/new">
+            <Plus className="w-3.5 h-3.5 mr-1.5" />
+            Receive Part
+          </Link>
         </Button>
       </div>
 
-      <div className="space-y-2">
-        {demoRequests.map((req) => (
-          <Card
-            key={req.id}
-            className={`border-border/60 ${req.urgency === "aog" ? "border-l-4 border-l-red-500" : ""}`}
-          >
-            <CardContent className="p-4">
-              <div className="flex items-start gap-3">
-                <Package className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-0.5" />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-0.5">
-                    <span className="font-mono text-xs font-semibold text-foreground">
-                      P/N: {req.partNumber}
-                    </span>
-                    {req.urgency === "aog" && (
-                      <Badge className="bg-red-500/15 text-red-400 border border-red-500/30 text-[10px] font-semibold">
-                        AOG
-                      </Badge>
-                    )}
-                    <Badge
-                      variant="outline"
-                      className={`text-[10px] border ${
-                        req.status === "ordered"
-                          ? "text-sky-400 border-sky-500/30 bg-sky-500/10"
-                          : "text-amber-400 border-amber-500/30 bg-amber-500/10"
-                      }`}
-                    >
-                      {req.statusLabel}
-                    </Badge>
+      {isLoading ? (
+        <PartsSkeleton />
+      ) : allParts.length === 0 ? (
+        <Card className="border-border/60">
+          <CardContent className="py-16 text-center">
+            <Package className="w-8 h-8 text-muted-foreground/30 mx-auto mb-3" />
+            <p className="text-sm text-muted-foreground">No pending parts</p>
+            <p className="text-[11px] text-muted-foreground/60 mt-1">
+              Parts pending inspection or disposition will appear here
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="space-y-2">
+          {allParts.map((part) => {
+            const locationStyle = getLocationStyle(part.location);
+            const isRemoved = part.location === "removed_pending_disposition";
+
+            return (
+              <Card
+                key={part._id}
+                className={`border-border/60 ${isRemoved ? "border-l-4 border-l-orange-500" : ""}`}
+              >
+                <CardContent className="p-4">
+                  <div className="flex items-start gap-3">
+                    <Package className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-0.5" />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                        <span className="font-mono text-xs font-semibold text-foreground">
+                          P/N: {part.partNumber}
+                        </span>
+                        {part.condition === "unserviceable" ||
+                        part.location === "quarantine" ? (
+                          <Badge className="bg-red-500/15 text-red-400 border border-red-500/30 text-[10px] font-semibold">
+                            UNSERVICEABLE
+                          </Badge>
+                        ) : null}
+                        <Badge
+                          variant="outline"
+                          className={`text-[10px] border ${locationStyle.color}`}
+                        >
+                          {locationStyle.label}
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        {part.partName}
+                        {part.description ? ` — ${part.description}` : ""}
+                      </p>
+                      <div className="flex items-center gap-3 mt-1 flex-wrap">
+                        {part.serialNumber && (
+                          <>
+                            <span className="font-mono text-[11px] text-muted-foreground">
+                              S/N: {part.serialNumber}
+                            </span>
+                            <span className="text-muted-foreground/40">·</span>
+                          </>
+                        )}
+                        <span className="text-[11px] text-muted-foreground capitalize">
+                          Cond: {part.condition}
+                        </span>
+                        {part.supplier && (
+                          <>
+                            <span className="text-muted-foreground/40">·</span>
+                            <span className="text-[11px] text-muted-foreground">
+                              {part.supplier}
+                            </span>
+                          </>
+                        )}
+                        {part.receivingDate && (
+                          <>
+                            <span className="text-muted-foreground/40">·</span>
+                            <span className="text-[11px] text-muted-foreground">
+                              Received{" "}
+                              {new Date(
+                                part.receivingDate,
+                              ).toLocaleDateString()}
+                            </span>
+                          </>
+                        )}
+                        {part.isOwnerSupplied && (
+                          <>
+                            <span className="text-muted-foreground/40">·</span>
+                            <Badge
+                              variant="outline"
+                              className="text-[10px] text-muted-foreground border-border/40"
+                            >
+                              OSP
+                            </Badge>
+                          </>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                  <p className="text-sm text-muted-foreground">{req.name}</p>
-                  <div className="flex items-center gap-3 mt-1">
-                    <span className="text-[11px] text-muted-foreground">
-                      Qty: {req.qty}
-                    </span>
-                    <span className="text-muted-foreground/40">·</span>
-                    <span className="font-mono text-[11px] text-muted-foreground">
-                      {req.wo}
-                    </span>
-                    <span className="text-muted-foreground/40">·</span>
-                    <span className="font-mono text-[11px] text-muted-foreground">
-                      {req.aircraft}
-                    </span>
-                    <span className="text-muted-foreground/40">·</span>
-                    <span className="text-[11px] text-muted-foreground">
-                      {req.requestedBy}
-                    </span>
-                  </div>
-                </div>
-                <div className="flex gap-2 flex-shrink-0">
-                  {req.status === "pending" && (
-                    <>
-                      <Button variant="outline" size="sm" className="h-7 text-xs">
-                        Mark Ordered
-                      </Button>
-                      <Button variant="outline" size="sm" className="h-7 text-xs">
-                        Pull from Storeroom
-                      </Button>
-                    </>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
