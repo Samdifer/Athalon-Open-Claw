@@ -1,353 +1,458 @@
-# WS27-C — Desert Sky Turbine Category 3 Resolution + FSDO Audit Readiness
+# WS27-C — Desert Sky Turbine Category 3 FSDO Audit Readiness
 **Phase:** 27 (ACTIVE)
 **Status:** ✅ COMPLETE — PASS
-**Filed:** 2026-02-23T~04:30Z
-**Open Condition Closed:** OC-26-01 (Frank Nguyen Cat-3 records, 30-day clock, Phase 26 gate)
+**Filed:** 2026-02-23T~05:00Z
+**Open Condition Closed:** OC-26-01 (DST Category 3 resolution follow-up + FSDO audit readiness, Phase 26 gate — 30-day clock)
 
 **Owners:**
-- Frank Nguyen — DOM, Desert Sky Turbine, Scottsdale AZ (Category 3 record resolution, FSDO audit lead)
-- Marcus Webb — Compliance Architect (oversight and sign-off on each resolution)
-- Devraj Anand — Engineering (any Athelon-side implementation actions)
+- Frank Nguyen — DOM, Desert Sky Turbine, Scottsdale AZ (Category 3 record resolution)
+- Marcus Webb — Compliance Architect (FSDO audit readiness review, Record 22 PT6A monitoring)
+- Devraj Anand — Engineering (FSDO audit export tooling)
 
-**Prerequisite read:** `phase-26-v20c/ws26-c-dst-resolution.md` (Phase 26 DST-FB-001 context: 24-record review, Category 3 identification, 30-day follow-up commitment)
+**Prerequisite read:** `phase-26-v20c/ws26-c-dst-resolution.md` (Frank's 24-record review; Category 1–3 classification; Category 3 record 22/23/24 identification; 30-day clock context)
 
 ---
 
 ## Table of Contents
 
-1. [OC-26-01 Context](#1-oc-26-01-context)
-2. [Frank Nguyen — What Category 3 Records Are](#2-frank-nguyen-brief)
-3. [Category 3 Record Resolutions](#3-category-3-resolutions)
-4. [FSDO Audit Readiness Package](#4-fsdo-audit-readiness)
-5. [Marcus Webb — Final Compliance Sign-Off](#5-marcus-sign-off)
-6. [OC-26-01 Closure Statement](#6-oc-26-01-closure)
+1. [Objective Checklist](#1-objective-checklist)
+2. [Frank Nguyen — Category 3 Resolution Update](#2-frank-nguyen-category-3-resolution)
+3. [FSDO-Ready Documentation Package — Record 22](#3-fsdo-ready-record-22)
+4. [FSDO-Ready Documentation Package — Record 23](#4-fsdo-ready-record-23)
+5. [FSDO-Ready Documentation Package — Record 24](#5-fsdo-ready-record-24)
+6. [Marcus Webb — FSDO Audit Readiness Review](#6-marcus-webb-fsdo-readiness-review)
+7. [Final Status Block — OC-26-01 Closure](#7-final-status-block)
 
 ---
 
-## 1. OC-26-01 Context
+## 1. Objective Checklist
 
-**The 30-day clock started at Phase 26 ship.** Three Desert Sky Turbine AD compliance records were placed in "Re-Inspection Scheduled" state during Phase 26 WS26-C because Frank Nguyen could not reconstruct the prior shop's NOT_APPLICABLE determination. He was unwilling to put his name on a determination he couldn't document. He committed to resolving all three within 30 days.
-
-**The three records:**
-
-| Record | AD Number | Subject | Issue |
+| ID | Criterion | PASS Condition | Result |
 |---|---|---|---|
-| 22 | 2020-07-12 | P&WC PT6A-series turbine compressor inspection | A PT6A-series AD — Desert Sky Turbine operates PT6A engines. Prior shop marked NOT_APPLICABLE; no documented basis. Highest priority. |
-| 23 | 2021-05-28 | Engine mount fatigue inspection — turboprop operators | Generic turboprop AD; may apply to Desert Sky aircraft. Prior NOT_APPLICABLE — no documented basis. |
-| 24 | 2022-09-14 | Fuel control unit inspection — PT6A variants | PT6A-series; prior NOT_APPLICABLE note said "variant not applicable" without specifying which variant. |
+| OBJ-01 | Frank Nguyen resolution brief: all 3 Category 3 records resolved | Each record has a documented disposition: applicable/not applicable, with evidence | ✅ PASS |
+| OBJ-02 | Record 22 (PT6A compressor AD): applicability determination complete | P&WC variant confirmation; AD applicability verdict; compliance action if applicable | ✅ PASS |
+| OBJ-03 | Record 23 (engine mount fatigue AD): applicability determination complete | Aircraft-type verification; AD applicability verdict | ✅ PASS |
+| OBJ-04 | Record 24 (PT6A fuel control unit AD): applicability determination complete | PT6A variant confirmation; AD applicability verdict | ✅ PASS |
+| OBJ-05 | FSDO-ready documentation package for each Category 3 record | Audit trail, corrective action evidence (if applicable), compliance disposition, DOM sign-off | ✅ PASS |
+| OBJ-06 | Marcus Webb monitoring sign-off on each resolution | Compliance Architect review and approval | ✅ PASS |
+| OBJ-07 | OC-26-01 30-day clock closure statement | Explicit closure; 30-day clock closed | ✅ PASS |
 
-**The clock close date:** 30 days from Phase 26 ship (~2026-02-23) = ~2026-03-25.
-
-**This workstream documents Frank's resolutions, the FSDO audit readiness package produced for each record, and the formal closure of OC-26-01.**
-
----
-
-## 2. Frank Nguyen — Brief on Category 3 Records
-
-*This brief is from Frank Nguyen's perspective, as the DOM who initiated the resolution work and the person whose certificate is on the line.*
+**Overall: 7/7 criteria MET → WS27-C: ✅ PASS**
 
 ---
 
-### 2.1 What Category 3 Records Are in Practice
+## 2. Frank Nguyen — Category 3 Resolution Update
 
-When I categorized the 24 flagged records in Phase 26, Category 3 was the honest category — records where I couldn't tell you why someone before me marked NOT_APPLICABLE.
-
-I want to explain what that actually means operationally. The records came into Athelon from a data import of Desert Sky Turbine's prior MRO software. The prior system had compliance records stretching back through my tenure as DOM and before it — before I took this position six years ago. For the 16 Category 1 records, the basis was obvious: piston engine ADs for an all-turbine fleet, classic cross-fleet contamination. For the 5 Category 2 records, I knew the basis but hadn't written it up formally. I corrected that with memos.
-
-Category 3 is different. These are three records where the original NOT_APPLICABLE determination was made before my time, by whoever ran the prior system, and the only documentation is the data in the prior system's compliance records. No printed memo. No AMOC reference. Just a NOT_APPLICABLE status and, in one case, a note that said "variant not applicable" without specifying the variant.
-
-I'm a DOM. My certificate is what makes Desert Sky Turbine airworthy. If I sign off on a NOT_APPLICABLE determination that I can't defend, and the FSDO shows up and asks me to walk them through it, I have to be able to answer. With these three records, I could not answer. That's Category 3.
-
-### 2.2 What FSDO Would Want to See in an Audit
-
-When an FSDO inspector conducts a Part 145 audit (or a ramp check of an aircraft in for maintenance), they may ask for the AD compliance status of the aircraft being worked. If any AD is marked NOT_APPLICABLE, the inspector can ask the DOM to explain the basis.
-
-Here is what a well-prepared DOM provides:
-
-**1. Applicability determination:** For model-based NOT_APPLICABLE determinations, the inspector wants to see the AD applicability language and the shop's fleet composition. "This AD applies to Lycoming engines only; our fleet is PT6A" is a complete answer if you can demonstrate your fleet composition.
-
-**2. Serial number determination:** For S/N-range NOT_APPLICABLE determinations, the inspector wants to see the affected S/N range in the AD and the aircraft S/N (from the data plate). The comparison should be documented — not just remembered.
-
-**3. DOM memo or AMOC reference:** For DOM determination-based NOT_APPLICABLE, the inspector expects a written memo. It doesn't have to be elaborate. It needs to identify the AD, state the basis for NOT_APPLICABLE, and be signed by the DOM with a date. If there's an AMOC, the inspector wants the AMOC reference number.
-
-**4. Corrective action evidence:** If an AD that was previously marked NOT_APPLICABLE turns out to be applicable, the inspector wants to see: (a) when the applicability was discovered, (b) what maintenance action was performed, (c) who performed and signed off the action, and (d) the work order or logbook entry that documents it.
-
-**5. Timeline:** If there was a gap between when the applicability was discovered and when the corrective action was completed, the inspector may ask whether the aircraft was flown during that gap. If it was, the shop needs to be able to explain why they believed the aircraft was airworthy during that period, or acknowledge a potential airworthiness violation and document the corrective action taken.
-
-### 2.3 Why the PT6A Record (Record 22) Was Highest Priority
-
-Record 22 is the one that kept me up at night during the 30-day window. An AD on a Lycoming engine is not applicable to a PT6A fleet — obvious. But an AD on a PT6A compressor inspection is a potential real-world compliance gap for Desert Sky Turbine. We have PT6A engines on every aircraft. If that AD is applicable and we haven't complied, we have an airworthiness issue.
-
-I contacted Pratt & Whitney Canada Technical Support the same week WS26-C shipped. I gave them the AD number, the affected serial number range, and the S/N for each Desert Sky aircraft. I asked for applicability confirmation in writing.
-
-Here is what P&WC confirmed:
+*Frank Nguyen, DOM — Desert Sky Turbine, Scottsdale AZ.*
+*The three Category 3 records from WS26-C are documented below with full resolution.*
 
 ---
 
-## 3. Category 3 Record Resolutions
+### 2.1 Frank's Opening Statement
 
-### 3.1 Record 22 — AD 2020-07-12 (P&WC PT6A Compressor Inspection)
+When Phase 26 closed, I had three records I couldn't sign off. I told Marcus that plainly: I don't know why the prior DOM marked these not applicable, I can't find the paperwork, and I'm not willing to put my name on a determination I can't document. The right call was to put them in Re-Inspection and do the work.
 
-**AD Summary:** FAA AD 2020-07-12 — Pratt & Whitney Canada PT6A-series engines. Requires inspection of the gas generator compressor (N1 stage 1 compressor) for fatigue cracks, affecting PT6A-27R, PT6A-28, PT6A-34, PT6A-36, PT6A-41, and PT6A-60A variants. Serial number range: 112001 through 146500. Compliance: within 1,000 hours of operation after AD effective date (2020-08-15), or at next hot section inspection, whichever occurs first.
+I've done the work. Here's what I found.
 
-**Desert Sky Turbine fleet PT6A variants and serial numbers:**
+Record 22 was the one I was most worried about. It's a PT6A compressor inspection AD, and we run PT6A engines. The prior DOM marked it NOT_APPLICABLE with no notes. That's the kind of thing that keeps you up at night if you're the new DOM. I called P&WC tech support, I got our aircraft serial numbers in front of them, and I got a written applicability determination. Record 22 is resolved. I'll tell you exactly what it is.
 
-| Aircraft | Engine | PT6A Variant | S/N (each engine) | Affected S/N Range? |
+Record 23 and Record 24 were also real questions — not as alarming as Record 22, but real. Both are resolved with documentation.
+
+All three are now in a state where I can hand an FSDO representative the complete file and not flinch.
+
+---
+
+### 2.2 Resolution Timeline
+
+| Record | AD Number | Initial State (Phase 26) | Resolution Method | Resolution Date |
 |---|---|---|---|---|
-| DST-001 (King Air B200) | PT6A-42 (L engine) | PT6A-42 | 146882 | Outside range (146882 > 146500) |
-| DST-001 (King Air B200) | PT6A-42 (R engine) | PT6A-42 | 146891 | Outside range (146891 > 146500) |
-| DST-002 (Cessna 208B Grand Caravan) | PT6A-114A (single) | PT6A-114A | 143201 | AD does not list PT6A-114A variant |
-| DST-003 (King Air C90GTx) | PT6A-135A (L engine) | PT6A-135A | 144810 | AD does not list PT6A-135A variant |
-| DST-003 (King Air C90GTx) | PT6A-135A (R engine) | PT6A-135A | 144822 | AD does not list PT6A-135A variant |
+| 22 | 2020-07-12 | MARK_FOR_REINSPECTION — no documented basis from prior DOM | P&WC tech support — serial number applicability determination | 2026-03-04 |
+| 23 | 2021-05-28 | MARK_FOR_REINSPECTION — no documented basis | Aircraft type verification + maintenance records review | 2026-03-08 |
+| 24 | 2022-09-14 | MARK_FOR_REINSPECTION — variant note undocumented | PT6A variant confirmation; P&WC IPC cross-reference | 2026-03-09 |
 
-**P&WC Technical Support response (written, on file as DST-REC22-PWCS):**
-> "We have reviewed FAA AD 2020-07-12 against the engine serial numbers and variants you provided for Desert Sky Turbine (Scottsdale AZ). None of the engines in your fleet are affected by this AD. AD 2020-07-12 applies to specific PT6A variants (PT6A-27R, -28, -34, -36, -41, and -60A) and is limited to serial numbers 112001 through 146500. The PT6A-42 variant (your King Air B200 engines) is not listed in the AD applicability. The PT6A-114A and PT6A-135A variants are not listed. Accordingly, no compliance action is required for your fleet."
-> — Pratt & Whitney Canada Technical Support, Ref. PWCS-2026-0317
-
-**Frank's determination:** NOT_APPLICABLE.  
-**Basis:** `NOT_APPLICABLE_BY_SERIAL_NUMBER` (PT6A variants and/or S/N ranges not included in AD applicability).  
-**Supporting document:** DST-REC22-PWCS (P&WC Technical Support written confirmation, on file).
-
-**Athelon action:** `resolveAdComplianceFlag` called with:
-- `resolution: "APPLY_BASIS"`
-- `nonApplicabilityBasis: "NOT_APPLICABLE_BY_SERIAL_NUMBER"`
-- `nonApplicabilityNotes: "P&WC Technical Support confirmed (Ref. PWCS-2026-0317) that AD 2020-07-12 does not apply to PT6A-42, PT6A-114A, or PT6A-135A variants. Desert Sky Turbine fleet consists exclusively of these variants. S/N range 112001–146500 confirmed does not include any DST fleet engine S/Ns for the affected variants. NOT_APPLICABLE_BY_SERIAL_NUMBER. P&WC letter DST-REC22-PWCS on file."`
-
-**`domReviewFlag` cleared:** ✅
-**Marcus sign-off:** ✅ (Record 22 resolution confirmed adequate — see §5)
+All three resolved within the 30-day window from Phase 26 ship (Phase 26 shipped approximately 2026-02-10).
 
 ---
 
-### 3.2 Record 23 — AD 2021-05-28 (Engine Mount Fatigue — Turboprop Operators)
+## 3. FSDO-Ready Documentation Package — Record 22
 
-**AD Summary:** FAA AD 2021-05-28 — Applicable to engine mounts on turboprop aircraft operated in defined high-utilization cycles (defined as aircraft accumulating more than 1,500 flight cycles per year). Requires inspection of engine mount attach fittings for fatigue cracking at 5,000 cycles or at next scheduled airframe inspection, whichever comes first.
+### 3.1 AD Identification
 
-**Key AD text:** The AD applicability section states: "This AD applies to turboprop aircraft as defined herein... operating under 14 CFR Part 135 or 121 as a commercial operator and accumulating 1,500 or more flight cycles per 12-month period."
-
-**Desert Sky Turbine operational analysis:**
-
-Desert Sky Turbine is a **Part 145 maintenance/repair station.** It is not a Part 135 or Part 121 operator. Frank has reviewed the aircraft logbooks and operational records for the aircraft in for maintenance:
-
-- Desert Sky Turbine's certificate is Part 145 (maintenance organization). The aircraft it maintains are owned by various operators.
-- The AD's applicability explicitly limits it to Part 135 and Part 121 commercial operators.
-- None of the aircraft that Desert Sky Turbine maintains are operated by Desert Sky Turbine under Part 135 or Part 121.
-
-**Frank's determination:** NOT_APPLICABLE.  
-**Basis:** `NOT_APPLICABLE_DOM_DETERMINATION` — Desert Sky Turbine is a Part 145 repair station, not a Part 135 or 121 operator. This AD's applicability statement excludes Part 145 repair stations operating the aircraft as their own.  
-**Supporting document:** DST-MEMO-006 (DOM memo, Frank Nguyen, documenting Part 145 operational scope exclusion from AD 2021-05-28).
-
-**Note on aircraft owner responsibility:** Marcus notes — the owners of the aircraft in Desert Sky's shop are subject to this AD if they operate under Part 135/121 and exceed the cycle threshold. Desert Sky Turbine, as the repair station, is correctly identifying the applicability in the context of its own certificate. If an aircraft owner is subject to the AD, they should be ensuring compliance via their own operating certificate. This is a scope-of-responsibility question, not a compliance failure by the repair station.
-
-**Athelon action:** `submitDomMemo` with `memoReference: "DST-MEMO-006"`, `memoText:` (full memo text documenting operational scope analysis).
-
-**`domReviewFlag` cleared:** ✅
-**Marcus sign-off:** ✅
+| Field | Value |
+|---|---|
+| AD Number | 2020-07-12 |
+| Title | Pratt & Whitney Canada PT6A-series — Gas Generator (N1) Compressor Turbine First-Stage Rotor Inspection |
+| Issuing Authority | FAA (EASA-originated; FAA adoption of EASA AD 2020-0155) |
+| Applicability | Pratt & Whitney Canada PT6A-series engines — specific model/serial number range in AD applicability section |
+| Compliance Action | Repetitive inspection of N1 first-stage rotor for compressor turbine disc fatigue cracking using fluorescent penetrant inspection (FPI). Initial inspection within 400 hours; repetitive at 400-hour intervals thereafter. |
+| Root Cause | P&WC engineering findings: fatigue crack propagation risk on first-stage rotor disc at blade root stress concentration areas on specific production serial number ranges. |
 
 ---
 
-### 3.3 Record 24 — AD 2022-09-14 (Fuel Control Unit — PT6A Variants)
+### 3.2 Frank's Resolution — Record 22
 
-**AD Summary:** FAA AD 2022-09-14 — Pratt & Whitney Canada PT6A-series engines, specific variants only. Requires inspection of the fuel control unit (FCU) for a specific fuel metering valve defect. Applicable to PT6A-20, PT6A-25, PT6A-27, and PT6A-27R variants. Compliance: at next FCU removal or within 500 hours, whichever first.
+**The question:** Does this AD apply to any engine in the Desert Sky Turbine fleet?
 
-**Prior shop note:** The prior Athelon import had `nonApplicabilityNotes` containing only "variant not applicable" — the note did not specify which variant was not applicable.
+**Desert Sky Turbine engine inventory:**
 
-**Frank's resolution:**
+| Aircraft | Engine Type | Engine S/N |
+|---|---|---|
+| DST-N8031T | PT6A-60A | PCE-68412 |
+| DST-N5217K | PT6A-60A | PCE-68553 |
+| DST-N117DS | PT6A-67D | PCE-72841 |
+| DST-N4422E | PT6A-67D | PCE-72955 |
+| DST-N9944P | PT6A-41 | PCE-54107 |
+| DST-N9944P Engine 2 | PT6A-41 | PCE-54210 |
 
-Frank reviewed the AD applicability statement (PT6A-20, -25, -27, -27R only) against Desert Sky Turbine's fleet:
+**P&WC applicability determination:**
 
-- PT6A-42 (King Air B200 engines): Not listed in AD applicability. ✅ NOT_APPLICABLE_BY_SERIAL_NUMBER (variant exclusion)
-- PT6A-114A (Cessna 208B): Not listed. ✅ NOT_APPLICABLE_BY_SERIAL_NUMBER
-- PT6A-135A (King Air C90GTx): Not listed. ✅ NOT_APPLICABLE_BY_SERIAL_NUMBER
+Frank contacted Pratt & Whitney Canada Technical Support on 2026-03-02. He provided all six engine serial numbers. P&WC Technical Support reviewed the applicability table for AD 2020-07-12 and issued a written applicability response (DST-PWC-CORR-001, filed in Desert Sky Turbine records).
 
-**The prior shop's "variant not applicable" note was substantively correct** — just not documented to an auditable standard. The variants in Desert Sky's fleet are not the PT6A-20/25/27/27R variants targeted by this AD.
+**P&WC Response (DST-PWC-CORR-001 — summary):**
 
-**Frank's determination:** NOT_APPLICABLE.  
-**Basis:** `NOT_APPLICABLE_BY_SERIAL_NUMBER` (variant-based exclusion — PT6A-42, -114A, -135A not in AD applicability list).  
-**Supporting document:** DST-REC24-VARIANT (internal memo documenting variant comparison, AD applicability statement cited).
+> "We have reviewed the provided engine serial numbers against the applicability range for AD 2020-07-12 (FAA adoption of EASA AD 2020-0155, Gas Generator First-Stage Rotor Inspection).
+>
+> AD applicability: PT6A-series engines, specific model range — PT6A-27, PT6A-28, PT6A-34, PT6A-34AG, PT6A-36, serial numbers PCE-53000 through PCE-54500.
+>
+> Engine serial numbers provided: PCE-68412, PCE-68553, PCE-72841, PCE-72955, PCE-54107, PCE-54210.
+>
+> Determination: Four of the six serial numbers (PCE-68412, PCE-68553, PCE-72841, PCE-72955) are PT6A-60A and PT6A-67D series — these model variants are NOT in the applicability range of AD 2020-07-12. NOT APPLICABLE.
+>
+> Two serial numbers (PCE-54107, PCE-54210) are PT6A-41 series. Serial number range for PT6A-41 applicability: PCE-53000 through PCE-54500. PCE-54107 and PCE-54210 ARE within this range.
+>
+> AD 2020-07-12 APPLIES to engines PCE-54107 and PCE-54210 on aircraft DST-N9944P."
 
-**Athelon action:** `resolveAdComplianceFlag` with `resolution: "APPLY_BASIS"`, basis `NOT_APPLICABLE_BY_SERIAL_NUMBER`, notes documenting specific variant exclusion.
+**Frank's action on the applicable engines:**
 
-**`domReviewFlag` cleared:** ✅
-**Marcus sign-off:** ✅
+Aircraft DST-N9944P carries two PT6A-41 engines that fall within the AD applicability range. Frank reviewed DST-N9944P's maintenance records for compliance history.
 
----
+**Compliance review of DST-N9944P:**
 
-### 3.4 Post-Resolution Status: All Three Category 3 Records Cleared
-
-| Record | AD | Status Before | Resolution | Status After |
-|---|---|---|---|---|
-| 22 | 2020-07-12 (PT6A compressor) | Re-Inspection Scheduled | P&WC variant/S/N confirmation — NOT_APPLICABLE_BY_SERIAL_NUMBER | ✅ CLEARED |
-| 23 | 2021-05-28 (engine mount fatigue) | Re-Inspection Scheduled | DOM memo — Part 145 scope, not Part 135/121 operator — NOT_APPLICABLE_DOM_DETERMINATION | ✅ CLEARED |
-| 24 | 2022-09-14 (FCU — PT6A variants) | Re-Inspection Scheduled | Variant exclusion confirmed — NOT_APPLICABLE_BY_SERIAL_NUMBER | ✅ CLEARED |
-
-All 24 Desert Sky Turbine flagged records are now resolved. Zero records in "Applicability Review Required" state. Zero records in "Re-Inspection Scheduled" state.
-
----
-
-## 4. FSDO Audit Readiness Package
-
-### 4.1 Package Purpose
-
-This section constitutes the FSDO-ready documentation package for the three Category 3 records. It is designed to be produced if Desert Sky Turbine is subject to an FSDO audit or ramp inspection and the inspector asks about these specific AD compliance records.
-
-The package format follows Frank's guidance in §2.2: applicability determination, serial number evidence, DOM memo or supporting reference, and corrective action evidence (in this case: documentation of the re-inspection process itself).
-
----
-
-### 4.2 Record 22 — FSDO Audit Documentation
-
-**Document Title:** AD 2020-07-12 Applicability Determination — Desert Sky Turbine  
-**Reference:** DST-REC22-FSDO  
-**Prepared by:** Frank Nguyen, DOM, Desert Sky Turbine  
-**Date:** 2026-02-23  
-**Reviewed by:** Marcus Webb, Compliance Architect, Athelon
-
----
-
-**AD:** FAA AD 2020-07-12  
-**Subject:** P&WC PT6A-series turbine compressor inspection  
-**AD Applicability Statement:** PT6A-27R, PT6A-28, PT6A-34, PT6A-36, PT6A-41, PT6A-60A. Serial numbers 112001 through 146500.
-
-**Desert Sky Turbine Fleet Compliance Determination:**
-
-| Aircraft | Engine Variant | Engine S/N | In AD Applicability? | Determination |
-|---|---|---|---|---|
-| King Air B200 (L) | PT6A-42 | 146882 | ❌ Variant not listed | NOT_APPLICABLE |
-| King Air B200 (R) | PT6A-42 | 146891 | ❌ Variant not listed | NOT_APPLICABLE |
-| Cessna 208B Grand Caravan | PT6A-114A | 143201 | ❌ Variant not listed | NOT_APPLICABLE |
-| King Air C90GTx (L) | PT6A-135A | 144810 | ❌ Variant not listed | NOT_APPLICABLE |
-| King Air C90GTx (R) | PT6A-135A | 144822 | ❌ Variant not listed | NOT_APPLICABLE |
-
-**Supporting Evidence:**
-- P&WC Technical Support written confirmation Ref. PWCS-2026-0317 (on file)
-- AD 2020-07-12 applicability section (printed copy, on file)
-- Desert Sky Turbine engine data plate records (on file per aircraft)
-
-**DOM Statement:** None of the engines in Desert Sky Turbine's maintenance operations are within the AD 2020-07-12 applicability scope. The prior NOT_APPLICABLE determination was substantively correct. It was not documented to a verifiable standard at time of original entry; this documentation corrects that. No maintenance action required.
-
-**Frank Nguyen — DOM signature:** ✅  
-**Marcus Webb — Compliance review:** ✅
-
----
-
-### 4.3 Record 23 — FSDO Audit Documentation
-
-**Document Title:** AD 2021-05-28 Applicability Determination — Desert Sky Turbine  
-**Reference:** DST-REC23-FSDO / DST-MEMO-006  
-
-**AD Applicability Statement:** Turboprop aircraft operated under 14 CFR Part 135 or 121, accumulating ≥1,500 flight cycles per 12-month period.
-
-**Desert Sky Turbine Operational Scope Analysis:**
-Desert Sky Turbine holds a Part 145 repair station certificate. It is not an operating certificate holder under Part 135 or Part 121. The aircraft on which Desert Sky performs maintenance are owned by third-party operators. The AD explicitly limits applicability to operators under Part 135 or 121. Desert Sky Turbine's Part 145 certificate is outside the AD's operator applicability.
-
-**Note:** Any Part 135 or Part 121 operator who delivers an aircraft to Desert Sky Turbine for maintenance, and who operates turboprop aircraft with ≥1,500 cycles per year, should ensure their own AD compliance for this requirement. This is the operating certificate holder's responsibility under §91.403, not the repair station's.
-
-**Supporting Evidence:**
-- Desert Sky Turbine Part 145 certificate (on file)
-- FAA AD 2021-05-28 applicability section (on file)
-- DST-MEMO-006 (DOM memo, Frank Nguyen, documenting scope analysis)
-
-**Frank Nguyen — DOM signature:** ✅  
-**Marcus Webb — Compliance review:** ✅
-
----
-
-### 4.4 Record 24 — FSDO Audit Documentation
-
-**Document Title:** AD 2022-09-14 Applicability Determination — Desert Sky Turbine  
-**Reference:** DST-REC24-FSDO
-
-**AD Applicability Statement:** P&WC PT6A-20, PT6A-25, PT6A-27, PT6A-27R engines.
-
-**Desert Sky Turbine Variant Comparison:**
-
-| Aircraft | Engine Variant | In AD Applicability? | Determination |
+| Engine | S/N | AD Applicability | Compliance History |
 |---|---|---|---|
-| King Air B200 | PT6A-42 | ❌ Not listed (PT6A-20/25/27/27R only) | NOT_APPLICABLE |
-| Cessna 208B | PT6A-114A | ❌ Not listed | NOT_APPLICABLE |
-| King Air C90GTx | PT6A-135A | ❌ Not listed | NOT_APPLICABLE |
+| Engine 1 | PCE-54107 | APPLICABLE | Reviewed overhaul records from P&WC authorized overhaul facility (2022-11-14). P&WC overhaul includes fluorescent penetrant inspection of all first-stage rotor components per current AD requirements. Overhaul shop compliance noted in OVH release documentation. |
+| Engine 2 | PCE-54210 | APPLICABLE | Same overhaul event (both engines overhauled simultaneously, 2022-11-14). AD compliance included in P&WC OVH release documentation. |
 
-**DOM Statement:** The prior shop note "variant not applicable" was substantively correct but did not specify which variant, making it non-auditable. This documentation corrects the record: the PT6A variants in Desert Sky Turbine's fleet (PT6A-42, -114A, -135A) are not among the PT6A-20/25/27/27R variants to which AD 2022-09-14 applies.
+**Compliance finding:** Both applicable engines underwent P&WC-authorized overhaul in November 2022. The overhaul included FPI inspection per AD 2020-07-12 requirements. The overhaul release documentation (P&WC Release Docs PCE-54107-OVH-2022 and PCE-54210-OVH-2022) documents this compliance. Current flight hours since overhaul: 847 hours (Engine 1), 847 hours (Engine 2). Next repetitive inspection due: 400 − 847 mod 400 = due at 1,200 hours since overhaul (next interval = overhaul + 1,200 hr TIS = due at 1,647 total hours).
 
-**Frank Nguyen — DOM signature:** ✅  
-**Marcus Webb — Compliance review:** ✅
+**Wait — correction:** Frank caught this himself. The AD compliance clock for repetitive inspection resets at overhaul if the overhaul included the FPI. The next due is 400 hours after the last inspection. Last inspection was at overhaul (2022-11-14, ~0 hours since overhaul). Current: 847 hours since overhaul. **The 400-hour repetitive interval has been exceeded by 447 hours.**
+
+**Frank:**
+
+> "I went back and looked at the interval more carefully. The overhaul was the compliance event — FPI at overhaul. That's the last inspection. The next inspection is due at 400 hours. These engines are at 847 hours since overhaul. They're 447 hours past the repetitive interval. They need the FPI. This is a real finding. The prior DOM didn't just fail to document the applicability — they failed to track the repetitive interval. These aircraft should not fly until the FPI is completed."
+
+**Corrective Action:**
+
+Marcus issued a compliance hold on DST-N9944P pending FPI completion for both engines. The following work order was opened:
+
+- **WO Number:** WO-DST-FPI-001
+- **Aircraft:** DST-N9944P
+- **Description:** AD 2020-07-12 — PT6A-41 N1 First-Stage Rotor FPI. Repetitive interval overdue by ~447 hours. FPI to be performed by P&WC-authorized inspector per AD instructions.
+- **Status:** OPENED 2026-03-05. Scheduled at authorized P&WC service facility 2026-03-12.
+- **Aircraft status:** GROUNDED pending WO completion.
+
+**Frank's attestation:**
+
+> "DST-N9944P is grounded. The work order is open. I've scheduled the inspection with our P&WC authorized facility. This is not a comfortable situation — it should have been caught in 2022 when the overhaul was completed. The prior DOM's failure to track the repetitive interval after the overhaul is the root cause. Athelon would have caught this if the AD compliance record had been properly maintained and the repetitive interval tracked. It was not. The record was marked NOT_APPLICABLE in error, and even if applicability had been correctly documented, the repetitive tracking was not in place.
+>
+> Desert Sky Turbine is taking corrective action. The aircraft is grounded. The inspection is scheduled. When the work order is signed and the FPI is complete, N9944P returns to service with a clean compliance record."
+
+**FSDO-Ready Summary — Record 22:**
+
+| Item | Status |
+|---|---|
+| AD applicability determined (P&WC written response) | ✅ DST-PWC-CORR-001 filed |
+| Applicable engines identified (PCE-54107, PCE-54210) | ✅ |
+| Compliance history reviewed | ✅ Overhaul 2022-11-14; FPI performed at overhaul |
+| Repetitive interval compliance reviewed | ✅ OVERDUE — 447 hours past interval |
+| Compliance hold issued | ✅ DST-N9944P grounded |
+| Work order opened | ✅ WO-DST-FPI-001 OPEN |
+| Inspection scheduled | ✅ 2026-03-12 at authorized P&WC facility |
+| DOM attestation | ✅ Frank Nguyen, signed 2026-03-09 |
 
 ---
 
-### 4.5 FSDO Readiness Assessment
+### 3.3 Record 22 — Compliance Disposition
 
-**Frank Nguyen's assessment:** Desert Sky Turbine is now FSDO-ready on all 24 formerly flagged records. Every record has:
-1. A documented applicability determination with a specific basis (model, variant, or DOM determination)
-2. A supporting reference (P&WC letter, DOM memo, or printed AD applicability section)
-3. A DOM signature and timestamp
+**AD 2020-07-12 applicability:** APPLICABLE to DST-N9944P (engines PCE-54107 and PCE-54210).
 
-The Category 3 records specifically now have external validation (Record 22: P&WC letter) or formal DOM memos (Records 23–24) that would satisfy an inspector's inquiry.
+**Compliance status at Phase 27 filing:** OPEN CORRECTIVE ACTION — WO-DST-FPI-001 opened and scheduled. Aircraft grounded pending completion. All other Desert Sky Turbine aircraft: NOT APPLICABLE (confirmed by P&WC written determination).
 
-**Marcus's assessment:** The three Category 3 resolutions are documented to an auditable standard. The bases are defensible: Records 22 and 24 use `NOT_APPLICABLE_BY_SERIAL_NUMBER` (variant exclusion) supported by variant applicability analysis and P&WC written confirmation for Record 22. Record 23 uses `NOT_APPLICABLE_DOM_DETERMINATION` with a memo documenting the Part 145 operational scope analysis. No compliance actions were required — the aircraft were never non-compliant in substance; they were non-compliant in documentation.
+**FSDO readiness:** Complete. If FSDO inspects: P&WC correspondence (DST-PWC-CORR-001), overhaul records for both engines, WO-DST-FPI-001 (open), grounding record available.
 
 ---
 
-## 5. Marcus Webb — Final Compliance Sign-Off
+## 4. FSDO-Ready Documentation Package — Record 23
 
-### 5.1 Review Summary
+### 4.1 AD Identification
 
-I have reviewed all three Category 3 record resolutions:
+| Field | Value |
+|---|---|
+| AD Number | 2021-05-28 |
+| Title | Turboprop — Engine Mount Fatigue Inspection (multi-manufacturer applicability) |
+| Applicability | Selected turboprop airframes: specific makes and models listed in AD applicability table. Compliance: repetitive inspection of engine mount lugs and attach fittings per manufacturer-specified inspection method at specified intervals. |
 
-**Record 22 (AD 2020-07-12):** P&WC's written confirmation is the highest quality evidence available — external validation from the engine manufacturer that their own AD does not apply to the variants and serial numbers in Desert Sky's fleet. This is not a DOM determination; it is a manufacturer determination, which is even more defensible. I accept this as adequate.
+---
 
-**Record 23 (AD 2021-05-28):** The scope analysis is legally sound. The AD applicability is explicitly limited to Part 135/121 operators, and Desert Sky Turbine is not one. The DST-MEMO-006 documents this analysis. An FSDO inspector would have no basis to challenge this determination.
+### 4.2 Frank's Resolution — Record 23
 
-**Record 24 (AD 2022-09-14):** Variant exclusion confirmed. The prior note "variant not applicable" was substantively correct but documentarily insufficient. The corrected record now specifies the exact variants in the AD's applicability list (PT6A-20/25/27/27R) and confirms Desert Sky's fleet variants (PT6A-42, -114A, -135A) are not listed. This is an adequate NOT_APPLICABLE_BY_SERIAL_NUMBER determination.
+**The question:** Does this AD apply to any aircraft in the Desert Sky Turbine fleet?
 
-**One forward-looking note:** Record 23 raises an interesting operational question that is NOT a compliance finding against Desert Sky Turbine, but which Frank has noted as a future customer education opportunity. When Desert Sky Turbine receives turboprop aircraft from Part 135 operators for scheduled maintenance, it may be worth flagging for the operator's attention that this AD exists and that the operator is responsible for compliance if the cycle threshold applies. This is a customer service consideration, not a compliance gap for the repair station. I've suggested to Nadia that this be a future dispatch or customer communication topic — not an Athelon compliance feature, just good customer relationship practice.
+**Method:** Frank reviewed the AD applicability table against the Desert Sky Turbine aircraft registry.
 
-**Marcus Webb Compliance Sign-Off: ✅ PASS**
-**All three Category 3 records resolved to auditable standard. Zero open compliance flags at Desert Sky Turbine.**
+**Desert Sky Turbine aircraft:**
+
+| Registration | Make/Model |
+|---|---|
+| DST-N8031T | Cessna 208B Grand Caravan |
+| DST-N5217K | Cessna 208B Grand Caravan |
+| DST-N117DS | Pilatus PC-12/47 |
+| DST-N4422E | Pilatus PC-12/47 |
+| DST-N9944P | Beechcraft King Air B200 (twin PT6A-41) |
+
+**AD 2021-05-28 applicability table review:**
+
+Frank reviewed the AD applicability statement. AD 2021-05-28 covers: **Cessna Aircraft Company Model 208 and 208B, serial numbers 20800001 through 20800375, and 208B0001 through 208B0850.**
+
+Frank's aircraft:
+- DST-N8031T: Cessna 208B. Serial number: 208B1122. **Outside the AD serial number range (208B0001 through 208B0850).** NOT APPLICABLE.
+- DST-N5217K: Cessna 208B. Serial number: 208B1347. **Outside the AD serial number range.** NOT APPLICABLE.
+- DST-N117DS: Pilatus PC-12/47. Not a Cessna 208 series. NOT APPLICABLE.
+- DST-N4422E: Pilatus PC-12/47. NOT APPLICABLE.
+- DST-N9944P: Beechcraft B200. NOT APPLICABLE (different manufacturer/model).
+
+**Determination:** AD 2021-05-28 is **NOT APPLICABLE** to any Desert Sky Turbine aircraft. The Cessna 208B aircraft in the fleet (N8031T and N5217K) have serial numbers outside the AD applicability range.
+
+**Documentation:** Frank documented the serial number comparison in DST-MEMO-006, referencing the AD applicability table and each aircraft's S/N. This memo is filed in Desert Sky Turbine's compliance records.
+
+**Why the prior DOM marked this NOT_APPLICABLE without documentation:** Frank's best reconstruction:
+
+> "My guess is the prior DOM looked at the AD, saw it was Cessna 208 and pulled our 208 S/Ns, and concluded they were outside the range. That would be the right determination. But there's no record of that comparison being done. My memo documents the comparison step by step so anyone auditing this can follow the analysis."
+
+**FSDO-Ready Summary — Record 23:**
+
+| Item | Status |
+|---|---|
+| AD applicability reviewed against fleet S/N registry | ✅ |
+| All five aircraft: NOT APPLICABLE with documented basis | ✅ DST-MEMO-006 filed |
+| Prior DOM's likely analysis reconstructed | ✅ |
+| DOM attestation | ✅ Frank Nguyen, signed 2026-03-08 |
+
+---
+
+### 4.3 Record 23 — Compliance Disposition
+
+**AD 2021-05-28 applicability:** **NOT APPLICABLE** — all Desert Sky Turbine aircraft are outside the serial number range specified in the AD applicability table.
+
+**Basis:** `NOT_APPLICABLE_BY_SERIAL_NUMBER`. Supporting document: DST-MEMO-006.
+
+**FSDO readiness:** Complete. Serial number comparison documented in DST-MEMO-006. AD text and applicability table on file.
+
+---
+
+## 5. FSDO-Ready Documentation Package — Record 24
+
+### 5.1 AD Identification
+
+| Field | Value |
+|---|---|
+| AD Number | 2022-09-14 |
+| Title | Pratt & Whitney Canada PT6A-series — Fuel Control Unit (FCU) Inspection and Replacement |
+| Applicability | PT6A-series engines — specific model variants listed in applicability table. Compliance: inspect FCU for correct operation per P&WC service bulletin; replace FCU units outside limits at next scheduled maintenance event not to exceed 24 months from AD effective date. |
+
+---
+
+### 5.2 Frank's Resolution — Record 24
+
+**The question:** Does this AD apply to any Desert Sky Turbine PT6A engine? The prior DOM noted "variant not applicable" but did not specify which variant.
+
+**Method:** Frank identified every PT6A variant in the Desert Sky Turbine fleet and checked against the AD applicability table.
+
+**AD 2022-09-14 — applicability table (Frank's review):**
+
+The AD applies to: **PT6A-21, PT6A-25, PT6A-25A, PT6A-25C, PT6A-27, PT6A-28, PT6A-34, PT6A-34AG, PT6A-36** — with specific FCU part number ranges.
+
+**Desert Sky Turbine PT6A variants:**
+
+| Aircraft | Engine Variant | In AD Applicability? |
+|---|---|---|
+| DST-N8031T | PT6A-60A | **NOT in list.** PT6A-60A is not a named variant in AD 2022-09-14 applicability. |
+| DST-N5217K | PT6A-60A | NOT in list. |
+| DST-N117DS | PT6A-67D | NOT in list. |
+| DST-N4422E | PT6A-67D | NOT in list. |
+| DST-N9944P (Eng 1) | PT6A-41 | **NOT in list.** PT6A-41 is not in the AD 2022-09-14 named variants. |
+| DST-N9944P (Eng 2) | PT6A-41 | NOT in list. |
+
+**FCU part number cross-check (belt-and-suspenders):**
+
+AD 2022-09-14 also specifies affected FCU part numbers. Frank cross-referenced the actual FCU part numbers installed on each aircraft against the AD's FCU P/N list.
+
+| Aircraft | FCU P/N Installed | In AD FCU P/N List? |
+|---|---|---|
+| DST-N8031T | 3040162-1 | No |
+| DST-N5217K | 3040162-1 | No |
+| DST-N117DS | 3040290-2 | No |
+| DST-N4422E | 3040290-2 | No |
+| DST-N9944P | 3040120-3 (both engines) | No |
+
+**Determination:** AD 2022-09-14 is **NOT APPLICABLE** to any Desert Sky Turbine aircraft on both model-variant and part-number basis. The prior DOM's note "variant not applicable" was correct — the PT6A variants in the fleet are not in the AD applicability table — but the specific variant names and the part number verification were not documented.
+
+**Documentation:** Frank documented the variant and FCU P/N comparison in DST-MEMO-007, with the AD applicability table and the fleet FCU P/N records attached. Filed in Desert Sky Turbine compliance records.
+
+**FSDO-Ready Summary — Record 24:**
+
+| Item | Status |
+|---|---|
+| AD applicability reviewed: PT6A variant analysis | ✅ All variants outside AD applicability range |
+| AD applicability reviewed: FCU P/N analysis (belt-and-suspenders) | ✅ All FCU P/Ns outside AD list |
+| Prior DOM note "variant not applicable" — verified and documented | ✅ |
+| Supporting document | ✅ DST-MEMO-007 filed |
+| DOM attestation | ✅ Frank Nguyen, signed 2026-03-09 |
+
+---
+
+### 5.3 Record 24 — Compliance Disposition
+
+**AD 2022-09-14 applicability:** **NOT APPLICABLE** — PT6A variants in the Desert Sky Turbine fleet (PT6A-60A, PT6A-67D, PT6A-41) are not in the AD applicability table. FCU part numbers also confirm non-applicability.
+
+**Basis:** `NOT_APPLICABLE_BY_MODEL` + `NOT_APPLICABLE_BY_SERIAL_NUMBER` (variant and P/N). Supporting document: DST-MEMO-007.
+
+---
+
+## 6. Marcus Webb — FSDO Audit Readiness Review
+
+### 6.1 What Frank Produced
+
+Frank Nguyen has produced the following documentation package for the three Category 3 records over the 30-day resolution window:
+
+| Document | Record | Purpose |
+|---|---|---|
+| DST-PWC-CORR-001 | Record 22 | P&WC written applicability determination for all 6 engine S/Ns |
+| WO-DST-FPI-001 | Record 22 | Open work order for overdue FPI on N9944P; grounding record |
+| DST-MEMO-006 | Record 23 | Serial number comparison; NOT_APPLICABLE by S/N documented |
+| DST-MEMO-007 | Record 24 | PT6A variant + FCU P/N analysis; NOT_APPLICABLE by model/P/N documented |
+
+This is the documentation package an FSDO auditor needs to evaluate these records. Each document is:
+- Authored by the current DOM (Frank Nguyen)
+- Dated
+- Specific to the applicable aircraft and engines
+- Cross-referenced to the AD text
+
+### 6.2 Marcus's Assessment — Record-by-Record
+
+**Record 22 (PT6A compressor inspection):**
+
+The finding here is significant. The prior DOM not only failed to document the applicability basis — they also failed to track the 400-hour repetitive inspection interval on the applicable engines. The engines are 447 hours overdue for an FPI. The aircraft is correctly grounded.
+
+This is the kind of compliance gap that an AD-only tracking system, even if it had correctly flagged the applicability, would have missed if the repetitive interval was not loaded. Athelon's `adComplianceRecords` model handles repetitive ADs — but only if the record is correctly populated with the interval and the current aircraft hours.
+
+**Lesson for Athelon system design (flagged to Devraj):** When an AD has a repetitive compliance interval, the `adComplianceRecords` schema should require: (a) initial compliance date/hours, (b) repetitive interval hours or calendar, and (c) auto-computed next-due. This is analogous to the `alsItems` schema's `nextDueHours`/`nextDueDate` fields. This is a v1.3 scope item (flagged to WS27-D).
+
+**Record 22 FSDO posture:** Active corrective action. Inspection scheduled. Aircraft grounded. If FSDO inspects before WO is closed, Desert Sky Turbine presents WO-DST-FPI-001 (open), grounding record, P&WC correspondence, and scheduled inspection date. This is defensible posture.
+
+**Record 23 (engine mount fatigue):**
+
+Clean resolution. Serial number comparison documented. NOT_APPLICABLE by S/N is the correct basis. DST-MEMO-006 provides the audit trail. No ongoing action required.
+
+**Record 24 (PT6A fuel control unit):**
+
+Clean resolution. Variant + FCU P/N dual verification. NOT_APPLICABLE by model and P/N. DST-MEMO-007 provides the audit trail. The prior DOM was correct in their determination — they just didn't write it down. Now it's written down.
+
+### 6.3 FSDO Audit Readiness Assessment
+
+**Scenario: FSDO ramp audit or certificate action inspection of Desert Sky Turbine.**
+
+**What FSDO would want to see for these three records:**
+
+1. Evidence that the NOT_APPLICABLE determinations have a documented basis
+2. If any AD is applicable: evidence of compliance or an active corrective action
+3. DOM identity on all determinations
+4. Accessible, organized documentation (not scattered across shop files)
+
+**Desert Sky Turbine's current posture:**
+
+| Record | FSDO Response Package | Posture |
+|---|---|---|
+| Record 22 | P&WC correspondence + grounding record + open WO + scheduled inspection date | Active corrective action — FSDO-defensible |
+| Record 23 | DST-MEMO-006 with S/N comparison | NOT_APPLICABLE with documentation — CLEAN |
+| Record 24 | DST-MEMO-007 with variant + P/N analysis | NOT_APPLICABLE with documentation — CLEAN |
+
+**Marcus's overall FSDO readiness verdict:**
+
+> "Desert Sky Turbine can now walk into an FSDO inspection with documentation for each of these records. Record 22 is an active corrective action — the aircraft is grounded and the inspection is scheduled. That is a better position than having a concealed compliance gap. An FSDO inspector who sees an operator that identified their own compliance deficiency, grounded the aircraft, and scheduled the corrective action is looking at a responsible DOM, not an evasive one.
+>
+> Record 23 and Record 24 are clean. The prior DOM's analysis was correct; Frank has documented it with the rigor it deserved the first time.
+>
+> OC-26-01's 30-day clock has run. All three Category 3 records are resolved. The compliance clock for Record 22 is now WO-DST-FPI-001 — when that work order is closed with a signed FPI finding, N9944P returns to service and the AD compliance record is clean."
+
+**Marcus Webb FSDO Readiness Sign-Off: ✅ PASS — all 3 Category 3 records resolved with FSDO-ready documentation.**
 *2026-02-23*
 
----
+### 6.4 Post-Resolution Athelon Data Entry Actions
 
-## 6. OC-26-01 Closure Statement
+The following Athelon data entry actions are required following WS27-C:
 
-**Open Condition:** OC-26-01 — Frank Nguyen Category 3 records (3 items) — 30-day applicability resolution. Filed at Phase 26 gate review. Severity: HIGH. Owner: Frank Nguyen + Marcus Webb (monitoring). Record 22 (PT6A compressor inspection AD 2020-07-12) was highest priority.
-
-**Clock started:** Phase 26 ship (~2026-02-23)
-**Clock close target:** ~2026-03-25
-**Actual resolution date:** 2026-02-23 (completed within Phase 27 execution — earlier than 30-day deadline)
-
-**Closure:** OC-26-01 is **closed**. All three Category 3 records have been resolved:
-
-| Record | Resolution | Basis | Supporting Reference | Status |
-|---|---|---|---|---|
-| 22 (AD 2020-07-12) | NOT_APPLICABLE_BY_SERIAL_NUMBER | P&WC variant/S/N confirmation | PWCS-2026-0317 | ✅ CLEARED |
-| 23 (AD 2021-05-28) | NOT_APPLICABLE_DOM_DETERMINATION | Part 145 scope, not Part 135/121 operator | DST-MEMO-006 | ✅ CLEARED |
-| 24 (AD 2022-09-14) | NOT_APPLICABLE_BY_SERIAL_NUMBER | PT6A variant exclusion confirmed | DST-REC24-VARIANT | ✅ CLEARED |
-
-All 24 Desert Sky Turbine flagged records from DST-FB-001 are now resolved. Zero records in flagged state. FSDO audit readiness packages (§4) are on file for all three Category 3 records.
-
-**No compliance actions were required.** The three records were compliance documentation gaps, not substantive compliance failures. The aircraft were not non-compliant in substance; the prior NOT_APPLICABLE determinations were substantively correct but not documented to an auditable standard. This has been corrected.
-
-**The 30-day clock is closed.** OC-26-01 is formally closed ahead of schedule.
+| Action | Record | Responsible |
+|---|---|---|
+| Update Record 22 in `adComplianceRecords`: `requiresReinspection: false`, `nonApplicabilityBasis: null` (record is APPLICABLE — remove NOT_APPLICABLE designation), link WO-DST-FPI-001 | Record 22 | Frank Nguyen + Devraj |
+| Update Records 23 and 24: `resolution: "APPLY_BASIS"`, appropriate `nonApplicabilityBasis`, clear `domReviewFlag` | Records 23, 24 | Frank Nguyen |
+| Add repetitive interval tracking to N9944P engine records once FPI is completed | Record 22 / N9944P | Frank Nguyen |
+| Flag WO-DST-FPI-001 for compliance monitoring | WO-DST-FPI-001 | Marcus |
 
 ---
 
-### 6.1 PASS/FAIL Judgment
+## 7. Final Status Block
+
+### 7.1 OC-26-01 Closure Statement
+
+**Open Condition:** OC-26-01 — Frank Nguyen's three Category 3 DST records (Records 22, 23, 24) flagged in WS26-C with a 30-day resolution clock. One record (Record 22) is a live PT6A-series AD applicability question with potential compliance action. 30-day clock started Phase 26 ship (~2026-02-10).
+
+**Clock close date:** 2026-03-09 (within 30 days of Phase 26 ship).
+
+**Closure:** OC-26-01 is **closed**. The following actions were completed in WS27-C:
+
+1. Record 22 (PT6A compressor inspection AD):
+   - P&WC written applicability determination obtained (DST-PWC-CORR-001)
+   - AD found APPLICABLE to DST-N9944P (engines PCE-54107, PCE-54210)
+   - Repetitive inspection interval found OVERDUE (447 hours past due)
+   - Aircraft DST-N9944P grounded
+   - WO-DST-FPI-001 opened and scheduled for 2026-03-12
+
+2. Record 23 (engine mount fatigue AD):
+   - Serial number comparison performed and documented (DST-MEMO-006)
+   - AD found NOT APPLICABLE by S/N
+   - Documentation filed
+
+3. Record 24 (PT6A fuel control unit AD):
+   - PT6A variant + FCU P/N analysis performed and documented (DST-MEMO-007)
+   - AD found NOT APPLICABLE by model variant and P/N
+   - Documentation filed
+
+**Active corrective action:** WO-DST-FPI-001 (DST-N9944P grounded, FPI scheduled 2026-03-12). This is tracked independently. The 30-day OC-26-01 clock closes because the resolution process is complete and documented. The corrective action on Record 22 continues to WO completion.
+
+**FSDO-Ready documentation package:** DST-PWC-CORR-001, WO-DST-FPI-001, DST-MEMO-006, DST-MEMO-007 — all filed in Desert Sky Turbine records.
+
+---
+
+### 7.2 PASS/FAIL Judgment
 
 | Item | Judgment |
 |---|---|
-| Record 22 resolution (AD 2020-07-12) | ✅ RESOLVED — NOT_APPLICABLE_BY_SERIAL_NUMBER |
-| Record 23 resolution (AD 2021-05-28) | ✅ RESOLVED — NOT_APPLICABLE_DOM_DETERMINATION |
-| Record 24 resolution (AD 2022-09-14) | ✅ RESOLVED — NOT_APPLICABLE_BY_SERIAL_NUMBER |
-| FSDO audit readiness packages filed | ✅ FILED (§4.2, §4.3, §4.4) |
-| Frank Nguyen DOM signature on each | ✅ SIGNED |
-| Marcus Webb compliance review on each | ✅ REVIEWED AND ACCEPTED |
-| All 24 DST flagged records cleared | ✅ ZERO open flags at DST |
-| OC-26-01 30-day clock closed | ✅ CLOSED (ahead of schedule) |
+| OBJ-01 through OBJ-07 | ✅ 7/7 PASS |
+| Record 22: applicability determined (APPLICABLE), corrective action initiated | ✅ |
+| Record 23: NOT APPLICABLE — documented | ✅ |
+| Record 24: NOT APPLICABLE — documented | ✅ |
+| FSDO-ready package for all three records | ✅ |
+| Marcus monitoring sign-off | ✅ PASS |
+| 30-day clock closed | ✅ |
+| OC-26-01 closure | ✅ CLOSED |
 
 **WS27-C Final Verdict: ✅ PASS**
 
 ---
 
 *WS27-C filed: 2026-02-23*
-*OC-26-01: ✅ CLOSED — 30-day clock closed ahead of schedule*
+*OC-26-01: ✅ CLOSED (30-day clock close: 2026-03-09)*
 *Signatories: Frank Nguyen (DOM, Desert Sky Turbine), Marcus Webb (Compliance Architect), Devraj Anand (Engineering)*
+
+*Note: WO-DST-FPI-001 remains OPEN (DST-N9944P grounded). This is an active compliance action, not an OC gate condition. Tracked separately until FPI complete and signed.*
