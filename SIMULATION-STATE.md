@@ -2,7 +2,142 @@
 <!-- Updated by: Jarvis (orchestrator) -->
 
 ## Current Phase
-**PHASE 18 — STAGING DEPLOYMENT + MARCUS MEMO CLOSURE (ACTIVE)**
+**PHASE 27 (ACTIVE)**
+
+## Phase 27 Mission
+Bell 206B-III ALS audit and mandatory service instruction (SI) tracking layer design — closes OC-25-02 and OC-26-02 (Lone Star Rotorcraft Bell fleet compliance gap). Sikorsky S-76C Part 29 ALS audit. Desert Sky Turbine OC-26-01 Category 3 resolution follow-up and FSDO audit readiness scoping. v1.3 feature planning and backlog lock. Miles Beaumont ninth dispatch.
+
+## Phase 27 Workstreams
+
+| Workstream | Status | Artifact Path | Owner(s) |
+|---|---|---|---|
+| Phase 26 Gate Review | ✅ DONE — GO | reviews/phase-26-gate-review.md | Review Board |
+| WS27 Plan | ✅ DONE | phase-27-v20d/ws27-plan.md | Nadia + Marcus + Devraj + Cilla + Jonas |
+| WS27-A Bell 206B-III ALS Audit + Mandatory SI Tracking Layer Design (closes OC-25-02 / OC-26-02) | ✅ DONE | phase-27-v20d/ws27-a-bell206-als-audit.md | Marcus + Tobias Ferreira + Devraj + Cilla |
+| WS27-B Sikorsky S-76C Part 29 ALS Audit (closes OC-26-03) | ⬜ PLANNED | phase-27-v20d/ws27-b-s76c-als-audit.md | Marcus + Devraj + Cilla |
+| WS27-C DST Category 3 Resolution Follow-Up + FSDO Audit Readiness (closes OC-26-01) | ⬜ PLANNED | phase-27-v20d/ws27-c-dst-fsdo-readiness.md | Frank Nguyen + Marcus + Devraj |
+| WS27-D v1.3 Feature Planning + Backlog Lock | ⬜ PLANNED | phase-27-v20d/ws27-d-v13-planning.md | Nadia + Marcus + Devraj + Cilla + Jonas |
+| WS27-E Miles Beaumont — Ninth Dispatch | ⬜ PLANNED | phase-27-v20d/dispatches/dispatch-27.md | Miles Beaumont |
+
+## Phase 26 Mission
+Robinson R44 Airworthiness Limitations Section (ALS) validation audit (Marcus + Tobias Ferreira). `alsItems` data model design and implementation (Devraj). Lone Star Rotorcraft full onboarding — Part 91 administrative scope; compliance surface features gated on WS26-A. DST-FB-001 Frank Nguyen follow-up: 24-record review + admin resolution UI (DOM-only flagged-record review screen). Miles Beaumont eighth dispatch: ALS vs. AD distinction — what it means for helicopter operators and why most MRO software gets it wrong.
+
+## Phase 26 Workstreams
+
+| Workstream | Status | Artifact Path | Owner(s) |
+|---|---|---|---|
+| Phase 25 Gate Review | ✅ DONE — GO | reviews/phase-25-gate-review.md | Review Board |
+| WS26 Plan | ✅ FILED | phase-26-v20c/ws26-plan.md | Nadia + Marcus + Devraj + Cilla + Jonas |
+| WS26-A Robinson R44 ALS Validation Audit (Marcus audit + alsItems schema) | ✅ DONE | phase-26-v20c/ws26-a-als-validation.md | Marcus + Tobias Ferreira + Devraj + Cilla + Jonas |
+| WS26-B Lone Star Rotorcraft Full Onboarding (Part 91 scope) | ✅ DONE | phase-26-v20c/ws26-b-loneStar-onboarding.md | Nadia + Sandra Okafor + Marcus |
+| WS26-C DST-FB-001 Frank Nguyen Follow-Up + Admin Resolution UI | ✅ DONE | phase-26-v20c/ws26-c-dst-resolution.md | Frank Nguyen + Devraj + Cilla + Marcus |
+| WS26-D Miles Beaumont — Eighth Dispatch (ALS vs. AD) | ✅ DONE | phase-26-v20c/dispatches/dispatch-26-als-vs-ad.md | Miles Beaumont |
+| Phase 26 Gate Review | ✅ DONE — GO | reviews/phase-26-gate-review.md | Review Board |
+
+## Phase 25 Mission
+Multi-org architecture (v2.0 GAP 1), Part 135 full compliance (v2.0 GAP 2: pilot portal + MEL integration + cert holder separation), Fort Worth helicopter MRO pre-onboarding assessment (Marcus's Part 27 audit). DST-FB-001 ships Sprint 1.
+
+## Phase 25 Workstreams
+
+| Workstream | Status | Artifact Path | Owner(s) |
+|---|---|---|---|
+| Phase 24 Gate Review | ✅ DONE — GO | reviews/phase-24-gate-review.md | Review Board |
+| WS25 Plan | ✅ FILED | phase-25-v20b/ws25-plan.md | Nadia Solis + Marcus Webb + Devraj Anand + Jonas Harker |
+| WS25-A DST-FB-001 + Multi-Org Sprint (schema/indexes + migration + role config) | ✅ DONE | phase-25-v20b/ws25-a-multiorg-sprint.md | Devraj Anand + Marcus Webb |
+| WS25-B Part 135 Full Compliance Sprint (pilot portal + MEL tracking + cert holder sep) | ✅ DONE | phase-25-v20b/ws25-b-part135-sprint.md | Marcus + Devraj + Priya (UAT) |
+| WS25-C Fort Worth Helicopter MRO Admin Onboarding (Lone Star Rotorcraft) | ✅ DONE | phase-25-v20b/ws25-c-fortworth-admin.md | Nadia + Marcus + Sandra Okafor |
+| WS25-D Miles Beaumont — Seventh Dispatch (Part 135 / Portal Link) | ✅ DONE | phase-25-v20b/dispatches/dispatch-25-part135.md | Miles Beaumont |
+| Phase 25 Gate Review | ✅ DONE — GO | reviews/phase-25-gate-review.md | Review Board |
+
+## Phase 24 Mission
+v2.0 planning and fourth shop pipeline. Scope the six commercial-readiness gaps. Assess and rank three inbound prospects (turbine shop Scottsdale AZ, helicopter MRO Fort Worth TX, corporate flight department Chicago IL). Authorize turbine shop onboarding. File Nadia's v2.0 roadmap letter to all current customers.
+
+## Phase 24 Gate
+**✅ DONE — GO**
+Gate review filed: `reviews/phase-24-gate-review.md`
+Verdict: GO — Ferry permit design approved (production pending Marcus sign-off); Desert Sky Turbine live with DER validation; DST-FB-001 filed and slotted to Phase 25 Sprint 1; dispatch-24 filed.
+
+## Phase 24 Workstreams
+
+| Workstream | Status | Artifact Path | Owner(s) |
+|---|---|---|---|
+| Phase 23 Gate Review | ✅ DONE — GO | reviews/phase-23-gate-review.md | Review Board |
+| WS24 Plan: v2.0 Scope + Fourth Shop Pipeline | ✅ DONE | phase-24-v20/ws24-plan.md | Nadia Solis + Marcus Webb + Rosa Eaton |
+| WS24-A Ferry Permit AD Exception Design | ✅ DONE | phase-24-v20/ws24-a-ferry-permit-design.md | Marcus Webb + Rosa Eaton |
+| WS24-B Desert Sky Turbine Onboarding (Scottsdale) | ✅ DONE | phase-24-v20/ws24-b-scottsdale-onboarding.md | Nadia Solis + Rosa Eaton + Frank Nguyen |
+| WS24-C Miles Beaumont — Sixth Dispatch (Frank) | ✅ DONE | phase-24-v20/dispatches/dispatch-24-frank.md | Miles Beaumont |
+
+## Phase 23 Mission (Complete)
+Execute Sprint 3 (8130-3 OCR for Parts Receiving + Pilot Notification Log §135.65), complete v1.2, ship release summary, file Miles Beaumont's fifth dispatch. Three shops live on v1.2.
+
+## Phase 23 Gate
+**✅ DONE — GO**  
+Gate review filed: `reviews/phase-23-gate-review.md`  
+Verdict: GO — Sprint 3 PASS, v1.2 complete and deployed to all three shops, dispatch-23 filed.
+
+## Phase 23 Workstreams
+
+| Workstream | Status | Artifact Path | Owner(s) |
+|---|---|---|---|
+| Phase 22 Gate Review | ✅ DONE | reviews/phase-22-gate-review.md | Review Board |
+| WS23 Sprint 3: 8130-3 OCR for Parts Receiving | ✅ DONE | phase-23-sprint3/ws23-sprint3.md | Devraj Anand + Chloe Park + Teresa Varga (UAT) |
+| WS23 Sprint 3: Pilot Notification Log (§135.65) | ✅ DONE | phase-23-sprint3/ws23-sprint3.md | Devraj Anand + Marcus Webb + Priya Sharma (UAT) |
+| v1.2 Release Summary + Shop Status | ✅ DONE | phase-23-sprint3/ws23-v12-ship.md | Nadia Solis |
+| Miles Beaumont — Fifth Dispatch (v1.2) | ✅ DONE | dispatches/dispatch-23-v12.md | Miles Beaumont |
+
+## Phase 22 Mission
+Execute the v1.2 sprint cycle (3 sprints: photo attachments + IA notifications, DOM compliance dashboard + portal polish, 8130-3 OCR). Process third-shop cold inbound (Priya Sharma, Part 135 charter operator) with explicit Part 91-only scope boundary. No offline work in scope (P6 deferred by operator directive).
+
+## Phase 22 Workstreams
+
+| Workstream | Status | Artifact Path | Owner(s) |
+|---|---|---|---|
+| WS22 Plan (Track A + Track B) | ✅ FILED | phase-22-v12/ws22-plan.md | Nadia Solis |
+| WS22-A Sprint 1: Photo Attachments on Maintenance Records | ✅ DONE | phase-22-v12/ws22-a-sprint1.md | Devraj Anand + Chloe Park |
+| WS22-A Sprint 1: IA Expiry Push Notifications | ✅ DONE | phase-22-v12/ws22-a-sprint1.md | Devraj Anand + Jonas Harker |
+| WS22-B Sprint 2: DOM Personnel Compliance Dashboard | ✅ DONE | phase-22-v12/ws22-b-sprint2.md | Chloe Park + Devraj Anand |
+| WS22-B Sprint 2: Customer Portal UX Polish | ✅ DONE | phase-22-v12/ws22-b-sprint2.md | Chloe Park + Finn Calloway |
+| Sprint 3: 8130-3 OCR for Parts Receiving | ✅ DONE (Phase 23) | phase-23-sprint3/ws23-sprint3.md | Devraj Anand + Teresa Varga (UAT) |
+| Track B: Priya Sharma intake + scope boundary | ✅ DONE | phase-22-v12/ws22-plan.md | Nadia Solis |
+| WS22-C Track B: Priya Sharma onboarding (Part 91 scope) | ✅ DONE | phase-22-v12/ws22-c-priya-onboarding.md | Nadia Solis + Rosa Eaton |
+| WS22-D Miles Beaumont — Fourth Dispatch (Priya) | ✅ DONE | phase-22-v12/dispatches/dispatch-22-priya.md | Miles Beaumont |
+| Track B: Part 135 notification workflow | ✅ DONE — §135.65 log shipped (Phase 23) | phase-23-sprint3/ws23-sprint3.md | Marcus Webb + Priya Sharma |
+| Sprint 3 addition: Pilot notification log (§135.65) | ✅ DONE (Phase 23) | phase-23-sprint3/ws23-sprint3.md | Marcus Webb + Priya Sharma |
+
+## Phase 22 Gate
+**✅ DONE — GO**  
+
+## Phase 21 Gate
+**✅ DONE — GO**  
+Gate review filed: `reviews/phase-21-gate-review.md`  
+Verdict: GO — High Desert onboarded, offline matrix clean, v1.2 backlog locked, dispatch-21 honest journalism.
+
+## Phase 21 Mission
+Expand to two shops. High Desert MRO onboarded. Offline device matrix executed and P6 authorized (deployment deferred by operator directive). v1.2 backlog locked. Miles Beaumont's third dispatch filed.
+
+## Phase 21 Workstreams
+
+| Workstream | Status | Artifact Path | Owner(s) |
+|---|---|---|---|
+| WS21-A High Desert MRO Onboarding (Bill Reardon) | ✅ DONE | phase-21-expansion/ws21-a-high-desert-onboarding.md | Nadia Solis + Rosa Eaton |
+| WS21-B Offline Device Matrix Execution | ✅ DONE | phase-21-expansion/ws21-b-offline-device-matrix.md | Tanya Birch + Devraj Anand + Troy Weaver |
+| WS21-C v1.2 Backlog Prioritization | ✅ DONE | phase-21-expansion/ws21-c-v12-backlog.md | Nadia Solis + Rafael Ortega + Marcus Webb |
+| WS21-D Miles Beaumont — Third Dispatch | ✅ DONE | phase-21-expansion/dispatches/dispatch-21-two-shops.md | Miles Beaumont |
+
+## Phase 21 Key Outcomes
+- High Desert MRO (Prescott AZ) onboarded — Bill Reardon, DOM; 6 certificated personnel; single-engine + light twin
+- Day 1 LLP baseline audit: Seneca II engine mount life count corrected from 4,340 to 4,412 hrs (spreadsheet error found and locked)
+- Marco Estefan (lead mechanic): "There's only one version now."
+- First live work order (WO-HD-001, PA-34-220T annual) completed Day 1
+- Bill's first-week verdict: LLP dashboard is not optional for a twin shop
+- Rosa Eaton field observation: In a twin shop, the LLP dashboard isn't a nice-to-have. It's the product.
+- Offline device matrix: 3 failure modes found (OFX-001/002/003), all fixed; P6 **GO week of 2026-03-16**
+- Troy Weaver's per-item sync confirmation shipped as new standard UX
+- v1.2 backlog locked: 5 features, 3 sprints, sequencing resolves Nadia/Marcus tension via hybrid plan
+
+---
+
+## Phase 20 (Complete — GO)
 
 **Phase 16 Final Gate Verdict:** GO WITH CONDITIONS (filed 2026-02-22)  
 See `reviews/phase-16-final-gate-review.md`.
@@ -170,6 +305,51 @@ Execute the v1.1 feature build. Convert all Phase 15 R&D specs into working Conv
 - Phase 16 gate review filed and GO verdict recorded.
 - v1.1 release candidate authorized.
 
+## Phase 20 Mission (Reference)
+Execute P5 feature activation, ship pre-second-shop fixes, authorize and plan second shop onboarding, scope P6 offline mode, and capture the moment the product became word-of-mouth through Miles Beaumont's second dispatch.
+
+## Phase 20 Workstreams
+
+| Workstream | Status | Artifact Path | Owner(s) |
+|---|---|---|---|
+| WS20-A P5 Feature Activation | ✅ DONE | phase-20-scale/ws20-a-p5-activation.md | Devraj + Marcus + Cilla |
+| WS20-B Pre-Second-Shop Fixes | ✅ DONE | phase-20-scale/ws20-b-pre-second-shop-fixes.md | Chloe + Finn + Devraj |
+| WS20-C Second Shop Selection + Onboarding Plan | ✅ DONE | phase-20-scale/ws20-c-second-shop.md | Nadia + Rosa Eaton |
+| WS20-D P6 Offline Mode Scoping | ✅ DONE | phase-20-scale/ws20-d-p6-offline-scope.md | Tanya Birch + Jonas |
+| WS20-E Miles Beaumont — Second Dispatch | ✅ DONE | phase-20-scale/dispatches/dispatch-20-the-second-shop.md | Miles Beaumont |
+| WS20-GATE Phase 20 Gate Review | ✅ DONE | reviews/phase-20-gate-review.md | Review Board |
+
+## Phase 20 Key Outcomes
+- All three memo-gated features activated in production (test equipment traceability, discrepancy customer auth, customer portal)
+- Three pre-second-shop fixes shipped: aircraft sidebar (FR-001), parts dashboard (FR-004), RTS button placement (Ellen's fix)
+- High Desert MRO (Prescott AZ) authorized for onboarding — Bill Reardon, DOM, 22-year veteran; onboarding begins 2026-03-02
+- P6 offline device matrix underway: iPad 10th gen, Samsung Galaxy Tab A8, iPhone 14; Tanya Birch lead; 3-week validation window
+- Miles Beaumont dispatch filed: Carla called Bill — the moment the product became word-of-mouth
+
+## Phase 19 Mission
+Execute the authorized P1–P6 production rollout. Onboard the first real Part 145 shop. Witness the first live work order created, executed, and returned to service on Athelon. Capture customer feedback from real shop personnel. Run post-P1 review and advance through P2–P4. Document everything — Miles Beaumont is embedded and writing.
+
+## Phase 19 Workstreams
+
+| Workstream | Agent Label | Status | Artifact Path | Owner(s) | Depends On |
+|---|---|---|---|---|---|
+| WS19-A P1 Production Deployment | athelon-p19-p1-deploy | ✅ DONE | phase-19-launch/ws19-a-p1-deployment.md | Jonas Harker (lead) + Devraj | Phase 18 FULL GO |
+| WS19-B First Shop Onboarding | athelon-p19-onboarding | ✅ DONE | phase-19-launch/ws19-b-first-shop-onboarding.md | Nadia Solis (lead) + Rosa Eaton + Carla Ostrowski | WS19-A |
+| WS19-C First Live Work Order | athelon-p19-first-wo | ✅ DONE | phase-19-launch/ws19-c-first-live-work-order.md | Marcus Webb (observer) + Rosa Eaton + Cilla Oduya | WS19-B |
+| WS19-D Post-P1 Customer Feedback | athelon-p19-feedback | ✅ DONE | phase-19-launch/ws19-d-post-p1-feedback.md | Nadia Solis + Miles Beaumont | WS19-C |
+| WS19-E P2–P4 Rollout Execution | athelon-p19-p2p4-rollout | ✅ DONE | phase-19-launch/ws19-e-p2p4-rollout.md | Jonas + Devraj + Cilla | WS19-D |
+| WS19-F Miles Beaumont — Launch Dispatch | athelon-p19-dispatch | ✅ DONE | dispatches/dispatch-19-the-first-work-order.md | Miles Beaumont | WS19-C |
+
+| WS19-GATE Phase 19 Gate Review | athelon-p19-gate | ✅ DONE | reviews/phase-19-gate-review.md | Review Board | WS19-A..WS19-F |
+
+## Phase 19 Exit Criteria
+- P1 deployed to production, first shop onboarded
+- First live work order completed end-to-end with RTS signed
+- Post-P1 feedback documented from real shop personnel
+- P2–P4 rollout underway
+- Miles Beaumont dispatch filed
+- Phase 19 gate review = GO for P5–P6 and continued scale
+
 ## Phase 18 Mission
 Convert Phase 17 GO WITH CONDITIONS verdict into a clean production authorization. Three parallel tracks: (1) Staging deployment execution and validation, (2) Marcus memo closure sprint — get CAL-POLICY-MEMO-V1 and DISC-AUTH-LIABILITY-MEMO-V1 reviewed and signed, (3) Conditional item closure — WS17-H pre-close severity seam and WS17-J RSM compliance hardening (Clerk 6-year retention, DOM override, no-publish gate). Phase ends when staging is validated, both memos are signed, and both conditional items are closed. That authorization state = full production GO.
 
@@ -178,12 +358,12 @@ Convert Phase 17 GO WITH CONDITIONS verdict into a clean production authorizatio
 | Workstream | Agent Label | Status | Artifact Path | Owner(s) | Depends On |
 |---|---|---|---|---|---|
 | WS18-A Staging Deployment Execution | athelon-p18-staging | ✅ DONE | phase-18-closure/ws18-a-staging-deployment.md | Jonas Harker (lead) + Devraj | Phase 17 GATE |
-| WS18-B Staging Validation + SME Acceptance | athelon-p18-staging-validation | ⬜ NOT STARTED | phase-18-closure/ws18-b-staging-validation.md | Cilla + Rosa Eaton + Marcus | WS18-A |
+| WS18-B Staging Validation + SME Acceptance | athelon-p18-staging-validation | ✅ DONE | phase-18-closure/ws18-b-staging-validation.md | Cilla + Rosa Eaton + Marcus | WS18-A |
 | WS18-C CAL-POLICY-MEMO-V1 Closure | athelon-p18-cal-memo | ✅ DONE | phase-18-closure/ws18-c-cal-memo-closure.md | Marcus Webb (signatory) + Dale Purcell (SME review) | Phase 17 GATE |
 | WS18-D DISC-AUTH-LIABILITY-MEMO-V1 Closure | athelon-p18-disc-memo | ✅ DONE | phase-18-closure/ws18-d-disc-memo-closure.md | Marcus Webb (signatory) + Danny Osei (SME review) | Phase 17 GATE |
 | WS18-E WS17-H Pre-Close Severity Seam Closure | athelon-p18-preclose-seam | ✅ DONE | phase-18-closure/ws18-e-preclose-seam-closure.md | Devraj + Marcus + Cilla + Jonas | Phase 17 GATE |
 | WS18-F WS17-J RSM Compliance Hardening | athelon-p18-rsm-hardening | ✅ DONE | phase-18-closure/ws18-f-rsm-hardening.md | Devraj + Rachel Kwon + Chloe | Phase 17 GATE |
-| WS18-G Full Production Authorization | athelon-p18-prod-auth | ⬜ NOT STARTED | phase-18-closure/ws18-g-prod-authorization.md | Nadia + Marcus + Rosa + Cilla | WS18-B + WS18-C + WS18-D + WS18-E + WS18-F |
+| WS18-G Full Production Authorization | athelon-p18-prod-auth | ✅ DONE | phase-18-closure/ws18-g-prod-authorization.md | Nadia + Marcus + Rosa + Cilla | WS18-B + WS18-C + WS18-D + WS18-E + WS18-F |
 
 ## Phase 18 Exit Criteria
 - Staging deployment live and validated (WS18-A + WS18-B PASS)
@@ -228,11 +408,11 @@ Execute the Athelon v1.1 sprint. Write production-quality simulated implementati
 3. Never spawn duplicates for an ACTIVE label or recently updated (<30 min) same-label artifact.
 
 ## Lock
-UNLOCKED
+LOCKED
 
 ## Last Orchestrator Run
-2026-02-22T22:45:00Z — Continuity watchdog check: no active subagents; Phase 17 GATE COMPLETE — GO WITH CONDITIONS; WS17-GATE artifact exists; all workstream rows DONE or CONDITIONAL; no eligible spawn remaining.
-2026-02-22T22:46:00Z — Phase 18 first wave: WS18-A/C/D/E/F spawned autonomously.
+2026-02-23T02:38:00Z — Recovery: athelon-p27-full-execution failed (API error mid-run); WS27 Plan + WS27-A confirmed complete on disk, state updated to ✅ DONE; respawned athelon-p27-recovery for WS27-B..WS27-E. Lock remains LOCKED.
+2026-02-23T01:29:00Z — Phase 24 execution: ferry permit designed, Desert Sky Turbine onboarded, Frank's dispatch filed.
 
 ## Latest Admissibility Authority Update
 2026-03-09T15:10:00Z — WS14-E final readiness authority executed.
