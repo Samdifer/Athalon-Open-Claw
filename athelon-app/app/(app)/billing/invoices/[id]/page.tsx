@@ -167,8 +167,8 @@ export default function InvoiceDetailPage() {
   }
 
   const canSend = invoice.status === "DRAFT";
-  const canPayment = invoice.status === "SENT" || invoice.status === "PAID";
-  const canVoid = invoice.status === "DRAFT" || invoice.status === "SENT";
+  const canPayment = invoice.status === "SENT" || invoice.status === "PARTIAL" || invoice.status === "PAID";
+  const canVoid = invoice.status === "DRAFT" || invoice.status === "SENT" || invoice.status === "PARTIAL";
 
   return (
     <>

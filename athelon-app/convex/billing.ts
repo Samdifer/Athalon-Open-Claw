@@ -27,64 +27,16 @@ import { mutation, query } from "./_generated/server";
 import type { MutationCtx } from "./_generated/server";
 import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
+import { requireAuth } from "./lib/authHelpers";
+import { getNextNumber } from "./lib/numberGenerator";
+import {
+  getQuoteLineItems,
+  getInvoiceLineItems,
+  getPOLineItems,
+} from "./lib/billingHelpers";
 
-// ─────────────────────────────────────────────────────────────────────────────
-// INTERNAL HELPER: REQUIRE AUTHENTICATED USER
-// ─────────────────────────────────────────────────────────────────────────────
-
-async function requireAuth(ctx: { auth: { getUserIdentity: () => Promise<{ subject: string } | null> } }): Promise<string> {
-  const identity = await ctx.auth.getUserIdentity();
-  if (!identity) {
-    throw new Error(
-      "UNAUTHENTICATED: This operation requires a valid Clerk session.",
-    );
-  }
-  return identity.subject;
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// INTERNAL UTILITY: GENERATE UNIQUE ORG-SCOPED NUMBER
-//
-// Generates a number like INV-0001 or Q-0001. Increments until the generated
-// number does not collide with an existing record.
-// ─────────────────────────────────────────────────────────────────────────────
-
-async function generateUniqueNumber(
-  ctx: MutationCtx,
-  table: "invoices" | "quotes" | "purchaseOrders",
-  orgId: string,
-  prefix: "INV" | "Q" | "PO",
-): Promise<string> {
-  // We use a simple counter: start at current record count + 1 and increment
-  // until we find an unused number. This avoids a separate counter document.
-  let attempt = 1;
-  const indexName =
-    table === "invoices"
-      ? "by_org_invoice_number"
-      : table === "quotes"
-        ? "by_org_quote_number"
-        : "by_org_po_number";
-
-  const fieldName =
-    table === "invoices"
-      ? "invoiceNumber"
-      : table === "quotes"
-        ? "quoteNumber"
-        : "poNumber";
-
-  // Seed the counter from a rough count by querying index
-  // We try up to 10_000 iterations to find a free slot (should never be needed)
-  while (attempt < 10_000) {
-    const candidate = `${prefix}-${String(attempt).padStart(4, "0")}`;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const existing = await (ctx.db.query(table) as any)
-      .withIndex(indexName, (q: any) => q.eq("orgId", orgId).eq(fieldName, candidate))
-      .first();
-    if (existing === null) return candidate;
-    attempt++;
-  }
-  throw new Error(`Could not generate a unique ${prefix} number after 10,000 attempts.`);
-}
+// generateUniqueNumber replaced by getNextNumber (convex/lib/numberGenerator.ts)
+// which uses an atomic orgCounters document instead of a scan-based loop.
 
 // ─────────────────────────────────────────────────────────────────────────────
 // INTERNAL UTILITY: ASSERT INVOICE IS EDITABLE
@@ -94,10 +46,10 @@ async function generateUniqueNumber(
 // ─────────────────────────────────────────────────────────────────────────────
 
 function assertInvoiceEditable(status: string, invoiceId: string): void {
-  if (status === "SENT" || status === "PAID") {
+  if (status === "SENT" || status === "PARTIAL" || status === "PAID") {
     throw new Error(
       `Invoice ${invoiceId} is in status "${status}" and cannot be edited. ` +
-      `Invoices in SENT or PAID status are immutable. ` +
+      `Invoices in SENT, PARTIAL, or PAID status are immutable. ` +
       `Issue a credit memo or void and recreate to make corrections.`,
     );
   }
@@ -138,12 +90,7 @@ export const createQuote = mutation({
     const aircraft = await ctx.db.get(args.aircraftId);
     if (!aircraft) throw new Error(`Aircraft ${args.aircraftId} not found.`);
 
-    const quoteNumber = await generateUniqueNumber(
-      ctx,
-      "quotes",
-      args.orgId,
-      "Q",
-    );
+    const quoteNumber = await getNextNumber(ctx, args.orgId, "quote", "Q");
 
     const quoteId = await ctx.db.insert("quotes", {
       orgId: args.orgId,
@@ -771,12 +718,7 @@ export const createInvoiceFromWorkOrder = mutation({
       );
     }
 
-    const invoiceNumber = await generateUniqueNumber(
-      ctx,
-      "invoices",
-      args.orgId,
-      "INV",
-    );
+    const invoiceNumber = await getNextNumber(ctx, args.orgId, "invoice", "INV");
 
     const invoiceId = await ctx.db.insert("invoices", {
       orgId: args.orgId,
@@ -882,12 +824,7 @@ export const createInvoiceManual = mutation({
       throw new Error(`Customer ${args.customerId} not found or does not belong to org.`);
     }
 
-    const invoiceNumber = await generateUniqueNumber(
-      ctx,
-      "invoices",
-      args.orgId,
-      "INV",
-    );
+    const invoiceNumber = await getNextNumber(ctx, args.orgId, "invoice", "INV");
 
     const invoiceId = await ctx.db.insert("invoices", {
       orgId: args.orgId,
@@ -1024,6 +961,7 @@ export const listInvoices = query({
     status: v.optional(v.union(
       v.literal("DRAFT"),
       v.literal("SENT"),
+      v.literal("PARTIAL"),
       v.literal("PAID"),
       v.literal("VOID"),
     )),
@@ -1162,11 +1100,19 @@ export const recordPayment = mutation({
     const newAmountPaid = Math.round((invoice.amountPaid + args.amount) * 100) / 100;
     const newBalance = Math.round((invoice.total - newAmountPaid) * 100) / 100;
     const nowPaid = newBalance <= 0;
+    const nowPartial = !nowPaid && newBalance > 0 && newAmountPaid > 0;
+
+    let newStatus: "SENT" | "PARTIAL" | "PAID" = invoice.status as "SENT" | "PARTIAL" | "PAID";
+    if (nowPaid) {
+      newStatus = "PAID";
+    } else if (nowPartial) {
+      newStatus = "PARTIAL";
+    }
 
     await ctx.db.patch(args.invoiceId, {
       amountPaid: newAmountPaid,
       balance: newBalance,
-      status: nowPaid ? "PAID" : invoice.status,
+      status: newStatus,
       paidAt: nowPaid ? now : invoice.paidAt,
       updatedAt: now,
     });
@@ -1181,7 +1127,7 @@ export const recordPayment = mutation({
       notes:
         `Payment of $${args.amount.toFixed(2)} (${args.method}) recorded on invoice ` +
         `${invoice.invoiceNumber}. New balance: $${newBalance.toFixed(2)}. ` +
-        (nowPaid ? "Invoice marked PAID." : ""),
+        (nowPaid ? "Invoice marked PAID." : nowPartial ? "Invoice marked PARTIAL." : ""),
       timestamp: now,
     });
 
@@ -1193,9 +1139,22 @@ export const recordPayment = mutation({
         recordId: args.invoiceId,
         userId: callerUserId,
         fieldName: "status",
-        oldValue: JSON.stringify("SENT"),
+        oldValue: JSON.stringify(invoice.status),
         newValue: JSON.stringify("PAID"),
         notes: `Invoice ${invoice.invoiceNumber} fully paid. Total collected: $${newAmountPaid.toFixed(2)}.`,
+        timestamp: now,
+      });
+    } else if (nowPartial) {
+      await ctx.db.insert("auditLog", {
+        organizationId: args.orgId,
+        eventType: "status_changed",
+        tableName: "invoices",
+        recordId: args.invoiceId,
+        userId: callerUserId,
+        fieldName: "status",
+        oldValue: JSON.stringify(invoice.status),
+        newValue: JSON.stringify("PARTIAL"),
+        notes: `Invoice ${invoice.invoiceNumber} partially paid. Paid: $${newAmountPaid.toFixed(2)}, Remaining: $${newBalance.toFixed(2)}.`,
         timestamp: now,
       });
     }
@@ -1311,12 +1270,7 @@ export const createPurchaseOrder = mutation({
       );
     }
 
-    const poNumber = await generateUniqueNumber(
-      ctx,
-      "purchaseOrders",
-      args.orgId,
-      "PO",
-    );
+    const poNumber = await getNextNumber(ctx, args.orgId, "po", "PO");
 
     const poId = await ctx.db.insert("purchaseOrders", {
       orgId: args.orgId,
@@ -1657,10 +1611,7 @@ async function recomputeQuoteTotals(
   callerUserId: string,
   now: number,
 ): Promise<void> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const items: Array<{ type: string; total: number }> = await (ctx.db.query("quoteLineItems") as any)
-    .withIndex("by_org_quote", (q: any) => q.eq("orgId", orgId).eq("quoteId", quoteId))
-    .collect();
+  const items = await getQuoteLineItems(ctx, orgId, quoteId);
 
   let laborTotal = 0;
   let partsTotal = 0;
@@ -1694,10 +1645,7 @@ async function recomputeInvoiceTotals(
   callerUserId: string,
   now: number,
 ): Promise<void> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const items: Array<{ type: string; total: number }> = await (ctx.db.query("invoiceLineItems") as any)
-    .withIndex("by_org_invoice", (q: any) => q.eq("orgId", orgId).eq("invoiceId", invoiceId))
-    .collect();
+  const items = await getInvoiceLineItems(ctx, orgId, invoiceId);
 
   let laborTotal = 0;
   let partsTotal = 0;
@@ -1734,10 +1682,7 @@ async function recomputePOTotals(
   purchaseOrderId: Id<"purchaseOrders">,
   now: number,
 ): Promise<void> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const items: Array<{ unitPrice: number; qty: number }> = await (ctx.db.query("poLineItems") as any)
-    .withIndex("by_po", (q: any) => q.eq("purchaseOrderId", purchaseOrderId))
-    .collect();
+  const items = await getPOLineItems(ctx, purchaseOrderId);
 
   let subtotal = 0;
   for (const item of items) {

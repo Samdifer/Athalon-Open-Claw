@@ -16,20 +16,7 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
-
-// ─────────────────────────────────────────────────────────────────────────────
-// INTERNAL HELPER: REQUIRE AUTHENTICATED USER
-// ─────────────────────────────────────────────────────────────────────────────
-
-async function requireAuth(ctx: { auth: { getUserIdentity: () => Promise<{ subject: string } | null> } }): Promise<string> {
-  const identity = await ctx.auth.getUserIdentity();
-  if (!identity) {
-    throw new Error(
-      "UNAUTHENTICATED: This operation requires a valid Clerk session.",
-    );
-  }
-  return identity.subject;
-}
+import { requireAuth } from "./lib/authHelpers";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // MUTATION: createVendor

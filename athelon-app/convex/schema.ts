@@ -2176,6 +2176,7 @@ export default defineSchema({
     status: v.union(
       v.literal("DRAFT"),
       v.literal("SENT"),
+      v.literal("PARTIAL"),
       v.literal("PAID"),
       v.literal("VOID"),
     ),
@@ -2348,4 +2349,18 @@ export default defineSchema({
     .index("by_org", ["orgId"])
     .index("by_org_applies_to", ["orgId", "appliesTo"])
     .index("by_org_priority", ["orgId", "priority"]),
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ORG COUNTERS
+  //
+  // Atomic counters for generating unique org-scoped sequential numbers.
+  // Supports invoice (INV-XXXX), quote (Q-XXXX), and PO (PO-XXXX) numbers.
+  // Each counter record is patched atomically within a Convex mutation
+  // transaction, guaranteeing no duplicate numbers even under concurrent load.
+  // ═══════════════════════════════════════════════════════════════════════════
+  orgCounters: defineTable({
+    orgId: v.string(),
+    counterType: v.string(), // "invoice" | "quote" | "po"
+    lastValue: v.number(),
+  }).index("by_org_type", ["orgId", "counterType"]),
 });
