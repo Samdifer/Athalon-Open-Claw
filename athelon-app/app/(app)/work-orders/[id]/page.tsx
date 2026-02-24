@@ -36,6 +36,7 @@ import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AdComplianceTab } from "./AdComplianceTab";
+import { NotFoundCard } from "@/components/NotFoundCard";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -158,15 +159,11 @@ export default function WorkOrderDetailPage() {
 
   if (!data) {
     return (
-      <div className="text-center py-20">
-        <XCircle className="w-8 h-8 text-red-400/60 mx-auto mb-3" />
-        <p className="text-sm font-medium text-muted-foreground">
-          Work order not found
-        </p>
-        <Button asChild variant="ghost" size="sm" className="mt-4">
-          <Link href="/work-orders">← Back to Work Orders</Link>
-        </Button>
-      </div>
+      <NotFoundCard
+        message="Work order not found. It may have been deleted or the link is invalid."
+        backHref="/work-orders"
+        backLabel="Back to Work Orders"
+      />
     );
   }
 

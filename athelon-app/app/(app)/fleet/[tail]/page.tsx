@@ -18,6 +18,7 @@ import { useQuery } from "convex/react";
 import { useOrganization } from "@clerk/nextjs";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
+import { NotFoundCard } from "@/components/NotFoundCard";
 
 // ─── Status helpers ───────────────────────────────────────────────────────────
 
@@ -116,23 +117,11 @@ export default function AircraftDetailPage({
 
   if (!isLoading && aircraft === null) {
     return (
-      <div className="space-y-5">
-        <div className="flex items-center gap-3">
-          <Button asChild variant="ghost" size="sm">
-            <Link href="/fleet">
-              <ArrowLeft className="w-4 h-4 mr-1.5" />
-              Fleet
-            </Link>
-          </Button>
-        </div>
-        <Card className="border-border/60">
-          <CardContent className="py-16 text-center">
-            <p className="text-sm text-muted-foreground">
-              Aircraft &ldquo;{tailNumber}&rdquo; not found
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+      <NotFoundCard
+        message={`Aircraft "${tailNumber}" not found. It may have been removed from the fleet or the registration is incorrect.`}
+        backHref="/fleet"
+        backLabel="Back to Fleet"
+      />
     );
   }
 

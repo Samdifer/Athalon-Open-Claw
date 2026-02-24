@@ -48,6 +48,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { NotFoundCard } from "@/components/NotFoundCard";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -548,12 +549,11 @@ export default function TaskCardPage() {
 
   if (!taskCards) {
     return (
-      <div className="text-center py-20">
-        <p className="text-sm text-muted-foreground">Work order not found</p>
-        <Button asChild variant="ghost" size="sm" className="mt-4">
-          <Link href={`/work-orders/${workOrderId}`}>← Back to Work Order</Link>
-        </Button>
-      </div>
+      <NotFoundCard
+        message="Work order not found. It may have been deleted or the link is invalid."
+        backHref="/work-orders"
+        backLabel="Back to Work Orders"
+      />
     );
   }
 
@@ -561,12 +561,11 @@ export default function TaskCardPage() {
 
   if (!taskCard) {
     return (
-      <div className="text-center py-20">
-        <p className="text-sm text-muted-foreground">Task card not found</p>
-        <Button asChild variant="ghost" size="sm" className="mt-4">
-          <Link href={`/work-orders/${workOrderId}`}>← Back to Work Order</Link>
-        </Button>
-      </div>
+      <NotFoundCard
+        message="Task card not found. It may have been deleted or the link is invalid."
+        backHref={`/work-orders/${workOrderId}`}
+        backLabel="Back to Work Order"
+      />
     );
   }
 
