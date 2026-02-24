@@ -1,0 +1,112 @@
+{
+  "_snapshot": "2026-02-24T19:00:00Z",
+  "_note": "Full cron job definitions as of snapshot date. Re-add via OpenClaw after restore.",
+  "jobs": [
+    {
+      "id": "334c1dfc-4f44-464f-81c8-df3d2cb51844",
+      "name": "security:ssh-unauthorized-alerts",
+      "enabled": true,
+      "schedule": { "kind": "every", "everyMs": 3600000 },
+      "sessionTarget": "isolated",
+      "payload": {
+        "kind": "agentTurn",
+        "model": "anthropic/claude-sonnet-4-6",
+        "message": "Run a read-only SSH intrusion check for the host and notify only on suspicious activity from the last 2 minutes.\n\nSteps:\n1) Execute: sudo journalctl -u ssh --since '2 minutes ago' --no-pager\n2) Look for lines indicating unauthorized access attempts, including patterns such as:\n- Failed password\n- Invalid user\n- Connection closed by authenticating user\n- maximum authentication attempts exceeded\n- Failed publickey\n- Did not receive identification string\n3) Also execute: sudo fail2ban-client status sshd\nIf currently banned IP count increased or banned IP list is non-empty, include that.\n\nOutput rules:\n- If no suspicious lines and no bans: output exactly NO_REPLY.\n- If suspicious activity exists: output a concise alert starting with \"🚨 SSH alert:\" including timestamp(s), source IP(s), username targeted (if present), and whether fail2ban has banned the IP."
+      },
+      "delivery": { "mode": "announce" }
+    },
+    {
+      "id": "fbf6cc67-1ab3-460b-ae5a-fda3d71e2fd9",
+      "name": "usage:token-visibility-hourly",
+      "enabled": true,
+      "schedule": { "kind": "every", "everyMs": 3600000 },
+      "sessionTarget": "isolated",
+      "payload": {
+        "kind": "agentTurn",
+        "model": "anthropic/claude-sonnet-4-6",
+        "message": "Run token usage visibility snapshot and only alert on anomalies.\n\nSteps:\n1) Execute: python3 /home/sam_sandifer1/.openclaw/workspace/ops/token-usage/generate_snapshot.py\n2) Read: /home/sam_sandifer1/.openclaw/workspace/ops/token-usage/snapshot.md\n3) Check for anomalies:\n   - any line showing rate-limit run count > 0\n   - sudden jump in total tokens vs previous history entry (if obvious from usage-history.jsonl)\n4) Output rules:\n   - If no anomaly: output exactly NO_REPLY\n   - If anomaly: start with \"📈 Token usage alert:\" and include concise reason + suggested tuning action."
+      },
+      "delivery": { "mode": "announce" }
+    },
+    {
+      "id": "bb0ec484-ccb7-49f7-bf42-3ab4483891e5",
+      "name": "security:adaptive-threat-blocker",
+      "enabled": true,
+      "schedule": { "kind": "cron", "expr": "0 */6 * * *", "tz": "UTC" },
+      "sessionTarget": "isolated",
+      "payload": {
+        "kind": "agentTurn",
+        "message": "Run the adaptive SSH threat blocker: `sudo /home/sam_sandifer1/.openclaw/workspace/security/adaptive-block.sh`. Then read the last 20 lines of /home/sam_sandifer1/.openclaw/workspace/security/adaptive-block.log and report: how many new blocks were added, any new patterns detected, and current total UFW deny rule count. Only alert the user if new subnets were blocked or a new attack pattern is detected. Otherwise just log it silently.",
+        "timeoutSeconds": 120
+      },
+      "delivery": { "mode": "none" }
+    },
+    {
+      "id": "d1271922-9cdc-4566-b143-c51dee7fe763",
+      "name": "usage:token-daily-digest",
+      "enabled": true,
+      "schedule": { "kind": "cron", "expr": "5 9 * * *", "tz": "UTC" },
+      "sessionTarget": "isolated",
+      "payload": {
+        "kind": "agentTurn",
+        "model": "anthropic/claude-sonnet-4-6",
+        "message": "Generate the daily token usage digest for Sam.\n\nSteps:\n1) Run:\n   - python3 /home/sam_sandifer1/.openclaw/workspace/ops/token-usage/generate_snapshot.py\n   - python3 /home/sam_sandifer1/.openclaw/workspace/ops/token-usage/generate_capacity_report.py\n2) Read:\n   - /home/sam_sandifer1/.openclaw/workspace/ops/token-usage/snapshot.md\n   - /home/sam_sandifer1/.openclaw/workspace/ops/token-usage/capacity-report.md\n3) Output a concise digest starting with \"📊 Daily Token Digest\" including:\n   - Codex vs Claude usage split (daily window)\n   - top model/provider by usage\n   - budget utilization by provider (daily/weekly/monthly)\n   - anomaly callout if rate-limit or WARN/CRITICAL utilization appears\n   - one tuning recommendation\n\nKeep it short and executive-ready."
+      },
+      "delivery": { "mode": "announce" }
+    },
+    {
+      "id": "2fac1c82-4ff5-43cd-9406-8bb43d28c6a5",
+      "name": "openclaw:weekly-release-digest",
+      "enabled": true,
+      "schedule": { "kind": "cron", "expr": "0 9 * * 1", "tz": "UTC" },
+      "sessionTarget": "isolated",
+      "payload": {
+        "kind": "agentTurn",
+        "message": "Prepare a concise weekly OpenClaw release digest for Sam.\n\nScope:\n1) Fetch latest official release notes from https://github.com/openclaw/openclaw/releases\n2) Fetch latest changelog from https://raw.githubusercontent.com/openclaw/openclaw/main/CHANGELOG.md\n3) Compare current installed version on host via `openclaw --version` with latest stable release.\n4) Summarize:\n   - New stable release(s) since last digest\n   - Top 5 changes most relevant to this environment (security, cron, messaging/telegram, automation, model/session tooling)\n   - Any breaking/deprecation/migration notes\n   - Recommended actions for Sam (max 5 bullets)\n\nOutput format:\n- Start with: \"📬 Weekly OpenClaw Digest\"\n- Keep it executive concise (under ~250 words)\n- If no meaningful changes, say: \"No major OpenClaw changes this week.\" and include version check result."
+      },
+      "delivery": { "mode": "announce" }
+    },
+    {
+      "id": "db97464b-eb3c-492f-8306-8cfe3d31c6c3",
+      "name": "athelon-mvp-build-watchdog",
+      "enabled": true,
+      "schedule": { "kind": "every", "everyMs": 600000 },
+      "sessionTarget": "isolated",
+      "payload": {
+        "kind": "agentTurn",
+        "model": "anthropic/claude-sonnet-4-6",
+        "timeoutSeconds": 90,
+        "message": "You are the Athelon MVP build watchdog. You have 90 seconds — stay fast.\n\nState file: /home/sam_sandifer1/.openclaw/workspace/athelon-build-plan/unified-plan/MVP-EXECUTION-STATE.md\n\nSTEP 1: Read ONLY lines 1-15 of MVP-EXECUTION-STATE.md.\nSTEP 2: If Lock is LOCKED → output 'LOCKED. Exiting.' and stop immediately.\nSTEP 3: If all 4 gates say DONE or VERIFIED → output 'MVP complete. Standing by.' and stop.\nSTEP 4: If Lock is UNLOCKED and work remains:\n  a) Write a single line change to MVP-EXECUTION-STATE.md: replace '- **Lock:** UNLOCKED' with '- **Lock:** LOCKED'\n  b) Call sessions_spawn with mode=run, runTimeoutSeconds=1800, cleanup=keep, label='athelon-mvp-cycle', agentId='main', task='...'\n  c) Output 'Spawned MVP cycle. Exiting.' and stop."
+      },
+      "delivery": { "mode": "announce" }
+    },
+    {
+      "id": "4649f08c-7fdb-446a-8930-333c64cfb9f9",
+      "name": "athelon-continuity-watchdog",
+      "enabled": false,
+      "schedule": { "kind": "every", "everyMs": 480000 },
+      "sessionTarget": "isolated",
+      "payload": {
+        "kind": "agentTurn",
+        "model": "anthropic/claude-sonnet-4-6",
+        "timeoutSeconds": 120,
+        "message": "Athelon continuity watchdog — checks SIMULATION-STATE.md and spawns missing workstreams."
+      },
+      "delivery": { "mode": "announce" }
+    },
+    {
+      "id": "3585c553-e452-4eae-ad3e-904a952a1ff4",
+      "name": "athelon-sim-orchestrator",
+      "enabled": false,
+      "schedule": { "kind": "every", "everyMs": 1200000 },
+      "sessionTarget": "isolated",
+      "payload": {
+        "kind": "agentTurn",
+        "model": "anthropic/claude-sonnet-4-6",
+        "timeoutSeconds": 600,
+        "message": "Athelon simulation orchestrator — manages full phase execution pipeline."
+      },
+      "delivery": { "mode": "announce" }
+    }
+  ]
+}

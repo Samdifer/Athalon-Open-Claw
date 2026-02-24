@@ -1,0 +1,134 @@
+{
+  "_note": "Secrets replaced with __OPENCLAW_REDACTED__ — re-enter via openclaw configure or directly in openclaw.json",
+  "_snapshot": "2026-02-24T19:00:00Z",
+  "_version": "2026.2.22-2",
+  "meta": {
+    "lastTouchedVersion": "2026.2.22-2",
+    "lastTouchedAt": "2026-02-24T16:02:15.826Z"
+  },
+  "wizard": {
+    "lastRunAt": "2026-02-19T01:49:15.896Z",
+    "lastRunVersion": "2026.2.17",
+    "lastRunCommand": "configure",
+    "lastRunMode": "local"
+  },
+  "auth": {
+    "profiles": {
+      "anthropic:default": {
+        "provider": "anthropic",
+        "mode": "token"
+      },
+      "openai-codex:default": {
+        "provider": "openai-codex",
+        "mode": "oauth"
+      },
+      "anthropic:manual": {
+        "provider": "anthropic",
+        "mode": "token"
+      }
+    }
+  },
+  "agents": {
+    "defaults": {
+      "model": {
+        "primary": "anthropic/claude-sonnet-4-6",
+        "fallbacks": [
+          "openai-codex/gpt-5.3-codex",
+          "anthropic/claude-opus-4-6"
+        ]
+      },
+      "models": {
+        "anthropic/claude-opus-4-6": {
+          "alias": "opus"
+        },
+        "openai-codex/gpt-5.3-codex": {},
+        "anthropic/claude-sonnet-4-6": {
+          "alias": "sonnet"
+        }
+      },
+      "workspace": "/home/sam_sandifer1/.openclaw/workspace",
+      "contextPruning": {
+        "mode": "cache-ttl",
+        "ttl": "1h"
+      },
+      "compaction": {
+        "mode": "safeguard"
+      },
+      "heartbeat": {
+        "every": "1h"
+      },
+      "maxConcurrent": 4,
+      "subagents": {
+        "maxConcurrent": 8
+      }
+    }
+  },
+  "tools": {
+    "web": {
+      "search": {
+        "provider": "brave",
+        "apiKey": "__OPENCLAW_REDACTED__"
+      }
+    }
+  },
+  "messages": {
+    "ackReactionScope": "group-mentions"
+  },
+  "commands": {
+    "native": "auto",
+    "nativeSkills": "auto",
+    "restart": true,
+    "ownerDisplay": "raw"
+  },
+  "channels": {
+    "telegram": {
+      "enabled": true,
+      "dmPolicy": "allowlist",
+      "botToken": "__OPENCLAW_REDACTED__",
+      "groups": {
+        "-1003638630016": {
+          "requireMention": false
+        },
+        "-1003827130852": {
+          "requireMention": false
+        }
+      },
+      "allowFrom": [
+        "849519235"
+      ],
+      "groupAllowFrom": [
+        "849519235"
+      ],
+      "groupPolicy": "allowlist",
+      "streaming": "partial"
+    }
+  },
+  "gateway": {
+    "port": 18789,
+    "mode": "local",
+    "bind": "loopback",
+    "auth": {
+      "mode": "token",
+      "token": "__OPENCLAW_REDACTED__"
+    },
+    "tailscale": {
+      "mode": "off",
+      "resetOnExit": false
+    }
+  },
+  "skills": {
+    "install": {
+      "nodeManager": "npm"
+    }
+  },
+  "plugins": {
+    "entries": {
+      "telegram": {
+        "enabled": true
+      },
+      "copilot-proxy": {
+        "enabled": true
+      }
+    }
+  }
+}
