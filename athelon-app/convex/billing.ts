@@ -497,6 +497,122 @@ export const declineQuote = mutation({
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
+// MUTATION: addQuoteDepartmentSection
+//
+// Adds a department section to a DRAFT quote. Each section is assigned to a
+// technician and starts in PENDING status.
+// Marcus: Multi-department quotation (FEAT-140) — each shop (avionics, airframe,
+// powerplant) must submit its scope before the quote can be sent to the customer.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Adds a department section to a DRAFT quote. Starts in PENDING status. */
+export const addQuoteDepartmentSection = mutation({
+  args: {
+    orgId: v.id("organizations"),
+    quoteId: v.id("quotes"),
+    sectionName: v.string(),
+    assignedTechId: v.id("technicians"),
+  },
+
+  handler: async (ctx, args): Promise<Id<"quoteDepartments">> => {
+    const now = Date.now();
+    const callerUserId = await requireAuth(ctx);
+
+    const quote = await ctx.db.get(args.quoteId);
+    if (!quote) throw new Error(`Quote ${args.quoteId} not found.`);
+    if (quote.orgId !== args.orgId) throw new Error(`Quote does not belong to org ${args.orgId}.`);
+    if (quote.status !== "DRAFT") {
+      throw new Error(`Department sections can only be added to DRAFT quotes. Current: "${quote.status}".`);
+    }
+    if (!args.sectionName.trim()) throw new Error("sectionName must be non-empty.");
+
+    const tech = await ctx.db.get(args.assignedTechId);
+    if (!tech) throw new Error(`Technician ${args.assignedTechId} not found.`);
+
+    const deptId = await ctx.db.insert("quoteDepartments", {
+      orgId: args.orgId,
+      quoteId: args.quoteId,
+      sectionName: args.sectionName.trim(),
+      assignedTechId: args.assignedTechId,
+      status: "PENDING",
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    await ctx.db.insert("auditLog", {
+      organizationId: args.orgId,
+      eventType: "record_created",
+      tableName: "quoteDepartments",
+      recordId: deptId,
+      userId: callerUserId,
+      technicianId: args.assignedTechId,
+      notes:
+        `Department section "${args.sectionName.trim()}" added to quote ${quote.quoteNumber}. ` +
+        `Assigned to ${tech.legalName ?? args.assignedTechId}. Status: PENDING.`,
+      timestamp: now,
+    });
+
+    return deptId;
+  },
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MUTATION: submitDepartmentSection
+//
+// Marks a quoteDepartments section as SUBMITTED. Must be called by the assigned
+// technician (or admin override). Once all sections are SUBMITTED or APPROVED,
+// the quote can be sent via sendQuote.
+// Marcus (FEAT-140): Prevents sending a quote that has incomplete scope from
+// any department. Each section must be explicitly submitted.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Submits a department section (PENDING → SUBMITTED). All sections must be submitted before sendQuote. */
+export const submitDepartmentSection = mutation({
+  args: {
+    orgId: v.id("organizations"),
+    deptSectionId: v.id("quoteDepartments"),
+    notes: v.optional(v.string()),
+  },
+
+  handler: async (ctx, args): Promise<void> => {
+    const now = Date.now();
+    const callerUserId = await requireAuth(ctx);
+
+    const section = await ctx.db.get(args.deptSectionId);
+    if (!section) throw new Error(`Department section ${args.deptSectionId} not found.`);
+    if (section.orgId !== args.orgId) throw new Error(`Section does not belong to org ${args.orgId}.`);
+    if (section.status === "SUBMITTED") {
+      throw new Error(`Department section "${section.sectionName}" is already SUBMITTED.`);
+    }
+    if (section.status === "APPROVED") {
+      throw new Error(`Department section "${section.sectionName}" is already APPROVED.`);
+    }
+
+    await ctx.db.patch(args.deptSectionId, {
+      status: "SUBMITTED",
+      submittedAt: now,
+      updatedAt: now,
+    });
+
+    await ctx.db.insert("auditLog", {
+      organizationId: args.orgId,
+      eventType: "status_changed",
+      tableName: "quoteDepartments",
+      recordId: args.deptSectionId,
+      userId: callerUserId,
+      technicianId: section.assignedTechId,
+      fieldName: "status",
+      oldValue: JSON.stringify("PENDING"),
+      newValue: JSON.stringify("SUBMITTED"),
+      notes:
+        `Department section "${section.sectionName}" SUBMITTED at ${new Date(now).toISOString()}. ` +
+        (args.notes ?? ""),
+      timestamp: now,
+    });
+  },
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
 // MUTATION: convertQuoteToWorkOrder
 //
 // Converts an APPROVED quote into a new work order. Sets quote.status = CONVERTED
