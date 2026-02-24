@@ -39,6 +39,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { NotFoundCard } from "@/components/NotFoundCard";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -576,19 +577,11 @@ export default function MaintenanceRecordsPage() {
 
   if (report === null) {
     return (
-      <div className="space-y-5">
-        <Button asChild variant="ghost" size="sm" className="h-7 -ml-2 text-xs text-muted-foreground">
-          <Link href="/work-orders">
-            <ArrowLeft className="w-3.5 h-3.5 mr-1.5" />
-            Work Orders
-          </Link>
-        </Button>
-        <Card className="border-border/60">
-          <CardContent className="py-10 text-center">
-            <p className="text-sm text-muted-foreground">Work order not found.</p>
-          </CardContent>
-        </Card>
-      </div>
+      <NotFoundCard
+        message="Work order not found. It may have been deleted or the link is invalid."
+        backHref="/work-orders"
+        backLabel="Back to Work Orders"
+      />
     );
   }
 
