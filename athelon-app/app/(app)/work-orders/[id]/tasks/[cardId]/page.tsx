@@ -26,6 +26,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { SignStepDialog } from "./_components/SignStepDialog";
 import { SignCardDialog } from "./_components/SignCardDialog";
 import { TaskStepRow } from "./_components/TaskStepRow";
+import {
+  type TaskStatus,
+  TASK_STATUS_LABEL,
+  TASK_STATUS_STYLES,
+} from "@/lib/mro-constants";
 
 // ─── Loading skeleton ─────────────────────────────────────────────────────────
 
@@ -135,13 +140,7 @@ export default function TaskCardPage() {
             <Badge
               variant="outline"
               className={`text-[10px] font-medium border ${
-                cardIsComplete
-                  ? "bg-green-500/15 text-green-400 border-green-500/30"
-                  : cardIsVoided
-                  ? "bg-slate-500/15 text-slate-400 border-slate-500/30"
-                  : taskCard.status === "in_progress"
-                  ? "bg-sky-500/15 text-sky-400 border-sky-500/30"
-                  : "bg-slate-500/15 text-slate-400 border-slate-500/30"
+                TASK_STATUS_STYLES[taskCard.status as TaskStatus] ?? "bg-muted text-muted-foreground"
               }`}
             >
               {cardIsComplete && (
@@ -149,13 +148,7 @@ export default function TaskCardPage() {
               )}
               {cardIsComplete
                 ? "Signed & Complete"
-                : taskCard.status === "in_progress"
-                ? "In Progress"
-                : taskCard.status === "not_started"
-                ? "Not Started"
-                : taskCard.status === "incomplete_na_steps"
-                ? "Needs IA Review"
-                : "Voided"}
+                : TASK_STATUS_LABEL[taskCard.status as TaskStatus] ?? taskCard.status}
             </Badge>
           </div>
           <h1 className="text-lg font-semibold text-foreground">

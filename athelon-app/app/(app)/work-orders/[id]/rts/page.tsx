@@ -30,6 +30,8 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { NotFoundCard } from "@/components/NotFoundCard";
 
+import { type CloseReadinessReport } from "@/lib/mro-types";
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type PreconditionStatus = "PASS" | "FAIL" | "PENDING";
@@ -72,7 +74,7 @@ function PreconditionBadge({ status }: { status: PreconditionStatus }) {
 // ─── Derive 9 Preconditions from report ──────────────────────────────────────
 
 function derivePreconditions(
-  report: NonNullable<ReturnType<typeof useQuery<typeof api.returnToService.getCloseReadinessReport>>>,
+  report: CloseReadinessReport,
   rtsStatement: string,
   signatureAuthEventId: string,
 ): Precondition[] {

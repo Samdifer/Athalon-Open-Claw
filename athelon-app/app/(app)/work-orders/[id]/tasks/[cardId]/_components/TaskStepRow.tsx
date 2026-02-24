@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import type { Id } from "@/convex/_generated/dataModel";
+import { formatDateTime } from "@/lib/format";
 
 // ─── Prop types ───────────────────────────────────────────────────────────────
 
@@ -104,12 +105,7 @@ export function TaskStepRow({
               {step.signedAt && (
                 <span className="text-muted-foreground/60">
                   ·{" "}
-                  {new Date(step.signedAt).toLocaleString("en-US", {
-                    month: "short",
-                    day: "numeric",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
+                  {formatDateTime(step.signedAt)}
                 </span>
               )}
               {step.signedCertificateNumber && (

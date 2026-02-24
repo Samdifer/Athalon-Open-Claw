@@ -107,7 +107,7 @@ export function TaskCardList({ taskCards, workOrderId }: TaskCardListProps) {
                           {tc.status === "in_progress" && (
                             <Circle className="w-2.5 h-2.5 mr-1" />
                           )}
-                          {TASK_STATUS_LABEL[tc.status] ?? tc.status}
+                          {TASK_STATUS_LABEL[tc.status as TaskStatus] ?? tc.status}
                         </Badge>
                         <Badge
                           variant="outline"

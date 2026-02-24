@@ -9,6 +9,7 @@ import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import type { Id } from "@/convex/_generated/dataModel";
 import { ArrowLeft, Plane, AlertCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -31,6 +32,7 @@ export default function NewWorkOrderPage() {
 
   // Form state
   const [aircraftId, setAircraftId] = useState<Id<"aircraft"> | "">("");
+  const [workOrderNumber, setWorkOrderNumber] = useState("");
   const [workOrderType, setWorkOrderType] = useState<string>("routine");
   const [description, setDescription] = useState("");
   const [squawks, setSquawks] = useState("");
@@ -54,7 +56,7 @@ export default function NewWorkOrderPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!orgId || !aircraftId) return;
+    if (!orgId || !aircraftId || !workOrderNumber.trim()) return;
 
     setIsSubmitting(true);
     setError(null);
@@ -63,6 +65,7 @@ export default function NewWorkOrderPage() {
       const woId = await createWorkOrder({
         organizationId: orgId,
         aircraftId: aircraftId as Id<"aircraft">,
+        workOrderNumber: workOrderNumber.trim(),
         workOrderType: workOrderType as WoType,
         description: description.trim(),
         squawks: squawks.trim() || undefined,
@@ -197,13 +200,24 @@ export default function NewWorkOrderPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4 pt-0">
-              {/* WO Number — auto-assigned server-side */}
-              <div className="flex items-start gap-2 p-3 rounded-md bg-muted/30 border border-border/60">
-                <AlertCircle className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-0.5" />
-                <p className="text-xs text-muted-foreground">
-                  Work order number will be auto-assigned by the system (e.g.{" "}
-                  <span className="font-mono">WO-2026-0001</span>). It will
-                  appear on the work order after creation.
+              {/* WO Number */}
+              <div>
+                <Label
+                  htmlFor="workOrderNumber"
+                  className="text-xs font-medium mb-1.5 block"
+                >
+                  Work Order Number <span className="text-red-400">*</span>
+                </Label>
+                <Input
+                  id="workOrderNumber"
+                  className="h-9 text-sm bg-muted/30 border-border/60 font-mono"
+                  placeholder="e.g. WO-2026-0001"
+                  value={workOrderNumber}
+                  onChange={(e) => setWorkOrderNumber(e.target.value)}
+                  required
+                />
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  Must be unique within your organization.
                 </p>
               </div>
 
