@@ -24,7 +24,7 @@
       "payload": {
         "kind": "agentTurn",
         "model": "anthropic/claude-sonnet-4-6",
-        "message": "Run token usage visibility snapshot and only alert on anomalies.\n\nSteps:\n1) Execute: python3 /home/sam_sandifer1/.openclaw/workspace/ops/token-usage/generate_snapshot.py\n2) Read: /home/sam_sandifer1/.openclaw/workspace/ops/token-usage/snapshot.md\n3) Check for anomalies:\n   - any line showing rate-limit run count > 0\n   - sudden jump in total tokens vs previous history entry (if obvious from usage-history.jsonl)\n4) Output rules:\n   - If no anomaly: output exactly NO_REPLY\n   - If anomaly: start with \"📈 Token usage alert:\" and include concise reason + suggested tuning action."
+        "message": "Run token usage visibility snapshot and only alert on anomalies.\n\nSteps:\n1) Execute: python3 /home/sam_sandifer1/.openclaw/workspace/ops/token-usage/generate_snapshot.py\n2) Read: /home/sam_sandifer1/.openclaw/workspace/ops/token-usage/snapshot.md\n3) Check for anomalies:\n   - rate-limit run count > 1 (NOTE: a baseline of 1 persistent rate-limit event is known and expected — only alert if count exceeds 1)\n   - sudden jump in total tokens vs previous history entry (if obvious from usage-history.jsonl)\n4) Output rules:\n   - If no anomaly (rate-limit count is 0 or 1, no token spike): output exactly NO_REPLY\n   - If anomaly (rate-limit count > 1 OR sudden token spike): start with \"📈 Token usage alert:\" and include concise reason + suggested tuning action."
       },
       "delivery": { "mode": "announce" }
     },
