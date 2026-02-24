@@ -10,6 +10,7 @@ import { AlertTriangle, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { formatDate } from "@/lib/format";
 
 // ─── Prop types ───────────────────────────────────────────────────────────────
 
@@ -74,7 +75,7 @@ export function DiscrepancyList({ discrepancies }: DiscrepancyListProps) {
                   </div>
                   <p className="text-sm text-foreground">{sq.description}</p>
                   <p className="text-[11px] text-muted-foreground mt-1">
-                    Found {new Date(sq._creationTime).toLocaleDateString()}
+                    Found {formatDate(sq._creationTime)}
                   </p>
                 </div>
               </div>

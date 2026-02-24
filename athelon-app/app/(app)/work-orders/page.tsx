@@ -22,64 +22,18 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  type WoStatus,
+  type WoType,
+  WO_STATUS_LABEL,
+  WO_STATUS_STYLES,
+  WO_TYPE_LABEL,
+} from "@/lib/mro-constants";
+import { formatDate } from "@/lib/format";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
 type FilterTab = "active" | "on_hold" | "pending" | "complete" | "all";
-
-type WoStatus =
-  | "draft"
-  | "open"
-  | "in_progress"
-  | "on_hold"
-  | "pending_inspection"
-  | "pending_signoff"
-  | "open_discrepancies"
-  | "closed"
-  | "cancelled"
-  | "voided";
-
-const STATUS_LABEL: Record<WoStatus, string> = {
-  draft: "Draft",
-  open: "Open",
-  in_progress: "In Progress",
-  on_hold: "On Hold",
-  pending_inspection: "Pending Inspection",
-  pending_signoff: "Pending Sign-Off",
-  open_discrepancies: "Open Discrepancies",
-  closed: "Closed",
-  cancelled: "Cancelled",
-  voided: "Voided",
-};
-
-const WO_TYPE_LABEL: Record<string, string> = {
-  routine: "Routine",
-  unscheduled: "Unscheduled",
-  annual_inspection: "Annual",
-  "100hr_inspection": "100-Hour",
-  progressive_inspection: "Progressive",
-  ad_compliance: "AD Compliance",
-  major_repair: "Major Repair",
-  major_alteration: "Major Alteration",
-  field_approval: "Field Approval",
-  ferry_permit: "Ferry Permit",
-};
-
-function getStatusStyles(status: string): string {
-  const map: Record<string, string> = {
-    in_progress: "bg-sky-500/15 text-sky-400 border-sky-500/30",
-    open: "bg-blue-500/15 text-blue-400 border-blue-500/30",
-    pending_signoff: "bg-amber-500/15 text-amber-400 border-amber-500/30",
-    pending_inspection: "bg-amber-500/15 text-amber-400 border-amber-500/30",
-    on_hold: "bg-orange-500/15 text-orange-400 border-orange-500/30",
-    draft: "bg-slate-500/15 text-slate-400 border-slate-500/30",
-    closed: "bg-green-500/15 text-green-400 border-green-500/30",
-    cancelled: "bg-slate-500/15 text-slate-400 border-slate-500/30",
-    open_discrepancies: "bg-red-500/15 text-red-400 border-red-500/30",
-    voided: "bg-slate-500/15 text-slate-400 border-slate-500/30",
-  };
-  return map[status] ?? "bg-muted text-muted-foreground";
-}
 
 function filterByTab(
   wos: Array<{ status: string }>,
@@ -288,16 +242,10 @@ export default function WorkOrdersPage() {
                 ? `${wo.aircraft.make} ${wo.aircraft.model}`
                 : "Unknown Aircraft";
             const statusLabel =
-              STATUS_LABEL[wo.status as WoStatus] ?? wo.status;
+              WO_STATUS_LABEL[wo.status as WoStatus] ?? wo.status;
             const typeLabel =
-              WO_TYPE_LABEL[wo.workOrderType] ?? wo.workOrderType;
-            const openedDate = wo.openedAt
-              ? new Date(wo.openedAt).toLocaleDateString("en-US", {
-                  month: "short",
-                  day: "numeric",
-                  year: "numeric",
-                })
-              : "—";
+              WO_TYPE_LABEL[wo.workOrderType as WoType] ?? wo.workOrderType;
+            const openedDate = wo.openedAt ? formatDate(wo.openedAt) : "—";
             const isAog = wo.priority === "aog";
 
             return (
@@ -322,7 +270,7 @@ export default function WorkOrdersPage() {
                           ) : (
                             <Badge
                               variant="outline"
-                              className={`text-[10px] font-medium border ${getStatusStyles(wo.status)}`}
+                              className={`text-[10px] font-medium border ${WO_STATUS_STYLES[wo.status as WoStatus] ?? "bg-muted text-muted-foreground"}`}
                             >
                               {wo.status === "in_progress" && (
                                 <Circle className="w-2 h-2 mr-1 fill-current" />

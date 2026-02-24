@@ -24,6 +24,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Select,
   SelectContent,
@@ -219,7 +220,7 @@ export default function NewTaskCardPage() {
   const [steps, setSteps] = useState<StepDraft[]>([newStepDraft()]);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   // Load work order info
   const wo = useQuery(
@@ -274,18 +275,18 @@ export default function NewTaskCardPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setSubmitError(null);
     const err = validate();
     if (err) {
-      setError(err);
+      setSubmitError(err);
       return;
     }
     if (!orgId) {
-      setError("Organization not loaded. Please wait and try again.");
+      setSubmitError("Organization not loaded. Please wait and try again.");
       return;
     }
 
     setIsSubmitting(true);
-    setError(null);
 
     try {
       const cardId = await createTaskCard({
@@ -312,7 +313,7 @@ export default function NewTaskCardPage() {
 
       router.push(`/work-orders/${workOrderId}/tasks/${cardId}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create task card.");
+      setSubmitError(err instanceof Error ? err.message : "Failed to create task card.");
       setIsSubmitting(false);
     }
   }
@@ -593,11 +594,11 @@ export default function NewTaskCardPage() {
       </div>
 
       {/* Error */}
-      {error && (
-        <div className="flex items-start gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/30 text-destructive">
-          <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-          <p className="text-sm">{error}</p>
-        </div>
+      {submitError && (
+        <Alert variant="destructive">
+          <AlertCircle className="w-4 h-4" />
+          <AlertDescription>{submitError}</AlertDescription>
+        </Alert>
       )}
 
       {/* Actions */}

@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useMutation } from "convex/react";
 import { useOrganization } from "@clerk/nextjs";
 import { api } from "@/convex/_generated/api";
@@ -28,34 +29,35 @@ export default function NewPartPage() {
   const [supplier, setSupplier] = useState("");
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [createdCount, setCreatedCount] = useState(0);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setSubmitError(null);
+
     if (!orgId) {
-      setError("Organization not loaded. Please try again.");
+      setSubmitError("Organization not loaded. Please try again.");
       return;
     }
 
     const qty = parseInt(quantity, 10);
     if (isNaN(qty) || qty < 1) {
-      setError("Quantity must be a positive number.");
+      setSubmitError("Quantity must be a positive number.");
       return;
     }
 
     if (!partNumber.trim()) {
-      setError("Part number is required.");
+      setSubmitError("Part number is required.");
       return;
     }
     if (!partName.trim()) {
-      setError("Part name is required.");
+      setSubmitError("Part name is required.");
       return;
     }
 
     setIsSubmitting(true);
-    setError(null);
 
     try {
       const ids = await createPart({
@@ -75,7 +77,7 @@ export default function NewPartPage() {
       setQuantity("1");
       setSupplier("");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+      setSubmitError(err instanceof Error ? err.message : "An unexpected error occurred. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -218,10 +220,10 @@ export default function NewPartPage() {
               </div>
             </div>
 
-            {error && (
-              <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20">
-                <p className="text-xs text-red-400">{error}</p>
-              </div>
+            {submitError && (
+              <Alert variant="destructive">
+                <AlertDescription>{submitError}</AlertDescription>
+              </Alert>
             )}
 
             <div className="flex items-center gap-3 pt-2">

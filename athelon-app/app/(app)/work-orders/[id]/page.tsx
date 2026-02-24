@@ -7,21 +7,12 @@ import { api } from "@/convex/_generated/api";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import type { Id } from "@/convex/_generated/dataModel";
 import {
-  ArrowLeft,
-  ClipboardList,
   AlertTriangle,
-  Package,
   FileText,
-  CheckCircle2,
-  Circle,
-  Clock,
-  Wrench,
-  ChevronRight,
   ShieldCheck,
-  XCircle,
   Timer,
   User,
-  Plus,
+  XCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -36,81 +27,10 @@ import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AdComplianceTab } from "./AdComplianceTab";
-import { NotFoundCard } from "@/components/NotFoundCard";
-
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
-const STATUS_LABEL: Record<string, string> = {
-  draft: "Draft",
-  open: "Open",
-  in_progress: "In Progress",
-  on_hold: "On Hold",
-  pending_inspection: "Pending Inspection",
-  pending_signoff: "Pending Sign-Off",
-  open_discrepancies: "Open Discrepancies",
-  closed: "Closed",
-  cancelled: "Cancelled",
-  voided: "Voided",
-};
-
-const WO_TYPE_LABEL: Record<string, string> = {
-  routine: "Routine",
-  unscheduled: "Unscheduled",
-  annual_inspection: "Annual Inspection",
-  "100hr_inspection": "100-Hour Inspection",
-  progressive_inspection: "Progressive Inspection",
-  ad_compliance: "AD Compliance",
-  major_repair: "Major Repair",
-  major_alteration: "Major Alteration",
-  field_approval: "Field Approval",
-  ferry_permit: "Ferry Permit",
-};
-
-function getStatusStyles(status: string): string {
-  const map: Record<string, string> = {
-    in_progress: "bg-sky-500/15 text-sky-400 border-sky-500/30",
-    open: "bg-blue-500/15 text-blue-400 border-blue-500/30",
-    pending_signoff: "bg-amber-500/15 text-amber-400 border-amber-500/30",
-    pending_inspection: "bg-amber-500/15 text-amber-400 border-amber-500/30",
-    on_hold: "bg-orange-500/15 text-orange-400 border-orange-500/30",
-    draft: "bg-slate-500/15 text-slate-400 border-slate-500/30",
-    closed: "bg-green-500/15 text-green-400 border-green-500/30",
-    cancelled: "bg-slate-500/15 text-slate-400 border-slate-500/30",
-    open_discrepancies: "bg-red-500/15 text-red-400 border-red-500/30",
-  };
-  return map[status] ?? "bg-muted text-muted-foreground";
-}
-
-function getTaskStatusStyles(status: string): string {
-  const map: Record<string, string> = {
-    complete: "bg-green-500/15 text-green-400 border-green-500/30",
-    in_progress: "bg-sky-500/15 text-sky-400 border-sky-500/30",
-    not_started: "bg-slate-500/15 text-slate-400 border-slate-500/30",
-    incomplete_na_steps: "bg-amber-500/15 text-amber-400 border-amber-500/30",
-    voided: "bg-slate-500/15 text-slate-400 border-slate-500/30",
-  };
-  return map[status] ?? "bg-muted text-muted-foreground";
-}
-
-const TASK_STATUS_LABEL: Record<string, string> = {
-  not_started: "Not Started",
-  in_progress: "In Progress",
-  incomplete_na_steps: "Needs IA Review",
-  complete: "Complete",
-  voided: "Voided",
-};
-
-const TASK_TYPE_LABEL: Record<string, string> = {
-  inspection: "Inspection",
-  repair: "Repair",
-  replacement: "Replacement",
-  ad_compliance: "AD Compliance",
-  functional_check: "Functional Check",
-  rigging: "Rigging",
-  return_to_service: "Return to Service",
-  overhaul: "Overhaul",
-  modification: "Modification",
-};
+import { WorkOrderHeader } from "./_components/WorkOrderHeader";
+import { TaskCardList } from "./_components/TaskCardList";
+import { DiscrepancyList } from "./_components/DiscrepancyList";
+import { formatDate, formatDateTime } from "@/lib/format";
 
 // ─── Loading skeleton ─────────────────────────────────────────────────────────
 
@@ -159,11 +79,15 @@ export default function WorkOrderDetailPage() {
 
   if (!data) {
     return (
-      <NotFoundCard
-        message="Work order not found. It may have been deleted or the link is invalid."
-        backHref="/work-orders"
-        backLabel="Back to Work Orders"
-      />
+      <div className="text-center py-20">
+        <XCircle className="w-8 h-8 text-red-400/60 mx-auto mb-3" />
+        <p className="text-sm font-medium text-muted-foreground">
+          Work order not found
+        </p>
+        <Button asChild variant="ghost" size="sm" className="mt-4">
+          <Link href="/work-orders">← Back to Work Orders</Link>
+        </Button>
+      </div>
     );
   }
 
@@ -178,108 +102,15 @@ export default function WorkOrderDetailPage() {
     (d) => d.status === "open" || d.status === "under_evaluation",
   ).length;
 
-  const openedDate = wo.openedAt
-    ? new Date(wo.openedAt).toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      })
-    : null;
+  const openedDate = wo.openedAt ? formatDate(wo.openedAt) : null;
 
   const canClose = readiness?.canClose ?? false;
   const blockers = readiness?.blockers ?? [];
 
   return (
     <div className="space-y-5">
-      {/* Back + Header */}
-      <div>
-        <Button
-          asChild
-          variant="ghost"
-          size="sm"
-          className="h-7 -ml-2 mb-3 text-xs text-muted-foreground"
-        >
-          <Link href="/work-orders">
-            <ArrowLeft className="w-3.5 h-3.5 mr-1.5" />
-            Work Orders
-          </Link>
-        </Button>
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2.5 mb-1 flex-wrap">
-              <h1 className="text-xl font-semibold font-mono text-foreground">
-                {wo.workOrderNumber}
-              </h1>
-              <Badge
-                variant="outline"
-                className={`text-[11px] font-medium border ${getStatusStyles(wo.status)}`}
-              >
-                {STATUS_LABEL[wo.status] ?? wo.status}
-              </Badge>
-              <Badge
-                variant="outline"
-                className="text-[10px] text-muted-foreground border-border/40"
-              >
-                {WO_TYPE_LABEL[wo.workOrderType] ?? wo.workOrderType}
-              </Badge>
-              {wo.priority === "aog" && (
-                <Badge className="bg-red-500/15 text-red-400 border border-red-500/30 text-[11px] font-semibold">
-                  AOG
-                </Badge>
-              )}
-              {wo.priority === "urgent" && (
-                <Badge className="bg-orange-500/15 text-orange-400 border border-orange-500/30 text-[11px]">
-                  Urgent
-                </Badge>
-              )}
-            </div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="font-mono font-bold text-2xl text-foreground">
-                {aircraft?.currentRegistration ?? "—"}
-              </span>
-              {aircraft && (
-                <span className="text-base text-muted-foreground">
-                  {aircraft.make} {aircraft.model}
-                </span>
-              )}
-              {aircraft?.serialNumber && (
-                <>
-                  <span className="text-muted-foreground/40">·</span>
-                  <span className="text-sm text-muted-foreground">
-                    S/N {aircraft.serialNumber}
-                  </span>
-                </>
-              )}
-            </div>
-            {wo.description && (
-              <p className="text-sm text-muted-foreground mt-1">
-                {wo.description}
-              </p>
-            )}
-          </div>
-
-          {/* Sign-Off Button */}
-          <div className="flex-shrink-0 flex gap-2">
-            {canClose ? (
-              <Button asChild className="gap-2">
-                <Link href={`/work-orders/${id}/signature`}>
-                  <ShieldCheck className="w-4 h-4" />
-                  Sign Off & Close
-                </Link>
-              </Button>
-            ) : (
-              <Button
-                variant="outline"
-                disabled
-                className="gap-2 opacity-50 cursor-not-allowed"
-              >
-                <ShieldCheck className="w-4 h-4" />
-                Sign Off & Close
-              </Button>
-            )}
-          </div>
-        </div>
-      </div>
+      {/* Back + Header (extracted) */}
+      <WorkOrderHeader wo={wo} aircraft={aircraft} id={id} canClose={canClose} />
 
       {/* Quick Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -384,7 +215,7 @@ export default function WorkOrderDetailPage() {
               {
                 value: "tasks",
                 label: "Task Cards",
-                Icon: ClipboardList,
+                Icon: ShieldCheck,
                 badge: `${tasksComplete}/${tasksTotal}`,
               },
               {
@@ -426,175 +257,14 @@ export default function WorkOrderDetailPage() {
           ))}
         </TabsList>
 
-        {/* ── Task Cards Tab ──────────────────────────────────────────────── */}
+        {/* ── Task Cards Tab (extracted) ──────────────────────────────────── */}
         <TabsContent value="tasks" className="mt-0">
-          <div className="space-y-2">
-            {taskCards.length === 0 ? (
-              <Card className="border-border/60">
-                <CardContent className="py-10 text-center">
-                  <ClipboardList className="w-6 h-6 text-muted-foreground/40 mx-auto mb-2" />
-                  <p className="text-sm text-muted-foreground">
-                    No task cards on this work order
-                  </p>
-                  <p className="text-xs text-muted-foreground/60 mt-1">
-                    Add task cards to begin maintenance work.
-                  </p>
-                </CardContent>
-              </Card>
-            ) : (
-              taskCards.map((tc) => {
-                const completedSteps = tc.steps.filter(
-                  (s) => s.status === "completed" || s.status === "na",
-                ).length;
-                const totalSteps = tc.steps.length;
-
-                return (
-                  <Link
-                    key={tc._id}
-                    href={`/work-orders/${id}/tasks/${tc._id}`}
-                  >
-                    <Card className="border-border/60 hover:border-primary/30 hover:bg-card/80 transition-all cursor-pointer">
-                      <CardContent className="p-4">
-                        <div className="flex items-center gap-4">
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1 flex-wrap">
-                              <span className="font-mono text-xs text-muted-foreground font-medium">
-                                {tc.taskCardNumber}
-                              </span>
-                              <Badge
-                                variant="outline"
-                                className={`text-[10px] font-medium border ${getTaskStatusStyles(tc.status)}`}
-                              >
-                                {tc.status === "complete" && (
-                                  <CheckCircle2 className="w-2.5 h-2.5 mr-1" />
-                                )}
-                                {tc.status === "in_progress" && (
-                                  <Circle className="w-2.5 h-2.5 mr-1" />
-                                )}
-                                {TASK_STATUS_LABEL[tc.status] ?? tc.status}
-                              </Badge>
-                              <Badge
-                                variant="outline"
-                                className="text-[10px] text-muted-foreground border-border/40"
-                              >
-                                {TASK_TYPE_LABEL[tc.taskType] ?? tc.taskType}
-                              </Badge>
-                            </div>
-                            <p className="text-sm font-medium text-foreground">
-                              {tc.title}
-                            </p>
-                            <p className="text-[11px] text-muted-foreground mt-0.5">
-                              {tc.approvedDataSource}
-                            </p>
-                          </div>
-                          <div className="flex-shrink-0 flex items-center gap-3">
-                            {totalSteps > 0 && (
-                              <div className="text-right">
-                                <div className="flex items-center gap-1.5 mb-1 justify-end">
-                                  <span className="text-[11px] text-muted-foreground">
-                                    {completedSteps}/{totalSteps} steps
-                                  </span>
-                                </div>
-                                <Progress
-                                  value={
-                                    (completedSteps / totalSteps) * 100
-                                  }
-                                  className="h-1 w-16"
-                                />
-                              </div>
-                            )}
-                            <ChevronRight className="w-4 h-4 text-muted-foreground/50" />
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </Link>
-                );
-              })
-            )}
-
-            {/* Add Task Card CTA */}
-            <Button
-              asChild
-              variant="outline"
-              size="sm"
-              className="w-full h-9 text-xs border-border/60 border-dashed gap-1.5 mt-2"
-            >
-              <Link href={`/work-orders/${id}/tasks/new`}>
-                <Wrench className="w-3.5 h-3.5" />
-                Add Task Card
-              </Link>
-            </Button>
-          </div>
+          <TaskCardList taskCards={taskCards} workOrderId={id} />
         </TabsContent>
 
-        {/* ── Squawks Tab ─────────────────────────────────────────────────── */}
+        {/* ── Squawks Tab (extracted) ──────────────────────────────────────── */}
         <TabsContent value="squawks" className="mt-0">
-          <div className="space-y-2">
-            {discrepancies.length === 0 ? (
-              <Card className="border-border/60">
-                <CardContent className="py-10 text-center">
-                  <CheckCircle2 className="w-6 h-6 text-green-400/60 mx-auto mb-2" />
-                  <p className="text-sm text-muted-foreground">
-                    No squawks on this work order
-                  </p>
-                </CardContent>
-              </Card>
-            ) : (
-              discrepancies.map((sq) => (
-                <Card
-                  key={sq._id}
-                  className="border-l-4 border-l-red-500 border-border/60"
-                >
-                  <CardContent className="p-4">
-                    <div className="flex items-start gap-3">
-                      <AlertTriangle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1 flex-wrap">
-                          <span className="font-mono text-xs text-muted-foreground">
-                            {sq.discrepancyNumber ?? sq._id}
-                          </span>
-                          <Badge
-                            className={`border text-[10px] ${
-                              sq.status === "open"
-                                ? "bg-red-500/15 text-red-400 border-red-500/30"
-                                : "bg-amber-500/15 text-amber-400 border-amber-500/30"
-                            }`}
-                          >
-                            {sq.status === "open" ? "Open" : sq.status}
-                          </Badge>
-                          {sq.disposition && (
-                            <Badge
-                              variant="outline"
-                              className="text-[10px] text-amber-400 border-amber-500/30"
-                            >
-                              {sq.disposition}
-                            </Badge>
-                          )}
-                        </div>
-                        <p className="text-sm text-foreground">
-                          {sq.description}
-                        </p>
-                        <p className="text-[11px] text-muted-foreground mt-1">
-                          Found{" "}
-                          {new Date(sq._creationTime).toLocaleDateString()}
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
-            )}
-
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full h-9 text-xs border-border/60 border-dashed gap-1.5 mt-2"
-            >
-              <AlertTriangle className="w-3.5 h-3.5" />
-              Log Squawk
-            </Button>
-          </div>
+          <DiscrepancyList discrepancies={discrepancies} />
         </TabsContent>
 
         {/* ── Activity Tab ─────────────────────────────────────────────────── */}
@@ -628,7 +298,7 @@ export default function WorkOrderDetailPage() {
                             </span>
                             <span className="text-muted-foreground/40">·</span>
                             <span className="font-mono text-[10px] text-muted-foreground/70">
-                              {new Date(ev.timestamp).toLocaleString()}
+                              {formatDateTime(ev.timestamp)}
                             </span>
                           </div>
                         </div>

@@ -19,27 +19,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import {
+  type TaskStatus,
+  TASK_STATUS_LABEL,
+  TASK_STATUS_STYLES,
+} from "@/lib/mro-constants";
 
 // ─── Local helpers ────────────────────────────────────────────────────────────
-
-function getTaskStatusStyles(status: string): string {
-  const map: Record<string, string> = {
-    complete: "bg-green-500/15 text-green-400 border-green-500/30",
-    in_progress: "bg-sky-500/15 text-sky-400 border-sky-500/30",
-    not_started: "bg-slate-500/15 text-slate-400 border-slate-500/30",
-    incomplete_na_steps: "bg-amber-500/15 text-amber-400 border-amber-500/30",
-    voided: "bg-slate-500/15 text-slate-400 border-slate-500/30",
-  };
-  return map[status] ?? "bg-muted text-muted-foreground";
-}
-
-const TASK_STATUS_LABEL: Record<string, string> = {
-  not_started: "Not Started",
-  in_progress: "In Progress",
-  incomplete_na_steps: "Needs IA Review",
-  complete: "Complete",
-  voided: "Voided",
-};
 
 const TASK_TYPE_LABEL: Record<string, string> = {
   inspection: "Inspection",
@@ -113,7 +99,7 @@ export function TaskCardList({ taskCards, workOrderId }: TaskCardListProps) {
                         </span>
                         <Badge
                           variant="outline"
-                          className={`text-[10px] font-medium border ${getTaskStatusStyles(tc.status)}`}
+                          className={`text-[10px] font-medium border ${TASK_STATUS_STYLES[tc.status as TaskStatus] ?? "bg-muted text-muted-foreground"}`}
                         >
                           {tc.status === "complete" && (
                             <CheckCircle2 className="w-2.5 h-2.5 mr-1" />

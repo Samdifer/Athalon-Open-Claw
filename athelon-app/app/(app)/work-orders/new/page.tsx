@@ -9,7 +9,6 @@ import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import type { Id } from "@/convex/_generated/dataModel";
 import { ArrowLeft, Plane, AlertCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -22,51 +21,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Separator } from "@/components/ui/separator";
-
-// ─── Constants ────────────────────────────────────────────────────────────────
-
-const WO_TYPES = [
-  { value: "routine", label: "Routine Maintenance" },
-  { value: "unscheduled", label: "Unscheduled Maintenance" },
-  { value: "annual_inspection", label: "Annual Inspection" },
-  { value: "100hr_inspection", label: "100-Hour Inspection" },
-  { value: "progressive_inspection", label: "Progressive Inspection" },
-  { value: "ad_compliance", label: "AD Compliance" },
-  { value: "major_repair", label: "Major Repair" },
-  { value: "major_alteration", label: "Major Alteration" },
-  { value: "field_approval", label: "Field Approval" },
-  { value: "ferry_permit", label: "Ferry Permit" },
-] as const;
-
-const PRIORITY_OPTIONS = [
-  {
-    value: "routine",
-    label: "Routine",
-    description: "Standard scheduling",
-    color: "text-muted-foreground",
-  },
-  {
-    value: "urgent",
-    label: "Urgent",
-    description: "Expedited — complete within 24–48h",
-    color: "text-orange-400",
-  },
-  {
-    value: "aog",
-    label: "AOG — Aircraft on Ground",
-    description: "Highest priority — aircraft grounded",
-    color: "text-red-400",
-  },
-] as const;
-
-/** Generate a default WO number from current date. */
-function defaultWoNumber(): string {
-  const now = new Date();
-  const year = now.getFullYear();
-  const seq = String(Math.floor(Math.random() * 9000) + 1000); // 4-digit random
-  return `WO-${year}-${seq}`;
-}
+import { WO_TYPES, PRIORITY_OPTIONS, type WoType } from "@/lib/mro-constants";
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
@@ -76,7 +31,6 @@ export default function NewWorkOrderPage() {
 
   // Form state
   const [aircraftId, setAircraftId] = useState<Id<"aircraft"> | "">("");
-  const [workOrderNumber, setWorkOrderNumber] = useState(defaultWoNumber);
   const [workOrderType, setWorkOrderType] = useState<string>("routine");
   const [description, setDescription] = useState("");
   const [squawks, setSquawks] = useState("");
@@ -109,18 +63,7 @@ export default function NewWorkOrderPage() {
       const woId = await createWorkOrder({
         organizationId: orgId,
         aircraftId: aircraftId as Id<"aircraft">,
-        workOrderNumber: workOrderNumber.trim(),
-        workOrderType: workOrderType as
-          | "routine"
-          | "unscheduled"
-          | "annual_inspection"
-          | "100hr_inspection"
-          | "progressive_inspection"
-          | "ad_compliance"
-          | "major_repair"
-          | "major_alteration"
-          | "field_approval"
-          | "ferry_permit",
+        workOrderType: workOrderType as WoType,
         description: description.trim(),
         squawks: squawks.trim() || undefined,
         priority,
@@ -254,26 +197,13 @@ export default function NewWorkOrderPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4 pt-0">
-              {/* WO Number */}
-              <div>
-                <Label
-                  htmlFor="woNumber"
-                  className="text-xs font-medium mb-1.5 block"
-                >
-                  Work Order Number{" "}
-                  <span className="text-red-400">*</span>
-                </Label>
-                <Input
-                  id="woNumber"
-                  value={workOrderNumber}
-                  onChange={(e) => setWorkOrderNumber(e.target.value)}
-                  placeholder="WO-2026-0001"
-                  required
-                  className="h-9 font-mono text-sm bg-muted/30 border-border/60"
-                />
-                <p className="text-[10px] text-muted-foreground mt-1">
-                  Must be unique within your organization. Cannot be reused
-                  after voiding.
+              {/* WO Number — auto-assigned server-side */}
+              <div className="flex items-start gap-2 p-3 rounded-md bg-muted/30 border border-border/60">
+                <AlertCircle className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-0.5" />
+                <p className="text-xs text-muted-foreground">
+                  Work order number will be auto-assigned by the system (e.g.{" "}
+                  <span className="font-mono">WO-2026-0001</span>). It will
+                  appear on the work order after creation.
                 </p>
               </div>
 
@@ -439,8 +369,7 @@ export default function NewWorkOrderPage() {
               disabled={
                 isSubmitting ||
                 !aircraftId ||
-                !description.trim() ||
-                !workOrderNumber.trim()
+                !description.trim()
               }
               className="gap-2"
             >
