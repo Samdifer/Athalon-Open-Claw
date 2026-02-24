@@ -14,6 +14,13 @@ import {
   Settings,
   ChevronRight,
   Wrench,
+  FileText,
+  Receipt,
+  ShoppingCart,
+  Clock,
+  Building2,
+  Tag,
+  BarChart3,
 } from "lucide-react";
 import {
   Sidebar,
@@ -21,6 +28,7 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
@@ -62,6 +70,44 @@ const mainNav = [
     title: "Compliance",
     href: "/compliance/audit-trail",
     icon: ShieldCheck,
+  },
+];
+
+const billingNav = [
+  {
+    title: "Quotes",
+    href: "/billing/quotes",
+    icon: FileText,
+  },
+  {
+    title: "Invoices",
+    href: "/billing/invoices",
+    icon: Receipt,
+  },
+  {
+    title: "Purchase Orders",
+    href: "/billing/purchase-orders",
+    icon: ShoppingCart,
+  },
+  {
+    title: "Time Clock",
+    href: "/billing/time-clock",
+    icon: Clock,
+  },
+  {
+    title: "Vendors",
+    href: "/billing/vendors",
+    icon: Building2,
+  },
+  {
+    title: "Pricing",
+    href: "/billing/pricing",
+    icon: Tag,
+  },
+  {
+    title: "Analytics",
+    href: "/billing/analytics",
+    icon: BarChart3,
   },
 ];
 
@@ -138,6 +184,41 @@ export function AppSidebar() {
                               {item.badgeCount}
                             </Badge>
                           )}
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarSeparator />
+
+        {/* Billing Navigation */}
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-wider px-3 py-1 group-data-[collapsible=icon]:hidden">
+            Billing
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {billingNav.map((item) => {
+                const isActive = pathname.startsWith(item.href);
+                return (
+                  <SidebarMenuItem key={item.href}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={isActive}
+                      tooltip={item.title}
+                      className={cn(
+                        "h-9 gap-2.5",
+                        isActive &&
+                          "bg-primary/10 text-primary hover:bg-primary/15"
+                      )}
+                    >
+                      <Link href={item.href}>
+                        <item.icon className="w-4 h-4 flex-shrink-0" />
+                        <span>{item.title}</span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>

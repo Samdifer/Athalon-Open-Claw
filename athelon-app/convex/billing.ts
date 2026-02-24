@@ -24,6 +24,7 @@
 // uniqueness is enforced via .withIndex lookup before insert.
 
 import { mutation, query } from "./_generated/server";
+import type { MutationCtx } from "./_generated/server";
 import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 
@@ -49,7 +50,7 @@ async function requireAuth(ctx: { auth: { getUserIdentity: () => Promise<{ subje
 // ─────────────────────────────────────────────────────────────────────────────
 
 async function generateUniqueNumber(
-  ctx: { db: { query: (table: string) => { withIndex: (name: string, fn: (q: { eq: (field: string, val: unknown) => { eq: (field: string, val: unknown) => unknown } }) => unknown) => { first: () => Promise<unknown> }; count?: () => Promise<number> } } },
+  ctx: MutationCtx,
   table: "invoices" | "quotes" | "purchaseOrders",
   orgId: string,
   prefix: "INV" | "Q" | "PO",
@@ -75,16 +76,9 @@ async function generateUniqueNumber(
   // We try up to 10_000 iterations to find a free slot (should never be needed)
   while (attempt < 10_000) {
     const candidate = `${prefix}-${String(attempt).padStart(4, "0")}`;
-    const existing = await (ctx.db
-      .query(table) as unknown as {
-        withIndex: (
-          name: string,
-          fn: (q: { eq: (f: string, v: unknown) => { eq: (f: string, v: unknown) => unknown } }) => unknown,
-        ) => { first: () => Promise<unknown> };
-      })
-      .withIndex(indexName, (q) =>
-        (q.eq("orgId", orgId) as { eq: (f: string, v: unknown) => unknown }).eq(fieldName, candidate),
-      )
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const existing = await (ctx.db.query(table) as any)
+      .withIndex(indexName, (q: any) => q.eq("orgId", orgId).eq(fieldName, candidate))
       .first();
     if (existing === null) return candidate;
     attempt++;
@@ -145,7 +139,7 @@ export const createQuote = mutation({
     if (!aircraft) throw new Error(`Aircraft ${args.aircraftId} not found.`);
 
     const quoteNumber = await generateUniqueNumber(
-      ctx as Parameters<typeof generateUniqueNumber>[0],
+      ctx,
       "quotes",
       args.orgId,
       "Q",
@@ -662,7 +656,7 @@ export const createInvoiceFromWorkOrder = mutation({
     }
 
     const invoiceNumber = await generateUniqueNumber(
-      ctx as Parameters<typeof generateUniqueNumber>[0],
+      ctx,
       "invoices",
       args.orgId,
       "INV",
@@ -773,7 +767,7 @@ export const createInvoiceManual = mutation({
     }
 
     const invoiceNumber = await generateUniqueNumber(
-      ctx as Parameters<typeof generateUniqueNumber>[0],
+      ctx,
       "invoices",
       args.orgId,
       "INV",
@@ -1202,7 +1196,7 @@ export const createPurchaseOrder = mutation({
     }
 
     const poNumber = await generateUniqueNumber(
-      ctx as Parameters<typeof generateUniqueNumber>[0],
+      ctx,
       "purchaseOrders",
       args.orgId,
       "PO",
@@ -1541,19 +1535,15 @@ export const listPurchaseOrders = query({
  * line items. Called after any line item add/remove operation.
  */
 async function recomputeQuoteTotals(
-  ctx: { db: { query: (t: string) => { withIndex: (name: string, fn: (q: { eq: (f: string, v: unknown) => { eq: (f: string, v: unknown) => unknown } }) => unknown) => { collect: () => Promise<Array<{ type: string; total: number }>> } }; patch: (id: unknown, patch: Record<string, unknown>) => Promise<void>; insert: (t: string, doc: Record<string, unknown>) => Promise<unknown> } },
+  ctx: MutationCtx,
   quoteId: Id<"quotes">,
   orgId: Id<"organizations">,
   callerUserId: string,
   now: number,
 ): Promise<void> {
-  const items = await (ctx.db
-    .query("quoteLineItems") as unknown as {
-      withIndex: (name: string, fn: (q: { eq: (f: string, v: unknown) => { eq: (f: string, v: unknown) => unknown } }) => unknown) => { collect: () => Promise<Array<{ type: string; total: number }>> };
-    })
-    .withIndex("by_org_quote", (q) =>
-      (q.eq("orgId", orgId) as { eq: (f: string, v: unknown) => unknown }).eq("quoteId", quoteId),
-    )
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const items: Array<{ type: string; total: number }> = await (ctx.db.query("quoteLineItems") as any)
+    .withIndex("by_org_quote", (q: any) => q.eq("orgId", orgId).eq("quoteId", quoteId))
     .collect();
 
   let laborTotal = 0;
@@ -1582,19 +1572,15 @@ async function recomputeQuoteTotals(
  * and deposit lines. Tax is currently passed through from existing invoice.tax.
  */
 async function recomputeInvoiceTotals(
-  ctx: { db: { query: (t: string) => { withIndex: (name: string, fn: (q: { eq: (f: string, v: unknown) => { eq: (f: string, v: unknown) => unknown } }) => unknown) => { collect: () => Promise<Array<{ type: string; total: number }>> } }; get: (id: unknown) => Promise<{ tax: number; amountPaid: number } | null>; patch: (id: unknown, patch: Record<string, unknown>) => Promise<void> } },
+  ctx: MutationCtx,
   invoiceId: Id<"invoices">,
   orgId: Id<"organizations">,
   callerUserId: string,
   now: number,
 ): Promise<void> {
-  const items = await (ctx.db
-    .query("invoiceLineItems") as unknown as {
-      withIndex: (name: string, fn: (q: { eq: (f: string, v: unknown) => { eq: (f: string, v: unknown) => unknown } }) => unknown) => { collect: () => Promise<Array<{ type: string; total: number }>> };
-    })
-    .withIndex("by_org_invoice", (q) =>
-      (q.eq("orgId", orgId) as { eq: (f: string, v: unknown) => unknown }).eq("invoiceId", invoiceId),
-    )
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const items: Array<{ type: string; total: number }> = await (ctx.db.query("invoiceLineItems") as any)
+    .withIndex("by_org_invoice", (q: any) => q.eq("orgId", orgId).eq("invoiceId", invoiceId))
     .collect();
 
   let laborTotal = 0;
@@ -1628,15 +1614,13 @@ async function recomputeInvoiceTotals(
  * Recomputes PO subtotal and total from line items.
  */
 async function recomputePOTotals(
-  ctx: { db: { query: (t: string) => { withIndex: (name: string, fn: (q: { eq: (f: string, v: unknown) => unknown }) => unknown) => { collect: () => Promise<Array<{ unitPrice: number; qty: number }>> } }; get: (id: unknown) => Promise<{ tax: number } | null>; patch: (id: unknown, patch: Record<string, unknown>) => Promise<void> } },
+  ctx: MutationCtx,
   purchaseOrderId: Id<"purchaseOrders">,
   now: number,
 ): Promise<void> {
-  const items = await (ctx.db
-    .query("poLineItems") as unknown as {
-      withIndex: (name: string, fn: (q: { eq: (f: string, v: unknown) => unknown }) => unknown) => { collect: () => Promise<Array<{ unitPrice: number; qty: number }>> };
-    })
-    .withIndex("by_po", (q) => (q as { eq: (f: string, v: unknown) => unknown }).eq("purchaseOrderId", purchaseOrderId))
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const items: Array<{ unitPrice: number; qty: number }> = await (ctx.db.query("poLineItems") as any)
+    .withIndex("by_po", (q: any) => q.eq("purchaseOrderId", purchaseOrderId))
     .collect();
 
   let subtotal = 0;
