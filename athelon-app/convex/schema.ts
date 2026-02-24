@@ -1896,4 +1896,456 @@ export default defineSchema({
     .index("by_aircraft", ["aircraftId"])
     .index("by_work_order_install", ["installedByWorkOrderId"])
     .index("by_work_order_removal", ["removedByWorkOrderId"]),
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ████████████████████████████████████████████████████████████████████████
+  // BILLING SCHEMA — Phase 1 Billing MVP
+  //
+  // Authors:       Devraj Anand (Backend), Marcus Webb (Regulatory)
+  // Schema Version: 4 (Billing Phase 1 — 2026-02-24)
+  //
+  // Marcus Webb regulatory notes:
+  //   All billing records are org-scoped. Invoice immutability (once SENT or PAID)
+  //   is enforced at the mutation layer, mirroring the immutability model for
+  //   maintenance records. Audit log entries are mandatory on every financial
+  //   state transition. This satisfies internal audit trail requirements and
+  //   supports future QBO sync (FEAT-110, deferred).
+  //
+  // ADDITIONS (12 tables):
+  //   vendors, purchaseOrders, poLineItems, timeEntries,
+  //   quotes, quoteLineItems, quoteDepartments,
+  //   invoices, invoiceLineItems, payments,
+  //   pricingProfiles, pricingRules
+  // ████████████████████████████████████████████████████████████████████████
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // VENDORS
+  //
+  // Tracks external vendors used for parts procurement, contract maintenance,
+  // calibration, and DER services. Marcus Webb: FAA Part 145 §145.217(b)
+  // requires repair stations to maintain a list of approved suppliers.
+  // isApproved / approvedBy / approvedAt implement the approved vendor list
+  // (AVL) control required by Part 145 Quality Control Manual procedures.
+  // ═══════════════════════════════════════════════════════════════════════════
+  vendors: defineTable({
+    orgId: v.id("organizations"),
+    name: v.string(),
+    type: v.union(
+      v.literal("parts_supplier"),
+      v.literal("contract_maintenance"),
+      v.literal("calibration_lab"),
+      v.literal("DER"),
+      v.literal("other"),
+    ),
+    address: v.optional(v.string()),
+    contactName: v.optional(v.string()),
+    contactEmail: v.optional(v.string()),
+    contactPhone: v.optional(v.string()),
+
+    // Certificate / approval tracking
+    // Marcus: For calibration labs and DERs, certNumber is the FAA-issued
+    // certificate number. For Part 145 repair stations, it is the RSMC number.
+    // certExpiry is monitored; vendors with expired certs must not be used.
+    certNumber: v.optional(v.string()),
+    certExpiry: v.optional(v.number()),   // Unix ms
+
+    // Approved Vendor List controls
+    isApproved: v.boolean(),
+    approvedBy: v.optional(v.id("technicians")),  // Technician who approved (DOM or QCM)
+    approvedAt: v.optional(v.number()),            // Unix ms
+
+    notes: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_org", ["orgId"])
+    .index("by_org_type", ["orgId", "type"])
+    .index("by_org_approved", ["orgId", "isApproved"]),
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // PURCHASE ORDERS
+  //
+  // PO lifecycle: DRAFT → SUBMITTED → PARTIAL → RECEIVED → CLOSED
+  // Marcus: POs support the procurement controls required by §145.213(a).
+  // A PO in RECEIVED or CLOSED status has parts in inventory; PARTIAL means
+  // a partial delivery was logged and more shipments are expected.
+  // ═══════════════════════════════════════════════════════════════════════════
+  purchaseOrders: defineTable({
+    orgId: v.id("organizations"),
+    poNumber: v.string(),       // Org-scoped unique PO number (e.g. PO-0001)
+    vendorId: v.id("vendors"),
+    workOrderId: v.optional(v.id("workOrders")),  // Optional: PO tied to a specific WO
+    status: v.union(
+      v.literal("DRAFT"),
+      v.literal("SUBMITTED"),
+      v.literal("PARTIAL"),
+      v.literal("RECEIVED"),
+      v.literal("CLOSED"),
+    ),
+    requestedByTechId: v.id("technicians"),
+    notes: v.optional(v.string()),
+
+    // Financial summary (computed from line items; denormalized for fast reads)
+    subtotal: v.number(),
+    tax: v.number(),
+    total: v.number(),
+
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_org", ["orgId"])
+    .index("by_org_status", ["orgId", "status"])
+    .index("by_org_vendor", ["orgId", "vendorId"])
+    .index("by_org_po_number", ["orgId", "poNumber"])
+    .index("by_work_order", ["workOrderId"]),
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // PO LINE ITEMS
+  // Individual line items on a purchase order. Tracks ordered qty vs received qty.
+  // ═══════════════════════════════════════════════════════════════════════════
+  poLineItems: defineTable({
+    orgId: v.id("organizations"),
+    purchaseOrderId: v.id("purchaseOrders"),
+    partId: v.optional(v.id("parts")),    // Optional FK to parts inventory
+    description: v.string(),
+    qty: v.number(),
+    unitPrice: v.number(),
+    receivedQty: v.number(),              // How many have been received so far
+    status: v.union(
+      v.literal("PENDING"),
+      v.literal("PARTIAL"),
+      v.literal("RECEIVED"),
+    ),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_po", ["purchaseOrderId"])
+    .index("by_org", ["orgId"])
+    .index("by_part", ["partId"]),
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TIME ENTRIES
+  //
+  // Technician clock-in / clock-out records per work order (and optionally
+  // per task card). durationMinutes is computed at clock-out.
+  // Marcus: Time entry records provide the audit trail for labor charged to
+  // a work order. Required for §145.213 cost allocation traceability.
+  // ═══════════════════════════════════════════════════════════════════════════
+  timeEntries: defineTable({
+    orgId: v.id("organizations"),
+    technicianId: v.id("technicians"),
+    workOrderId: v.id("workOrders"),
+    taskCardId: v.optional(v.id("taskCards")),  // Optional: tie to a specific task card
+
+    clockInAt: v.number(),                 // Unix ms
+    clockOutAt: v.optional(v.number()),    // Unix ms — null while clocked in
+    durationMinutes: v.optional(v.number()), // Computed at clock-out
+
+    notes: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_org", ["orgId"])
+    .index("by_work_order", ["workOrderId"])
+    .index("by_technician", ["technicianId"])
+    .index("by_org_tech", ["orgId", "technicianId"])
+    .index("by_org_wo", ["orgId", "workOrderId"]),
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // QUOTES
+  //
+  // Quote lifecycle: DRAFT → SENT → APPROVED → CONVERTED (to WO) | DECLINED
+  // Marcus: Quotes are pre-work authorizations. APPROVED status captures the
+  // customer's written authorization required by 14 CFR 43 Appendix D (most
+  // operators require written auth before major repairs). convertedToWorkOrderId
+  // provides the audit link between customer approval and maintenance activity.
+  // ═══════════════════════════════════════════════════════════════════════════
+  quotes: defineTable({
+    orgId: v.id("organizations"),
+    customerId: v.id("customers"),
+    aircraftId: v.id("aircraft"),
+    workOrderId: v.optional(v.id("workOrders")),  // Set if quote is tied to existing WO
+    status: v.union(
+      v.literal("DRAFT"),
+      v.literal("SENT"),
+      v.literal("APPROVED"),
+      v.literal("CONVERTED"),
+      v.literal("DECLINED"),
+    ),
+    quoteNumber: v.string(),            // Org-scoped unique (e.g. Q-0001)
+    createdByTechId: v.id("technicians"),
+
+    // Timestamps
+    sentAt: v.optional(v.number()),
+    respondedAt: v.optional(v.number()),
+    expiresAt: v.optional(v.number()),
+
+    // Decline tracking
+    declineReason: v.optional(v.string()),
+
+    // Conversion tracking
+    convertedToWorkOrderId: v.optional(v.id("workOrders")),
+
+    // Financial summary (denormalized for fast reads)
+    laborTotal: v.number(),
+    partsTotal: v.number(),
+    subtotal: v.number(),
+    tax: v.number(),
+    total: v.number(),
+
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_org", ["orgId"])
+    .index("by_org_status", ["orgId", "status"])
+    .index("by_org_customer", ["orgId", "customerId"])
+    .index("by_org_quote_number", ["orgId", "quoteNumber"])
+    .index("by_work_order", ["workOrderId"]),
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // QUOTE LINE ITEMS
+  // Labor, parts, and external service line items on a quote.
+  // ═══════════════════════════════════════════════════════════════════════════
+  quoteLineItems: defineTable({
+    orgId: v.id("organizations"),
+    quoteId: v.id("quotes"),
+    type: v.union(
+      v.literal("labor"),
+      v.literal("part"),
+      v.literal("external_service"),
+    ),
+    description: v.string(),
+    qty: v.number(),
+    unitPrice: v.number(),
+    total: v.number(),
+
+    // Optional context fields
+    technicianId: v.optional(v.id("technicians")),  // For labor lines: which tech
+    partId: v.optional(v.id("parts")),              // For part lines: which part
+    departmentSection: v.optional(v.string()),       // For multi-dept quotes (FEAT-140)
+
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_quote", ["quoteId"])
+    .index("by_org", ["orgId"])
+    .index("by_org_quote", ["orgId", "quoteId"]),
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // QUOTE DEPARTMENTS
+  //
+  // Multi-department quotation workflow (FEAT-140). Each department section of
+  // a quote must be submitted and approved before the quote can be sent.
+  // Marcus: Required for Part 145 repair stations with segregated shops
+  // (avionics, airframe, powerplant) — each must sign off their section.
+  // ═══════════════════════════════════════════════════════════════════════════
+  quoteDepartments: defineTable({
+    orgId: v.id("organizations"),
+    quoteId: v.id("quotes"),
+    sectionName: v.string(),          // e.g. "Avionics", "Airframe", "Powerplant"
+    assignedTechId: v.id("technicians"),
+    status: v.union(
+      v.literal("PENDING"),
+      v.literal("SUBMITTED"),
+      v.literal("APPROVED"),
+    ),
+    submittedAt: v.optional(v.number()),  // Unix ms
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_quote", ["quoteId"])
+    .index("by_org", ["orgId"])
+    .index("by_org_quote", ["orgId", "quoteId"]),
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // INVOICES
+  //
+  // Invoice lifecycle: DRAFT → SENT → PAID → VOID
+  // Marcus: Invoices in SENT or PAID status are immutable — corrections must
+  // be made via credit memo (not implemented in MVP; this is the enforcement
+  // hook). This mirrors the immutability model for maintenance records.
+  // isProgressBill and depositAmount support FEAT-138 (Progress Billing).
+  // ═══════════════════════════════════════════════════════════════════════════
+  invoices: defineTable({
+    orgId: v.id("organizations"),
+    workOrderId: v.optional(v.id("workOrders")),
+    customerId: v.id("customers"),
+    quoteId: v.optional(v.id("quotes")),
+    invoiceNumber: v.string(),          // Org-scoped unique (e.g. INV-0001)
+    status: v.union(
+      v.literal("DRAFT"),
+      v.literal("SENT"),
+      v.literal("PAID"),
+      v.literal("VOID"),
+    ),
+    createdByTechId: v.id("technicians"),
+
+    // Timestamps
+    sentAt: v.optional(v.number()),
+    paidAt: v.optional(v.number()),
+    voidedAt: v.optional(v.number()),
+    voidReason: v.optional(v.string()),
+
+    // Financial summary (denormalized)
+    laborTotal: v.number(),
+    partsTotal: v.number(),
+    subtotal: v.number(),
+    tax: v.number(),
+    total: v.number(),
+    amountPaid: v.number(),
+    balance: v.number(),
+
+    // Progress billing (FEAT-138)
+    isProgressBill: v.optional(v.boolean()),
+    depositAmount: v.optional(v.number()),
+
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_org", ["orgId"])
+    .index("by_org_status", ["orgId", "status"])
+    .index("by_org_customer", ["orgId", "customerId"])
+    .index("by_org_invoice_number", ["orgId", "invoiceNumber"])
+    .index("by_work_order", ["workOrderId"])
+    .index("by_quote", ["quoteId"]),
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // INVOICE LINE ITEMS
+  // Labor by tech, parts consumed, external service charges, deposits, credits.
+  // ═══════════════════════════════════════════════════════════════════════════
+  invoiceLineItems: defineTable({
+    orgId: v.id("organizations"),
+    invoiceId: v.id("invoices"),
+    type: v.union(
+      v.literal("labor"),
+      v.literal("part"),
+      v.literal("external_service"),
+      v.literal("deposit"),
+      v.literal("credit"),
+    ),
+    description: v.string(),
+    qty: v.number(),
+    unitPrice: v.number(),
+    total: v.number(),
+
+    // Optional context
+    technicianId: v.optional(v.id("technicians")),  // For labor lines
+    partId: v.optional(v.id("parts")),              // For part lines
+
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_invoice", ["invoiceId"])
+    .index("by_org", ["orgId"])
+    .index("by_org_invoice", ["orgId", "invoiceId"]),
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // PAYMENTS
+  //
+  // Partial and full payment records against invoices.
+  // Marcus: Each payment record must carry method and referenceNumber for
+  // bank reconciliation and cash-flow audit purposes.
+  // recordedAt is the business date of payment (not necessarily now()).
+  // ═══════════════════════════════════════════════════════════════════════════
+  payments: defineTable({
+    orgId: v.id("organizations"),
+    invoiceId: v.id("invoices"),
+    amount: v.number(),
+    method: v.union(
+      v.literal("cash"),
+      v.literal("check"),
+      v.literal("credit_card"),
+      v.literal("wire"),
+      v.literal("ach"),
+      v.literal("other"),
+    ),
+    recordedAt: v.number(),             // Business date of payment (Unix ms)
+    recordedByTechId: v.id("technicians"),
+    notes: v.optional(v.string()),
+    referenceNumber: v.optional(v.string()), // Check#, wire ref, ACH trace, etc.
+    createdAt: v.number(),
+  })
+    .index("by_invoice", ["invoiceId"])
+    .index("by_org", ["orgId"])
+    .index("by_org_invoice", ["orgId", "invoiceId"]),
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // PRICING PROFILES
+  //
+  // Per-customer pricing configuration. isDefault=true applies org-wide when
+  // no customer-specific profile exists. Rate fields are optional — absence
+  // means "use system default".
+  // ═══════════════════════════════════════════════════════════════════════════
+  pricingProfiles: defineTable({
+    orgId: v.id("organizations"),
+    customerId: v.optional(v.id("customers")),  // null = org-wide default profile
+    name: v.string(),
+    laborRateOverride: v.optional(v.number()),    // Flat $ rate overriding tech cert rate
+    laborRateMultiplier: v.optional(v.number()),  // e.g. 1.5 = 150% of base rate
+    partsMarkupPercent: v.optional(v.number()),   // e.g. 20 = 20% markup over cost
+    partsDiscountPercent: v.optional(v.number()), // e.g. 10 = 10% discount off list
+    effectiveDate: v.number(),                    // Unix ms — profile takes effect
+    expiryDate: v.optional(v.number()),           // Unix ms — null = perpetual
+    isDefault: v.boolean(),                       // True = use when no specific profile matches
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_org", ["orgId"])
+    .index("by_org_customer", ["orgId", "customerId"])
+    .index("by_org_default", ["orgId", "isDefault"]),
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // PRICING RULES
+  //
+  // Multi-structure pricing rules (FEAT-130). Evaluated in priority order
+  // (lower priority number = higher precedence). Rules may apply to labor,
+  // parts, or external services. A rule may be scoped by part, partClass,
+  // techCertLevel, or customerClass. The computePrice action resolves the
+  // applicable rule given a context and returns the computed price.
+  //
+  // Rule types:
+  //   cost_plus      — unitPrice = baseCost * (1 + markupPercent/100)
+  //   list_minus     — unitPrice = listPrice * (1 - discountPercent/100)
+  //   flat_rate      — unitPrice = flatRate (ignores baseCost)
+  //   quantity_tier  — unitPrice from tier table encoded in tierBreaks JSON
+  // ═══════════════════════════════════════════════════════════════════════════
+  pricingRules: defineTable({
+    orgId: v.id("organizations"),
+    ruleType: v.union(
+      v.literal("cost_plus"),
+      v.literal("list_minus"),
+      v.literal("flat_rate"),
+      v.literal("quantity_tier"),
+    ),
+    appliesTo: v.union(
+      v.literal("labor"),
+      v.literal("part"),
+      v.literal("external_service"),
+    ),
+
+    // Scoping selectors (all optional — absence = "match any")
+    partId: v.optional(v.id("parts")),
+    partClass: v.optional(v.string()),      // e.g. "avionics", "structural"
+    techCertLevel: v.optional(v.string()),  // e.g. "A&P", "IA"
+    customerClass: v.optional(v.string()),  // e.g. "charter_operator", "flight_school"
+
+    // Rule-type-specific parameters
+    unitCost: v.optional(v.number()),         // cost_plus base cost (if fixed)
+    markupPercent: v.optional(v.number()),    // cost_plus markup
+    listPrice: v.optional(v.number()),        // list_minus list price
+    discountPercent: v.optional(v.number()),  // list_minus discount
+    flatRate: v.optional(v.number()),         // flat_rate value
+    tierBreaks: v.optional(v.string()),       // JSON-encoded tier table for quantity_tier
+
+    effectiveDate: v.number(),               // Unix ms
+    expiryDate: v.optional(v.number()),      // Unix ms — null = perpetual
+    priority: v.number(),                    // Lower = higher precedence
+
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_org", ["orgId"])
+    .index("by_org_applies_to", ["orgId", "appliesTo"])
+    .index("by_org_priority", ["orgId", "priority"]),
 });
