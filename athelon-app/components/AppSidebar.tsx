@@ -91,6 +91,11 @@ const billingNav = [
     icon: Receipt,
   },
   {
+    title: "Customers",
+    href: "/billing/customers",
+    icon: Users,
+  },
+  {
     title: "Purchase Orders",
     href: "/billing/purchase-orders",
     icon: ShoppingCart,
