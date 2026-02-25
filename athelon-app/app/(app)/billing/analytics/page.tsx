@@ -13,6 +13,8 @@ import {
   XCircle,
   RefreshCw,
   Send,
+  DollarSign,
+  TrendingDown,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -74,6 +76,22 @@ function MetricCard({ title, value, subtitle, icon, color = "" }: MetricCardProp
   );
 }
 
+function fmtUSD(n: number) {
+  return "$" + n.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+}
+
+const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+function getMonthKey(ms: number) {
+  const d = new Date(ms);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function getMonthLabel(key: string) {
+  const [year, month] = key.split("-");
+  return `${MONTH_NAMES[parseInt(month, 10) - 1]} ${year}`;
+}
+
 export default function AnalyticsPage() {
   const { orgId, isLoaded } = useCurrentOrg();
 
@@ -94,7 +112,20 @@ export default function AnalyticsPage() {
 
   const isLoading = !isLoaded || quotes === undefined || invoices === undefined;
 
-  // Quote pipeline metrics
+  // ── Top-level invoice metrics ──────────────────────────────────────────────
+  const invoiceMetrics = useMemo(() => {
+    if (!invoices) return null;
+    const totalInvoiced = invoices.reduce((sum, i) => sum + i.total, 0);
+    const totalCollected = invoices.reduce((sum, i) => sum + i.amountPaid, 0);
+    const outstandingAR = invoices
+      .filter((i) => i.status !== "PAID" && i.status !== "VOID")
+      .reduce((sum, i) => sum + i.balance, 0);
+    const count = invoices.length;
+    const avgInvoiceValue = count > 0 ? totalInvoiced / count : 0;
+    return { totalInvoiced, totalCollected, outstandingAR, count, avgInvoiceValue };
+  }, [invoices]);
+
+  // ── Quote conversion rate ──────────────────────────────────────────────────
   const quoteMetrics = useMemo(() => {
     if (!quotes) return null;
     const byStatus = {
@@ -114,25 +145,46 @@ export default function AnalyticsPage() {
 
     const total = quotes.length;
     const totalValue = quotes.reduce((sum, q) => sum + q.total, 0);
-    const conversionRate = total > 0
-      ? Math.round(((byStatus.CONVERTED?.count ?? 0) / total) * 100)
-      : 0;
+    const sentCount = byStatus.SENT?.count ?? 0;
+    const convertedCount = byStatus.CONVERTED?.count ?? 0;
+    const conversionRate = sentCount > 0
+      ? Math.round((convertedCount / sentCount) * 100)
+      : total > 0
+        ? Math.round((convertedCount / total) * 100)
+        : 0;
 
     return { byStatus, total, totalValue, conversionRate };
   }, [quotes]);
 
-  // Invoice metrics
-  const invoiceMetrics = useMemo(() => {
-    if (!invoices) return null;
-    const outstanding = invoices.filter((i) => i.status === "SENT");
-    const outstandingValue = outstanding.reduce((sum, i) => sum + i.balance, 0);
-    const collectedValue = invoices
-      .filter((i) => i.status === "PAID")
-      .reduce((sum, i) => sum + i.amountPaid, 0);
-    return { outstanding: outstanding.length, outstandingValue, collectedValue };
+  // ── Monthly Revenue (last 6 months) ───────────────────────────────────────
+  const monthlyData = useMemo(() => {
+    if (!invoices) return [];
+
+    // Build last-6-months keys
+    const now = new Date();
+    const keys: string[] = [];
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      keys.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
+    }
+
+    const byMonth: Record<string, { invoiced: number; collected: number; outstanding: number }> = {};
+    for (const k of keys) byMonth[k] = { invoiced: 0, collected: 0, outstanding: 0 };
+
+    for (const inv of invoices) {
+      const key = getMonthKey(inv.createdAt);
+      if (!byMonth[key]) continue;
+      byMonth[key].invoiced += inv.total;
+      byMonth[key].collected += inv.amountPaid;
+      if (inv.status !== "PAID" && inv.status !== "VOID") {
+        byMonth[key].outstanding += inv.balance;
+      }
+    }
+
+    return keys.map((key) => ({ key, label: getMonthLabel(key), ...byMonth[key] }));
   }, [invoices]);
 
-  // Top 5 customers by quote value
+  // ── Customer lookup ────────────────────────────────────────────────────────
   const topCustomers = useMemo(() => {
     if (!quotes || !customers) return [];
     const byCustomer = new Map<string, { name: string; total: number; count: number }>();
@@ -154,7 +206,6 @@ export default function AnalyticsPage() {
       .slice(0, 5);
   }, [quotes, customers]);
 
-  // Recent conversions (last 10 converted quotes)
   const recentConversions = useMemo(() => {
     if (!quotes) return [];
     return quotes
@@ -167,8 +218,8 @@ export default function AnalyticsPage() {
     return (
       <div className="space-y-5">
         <Skeleton className="h-8 w-48" />
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          {Array.from({ length: 4 }).map((_, i) => (
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
+          {Array.from({ length: 5 }).map((_, i) => (
             <Card key={i} className="border-border/60">
               <CardContent className="p-4"><Skeleton className="h-20 w-full" /></CardContent>
             </Card>
@@ -185,41 +236,78 @@ export default function AnalyticsPage() {
     <div className="space-y-5">
       <div>
         <h1 className="text-xl font-semibold text-foreground">Billing Analytics</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">Sales pipeline and revenue overview</p>
+        <p className="text-sm text-muted-foreground mt-0.5">Revenue, AR, and pipeline overview</p>
       </div>
 
-      {/* Key Metrics */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      {/* ── Top Metrics (5 cards) ─────────────────────────────────────────── */}
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
         <MetricCard
-          title="Total Quotes"
-          value={quoteMetrics?.total ?? 0}
-          subtitle={`$${(quoteMetrics?.totalValue ?? 0).toLocaleString("en-US", { minimumFractionDigits: 0 })} pipeline`}
-          icon={<FileText className="w-4 h-4" />}
+          title="Total Invoiced"
+          value={fmtUSD(invoiceMetrics?.totalInvoiced ?? 0)}
+          subtitle={`${invoiceMetrics?.count ?? 0} invoices`}
+          icon={<Receipt className="w-4 h-4" />}
+          color="text-foreground"
         />
         <MetricCard
-          title="Conversion Rate"
-          value={`${quoteMetrics?.conversionRate ?? 0}%`}
-          subtitle={`${quoteMetrics?.byStatus.CONVERTED?.count ?? 0} converted`}
-          icon={<TrendingUp className="w-4 h-4" />}
+          title="Total Collected"
+          value={fmtUSD(invoiceMetrics?.totalCollected ?? 0)}
+          subtitle="Payments received"
+          icon={<DollarSign className="w-4 h-4" />}
           color="text-green-400"
         />
         <MetricCard
-          title="Outstanding"
-          value={`$${(invoiceMetrics?.outstandingValue ?? 0).toLocaleString("en-US", { minimumFractionDigits: 0 })}`}
-          subtitle={`${invoiceMetrics?.outstanding ?? 0} invoices`}
-          icon={<Receipt className="w-4 h-4" />}
+          title="Outstanding AR"
+          value={fmtUSD(invoiceMetrics?.outstandingAR ?? 0)}
+          subtitle="Unpaid balances"
+          icon={<TrendingDown className="w-4 h-4" />}
           color="text-amber-400"
         />
         <MetricCard
-          title="Collected"
-          value={`$${(invoiceMetrics?.collectedValue ?? 0).toLocaleString("en-US", { minimumFractionDigits: 0 })}`}
-          subtitle="Fully paid invoices"
+          title="Quote Conversion"
+          value={`${quoteMetrics?.conversionRate ?? 0}%`}
+          subtitle={`${quoteMetrics?.byStatus.CONVERTED?.count ?? 0} converted`}
+          icon={<TrendingUp className="w-4 h-4" />}
+          color="text-purple-400"
+        />
+        <MetricCard
+          title="Avg Invoice Value"
+          value={fmtUSD(invoiceMetrics?.avgInvoiceValue ?? 0)}
+          subtitle="Per invoice"
           icon={<BarChart3 className="w-4 h-4" />}
-          color="text-green-400"
+          color="text-blue-400"
         />
       </div>
 
-      {/* Quote Pipeline */}
+      {/* ── Monthly Revenue Table ─────────────────────────────────────────── */}
+      <Card className="border-border/60">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm font-medium">Monthly Revenue — Last 6 Months</CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow className="border-border/50">
+                <TableHead className="text-xs">Month</TableHead>
+                <TableHead className="text-xs text-right">Invoiced</TableHead>
+                <TableHead className="text-xs text-right">Collected</TableHead>
+                <TableHead className="text-xs text-right">Outstanding</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {monthlyData.map((row) => (
+                <TableRow key={row.key} className="border-border/40">
+                  <TableCell className="text-sm font-medium">{row.label}</TableCell>
+                  <TableCell className="text-sm text-right">{fmtUSD(row.invoiced)}</TableCell>
+                  <TableCell className="text-sm text-right text-green-400">{fmtUSD(row.collected)}</TableCell>
+                  <TableCell className="text-sm text-right text-amber-400">{fmtUSD(row.outstanding)}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      {/* ── Quote Funnel ──────────────────────────────────────────────────── */}
       <Card className="border-border/60">
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-medium">Quote Pipeline by Status</CardTitle>
@@ -231,7 +319,7 @@ export default function AnalyticsPage() {
               return (
                 <div key={status} className="p-3 rounded-lg border border-border/50 space-y-1">
                   <div className="flex items-center gap-1.5">
-                    <div className={`text-muted-foreground`}>{STATUS_ICONS[status]}</div>
+                    <div className="text-muted-foreground">{STATUS_ICONS[status]}</div>
                     <Badge variant="outline" className={`text-[10px] border ${STATUS_STYLES[status] ?? ""}`}>
                       {status}
                     </Badge>
@@ -245,7 +333,6 @@ export default function AnalyticsPage() {
             })}
           </div>
 
-          {/* Visual bar */}
           {(quoteMetrics?.total ?? 0) > 0 && (
             <div className="mt-4">
               <div className="flex h-3 rounded-full overflow-hidden">
@@ -277,6 +364,7 @@ export default function AnalyticsPage() {
         </CardContent>
       </Card>
 
+      {/* ── Bottom: Customer + Conversion tables ─────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {/* Top Customers */}
         <Card className="border-border/60">

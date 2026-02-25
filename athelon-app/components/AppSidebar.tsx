@@ -22,6 +22,8 @@ import {
   Building2,
   Tag,
   BarChart3,
+  FileX,
+  Percent,
 } from "lucide-react";
 import {
   Sidebar,
@@ -81,6 +83,11 @@ const mainNav = [
 
 const billingNav = [
   {
+    title: "AR Dashboard",
+    href: "/billing/ar-dashboard",
+    icon: AlertTriangle,
+  },
+  {
     title: "Quotes",
     href: "/billing/quotes",
     icon: FileText,
@@ -89,6 +96,11 @@ const billingNav = [
     title: "Invoices",
     href: "/billing/invoices",
     icon: Receipt,
+  },
+  {
+    title: "Credit Memos",
+    href: "/billing/credit-memos",
+    icon: FileX,
   },
   {
     title: "Customers",
@@ -114,6 +126,11 @@ const billingNav = [
     title: "Pricing",
     href: "/billing/pricing",
     icon: Tag,
+  },
+  {
+    title: "Tax Config",
+    href: "/billing/tax-config",
+    icon: Percent,
   },
   {
     title: "Analytics",
