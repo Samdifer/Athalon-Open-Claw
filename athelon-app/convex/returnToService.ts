@@ -42,14 +42,8 @@
 // ─── SIGNATURE HASH ─────────────────────────────────────────────────────────
 //
 // Per spec §3.3: signatureHash is computed over canonical JSON of all required
-// RTS fields before insert. The hash is SHA-256. Since Convex mutations run
-// server-side, we use a simple deterministic hash over the string representation
-// of the canonical fields. A proper crypto hash would require a Convex action
-// with crypto import — see TODO: Phase 4.1.
-//
-// TODO: Phase 4.1 — Replace computeRtsHash with a proper SHA-256 implementation
-// using Node.js crypto module in a Convex action. The current implementation
-// uses a deterministic string-based approximation for structural correctness.
+// RTS fields before insert. The hash is SHA-256 via Web Crypto API.
+// v3: Upgraded from weak DJB2 hash to proper SHA-256 (TD-011).
 
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
@@ -75,12 +69,10 @@ async function requireAuth(ctx: {
 // INTERNAL UTILITY: COMPUTE RTS HASH
 //
 // Per spec §3.3: hash computed over canonical JSON of all required RTS fields.
-// TODO: Phase 4.1 — Replace with proper SHA-256 via Node.js crypto in Convex action.
-// For now, a deterministic string hash that is structurally correct and enables
-// tamper detection even without cryptographic strength.
+// v3: Now uses SHA-256 via crypto.subtle (Web Crypto API).
 // ─────────────────────────────────────────────────────────────────────────────
 
-function computeRtsHash(fields: {
+async function computeRtsHash(fields: {
   workOrderId: string;
   aircraftId: string;
   organizationId: string;
@@ -91,7 +83,7 @@ function computeRtsHash(fields: {
   aircraftHoursAtRts: number;
   limitations?: string;
   signatureAuthEventId: string;
-}): string {
+}): Promise<string> {
   // Deterministic canonical serialization — keys in alphabetical order
   const canonical = JSON.stringify(
     Object.fromEntries(
@@ -100,17 +92,13 @@ function computeRtsHash(fields: {
         .filter(([, v]) => v != null),
     ),
   );
-  // Simple but deterministic hash until proper SHA-256 is implemented.
-  // This is not cryptographically secure — see TODO above.
-  // The value changes if any field changes, which is the structural requirement.
-  let hash = 0;
-  for (let i = 0; i < canonical.length; i++) {
-    const char = canonical.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash |= 0; // Convert to 32-bit integer
-  }
-  // Return as a hex-like string with a version prefix so auditors know it's not SHA-256 yet
-  return `RTS-HASH-V0-${(hash >>> 0).toString(16).padStart(8, "0")}-${canonical.length}`;
+  // SHA-256 via Web Crypto API (available in Convex runtime)
+  const encoder = new TextEncoder();
+  const data = encoder.encode(canonical);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const hashHex = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+  return `RTS-SHA256-${hashHex}`;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -822,7 +810,7 @@ export const authorizeReturnToService = mutation({
       limitations: args.limitations,
       signatureAuthEventId: args.signatureAuthEventId as string,
     };
-    const signatureHash = computeRtsHash(hashFields);
+    const signatureHash = await computeRtsHash(hashFields);
 
     // Step 3: Create the returnToService record (immutable after creation)
     const rtsId = await ctx.db.insert("returnToService", {

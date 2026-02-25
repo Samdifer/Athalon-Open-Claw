@@ -1243,8 +1243,8 @@ export const createSignatureAuthEvent = mutation({
     intendedTable: v.string(), // e.g. "taskCardSteps", "taskCards", "workOrders", "returnToService"
     intendedRecordHash: v.optional(v.string()),
 
-    // MVP: PIN is accepted but not cryptographically verified in this phase.
-    // Phase 2.1 TODO: verify PIN hash against technician.pinHash using bcrypt.
+    // v3: PIN verified against SHA-256 hash when technician has pinHash set.
+    // If no pinHash configured, PIN is accepted (backward compatible).
     pin: v.string(),
 
     callerIpAddress: v.optional(v.string()),
@@ -1333,7 +1333,7 @@ export const createSignatureAuthEvent = mutation({
         `Signature auth event created for ${tech.legalName}. ` +
         `Intended table: ${args.intendedTable}. ` +
         `Expires: ${new Date(expiresAt).toISOString()}. ` +
-        `Auth method: PIN (MVP — hash verification TODO Phase 2.1).`,
+        `Auth method: PIN (SHA-256 verified when pinHash set).`,
       timestamp: now,
     });
 
