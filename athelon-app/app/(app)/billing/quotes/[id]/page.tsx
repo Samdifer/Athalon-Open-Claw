@@ -14,6 +14,10 @@ import {
   XCircle,
   RefreshCw,
   AlertCircle,
+  Pencil,
+  Trash2,
+  FileEdit,
+  Receipt,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -54,11 +58,23 @@ const LINE_TYPE_LABELS: Record<string, string> = {
   external_service: "External Service",
 };
 
+/** Convert a Unix ms timestamp to a date input value (YYYY-MM-DD). */
+function toDateInputValue(ts: number): string {
+  return new Date(ts).toISOString().split("T")[0];
+}
+
+/** Convert a date input value (YYYY-MM-DD) to a Unix ms timestamp. */
+function fromDateInputValue(val: string): number {
+  return new Date(val).getTime();
+}
+
+const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+
 export default function QuoteDetailPage() {
   const params = useParams();
   const router = useRouter();
   const quoteId = params.id as Id<"quotes">;
-  const { orgId, isLoaded } = useCurrentOrg();
+  const { orgId, techId, isLoaded } = useCurrentOrg();
 
   const quote = useQuery(
     api.billing.getQuote,
@@ -69,18 +85,44 @@ export default function QuoteDetailPage() {
   const approveQuote = useMutation(api.billing.approveQuote);
   const declineQuote = useMutation(api.billing.declineQuote);
   const convertQuote = useMutation(api.billing.convertQuoteToWorkOrder);
+  // GAP-08: Create revision
+  const createQuoteRevision = useMutation(api.billingV4.createQuoteRevision);
+  // GAP-13: Create invoice from quote
+  const createInvoiceFromQuote = useMutation(api.billingV4.createInvoiceFromQuote);
+  // GAP-06: Edit/remove line items
+  const updateQuoteLineItem = useMutation(api.billingV4.updateQuoteLineItem);
+  const removeQuoteLineItem = useMutation(api.billingV4.removeQuoteLineItem);
 
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Dialog states
+  // Decline dialog
   const [declineDialog, setDeclineDialog] = useState(false);
   const [declineReason, setDeclineReason] = useState("");
+
+  // Convert to WO dialog
   const [convertDialog, setConvertDialog] = useState(false);
   const [woNumber, setWoNumber] = useState("");
   const [woDescription, setWoDescription] = useState("");
   const [woType, setWoType] = useState<"routine" | "unscheduled">("routine");
   const [woPriority, setWoPriority] = useState<"routine" | "urgent" | "aog">("routine");
+
+  // GAP-13: Create invoice dialog
+  const [createInvoiceDialog, setCreateInvoiceDialog] = useState(false);
+  const [invoiceDueDate, setInvoiceDueDate] = useState("");
+  const [invoicePaymentTerms, setInvoicePaymentTerms] = useState("");
+
+  // GAP-06: Edit line item dialog
+  const [editItemDialog, setEditItemDialog] = useState(false);
+  const [editItemId, setEditItemId] = useState<Id<"quoteLineItems"> | null>(null);
+  const [editDesc, setEditDesc] = useState("");
+  const [editQty, setEditQty] = useState("");
+  const [editUnitPrice, setEditUnitPrice] = useState("");
+  const [editDiscountPct, setEditDiscountPct] = useState("");
+
+  // GAP-06: Delete line item confirm
+  const [deleteItemDialog, setDeleteItemDialog] = useState(false);
+  const [deleteItemId, setDeleteItemId] = useState<Id<"quoteLineItems"> | null>(null);
 
   const isLoading = !isLoaded || quote === undefined;
 
@@ -142,6 +184,95 @@ export default function QuoteDetailPage() {
     }
   };
 
+  // GAP-08: Create revision
+  const handleCreateRevision = async () => {
+    if (!orgId || !techId) return;
+    setActionLoading("revision"); setError(null);
+    try {
+      const newQuoteId = await createQuoteRevision({
+        orgId,
+        originalQuoteId: quoteId,
+        createdByTechId: techId as Id<"technicians">,
+      });
+      router.push(`/billing/quotes/${newQuoteId}`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to create revision.");
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  // GAP-13: Create invoice from quote
+  const handleCreateInvoice = async () => {
+    if (!orgId || !techId) return;
+    setActionLoading("createInvoice"); setError(null);
+    try {
+      const newInvoiceId = await createInvoiceFromQuote({
+        orgId,
+        quoteId,
+        createdByTechId: techId as Id<"technicians">,
+        dueDate: invoiceDueDate ? fromDateInputValue(invoiceDueDate) : undefined,
+        paymentTerms: invoicePaymentTerms.trim() || undefined,
+      });
+      setCreateInvoiceDialog(false);
+      router.push(`/billing/invoices/${newInvoiceId}`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to create invoice.");
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  // GAP-06: Open edit dialog for a quote line item
+  const openEditItem = (item: {
+    _id: Id<"quoteLineItems">;
+    description: string;
+    qty: number;
+    unitPrice: number;
+    discountPercent?: number;
+  }) => {
+    setEditItemId(item._id);
+    setEditDesc(item.description);
+    setEditQty(String(item.qty));
+    setEditUnitPrice(String(item.unitPrice));
+    setEditDiscountPct(item.discountPercent != null ? String(item.discountPercent) : "");
+    setEditItemDialog(true);
+  };
+
+  const handleEditItem = async () => {
+    if (!orgId || !editItemId) return;
+    setActionLoading("editItem"); setError(null);
+    try {
+      await updateQuoteLineItem({
+        orgId,
+        lineItemId: editItemId,
+        description: editDesc.trim() || undefined,
+        qty: editQty !== "" ? parseFloat(editQty) : undefined,
+        unitPrice: editUnitPrice !== "" ? parseFloat(editUnitPrice) : undefined,
+        discountPercent: editDiscountPct !== "" ? parseFloat(editDiscountPct) : undefined,
+      });
+      setEditItemDialog(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to update line item.");
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  // GAP-06: Delete line item
+  const handleDeleteItem = async () => {
+    if (!orgId || !deleteItemId) return;
+    setActionLoading("deleteItem"); setError(null);
+    try {
+      await removeQuoteLineItem({ orgId, lineItemId: deleteItemId });
+      setDeleteItemDialog(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to remove line item.");
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-5">
@@ -168,6 +299,21 @@ export default function QuoteDetailPage() {
   const canApprove = quote.status === "SENT";
   const canDecline = quote.status === "SENT";
   const canConvert = quote.status === "APPROVED";
+  // GAP-08: Revision allowed on SENT or DECLINED quotes
+  const canRevise = quote.status === "SENT" || quote.status === "DECLINED";
+  // GAP-13: Create invoice on APPROVED quotes
+  const canCreateInvoice = quote.status === "APPROVED";
+  const isDraft = quote.status === "DRAFT";
+
+  const now = Date.now();
+  // GAP-07: Expiry logic
+  const isExpired =
+    quote.expiresAt != null && quote.expiresAt < now && quote.status === "SENT";
+  const isExpiringSoon =
+    quote.expiresAt != null &&
+    !isExpired &&
+    quote.expiresAt - now < SEVEN_DAYS_MS &&
+    quote.status === "SENT";
 
   return (
     <div className="space-y-5 max-w-3xl">
@@ -179,11 +325,17 @@ export default function QuoteDetailPage() {
             Back
           </Button>
           <div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <h1 className="text-xl font-semibold text-foreground font-mono">{quote.quoteNumber}</h1>
               <Badge variant="outline" className={`text-[10px] font-medium border ${STATUS_STYLES[quote.status] ?? ""}`}>
                 {quote.status}
               </Badge>
+              {/* GAP-07: EXPIRED badge */}
+              {isExpired && (
+                <Badge variant="outline" className="text-[10px] font-medium border bg-amber-500/15 text-amber-400 border-amber-500/30">
+                  EXPIRED
+                </Badge>
+              )}
             </div>
             <p className="text-xs text-muted-foreground mt-0.5">
               Created {formatDate(quote.createdAt)}
@@ -193,7 +345,7 @@ export default function QuoteDetailPage() {
         </div>
 
         {/* Actions */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap justify-end">
           {canSend && (
             <Button size="sm" onClick={handleSend} disabled={actionLoading === "send"} className="h-8 gap-1.5 text-xs">
               <Send className="w-3.5 h-3.5" />
@@ -212,14 +364,50 @@ export default function QuoteDetailPage() {
               Decline
             </Button>
           )}
+          {/* GAP-08: Create Revision */}
+          {canRevise && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleCreateRevision}
+              disabled={actionLoading === "revision"}
+              className="h-8 gap-1.5 text-xs"
+            >
+              <FileEdit className="w-3.5 h-3.5" />
+              {actionLoading === "revision" ? "Creating..." : "Create Revision"}
+            </Button>
+          )}
           {canConvert && (
             <Button size="sm" onClick={() => setConvertDialog(true)} className="h-8 gap-1.5 text-xs bg-purple-600 hover:bg-purple-700">
               <RefreshCw className="w-3.5 h-3.5" />
               Convert to WO
             </Button>
           )}
+          {/* GAP-13: Create Invoice */}
+          {canCreateInvoice && (
+            <Button
+              size="sm"
+              onClick={() => {
+                setInvoiceDueDate("");
+                setInvoicePaymentTerms("");
+                setCreateInvoiceDialog(true);
+              }}
+              className="h-8 gap-1.5 text-xs bg-green-600 hover:bg-green-700"
+            >
+              <Receipt className="w-3.5 h-3.5" />
+              Create Invoice
+            </Button>
+          )}
         </div>
       </div>
+
+      {/* GAP-07: Expires soon warning banner */}
+      {isExpiringSoon && (
+        <div className="flex items-center gap-2 p-3 rounded-md bg-amber-500/10 border border-amber-500/30 text-sm text-amber-400">
+          <AlertCircle className="w-4 h-4 flex-shrink-0" />
+          This quote expires soon ({formatDate(quote.expiresAt!)}). Consider sending a revision or obtaining approval before expiry.
+        </div>
+      )}
 
       {error && (
         <div className="flex items-center gap-2 p-3 rounded-md bg-red-500/10 border border-red-500/30 text-sm text-red-400">
@@ -228,7 +416,7 @@ export default function QuoteDetailPage() {
         </div>
       )}
 
-      {/* Details Card */}
+      {/* Summary Card */}
       <Card className="border-border/60">
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-medium">Quote Summary</CardTitle>
@@ -253,7 +441,7 @@ export default function QuoteDetailPage() {
         </CardContent>
       </Card>
 
-      {/* Line Items */}
+      {/* Line Items — GAP-06: edit/delete on DRAFT */}
       <Card className="border-border/60">
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-medium">Line Items</CardTitle>
@@ -273,12 +461,19 @@ export default function QuoteDetailPage() {
                   <TableHead className="text-xs text-right">Qty</TableHead>
                   <TableHead className="text-xs text-right">Unit $</TableHead>
                   <TableHead className="text-xs text-right">Total</TableHead>
+                  {isDraft && <TableHead className="text-xs w-16" />}
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {quote.lineItems.map((item) => (
                   <TableRow key={item._id} className="border-border/40">
-                    <TableCell className="text-sm">{item.description}</TableCell>
+                    <TableCell className="text-sm">
+                      <div>{item.description}</div>
+                      {/* GAP-06: Show discount percentage label */}
+                      {item.discountPercent ? (
+                        <div className="text-[10px] text-amber-400 mt-0.5">- {item.discountPercent}%</div>
+                      ) : null}
+                    </TableCell>
                     <TableCell>
                       <Badge variant="outline" className="text-[10px] border-border/50">
                         {LINE_TYPE_LABELS[item.type] ?? item.type}
@@ -287,6 +482,39 @@ export default function QuoteDetailPage() {
                     <TableCell className="text-sm text-right">{item.qty}</TableCell>
                     <TableCell className="text-sm text-right">${item.unitPrice.toFixed(2)}</TableCell>
                     <TableCell className="text-sm font-medium text-right">${item.total.toFixed(2)}</TableCell>
+                    {isDraft && (
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            title="Edit line item"
+                            className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
+                            onClick={() => openEditItem({
+                              _id: item._id as Id<"quoteLineItems">,
+                              description: item.description,
+                              qty: item.qty,
+                              unitPrice: item.unitPrice,
+                              discountPercent: item.discountPercent,
+                            })}
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            title="Remove line item"
+                            className="h-7 w-7 p-0 text-muted-foreground hover:text-red-400"
+                            onClick={() => {
+                              setDeleteItemId(item._id as Id<"quoteLineItems">);
+                              setDeleteItemDialog(true);
+                            }}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    )}
                   </TableRow>
                 ))}
               </TableBody>
@@ -408,6 +636,135 @@ export default function QuoteDetailPage() {
               className="bg-purple-600 hover:bg-purple-700"
             >
               {actionLoading === "convert" ? "Converting..." : "Create Work Order"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* GAP-13: Create Invoice from Quote Dialog */}
+      <Dialog open={createInvoiceDialog} onOpenChange={setCreateInvoiceDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create Invoice from Quote</DialogTitle>
+            <DialogDescription>
+              Create a draft invoice from {quote.quoteNumber}. All line items will be copied over.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <div className="space-y-1.5">
+              <Label className="text-xs">Due Date (optional)</Label>
+              <Input
+                type="date"
+                value={invoiceDueDate}
+                onChange={(e) => setInvoiceDueDate(e.target.value)}
+                className="h-9 text-sm"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Payment Terms (optional)</Label>
+              <Input
+                value={invoicePaymentTerms}
+                onChange={(e) => setInvoicePaymentTerms(e.target.value)}
+                placeholder="e.g. Net 30, Due on receipt"
+                className="h-9 text-sm"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" size="sm" onClick={() => setCreateInvoiceDialog(false)}>Cancel</Button>
+            <Button
+              size="sm"
+              onClick={handleCreateInvoice}
+              disabled={actionLoading === "createInvoice"}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              {actionLoading === "createInvoice" ? "Creating..." : "Create Invoice"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* GAP-06: Edit Line Item Dialog */}
+      <Dialog open={editItemDialog} onOpenChange={setEditItemDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Line Item</DialogTitle>
+            <DialogDescription>Update the details for this line item.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <div className="space-y-1.5">
+              <Label className="text-xs">Description</Label>
+              <Input
+                value={editDesc}
+                onChange={(e) => setEditDesc(e.target.value)}
+                className="h-9 text-sm"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs">Quantity</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={editQty}
+                  onChange={(e) => setEditQty(e.target.value)}
+                  className="h-9 text-sm"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Unit Price ($)</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={editUnitPrice}
+                  onChange={(e) => setEditUnitPrice(e.target.value)}
+                  className="h-9 text-sm"
+                />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Discount %</Label>
+              <Input
+                type="number"
+                min="0"
+                max="100"
+                step="0.1"
+                value={editDiscountPct}
+                onChange={(e) => setEditDiscountPct(e.target.value)}
+                placeholder="0"
+                className="h-9 text-sm"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" size="sm" onClick={() => setEditItemDialog(false)}>Cancel</Button>
+            <Button size="sm" onClick={handleEditItem} disabled={actionLoading === "editItem"}>
+              {actionLoading === "editItem" ? "Saving..." : "Save Changes"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* GAP-06: Delete Line Item Confirm */}
+      <Dialog open={deleteItemDialog} onOpenChange={setDeleteItemDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Remove Line Item</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to remove this line item? This cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" size="sm" onClick={() => setDeleteItemDialog(false)}>Cancel</Button>
+            <Button
+              size="sm"
+              variant="destructive"
+              onClick={handleDeleteItem}
+              disabled={actionLoading === "deleteItem"}
+            >
+              {actionLoading === "deleteItem" ? "Removing..." : "Remove"}
             </Button>
           </DialogFooter>
         </DialogContent>
