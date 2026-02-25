@@ -1271,14 +1271,29 @@ export const createSignatureAuthEvent = mutation({
       );
     }
 
-    // Validate PIN length (basic format check — real validation in Phase 2.1)
+    // Validate PIN length
     if (!args.pin || args.pin.trim().length < 4) {
       throw new Error(
-        `PIN must be at least 4 digits. ` +
-        `For the MVP, any 4+ digit PIN is accepted. ` +
-        `Phase 2.1 will enforce the stored PIN hash.`,
+        `PIN must be at least 4 digits.`,
       );
     }
+
+    // Verify PIN against stored hash if the technician has one set
+    if (tech.pinHash) {
+      // SHA-256 the provided PIN and compare to stored hash
+      const encoder = new TextEncoder();
+      const data = encoder.encode(args.pin.trim());
+      const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const hashHex = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+      if (hashHex !== tech.pinHash) {
+        throw new Error(
+          `INVALID_PIN: The PIN entered does not match the stored PIN for ${tech.legalName}. ` +
+          `Please try again.`,
+        );
+      }
+    }
+    // If no pinHash set, PIN is accepted (technician hasn't configured a PIN yet)
 
     // Look up the technician's active certificate for the auth record
     const cert = await ctx.db

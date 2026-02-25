@@ -639,6 +639,11 @@ export default defineSchema({
     email: v.optional(v.string()),
     phone: v.optional(v.string()),
 
+    // v3: PIN hash for signature re-authentication (TD: PIN security)
+    // Stored as SHA-256 hex digest. Set via setPin mutation.
+    // When set, createSignatureAuthEvent verifies the PIN against this hash.
+    pinHash: v.optional(v.string()),
+
     createdAt: v.number(),
     updatedAt: v.number(),
   })

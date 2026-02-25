@@ -1,7 +1,7 @@
 // convex/technicians.ts
 // Athelon — Technician Queries
 
-import { query } from "./_generated/server";
+import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 
 /**
@@ -104,5 +104,46 @@ export const listWithExpiringCerts = query({
         (technician as { organizationId?: unknown }).organizationId ===
           args.organizationId
     );
+  },
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SET PIN  (TD: PIN Security)
+// Sets or updates the technician's PIN hash for signature re-authentication.
+// ═══════════════════════════════════════════════════════════════════════════
+export const setPin = mutation({
+  args: {
+    technicianId: v.id("technicians"),
+    organizationId: v.id("organizations"),
+    pin: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const tech = await ctx.db.get(args.technicianId);
+    if (!tech) throw new Error("Technician not found.");
+    if (tech.organizationId !== args.organizationId) {
+      throw new Error("ORG_MISMATCH: technician does not belong to this organization.");
+    }
+
+    const trimmed = args.pin.trim();
+    if (trimmed.length < 4 || trimmed.length > 6) {
+      throw new Error("PIN must be 4–6 digits.");
+    }
+    if (!/^\d+$/.test(trimmed)) {
+      throw new Error("PIN must contain only digits.");
+    }
+
+    // SHA-256 hash the PIN
+    const encoder = new TextEncoder();
+    const data = encoder.encode(trimmed);
+    const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const pinHash = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+
+    await ctx.db.patch(args.technicianId, {
+      pinHash,
+      updatedAt: Date.now(),
+    });
+
+    return { success: true };
   },
 });

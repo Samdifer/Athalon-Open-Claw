@@ -7,26 +7,7 @@
  * Displays all maintenance records for a specific aircraft in reverse-chronological
  * order (newest first) with filtering and expand-in-place for long narratives.
  *
- * TODO: This page requires `api.maintenanceRecords.listByAircraft` which does not
- * yet exist in `convex/maintenanceRecords.ts`. The schema has the required indexes:
- *   - `by_aircraft`: ["aircraftId"]
- *   - `by_aircraft_sequence`: ["aircraftId", "sequenceNumber"]
- * Add a query like:
- *
- *   export const listByAircraft = query({
- *     args: { aircraftId: v.id("aircraft"), organizationId: v.id("organizations") },
- *     handler: async (ctx, args) => {
- *       const identity = await requireAuth(ctx);
- *       return await ctx.db
- *         .query("maintenanceRecords")
- *         .withIndex("by_aircraft_sequence", (q) => q.eq("aircraftId", args.aircraftId))
- *         .order("desc")
- *         .collect();
- *     },
- *   });
- *
- * Once the query exists, replace the `records = undefined` placeholder below
- * with the actual useQuery call (search for "WIRE UP QUERY HERE").
+ * Backend query: api.maintenanceRecords.listByAircraft (added in convex/maintenanceRecords.ts).
  */
 
 import { useState } from "react";
@@ -43,7 +24,6 @@ import {
   ChevronDown,
   ChevronUp,
   Package,
-  ShieldCheck,
   Wrench,
   ClipboardCheck,
   AlertCircle,
@@ -488,45 +468,6 @@ export default function AircraftLogbookPage() {
             <Button asChild variant="ghost" size="sm" className="mt-4">
               <Link href="/fleet">← Back to Fleet</Link>
             </Button>
-          </CardContent>
-        </Card>
-      ) : records === undefined ? (
-        /* TODO: Remove this state once listByAircraft query is implemented */
-        <Card className="border-border/60 border-amber-500/20">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-semibold flex items-center gap-2 text-amber-400">
-              <ShieldCheck className="w-4 h-4" />
-              Query Not Yet Available
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <p className="text-sm text-muted-foreground">
-              The <code className="text-xs bg-muted px-1 py-0.5 rounded font-mono">api.maintenanceRecords.listByAircraft</code> query
-              has not been implemented yet in{" "}
-              <code className="text-xs bg-muted px-1 py-0.5 rounded font-mono">convex/maintenanceRecords.ts</code>.
-            </p>
-            <p className="text-xs text-muted-foreground/60 mt-2">
-              The schema has the required <code className="font-mono">by_aircraft</code> and{" "}
-              <code className="font-mono">by_aircraft_sequence</code> indexes on{" "}
-              <code className="font-mono">maintenanceRecords</code>. Add the query to enable this view.
-            </p>
-            <div className="mt-4 p-3 rounded-md bg-muted/30 border border-border/40 font-mono text-[11px] text-muted-foreground whitespace-pre leading-relaxed">
-{`export const listByAircraft = query({
-  args: {
-    aircraftId: v.id("aircraft"),
-    organizationId: v.id("organizations"),
-  },
-  handler: async (ctx, args) => {
-    await requireAuth(ctx);
-    return await ctx.db
-      .query("maintenanceRecords")
-      .withIndex("by_aircraft_sequence",
-        (q) => q.eq("aircraftId", args.aircraftId))
-      .order("desc")
-      .collect();
-  },
-});`}
-            </div>
           </CardContent>
         </Card>
       ) : sorted.length === 0 ? (
