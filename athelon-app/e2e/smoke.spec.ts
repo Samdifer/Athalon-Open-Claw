@@ -54,8 +54,12 @@ test.describe("Smoke: App starts and billing pages respond", () => {
         ).toBeLessThan(500);
       }
 
-      // The URL should still be on our app domain (not some external error page)
-      expect(page.url()).toContain("localhost:3000");
+      // Accept: app domain OR Clerk sign-in redirect (both mean the app is alive)
+      const finalUrl = page.url();
+      expect(
+        finalUrl.includes("localhost:3000") || finalUrl.includes("clerk") || finalUrl.includes("accounts.dev") || finalUrl.includes("sign-in"),
+        `Unexpected redirect — expected app or Clerk auth, got: ${finalUrl}`,
+      ).toBeTruthy();
     });
   }
 
