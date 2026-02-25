@@ -100,6 +100,9 @@ const MODULE_ROUTES: RouteEntry[] = [
 
   // Settings
   { path: "/settings/shop", label: "Settings shop" },
+
+  // Technician MVP (new pages)
+  { path: "/my-work", label: "My Work (tech view)" },
 ];
 
 // ─── Tests ───────────────────────────────────────────────────────────────────

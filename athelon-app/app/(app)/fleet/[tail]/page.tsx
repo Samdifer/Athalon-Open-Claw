@@ -4,6 +4,7 @@ import Link from "next/link";
 import { use } from "react";
 import {
   ArrowLeft,
+  BookOpen,
   Clock,
   Wrench,
   ClipboardList,
@@ -312,7 +313,7 @@ export default function AircraftDetailPage({
           </Card>
 
           {/* Quick Actions */}
-          <div className="flex gap-3">
+          <div className="flex gap-3 flex-wrap">
             <Button asChild variant="outline" size="sm">
               <Link href={`/work-orders?aircraft=${tailNumber}`}>
                 <ClipboardList className="w-3.5 h-3.5 mr-1.5" />
@@ -323,6 +324,12 @@ export default function AircraftDetailPage({
               <Link href="/work-orders/new">
                 <Wrench className="w-3.5 h-3.5 mr-1.5" />
                 New Work Order
+              </Link>
+            </Button>
+            <Button asChild variant="outline" size="sm">
+              <Link href={`/fleet/${encodeURIComponent(tailNumber)}/logbook`}>
+                <BookOpen className="w-3.5 h-3.5 mr-1.5" />
+                Logbook
               </Link>
             </Button>
           </div>

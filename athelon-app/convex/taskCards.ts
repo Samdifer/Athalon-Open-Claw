@@ -426,6 +426,18 @@ export const completeStep = mutation({
     discrepancyIds: v.optional(v.array(v.id("discrepancies"))),
     notes: v.optional(v.string()),
 
+    // v3: Step-level approved data reference (Gap 1)
+    approvedDataReference: v.optional(v.string()),
+
+    // v3: Parts installed during this step (Gap 2)
+    partsInstalled: v.optional(v.array(v.object({
+      partId: v.optional(v.id("parts")),
+      partNumber: v.string(),
+      serialNumber: v.optional(v.string()),
+      description: v.string(),
+      quantity: v.number(),
+    }))),
+
     // The technician performing the action (signing or N/A authorizing)
     callerTechnicianId: v.id("technicians"),
     callerIpAddress: v.optional(v.string()),
@@ -648,6 +660,9 @@ export const completeStep = mutation({
         signatureAuthEventId: args.signatureAuthEventId,
         discrepancyIds: args.discrepancyIds ?? [],
         notes: args.notes,
+        // v3: Step-level approved data and parts (Gap 1 & 2)
+        approvedDataReference: args.approvedDataReference,
+        partsInstalled: args.partsInstalled,
         updatedAt: now,
       });
 
@@ -1150,6 +1165,108 @@ export const listTaskCardsForWorkOrder = query({
 
     // Sort by task card number (lexicographic — assumes consistent numbering format)
     enriched.sort((a, b) => a.taskCardNumber.localeCompare(b.taskCardNumber));
+
+    return enriched;
+  },
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ADD HANDOFF NOTE  (Gap 5: Shift Handoff)
+// ═══════════════════════════════════════════════════════════════════════════
+export const addHandoffNote = mutation({
+  args: {
+    taskCardId: v.id("taskCards"),
+    organizationId: v.id("organizations"),
+    callerTechnicianId: v.id("technicians"),
+    note: v.string(),
+  },
+  handler: async (ctx, args) => {
+    await requireAuth(ctx);
+
+    if (!args.note.trim()) {
+      throw new Error("HANDOFF_NOTE_EMPTY: note must be non-empty.");
+    }
+
+    const taskCard = await ctx.db.get(args.taskCardId);
+    if (!taskCard) throw new Error("Task card not found.");
+    if (taskCard.organizationId !== args.organizationId) {
+      throw new Error("ORG_MISMATCH: task card does not belong to this organization.");
+    }
+    if (taskCard.status === "voided") {
+      throw new Error("VOIDED_CARD: cannot add handoff notes to a voided task card.");
+    }
+
+    const tech = await ctx.db.get(args.callerTechnicianId);
+    const techName = tech?.legalName ?? "Unknown";
+
+    const existingNotes = taskCard.handoffNotes ?? [];
+    const newNote = {
+      technicianId: args.callerTechnicianId,
+      technicianName: techName,
+      note: args.note.trim(),
+      createdAt: Date.now(),
+    };
+
+    await ctx.db.patch(args.taskCardId, {
+      handoffNotes: [...existingNotes, newNote],
+      updatedAt: Date.now(),
+    });
+
+    return { success: true };
+  },
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// LIST TASK CARDS FOR TECHNICIAN  (Gap 3: "My Work" view)
+// ═══════════════════════════════════════════════════════════════════════════
+export const listTaskCardsForTechnician = query({
+  args: {
+    organizationId: v.id("organizations"),
+    technicianId: v.id("technicians"),
+  },
+  handler: async (ctx, args) => {
+    // Use the by_org_assigned index to efficiently fetch assigned cards
+    const cards = await ctx.db
+      .query("taskCards")
+      .withIndex("by_org_assigned", (q) =>
+        q.eq("organizationId", args.organizationId)
+         .eq("assignedToTechnicianId", args.technicianId),
+      )
+      .collect();
+
+    // Filter out voided and completed, focus on active work
+    const activeCards = cards.filter(
+      (c) => c.status === "not_started" || c.status === "in_progress" || c.status === "incomplete_na_steps",
+    );
+
+    // Enrich with work order info and steps
+    const enriched = await Promise.all(
+      activeCards.map(async (tc) => {
+        const wo = await ctx.db.get(tc.workOrderId);
+        const steps = await ctx.db
+          .query("taskCardSteps")
+          .withIndex("by_task_card", (q) => q.eq("taskCardId", tc._id))
+          .collect();
+
+        const pendingSteps = steps.filter((s) => s.status === "pending").length;
+        const totalSteps = steps.length;
+
+        return {
+          ...tc,
+          workOrderNumber: wo?.workOrderNumber ?? "—",
+          aircraftRegistration: "", // Will be enriched by caller if needed
+          pendingSteps,
+          totalSteps,
+        };
+      }),
+    );
+
+    // Sort by priority: in_progress first, then not_started
+    enriched.sort((a, b) => {
+      if (a.status === "in_progress" && b.status !== "in_progress") return -1;
+      if (a.status !== "in_progress" && b.status === "in_progress") return 1;
+      return a.taskCardNumber.localeCompare(b.taskCardNumber);
+    });
 
     return enriched;
   },

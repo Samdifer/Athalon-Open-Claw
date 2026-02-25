@@ -2032,3 +2032,27 @@ export const receiveTestEquipment = mutation({
     return testEquipmentId;
   },
 });
+
+// ═══════════════════════════════════════════════════════════════════════════
+// LIST BY AIRCRAFT  (Gap 6: Logbook view)
+// Returns all maintenance records for a given aircraft, sorted by sequence.
+// ═══════════════════════════════════════════════════════════════════════════
+export const listByAircraft = query({
+  args: {
+    aircraftId: v.id("aircraft"),
+    organizationId: v.id("organizations"),
+  },
+  handler: async (ctx, args) => {
+    const records = await ctx.db
+      .query("maintenanceRecords")
+      .withIndex("by_aircraft", (q) => q.eq("aircraftId", args.aircraftId))
+      .collect();
+
+    // Filter by org and sort by sequence number descending (newest first)
+    const orgRecords = records
+      .filter((r) => r.organizationId === args.organizationId)
+      .sort((a, b) => b.sequenceNumber - a.sequenceNumber);
+
+    return orgRecords;
+  },
+});

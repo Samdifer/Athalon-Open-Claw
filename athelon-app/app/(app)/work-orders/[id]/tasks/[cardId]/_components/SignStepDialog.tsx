@@ -81,6 +81,11 @@ export function SignStepDialog({
     requiresIa ? "ia" : "airframe",
   );
   const [notes, setNotes] = useState("");
+  const [approvedDataRef, setApprovedDataRef] = useState("");
+  const [partsInstalled, setPartsInstalled] = useState<
+    { partNumber: string; serialNumber: string; description: string; quantity: number }[]
+  >([]);
+  const [showPartsForm, setShowPartsForm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -126,6 +131,15 @@ export function SignStepDialog({
         signatureAuthEventId: eventId,
         ratingsExercised: [rating],
         notes: notes.trim() || undefined,
+        approvedDataReference: approvedDataRef.trim() || undefined,
+        partsInstalled: partsInstalled.length > 0
+          ? partsInstalled.map((p) => ({
+              partNumber: p.partNumber,
+              serialNumber: p.serialNumber || undefined,
+              description: p.description,
+              quantity: p.quantity,
+            }))
+          : undefined,
         callerTechnicianId: techId,
       });
 
@@ -220,6 +234,106 @@ export function SignStepDialog({
                 ))}
               </SelectContent>
             </Select>
+          </div>
+
+          {/* Approved Data Reference (Gap 1) */}
+          <div>
+            <Label className="text-xs font-medium mb-1.5 block">
+              Approved Data Reference{" "}
+              <span className="text-muted-foreground font-normal">
+                (14 CFR 43.9(a)(3))
+              </span>
+            </Label>
+            <Input
+              value={approvedDataRef}
+              onChange={(e) => setApprovedDataRef(e.target.value)}
+              placeholder="e.g. AMM 71-00-00, Rev 42"
+              className="h-9 text-sm bg-muted/30 border-border/60"
+            />
+          </div>
+
+          {/* Parts Installed (Gap 2) */}
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <Label className="text-xs font-medium">
+                Parts Installed{" "}
+                <span className="text-muted-foreground font-normal">
+                  (optional)
+                </span>
+              </Label>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-6 text-[10px] px-2"
+                onClick={() => {
+                  setShowPartsForm(true);
+                  setPartsInstalled((prev) => [
+                    ...prev,
+                    { partNumber: "", serialNumber: "", description: "", quantity: 1 },
+                  ]);
+                }}
+              >
+                + Add Part
+              </Button>
+            </div>
+            {partsInstalled.map((part, idx) => (
+              <div
+                key={idx}
+                className="grid grid-cols-[1fr_1fr_2fr_60px_24px] gap-1.5 mb-1.5 items-end"
+              >
+                <Input
+                  placeholder="P/N"
+                  value={part.partNumber}
+                  onChange={(e) => {
+                    const updated = [...partsInstalled];
+                    updated[idx] = { ...updated[idx], partNumber: e.target.value };
+                    setPartsInstalled(updated);
+                  }}
+                  className="h-7 text-xs bg-muted/30 border-border/60"
+                />
+                <Input
+                  placeholder="S/N"
+                  value={part.serialNumber}
+                  onChange={(e) => {
+                    const updated = [...partsInstalled];
+                    updated[idx] = { ...updated[idx], serialNumber: e.target.value };
+                    setPartsInstalled(updated);
+                  }}
+                  className="h-7 text-xs bg-muted/30 border-border/60"
+                />
+                <Input
+                  placeholder="Description"
+                  value={part.description}
+                  onChange={(e) => {
+                    const updated = [...partsInstalled];
+                    updated[idx] = { ...updated[idx], description: e.target.value };
+                    setPartsInstalled(updated);
+                  }}
+                  className="h-7 text-xs bg-muted/30 border-border/60"
+                />
+                <Input
+                  type="number"
+                  min={1}
+                  value={part.quantity}
+                  onChange={(e) => {
+                    const updated = [...partsInstalled];
+                    updated[idx] = { ...updated[idx], quantity: Number(e.target.value) || 1 };
+                    setPartsInstalled(updated);
+                  }}
+                  className="h-7 text-xs bg-muted/30 border-border/60"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 w-7 p-0 text-muted-foreground hover:text-red-400"
+                  onClick={() => setPartsInstalled((prev) => prev.filter((_, i) => i !== idx))}
+                >
+                  ×
+                </Button>
+              </div>
+            ))}
           </div>
 
           {/* Notes */}

@@ -7,6 +7,7 @@ import {
   LayoutDashboard,
   PlaneTakeoff,
   ClipboardList,
+  ClipboardCheck,
   Package,
   AlertTriangle,
   ShieldCheck,
@@ -53,6 +54,11 @@ const mainNav = [
     title: "Work Orders",
     href: "/work-orders",
     icon: ClipboardList,
+  },
+  {
+    title: "My Work",
+    href: "/my-work",
+    icon: ClipboardCheck,
   },
   {
     title: "Parts",

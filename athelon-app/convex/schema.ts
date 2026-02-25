@@ -1003,6 +1003,15 @@ export default defineSchema({
 
     notes: v.optional(v.string()),
 
+    // v3: Shift handoff notes (Gap 5)
+    // Timestamped, attributed notes for shift handoff between technicians.
+    handoffNotes: v.optional(v.array(v.object({
+      technicianId: v.id("technicians"),
+      technicianName: v.string(),
+      note: v.string(),
+      createdAt: v.number(),
+    }))),
+
     // Denormalized counters — maintained by completeStep mutation
     stepCount: v.number(),
     completedStepCount: v.number(),
@@ -1070,6 +1079,21 @@ export default defineSchema({
 
     notes: v.optional(v.string()),
     discrepancyIds: v.array(v.id("discrepancies")),
+
+    // v3: Step-level approved data reference (Gap 1 — 14 CFR 43.9(a)(3))
+    // The task card has a card-level approvedDataSource, but individual steps
+    // may reference different sections of the same manual or different manuals.
+    approvedDataReference: v.optional(v.string()),
+
+    // v3: Parts installed during this step (Gap 2)
+    // Captured at sign-off time. Links to parts inventory for traceability.
+    partsInstalled: v.optional(v.array(v.object({
+      partId: v.optional(v.id("parts")),
+      partNumber: v.string(),
+      serialNumber: v.optional(v.string()),
+      description: v.string(),
+      quantity: v.number(),
+    }))),
 
     createdAt: v.number(),
     updatedAt: v.number(),
