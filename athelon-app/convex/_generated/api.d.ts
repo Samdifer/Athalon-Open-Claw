@@ -11,6 +11,7 @@
 import type * as adCompliance from "../adCompliance.js";
 import type * as aircraft from "../aircraft.js";
 import type * as billing from "../billing.js";
+import type * as billingV4 from "../billingV4.js";
 import type * as customers from "../customers.js";
 import type * as discrepancies from "../discrepancies.js";
 import type * as lib_authHelpers from "../lib/authHelpers.js";
@@ -38,6 +39,7 @@ declare const fullApi: ApiFromModules<{
   adCompliance: typeof adCompliance;
   aircraft: typeof aircraft;
   billing: typeof billing;
+  billingV4: typeof billingV4;
   customers: typeof customers;
   discrepancies: typeof discrepancies;
   "lib/authHelpers": typeof lib_authHelpers;

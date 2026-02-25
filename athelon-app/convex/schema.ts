@@ -1812,6 +1812,11 @@ export default defineSchema({
     // v2: aircraftIds removed (QA-005). Query: aircraft.by_customer(customerId)
     notes: v.optional(v.string()),
 
+    // v4: Tax and payment terms (GAP-03, GAP-04)
+    taxExempt: v.optional(v.boolean()),
+    defaultPaymentTerms: v.optional(v.string()),    // e.g., "Net 30"
+    defaultPaymentTermsDays: v.optional(v.number()), // e.g., 30
+
     active: v.boolean(),
     createdAt: v.number(),
     updatedAt: v.number(),
@@ -2072,6 +2077,15 @@ export default defineSchema({
     durationMinutes: v.optional(v.number()), // Computed at clock-out
 
     notes: v.optional(v.string()),
+
+    // v4: Time approval workflow (GAP-16)
+    approved: v.optional(v.boolean()),
+    approvedByTechId: v.optional(v.id("technicians")),
+    approvedAt: v.optional(v.number()),
+    rejectionReason: v.optional(v.string()),
+    rejectedByTechId: v.optional(v.id("technicians")),
+    rejectedAt: v.optional(v.number()),
+
     createdAt: v.number(),
     updatedAt: v.number(),
   })
@@ -2147,7 +2161,10 @@ export default defineSchema({
     description: v.string(),
     qty: v.number(),
     unitPrice: v.number(),
-    total: v.number(),
+    // v4: Line item discounts (GAP-11)
+    discountPercent: v.optional(v.number()),   // e.g., 10 for 10%
+    discountAmount: v.optional(v.number()),    // Flat dollar discount
+    total: v.number(),                         // After discount applied
 
     // Optional context fields
     technicianId: v.optional(v.id("technicians")),  // For labor lines: which tech
@@ -2230,6 +2247,11 @@ export default defineSchema({
     isProgressBill: v.optional(v.boolean()),
     depositAmount: v.optional(v.number()),
 
+    // v4: Due date and overdue tracking (GAP-04)
+    dueDate: v.optional(v.number()),      // Unix ms — when payment is due
+    // v4: Terms for display (e.g., "Net 30", "Due on Receipt")
+    paymentTerms: v.optional(v.string()),
+
     createdAt: v.number(),
     updatedAt: v.number(),
   })
@@ -2257,6 +2279,9 @@ export default defineSchema({
     description: v.string(),
     qty: v.number(),
     unitPrice: v.number(),
+    // v4: Line item discounts (GAP-11)
+    discountPercent: v.optional(v.number()),
+    discountAmount: v.optional(v.number()),
     total: v.number(),
 
     // Optional context
@@ -2387,9 +2412,76 @@ export default defineSchema({
   // Each counter record is patched atomically within a Convex mutation
   // transaction, guaranteeing no duplicate numbers even under concurrent load.
   // ═══════════════════════════════════════════════════════════════════════════
+  // ═══════════════════════════════════════════════════════════════════════════
+  // CREDIT MEMOS (GAP-09)
+  // Issued for returns, corrections, or overpayments.
+  // ═══════════════════════════════════════════════════════════════════════════
+  creditMemos: defineTable({
+    orgId: v.id("organizations"),
+    customerId: v.id("customers"),
+    invoiceId: v.optional(v.id("invoices")),   // Related invoice (if applicable)
+    creditMemoNumber: v.string(),               // CM-0001
+    status: v.union(
+      v.literal("DRAFT"),
+      v.literal("ISSUED"),
+      v.literal("APPLIED"),                     // Applied to another invoice
+      v.literal("VOID"),
+    ),
+    reason: v.string(),
+    amount: v.number(),
+    appliedToInvoiceId: v.optional(v.id("invoices")),
+    appliedAt: v.optional(v.number()),
+    issuedByTechId: v.id("technicians"),
+    notes: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_org", ["orgId"])
+    .index("by_org_customer", ["orgId", "customerId"])
+    .index("by_org_status", ["orgId", "status"])
+    .index("by_invoice", ["invoiceId"]),
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TAX CONFIGURATION (GAP-03)
+  // Per-org tax rates. Supports multiple tax rates (state, county, etc.)
+  // ═══════════════════════════════════════════════════════════════════════════
+  taxRates: defineTable({
+    orgId: v.id("organizations"),
+    name: v.string(),                           // e.g., "Colorado Sales Tax"
+    rate: v.number(),                           // Percentage, e.g. 7.65
+    appliesTo: v.union(
+      v.literal("parts"),
+      v.literal("labor"),
+      v.literal("all"),
+    ),
+    isDefault: v.boolean(),
+    active: v.boolean(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_org", ["orgId"])
+    .index("by_org_active", ["orgId", "active"]),
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // CUSTOMER TAX EXEMPTIONS (GAP-03)
+  // ═══════════════════════════════════════════════════════════════════════════
+  customerTaxExemptions: defineTable({
+    orgId: v.id("organizations"),
+    customerId: v.id("customers"),
+    exemptionType: v.union(
+      v.literal("full"),
+      v.literal("parts_only"),
+      v.literal("labor_only"),
+    ),
+    certificateNumber: v.optional(v.string()),
+    expiresAt: v.optional(v.number()),
+    createdAt: v.number(),
+  })
+    .index("by_org_customer", ["orgId", "customerId"]),
+
   orgCounters: defineTable({
     orgId: v.string(),
-    counterType: v.string(), // "invoice" | "quote" | "po"
+    counterType: v.string(), // "invoice" | "quote" | "po" | "credit_memo"
     lastValue: v.number(),
   }).index("by_org_type", ["orgId", "counterType"]),
 });
