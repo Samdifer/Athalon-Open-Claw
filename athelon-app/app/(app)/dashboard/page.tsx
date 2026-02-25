@@ -255,13 +255,13 @@ export default function DashboardPage() {
                   <p className="text-xs text-muted-foreground font-medium">
                     Open Work Orders
                   </p>
-                  <p className="text-2xl font-bold text-foreground mt-1">
+                  <div className="text-2xl font-bold text-foreground mt-1">
                     {statsLoading ? (
                       <Skeleton className="h-7 w-10 inline-block" />
                     ) : (
                       (openWoCount ?? 0)
                     )}
-                  </p>
+                  </div>
                   <p className="text-[11px] text-muted-foreground mt-0.5">
                     active
                   </p>
@@ -283,13 +283,13 @@ export default function DashboardPage() {
                   <p className="text-xs text-muted-foreground font-medium">
                     Active Squawks
                   </p>
-                  <p className="text-2xl font-bold text-foreground mt-1">
+                  <div className="text-2xl font-bold text-foreground mt-1">
                     {statsLoading ? (
                       <Skeleton className="h-7 w-10 inline-block" />
                     ) : (
                       squawkCount
                     )}
-                  </p>
+                  </div>
                   <p className="text-[11px] text-muted-foreground mt-0.5">
                     open
                   </p>
@@ -311,13 +311,13 @@ export default function DashboardPage() {
                   <p className="text-xs text-muted-foreground font-medium">
                     Parts Pending
                   </p>
-                  <p className="text-2xl font-bold text-foreground mt-1">
+                  <div className="text-2xl font-bold text-foreground mt-1">
                     {statsLoading ? (
                       <Skeleton className="h-7 w-10 inline-block" />
                     ) : (
                       partsCount
                     )}
-                  </p>
+                  </div>
                   <p className="text-[11px] text-muted-foreground mt-0.5">
                     awaiting inspection
                   </p>
@@ -339,13 +339,13 @@ export default function DashboardPage() {
                   <p className="text-xs text-muted-foreground font-medium">
                     Certs Expiring
                   </p>
-                  <p className="text-2xl font-bold text-foreground mt-1">
+                  <div className="text-2xl font-bold text-foreground mt-1">
                     {statsLoading ? (
                       <Skeleton className="h-7 w-10 inline-block" />
                     ) : (
                       expiringCertCount
                     )}
-                  </p>
+                  </div>
                   <p className="text-[11px] text-muted-foreground mt-0.5">
                     within 30 days
                   </p>

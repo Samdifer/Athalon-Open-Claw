@@ -21,14 +21,14 @@ export default defineConfig({
     // ── 1. Unauthenticated smoke tests — no auth required ───────────────────
     {
       name: "chromium",
-      testMatch: /smoke\.spec\.ts/,
+      testMatch: /smoke(?:-full)?\.spec\.ts/,
       use: { ...devices["Desktop Chrome"] },
     },
 
     // ── 2. Authenticated tests — use storage state from globalSetup ─────────
     {
       name: "chromium-authenticated",
-      testIgnore: /auth\.setup\.ts|smoke\.spec\.ts/,
+      testIgnore: /auth\.setup\.ts|smoke(?:-full)?\.spec\.ts/,
       use: {
         ...devices["Desktop Chrome"],
         storageState: AUTH_FILE,
