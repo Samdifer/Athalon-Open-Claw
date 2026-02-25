@@ -77,11 +77,10 @@
   - discrepancies.ts: 1 TODO (counter document)
 - **Status:** These are correctly scoped to future phases. No immediate action needed.
 
-### TD-011: RTS Hash Uses Weak Algorithm
-- **Severity:** Medium (security)
-- **Location:** `convex/returnToService.ts` line 50-78
-- **Issue:** computeRtsHash uses a custom non-cryptographic hash instead of SHA-256
-- **Recommendation:** Replace with `crypto.subtle.digest("SHA-256", ...)` (same pattern now used for PIN hashing)
+### TD-011: RTS Hash Upgraded to SHA-256 ✅
+- **Before:** computeRtsHash used DJB2 (non-cryptographic, 32-bit)
+- **Fix:** Replaced with `crypto.subtle.digest("SHA-256")` via Web Crypto API
+- **Hash prefix:** Changed from `RTS-HASH-V0-` to `RTS-SHA256-` for auditability
 
 ---
 

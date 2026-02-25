@@ -111,18 +111,19 @@ export default function PurchaseOrdersPage() {
           </TabsList>
         </Tabs>
         <div className="relative ml-auto">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" aria-hidden="true" />
           <Input
             placeholder="Search PO number..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="h-8 pl-8 pr-3 text-xs w-56 bg-muted/30 border-border/60"
+            aria-label="Search purchase orders by number"
           />
         </div>
       </div>
 
       {isLoading ? (
-        <div className="space-y-2">{Array.from({ length: 3 }).map((_, i) => <POSkeleton key={i} />)}</div>
+        <div className="space-y-2" role="status" aria-label="Loading purchase orders">{Array.from({ length: 3 }).map((_, i) => <POSkeleton key={i} />)}</div>
       ) : filtered.length === 0 ? (
         <Card className="border-border/60">
           <CardContent className="py-16 text-center">
@@ -142,9 +143,9 @@ export default function PurchaseOrdersPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-2" aria-live="polite" aria-label={`Purchase orders list, ${filtered.length} result${filtered.length !== 1 ? "s" : ""}`}>
           {filtered.map((po) => (
-            <Link key={po._id} href={`/billing/purchase-orders/${po._id}`}>
+            <Link key={po._id} href={`/billing/purchase-orders/${po._id}`} aria-label={`Purchase order ${po.poNumber} — ${po.status} — $${po.total.toFixed(2)}`}>
               <Card className="border-border/60 hover:border-primary/30 hover:bg-card/80 transition-all cursor-pointer">
                 <CardContent className="p-4">
                   <div className="flex items-center gap-4">

@@ -112,7 +112,7 @@ export default function FleetPage() {
       </div>
 
       {isLoading ? (
-        <FleetSkeleton />
+        <div role="status" aria-label="Loading fleet"><FleetSkeleton /></div>
       ) : fleet.length === 0 ? (
         <Card className="border-border/60">
           <CardContent className="py-16 text-center">
@@ -122,16 +122,17 @@ export default function FleetPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-3">
+        <div className="grid gap-3" aria-live="polite" aria-label={`Fleet list, ${fleet.length} aircraft`}>
           {fleet.map((ac) => {
             const style = getStatusStyle(ac.status);
             return (
-              <Link key={ac._id} href={`/fleet/${ac.currentRegistration}`}>
+              <Link key={ac._id} href={`/fleet/${ac.currentRegistration}`} aria-label={`Aircraft ${ac.currentRegistration} — ${ac.make} ${ac.model} — ${style.label}`}>
                 <Card className="border-border/60 hover:border-primary/30 hover:bg-card/80 transition-all cursor-pointer">
                   <CardContent className="p-4">
                     <div className="flex items-center gap-4">
                       <div
                         className={`w-2 h-2 rounded-full flex-shrink-0 ${style.dot}`}
+                        aria-hidden="true"
                       />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2.5 mb-0.5">
@@ -148,6 +149,7 @@ export default function FleetPage() {
                             <Badge
                               variant="secondary"
                               className="text-[10px] bg-muted"
+                              aria-label={`${ac.openWorkOrderCount} open work order${ac.openWorkOrderCount > 1 ? "s" : ""}`}
                             >
                               {ac.openWorkOrderCount} open WO
                               {ac.openWorkOrderCount > 1 ? "s" : ""}

@@ -135,12 +135,12 @@ export function AppSidebar() {
   const { organization } = useOrganization();
 
   return (
-    <Sidebar collapsible="icon" className="border-r border-border/50">
+    <Sidebar collapsible="icon" className="border-r border-border/50" aria-label="Main navigation">
       {/* Header — Logo + Org Name */}
       <SidebarHeader className="px-3 py-4">
         <div className="flex items-center gap-2.5 px-1">
           <div className="w-7 h-7 rounded-md bg-primary flex items-center justify-center flex-shrink-0">
-            <Wrench className="w-4 h-4 text-primary-foreground" />
+            <Wrench className="w-4 h-4 text-primary-foreground" aria-hidden="true" />
           </div>
           <div className="flex flex-col min-w-0 group-data-[collapsible=icon]:hidden">
             <span className="text-sm font-semibold text-foreground leading-tight truncate">
@@ -178,14 +178,15 @@ export function AppSidebar() {
                           "bg-primary/10 text-primary hover:bg-primary/15"
                       )}
                     >
-                      <Link href={item.href}>
-                        <item.icon className="w-4 h-4 flex-shrink-0" />
+                      <Link href={item.href} aria-current={isActive ? "page" : undefined}>
+                        <item.icon className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
                         <span className="flex-1">{item.title}</span>
                         {item.badgeCount !== undefined &&
                           item.badgeCount > 0 && (
                             <Badge
                               variant={item.badgeVariant ?? "secondary"}
                               className="ml-auto h-4.5 min-w-[18px] px-1 text-[10px] font-medium group-data-[collapsible=icon]:hidden"
+                              aria-label={`${item.badgeCount} ${item.title.toLowerCase()} items`}
                             >
                               {item.badgeCount}
                             </Badge>
@@ -222,8 +223,8 @@ export function AppSidebar() {
                           "bg-primary/10 text-primary hover:bg-primary/15"
                       )}
                     >
-                      <Link href={item.href}>
-                        <item.icon className="w-4 h-4 flex-shrink-0" />
+                      <Link href={item.href} aria-current={isActive ? "page" : undefined}>
+                        <item.icon className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
                         <span>{item.title}</span>
                       </Link>
                     </SidebarMenuButton>
@@ -254,8 +255,8 @@ export function AppSidebar() {
                           "bg-primary/10 text-primary hover:bg-primary/15"
                       )}
                     >
-                      <Link href={item.href}>
-                        <item.icon className="w-4 h-4 flex-shrink-0" />
+                      <Link href={item.href} aria-current={isActive ? "page" : undefined}>
+                        <item.icon className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
                         <span>{item.title}</span>
                       </Link>
                     </SidebarMenuButton>
@@ -292,7 +293,7 @@ export function AppSidebar() {
                     Director of Maintenance
                   </span>
                 </div>
-                <ChevronRight className="w-3.5 h-3.5 text-muted-foreground group-data-[collapsible=icon]:hidden" />
+                <ChevronRight className="w-3.5 h-3.5 text-muted-foreground group-data-[collapsible=icon]:hidden" aria-hidden="true" />
               </div>
             </SidebarMenuButton>
           </SidebarMenuItem>

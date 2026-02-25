@@ -43,8 +43,8 @@ function AgingBadge({ days }: { days: number }) {
     ? "bg-amber-500/15 text-amber-400 border-amber-500/30"
     : "bg-yellow-500/15 text-yellow-400 border-yellow-500/30";
   return (
-    <Badge variant="outline" className={`text-[10px] border ${cls} gap-0.5`}>
-      <AlertTriangle className="w-2.5 h-2.5" />
+    <Badge variant="outline" className={`text-[10px] border ${cls} gap-0.5`} aria-label={`Invoice ${days} days overdue`}>
+      <AlertTriangle className="w-2.5 h-2.5" aria-hidden="true" />
       {days}d
     </Badge>
   );
@@ -147,19 +147,20 @@ export default function InvoicesPage() {
           </TabsList>
         </Tabs>
         <div className="relative ml-auto">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" aria-hidden="true" />
           <Input
             placeholder="Search invoice number..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="h-8 pl-8 pr-3 text-xs w-56 bg-muted/30 border-border/60"
+            aria-label="Search invoices by number"
           />
         </div>
       </div>
 
       {/* List */}
       {isLoading ? (
-        <div className="space-y-2">
+        <div className="space-y-2" role="status" aria-label="Loading invoices">
           {Array.from({ length: 4 }).map((_, i) => <InvoiceSkeleton key={i} />)}
         </div>
       ) : filtered.length === 0 ? (
@@ -181,11 +182,11 @@ export default function InvoicesPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-2" aria-live="polite" aria-label={`Invoices list, ${filtered.length} result${filtered.length !== 1 ? "s" : ""}`}>
           {filtered.map((inv) => {
             const aging = inv.status === "SENT" ? agingDays(inv.sentAt) : null;
             return (
-              <Link key={inv._id} href={`/billing/invoices/${inv._id}`}>
+              <Link key={inv._id} href={`/billing/invoices/${inv._id}`} aria-label={`Invoice ${inv.invoiceNumber} — ${inv.status} — $${inv.total.toFixed(2)}`}>
                 <Card className="border-border/60 hover:border-primary/30 hover:bg-card/80 transition-all cursor-pointer">
                   <CardContent className="p-4">
                     <div className="flex items-start gap-4">
@@ -211,7 +212,7 @@ export default function InvoicesPage() {
                             <p className="text-[10px] text-muted-foreground">Balance: ${inv.balance.toFixed(2)}</p>
                           )}
                         </div>
-                        <ChevronRight className="w-4 h-4 text-muted-foreground/50" />
+                        <ChevronRight className="w-4 h-4 text-muted-foreground/50" aria-hidden="true" />
                       </div>
                     </div>
                   </CardContent>

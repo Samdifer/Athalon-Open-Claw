@@ -14,7 +14,7 @@ export default function AppLayout({
         <AppSidebar />
         <div className="flex flex-col flex-1 min-h-screen min-w-0">
           <TopBar />
-          <main className="flex-1 p-6 overflow-auto">{children}</main>
+          <main className="flex-1 p-6 overflow-auto" aria-label="Main content">{children}</main>
         </div>
       </SidebarProvider>
     </OrgContextProvider>

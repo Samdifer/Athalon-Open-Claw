@@ -137,18 +137,19 @@ export default function VendorsPage() {
           </TabsList>
         </Tabs>
         <div className="relative ml-auto">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" aria-hidden="true" />
           <Input
             placeholder="Search vendors..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="h-8 pl-8 pr-3 text-xs w-56 bg-muted/30 border-border/60"
+            aria-label="Search vendors by name or type"
           />
         </div>
       </div>
 
       {isLoading ? (
-        <div className="space-y-2">{Array.from({ length: 4 }).map((_, i) => <VendorSkeleton key={i} />)}</div>
+        <div className="space-y-2" role="status" aria-label="Loading vendors">{Array.from({ length: 4 }).map((_, i) => <VendorSkeleton key={i} />)}</div>
       ) : filtered.length === 0 ? (
         <Card className="border-border/60">
           <CardContent className="py-16 text-center">
@@ -168,13 +169,13 @@ export default function VendorsPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-2" aria-live="polite" aria-label={`Vendors list, ${filtered.length} result${filtered.length !== 1 ? "s" : ""}`}>
           {filtered.map((vendor) => {
             const certExpired = isCertExpired(vendor.certExpiry);
             const certExpiringSoon = !certExpired && isCertExpiringSoon(vendor.certExpiry);
 
             return (
-              <Link key={vendor._id} href={`/billing/vendors/${vendor._id}`}>
+              <Link key={vendor._id} href={`/billing/vendors/${vendor._id}`} aria-label={`Vendor: ${vendor.name} — ${vendor.isApproved ? "Approved" : "Not Approved"}${certExpired ? " — Certificate Expired" : certExpiringSoon ? " — Certificate Expiring Soon" : ""}`}>
                 <Card className={`border-border/60 hover:border-primary/30 hover:bg-card/80 transition-all cursor-pointer ${certExpired ? "border-l-4 border-l-red-500" : certExpiringSoon ? "border-l-4 border-l-amber-500" : ""}`}>
                   <CardContent className="p-4">
                     <div className="flex items-center gap-4">
@@ -183,12 +184,12 @@ export default function VendorsPage() {
                           <span className="text-sm font-medium text-foreground">{vendor.name}</span>
                           {vendor.isApproved ? (
                             <Badge className="bg-green-500/15 text-green-400 border border-green-500/30 text-[10px] gap-0.5">
-                              <CheckCircle2 className="w-2.5 h-2.5" />
+                              <CheckCircle2 className="w-2.5 h-2.5" aria-hidden="true" />
                               Approved
                             </Badge>
                           ) : (
                             <Badge variant="outline" className="text-[10px] bg-muted text-muted-foreground border-muted-foreground/30 gap-0.5">
-                              <XCircle className="w-2.5 h-2.5" />
+                              <XCircle className="w-2.5 h-2.5" aria-hidden="true" />
                               Not Approved
                             </Badge>
                           )}

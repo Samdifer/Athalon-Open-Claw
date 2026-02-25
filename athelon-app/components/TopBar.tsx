@@ -33,7 +33,7 @@ export function TopBar() {
   return (
     <>
       <header className="h-12 flex items-center gap-2 px-4 border-b border-border/50 bg-background/80 backdrop-blur-sm sticky top-0 z-50">
-        <SidebarTrigger className="-ml-1" />
+        <SidebarTrigger className="-ml-1" aria-label="Toggle sidebar" />
         <Separator orientation="vertical" className="h-5 mx-1" />
 
         {/* Search trigger */}
@@ -41,8 +41,10 @@ export function TopBar() {
           variant="outline"
           onClick={() => setCommandOpen(true)}
           className="h-8 w-64 justify-start gap-2 text-muted-foreground font-normal text-xs border-border/60 bg-muted/30 hover:bg-muted/50"
+          aria-label="Open search palette (Cmd+K)"
+          aria-haspopup="dialog"
         >
-          <Search className="w-3.5 h-3.5" />
+          <Search className="w-3.5 h-3.5" aria-hidden="true" />
           <span>Search work orders, aircraft...</span>
           <kbd className="ml-auto pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border border-border/60 bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground">
             ⌘K
@@ -55,12 +57,13 @@ export function TopBar() {
             variant="ghost"
             size="icon"
             className="h-8 w-8 relative"
-            title="Notifications"
+            aria-label="Notifications (2 unread)"
           >
-            <Bell className="w-4 h-4" />
+            <Bell className="w-4 h-4" aria-hidden="true" />
             <Badge
               variant="destructive"
               className="absolute -top-0.5 -right-0.5 h-3.5 w-3.5 p-0 text-[9px] flex items-center justify-center"
+              aria-hidden="true"
             >
               2
             </Badge>

@@ -216,14 +216,14 @@ export function SignStepDialog({
 
           {/* Rating Exercised */}
           <div>
-            <Label className="text-xs font-medium mb-1.5 block">
-              Rating Exercised <span className="text-red-400">*</span>
+            <Label htmlFor="sign-step-rating" className="text-xs font-medium mb-1.5 block">
+              Rating Exercised <span className="text-red-400" aria-hidden="true">*</span>
             </Label>
             <Select
               value={rating}
               onValueChange={(v) => setRating(v as RatingValue)}
             >
-              <SelectTrigger className="h-9 text-sm bg-muted/30 border-border/60">
+              <SelectTrigger id="sign-step-rating" className="h-9 text-sm bg-muted/30 border-border/60" aria-required="true" aria-label="Rating exercised (required)">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -238,17 +238,19 @@ export function SignStepDialog({
 
           {/* Approved Data Reference (Gap 1) */}
           <div>
-            <Label className="text-xs font-medium mb-1.5 block">
+            <Label htmlFor="sign-step-data-ref" className="text-xs font-medium mb-1.5 block">
               Approved Data Reference{" "}
               <span className="text-muted-foreground font-normal">
                 (14 CFR 43.9(a)(3))
               </span>
             </Label>
             <Input
+              id="sign-step-data-ref"
               value={approvedDataRef}
               onChange={(e) => setApprovedDataRef(e.target.value)}
               placeholder="e.g. AMM 71-00-00, Rev 42"
               className="h-9 text-sm bg-muted/30 border-border/60"
+              aria-label="Approved data reference per 14 CFR 43.9(a)(3)"
             />
           </div>
 
@@ -328,6 +330,7 @@ export function SignStepDialog({
                   variant="ghost"
                   size="sm"
                   className="h-7 w-7 p-0 text-muted-foreground hover:text-red-400"
+                  aria-label={`Remove part ${idx + 1}`}
                   onClick={() => setPartsInstalled((prev) => prev.filter((_, i) => i !== idx))}
                 >
                   ×
@@ -338,13 +341,14 @@ export function SignStepDialog({
 
           {/* Notes */}
           <div>
-            <Label className="text-xs font-medium mb-1.5 block">
+            <Label htmlFor="sign-step-notes" className="text-xs font-medium mb-1.5 block">
               Notes{" "}
               <span className="text-muted-foreground font-normal">
                 (optional)
               </span>
             </Label>
             <Textarea
+              id="sign-step-notes"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Any notes for this step..."
@@ -357,11 +361,12 @@ export function SignStepDialog({
 
           {/* PIN Re-authentication */}
           <div>
-            <Label className="text-xs font-medium mb-1.5 block">
+            <Label htmlFor="sign-step-pin" className="text-xs font-medium mb-1.5 block">
               Re-enter PIN to authorize signature{" "}
-              <span className="text-red-400">*</span>
+              <span className="text-red-400" aria-hidden="true">*</span>
             </Label>
             <Input
+              id="sign-step-pin"
               type="password"
               value={pin}
               onChange={(e) => setPin(e.target.value)}
@@ -369,8 +374,10 @@ export function SignStepDialog({
               maxLength={6}
               inputMode="numeric"
               className="h-9 font-mono text-sm bg-muted/30 border-border/60"
+              aria-required="true"
+              aria-describedby="sign-step-pin-hint"
             />
-            <p className="text-[10px] text-muted-foreground mt-1">
+            <p id="sign-step-pin-hint" className="text-[10px] text-muted-foreground mt-1">
               Creates a 5-minute authorization token for this signature.
             </p>
           </div>

@@ -185,20 +185,22 @@ export default function WorkOrdersPage() {
 
         <div className="flex items-center gap-2 ml-auto">
           <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" aria-hidden="true" />
             <Input
               placeholder="Search WO#, aircraft, description..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="h-8 pl-8 pr-3 text-xs w-64 bg-muted/30 border-border/60"
+              aria-label="Search work orders by number, aircraft, or description"
             />
           </div>
           <Button
             variant="outline"
             size="sm"
             className="h-8 gap-1.5 text-xs border-border/60"
+            aria-label="Filter work orders"
           >
-            <Filter className="w-3.5 h-3.5" />
+            <Filter className="w-3.5 h-3.5" aria-hidden="true" />
             Filter
           </Button>
         </div>
@@ -206,7 +208,7 @@ export default function WorkOrdersPage() {
 
       {/* Work Orders List */}
       {isLoading ? (
-        <div className="space-y-2">
+        <div className="space-y-2" role="status" aria-label="Loading work orders">
           {Array.from({ length: 4 }).map((_, i) => (
             <WorkOrderSkeleton key={i} />
           ))}
@@ -234,7 +236,7 @@ export default function WorkOrdersPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-2" aria-live="polite" aria-label={`Work orders list, ${filtered.length} result${filtered.length !== 1 ? "s" : ""}`}>
           {filtered.map((wo) => {
             const tailNumber = wo.aircraft?.currentRegistration ?? "—";
             const aircraftLabel =
@@ -249,7 +251,7 @@ export default function WorkOrdersPage() {
             const isAog = wo.priority === "aog";
 
             return (
-              <Link key={wo._id} href={`/work-orders/${wo._id}`}>
+              <Link key={wo._id} href={`/work-orders/${wo._id}`} aria-label={`Work order ${wo.workOrderNumber}: ${tailNumber} — ${wo.description} (${statusLabel})`}>
                 <Card
                   className={`border-border/60 hover:border-primary/30 hover:bg-card/80 transition-all cursor-pointer ${
                     isAog ? "border-l-4 border-l-red-500" : ""

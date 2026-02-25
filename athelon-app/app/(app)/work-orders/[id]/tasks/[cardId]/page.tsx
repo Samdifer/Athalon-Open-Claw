@@ -40,7 +40,7 @@ import {
 
 function TaskCardSkeleton() {
   return (
-    <div className="space-y-5">
+    <div className="space-y-5" role="status" aria-label="Loading task card">
       <Skeleton className="h-7 w-24" />
       <div className="space-y-2">
         <Skeleton className="h-7 w-64" />
@@ -203,11 +203,11 @@ export default function TaskCardPage() {
       <Card className="border-border/60">
         <CardHeader className="pb-3">
           <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
-            <Wrench className="w-3.5 h-3.5" />
+            <Wrench className="w-3.5 h-3.5" aria-hidden="true" />
             Steps
           </CardTitle>
         </CardHeader>
-        <CardContent className="pt-0 space-y-0">
+        <CardContent className="pt-0 space-y-0" aria-live="polite" aria-label="Task steps">
           {taskCard.steps
             .slice()
             .sort((a, b) => a.stepNumber - b.stepNumber)
@@ -270,12 +270,14 @@ export default function TaskCardPage() {
                 placeholder="Add a shift handoff note..."
                 rows={2}
                 className="text-xs bg-muted/30 border-border/60 resize-none flex-1"
+                aria-label="Shift handoff note"
               />
               <Button
                 variant="outline"
                 size="sm"
                 className="h-auto self-end gap-1 text-xs"
                 disabled={!handoffNote.trim() || handoffSubmitting}
+                aria-label="Submit handoff note"
                 onClick={async () => {
                   setHandoffSubmitting(true);
                   try {

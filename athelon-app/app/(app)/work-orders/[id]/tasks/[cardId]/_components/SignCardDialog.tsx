@@ -112,7 +112,7 @@ export function SignCardDialog({
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-base">
-            <Lock className="w-4 h-4 text-green-400" />
+            <Lock className="w-4 h-4 text-green-400" aria-hidden="true" />
             Sign Task Card
           </DialogTitle>
         </DialogHeader>
@@ -133,14 +133,14 @@ export function SignCardDialog({
 
           {/* Rating */}
           <div>
-            <Label className="text-xs font-medium mb-1.5 block">
-              Rating Exercised <span className="text-red-400">*</span>
+            <Label htmlFor="sign-card-rating" className="text-xs font-medium mb-1.5 block">
+              Rating Exercised <span className="text-red-400" aria-hidden="true">*</span>
             </Label>
             <Select
               value={rating}
               onValueChange={(v) => setRating(v as RatingValue)}
             >
-              <SelectTrigger className="h-9 text-sm bg-muted/30 border-border/60">
+              <SelectTrigger id="sign-card-rating" className="h-9 text-sm bg-muted/30 border-border/60" aria-required="true" aria-label="Rating exercised (required)">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -155,21 +155,24 @@ export function SignCardDialog({
 
           {/* Return to Service Statement */}
           <div>
-            <Label className="text-xs font-medium mb-1.5 block">
+            <Label htmlFor="sign-card-statement" className="text-xs font-medium mb-1.5 block">
               Return-to-Service Statement{" "}
-              <span className="text-red-400">*</span>
+              <span className="text-red-400" aria-hidden="true">*</span>
               <span className="text-muted-foreground font-normal ml-1">
                 (min. 50 chars, 14 CFR 43.9)
               </span>
             </Label>
             <Textarea
+              id="sign-card-statement"
               value={statement}
               onChange={(e) => setStatement(e.target.value)}
               placeholder="I certify that the work identified in this task card was performed in accordance with [approved data reference] and that the aircraft/component is approved for return to service..."
               rows={4}
               className="text-sm bg-muted/30 border-border/60 resize-none"
+              aria-required="true"
+              aria-describedby="sign-card-statement-hint"
             />
-            <p className="text-[10px] text-muted-foreground mt-1">
+            <p id="sign-card-statement-hint" className="text-[10px] text-muted-foreground mt-1">
               {statement.length}/50 chars minimum
             </p>
           </div>
@@ -178,10 +181,11 @@ export function SignCardDialog({
 
           {/* PIN */}
           <div>
-            <Label className="text-xs font-medium mb-1.5 block">
-              Re-enter PIN <span className="text-red-400">*</span>
+            <Label htmlFor="sign-card-pin" className="text-xs font-medium mb-1.5 block">
+              Re-enter PIN <span className="text-red-400" aria-hidden="true">*</span>
             </Label>
             <Input
+              id="sign-card-pin"
               type="password"
               value={pin}
               onChange={(e) => setPin(e.target.value)}
@@ -189,6 +193,7 @@ export function SignCardDialog({
               maxLength={6}
               inputMode="numeric"
               className="h-9 font-mono text-sm bg-muted/30 border-border/60"
+              aria-required="true"
             />
           </div>
 

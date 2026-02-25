@@ -145,19 +145,20 @@ export default function QuotesPage() {
         </Tabs>
 
         <div className="relative ml-auto">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" aria-hidden="true" />
           <Input
             placeholder="Search quote number..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="h-8 pl-8 pr-3 text-xs w-56 bg-muted/30 border-border/60"
+            aria-label="Search quotes by number"
           />
         </div>
       </div>
 
       {/* List */}
       {isLoading ? (
-        <div className="space-y-2">
+        <div className="space-y-2" role="status" aria-label="Loading quotes">
           {Array.from({ length: 4 }).map((_, i) => <QuoteSkeleton key={i} />)}
         </div>
       ) : filtered.length === 0 ? (
@@ -181,9 +182,9 @@ export default function QuotesPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-2" aria-live="polite" aria-label={`Quotes list, ${filtered.length} result${filtered.length !== 1 ? "s" : ""}`}>
           {filtered.map((quote) => (
-            <Link key={quote._id} href={`/billing/quotes/${quote._id}`}>
+            <Link key={quote._id} href={`/billing/quotes/${quote._id}`} aria-label={`Quote ${quote.quoteNumber} — ${quote.status} — $${quote.total.toLocaleString("en-US", { minimumFractionDigits: 2 })}`}>
               <Card className="border-border/60 hover:border-primary/30 hover:bg-card/80 transition-all cursor-pointer">
                 <CardContent className="p-4">
                   <div className="flex items-start gap-4">

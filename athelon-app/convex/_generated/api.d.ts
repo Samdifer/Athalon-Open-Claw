@@ -16,6 +16,7 @@ import type * as discrepancies from "../discrepancies.js";
 import type * as lib_authHelpers from "../lib/authHelpers.js";
 import type * as lib_billingHelpers from "../lib/billingHelpers.js";
 import type * as lib_numberGenerator from "../lib/numberGenerator.js";
+import type * as lib_orgScope from "../lib/orgScope.js";
 import type * as maintenanceRecords from "../maintenanceRecords.js";
 import type * as parts from "../parts.js";
 import type * as pricing from "../pricing.js";
@@ -42,6 +43,7 @@ declare const fullApi: ApiFromModules<{
   "lib/authHelpers": typeof lib_authHelpers;
   "lib/billingHelpers": typeof lib_billingHelpers;
   "lib/numberGenerator": typeof lib_numberGenerator;
+  "lib/orgScope": typeof lib_orgScope;
   maintenanceRecords: typeof maintenanceRecords;
   parts: typeof parts;
   pricing: typeof pricing;

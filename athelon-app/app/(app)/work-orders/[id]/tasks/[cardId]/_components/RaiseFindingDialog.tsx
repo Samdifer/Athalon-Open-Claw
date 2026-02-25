@@ -149,28 +149,30 @@ export function RaiseFindingDialog({
 
           {/* Description */}
           <div>
-            <Label className="text-xs font-medium mb-1.5 block">
-              Description <span className="text-red-400">*</span>
+            <Label htmlFor="finding-description" className="text-xs font-medium mb-1.5 block">
+              Description <span className="text-red-400" aria-hidden="true">*</span>
             </Label>
             <Textarea
+              id="finding-description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Describe the discrepancy found..."
               rows={3}
               className="text-sm bg-muted/30 border-border/60 resize-none"
+              aria-required="true"
             />
           </div>
 
           {/* Found During */}
           <div>
-            <Label className="text-xs font-medium mb-1.5 block">
-              Found During <span className="text-red-400">*</span>
+            <Label htmlFor="finding-found-during" className="text-xs font-medium mb-1.5 block">
+              Found During <span className="text-red-400" aria-hidden="true">*</span>
             </Label>
             <Select
               value={foundDuring}
               onValueChange={(v) => setFoundDuring(v as FoundDuringValue)}
             >
-              <SelectTrigger className="h-9 text-sm bg-muted/30 border-border/60">
+              <SelectTrigger id="finding-found-during" className="h-9 text-sm bg-muted/30 border-border/60" aria-required="true" aria-label="Found during (required)">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -186,10 +188,11 @@ export function RaiseFindingDialog({
           {/* Component fields (collapsible row) */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
-              <Label className="text-xs font-medium mb-1.5 block">
+              <Label htmlFor="finding-component" className="text-xs font-medium mb-1.5 block">
                 Component Affected
               </Label>
               <Input
+                id="finding-component"
                 value={componentAffected}
                 onChange={(e) => setComponentAffected(e.target.value)}
                 placeholder="e.g. Left main gear"
@@ -197,10 +200,11 @@ export function RaiseFindingDialog({
               />
             </div>
             <div>
-              <Label className="text-xs font-medium mb-1.5 block">
+              <Label htmlFor="finding-part-number" className="text-xs font-medium mb-1.5 block">
                 Part Number
               </Label>
               <Input
+                id="finding-part-number"
                 value={componentPartNumber}
                 onChange={(e) => setComponentPartNumber(e.target.value)}
                 placeholder="P/N"
@@ -208,10 +212,11 @@ export function RaiseFindingDialog({
               />
             </div>
             <div>
-              <Label className="text-xs font-medium mb-1.5 block">
+              <Label htmlFor="finding-serial-number" className="text-xs font-medium mb-1.5 block">
                 Serial Number
               </Label>
               <Input
+                id="finding-serial-number"
                 value={componentSerialNumber}
                 onChange={(e) => setComponentSerialNumber(e.target.value)}
                 placeholder="S/N"
@@ -222,11 +227,12 @@ export function RaiseFindingDialog({
 
           {/* Notes */}
           <div>
-            <Label className="text-xs font-medium mb-1.5 block">
+            <Label htmlFor="finding-notes" className="text-xs font-medium mb-1.5 block">
               Notes{" "}
               <span className="text-muted-foreground font-normal">(optional)</span>
             </Label>
             <Textarea
+              id="finding-notes"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Additional context, references, photos..."

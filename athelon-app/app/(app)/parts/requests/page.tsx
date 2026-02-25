@@ -126,7 +126,7 @@ export default function PartsRequestsPage() {
       </div>
 
       {isLoading ? (
-        <PartsSkeleton />
+        <div role="status" aria-label="Loading parts queue"><PartsSkeleton /></div>
       ) : allParts.length === 0 ? (
         <Card className="border-border/60">
           <CardContent className="py-16 text-center">
@@ -138,7 +138,7 @@ export default function PartsRequestsPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-2" aria-live="polite" aria-label={`Parts queue, ${allParts.length} part${allParts.length !== 1 ? "s" : ""}`}>
           {allParts.map((part) => {
             const locationStyle = getLocationStyle(part.location);
             const isRemoved = part.location === "removed_pending_disposition";
@@ -150,7 +150,7 @@ export default function PartsRequestsPage() {
               >
                 <CardContent className="p-4">
                   <div className="flex items-start gap-3">
-                    <Package className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-0.5" />
+                    <Package className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-0.5" aria-hidden="true" />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-0.5 flex-wrap">
                         <span className="font-mono text-xs font-semibold text-foreground">
