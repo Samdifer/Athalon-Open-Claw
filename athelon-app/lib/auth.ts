@@ -13,9 +13,7 @@
  * Never trust this client-side role for security decisions — only for show/hide.
  */
 
-"use client";
-
-import { useAuth } from "@clerk/nextjs";
+import { useAuth } from "@clerk/clerk-react";
 
 // ---------------------------------------------------------------------------
 // Role types — must stay in sync with convex/lib/permissions.ts

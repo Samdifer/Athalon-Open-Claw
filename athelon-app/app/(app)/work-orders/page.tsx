@@ -1,15 +1,11 @@
-"use client";
-
-import { useState, useMemo } from "react";
-import Link from "next/link";
-import { usePaginatedQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
-import { useCurrentOrg } from "@/hooks/useCurrentOrg";
+import { useState } from "react";
+import { Link } from "react-router-dom";
 import {
   Plus,
   Search,
   ClipboardList,
   AlertTriangle,
+  Package,
   CheckCircle2,
   Circle,
   Timer,
@@ -21,35 +17,141 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  type WoStatus,
-  type WoType,
-  WO_STATUS_LABEL,
-  WO_STATUS_STYLES,
-  WO_TYPE_LABEL,
-} from "@/lib/mro-constants";
-import { formatDate } from "@/lib/format";
 
-// ─── Types ──────────────────────────────────────────────────────────────────
+// ─── Demo data ─────────────────────────────────────────────────────────────────
 
-type FilterTab = "active" | "on_hold" | "pending" | "complete" | "all";
+const demoWorkOrders = [
+  {
+    id: "wo-1",
+    number: "WO-2026-0041",
+    aircraft: "N192AK",
+    aircraftType: "Cessna 172S",
+    customer: "High Country Charter LLC",
+    description: "100-hour Inspection",
+    type: "100_hour",
+    typeLabel: "100-Hour",
+    status: "in_progress",
+    statusLabel: "In Progress",
+    priority: "normal",
+    tasksComplete: 2,
+    tasksTotal: 4,
+    openSquawks: 1,
+    partsOnOrder: 1,
+    daysOpen: 3,
+    openedDate: "Feb 20, 2026",
+    assignedTo: "Ray Kowalski, Sandra Mercado",
+    href: "/work-orders/WO-2026-0041",
+  },
+  {
+    id: "wo-2",
+    number: "WO-2026-0040",
+    aircraft: "N416AB",
+    aircraftType: "Cessna 208B",
+    customer: "High Country Charter LLC",
+    description: "Oil Change & Engine Trend Monitoring",
+    type: "routine",
+    typeLabel: "Routine",
+    status: "pending_signoff",
+    statusLabel: "Pending Sign-Off",
+    priority: "normal",
+    tasksComplete: 3,
+    tasksTotal: 3,
+    openSquawks: 0,
+    partsOnOrder: 0,
+    daysOpen: 5,
+    openedDate: "Feb 18, 2026",
+    assignedTo: "Ray Kowalski",
+    href: "/work-orders/WO-2026-0040",
+  },
+  {
+    id: "wo-3",
+    number: "WO-2026-0039",
+    aircraft: "N76LS",
+    aircraftType: "Bell 206B-III",
+    customer: "Summit Helicopters Inc.",
+    description: "AOG: Main Rotor Blade Crack",
+    type: "aog",
+    typeLabel: "AOG",
+    status: "on_hold",
+    statusLabel: "On Hold",
+    priority: "aog",
+    tasksComplete: 0,
+    tasksTotal: 2,
+    openSquawks: 0,
+    partsOnOrder: 1,
+    daysOpen: 7,
+    openedDate: "Feb 16, 2026",
+    assignedTo: "Ray Kowalski",
+    href: "/work-orders/WO-2026-0039",
+  },
+  {
+    id: "wo-4",
+    number: "WO-2026-0042",
+    aircraft: "N416AB",
+    aircraftType: "Cessna 208B",
+    customer: "High Country Charter LLC",
+    description: "Fuel Selector Valve ALS Replacement",
+    type: "routine",
+    typeLabel: "Routine",
+    status: "draft",
+    statusLabel: "Draft",
+    priority: "normal",
+    tasksComplete: 0,
+    tasksTotal: 0,
+    openSquawks: 0,
+    partsOnOrder: 0,
+    daysOpen: 0,
+    openedDate: "—",
+    assignedTo: "Unassigned",
+    href: "/work-orders/WO-2026-0042",
+  },
+  {
+    id: "wo-5",
+    number: "WO-2026-0037",
+    aircraft: "N76LS",
+    aircraftType: "Bell 206B-III",
+    customer: "Summit Helicopters Inc.",
+    description: "Annual Inspection — ALS Review",
+    type: "annual",
+    typeLabel: "Annual",
+    status: "closed",
+    statusLabel: "Closed",
+    priority: "normal",
+    tasksComplete: 8,
+    tasksTotal: 8,
+    openSquawks: 0,
+    partsOnOrder: 0,
+    daysOpen: 13,
+    openedDate: "Feb 2, 2026",
+    assignedTo: "Ray Kowalski, Mia Chen",
+    href: "/work-orders/WO-2026-0037",
+  },
+];
 
-function filterByTab(
-  wos: Array<{ status: string }>,
-  tab: FilterTab,
-): Array<{ status: string }> {
+type FilterTab =
+  | "active"
+  | "on_hold"
+  | "pending"
+  | "awaiting_parts"
+  | "complete"
+  | "all";
+
+function filterWorkOrders(wos: typeof demoWorkOrders, tab: FilterTab) {
   switch (tab) {
     case "active":
       return wos.filter((w) =>
-        ["open", "in_progress", "open_discrepancies", "draft"].includes(w.status),
+        ["open", "in_progress", "open_discrepancies"].includes(w.status)
       );
     case "on_hold":
       return wos.filter((w) => w.status === "on_hold");
     case "pending":
       return wos.filter((w) =>
-        ["pending_inspection", "pending_signoff"].includes(w.status),
+        ["pending_inspection", "pending_signoff"].includes(w.status)
       );
+    case "awaiting_parts":
+      return wos.filter((w) => w.partsOnOrder > 0);
     case "complete":
       return wos.filter((w) => ["closed", "cancelled"].includes(w.status));
     default:
@@ -57,86 +159,57 @@ function filterByTab(
   }
 }
 
-// ─── Loading skeletons ───────────────────────────────────────────────────────
-
-function WorkOrderSkeleton() {
-  return (
-    <Card className="border-border/60">
-      <CardContent className="p-4">
-        <div className="flex items-start gap-4">
-          <div className="flex-1 space-y-2">
-            <div className="flex items-center gap-2">
-              <Skeleton className="h-4 w-24" />
-              <Skeleton className="h-4 w-20" />
-              <Skeleton className="h-4 w-16" />
-            </div>
-            <Skeleton className="h-5 w-3/4" />
-            <Skeleton className="h-4 w-1/2" />
-          </div>
-          <Skeleton className="h-8 w-8 rounded" />
-        </div>
-      </CardContent>
-    </Card>
-  );
+function getStatusStyles(status: string) {
+  const map: Record<string, string> = {
+    in_progress: "bg-sky-500/15 text-sky-400 border-sky-500/30",
+    pending_signoff: "bg-amber-500/15 text-amber-400 border-amber-500/30",
+    pending_inspection: "bg-amber-500/15 text-amber-400 border-amber-500/30",
+    on_hold: "bg-orange-500/15 text-orange-400 border-orange-500/30",
+    draft: "bg-slate-500/15 text-slate-400 border-slate-500/30",
+    closed: "bg-green-500/15 text-green-400 border-green-500/30",
+    cancelled: "bg-slate-500/15 text-slate-400 border-slate-500/30",
+  };
+  return map[status] ?? "bg-muted text-muted-foreground";
 }
-
-// ─── Main page ───────────────────────────────────────────────────────────────
 
 export default function WorkOrdersPage() {
   const [activeTab, setActiveTab] = useState<FilterTab>("active");
   const [search, setSearch] = useState("");
-  const { orgId, isLoaded: orgLoaded } = useCurrentOrg();
 
-  const { results, status: queryStatus } = usePaginatedQuery(
-    api.workOrders.listWorkOrders,
-    orgId ? { organizationId: orgId } : "skip",
-    { initialNumItems: 100 },
+  const filtered = filterWorkOrders(demoWorkOrders, activeTab).filter(
+    (wo) =>
+      search === "" ||
+      wo.number.toLowerCase().includes(search.toLowerCase()) ||
+      wo.aircraft.toLowerCase().includes(search.toLowerCase()) ||
+      wo.description.toLowerCase().includes(search.toLowerCase())
   );
 
-  const isLoading = !orgLoaded || queryStatus === "LoadingFirstPage";
-
-  // Filter and search client-side
-  const filtered = useMemo(() => {
-    const all = results ?? [];
-    const byTab = filterByTab(all, activeTab) as typeof results;
-    if (!search.trim()) return byTab;
-    const q = search.toLowerCase();
-    return byTab.filter(
-      (wo) =>
-        wo.workOrderNumber.toLowerCase().includes(q) ||
-        (wo.aircraft?.currentRegistration ?? "").toLowerCase().includes(q) ||
-        wo.description.toLowerCase().includes(q),
-    );
-  }, [results, activeTab, search]);
-
-  // Count per tab
-  const all = results ?? [];
-  const counts: Record<FilterTab, number> = {
-    active: filterByTab(all, "active").length,
-    on_hold: filterByTab(all, "on_hold").length,
-    pending: filterByTab(all, "pending").length,
-    complete: filterByTab(all, "complete").length,
-    all: all.length,
+  // Count per tab for badges
+  const counts = {
+    active: filterWorkOrders(demoWorkOrders, "active").length,
+    on_hold: filterWorkOrders(demoWorkOrders, "on_hold").length,
+    pending: filterWorkOrders(demoWorkOrders, "pending").length,
+    awaiting_parts: filterWorkOrders(demoWorkOrders, "awaiting_parts").length,
+    complete: filterWorkOrders(demoWorkOrders, "complete").length,
+    all: demoWorkOrders.length,
   };
-
-  const totalInProgress = all.filter((w) => w.status === "in_progress").length;
 
   return (
     <div className="space-y-5">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-foreground">Work Orders</h1>
-          {isLoading ? (
-            <Skeleton className="h-4 w-40 mt-1" />
-          ) : (
-            <p className="text-sm text-muted-foreground mt-0.5">
-              {all.length} total · {totalInProgress} in progress
-            </p>
-          )}
+          <h1 className="text-xl font-semibold text-foreground">
+            Work Orders
+          </h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            {demoWorkOrders.length} total ·{" "}
+            {demoWorkOrders.filter((w) => w.status === "in_progress").length}{" "}
+            in progress
+          </p>
         </div>
         <Button asChild size="sm">
-          <Link href="/work-orders/new">
+          <Link to="/work-orders/new">
             <Plus className="w-3.5 h-3.5 mr-1.5" />
             New Work Order
           </Link>
@@ -153,20 +226,21 @@ export default function WorkOrdersPage() {
           <TabsList className="h-8 bg-muted/40 p-0.5">
             {(
               [
-                ["active", "Active"],
-                ["on_hold", "On Hold"],
-                ["pending", "Pending"],
-                ["complete", "Complete"],
-                ["all", "All"],
+                ["active", "Active", counts.active],
+                ["on_hold", "On Hold", counts.on_hold],
+                ["pending", "Pending", counts.pending],
+                ["awaiting_parts", "Awaiting Parts", counts.awaiting_parts],
+                ["complete", "Complete", counts.complete],
+                ["all", "All", counts.all],
               ] as const
-            ).map(([tab, label]) => (
+            ).map(([tab, label, count]) => (
               <TabsTrigger
                 key={tab}
                 value={tab}
                 className="h-7 px-3 text-xs data-[state=active]:bg-background data-[state=active]:text-foreground"
               >
                 {label}
-                {!isLoading && counts[tab] > 0 && (
+                {count > 0 && (
                   <Badge
                     variant="secondary"
                     className={`ml-1.5 h-4 min-w-[16px] px-1 text-[9px] ${
@@ -175,7 +249,7 @@ export default function WorkOrdersPage() {
                         : "bg-muted-foreground/20 text-muted-foreground"
                     }`}
                   >
-                    {counts[tab]}
+                    {count}
                   </Badge>
                 )}
               </TabsTrigger>
@@ -185,35 +259,23 @@ export default function WorkOrdersPage() {
 
         <div className="flex items-center gap-2 ml-auto">
           <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" aria-hidden="true" />
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
             <Input
               placeholder="Search WO#, aircraft, description..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="h-8 pl-8 pr-3 text-xs w-64 bg-muted/30 border-border/60"
-              aria-label="Search work orders by number, aircraft, or description"
             />
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-8 gap-1.5 text-xs border-border/60"
-            aria-label="Filter work orders"
-          >
-            <Filter className="w-3.5 h-3.5" aria-hidden="true" />
+          <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs border-border/60">
+            <Filter className="w-3.5 h-3.5" />
             Filter
           </Button>
         </div>
       </div>
 
       {/* Work Orders List */}
-      {isLoading ? (
-        <div className="space-y-2" role="status" aria-label="Loading work orders">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <WorkOrderSkeleton key={i} />
-          ))}
-        </div>
-      ) : filtered.length === 0 ? (
+      {filtered.length === 0 ? (
         <Card className="border-border/60">
           <CardContent className="py-16 text-center">
             <ClipboardList className="w-8 h-8 text-muted-foreground/40 mx-auto mb-3" />
@@ -227,7 +289,7 @@ export default function WorkOrdersPage() {
             </p>
             {activeTab === "active" && (
               <Button asChild size="sm" className="mt-4">
-                <Link href="/work-orders/new">
+                <Link to="/work-orders/new">
                   <Plus className="w-3.5 h-3.5 mr-1.5" />
                   Create Work Order
                 </Link>
@@ -236,115 +298,120 @@ export default function WorkOrdersPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-2" aria-live="polite" aria-label={`Work orders list, ${filtered.length} result${filtered.length !== 1 ? "s" : ""}`}>
-          {filtered.map((wo) => {
-            const tailNumber = wo.aircraft?.currentRegistration ?? "—";
-            const aircraftLabel =
-              wo.aircraft
-                ? `${wo.aircraft.make} ${wo.aircraft.model}`
-                : "Unknown Aircraft";
-            const statusLabel =
-              WO_STATUS_LABEL[wo.status as WoStatus] ?? wo.status;
-            const typeLabel =
-              WO_TYPE_LABEL[wo.workOrderType as WoType] ?? wo.workOrderType;
-            const openedDate = wo.openedAt ? formatDate(wo.openedAt) : "—";
-            const isAog = wo.priority === "aog";
-
-            return (
-              <Link key={wo._id} href={`/work-orders/${wo._id}`} aria-label={`Work order ${wo.workOrderNumber}: ${tailNumber} — ${wo.description} (${statusLabel})`}>
-                <Card
-                  className={`border-border/60 hover:border-primary/30 hover:bg-card/80 transition-all cursor-pointer ${
-                    isAog ? "border-l-4 border-l-red-500" : ""
-                  }`}
-                >
-                  <CardContent className="p-4">
-                    <div className="flex items-start gap-4">
-                      <div className="flex-1 min-w-0">
-                        {/* Row 1: WO# + Status + Badges */}
-                        <div className="flex items-center gap-2 mb-1 flex-wrap">
-                          <span className="font-mono text-xs text-muted-foreground font-medium">
-                            {wo.workOrderNumber}
-                          </span>
-                          {isAog ? (
-                            <Badge className="bg-red-500/15 text-red-400 border border-red-500/30 text-[10px] font-semibold">
-                              AOG
-                            </Badge>
-                          ) : (
-                            <Badge
-                              variant="outline"
-                              className={`text-[10px] font-medium border ${WO_STATUS_STYLES[wo.status as WoStatus] ?? "bg-muted text-muted-foreground"}`}
-                            >
-                              {wo.status === "in_progress" && (
-                                <Circle className="w-2 h-2 mr-1 fill-current" />
-                              )}
-                              {wo.status === "closed" && (
-                                <CheckCircle2 className="w-2.5 h-2.5 mr-1" />
-                              )}
-                              {statusLabel}
-                            </Badge>
-                          )}
+        <div className="space-y-2">
+          {filtered.map((wo) => (
+            <Link key={wo.id} to={wo.href}>
+              <Card
+                className={`border-border/60 hover:border-primary/30 hover:bg-card/80 transition-all cursor-pointer ${
+                  wo.priority === "aog" ? "border-l-4 border-l-red-500" : ""
+                }`}
+              >
+                <CardContent className="p-4">
+                  <div className="flex items-start gap-4">
+                    <div className="flex-1 min-w-0">
+                      {/* Row 1: WO# + Status + Badges */}
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-mono text-xs text-muted-foreground font-medium">
+                          {wo.number}
+                        </span>
+                        {wo.priority === "aog" ? (
+                          <Badge className="bg-red-500/15 text-red-400 border border-red-500/30 text-[10px] font-semibold">
+                            AOG
+                          </Badge>
+                        ) : (
                           <Badge
                             variant="outline"
-                            className="text-[10px] text-muted-foreground border-border/40"
+                            className={`text-[10px] font-medium border ${getStatusStyles(wo.status)}`}
                           >
-                            {typeLabel}
+                            {wo.statusLabel}
                           </Badge>
-                          {wo.priority === "urgent" && (
-                            <Badge className="bg-orange-500/15 text-orange-400 border border-orange-500/30 text-[10px]">
-                              <AlertTriangle className="w-2.5 h-2.5 mr-1" />
-                              Urgent
-                            </Badge>
-                          )}
-                        </div>
-
-                        {/* Row 2: Aircraft + Description */}
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-mono font-bold text-base text-foreground">
-                            {tailNumber}
-                          </span>
-                          <span className="text-sm text-muted-foreground">
-                            {aircraftLabel}
-                          </span>
-                          <span className="text-muted-foreground/50">·</span>
-                          <span className="text-sm text-foreground truncate">
-                            {wo.description}
-                          </span>
-                        </div>
-
-                        {/* Row 3: Meta */}
-                        {wo.openedAt ? (
-                          <div className="flex items-center gap-3 mt-1.5">
-                            <span className="text-[11px] text-muted-foreground flex items-center gap-1">
-                              <Timer className="w-3 h-3" />
-                              Opened {openedDate}
-                            </span>
-                          </div>
-                        ) : (
-                          <div className="mt-1.5">
-                            <span className="text-[11px] text-muted-foreground">
-                              Draft — not yet opened
-                            </span>
-                          </div>
+                        )}
+                        <Badge
+                          variant="outline"
+                          className="text-[10px] text-muted-foreground border-border/40"
+                        >
+                          {wo.typeLabel}
+                        </Badge>
+                        {wo.openSquawks > 0 && (
+                          <Badge className="bg-red-500/15 text-red-400 border border-red-500/30 text-[9px] gap-0.5">
+                            <AlertTriangle className="w-2.5 h-2.5" />
+                            {wo.openSquawks} squawk
+                          </Badge>
+                        )}
+                        {wo.partsOnOrder > 0 && (
+                          <Badge className="bg-amber-500/15 text-amber-400 border border-amber-500/30 text-[9px] gap-0.5">
+                            <Package className="w-2.5 h-2.5" />
+                            {wo.partsOnOrder} on order
+                          </Badge>
                         )}
                       </div>
 
-                      {/* Right: Arrow */}
-                      <div className="flex items-center gap-3 flex-shrink-0">
-                        <ChevronRight className="w-4 h-4 text-muted-foreground/50" />
+                      {/* Row 2: Aircraft + Description */}
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono font-bold text-base text-foreground">
+                          {wo.aircraft}
+                        </span>
+                        <span className="text-sm text-muted-foreground">
+                          {wo.aircraftType}
+                        </span>
+                        <span className="text-muted-foreground/50">·</span>
+                        <span className="text-sm text-foreground truncate">
+                          {wo.description}
+                        </span>
+                      </div>
+
+                      {/* Row 3: Meta */}
+                      <div className="flex items-center gap-3 mt-1.5">
+                        <span className="text-[11px] text-muted-foreground">
+                          {wo.customer}
+                        </span>
+                        <span className="text-muted-foreground/40 text-[11px]">
+                          ·
+                        </span>
+                        <span className="text-[11px] text-muted-foreground">
+                          {wo.assignedTo}
+                        </span>
+                        {wo.openedDate !== "—" && (
+                          <>
+                            <span className="text-muted-foreground/40 text-[11px]">
+                              ·
+                            </span>
+                            <span className="text-[11px] text-muted-foreground flex items-center gap-1">
+                              <Timer className="w-3 h-3" />
+                              Opened {wo.openedDate}
+                            </span>
+                          </>
+                        )}
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
-              </Link>
-            );
-          })}
 
-          {/* Load more */}
-          {queryStatus === "CanLoadMore" && (
-            <p className="text-center text-xs text-muted-foreground py-2">
-              Showing first 100 work orders
-            </p>
-          )}
+                    {/* Right: Progress + Arrow */}
+                    <div className="flex items-center gap-3 flex-shrink-0">
+                      {wo.tasksTotal > 0 && (
+                        <div className="text-right">
+                          <div className="flex items-center gap-1.5 mb-1 justify-end">
+                            {wo.tasksComplete === wo.tasksTotal ? (
+                              <CheckCircle2 className="w-3 h-3 text-green-400" />
+                            ) : (
+                              <Circle className="w-3 h-3 text-muted-foreground" />
+                            )}
+                            <span className="text-[11px] text-muted-foreground">
+                              {wo.tasksComplete}/{wo.tasksTotal}
+                            </span>
+                          </div>
+                          <Progress
+                            value={(wo.tasksComplete / wo.tasksTotal) * 100}
+                            className="h-1 w-16"
+                          />
+                        </div>
+                      )}
+                      <ChevronRight className="w-4 h-4 text-muted-foreground/50" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+          ))}
         </div>
       )}
     </div>

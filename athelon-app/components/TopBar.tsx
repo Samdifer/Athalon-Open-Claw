@@ -1,6 +1,4 @@
-"use client";
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Search, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,8 +17,8 @@ import { Separator } from "@/components/ui/separator";
 export function TopBar() {
   const [commandOpen, setCommandOpen] = useState(false);
 
-  // Cmd+K opens command palette
-  if (typeof window !== "undefined") {
+  // Cmd+K opens command palette — useEffect ensures proper cleanup on unmount
+  useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
         e.preventDefault();
@@ -28,7 +26,8 @@ export function TopBar() {
       }
     };
     window.addEventListener("keydown", handleKey);
-  }
+    return () => window.removeEventListener("keydown", handleKey);
+  }, []);
 
   return (
     <>
