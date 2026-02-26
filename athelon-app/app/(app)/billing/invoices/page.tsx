@@ -2,8 +2,9 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
-import { useQuery } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import {
   Plus,
@@ -11,6 +12,10 @@ import {
   Receipt,
   ChevronRight,
   AlertTriangle,
+  Send,
+  Ban,
+  CreditCard,
+  CheckSquare2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,9 +23,28 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { formatDate } from "@/lib/format";
 
 type InvoiceStatus = "DRAFT" | "SENT" | "PAID" | "VOID" | "all";
+type PaymentMethod = "cash" | "check" | "credit_card" | "wire" | "ach" | "other";
 
 const STATUS_STYLES: Record<string, string> = {
   DRAFT: "bg-muted text-muted-foreground border-muted-foreground/30",
@@ -30,6 +54,15 @@ const STATUS_STYLES: Record<string, string> = {
   VOID: "bg-red-500/15 text-red-400 border-red-500/30",
 };
 
+const PAYMENT_METHODS: { value: PaymentMethod; label: string }[] = [
+  { value: "cash", label: "Cash" },
+  { value: "check", label: "Check" },
+  { value: "credit_card", label: "Credit Card" },
+  { value: "wire", label: "Wire Transfer" },
+  { value: "ach", label: "ACH" },
+  { value: "other", label: "Other" },
+];
+
 function agingDays(sentAt: number | undefined): number | null {
   if (!sentAt) return null;
   return Math.floor((Date.now() - sentAt) / (1000 * 60 * 60 * 24));
@@ -37,15 +70,33 @@ function agingDays(sentAt: number | undefined): number | null {
 
 function AgingBadge({ days }: { days: number }) {
   if (days <= 30) return null;
-  const cls = days > 90
-    ? "bg-red-500/15 text-red-400 border-red-500/30"
-    : days > 60
-    ? "bg-amber-500/15 text-amber-400 border-amber-500/30"
-    : "bg-yellow-500/15 text-yellow-400 border-yellow-500/30";
+  const cls =
+    days > 90
+      ? "bg-red-500/15 text-red-400 border-red-500/30"
+      : days > 60
+        ? "bg-amber-500/15 text-amber-400 border-amber-500/30"
+        : "bg-yellow-500/15 text-yellow-400 border-yellow-500/30";
   return (
-    <Badge variant="outline" className={`text-[10px] border ${cls} gap-0.5`} aria-label={`Invoice ${days} days overdue`}>
+    <Badge
+      variant="outline"
+      className={`text-[10px] border ${cls} gap-0.5`}
+      aria-label={`Invoice ${days} days overdue`}
+    >
       <AlertTriangle className="w-2.5 h-2.5" aria-hidden="true" />
       {days}d
+    </Badge>
+  );
+}
+
+function OverdueBadge() {
+  return (
+    <Badge
+      variant="outline"
+      className="text-[10px] border bg-red-500/15 text-red-400 border-red-500/30 gap-0.5"
+      aria-label="Invoice overdue"
+    >
+      <span className="w-1.5 h-1.5 rounded-full bg-red-400 inline-block" />
+      OVERDUE
     </Badge>
   );
 }
@@ -55,6 +106,7 @@ function InvoiceSkeleton() {
     <Card className="border-border/60">
       <CardContent className="p-4">
         <div className="flex items-start gap-4">
+          <Skeleton className="h-4 w-4 mt-0.5 rounded" />
           <div className="flex-1 space-y-2">
             <div className="flex items-center gap-2">
               <Skeleton className="h-4 w-24" />
@@ -72,10 +124,297 @@ function InvoiceSkeleton() {
   );
 }
 
+// ─── Void Batch Dialog ─────────────────────────────────────────────────────────
+
+interface VoidDialogProps {
+  open: boolean;
+  count: number;
+  onClose: () => void;
+  onConfirm: (reason: string) => Promise<void>;
+}
+
+function VoidBatchDialog({ open, count, onClose, onConfirm }: VoidDialogProps) {
+  const [reason, setReason] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleConfirm = async () => {
+    if (!reason.trim()) { setError("Void reason is required."); return; }
+    setLoading(true); setError(null);
+    try {
+      await onConfirm(reason.trim());
+      setReason("");
+      onClose();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to void invoices.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Void {count} Invoice{count !== 1 ? "s" : ""}</DialogTitle>
+          <DialogDescription>
+            Provide a reason for voiding. This action cannot be undone.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-2 py-2">
+          <Label className="text-xs">Void Reason</Label>
+          <Textarea
+            placeholder="e.g. Duplicate invoice, customer request..."
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            rows={3}
+            className="text-sm resize-none"
+          />
+          {error && <p className="text-xs text-red-400">{error}</p>}
+        </div>
+        <DialogFooter>
+          <Button variant="outline" size="sm" onClick={onClose} disabled={loading}>Cancel</Button>
+          <Button
+            size="sm"
+            variant="destructive"
+            onClick={handleConfirm}
+            disabled={loading || !reason.trim()}
+          >
+            {loading ? "Voiding..." : `Void ${count}`}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ─── Batch Payment Dialog ──────────────────────────────────────────────────────
+
+interface BatchPaymentInvoice {
+  _id: Id<"invoices">;
+  invoiceNumber: string;
+  balance: number;
+  total: number;
+}
+
+interface BatchPaymentDialogProps {
+  open: boolean;
+  invoices: BatchPaymentInvoice[];
+  orgId: Id<"organizations">;
+  onClose: () => void;
+  onSuccess: () => void;
+}
+
+function BatchPaymentDialog({
+  open,
+  invoices,
+  orgId,
+  onClose,
+  onSuccess,
+}: BatchPaymentDialogProps) {
+  const batchRecordPayments = useMutation(api.billingV4b.batchRecordPayments);
+  const technicians = useQuery(
+    api.technicians.list,
+    orgId ? { organizationId: orgId } : "skip",
+  );
+
+  const [amounts, setAmounts] = useState<Record<string, string>>({});
+  const [methods, setMethods] = useState<Record<string, PaymentMethod>>({});
+  const [techId, setTechId] = useState<string>("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [result, setResult] = useState<{ recorded: number; errors: string[] } | null>(null);
+
+  const handlePayAll = () => {
+    const newAmounts: Record<string, string> = {};
+    for (const inv of invoices) {
+      newAmounts[inv._id] = inv.balance.toFixed(2);
+    }
+    setAmounts(newAmounts);
+  };
+
+  const handleSubmit = async () => {
+    if (!techId) { setError("Please select the technician recording these payments."); return; }
+    const payments = invoices
+      .map((inv) => ({
+        invoiceId: inv._id,
+        amount: parseFloat(amounts[inv._id] ?? "0"),
+        method: (methods[inv._id] ?? "cash") as PaymentMethod,
+      }))
+      .filter((p) => p.amount > 0);
+
+    if (payments.length === 0) { setError("Enter at least one payment amount."); return; }
+
+    setLoading(true); setError(null);
+    try {
+      const res = await batchRecordPayments({
+        orgId,
+        payments,
+        recordedByTechId: techId as Id<"technicians">,
+      });
+      setResult(res);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to record payments.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleClose = () => {
+    setAmounts({});
+    setMethods({});
+    setTechId("");
+    setError(null);
+    setResult(null);
+    onClose();
+    if (result && result.recorded > 0) onSuccess();
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={(v) => { if (!v) handleClose(); }}>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>Record Batch Payments</DialogTitle>
+          <DialogDescription>
+            Enter payment amounts for each invoice. Leave blank to skip.
+          </DialogDescription>
+        </DialogHeader>
+
+        {result ? (
+          <div className="space-y-3 py-2">
+            <div className="p-3 rounded-md bg-green-500/10 border border-green-500/30 text-sm text-green-400">
+              ✓ {result.recorded} payment{result.recorded !== 1 ? "s" : ""} recorded successfully.
+            </div>
+            {result.errors.length > 0 && (
+              <div className="p-3 rounded-md bg-red-500/10 border border-red-500/30">
+                <p className="text-xs font-medium text-red-400 mb-1">Errors:</p>
+                <ul className="space-y-0.5">
+                  {result.errors.map((e, i) => (
+                    <li key={i} className="text-xs text-red-400">• {e}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            <DialogFooter>
+              <Button size="sm" onClick={handleClose}>Close</Button>
+            </DialogFooter>
+          </div>
+        ) : (
+          <>
+            <div className="space-y-3 py-2 max-h-[380px] overflow-y-auto">
+              {/* Tech selector */}
+              <div className="flex items-center gap-3 pb-2 border-b border-border/50">
+                <div className="flex-1">
+                  <Label className="text-[10px] text-muted-foreground uppercase">Recorded By</Label>
+                  <Select value={techId} onValueChange={setTechId}>
+                    <SelectTrigger className="h-8 text-xs mt-0.5">
+                      <SelectValue placeholder="Select technician..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {(technicians ?? []).map((t) => (
+                        <SelectItem key={t._id} value={t._id} className="text-xs">
+                          {t.legalName}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 text-xs self-end"
+                  onClick={handlePayAll}
+                >
+                  Pay All (Full Balance)
+                </Button>
+              </div>
+
+              {/* Header row */}
+              <div className="grid grid-cols-[1fr_auto_auto_auto] gap-2 text-[10px] uppercase text-muted-foreground font-medium px-0.5">
+                <span>Invoice</span>
+                <span className="w-28 text-right">Balance</span>
+                <span className="w-28">Amount</span>
+                <span className="w-28">Method</span>
+              </div>
+
+              {/* Invoice rows */}
+              {invoices.map((inv) => (
+                <div key={inv._id} className="grid grid-cols-[1fr_auto_auto_auto] gap-2 items-center">
+                  <div>
+                    <p className="text-xs font-mono font-medium">{inv.invoiceNumber}</p>
+                    <p className="text-[10px] text-muted-foreground">Total: ${inv.total.toFixed(2)}</p>
+                  </div>
+                  <span className="text-xs font-medium w-28 text-right">
+                    ${inv.balance.toFixed(2)}
+                  </span>
+                  <Input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    placeholder="0.00"
+                    value={amounts[inv._id] ?? ""}
+                    onChange={(e) =>
+                      setAmounts((prev) => ({ ...prev, [inv._id]: e.target.value }))
+                    }
+                    className="h-8 text-xs w-28"
+                  />
+                  <Select
+                    value={methods[inv._id] ?? "cash"}
+                    onValueChange={(v) =>
+                      setMethods((prev) => ({ ...prev, [inv._id]: v as PaymentMethod }))
+                    }
+                  >
+                    <SelectTrigger className="h-8 text-xs w-28">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {PAYMENT_METHODS.map((m) => (
+                        <SelectItem key={m.value} value={m.value} className="text-xs">
+                          {m.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              ))}
+
+              {error && (
+                <p className="text-xs text-red-400 pt-1">{error}</p>
+              )}
+            </div>
+
+            <DialogFooter>
+              <Button variant="outline" size="sm" onClick={handleClose} disabled={loading}>
+                Cancel
+              </Button>
+              <Button size="sm" onClick={handleSubmit} disabled={loading || !techId}>
+                {loading ? "Recording..." : "Submit Payments"}
+              </Button>
+            </DialogFooter>
+          </>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ─── Main Page ─────────────────────────────────────────────────────────────────
+
 export default function InvoicesPage() {
   const [activeTab, setActiveTab] = useState<InvoiceStatus>("all");
   const [search, setSearch] = useState("");
   const { orgId, isLoaded } = useCurrentOrg();
+
+  // Selection state
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  // Batch action dialogs
+  const [voidDialogOpen, setVoidDialogOpen] = useState(false);
+  const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
+
+  // Mutations
+  const batchSendInvoices = useMutation(api.billingV4b.batchSendInvoices);
+  const batchVoidInvoices = useMutation(api.billingV4b.batchVoidInvoices);
 
   const invoices = useQuery(
     api.billing.listInvoices,
@@ -108,8 +447,69 @@ export default function InvoicesPage() {
     { value: "VOID", label: "Void" },
   ];
 
+  // Selection helpers
+  const allFilteredIds = filtered.map((inv) => inv._id);
+  const allSelected = allFilteredIds.length > 0 && allFilteredIds.every((id) => selectedIds.has(id));
+  const someSelected = allFilteredIds.some((id) => selectedIds.has(id));
+
+  const toggleSelectAll = () => {
+    if (allSelected) {
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        allFilteredIds.forEach((id) => next.delete(id));
+        return next;
+      });
+    } else {
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        allFilteredIds.forEach((id) => next.add(id));
+        return next;
+      });
+    }
+  };
+
+  const toggleSelect = (id: string, checked: boolean) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (checked) next.add(id); else next.delete(id);
+      return next;
+    });
+  };
+
+  // Selected invoice objects (for batch payment dialog)
+  const selectedInvoices = filtered.filter((inv) => selectedIds.has(inv._id));
+
+  // Draft invoices among selected (for batch send)
+  const selectedDraftIds = selectedInvoices
+    .filter((inv) => inv.status === "DRAFT")
+    .map((inv) => inv._id);
+
+  // Overdue check helper
+  const isOverdue = (inv: { dueDate?: number; status: string }) =>
+    inv.dueDate != null &&
+    inv.dueDate < Date.now() &&
+    (inv.status === "SENT" || inv.status === "PARTIAL");
+
+  // Batch send
+  const handleBatchSend = async () => {
+    if (!orgId || selectedDraftIds.length === 0) return;
+    await batchSendInvoices({ orgId, invoiceIds: selectedDraftIds as Id<"invoices">[] });
+    setSelectedIds(new Set());
+  };
+
+  // Batch void
+  const handleBatchVoid = async (reason: string) => {
+    if (!orgId) return;
+    await batchVoidInvoices({
+      orgId,
+      invoiceIds: Array.from(selectedIds) as Id<"invoices">[],
+      voidReason: reason,
+    });
+    setSelectedIds(new Set());
+  };
+
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 pb-24">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -132,13 +532,31 @@ export default function InvoicesPage() {
 
       {/* Filter Tabs + Search */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as InvoiceStatus)} className="w-full sm:w-auto">
+        <Tabs
+          value={activeTab}
+          onValueChange={(v) => {
+            setActiveTab(v as InvoiceStatus);
+            setSelectedIds(new Set());
+          }}
+          className="w-full sm:w-auto"
+        >
           <TabsList className="h-8 bg-muted/40 p-0.5">
             {tabs.map(({ value, label }) => (
-              <TabsTrigger key={value} value={value} className="h-7 px-3 text-xs data-[state=active]:bg-background">
+              <TabsTrigger
+                key={value}
+                value={value}
+                className="h-7 px-3 text-xs data-[state=active]:bg-background"
+              >
                 {label}
                 {!isLoading && counts[value] > 0 && (
-                  <Badge variant="secondary" className={`ml-1.5 h-4 min-w-[16px] px-1 text-[9px] ${activeTab === value ? "bg-primary/15 text-primary" : "bg-muted-foreground/20 text-muted-foreground"}`}>
+                  <Badge
+                    variant="secondary"
+                    className={`ml-1.5 h-4 min-w-[16px] px-1 text-[9px] ${
+                      activeTab === value
+                        ? "bg-primary/15 text-primary"
+                        : "bg-muted-foreground/20 text-muted-foreground"
+                    }`}
+                  >
                     {counts[value]}
                   </Badge>
                 )}
@@ -147,7 +565,10 @@ export default function InvoicesPage() {
           </TabsList>
         </Tabs>
         <div className="relative ml-auto">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" aria-hidden="true" />
+          <Search
+            className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none"
+            aria-hidden="true"
+          />
           <Input
             placeholder="Search invoice number..."
             value={search}
@@ -161,7 +582,9 @@ export default function InvoicesPage() {
       {/* List */}
       {isLoading ? (
         <div className="space-y-2" role="status" aria-label="Loading invoices">
-          {Array.from({ length: 4 }).map((_, i) => <InvoiceSkeleton key={i} />)}
+          {Array.from({ length: 4 }).map((_, i) => (
+            <InvoiceSkeleton key={i} />
+          ))}
         </div>
       ) : filtered.length === 0 ? (
         <Card className="border-border/60">
@@ -169,7 +592,9 @@ export default function InvoicesPage() {
             <Receipt className="w-8 h-8 text-muted-foreground/40 mx-auto mb-3" />
             <p className="text-sm font-medium text-muted-foreground">No invoices found</p>
             <p className="text-xs text-muted-foreground/60 mt-1">
-              {activeTab === "all" ? "No invoices yet. Create one from a closed work order." : `No ${activeTab.toLowerCase()} invoices.`}
+              {activeTab === "all"
+                ? "No invoices yet. Create one from a closed work order."
+                : `No ${activeTab.toLowerCase()} invoices.`}
             </p>
             {activeTab === "all" && (
               <Button asChild size="sm" className="mt-4">
@@ -182,45 +607,192 @@ export default function InvoicesPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-2" aria-live="polite" aria-label={`Invoices list, ${filtered.length} result${filtered.length !== 1 ? "s" : ""}`}>
+        <div
+          className="space-y-2"
+          aria-live="polite"
+          aria-label={`Invoices list, ${filtered.length} result${filtered.length !== 1 ? "s" : ""}`}
+        >
+          {/* Select all row */}
+          {filtered.length > 0 && (
+            <div className="flex items-center gap-2 px-1 pb-1">
+              <Checkbox
+                checked={allSelected}
+                onCheckedChange={toggleSelectAll}
+                aria-label="Select all invoices"
+                className="data-[state=indeterminate]:bg-primary/30"
+                data-state={allSelected ? "checked" : someSelected ? "indeterminate" : "unchecked"}
+              />
+              <span className="text-xs text-muted-foreground">
+                {selectedIds.size > 0
+                  ? `${selectedIds.size} selected`
+                  : "Select all"}
+              </span>
+            </div>
+          )}
+
           {filtered.map((inv) => {
             const aging = inv.status === "SENT" ? agingDays(inv.sentAt) : null;
+            const overdue = isOverdue(inv);
+            const isSelected = selectedIds.has(inv._id);
+
             return (
-              <Link key={inv._id} href={`/billing/invoices/${inv._id}`} aria-label={`Invoice ${inv.invoiceNumber} — ${inv.status} — $${inv.total.toFixed(2)}`}>
-                <Card className="border-border/60 hover:border-primary/30 hover:bg-card/80 transition-all cursor-pointer">
-                  <CardContent className="p-4">
-                    <div className="flex items-start gap-4">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1 flex-wrap">
-                          <span className="font-mono text-xs text-muted-foreground font-medium">{inv.invoiceNumber}</span>
-                          <Badge variant="outline" className={`text-[10px] font-medium border ${STATUS_STYLES[inv.status] ?? ""}`}>
-                            {inv.status}
-                          </Badge>
-                          {aging !== null && aging > 30 && <AgingBadge days={aging} />}
+              <div key={inv._id} className="flex items-center gap-2">
+                {/* Checkbox */}
+                <Checkbox
+                  checked={isSelected}
+                  onCheckedChange={(checked) => toggleSelect(inv._id, !!checked)}
+                  aria-label={`Select invoice ${inv.invoiceNumber}`}
+                  onClick={(e) => e.stopPropagation()}
+                />
+
+                {/* Invoice card — full width, clickable */}
+                <Link
+                  href={`/billing/invoices/${inv._id}`}
+                  className="flex-1 min-w-0"
+                  aria-label={`Invoice ${inv.invoiceNumber} — ${inv.status} — $${inv.total.toFixed(2)}`}
+                >
+                  <Card
+                    className={`border-border/60 hover:border-primary/30 hover:bg-card/80 transition-all cursor-pointer ${
+                      isSelected ? "border-primary/40 bg-primary/5" : ""
+                    }`}
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex items-start gap-4">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1 flex-wrap">
+                            <span className="font-mono text-xs text-muted-foreground font-medium">
+                              {inv.invoiceNumber}
+                            </span>
+                            <Badge
+                              variant="outline"
+                              className={`text-[10px] font-medium border ${STATUS_STYLES[inv.status] ?? ""}`}
+                            >
+                              {inv.status}
+                            </Badge>
+                            {overdue && <OverdueBadge />}
+                            {aging !== null && aging > 30 && <AgingBadge days={aging} />}
+                          </div>
+                          <div className="flex items-center gap-3 mt-1">
+                            <span className="text-xs text-muted-foreground">
+                              Created {formatDate(inv.createdAt)}
+                            </span>
+                            {inv.sentAt && (
+                              <span className="text-xs text-muted-foreground">
+                                · Sent {formatDate(inv.sentAt)}
+                              </span>
+                            )}
+                            {inv.dueDate && (
+                              <span className={`text-xs ${overdue ? "text-red-400 font-medium" : "text-muted-foreground"}`}>
+                                · Due {formatDate(inv.dueDate)}
+                              </span>
+                            )}
+                          </div>
                         </div>
-                        <div className="flex items-center gap-3 mt-1">
-                          <span className="text-xs text-muted-foreground">Created {formatDate(inv.createdAt)}</span>
-                          {inv.sentAt && (
-                            <span className="text-xs text-muted-foreground">· Sent {formatDate(inv.sentAt)}</span>
-                          )}
+                        <div className="flex items-center gap-3 flex-shrink-0">
+                          <div className="text-right">
+                            <p className="text-sm font-semibold">${inv.total.toFixed(2)}</p>
+                            {inv.status === "SENT" && inv.balance > 0 && (
+                              <p className="text-[10px] text-muted-foreground">
+                                Balance: ${inv.balance.toFixed(2)}
+                              </p>
+                            )}
+                            {inv.status === "PARTIAL" && inv.balance > 0 && (
+                              <p className="text-[10px] text-amber-400">
+                                Balance: ${inv.balance.toFixed(2)}
+                              </p>
+                            )}
+                          </div>
+                          <ChevronRight
+                            className="w-4 h-4 text-muted-foreground/50"
+                            aria-hidden="true"
+                          />
                         </div>
                       </div>
-                      <div className="flex items-center gap-3 flex-shrink-0">
-                        <div className="text-right">
-                          <p className="text-sm font-semibold">${inv.total.toFixed(2)}</p>
-                          {inv.status === "SENT" && inv.balance > 0 && (
-                            <p className="text-[10px] text-muted-foreground">Balance: ${inv.balance.toFixed(2)}</p>
-                          )}
-                        </div>
-                        <ChevronRight className="w-4 h-4 text-muted-foreground/50" aria-hidden="true" />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
+                    </CardContent>
+                  </Card>
+                </Link>
+              </div>
             );
           })}
         </div>
+      )}
+
+      {/* Floating Batch Action Bar */}
+      {selectedIds.size > 0 && orgId && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-4 py-2.5 rounded-full bg-card border border-border shadow-2xl shadow-black/30 backdrop-blur-sm">
+          <span className="text-xs text-muted-foreground font-medium mr-1">
+            <CheckSquare2 className="w-3.5 h-3.5 inline mr-1 text-primary" />
+            {selectedIds.size} selected
+          </span>
+
+          {/* Send — only for drafts */}
+          {selectedDraftIds.length > 0 && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-7 text-xs gap-1.5"
+              onClick={handleBatchSend}
+            >
+              <Send className="w-3 h-3" />
+              Send ({selectedDraftIds.length})
+            </Button>
+          )}
+
+          {/* Void */}
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-7 text-xs gap-1.5 text-red-400 border-red-500/30 hover:bg-red-500/10"
+            onClick={() => setVoidDialogOpen(true)}
+          >
+            <Ban className="w-3 h-3" />
+            Void ({selectedIds.size})
+          </Button>
+
+          {/* Record Payments */}
+          <Button
+            size="sm"
+            className="h-7 text-xs gap-1.5"
+            onClick={() => setPaymentDialogOpen(true)}
+          >
+            <CreditCard className="w-3 h-3" />
+            Record Payments
+          </Button>
+
+          {/* Deselect */}
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-7 text-xs text-muted-foreground"
+            onClick={() => setSelectedIds(new Set())}
+          >
+            Clear
+          </Button>
+        </div>
+      )}
+
+      {/* Void Dialog */}
+      <VoidBatchDialog
+        open={voidDialogOpen}
+        count={selectedIds.size}
+        onClose={() => setVoidDialogOpen(false)}
+        onConfirm={handleBatchVoid}
+      />
+
+      {/* Batch Payment Dialog */}
+      {orgId && (
+        <BatchPaymentDialog
+          open={paymentDialogOpen}
+          invoices={selectedInvoices.map((inv) => ({
+            _id: inv._id,
+            invoiceNumber: inv.invoiceNumber,
+            balance: inv.balance ?? inv.total,
+            total: inv.total,
+          }))}
+          orgId={orgId}
+          onClose={() => setPaymentDialogOpen(false)}
+          onSuccess={() => setSelectedIds(new Set())}
+        />
       )}
     </div>
   );

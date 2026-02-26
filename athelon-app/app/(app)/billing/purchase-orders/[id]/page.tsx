@@ -6,10 +6,11 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import type { Id } from "@/convex/_generated/dataModel";
-import { ArrowLeft, Send, Package, CheckSquare, AlertCircle } from "lucide-react";
+import { ArrowLeft, Send, Package, CheckSquare, AlertCircle, TrendingUp, TrendingDown, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 import {
   Table,
   TableBody,
@@ -59,6 +60,13 @@ export default function PODetailPage() {
   const submitPO = useMutation(api.billing.submitPO);
   const receivePOItems = useMutation(api.billing.receivePOItems);
   const closePO = useMutation(api.billing.closePO);
+
+  // Budget status — only query when PO is loaded and has a workOrderId
+  const poWorkOrderId = (po as (typeof po & { workOrderId?: Id<"workOrders"> }) | null | undefined)?.workOrderId;
+  const budgetStatus = useQuery(
+    api.billingV4b.getWorkOrderBudgetStatus,
+    orgId && poWorkOrderId ? { orgId, workOrderId: poWorkOrderId } : "skip",
+  );
 
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -206,6 +214,111 @@ export default function PODetailPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Budget Status Card — only when WO is linked */}
+      {poWorkOrderId && (
+        <>
+          {/* Over-budget warning banner */}
+          {budgetStatus?.partsOverBudget && (
+            <div className="flex items-center gap-2 p-3 rounded-md bg-red-500/10 border border-red-500/30 text-sm text-red-400">
+              <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+              <span className="font-medium">Over Budget!</span>
+              <span>
+                PO spend exceeds the quoted parts budget by{" "}
+                <strong>${budgetStatus.partsOverageAmount.toFixed(2)}</strong> (
+                {budgetStatus.partsOveragePercent.toFixed(1)}% over)
+              </span>
+            </div>
+          )}
+
+          <Card className="border-border/60">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                Budget Status
+                {budgetStatus?.partsOverBudget ? (
+                  <Badge variant="outline" className="text-[10px] border bg-red-500/15 text-red-400 border-red-500/30">
+                    Over Budget
+                  </Badge>
+                ) : (budgetStatus?.quotedParts ?? 0) > 0 ? (
+                  <Badge variant="outline" className="text-[10px] border bg-green-500/15 text-green-400 border-green-500/30">
+                    Within Budget
+                  </Badge>
+                ) : null}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {budgetStatus === undefined ? (
+                <div className="text-xs text-muted-foreground">Loading budget data...</div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div>
+                      <p className="text-[10px] uppercase text-muted-foreground font-medium mb-0.5">
+                        Quoted Parts Budget
+                      </p>
+                      <p className="text-sm font-semibold">
+                        {budgetStatus.quotedParts > 0
+                          ? `$${budgetStatus.quotedParts.toFixed(2)}`
+                          : <span className="text-muted-foreground text-xs">No quote</span>}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] uppercase text-muted-foreground font-medium mb-0.5">
+                        PO Total Spent
+                      </p>
+                      <p className={`text-sm font-semibold ${budgetStatus.partsOverBudget ? "text-red-400" : ""}`}>
+                        ${budgetStatus.poTotal.toFixed(2)}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground">{budgetStatus.poCount} PO{budgetStatus.poCount !== 1 ? "s" : ""} for this WO</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] uppercase text-muted-foreground font-medium mb-0.5">
+                        Over / Under
+                      </p>
+                      {budgetStatus.quotedParts > 0 ? (
+                        <div className="flex items-center gap-1">
+                          {budgetStatus.partsOverBudget ? (
+                            <TrendingUp className="w-3.5 h-3.5 text-red-400" />
+                          ) : (
+                            <TrendingDown className="w-3.5 h-3.5 text-green-400" />
+                          )}
+                          <p className={`text-sm font-semibold ${budgetStatus.partsOverBudget ? "text-red-400" : "text-green-400"}`}>
+                            {budgetStatus.partsOverBudget ? "+" : "-"}$
+                            {Math.abs(budgetStatus.partsOverageAmount).toFixed(2)}
+                          </p>
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground text-xs">N/A</span>
+                      )}
+                    </div>
+                  </div>
+
+                  {budgetStatus.quotedParts > 0 && (
+                    <div className="space-y-1">
+                      <div className="flex justify-between text-[10px] text-muted-foreground">
+                        <span>Budget Used</span>
+                        <span className={`font-medium ${budgetStatus.partsOverBudget ? "text-red-400" : "text-foreground"}`}>
+                          {Math.min(
+                            Math.round((budgetStatus.poTotal / budgetStatus.quotedParts) * 100),
+                            200,
+                          )}%
+                        </span>
+                      </div>
+                      <Progress
+                        value={Math.min(
+                          (budgetStatus.poTotal / budgetStatus.quotedParts) * 100,
+                          100,
+                        )}
+                        className={`h-1.5 ${budgetStatus.partsOverBudget ? "[&>div]:bg-red-500" : "[&>div]:bg-green-500"}`}
+                      />
+                    </div>
+                  )}
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </>
+      )}
 
       {/* Line Items */}
       <Card className="border-border/60">
