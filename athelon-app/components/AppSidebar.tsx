@@ -24,6 +24,8 @@ import {
   BarChart3,
   FileX,
   Percent,
+  Landmark,
+  RefreshCw,
 } from "lucide-react";
 import {
   Sidebar,
@@ -136,6 +138,26 @@ const billingNav = [
     title: "Analytics",
     href: "/billing/analytics",
     icon: BarChart3,
+  },
+  {
+    title: "Deposits",
+    href: "/billing/deposits",
+    icon: Landmark,
+  },
+  {
+    title: "Time Approval",
+    href: "/billing/time-approval",
+    icon: ClipboardCheck,
+  },
+  {
+    title: "Recurring",
+    href: "/billing/recurring",
+    icon: RefreshCw,
+  },
+  {
+    title: "Settings",
+    href: "/billing/settings",
+    icon: Settings,
   },
 ];
 
