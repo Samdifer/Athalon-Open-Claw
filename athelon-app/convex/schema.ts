@@ -114,8 +114,13 @@ const workOrderStatus = v.union(
 /** Discrepancy disposition — how a finding was resolved. */
 const discrepancyDisposition = v.union(
   v.literal("corrected"),
+  v.literal("replaced"),                          // v5: GAP-06
+  v.literal("overhauled"),                        // v5: GAP-06
+  v.literal("serviceable_as_is"),                 // v5: GAP-06
   v.literal("deferred_mel"),
   v.literal("deferred_grounded"),
+  v.literal("deferred_customer_declined"),        // v5: GAP-10
+  v.literal("deferred_next_inspection"),          // v5: GAP-06
   v.literal("no_fault_found"),
   v.literal("no_fault_found_could_not_reproduce"),
   v.literal("pending"),
@@ -814,6 +819,15 @@ export default defineSchema({
     voidedAt: v.optional(v.number()),
     voidedReason: v.optional(v.string()),
 
+    // v5: Induction (GAP-02)
+    inductedAt: v.optional(v.number()),
+
+    // v5: Release to customer (GAP-18 Phase 9)
+    releasedAt: v.optional(v.number()),
+    releasedByTechnicianId: v.optional(v.id("technicians")),
+    customerSignatureAtRelease: v.optional(v.string()),
+    pickupNotes: v.optional(v.string()),
+
     // On-hold state
     onHoldReason: v.optional(v.string()),
     onHoldSince: v.optional(v.number()),
@@ -935,6 +949,34 @@ export default defineSchema({
     deferredListIssuedAt: v.optional(v.number()),
     deferredListRecipient: v.optional(v.string()),
 
+    // v5: Task card step linkage (GAP-01 Phase 5)
+    taskCardStepId: v.optional(v.id("taskCardSteps")),
+    taskCardId: v.optional(v.id("taskCards")),
+
+    // v5: Severity and priority (GAP-02 Phase 5)
+    severity: v.optional(v.union(
+      v.literal("critical"),
+      v.literal("major"),
+      v.literal("minor"),
+      v.literal("observation"),
+    )),
+    priority: v.optional(v.union(
+      v.literal("aog"),
+      v.literal("urgent"),
+      v.literal("routine"),
+      v.literal("deferred"),
+    )),
+
+    // v5: Photos (GAP-03 Phase 5)
+    photoUrls: v.optional(v.array(v.string())),
+
+    // v5: Reporting technician (separate from foundBy for clarity)
+    reportedByTechnicianId: v.optional(v.id("technicians")),
+
+    // v5: Enhanced disposition fields (GAP-06 Phase 5)
+    dispositionApprovedDataReference: v.optional(v.string()),
+    dispositionNotes: v.optional(v.string()),
+
     createdAt: v.number(),
     updatedAt: v.number(),
   })
@@ -1018,6 +1060,15 @@ export default defineSchema({
     }))),
 
     // Denormalized counters — maintained by completeStep mutation
+    // v5: Estimated hours (GAP-08)
+    estimatedHours: v.optional(v.number()),
+
+    // v5: Dedicated signature fields (GAP-22 — replaces notes-based sign-off)
+    signingTechnicianId: v.optional(v.id("technicians")),
+    signedAt: v.optional(v.number()),
+    signedCertificateNumber: v.optional(v.string()),
+    cardSignatureAuthEventId: v.optional(v.id("signatureAuthEvents")),
+
     stepCount: v.number(),
     completedStepCount: v.number(),
     naStepCount: v.number(),
@@ -1029,7 +1080,8 @@ export default defineSchema({
     .index("by_aircraft", ["aircraftId"])
     .index("by_status", ["organizationId", "status"])
     .index("by_assigned", ["assignedToTechnicianId", "status"])
-    .index("by_org_assigned", ["organizationId", "assignedToTechnicianId", "status"]), // v2
+    .index("by_org_assigned", ["organizationId", "assignedToTechnicianId", "status"]) // v2
+    .index("by_organization", ["organizationId"]),
 
   // ═══════════════════════════════════════════════════════════════════════════
   // TASK CARD STEPS
@@ -1066,9 +1118,52 @@ export default defineSchema({
 
     status: v.union(
       v.literal("pending"),
+      v.literal("in_progress"),   // v5: GAP-18 — tech actively working on this step
       v.literal("completed"),
       v.literal("na"),
     ),
+
+    // v5: Step started tracking (GAP-18)
+    startedByTechnicianId: v.optional(v.id("technicians")),
+    startedAt: v.optional(v.number()),
+
+    // v5: Estimated duration (GAP-08/19 — was in API validator but never in schema)
+    estimatedDurationMinutes: v.optional(v.number()),
+
+    // v5: Zone reference for inspection mapping (GAP-16)
+    zoneReference: v.optional(v.string()),
+
+    // v5: Measurement spec for recorded values (GAP-17)
+    measurementSpec: v.optional(v.object({
+      name: v.string(),
+      unit: v.string(),
+      minValue: v.optional(v.number()),
+      maxValue: v.optional(v.number()),
+    })),
+
+    // v5: Photos (GAP-16)
+    photoUrls: v.optional(v.array(v.string())),
+
+    // v5: Measurements recorded at completion (GAP-17)
+    measurements: v.optional(v.array(v.object({
+      name: v.string(),
+      value: v.number(),
+      unit: v.string(),
+      withinLimits: v.boolean(),
+      minLimit: v.optional(v.number()),
+      maxLimit: v.optional(v.number()),
+      notes: v.optional(v.string()),
+    }))),
+
+    // v5: Parts removed (GAP-13)
+    partsRemoved: v.optional(v.array(v.object({
+      partId: v.optional(v.id("parts")),
+      partNumber: v.string(),
+      serialNumber: v.optional(v.string()),
+      description: v.string(),
+      conditionAtRemoval: v.string(),
+      intendedDisposition: v.string(),
+    }))),
 
     // Sign-off fields — populated when status → completed
     signedByTechnicianId: v.optional(v.id("technicians")),
@@ -1105,6 +1200,7 @@ export default defineSchema({
   })
     .index("by_task_card", ["taskCardId"])
     .index("by_task_card_step", ["taskCardId", "stepNumber"]) // ordered step retrieval
+    .index("by_organization", ["organizationId"])
     .index("by_work_order", ["workOrderId"])
     .index("by_org_status", ["organizationId", "status"])
     .index("by_signed_technician", ["signedByTechnicianId"]),
@@ -1563,6 +1659,27 @@ export default defineSchema({
     quarantineReason: v.optional(v.string()),
     quarantineCreatedById: v.optional(v.id("technicians")),
     quarantineCreatedAt: v.optional(v.number()),
+
+    // v5: Reservation (GAP-14)
+    reservedForWorkOrderId: v.optional(v.id("workOrders")),
+    reservedByTechnicianId: v.optional(v.id("technicians")),
+    reservedAt: v.optional(v.number()),
+
+    // v5: Receiving inspection (GAP-11, GAP-15)
+    receivingInspectedBy: v.optional(v.id("technicians")),
+    receivingInspectedAt: v.optional(v.number()),
+    receivingInspectionNotes: v.optional(v.string()),
+    receivingRejectionReason: v.optional(v.string()),
+
+    // v5: Installation tracking (GAP-12)
+    installedOnAircraftId: v.optional(v.id("aircraft")),
+    installedOnWorkOrderId: v.optional(v.id("workOrders")),
+    installedByTechnicianId: v.optional(v.id("technicians")),
+
+    // v5: Removal tracking (GAP-13, GAP-14)
+    removedByTechnicianId: v.optional(v.id("technicians")),
+    removalCondition: v.optional(v.string()),
+    intendedDisposition: v.optional(v.string()),
 
     notes: v.optional(v.string()),
 
@@ -2172,6 +2289,18 @@ export default defineSchema({
     partId: v.optional(v.id("parts")),              // For part lines: which part
     departmentSection: v.optional(v.string()),       // For multi-dept quotes (FEAT-140)
 
+    // v5: Discrepancy link (GAP-07 Phase 6)
+    discrepancyId: v.optional(v.id("discrepancies")),
+
+    // v5: Per-line-item customer decision (GAP-08 Phase 6)
+    customerDecision: v.optional(v.union(
+      v.literal("approved"),
+      v.literal("declined"),
+      v.literal("deferred"),
+    )),
+    customerDecisionNotes: v.optional(v.string()),
+    customerDecisionAt: v.optional(v.number()),
+
     createdAt: v.number(),
     updatedAt: v.number(),
   })
@@ -2565,6 +2694,57 @@ export default defineSchema({
     updatedAt: v.number(),
   })
     .index("by_org", ["orgId"]),
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // INDUCTION RECORDS (GAP-02)
+  // Records the aircraft arrival event with logbook review and walk-around findings.
+  // ═══════════════════════════════════════════════════════════════════════════
+  inductionRecords: defineTable({
+    aircraftId: v.id("aircraft"),
+    workOrderId: v.id("workOrders"),
+    totalTimeAtInduction: v.number(),
+    inductionNotes: v.optional(v.string()),
+    walkAroundFindings: v.optional(v.string()),
+    logbookReviewNotes: v.optional(v.string()),
+    inductedAt: v.number(),
+  })
+    .index("by_aircraft", ["aircraftId"])
+    .index("by_work_order", ["workOrderId"]),
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // INSPECTION TEMPLATES (GAP-06)
+  // Reusable checklist templates (e.g., King Air B200 Phase 4).
+  // ═══════════════════════════════════════════════════════════════════════════
+  inspectionTemplates: defineTable({
+    organizationId: v.id("organizations"),
+    name: v.string(),
+    aircraftMake: v.optional(v.string()),
+    aircraftModel: v.optional(v.string()),
+    inspectionType: v.string(),
+    approvedDataSource: v.string(),
+    approvedDataRevision: v.optional(v.string()),
+    steps: v.array(v.object({
+      stepNumber: v.number(),
+      description: v.string(),
+      requiresSpecialTool: v.boolean(),
+      specialToolReference: v.optional(v.string()),
+      signOffRequired: v.boolean(),
+      signOffRequiresIa: v.boolean(),
+      estimatedDurationMinutes: v.optional(v.number()),
+      zoneReference: v.optional(v.string()),
+      measurementSpec: v.optional(v.object({
+        name: v.string(),
+        unit: v.string(),
+        minValue: v.optional(v.number()),
+        maxValue: v.optional(v.number()),
+      })),
+    })),
+    active: v.boolean(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_org", ["organizationId"])
+    .index("by_org_type", ["organizationId", "inspectionType"]),
 
   orgCounters: defineTable({
     orgId: v.string(),

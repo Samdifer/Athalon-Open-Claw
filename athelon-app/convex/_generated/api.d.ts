@@ -15,6 +15,7 @@ import type * as billingV4 from "../billingV4.js";
 import type * as billingV4b from "../billingV4b.js";
 import type * as customers from "../customers.js";
 import type * as discrepancies from "../discrepancies.js";
+import type * as gapFixes from "../gapFixes.js";
 import type * as lib_authHelpers from "../lib/authHelpers.js";
 import type * as lib_billingHelpers from "../lib/billingHelpers.js";
 import type * as lib_numberGenerator from "../lib/numberGenerator.js";
@@ -44,6 +45,7 @@ declare const fullApi: ApiFromModules<{
   billingV4b: typeof billingV4b;
   customers: typeof customers;
   discrepancies: typeof discrepancies;
+  gapFixes: typeof gapFixes;
   "lib/authHelpers": typeof lib_authHelpers;
   "lib/billingHelpers": typeof lib_billingHelpers;
   "lib/numberGenerator": typeof lib_numberGenerator;
