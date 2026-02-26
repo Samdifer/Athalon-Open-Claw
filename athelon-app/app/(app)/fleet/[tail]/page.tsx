@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { use } from "react";
+import { use, useState } from "react";
 import {
   ArrowLeft,
   BookOpen,
@@ -9,16 +9,29 @@ import {
   Wrench,
   ClipboardList,
   AlertTriangle,
+  Pencil,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
-import { useQuery } from "convex/react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useQuery, useMutation } from "convex/react";
 import { useOrganization } from "@clerk/nextjs";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
+import { toast } from "sonner";
 import { NotFoundCard } from "@/components/NotFoundCard";
 
 // ─── Status helpers ───────────────────────────────────────────────────────────
@@ -97,6 +110,39 @@ export default function AircraftDetailPage({
 
   const { organization } = useOrganization();
   const orgId = organization?.id as Id<"organizations"> | undefined;
+
+  // Update TT dialog state
+  const [updateTTOpen, setUpdateTTOpen] = useState(false);
+  const [newTT, setNewTT] = useState("");
+  const [asOfDate, setAsOfDate] = useState("");
+  const [updateTTError, setUpdateTTError] = useState<string | null>(null);
+  const [updateTTSubmitting, setUpdateTTSubmitting] = useState(false);
+
+  const updateTotalTime = useMutation(api.gapFixes.updateAircraftTotalTime);
+
+  async function handleUpdateTT(e: React.FormEvent) {
+    e.preventDefault();
+    if (!aircraft?._id || !newTT || !asOfDate) return;
+    setUpdateTTSubmitting(true);
+    setUpdateTTError(null);
+    try {
+      await updateTotalTime({
+        aircraftId: aircraft._id,
+        totalTimeAirframeHours: parseFloat(newTT),
+        asOfDate: new Date(asOfDate).getTime(),
+      });
+      toast.success("Total time updated successfully");
+      setUpdateTTOpen(false);
+      setNewTT("");
+      setAsOfDate("");
+    } catch (err) {
+      const msg =
+        err instanceof Error ? err.message : "Failed to update total time";
+      setUpdateTTError(msg);
+    } finally {
+      setUpdateTTSubmitting(false);
+    }
+  }
 
   // Load aircraft by tail number
   const aircraft = useQuery(
@@ -179,13 +225,24 @@ export default function AircraftDetailPage({
               <CardContent className="p-4">
                 <div className="flex items-start gap-2">
                   <Clock className="w-4 h-4 text-muted-foreground mt-0.5" />
-                  <div>
+                  <div className="flex-1">
                     <p className="text-xs text-muted-foreground font-medium">
                       Total Airframe Time
                     </p>
-                    <p className="text-xl font-bold text-foreground mt-0.5">
-                      {aircraft!.totalTimeAirframeHours.toFixed(1)}
-                    </p>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <p className="text-xl font-bold text-foreground">
+                        {aircraft!.totalTimeAirframeHours.toFixed(1)}
+                      </p>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 px-1.5 text-[10px] text-sky-400 hover:text-sky-300 hover:bg-sky-500/10"
+                        onClick={() => setUpdateTTOpen(true)}
+                      >
+                        <Pencil className="w-2.5 h-2.5 mr-1" />
+                        Update TT
+                      </Button>
+                    </div>
                     <p className="text-[11px] text-muted-foreground">hours</p>
                   </div>
                 </div>
@@ -356,6 +413,93 @@ export default function AircraftDetailPage({
           </Card>
         </>
       )}
+
+      {/* ── Update Total Time Dialog (GAP-01) ── */}
+      <Dialog open={updateTTOpen} onOpenChange={(open) => {
+        setUpdateTTOpen(open);
+        if (!open) {
+          setNewTT("");
+          setAsOfDate("");
+          setUpdateTTError(null);
+        }
+      }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Update Total Time</DialogTitle>
+            <DialogDescription>
+              Enter the new total airframe time. Per INV-18, total time may only
+              increase.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleUpdateTT} className="space-y-4">
+            <div>
+              <Label
+                htmlFor="new-tt"
+                className="text-xs font-medium mb-1.5 block"
+              >
+                New Total Time (hours){" "}
+                <span className="text-red-400">*</span>
+              </Label>
+              <Input
+                id="new-tt"
+                type="number"
+                step="0.1"
+                min="0"
+                value={newTT}
+                onChange={(e) => setNewTT(e.target.value)}
+                placeholder={`Current: ${aircraft?.totalTimeAirframeHours.toFixed(1)}`}
+                className="h-9 text-sm bg-muted/30 border-border/60 font-mono"
+                required
+              />
+            </div>
+            <div>
+              <Label
+                htmlFor="as-of-date"
+                className="text-xs font-medium mb-1.5 block"
+              >
+                As of Date <span className="text-red-400">*</span>
+              </Label>
+              <Input
+                id="as-of-date"
+                type="date"
+                value={asOfDate}
+                onChange={(e) => setAsOfDate(e.target.value)}
+                className="h-9 text-sm bg-muted/30 border-border/60"
+                required
+              />
+            </div>
+
+            {updateTTError && (
+              <div className="flex items-start gap-2 p-3 rounded-md border border-red-500/30 bg-red-500/5">
+                <AlertTriangle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+                <p className="text-xs text-red-400">{updateTTError}</p>
+              </div>
+            )}
+
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setUpdateTTOpen(false)}
+                disabled={updateTTSubmitting}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={updateTTSubmitting || !newTT || !asOfDate}
+                className="gap-2"
+              >
+                {updateTTSubmitting && (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                )}
+                Update
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

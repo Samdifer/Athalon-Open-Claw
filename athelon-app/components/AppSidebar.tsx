@@ -26,6 +26,7 @@ import {
   Percent,
   Landmark,
   RefreshCw,
+  LayoutTemplate,
 } from "lucide-react";
 import {
   Sidebar,
@@ -60,6 +61,11 @@ const mainNav = [
     icon: ClipboardList,
   },
   {
+    title: "Templates",
+    href: "/work-orders/templates",
+    icon: LayoutTemplate,
+  },
+  {
     title: "My Work",
     href: "/my-work",
     icon: ClipboardCheck,
@@ -79,6 +85,11 @@ const mainNav = [
   {
     title: "Compliance",
     href: "/compliance/audit-trail",
+    icon: ShieldCheck,
+  },
+  {
+    title: "QCM Review",
+    href: "/compliance/qcm-review",
     icon: ShieldCheck,
   },
 ];

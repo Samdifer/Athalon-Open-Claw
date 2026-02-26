@@ -7,7 +7,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import type { Id } from "@/convex/_generated/dataModel";
-import { ArrowLeft, Plane, AlertCircle, Loader2 } from "lucide-react";
+import { ArrowLeft, Plane, AlertCircle, Loader2, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -32,6 +32,7 @@ export default function NewWorkOrderPage() {
 
   // Form state
   const [aircraftId, setAircraftId] = useState<Id<"aircraft"> | "">("");
+  const [customerId, setCustomerId] = useState<Id<"customers"> | "">("");
   const [workOrderNumber, setWorkOrderNumber] = useState("");
   const [workOrderType, setWorkOrderType] = useState<string>("routine");
   const [description, setDescription] = useState("");
@@ -47,6 +48,12 @@ export default function NewWorkOrderPage() {
   // Fetch aircraft for this org
   const aircraft = useQuery(
     api.aircraft.list,
+    orgId ? { organizationId: orgId } : "skip",
+  );
+
+  // Fetch customers for this org
+  const customers = useQuery(
+    api.billingV4.listAllCustomers,
     orgId ? { organizationId: orgId } : "skip",
   );
 
@@ -71,6 +78,7 @@ export default function NewWorkOrderPage() {
         squawks: squawks.trim() || undefined,
         priority,
         notes: notes.trim() || undefined,
+        customerId: customerId ? (customerId as Id<"customers">) : undefined,
       });
 
       router.push(`/work-orders/${woId}`);
@@ -187,6 +195,66 @@ export default function NewWorkOrderPage() {
                       </Badge>
                     )}
                   </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Customer */}
+          <Card className="border-border/60">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
+                <Users className="w-3.5 h-3.5" />
+                Customer
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4 pt-0">
+              <div>
+                <Label
+                  htmlFor="customer"
+                  className="text-xs font-medium mb-1.5 block"
+                >
+                  Customer{" "}
+                  <span className="text-muted-foreground font-normal">
+                    (optional)
+                  </span>
+                </Label>
+                {customers === undefined ? (
+                  <div className="h-9 bg-muted/30 border border-border/60 rounded-md animate-pulse" />
+                ) : customers.length === 0 ? (
+                  <div className="flex items-center gap-2 p-3 rounded-md bg-muted/30 border border-border/60">
+                    <AlertCircle className="w-4 h-4 text-amber-400" />
+                    <p className="text-xs text-muted-foreground">
+                      No customers yet. Add customers in Billing → Customers.
+                    </p>
+                  </div>
+                ) : (
+                  <Select
+                    value={customerId}
+                    onValueChange={(v) => setCustomerId(v as Id<"customers">)}
+                  >
+                    <SelectTrigger
+                      id="customer"
+                      className="h-9 text-sm bg-muted/30 border-border/60"
+                    >
+                      <SelectValue placeholder="Select customer..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">
+                        <span className="text-muted-foreground">— No customer —</span>
+                      </SelectItem>
+                      {customers.map((c) => (
+                        <SelectItem key={c._id} value={c._id}>
+                          <span className="font-medium">{c.name}</span>
+                          {c.companyName && (
+                            <span className="text-muted-foreground ml-2 text-xs">
+                              {c.companyName}
+                            </span>
+                          )}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 )}
               </div>
             </CardContent>

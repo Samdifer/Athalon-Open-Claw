@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { useQuery } from "convex/react";
@@ -13,6 +14,7 @@ import {
   Timer,
   User,
   XCircle,
+  PlaneLanding,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -30,6 +32,8 @@ import { AdComplianceTab } from "./AdComplianceTab";
 import { WorkOrderHeader } from "./_components/WorkOrderHeader";
 import { TaskCardList } from "./_components/TaskCardList";
 import { DiscrepancyList } from "./_components/DiscrepancyList";
+import { InductAircraftDialog } from "./_components/InductAircraftDialog";
+import { CustomerStatusControl } from "./_components/CustomerStatusControl";
 import { formatDate, formatDateTime } from "@/lib/format";
 
 // ─── Loading skeleton ─────────────────────────────────────────────────────────
@@ -58,6 +62,7 @@ export default function WorkOrderDetailPage() {
   const params = useParams();
   const id = params.id as string;
   const { orgId, isLoaded: orgLoaded } = useCurrentOrg();
+  const [inductDialogOpen, setInductDialogOpen] = useState(false);
 
   const data = useQuery(
     api.workOrders.getWorkOrder,
@@ -111,6 +116,35 @@ export default function WorkOrderDetailPage() {
     <div className="space-y-5">
       {/* Back + Header (extracted) */}
       <WorkOrderHeader wo={wo} aircraft={aircraft} id={id} canClose={canClose} />
+
+      {/* Customer Status + Induct Aircraft */}
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <CustomerStatusControl
+          workOrderId={id as Id<"workOrders">}
+          customerFacingStatus={(wo as any).customerFacingStatus}
+        />
+        {aircraft && wo.status !== "closed" && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5 text-sky-400 border-sky-500/30 hover:bg-sky-500/10"
+            onClick={() => setInductDialogOpen(true)}
+          >
+            <PlaneLanding className="w-3.5 h-3.5" />
+            Induct Aircraft
+          </Button>
+        )}
+      </div>
+
+      {/* Induct Aircraft Dialog */}
+      {aircraft && (
+        <InductAircraftDialog
+          open={inductDialogOpen}
+          onOpenChange={setInductDialogOpen}
+          workOrderId={id as Id<"workOrders">}
+          aircraftId={aircraft._id}
+        />
+      )}
 
       {/* Quick Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
