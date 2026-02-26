@@ -2032,7 +2032,8 @@ export default defineSchema({
     .index("by_org_status", ["orgId", "status"])
     .index("by_org_vendor", ["orgId", "vendorId"])
     .index("by_org_po_number", ["orgId", "poNumber"])
-    .index("by_work_order", ["workOrderId"]),
+    .index("by_work_order", ["workOrderId"])
+    .index("by_org_wo", ["orgId", "workOrderId"]),
 
   // ═══════════════════════════════════════════════════════════════════════════
   // PO LINE ITEMS
@@ -2478,6 +2479,92 @@ export default defineSchema({
     createdAt: v.number(),
   })
     .index("by_org_customer", ["orgId", "customerId"]),
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // RECURRING BILLING TEMPLATES (GAP-10)
+  // ═══════════════════════════════════════════════════════════════════════════
+  recurringBillingTemplates: defineTable({
+    orgId: v.id("organizations"),
+    customerId: v.id("customers"),
+    name: v.string(),
+    description: v.optional(v.string()),
+    frequency: v.union(
+      v.literal("weekly"),
+      v.literal("biweekly"),
+      v.literal("monthly"),
+      v.literal("quarterly"),
+      v.literal("annually"),
+    ),
+    lineItems: v.array(v.object({
+      type: v.union(v.literal("labor"), v.literal("part"), v.literal("external_service")),
+      description: v.string(),
+      qty: v.number(),
+      unitPrice: v.number(),
+    })),
+    subtotal: v.number(),
+    paymentTerms: v.optional(v.string()),
+    paymentTermsDays: v.optional(v.number()),
+    nextGenerateAt: v.number(),
+    lastGeneratedAt: v.optional(v.number()),
+    active: v.boolean(),
+    createdByTechId: v.id("technicians"),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_org", ["orgId"])
+    .index("by_org_active", ["orgId", "active"]),
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // CUSTOMER DEPOSITS (GAP-12)
+  // ═══════════════════════════════════════════════════════════════════════════
+  customerDeposits: defineTable({
+    orgId: v.id("organizations"),
+    customerId: v.id("customers"),
+    amount: v.number(),
+    appliedAmount: v.number(),
+    remainingAmount: v.number(),
+    method: v.union(
+      v.literal("cash"), v.literal("check"), v.literal("credit_card"),
+      v.literal("wire"), v.literal("ach"), v.literal("other"),
+    ),
+    referenceNumber: v.optional(v.string()),
+    notes: v.optional(v.string()),
+    recordedByTechId: v.id("technicians"),
+    status: v.union(
+      v.literal("AVAILABLE"),
+      v.literal("PARTIAL"),
+      v.literal("APPLIED"),
+    ),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_org", ["orgId"])
+    .index("by_org_customer", ["orgId", "customerId"])
+    .index("by_org_status", ["orgId", "status"]),
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ORG BILLING SETTINGS (GAP-15, GAP-19)
+  // Company branding, default terms, PO approval thresholds.
+  // ═══════════════════════════════════════════════════════════════════════════
+  orgBillingSettings: defineTable({
+    orgId: v.id("organizations"),
+    companyName: v.optional(v.string()),
+    companyAddress: v.optional(v.string()),
+    companyPhone: v.optional(v.string()),
+    companyEmail: v.optional(v.string()),
+    logoUrl: v.optional(v.string()),
+    invoiceTerms: v.optional(v.string()),
+    invoiceNotes: v.optional(v.string()),
+    quoteTerms: v.optional(v.string()),
+    quoteNotes: v.optional(v.string()),
+    paymentInstructions: v.optional(v.string()),
+    defaultPaymentTerms: v.optional(v.string()),
+    defaultPaymentTermsDays: v.optional(v.number()),
+    poApprovalThreshold: v.optional(v.number()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_org", ["orgId"]),
 
   orgCounters: defineTable({
     orgId: v.string(),
