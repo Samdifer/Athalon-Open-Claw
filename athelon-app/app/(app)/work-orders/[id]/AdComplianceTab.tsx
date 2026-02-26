@@ -1,6 +1,6 @@
 "use client";
 
-import { useParams } from "next/navigation";
+import { useParams } from "react-router-dom";
 import { useQuery } from "convex/react";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import { api } from "@/convex/_generated/api";

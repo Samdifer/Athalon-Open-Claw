@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useParams } from "next/navigation";
-import Link from "next/link";
+import { useParams } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
@@ -95,7 +95,7 @@ export default function TaskCardPage() {
       <div className="text-center py-20">
         <p className="text-sm text-muted-foreground">Work order not found</p>
         <Button asChild variant="ghost" size="sm" className="mt-4">
-          <Link href={`/work-orders/${workOrderId}`}>← Back to Work Order</Link>
+          <Link to={`/work-orders/${workOrderId}`}>← Back to Work Order</Link>
         </Button>
       </div>
     );
@@ -108,7 +108,7 @@ export default function TaskCardPage() {
       <div className="text-center py-20">
         <p className="text-sm text-muted-foreground">Task card not found</p>
         <Button asChild variant="ghost" size="sm" className="mt-4">
-          <Link href={`/work-orders/${workOrderId}`}>← Back to Work Order</Link>
+          <Link to={`/work-orders/${workOrderId}`}>← Back to Work Order</Link>
         </Button>
       </div>
     );
@@ -132,7 +132,7 @@ export default function TaskCardPage() {
         size="sm"
         className="h-7 -ml-2 text-xs text-muted-foreground"
       >
-        <Link href={`/work-orders/${workOrderId}`}>
+        <Link to={`/work-orders/${workOrderId}`}>
           <ArrowLeft className="w-3.5 h-3.5 mr-1.5" />
           Back to Work Order
         </Link>

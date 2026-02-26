@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { Link } from "react-router-dom";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
@@ -176,7 +176,7 @@ export default function MyWorkPage() {
                       className="flex-shrink-0 h-7 text-xs gap-1.5"
                     >
                       <Link
-                        href={`/work-orders/${card.workOrderId}/tasks/${card._id}`}
+                        to={`/work-orders/${card.workOrderId}/tasks/${card._id}`}
                       >
                         Continue
                         <ArrowRight className="w-3 h-3" />
@@ -189,7 +189,7 @@ export default function MyWorkPage() {
                     <Wrench className="w-3 h-3 flex-shrink-0" />
                     <span>Work Order</span>
                     <Link
-                      href={`/work-orders/${card.workOrderId}`}
+                      to={`/work-orders/${card.workOrderId}`}
                       className="font-mono text-primary hover:underline"
                     >
                       {card.workOrderNumber}

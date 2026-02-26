@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDate } from "@/lib/format";
-import Link from "next/link";
+import { Link } from "react-router-dom";
 
 interface KpiCardProps {
   title: string;
@@ -201,7 +201,7 @@ export default function ArDashboardPage() {
                   >
                     <TableCell>
                       <Link
-                        href={`/billing/invoices/${inv._id}`}
+                        to={`/billing/invoices/${inv._id}`}
                         className="font-mono text-xs text-primary hover:underline"
                       >
                         {inv.invoiceNumber}
@@ -230,7 +230,7 @@ export default function ArDashboardPage() {
                     </TableCell>
                     <TableCell>
                       <Button asChild size="sm" variant="outline" className="h-7 text-xs">
-                        <Link href={`/billing/invoices/${inv._id}`}>
+                        <Link to={`/billing/invoices/${inv._id}`}>
                           <ExternalLink className="w-3 h-3 mr-1" />
                           Record Payment
                         </Link>

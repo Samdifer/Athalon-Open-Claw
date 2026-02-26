@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import Link from "next/link";
+import { Link } from "react-router-dom";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -523,7 +523,7 @@ export default function InvoicesPage() {
           )}
         </div>
         <Button asChild size="sm">
-          <Link href="/billing/invoices/new">
+          <Link to="/billing/invoices/new">
             <Plus className="w-3.5 h-3.5 mr-1.5" />
             New Invoice
           </Link>
@@ -598,7 +598,7 @@ export default function InvoicesPage() {
             </p>
             {activeTab === "all" && (
               <Button asChild size="sm" className="mt-4">
-                <Link href="/billing/invoices/new">
+                <Link to="/billing/invoices/new">
                   <Plus className="w-3.5 h-3.5 mr-1.5" />
                   Create Invoice
                 </Link>
@@ -647,7 +647,7 @@ export default function InvoicesPage() {
 
                 {/* Invoice card — full width, clickable */}
                 <Link
-                  href={`/billing/invoices/${inv._id}`}
+                  to={`/billing/invoices/${inv._id}`}
                   className="flex-1 min-w-0"
                   aria-label={`Invoice ${inv.invoiceNumber} — ${inv.status} — $${inv.total.toFixed(2)}`}
                 >

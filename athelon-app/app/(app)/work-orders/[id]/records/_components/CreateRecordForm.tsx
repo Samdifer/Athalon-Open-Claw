@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
-import Link from "next/link";
+import { Link } from "react-router-dom";
 import {
   CheckCircle2,
   XCircle,
@@ -520,7 +520,7 @@ export function CreateRecordForm({
         <p className="text-[11px] text-muted-foreground">
           Obtain from{" "}
           <Link
-            href={`/work-orders/${workOrderId}/signature`}
+            to={`/work-orders/${workOrderId}/signature`}
             className="text-primary hover:underline"
           >
             the signature page

@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { Link } from "react-router-dom";
 import { FileText, User, Gauge } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -61,7 +61,7 @@ export function RtsSignoffForm({
           <p className="text-[11px] text-muted-foreground">
             Obtain a 5-minute auth event from{" "}
             <Link
-              href={`/work-orders/${workOrderId}/signature`}
+              to={`/work-orders/${workOrderId}/signature`}
               className="text-primary hover:underline"
             >
               the signature page

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter, useParams } from "next/navigation";
+import { useNavigate, useParams } from "react-router-dom";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
@@ -82,7 +82,7 @@ function fromDateInputValue(val: string): number {
 
 export default function InvoiceDetailPage() {
   const params = useParams();
-  const router = useRouter();
+  const navigate = useNavigate();
   const invoiceId = params.id as Id<"invoices">;
   const { orgId, techId, isLoaded } = useCurrentOrg();
 
@@ -270,7 +270,7 @@ export default function InvoiceDetailPage() {
         <CardContent className="py-16 text-center">
           <AlertCircle className="w-8 h-8 text-red-400/60 mx-auto mb-3" />
           <p className="text-sm text-muted-foreground">Invoice not found.</p>
-          <Button variant="outline" size="sm" className="mt-4" onClick={() => router.back()}>Go Back</Button>
+          <Button variant="outline" size="sm" className="mt-4" onClick={() => navigate(-1)}>Go Back</Button>
         </CardContent>
       </Card>
     );
@@ -308,7 +308,7 @@ export default function InvoiceDetailPage() {
         {/* Header — no-print wrapper for actions */}
         <div className="flex items-center justify-between gap-3 no-print">
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="sm" onClick={() => router.back()} className="h-8 gap-1.5 text-xs">
+            <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="h-8 gap-1.5 text-xs">
               <ArrowLeft className="w-3.5 h-3.5" />
               Back
             </Button>

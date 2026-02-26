@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
-import { use, useState } from "react";
+import { Link, useParams } from "react-router-dom";
+import { useState } from "react";
 import {
   ArrowLeft,
   BookOpen,
@@ -28,7 +28,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useQuery, useMutation } from "convex/react";
-import { useOrganization } from "@clerk/nextjs";
+import { useOrganization } from "@clerk/clerk-react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { toast } from "sonner";
@@ -100,13 +100,9 @@ function DetailSkeleton() {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
-export default function AircraftDetailPage({
-  params,
-}: {
-  params: Promise<{ tail: string }>;
-}) {
-  const { tail } = use(params);
-  const tailNumber = decodeURIComponent(tail);
+export default function AircraftDetailPage() {
+  const { tail } = useParams();
+  const tailNumber = decodeURIComponent(tail ?? "");
 
   const { organization } = useOrganization();
   const orgId = organization?.id as Id<"organizations"> | undefined;
@@ -181,7 +177,7 @@ export default function AircraftDetailPage({
       {/* Back + Header */}
       <div className="flex items-start gap-3">
         <Button asChild variant="ghost" size="sm" className="mt-0.5">
-          <Link href="/fleet">
+          <Link to="/fleet">
             <ArrowLeft className="w-4 h-4 mr-1.5" />
             Fleet
           </Link>
@@ -372,19 +368,19 @@ export default function AircraftDetailPage({
           {/* Quick Actions */}
           <div className="flex gap-3 flex-wrap">
             <Button asChild variant="outline" size="sm">
-              <Link href={`/work-orders?aircraft=${tailNumber}`}>
+              <Link to={`/work-orders?aircraft=${tailNumber}`}>
                 <ClipboardList className="w-3.5 h-3.5 mr-1.5" />
                 View Work Orders
               </Link>
             </Button>
             <Button asChild variant="outline" size="sm">
-              <Link href="/work-orders/new">
+              <Link to="/work-orders/new">
                 <Wrench className="w-3.5 h-3.5 mr-1.5" />
                 New Work Order
               </Link>
             </Button>
             <Button asChild variant="outline" size="sm">
-              <Link href={`/fleet/${encodeURIComponent(tailNumber)}/logbook`}>
+              <Link to={`/fleet/${encodeURIComponent(tailNumber)}/logbook`}>
                 <BookOpen className="w-3.5 h-3.5 mr-1.5" />
                 Logbook
               </Link>

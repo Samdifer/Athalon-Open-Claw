@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter, useParams } from "next/navigation";
+import { useNavigate, useParams } from "react-router-dom";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
@@ -72,7 +72,7 @@ const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 
 export default function QuoteDetailPage() {
   const params = useParams();
-  const router = useRouter();
+  const navigate = useNavigate();
   const quoteId = params.id as Id<"quotes">;
   const { orgId, techId, isLoaded } = useCurrentOrg();
 
@@ -176,7 +176,7 @@ export default function QuoteDetailPage() {
         description: woDescription.trim() || `Work order from quote ${quote?.quoteNumber ?? ""}`,
       });
       setConvertDialog(false);
-      router.push(`/work-orders/${newWoId}`);
+      navigate(`/work-orders/${newWoId}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to convert quote.");
     } finally {
@@ -194,7 +194,7 @@ export default function QuoteDetailPage() {
         originalQuoteId: quoteId,
         createdByTechId: techId as Id<"technicians">,
       });
-      router.push(`/billing/quotes/${newQuoteId}`);
+      navigate(`/billing/quotes/${newQuoteId}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create revision.");
     } finally {
@@ -215,7 +215,7 @@ export default function QuoteDetailPage() {
         paymentTerms: invoicePaymentTerms.trim() || undefined,
       });
       setCreateInvoiceDialog(false);
-      router.push(`/billing/invoices/${newInvoiceId}`);
+      navigate(`/billing/invoices/${newInvoiceId}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create invoice.");
     } finally {
@@ -289,7 +289,7 @@ export default function QuoteDetailPage() {
         <CardContent className="py-16 text-center">
           <AlertCircle className="w-8 h-8 text-red-400/60 mx-auto mb-3" />
           <p className="text-sm text-muted-foreground">Quote not found.</p>
-          <Button variant="outline" size="sm" className="mt-4" onClick={() => router.back()}>Go Back</Button>
+          <Button variant="outline" size="sm" className="mt-4" onClick={() => navigate(-1)}>Go Back</Button>
         </CardContent>
       </Card>
     );
@@ -320,7 +320,7 @@ export default function QuoteDetailPage() {
       {/* Header */}
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="sm" onClick={() => router.back()} className="h-8 gap-1.5 text-xs">
+          <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="h-8 gap-1.5 text-xs">
             <ArrowLeft className="w-3.5 h-3.5" />
             Back
           </Button>

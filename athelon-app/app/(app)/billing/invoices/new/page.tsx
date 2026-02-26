@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, usePaginatedQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
@@ -164,8 +164,8 @@ function WorkSummaryPanel({
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function NewInvoicePage() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { orgId, techId, isLoaded } = useCurrentOrg();
 
   const { results: workOrders, status: woStatus } = usePaginatedQuery(
@@ -276,7 +276,7 @@ export default function NewInvoicePage() {
         });
       }
 
-      router.push(`/billing/invoices/${invoiceId}`);
+      navigate(`/billing/invoices/${invoiceId}`);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Failed to create invoice.",
@@ -307,7 +307,7 @@ export default function NewInvoicePage() {
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => router.back()}
+          onClick={() => navigate(-1)}
           className="h-8 gap-1.5 text-xs"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
@@ -585,7 +585,7 @@ export default function NewInvoicePage() {
             type="button"
             variant="outline"
             size="sm"
-            onClick={() => router.back()}
+            onClick={() => navigate(-1)}
           >
             Cancel
           </Button>

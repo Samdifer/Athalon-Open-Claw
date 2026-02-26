@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "react-router-dom";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
@@ -71,7 +71,7 @@ function CustomerRowSkeleton() {
 }
 
 export default function CustomersPage() {
-  const router = useRouter();
+  const navigate = useNavigate();
   const { orgId, isLoaded } = useCurrentOrg();
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -196,7 +196,7 @@ export default function CustomersPage() {
                     key={customer._id}
                     className="cursor-pointer hover:bg-muted/40 transition-colors"
                     onClick={() =>
-                      router.push(`/billing/customers/${customer._id}`)
+                      navigate(`/billing/customers/${customer._id}`)
                     }
                   >
                     <TableCell className="font-medium text-sm">

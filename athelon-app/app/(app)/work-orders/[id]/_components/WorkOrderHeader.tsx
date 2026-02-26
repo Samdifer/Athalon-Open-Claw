@@ -6,7 +6,7 @@
  * Renders: back link, WO number, status badge, aircraft info, action buttons.
  */
 
-import Link from "next/link";
+import { Link } from "react-router-dom";
 import { ArrowLeft, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -53,7 +53,7 @@ export function WorkOrderHeader({ wo, aircraft, id, canClose }: WorkOrderHeaderP
         size="sm"
         className="h-7 -ml-2 mb-3 text-xs text-muted-foreground"
       >
-        <Link href="/work-orders">
+        <Link to="/work-orders">
           <ArrowLeft className="w-3.5 h-3.5 mr-1.5" />
           Work Orders
         </Link>
@@ -116,7 +116,7 @@ export function WorkOrderHeader({ wo, aircraft, id, canClose }: WorkOrderHeaderP
         <div className="flex-shrink-0 flex gap-2">
           {canClose ? (
             <Button asChild className="gap-2">
-              <Link href={`/work-orders/${id}/signature`}>
+              <Link to={`/work-orders/${id}/signature`}>
                 <ShieldCheck className="w-4 h-4" />
                 Sign Off & Close
               </Link>

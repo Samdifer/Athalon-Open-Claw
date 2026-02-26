@@ -16,7 +16,7 @@
  */
 
 import { useEffect } from "react";
-import Link from "next/link";
+import { Link } from "react-router-dom";
 import { AlertCircle, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,7 +25,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { useParams } from "next/navigation";
+import { useParams } from "react-router-dom";
 
 interface ErrorPageProps {
   error: Error & { digest?: string };
@@ -70,11 +70,11 @@ export default function WorkOrderErrorBoundary({ error, reset }: ErrorPageProps)
             </Button>
             {woId && (
               <Button asChild size="sm" variant="ghost">
-                <Link href={`/work-orders/${woId}`}>Back to Work Order</Link>
+                <Link to={`/work-orders/${woId}`}>Back to Work Order</Link>
               </Button>
             )}
             <Button asChild size="sm" variant="ghost">
-              <Link href="/work-orders">All Work Orders</Link>
+              <Link to="/work-orders">All Work Orders</Link>
             </Button>
           </div>
         </CardContent>

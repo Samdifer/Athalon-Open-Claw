@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { Link } from "react-router-dom";
 import {
   AlertTriangle,
   ClipboardList,
@@ -28,7 +28,7 @@ export function StatCards({
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
       {/* Open Work Orders */}
-      <Link href="/work-orders">
+      <Link to="/work-orders">
         <Card className="hover:bg-card/80 transition-colors cursor-pointer border-border/60">
           <CardContent className="p-4">
             <div className="flex items-start justify-between">
@@ -56,7 +56,7 @@ export function StatCards({
       </Link>
 
       {/* Active Squawks */}
-      <Link href="/squawks">
+      <Link to="/squawks">
         <Card className="hover:bg-card/80 transition-colors cursor-pointer border-border/60">
           <CardContent className="p-4">
             <div className="flex items-start justify-between">
@@ -84,7 +84,7 @@ export function StatCards({
       </Link>
 
       {/* Parts Pending */}
-      <Link href="/parts/requests">
+      <Link to="/parts/requests">
         <Card className="hover:bg-card/80 transition-colors cursor-pointer border-border/60">
           <CardContent className="p-4">
             <div className="flex items-start justify-between">
@@ -112,7 +112,7 @@ export function StatCards({
       </Link>
 
       {/* Certs Expiring */}
-      <Link href="/personnel">
+      <Link to="/personnel">
         <Card className="hover:bg-card/80 transition-colors cursor-pointer border-border/60">
           <CardContent className="p-4">
             <div className="flex items-start justify-between">

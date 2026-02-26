@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import Link from "next/link";
+import { Link } from "react-router-dom";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
@@ -105,7 +105,7 @@ export default function QuotesPage() {
           )}
         </div>
         <Button asChild size="sm">
-          <Link href="/billing/quotes/new">
+          <Link to="/billing/quotes/new">
             <Plus className="w-3.5 h-3.5 mr-1.5" />
             New Quote
           </Link>
@@ -173,7 +173,7 @@ export default function QuotesPage() {
             </p>
             {activeTab === "all" && (
               <Button asChild size="sm" className="mt-4">
-                <Link href="/billing/quotes/new">
+                <Link to="/billing/quotes/new">
                   <Plus className="w-3.5 h-3.5 mr-1.5" />
                   Create Quote
                 </Link>
@@ -184,7 +184,7 @@ export default function QuotesPage() {
       ) : (
         <div className="space-y-2" aria-live="polite" aria-label={`Quotes list, ${filtered.length} result${filtered.length !== 1 ? "s" : ""}`}>
           {filtered.map((quote) => (
-            <Link key={quote._id} href={`/billing/quotes/${quote._id}`} aria-label={`Quote ${quote.quoteNumber} — ${quote.status} — $${quote.total.toLocaleString("en-US", { minimumFractionDigits: 2 })}`}>
+            <Link key={quote._id} to={`/billing/quotes/${quote._id}`} aria-label={`Quote ${quote.quoteNumber} — ${quote.status} — $${quote.total.toLocaleString("en-US", { minimumFractionDigits: 2 })}`}>
               <Card className="border-border/60 hover:border-primary/30 hover:bg-card/80 transition-all cursor-pointer">
                 <CardContent className="p-4">
                   <div className="flex items-start gap-4">

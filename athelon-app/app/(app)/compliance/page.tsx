@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { Link } from "react-router-dom";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
@@ -60,7 +60,7 @@ export default function CompliancePage() {
           size="sm"
           className="h-8 gap-1.5 text-xs border-border/60"
         >
-          <Link href="/compliance/audit-trail">
+          <Link to="/compliance/audit-trail">
             <FileSearch className="w-3.5 h-3.5" />
             Audit Trail
           </Link>
@@ -202,7 +202,7 @@ export default function CompliancePage() {
                 className="justify-start h-auto py-3 px-4 border-border/60"
               >
                 <Link
-                  href="/compliance/audit-trail"
+                  to="/compliance/audit-trail"
                   className="flex items-start gap-3"
                 >
                   <FileSearch className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-0.5" />
@@ -220,7 +220,7 @@ export default function CompliancePage() {
                 variant="outline"
                 className="justify-start h-auto py-3 px-4 border-border/60"
               >
-                <Link href="/fleet" className="flex items-start gap-3">
+                <Link to="/fleet" className="flex items-start gap-3">
                   <PlaneTakeoff className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-0.5" />
                   <div className="text-left">
                     <p className="text-xs font-medium">Fleet Management</p>

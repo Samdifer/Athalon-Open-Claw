@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import Link from "next/link";
+import { Link } from "react-router-dom";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
@@ -88,7 +88,7 @@ export default function PurchaseOrdersPage() {
           )}
         </div>
         <Button asChild size="sm">
-          <Link href="/billing/purchase-orders/new">
+          <Link to="/billing/purchase-orders/new">
             <Plus className="w-3.5 h-3.5 mr-1.5" />
             New PO
           </Link>
@@ -134,7 +134,7 @@ export default function PurchaseOrdersPage() {
             </p>
             {activeTab === "all" && (
               <Button asChild size="sm" className="mt-4">
-                <Link href="/billing/purchase-orders/new">
+                <Link to="/billing/purchase-orders/new">
                   <Plus className="w-3.5 h-3.5 mr-1.5" />
                   Create PO
                 </Link>
@@ -145,7 +145,7 @@ export default function PurchaseOrdersPage() {
       ) : (
         <div className="space-y-2" aria-live="polite" aria-label={`Purchase orders list, ${filtered.length} result${filtered.length !== 1 ? "s" : ""}`}>
           {filtered.map((po) => (
-            <Link key={po._id} href={`/billing/purchase-orders/${po._id}`} aria-label={`Purchase order ${po.poNumber} — ${po.status} — $${po.total.toFixed(2)}`}>
+            <Link key={po._id} to={`/billing/purchase-orders/${po._id}`} aria-label={`Purchase order ${po.poNumber} — ${po.status} — $${po.total.toFixed(2)}`}>
               <Card className="border-border/60 hover:border-primary/30 hover:bg-card/80 transition-all cursor-pointer">
                 <CardContent className="p-4">
                   <div className="flex items-center gap-4">

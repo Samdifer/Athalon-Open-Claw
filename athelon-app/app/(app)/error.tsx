@@ -13,7 +13,7 @@
  */
 
 import { useEffect } from "react";
-import Link from "next/link";
+import { Link } from "react-router-dom";
 import { AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -59,7 +59,7 @@ export default function AppErrorBoundary({ error, reset }: ErrorPageProps) {
               Try again
             </Button>
             <Button asChild size="sm" variant="ghost">
-              <Link href="/dashboard">Go to dashboard</Link>
+              <Link to="/dashboard">Go to dashboard</Link>
             </Button>
           </div>
         </CardContent>

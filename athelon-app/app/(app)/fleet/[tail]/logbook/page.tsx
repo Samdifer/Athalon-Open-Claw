@@ -11,8 +11,8 @@
  */
 
 import { useState } from "react";
-import { useParams } from "next/navigation";
-import Link from "next/link";
+import { useParams } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
@@ -353,7 +353,7 @@ export default function AircraftLogbookPage() {
       {/* Back + Header */}
       <div className="flex items-start gap-3">
         <Button asChild variant="ghost" size="sm" className="mt-0.5">
-          <Link href="/fleet">
+          <Link to="/fleet">
             <ArrowLeft className="w-4 h-4 mr-1.5" />
             Fleet
           </Link>
@@ -466,7 +466,7 @@ export default function AircraftLogbookPage() {
               Aircraft &ldquo;{tailNumber}&rdquo; not found
             </p>
             <Button asChild variant="ghost" size="sm" className="mt-4">
-              <Link href="/fleet">← Back to Fleet</Link>
+              <Link to="/fleet">← Back to Fleet</Link>
             </Button>
           </CardContent>
         </Card>

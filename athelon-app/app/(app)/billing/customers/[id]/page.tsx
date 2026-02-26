@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -78,7 +78,7 @@ function TypeBadge({ type }: { type: CustomerType }) {
 
 export default function CustomerDetailPage() {
   const params = useParams();
-  const router = useRouter();
+  const navigate = useNavigate();
   const customerId = params.id as string;
   const { orgId, isLoaded } = useCurrentOrg();
 
@@ -192,7 +192,7 @@ export default function CustomerDetailPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
         <p className="text-muted-foreground">Customer not found.</p>
-        <Button variant="outline" onClick={() => router.push("/billing/customers")}>
+        <Button variant="outline" onClick={() => navigate("/billing/customers")}>
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Customers
         </Button>
@@ -209,7 +209,7 @@ export default function CustomerDetailPage() {
             variant="ghost"
             size="icon"
             className="h-8 w-8"
-            onClick={() => router.push("/billing/customers")}
+            onClick={() => navigate("/billing/customers")}
             aria-label="Back to customers"
           >
             <ArrowLeft className="w-4 h-4" />

@@ -1,13 +1,13 @@
 "use client";
 
-import Link from "next/link";
+import { Link } from "react-router-dom";
 import { Package, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery } from "convex/react";
-import { useOrganization } from "@clerk/nextjs";
+import { useOrganization } from "@clerk/clerk-react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 
@@ -118,7 +118,7 @@ export default function PartsRequestsPage() {
           </p>
         </div>
         <Button size="sm" asChild>
-          <Link href="/parts/new">
+          <Link to="/parts/new">
             <Plus className="w-3.5 h-3.5 mr-1.5" />
             Receive Part
           </Link>

@@ -1,13 +1,13 @@
 "use client";
 
 import { Users, ShieldAlert, AlertTriangle, ExternalLink } from "lucide-react";
-import Link from "next/link";
+import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery } from "convex/react";
-import { useOrganization } from "@clerk/nextjs";
+import { useOrganization } from "@clerk/clerk-react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 
@@ -186,7 +186,7 @@ export default function PersonnelPage() {
                           : `${days}d remaining`}
                       </span>
                       <Link
-                        href={`/settings/shop`}
+                        to={`/settings/shop`}
                         className="inline-flex items-center gap-1 underline underline-offset-2 hover:opacity-80 transition-opacity"
                       >
                         Take Action

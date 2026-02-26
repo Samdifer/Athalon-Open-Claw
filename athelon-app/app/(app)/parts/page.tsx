@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import Link from "next/link";
+import { Link } from "react-router-dom";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -582,7 +582,7 @@ export default function PartsPage() {
             size="sm"
             className="h-8 text-xs border-border/60"
           >
-            <Link href="/parts/requests">
+            <Link to="/parts/requests">
               <Clock className="w-3.5 h-3.5 mr-1.5" />
               Receiving Queue
               {counts.pending_inspection > 0 && (
@@ -593,7 +593,7 @@ export default function PartsPage() {
             </Link>
           </Button>
           <Button asChild size="sm" className="h-8 text-xs">
-            <Link href="/parts/new">
+            <Link to="/parts/new">
               <Plus className="w-3.5 h-3.5 mr-1.5" />
               Add Part
             </Link>
@@ -719,7 +719,7 @@ export default function PartsPage() {
                       <td className="px-4 py-3 font-mono text-xs text-muted-foreground">
                         {part.receivingWorkOrderId ? (
                           <Link
-                            href={`/work-orders/${part.receivingWorkOrderId}`}
+                            to={`/work-orders/${part.receivingWorkOrderId}`}
                             className="text-primary hover:underline"
                           >
                             View WO
@@ -771,7 +771,7 @@ export default function PartsPage() {
                 </p>
                 {activeTab === "all" && (
                   <Button asChild size="sm" className="mt-4">
-                    <Link href="/parts/new">
+                    <Link to="/parts/new">
                       <Plus className="w-3.5 h-3.5 mr-1.5" />
                       Add Part
                     </Link>

@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { Link } from "react-router-dom";
 import { FileQuestion } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -41,7 +41,7 @@ export function NotFoundCard({
           </h2>
           <p className="text-sm text-muted-foreground mb-6">{message}</p>
           <Button asChild variant="outline" size="sm">
-            <Link href={backHref}>← {backLabel}</Link>
+            <Link to={backHref}>← {backLabel}</Link>
           </Button>
         </CardContent>
       </Card>

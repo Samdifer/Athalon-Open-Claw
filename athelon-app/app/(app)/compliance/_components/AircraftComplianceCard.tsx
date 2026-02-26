@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { Link } from "react-router-dom";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -105,7 +105,7 @@ export function AircraftComplianceCard({
   const StatusIcon = cfg.icon;
 
   return (
-    <Link href={`/fleet/${tailNumber}`}>
+    <Link to={`/fleet/${tailNumber}`}>
       <Card
         className={`border-border/60 hover:border-primary/30 hover:bg-card/80 transition-all cursor-pointer border-l-2 ${cfg.borderLeft}`}
       >

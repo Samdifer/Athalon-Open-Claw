@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "react-router-dom";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
@@ -30,7 +30,7 @@ const VENDOR_TYPES: { value: VendorType; label: string }[] = [
 ];
 
 export default function NewVendorPage() {
-  const router = useRouter();
+  const navigate = useNavigate();
   const { orgId, isLoaded } = useCurrentOrg();
 
   const createVendor = useMutation(api.vendors.createVendor);
@@ -67,7 +67,7 @@ export default function NewVendorPage() {
         certExpiry: certExpiry ? new Date(certExpiry).getTime() : undefined,
         notes: notes.trim() || undefined,
       });
-      router.push(`/billing/vendors/${vendorId}`);
+      navigate(`/billing/vendors/${vendorId}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create vendor.");
       setSubmitting(false);
@@ -79,7 +79,7 @@ export default function NewVendorPage() {
   return (
     <div className="space-y-5 max-w-2xl">
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="sm" onClick={() => router.back()} className="h-8 gap-1.5 text-xs">
+        <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="h-8 gap-1.5 text-xs">
           <ArrowLeft className="w-3.5 h-3.5" />
           Back
         </Button>
@@ -192,7 +192,7 @@ export default function NewVendorPage() {
         </Card>
 
         <div className="flex gap-2 justify-end">
-          <Button type="button" variant="outline" size="sm" onClick={() => router.back()}>Cancel</Button>
+          <Button type="button" variant="outline" size="sm" onClick={() => navigate(-1)}>Cancel</Button>
           <Button type="submit" size="sm" disabled={submitting}>
             {submitting ? "Creating..." : "Create Vendor"}
           </Button>

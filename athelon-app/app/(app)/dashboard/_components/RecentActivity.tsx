@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { Link } from "react-router-dom";
 import {
   AlertTriangle,
   ClipboardList,
@@ -170,7 +170,7 @@ export function RecentActivity({
                     size="sm"
                     className="h-6 px-2 text-[11px] flex-shrink-0"
                   >
-                    <Link href={item.href}>{item.action}</Link>
+                    <Link to={item.href}>{item.action}</Link>
                   </Button>
                 </div>
               );
@@ -188,7 +188,7 @@ export function RecentActivity({
               Active Work Orders
             </CardTitle>
             <Button asChild variant="ghost" size="sm" className="h-7 text-xs">
-              <Link href="/work-orders" className="flex items-center gap-1">
+              <Link to="/work-orders" className="flex items-center gap-1">
                 View All
                 <ChevronRight className="w-3 h-3" />
               </Link>
@@ -217,7 +217,7 @@ export function RecentActivity({
               return (
                 <div key={wo._id}>
                   {i > 0 && <Separator className="my-1 opacity-40" />}
-                  <Link href={`/work-orders/${wo.workOrderNumber}`}>
+                  <Link to={`/work-orders/${wo.workOrderNumber}`}>
                     <div className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-muted/40 transition-colors cursor-pointer">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-0.5">

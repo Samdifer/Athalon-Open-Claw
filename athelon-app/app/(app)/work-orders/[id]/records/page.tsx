@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams } from "react-router-dom";
 import { useQuery } from "convex/react";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
-import Link from "next/link";
+import { Link } from "react-router-dom";
 import {
   ArrowLeft,
   FileText,
@@ -102,7 +102,7 @@ export default function MaintenanceRecordsPage() {
         size="sm"
         className="h-7 -ml-2 text-xs text-muted-foreground"
       >
-        <Link href={`/work-orders/${workOrderId}`}>
+        <Link to={`/work-orders/${workOrderId}`}>
           <ArrowLeft className="w-3.5 h-3.5 mr-1.5" />
           {report.workOrderNumber}
         </Link>

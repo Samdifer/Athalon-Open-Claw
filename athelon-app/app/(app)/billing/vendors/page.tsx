@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import Link from "next/link";
+import { Link } from "react-router-dom";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
@@ -110,7 +110,7 @@ export default function VendorsPage() {
           )}
         </div>
         <Button asChild size="sm">
-          <Link href="/billing/vendors/new">
+          <Link to="/billing/vendors/new">
             <Plus className="w-3.5 h-3.5 mr-1.5" />
             New Vendor
           </Link>
@@ -160,7 +160,7 @@ export default function VendorsPage() {
             </p>
             {activeTab === "all" && (
               <Button asChild size="sm" className="mt-4">
-                <Link href="/billing/vendors/new">
+                <Link to="/billing/vendors/new">
                   <Plus className="w-3.5 h-3.5 mr-1.5" />
                   Add Vendor
                 </Link>
@@ -175,7 +175,7 @@ export default function VendorsPage() {
             const certExpiringSoon = !certExpired && isCertExpiringSoon(vendor.certExpiry);
 
             return (
-              <Link key={vendor._id} href={`/billing/vendors/${vendor._id}`} aria-label={`Vendor: ${vendor.name} — ${vendor.isApproved ? "Approved" : "Not Approved"}${certExpired ? " — Certificate Expired" : certExpiringSoon ? " — Certificate Expiring Soon" : ""}`}>
+              <Link key={vendor._id} to={`/billing/vendors/${vendor._id}`} aria-label={`Vendor: ${vendor.name} — ${vendor.isApproved ? "Approved" : "Not Approved"}${certExpired ? " — Certificate Expired" : certExpiringSoon ? " — Certificate Expiring Soon" : ""}`}>
                 <Card className={`border-border/60 hover:border-primary/30 hover:bg-card/80 transition-all cursor-pointer ${certExpired ? "border-l-4 border-l-red-500" : certExpiringSoon ? "border-l-4 border-l-amber-500" : ""}`}>
                   <CardContent className="p-4">
                     <div className="flex items-center gap-4">

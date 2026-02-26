@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { Link } from "react-router-dom";
 import {
   AlertTriangle,
   Package,
@@ -80,7 +80,7 @@ export function QuickActions({ fleet }: QuickActionsProps) {
               Fleet Status
             </CardTitle>
             <Button asChild variant="ghost" size="sm" className="h-7 text-xs">
-              <Link href="/fleet" className="flex items-center gap-1">
+              <Link to="/fleet" className="flex items-center gap-1">
                 View All
                 <ChevronRight className="w-3 h-3" />
               </Link>
@@ -103,7 +103,7 @@ export function QuickActions({ fleet }: QuickActionsProps) {
               <div key={aircraft._id}>
                 {i > 0 && <Separator className="my-1 opacity-40" />}
                 <Link
-                  href={`/fleet/${aircraft.currentRegistration}`}
+                  to={`/fleet/${aircraft.currentRegistration}`}
                 >
                   <div className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-muted/40 transition-colors cursor-pointer">
                     <div
@@ -155,7 +155,7 @@ export function QuickActions({ fleet }: QuickActionsProps) {
             className="w-full justify-start h-9 text-xs gap-2 border-border/60"
             size="sm"
           >
-            <Link href="/work-orders/new">
+            <Link to="/work-orders/new">
               <Wrench className="w-3.5 h-3.5" />
               New Work Order
             </Link>
@@ -166,7 +166,7 @@ export function QuickActions({ fleet }: QuickActionsProps) {
             className="w-full justify-start h-9 text-xs gap-2 border-border/60"
             size="sm"
           >
-            <Link href="/squawks">
+            <Link to="/squawks">
               <AlertTriangle className="w-3.5 h-3.5" />
               Log Squawk
             </Link>
@@ -177,7 +177,7 @@ export function QuickActions({ fleet }: QuickActionsProps) {
             className="w-full justify-start h-9 text-xs gap-2 border-border/60"
             size="sm"
           >
-            <Link href="/parts/requests">
+            <Link to="/parts/requests">
               <Package className="w-3.5 h-3.5" />
               View Parts Queue
             </Link>
@@ -188,7 +188,7 @@ export function QuickActions({ fleet }: QuickActionsProps) {
             className="w-full justify-start h-9 text-xs gap-2 border-border/60"
             size="sm"
           >
-            <Link href="/compliance/audit-trail">
+            <Link to="/compliance/audit-trail">
               <ShieldAlert className="w-3.5 h-3.5" />
               Audit Trail
             </Link>

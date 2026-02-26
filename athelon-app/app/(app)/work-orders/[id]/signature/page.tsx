@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
+import { useParams, useNavigate, useSearchParams, Link } from "react-router-dom";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
@@ -59,8 +58,8 @@ function formatCountdown(ms: number): string {
 export default function SignaturePage() {
   const params = useParams();
   const workOrderId = params.id as string;
-  const router = useRouter();
-  const searchParams = useSearchParams();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   // Optional query params:
   //   ?returnTo=/work-orders/[id]/tasks/[cardId]
@@ -123,7 +122,7 @@ export default function SignaturePage() {
     const dest = returnTo
       ? `${returnTo}?authEventId=${authEvent.eventId}`
       : `/work-orders/${workOrderId}`;
-    router.push(dest);
+    navigate(dest);
   }
 
   function handleRefresh() {
@@ -162,7 +161,7 @@ export default function SignaturePage() {
         size="sm"
         className="h-7 -ml-2 text-xs text-muted-foreground"
       >
-        <Link href={`/work-orders/${workOrderId}`}>
+        <Link to={`/work-orders/${workOrderId}`}>
           <ArrowLeft className="w-3.5 h-3.5 mr-1.5" />
           Back to Work Order
         </Link>

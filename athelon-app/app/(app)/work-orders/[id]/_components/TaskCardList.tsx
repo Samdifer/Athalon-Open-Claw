@@ -7,7 +7,7 @@
  * and the "Add Task Card" CTA button.
  */
 
-import Link from "next/link";
+import { Link } from "react-router-dom";
 import {
   ClipboardList,
   CheckCircle2,
@@ -87,7 +87,7 @@ export function TaskCardList({ taskCards, workOrderId }: TaskCardListProps) {
           return (
             <Link
               key={tc._id}
-              href={`/work-orders/${workOrderId}/tasks/${tc._id}`}
+              to={`/work-orders/${workOrderId}/tasks/${tc._id}`}
             >
               <Card className="border-border/60 hover:border-primary/30 hover:bg-card/80 transition-all cursor-pointer">
                 <CardContent className="p-4">
@@ -154,7 +154,7 @@ export function TaskCardList({ taskCards, workOrderId }: TaskCardListProps) {
         size="sm"
         className="w-full h-9 text-xs border-border/60 border-dashed gap-1.5 mt-2"
       >
-        <Link href={`/work-orders/${workOrderId}/tasks/new`}>
+        <Link to={`/work-orders/${workOrderId}/tasks/new`}>
           <Wrench className="w-3.5 h-3.5" />
           Add Task Card
         </Link>

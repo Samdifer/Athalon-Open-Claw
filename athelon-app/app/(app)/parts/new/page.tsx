@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
+import { Link } from "react-router-dom";
 import { ArrowLeft, Package, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useMutation } from "convex/react";
-import { useOrganization } from "@clerk/nextjs";
+import { useOrganization } from "@clerk/clerk-react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 
@@ -88,7 +88,7 @@ export default function NewPartPage() {
       {/* Header */}
       <div className="flex items-center gap-3">
         <Button asChild variant="ghost" size="sm">
-          <Link href="/parts/requests">
+          <Link to="/parts/requests">
             <ArrowLeft className="w-4 h-4 mr-1.5" />
             Parts Queue
           </Link>
@@ -125,7 +125,7 @@ export default function NewPartPage() {
             size="sm"
             className="ml-auto text-green-400 h-7 text-xs"
           >
-            <Link href="/parts/requests">View Queue</Link>
+            <Link to="/parts/requests">View Queue</Link>
           </Button>
         </div>
       )}
@@ -235,7 +235,7 @@ export default function NewPartPage() {
                 {isSubmitting ? "Creating..." : "Create Part Record"}
               </Button>
               <Button asChild variant="ghost" size="sm">
-                <Link href="/parts/requests">Cancel</Link>
+                <Link to="/parts/requests">Cancel</Link>
               </Button>
             </div>
           </form>

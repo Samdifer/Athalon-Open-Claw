@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter, useParams } from "next/navigation";
+import { useNavigate, useParams } from "react-router-dom";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
@@ -48,7 +48,7 @@ const ITEM_STATUS_STYLES: Record<string, string> = {
 
 export default function PODetailPage() {
   const params = useParams();
-  const router = useRouter();
+  const navigate = useNavigate();
   const purchaseOrderId = params.id as Id<"purchaseOrders">;
   const { orgId, isLoaded } = useCurrentOrg();
 
@@ -129,7 +129,7 @@ export default function PODetailPage() {
         <CardContent className="py-16 text-center">
           <AlertCircle className="w-8 h-8 text-red-400/60 mx-auto mb-3" />
           <p className="text-sm text-muted-foreground">Purchase order not found.</p>
-          <Button variant="outline" size="sm" className="mt-4" onClick={() => router.back()}>Go Back</Button>
+          <Button variant="outline" size="sm" className="mt-4" onClick={() => navigate(-1)}>Go Back</Button>
         </CardContent>
       </Card>
     );
@@ -143,7 +143,7 @@ export default function PODetailPage() {
     <div className="space-y-5 max-w-3xl">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="sm" onClick={() => router.back()} className="h-8 gap-1.5 text-xs">
+          <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="h-8 gap-1.5 text-xs">
             <ArrowLeft className="w-3.5 h-3.5" />
             Back
           </Button>

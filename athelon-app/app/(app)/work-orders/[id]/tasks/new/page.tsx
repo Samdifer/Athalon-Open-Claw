@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useParams, useRouter } from "next/navigation";
-import Link from "next/link";
+import { useParams, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
@@ -81,7 +81,7 @@ function TemplatePickerDialog({ open, onClose, orgId, onSelect }: TemplatePicker
             <LayoutTemplate className="w-7 h-7 text-muted-foreground/40 mx-auto mb-2" />
             <p className="text-sm text-muted-foreground">
               No templates found.{" "}
-              <Link href="/work-orders/templates" className="text-primary underline underline-offset-2">
+              <Link to="/work-orders/templates" className="text-primary underline underline-offset-2">
                 Create one first.
               </Link>
             </p>
@@ -147,7 +147,7 @@ function TemplatePickerDialog({ open, onClose, orgId, onSelect }: TemplatePicker
 
 export default function NewTaskCardPage() {
   const params = useParams();
-  const router = useRouter();
+  const navigate = useNavigate();
   const workOrderId = params.id as string;
   const { orgId, isLoaded } = useCurrentOrg();
 
@@ -267,7 +267,7 @@ export default function NewTaskCardPage() {
         })),
       });
 
-      router.push(`/work-orders/${workOrderId}/tasks/${cardId}`);
+      navigate(`/work-orders/${workOrderId}/tasks/${cardId}`);
     } catch (err) {
       setSubmitError(
         err instanceof Error ? err.message : "Failed to create task card.",
@@ -293,7 +293,7 @@ export default function NewTaskCardPage() {
         <AlertCircle className="w-8 h-8 text-muted-foreground/40 mx-auto mb-3" />
         <p className="text-sm text-muted-foreground">Work order not found.</p>
         <Button asChild variant="outline" size="sm" className="mt-4">
-          <Link href="/work-orders">Back to Work Orders</Link>
+          <Link to="/work-orders">Back to Work Orders</Link>
         </Button>
       </div>
     );
@@ -315,7 +315,7 @@ export default function NewTaskCardPage() {
           only be added to open or in-progress work orders.
         </p>
         <Button asChild variant="outline" size="sm" className="mt-4">
-          <Link href={`/work-orders/${workOrderId}`}>Back to Work Order</Link>
+          <Link to={`/work-orders/${workOrderId}`}>Back to Work Order</Link>
         </Button>
       </div>
     );
@@ -327,7 +327,7 @@ export default function NewTaskCardPage() {
         {/* Header */}
         <div className="flex items-center gap-3">
           <Button asChild variant="ghost" size="sm" className="h-8 gap-1.5 text-xs">
-            <Link href={`/work-orders/${workOrderId}`}>
+            <Link to={`/work-orders/${workOrderId}`}>
               <ArrowLeft className="w-3.5 h-3.5" />
               Back
             </Link>
@@ -440,7 +440,7 @@ export default function NewTaskCardPage() {
             size="sm"
             className="h-9 border-border/60"
           >
-            <Link href={`/work-orders/${workOrderId}`}>Cancel</Link>
+            <Link to={`/work-orders/${workOrderId}`}>Cancel</Link>
           </Button>
           <Button
             type="submit"

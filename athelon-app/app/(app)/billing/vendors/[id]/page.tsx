@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter, useParams } from "next/navigation";
+import { useNavigate, useParams, Link } from "react-router-dom";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
@@ -43,7 +43,7 @@ const TYPE_LABELS: Record<string, string> = {
 
 export default function VendorDetailPage() {
   const params = useParams();
-  const router = useRouter();
+  const navigate = useNavigate();
   const vendorId = params.id as Id<"vendors">;
   const { orgId, techId, isLoaded } = useCurrentOrg();
 
@@ -126,7 +126,7 @@ export default function VendorDetailPage() {
         <CardContent className="py-16 text-center">
           <AlertCircle className="w-8 h-8 text-red-400/60 mx-auto mb-3" />
           <p className="text-sm text-muted-foreground">Vendor not found.</p>
-          <Button variant="outline" size="sm" className="mt-4" onClick={() => router.back()}>Go Back</Button>
+          <Button variant="outline" size="sm" className="mt-4" onClick={() => navigate(-1)}>Go Back</Button>
         </CardContent>
       </Card>
     );
@@ -136,7 +136,7 @@ export default function VendorDetailPage() {
     <div className="space-y-5 max-w-2xl">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="sm" onClick={() => router.back()} className="h-8 gap-1.5 text-xs">
+          <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="h-8 gap-1.5 text-xs">
             <ArrowLeft className="w-3.5 h-3.5" />
             Back
           </Button>
@@ -280,7 +280,7 @@ export default function VendorDetailPage() {
           ) : (
             <div className="divide-y divide-border/40">
               {purchaseOrders.slice(0, 10).map((po) => (
-                <a key={po._id} href={`/billing/purchase-orders/${po._id}`} className="flex items-center justify-between p-4 hover:bg-muted/20 transition-colors">
+                <Link key={po._id} to={`/billing/purchase-orders/${po._id}`} className="flex items-center justify-between p-4 hover:bg-muted/20 transition-colors">
                   <div>
                     <div className="flex items-center gap-2">
                       <span className="font-mono text-xs text-muted-foreground">{po.poNumber}</span>
@@ -292,7 +292,7 @@ export default function VendorDetailPage() {
                     <span className="text-sm font-medium">${po.total.toFixed(2)}</span>
                     <FileText className="w-3.5 h-3.5 text-muted-foreground/50" />
                   </div>
-                </a>
+                </Link>
               ))}
             </div>
           )}

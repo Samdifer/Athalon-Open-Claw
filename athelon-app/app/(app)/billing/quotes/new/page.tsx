@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
@@ -52,7 +52,7 @@ function calcTotal(qty: string, unitPrice: string): number {
 }
 
 export default function NewQuotePage() {
-  const router = useRouter();
+  const navigate = useNavigate();
   const { orgId, techId, isLoaded } = useCurrentOrg();
 
   const customers = useQuery(
@@ -137,7 +137,7 @@ export default function NewQuotePage() {
         });
       }
 
-      router.push(`/billing/quotes/${quoteId}`);
+      navigate(`/billing/quotes/${quoteId}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create quote.");
       setSubmitting(false);
@@ -161,7 +161,7 @@ export default function NewQuotePage() {
     <div className="space-y-5 max-w-3xl">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="sm" onClick={() => router.back()} className="h-8 gap-1.5 text-xs">
+        <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="h-8 gap-1.5 text-xs">
           <ArrowLeft className="w-3.5 h-3.5" />
           Back
         </Button>
@@ -329,7 +329,7 @@ export default function NewQuotePage() {
             </Badge>
           </div>
           <div className="flex gap-2">
-            <Button type="button" variant="outline" size="sm" onClick={() => router.back()}>
+            <Button type="button" variant="outline" size="sm" onClick={() => navigate(-1)}>
               Cancel
             </Button>
             <Button type="submit" size="sm" disabled={submitting}>

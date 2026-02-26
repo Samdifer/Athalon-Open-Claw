@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
+import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
@@ -27,7 +27,7 @@ import { WO_TYPES, PRIORITY_OPTIONS, type WoType } from "@/lib/mro-constants";
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function NewWorkOrderPage() {
-  const router = useRouter();
+  const navigate = useNavigate();
   const { orgId, isLoaded: orgLoaded } = useCurrentOrg();
 
   // Form state
@@ -81,7 +81,7 @@ export default function NewWorkOrderPage() {
         customerId: customerId ? (customerId as Id<"customers">) : undefined,
       });
 
-      router.push(`/work-orders/${woId}`);
+      navigate(`/work-orders/${woId}`);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Failed to create work order",
@@ -102,7 +102,7 @@ export default function NewWorkOrderPage() {
           size="sm"
           className="h-7 -ml-2 mb-3 text-xs text-muted-foreground"
         >
-          <Link href="/work-orders">
+          <Link to="/work-orders">
             <ArrowLeft className="w-3.5 h-3.5 mr-1.5" />
             Work Orders
           </Link>
@@ -461,7 +461,7 @@ export default function NewWorkOrderPage() {
               Create Work Order
             </Button>
             <Button asChild variant="ghost" size="sm" disabled={isSubmitting}>
-              <Link href="/work-orders">Cancel</Link>
+              <Link to="/work-orders">Cancel</Link>
             </Button>
           </div>
         </form>

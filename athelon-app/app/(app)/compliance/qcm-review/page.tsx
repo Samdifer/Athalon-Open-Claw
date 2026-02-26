@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
+import { Link } from "react-router-dom";
 import { useQuery, usePaginatedQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
@@ -167,7 +167,7 @@ function CloseReadinessPanel({
               </span>
               {readiness.canClose && (
                 <Button asChild size="sm" className="ml-auto h-7 text-xs">
-                  <Link href={`/work-orders/${selectedWoId}/signature`}>
+                  <Link to={`/work-orders/${selectedWoId}/signature`}>
                     Sign Off &amp; Close
                   </Link>
                 </Button>
@@ -356,7 +356,7 @@ export default function QcmReviewPage() {
                               className="h-7 text-xs gap-1 border-primary/40 text-primary hover:bg-primary/5"
                             >
                               <Link
-                                href={`/work-orders/${step.taskCardId}/tasks/${step.taskCardId}`}
+                                to={`/work-orders/${step.taskCardId}/tasks/${step.taskCardId}`}
                               >
                                 IA Sign Off
                                 <ChevronRight className="w-3 h-3" />
