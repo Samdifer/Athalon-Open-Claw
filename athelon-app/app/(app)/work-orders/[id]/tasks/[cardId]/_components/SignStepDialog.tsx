@@ -35,6 +35,8 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
+import { FileUpload, type UploadedFile } from "@/components/FileUpload";
+import { PhotoGallery } from "@/components/PhotoGallery";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -85,6 +87,7 @@ export function SignStepDialog({
   const [partsInstalled, setPartsInstalled] = useState<
     { partNumber: string; serialNumber: string; description: string; quantity: number }[]
   >([]);
+  const [photoStorageIds, setPhotoStorageIds] = useState<string[]>([]);
   const [showPartsForm, setShowPartsForm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -109,6 +112,7 @@ export function SignStepDialog({
 
   const createAuthEvent = useMutation(api.workOrders.createSignatureAuthEvent);
   const completeStep = useMutation(api.taskCards.completeStep);
+  const saveDocument = useMutation(api.documents.saveDocument);
 
   async function handleSign() {
     setIsSubmitting(true);
@@ -143,8 +147,28 @@ export function SignStepDialog({
         callerTechnicianId: techId,
       });
 
+      // Save uploaded photos as documents attached to this step
+      for (const storageId of photoStorageIds) {
+        try {
+          await saveDocument({
+            organizationId: orgId,
+            attachedToTable: "taskCardSteps",
+            attachedToId: stepId as string,
+            storageId: storageId as Id<"_storage">,
+            fileName: `step-${stepNumber}-photo.jpg`,
+            fileSize: 0, // Size tracked at upload time
+            mimeType: "image/jpeg",
+            documentType: "photo",
+            description: `Step ${stepNumber} sign-off photo`,
+          });
+        } catch {
+          // Non-blocking — step is already signed
+        }
+      }
+
       setPin("");
       setNotes("");
+      setPhotoStorageIds([]);
       onSuccess();
       onClose();
     } catch (err) {
@@ -337,6 +361,34 @@ export function SignStepDialog({
                 </Button>
               </div>
             ))}
+          </div>
+
+          {/* Photos */}
+          <div>
+            <Label className="text-xs font-medium mb-1.5 block">
+              Step Photos{" "}
+              <span className="text-muted-foreground font-normal">(optional)</span>
+            </Label>
+            {photoStorageIds.length > 0 && (
+              <div className="mb-2">
+                <PhotoGallery
+                  storageIds={photoStorageIds}
+                  onDelete={(id) =>
+                    setPhotoStorageIds((prev) => prev.filter((s) => s !== id))
+                  }
+                  confirmDelete={false}
+                />
+              </div>
+            )}
+            <FileUpload
+              accept="images"
+              multiple
+              compact
+              maxSizeMB={10}
+              onUpload={(file) =>
+                setPhotoStorageIds((prev) => [...prev, file.storageId])
+              }
+            />
           </div>
 
           {/* Notes */}

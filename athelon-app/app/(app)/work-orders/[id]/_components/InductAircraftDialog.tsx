@@ -18,12 +18,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { AlertCircle, Loader2, CheckCircle } from "lucide-react";
+import { FileUpload, type UploadedFile } from "@/components/FileUpload";
+import { PhotoGallery } from "@/components/PhotoGallery";
 
 interface InductAircraftDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   workOrderId: Id<"workOrders">;
   aircraftId: Id<"aircraft">;
+  organizationId: Id<"organizations">;
 }
 
 export function InductAircraftDialog({
@@ -31,17 +34,20 @@ export function InductAircraftDialog({
   onOpenChange,
   workOrderId,
   aircraftId,
+  organizationId,
 }: InductAircraftDialogProps) {
   const [totalTimeAtInduction, setTotalTimeAtInduction] = useState("");
   const [inductionNotes, setInductionNotes] = useState("");
   const [walkAroundFindings, setWalkAroundFindings] = useState("");
   const [logbookReviewNotes, setLogbookReviewNotes] = useState("");
+  const [photoStorageIds, setPhotoStorageIds] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [updatedTT, setUpdatedTT] = useState<number | null>(null);
 
   const inductAircraft = useMutation(api.gapFixes.inductAircraft);
+  const saveDocument = useMutation(api.documents.saveDocument);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -59,6 +65,25 @@ export function InductAircraftDialog({
         walkAroundFindings: walkAroundFindings.trim() || undefined,
         logbookReviewNotes: logbookReviewNotes.trim() || undefined,
       });
+      // Save induction photos as documents
+      for (const storageId of photoStorageIds) {
+        try {
+          await saveDocument({
+            organizationId,
+            attachedToTable: "workOrders",
+            attachedToId: workOrderId as string,
+            storageId: storageId as Id<"_storage">,
+            fileName: "induction-photo.jpg",
+            fileSize: 0,
+            mimeType: "image/jpeg",
+            documentType: "photo",
+            description: "Aircraft induction photo",
+          });
+        } catch {
+          // Non-blocking
+        }
+      }
+
       setUpdatedTT(parseFloat(totalTimeAtInduction));
       setSuccess(true);
       toast.success("Aircraft inducted successfully");
@@ -196,6 +221,35 @@ export function InductAircraftDialog({
                 placeholder="Notes from reviewing aircraft logbooks..."
                 rows={2}
                 className="text-sm bg-muted/30 border-border/60 resize-none"
+              />
+            </div>
+
+            {/* Induction Photos */}
+            <div>
+              <Label className="text-xs font-medium mb-1.5 block">
+                Induction Photos{" "}
+                <span className="text-muted-foreground font-normal">(optional)</span>
+              </Label>
+              {photoStorageIds.length > 0 && (
+                <div className="mb-2">
+                  <PhotoGallery
+                    storageIds={photoStorageIds}
+                    onDelete={(id) =>
+                      setPhotoStorageIds((prev) => prev.filter((s) => s !== id))
+                    }
+                    confirmDelete={false}
+                  />
+                </div>
+              )}
+              <FileUpload
+                accept="images"
+                multiple
+                compact
+                maxSizeMB={10}
+                onUpload={(file) =>
+                  setPhotoStorageIds((prev) => [...prev, file.storageId])
+                }
+                disabled={submitting}
               />
             </div>
 

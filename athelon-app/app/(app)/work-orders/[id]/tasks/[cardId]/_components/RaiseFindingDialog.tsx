@@ -18,6 +18,8 @@ import {
   Loader2,
   AlertCircle,
 } from "lucide-react";
+import { FileUpload, type UploadedFile } from "@/components/FileUpload";
+import { PhotoGallery } from "@/components/PhotoGallery";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -128,6 +130,9 @@ export function RaiseFindingDialog({
   // Labor estimate
   const [mhEstimate, setMhEstimate] = useState("");
 
+  // Photos
+  const [photoStorageIds, setPhotoStorageIds] = useState<string[]>([]);
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -146,6 +151,7 @@ export function RaiseFindingDialog({
     setStcRelated(false);
     setStcNumber("");
     setMhEstimate("");
+    setPhotoStorageIds([]);
   }
 
   async function handleSubmit() {
@@ -442,6 +448,35 @@ export function RaiseFindingDialog({
             />
           </div>
 
+          {/* Photos */}
+          <div>
+            <Label className="text-xs font-medium mb-1.5 block">
+              Photos{" "}
+              <span className="text-muted-foreground font-normal">(optional)</span>
+            </Label>
+            {photoStorageIds.length > 0 && (
+              <div className="mb-2">
+                <PhotoGallery
+                  storageIds={photoStorageIds}
+                  onDelete={(id) =>
+                    setPhotoStorageIds((prev) => prev.filter((s) => s !== id))
+                  }
+                  confirmDelete={false}
+                />
+              </div>
+            )}
+            <FileUpload
+              accept="images"
+              multiple
+              compact
+              maxSizeMB={10}
+              onUpload={(file) =>
+                setPhotoStorageIds((prev) => [...prev, file.storageId])
+              }
+              disabled={isSubmitting}
+            />
+          </div>
+
           {/* Notes */}
           <div>
             <Label htmlFor="finding-notes" className="text-xs font-medium mb-1.5 block">
@@ -452,7 +487,7 @@ export function RaiseFindingDialog({
               id="finding-notes"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Additional context, references, photos..."
+              placeholder="Additional context, references..."
               rows={2}
               className="text-sm bg-muted/30 border-border/60 resize-none"
             />
