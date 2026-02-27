@@ -15,7 +15,9 @@ import {
   PenLine,
   Loader2,
   AlertCircle,
+  ScanLine,
 } from "lucide-react";
+import { BarcodeScanner } from "@/components/BarcodeScanner";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -89,6 +91,7 @@ export function SignStepDialog({
   >([]);
   const [photoStorageIds, setPhotoStorageIds] = useState<string[]>([]);
   const [showPartsForm, setShowPartsForm] = useState(false);
+  const [partScannerOpen, setPartScannerOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -287,21 +290,33 @@ export function SignStepDialog({
                   (optional)
                 </span>
               </Label>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="h-6 text-[10px] px-2"
-                onClick={() => {
-                  setShowPartsForm(true);
-                  setPartsInstalled((prev) => [
-                    ...prev,
-                    { partNumber: "", serialNumber: "", description: "", quantity: 1 },
-                  ]);
-                }}
-              >
-                + Add Part
-              </Button>
+              <div className="flex items-center gap-1">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 text-[10px] px-2 gap-1"
+                  onClick={() => setPartScannerOpen(true)}
+                >
+                  <ScanLine className="w-3 h-3" />
+                  Scan Part
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 text-[10px] px-2"
+                  onClick={() => {
+                    setShowPartsForm(true);
+                    setPartsInstalled((prev) => [
+                      ...prev,
+                      { partNumber: "", serialNumber: "", description: "", quantity: 1 },
+                    ]);
+                  }}
+                >
+                  + Add Part
+                </Button>
+              </div>
             </div>
             {partsInstalled.map((part, idx) => (
               <div
@@ -466,6 +481,21 @@ export function SignStepDialog({
           </Button>
         </DialogFooter>
       </DialogContent>
+
+      {/* Part Barcode Scanner */}
+      <BarcodeScanner
+        open={partScannerOpen}
+        onClose={() => setPartScannerOpen(false)}
+        onScan={(value) => {
+          setPartScannerOpen(false);
+          setShowPartsForm(true);
+          setPartsInstalled((prev) => [
+            ...prev,
+            { partNumber: value, serialNumber: "", description: "", quantity: 1 },
+          ]);
+        }}
+        title="Scan Part Barcode"
+      />
     </Dialog>
   );
 }

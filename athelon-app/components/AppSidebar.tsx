@@ -11,6 +11,7 @@ import {
   Settings,
   ChevronRight,
   Wrench,
+  GraduationCap,
   CalendarDays,
   Hammer,
   FileBarChart,
@@ -89,6 +90,12 @@ const mainNav: NavItem[] = [
     section: "parts",
   },
   {
+    title: "Tool Crib",
+    href: "/parts/tools",
+    icon: Wrench,
+    section: "parts",
+  },
+  {
     title: "Billing",
     href: "/billing/invoices",
     icon: ReceiptText,
@@ -113,6 +120,12 @@ const bottomNav: NavItem[] = [
     title: "Personnel",
     href: "/personnel",
     icon: Users,
+    section: "personnel",
+  },
+  {
+    title: "Training",
+    href: "/personnel/training",
+    icon: GraduationCap,
     section: "personnel",
   },
   {

@@ -12,7 +12,9 @@ import {
   Loader2,
   AlertCircle,
   ClipboardCheck,
+  ScanLine,
 } from "lucide-react";
+import { BarcodeScanner } from "@/components/BarcodeScanner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
@@ -258,6 +260,7 @@ export default function PartsReceivingPage() {
     description?: string | null;
     serialNumber?: string | null;
   } | null>(null);
+  const [scannerOpen, setScannerOpen] = useState(false);
 
   const parts = useQuery(
     api.gapFixes.listPartsPendingInspection,
@@ -279,11 +282,22 @@ export default function PartsReceivingPage() {
             Parts awaiting receiving inspection before entering inventory.
           </p>
         </div>
-        {parts !== undefined && (
-          <Badge variant="secondary" className="text-xs tabular-nums">
-            {parts.length} pending
-          </Badge>
-        )}
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 gap-1.5 text-xs"
+            onClick={() => setScannerOpen(true)}
+          >
+            <ScanLine className="w-3.5 h-3.5" />
+            Scan Part
+          </Button>
+          {parts !== undefined && (
+            <Badge variant="secondary" className="text-xs tabular-nums">
+              {parts.length} pending
+            </Badge>
+          )}
+        </div>
       </div>
 
       {/* Table */}
@@ -399,6 +413,35 @@ export default function PartsReceivingPage() {
           </Table>
         </div>
       )}
+
+      {/* Barcode Scanner */}
+      <BarcodeScanner
+        open={scannerOpen}
+        onClose={() => setScannerOpen(false)}
+        onScan={(value) => {
+          setScannerOpen(false);
+          // Find matching part and open inspect dialog
+          if (parts) {
+            const match = parts.find(
+              (p) =>
+                p.partNumber === value ||
+                p.serialNumber === value,
+            );
+            if (match && techId) {
+              setInspectTarget({
+                _id: match._id,
+                partNumber: match.partNumber,
+                description: match.description,
+                serialNumber: match.serialNumber,
+              });
+              toast.success(`Found part: ${match.partNumber}`);
+            } else {
+              toast.error(`No pending part found for scanned value: ${value}`);
+            }
+          }
+        }}
+        title="Scan Part for Inspection"
+      />
 
       {/* Inspect Dialog */}
       {inspectTarget && techId && (

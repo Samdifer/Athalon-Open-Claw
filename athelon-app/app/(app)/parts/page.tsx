@@ -20,8 +20,12 @@ import {
   Unlock,
   ClipboardCheck,
   Download,
+  ScanLine,
+  Printer,
 } from "lucide-react";
 import { downloadCSV } from "@/lib/export";
+import { BarcodeScanner } from "@/components/BarcodeScanner";
+import { printBarcodeLabel } from "@/lib/barcode";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -456,6 +460,7 @@ export default function PartsPage() {
   const [inspectPart, setInspectPart] = useState<PartDoc | null>(null);
   const [reservePart, setReservePart] = useState<PartDoc | null>(null);
   const [toastMsg, setToastMsg] = useState<{ text: string; kind: "success" | "error" } | null>(null);
+  const [scannerOpen, setScannerOpen] = useState(false);
 
   // Load all parts
   const allParts = useQuery(
@@ -692,6 +697,15 @@ export default function PartsPage() {
             variant="outline"
             size="sm"
             className="h-8 gap-1.5 text-xs border-border/60"
+            onClick={() => setScannerOpen(true)}
+          >
+            <ScanLine className="w-3.5 h-3.5" />
+            Scan
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 gap-1.5 text-xs border-border/60"
           >
             <Filter className="w-3.5 h-3.5" />
             Filter
@@ -915,6 +929,18 @@ export default function PartsPage() {
 
                         {/* Actions */}
                         <div className="flex items-center gap-1.5 flex-shrink-0">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-7 w-7 p-0 border-border/50 text-muted-foreground hover:text-primary hover:border-primary/40"
+                            title="Print Label"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              printBarcodeLabel(part.partNumber, part.partName, part.serialNumber);
+                            }}
+                          >
+                            <Printer className="w-3.5 h-3.5" />
+                          </Button>
                           {isInventory && !isReserved && (
                             <Button
                               variant="outline"
@@ -969,6 +995,18 @@ export default function PartsPage() {
           }
           setInspectPart(null);
         }}
+      />
+
+      {/* Barcode Scanner */}
+      <BarcodeScanner
+        open={scannerOpen}
+        onClose={() => setScannerOpen(false)}
+        onScan={(value) => {
+          setSearch(value);
+          setScannerOpen(false);
+          showToast(`Scanned: ${value}`, "success");
+        }}
+        title="Scan Part Barcode"
       />
 
       {/* Reserve Part Dialog */}

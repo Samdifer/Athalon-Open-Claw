@@ -5,7 +5,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import { toast } from "sonner";
-import { Settings, Building2, FileText, FileCheck, ShieldCheck, Save } from "lucide-react";
+import { Settings, Building2, FileText, FileCheck, ShieldCheck, Save, DollarSign, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,30 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { CURRENCY_OPTIONS, formatCurrency } from "@/lib/format";
 
 // ─── Form State ───────────────────────────────────────────────────────────────
 
@@ -62,10 +86,31 @@ export default function BillingSettingsPage() {
   const saveSettings = useMutation(api.billingV4b.saveOrgBillingSettings);
   const setApprovalThreshold = useMutation(api.billingV4b.setApprovalThreshold);
 
+  // Currency
+  const currencySettings = useQuery(
+    api.currency.listSupportedCurrencies,
+    orgId ? { orgId } : "skip",
+  );
+  const currencyRates = useQuery(
+    api.currency.listRates,
+    orgId ? { orgId } : "skip",
+  );
+  const updateCurrencySettings = useMutation(api.currency.updateCurrencySettings);
+  const upsertRate = useMutation(api.currency.upsertRate);
+  const deleteRate = useMutation(api.currency.deleteRate);
+
   const [form, setForm] = useState<BillingSettingsForm>(DEFAULT_FORM);
   const [poThreshold, setPoThreshold] = useState("5000");
   const [saving, setSaving] = useState(false);
   const [savingThreshold, setSavingThreshold] = useState(false);
+
+  // Currency state
+  const [rateDialogOpen, setRateDialogOpen] = useState(false);
+  const [rateFrom, setRateFrom] = useState("USD");
+  const [rateTo, setRateTo] = useState("EUR");
+  const [rateValue, setRateValue] = useState("");
+  const [savingRate, setSavingRate] = useState(false);
+  const [savingCurrency, setSavingCurrency] = useState(false);
 
   // Pre-fill form when settings load
   useEffect(() => {
@@ -389,6 +434,276 @@ export default function BillingSettingsPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Currency Settings */}
+      <Card className="border-border/60">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm font-medium flex items-center gap-2">
+            <DollarSign className="w-4 h-4 text-muted-foreground" />
+            Multi-Currency
+          </CardTitle>
+        </CardHeader>
+        <Separator className="mb-0" />
+        <CardContent className="pt-5 space-y-4">
+          {/* Base Currency */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label className="text-xs">Base Currency</Label>
+              <Select
+                value={currencySettings?.baseCurrency ?? "USD"}
+                onValueChange={async (val) => {
+                  if (!orgId) return;
+                  setSavingCurrency(true);
+                  try {
+                    await updateCurrencySettings({
+                      orgId,
+                      baseCurrency: val,
+                      supportedCurrencies: currencySettings?.supportedCurrencies ?? [val],
+                    });
+                    toast.success("Base currency updated.");
+                  } catch (err: unknown) {
+                    toast.error(err instanceof Error ? err.message : "Failed to update");
+                  } finally {
+                    setSavingCurrency(false);
+                  }
+                }}
+              >
+                <SelectTrigger className="h-9 text-sm bg-muted/30 border-border/60">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {CURRENCY_OPTIONS.map((c) => (
+                    <SelectItem key={c.code} value={c.code}>
+                      {c.symbol} {c.code} — {c.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Supported Currencies</Label>
+              <div className="flex flex-wrap gap-1.5">
+                {(currencySettings?.supportedCurrencies ?? ["USD"]).map((code) => (
+                  <Badge key={code} variant="secondary" className="text-xs gap-1">
+                    {code}
+                    {code !== (currencySettings?.baseCurrency ?? "USD") && (
+                      <button
+                        type="button"
+                        className="hover:text-red-400 ml-0.5"
+                        onClick={async () => {
+                          if (!orgId) return;
+                          const updated = (currencySettings?.supportedCurrencies ?? []).filter(
+                            (c) => c !== code,
+                          );
+                          await updateCurrencySettings({
+                            orgId,
+                            baseCurrency: currencySettings?.baseCurrency ?? "USD",
+                            supportedCurrencies: updated,
+                          });
+                        }}
+                      >
+                        ×
+                      </button>
+                    )}
+                  </Badge>
+                ))}
+                <Select
+                  value=""
+                  onValueChange={async (val) => {
+                    if (!orgId || !val) return;
+                    const existing = currencySettings?.supportedCurrencies ?? [];
+                    if (existing.includes(val)) return;
+                    await updateCurrencySettings({
+                      orgId,
+                      baseCurrency: currencySettings?.baseCurrency ?? "USD",
+                      supportedCurrencies: [...existing, val],
+                    });
+                  }}
+                >
+                  <SelectTrigger className="h-7 w-20 text-xs border-dashed">
+                    <Plus className="w-3 h-3 mr-1" />
+                    Add
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CURRENCY_OPTIONS.filter(
+                      (c) => !(currencySettings?.supportedCurrencies ?? []).includes(c.code),
+                    ).map((c) => (
+                      <SelectItem key={c.code} value={c.code}>
+                        {c.code} — {c.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+
+          {/* Exchange Rates Table */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label className="text-xs font-medium">Exchange Rates</Label>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-7 text-xs gap-1"
+                onClick={() => {
+                  setRateFrom(currencySettings?.baseCurrency ?? "USD");
+                  setRateTo(
+                    CURRENCY_OPTIONS.find(
+                      (c) => c.code !== (currencySettings?.baseCurrency ?? "USD"),
+                    )?.code ?? "EUR",
+                  );
+                  setRateValue("");
+                  setRateDialogOpen(true);
+                }}
+              >
+                <Plus className="w-3 h-3" />
+                Add Rate
+              </Button>
+            </div>
+
+            {currencyRates && currencyRates.length > 0 ? (
+              <div className="rounded-lg border border-border/60 overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/20">
+                      <TableHead className="text-xs">From</TableHead>
+                      <TableHead className="text-xs">To</TableHead>
+                      <TableHead className="text-xs">Rate</TableHead>
+                      <TableHead className="text-xs">Updated</TableHead>
+                      <TableHead className="text-xs text-right">Action</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {currencyRates.map((rate) => (
+                      <TableRow key={rate._id}>
+                        <TableCell className="text-sm font-mono">{rate.fromCurrency}</TableCell>
+                        <TableCell className="text-sm font-mono">{rate.toCurrency}</TableCell>
+                        <TableCell className="text-sm font-mono">{rate.rate.toFixed(4)}</TableCell>
+                        <TableCell className="text-xs text-muted-foreground">
+                          {new Date(rate.updatedAt).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 w-7 p-0 text-muted-foreground hover:text-red-400"
+                            onClick={async () => {
+                              await deleteRate({ rateId: rate._id });
+                              toast.success("Rate deleted.");
+                            }}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground py-4 text-center border border-dashed border-border/50 rounded-lg">
+                No exchange rates configured. Add a rate to enable multi-currency billing.
+              </p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Add/Edit Rate Dialog */}
+      <Dialog open={rateDialogOpen} onOpenChange={setRateDialogOpen}>
+        <DialogContent className="max-w-[95vw] sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-base">Add Exchange Rate</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs">From</Label>
+                <Select value={rateFrom} onValueChange={setRateFrom}>
+                  <SelectTrigger className="h-9 text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CURRENCY_OPTIONS.map((c) => (
+                      <SelectItem key={c.code} value={c.code}>{c.code}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">To</Label>
+                <Select value={rateTo} onValueChange={setRateTo}>
+                  <SelectTrigger className="h-9 text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CURRENCY_OPTIONS.map((c) => (
+                      <SelectItem key={c.code} value={c.code}>{c.code}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">
+                Rate <span className="text-muted-foreground">(1 {rateFrom} = ? {rateTo})</span>
+              </Label>
+              <Input
+                type="number"
+                step="0.0001"
+                min="0"
+                placeholder="1.0000"
+                value={rateValue}
+                onChange={(e) => setRateValue(e.target.value)}
+                className="text-sm font-mono"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => setRateDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              disabled={savingRate || !rateValue || rateFrom === rateTo}
+              onClick={async () => {
+                if (!orgId) return;
+                const val = parseFloat(rateValue);
+                if (isNaN(val) || val <= 0) {
+                  toast.error("Rate must be a positive number.");
+                  return;
+                }
+                setSavingRate(true);
+                try {
+                  await upsertRate({
+                    orgId,
+                    fromCurrency: rateFrom,
+                    toCurrency: rateTo,
+                    rate: val,
+                  });
+                  toast.success(`Rate saved: 1 ${rateFrom} = ${val} ${rateTo}`);
+                  setRateDialogOpen(false);
+                } catch (err: unknown) {
+                  toast.error(err instanceof Error ? err.message : "Failed to save rate");
+                } finally {
+                  setSavingRate(false);
+                }
+              }}
+            >
+              {savingRate ? "Saving…" : "Save Rate"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Bottom save button for convenience */}
       <div className="flex justify-end">

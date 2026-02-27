@@ -2507,6 +2507,9 @@ export default defineSchema({
     tax: v.number(),
     total: v.number(),
 
+    // Multi-currency support
+    currency: v.optional(v.string()),     // ISO 4217 code, default "USD"
+
     createdAt: v.number(),
     updatedAt: v.number(),
   })
@@ -2619,6 +2622,9 @@ export default defineSchema({
     subtotal: v.number(),
     tax: v.number(),
     total: v.number(),
+
+    // Multi-currency support
+    currency: v.optional(v.string()),     // ISO 4217 code, default "USD"
 
     createdAt: v.number(),
     updatedAt: v.number(),
@@ -2746,6 +2752,9 @@ export default defineSchema({
     dueDate: v.optional(v.number()),      // Unix ms — when payment is due
     // v4: Terms for display (e.g., "Net 30", "Due on Receipt")
     paymentTerms: v.optional(v.string()),
+
+    // Multi-currency support
+    currency: v.optional(v.string()),     // ISO 4217 code, default "USD"
 
     createdAt: v.number(),
     updatedAt: v.number(),
@@ -3055,6 +3064,9 @@ export default defineSchema({
     defaultPaymentTerms: v.optional(v.string()),
     defaultPaymentTermsDays: v.optional(v.number()),
     poApprovalThreshold: v.optional(v.number()),
+    // Multi-currency support
+    baseCurrency: v.optional(v.string()),              // default "USD"
+    supportedCurrencies: v.optional(v.array(v.string())),
     createdAt: v.number(),
     updatedAt: v.number(),
   })
@@ -3270,4 +3282,112 @@ export default defineSchema({
   })
     .index("by_org", ["organizationId"])
     .index("by_org_status", ["organizationId", "status"]),
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TRAINING RECORDS — Phase 8 Training & Qualifications
+  //
+  // Tracks technician training completions, certifications, and expiry dates.
+  // Supports compliance monitoring for FAA-required recurrent training.
+  // ═══════════════════════════════════════════════════════════════════════════
+  trainingRecords: defineTable({
+    organizationId: v.id("organizations"),
+    technicianId: v.id("technicians"),
+    courseName: v.string(),
+    courseType: v.union(
+      v.literal("initial"),
+      v.literal("recurrent"),
+      v.literal("oem"),
+      v.literal("regulatory"),
+      v.literal("safety"),
+      v.literal("hazmat"),
+      v.literal("custom"),
+    ),
+    provider: v.optional(v.string()),
+    completedAt: v.number(),
+    expiresAt: v.optional(v.number()),
+    certificateNumber: v.optional(v.string()),
+    documentStorageId: v.optional(v.string()),
+    notes: v.optional(v.string()),
+    status: v.union(
+      v.literal("current"),
+      v.literal("expiring_soon"),
+      v.literal("expired"),
+    ),
+    createdAt: v.number(),
+  })
+    .index("by_technician", ["technicianId", "createdAt"])
+    .index("by_org", ["organizationId", "createdAt"])
+    .index("by_org_expiry", ["organizationId", "expiresAt"]),
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // QUALIFICATION REQUIREMENTS — Phase 8 Training & Qualifications
+  //
+  // Defines what training courses are required for specific roles within the
+  // organization. Used to calculate compliance status per technician.
+  // ═══════════════════════════════════════════════════════════════════════════
+  qualificationRequirements: defineTable({
+    organizationId: v.id("organizations"),
+    name: v.string(),
+    description: v.optional(v.string()),
+    requiredCourses: v.array(v.string()),
+    recurrencyMonths: v.optional(v.number()),
+    applicableRoles: v.array(v.string()),
+    createdAt: v.number(),
+  })
+    .index("by_org", ["organizationId"]),
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TOOL RECORDS — Phase 8 Tool Crib Management
+  //
+  // Tracks tool inventory, check-out/check-in, and calibration status.
+  // Supports calibration due alerts and tool assignment to work orders.
+  // ═══════════════════════════════════════════════════════════════════════════
+  toolRecords: defineTable({
+    organizationId: v.id("organizations"),
+    toolNumber: v.string(),
+    description: v.string(),
+    serialNumber: v.optional(v.string()),
+    category: v.union(
+      v.literal("hand_tool"),
+      v.literal("power_tool"),
+      v.literal("test_equipment"),
+      v.literal("special_tooling"),
+      v.literal("consumable"),
+    ),
+    location: v.optional(v.string()),
+    status: v.union(
+      v.literal("available"),
+      v.literal("in_use"),
+      v.literal("calibration_due"),
+      v.literal("out_for_calibration"),
+      v.literal("retired"),
+    ),
+    calibrationRequired: v.boolean(),
+    lastCalibrationDate: v.optional(v.number()),
+    nextCalibrationDue: v.optional(v.number()),
+    calibrationIntervalDays: v.optional(v.number()),
+    calibrationProvider: v.optional(v.string()),
+    assignedToTechnicianId: v.optional(v.id("technicians")),
+    assignedToWorkOrderId: v.optional(v.id("workOrders")),
+    purchaseDate: v.optional(v.number()),
+    notes: v.optional(v.string()),
+    createdAt: v.number(),
+  })
+    .index("by_org", ["organizationId"])
+    .index("by_org_status", ["organizationId", "status"])
+    .index("by_calibration_due", ["organizationId", "nextCalibrationDue"]),
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // CURRENCY RATES — Multi-Currency Support
+  // Stores exchange rates per organization for multi-currency billing.
+  // ═══════════════════════════════════════════════════════════════════════════
+  currencyRates: defineTable({
+    organizationId: v.id("organizations"),
+    fromCurrency: v.string(),   // ISO 4217 (e.g. "USD")
+    toCurrency: v.string(),     // ISO 4217 (e.g. "EUR")
+    rate: v.number(),           // 1 fromCurrency = rate toCurrency
+    updatedAt: v.number(),
+  })
+    .index("by_org", ["organizationId"])
+    .index("by_pair", ["organizationId", "fromCurrency", "toCurrency"]),
 });

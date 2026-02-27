@@ -16,6 +16,7 @@ import type * as billingV4b from "../billingV4b.js";
 import type * as bulkImport from "../bulkImport.js";
 import type * as capacity from "../capacity.js";
 import type * as conformityInspections from "../conformityInspections.js";
+import type * as currency from "../currency.js";
 import type * as customerPortal from "../customerPortal.js";
 import type * as customers from "../customers.js";
 import type * as discrepancies from "../discrepancies.js";
@@ -40,6 +41,8 @@ import type * as taskCards from "../taskCards.js";
 import type * as taskCompliance from "../taskCompliance.js";
 import type * as technicians from "../technicians.js";
 import type * as timeClock from "../timeClock.js";
+import type * as toolCrib from "../toolCrib.js";
+import type * as training from "../training.js";
 import type * as vendors from "../vendors.js";
 import type * as workOrders from "../workOrders.js";
 
@@ -58,6 +61,7 @@ declare const fullApi: ApiFromModules<{
   bulkImport: typeof bulkImport;
   capacity: typeof capacity;
   conformityInspections: typeof conformityInspections;
+  currency: typeof currency;
   customerPortal: typeof customerPortal;
   customers: typeof customers;
   discrepancies: typeof discrepancies;
@@ -82,6 +86,8 @@ declare const fullApi: ApiFromModules<{
   taskCompliance: typeof taskCompliance;
   technicians: typeof technicians;
   timeClock: typeof timeClock;
+  toolCrib: typeof toolCrib;
+  training: typeof training;
   vendors: typeof vendors;
   workOrders: typeof workOrders;
 }>;

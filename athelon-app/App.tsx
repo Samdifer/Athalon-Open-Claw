@@ -33,6 +33,10 @@ import SquawksPage from "@/app/(app)/squawks/page";
 
 // Personnel
 import PersonnelPage from "@/app/(app)/personnel/page";
+import TrainingPage from "@/app/(app)/personnel/training/page";
+
+// Tool Crib
+import ToolCribPage from "@/app/(app)/parts/tools/page";
 
 // My Work
 import MyWorkPage from "@/app/(app)/my-work/page";
@@ -147,12 +151,14 @@ export default function App() {
           <Route path="/parts/new" element={<NewPartPage />} />
           <Route path="/parts/requests" element={<PartsRequestsPage />} />
           <Route path="/parts/receiving" element={<PartsReceivingPage />} />
+          <Route path="/parts/tools" element={<ToolCribPage />} />
 
           {/* Squawks */}
           <Route path="/squawks" element={<SquawksPage />} />
 
           {/* Personnel */}
           <Route path="/personnel" element={<PersonnelPage />} />
+          <Route path="/personnel/training" element={<TrainingPage />} />
 
           {/* My Work */}
           <Route path="/my-work" element={<MyWorkPage />} />

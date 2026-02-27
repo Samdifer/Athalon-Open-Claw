@@ -83,3 +83,54 @@ export function formatRelativeDay(ms: number): string {
   if (futureDays === 1) return "Tomorrow";
   return `In ${futureDays} days`;
 }
+
+// ─── Currency formatting ──────────────────────────────────────────────────────
+
+const currencyFormatterCache = new Map<string, Intl.NumberFormat>();
+
+/**
+ * Format a numeric amount with a currency symbol.
+ *
+ * @example formatCurrency(1234.5, "USD") → "$1,234.50"
+ * @example formatCurrency(1234.5, "EUR") → "€1,234.50"
+ * @example formatCurrency(1234.5)        → "$1,234.50"  (defaults to USD)
+ */
+export function formatCurrency(amount: number, currency = "USD"): string {
+  const code = currency.toUpperCase();
+  let formatter = currencyFormatterCache.get(code);
+  if (!formatter) {
+    try {
+      formatter = new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: code,
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+    } catch {
+      // Fallback for unknown currency codes
+      formatter = new Intl.NumberFormat("en-US", {
+        style: "decimal",
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+    }
+    currencyFormatterCache.set(code, formatter);
+  }
+  return formatter.format(amount);
+}
+
+/**
+ * Common currency options for selectors.
+ */
+export const CURRENCY_OPTIONS = [
+  { code: "USD", label: "US Dollar", symbol: "$" },
+  { code: "EUR", label: "Euro", symbol: "€" },
+  { code: "GBP", label: "British Pound", symbol: "£" },
+  { code: "CAD", label: "Canadian Dollar", symbol: "CA$" },
+  { code: "AUD", label: "Australian Dollar", symbol: "A$" },
+  { code: "CHF", label: "Swiss Franc", symbol: "CHF" },
+  { code: "JPY", label: "Japanese Yen", symbol: "¥" },
+  { code: "BRL", label: "Brazilian Real", symbol: "R$" },
+  { code: "MXN", label: "Mexican Peso", symbol: "MX$" },
+  { code: "SGD", label: "Singapore Dollar", symbol: "S$" },
+] as const;
