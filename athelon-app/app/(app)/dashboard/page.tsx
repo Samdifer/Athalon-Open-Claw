@@ -18,6 +18,10 @@ import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { Link } from "react-router-dom";
 import { ScheduleHealthWidget } from "./_components/ScheduleHealthWidget";
+import { WOStatusChart } from "./_components/WOStatusChart";
+import { RevenueTrendChart } from "./_components/RevenueTrendChart";
+import { TATChart } from "./_components/TATChart";
+import { TechUtilizationChart } from "./_components/TechUtilizationChart";
 
 // ─── Demo data (will be replaced with Convex queries) ────────────────────────
 
@@ -547,6 +551,14 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
         </div>
+      </div>
+
+      {/* Charts Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <WOStatusChart />
+        <RevenueTrendChart />
+        <TATChart />
+        <TechUtilizationChart />
       </div>
     </div>
   );

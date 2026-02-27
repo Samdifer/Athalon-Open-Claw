@@ -12,7 +12,11 @@ import {
   ChevronRight,
   Wrench,
   CalendarDays,
+  Hammer,
+  FileBarChart,
 } from "lucide-react";
+import { useUserRole } from "@/hooks/useUserRole";
+import { canAccessNav, type NavSection } from "@/lib/roles";
 import {
   Sidebar,
   SidebarContent,
@@ -32,6 +36,7 @@ type NavItem = {
   title: string;
   href: string;
   icon: React.ComponentType<{ className?: string }>;
+  section?: NavSection;
   badgeCount?: number;
   badgeVariant?: "default" | "secondary" | "destructive" | "outline";
 };
@@ -43,36 +48,49 @@ const mainNav: NavItem[] = [
     title: "Dashboard",
     href: "/dashboard",
     icon: LayoutDashboard,
+    section: "dashboard",
+  },
+  {
+    title: "My Work",
+    href: "/my-work",
+    icon: Hammer,
+    section: "my-work",
   },
   {
     title: "Fleet",
     href: "/fleet",
     icon: PlaneTakeoff,
+    section: "fleet",
   },
   {
     title: "Work Orders",
     href: "/work-orders",
     icon: ClipboardList,
+    section: "work-orders",
   },
   {
     title: "Schedule",
     href: "/scheduling",
     icon: CalendarDays,
+    section: "scheduling",
   },
   {
     title: "Parts",
     href: "/parts/requests",
     icon: Package,
+    section: "parts",
   },
   {
     title: "Billing",
     href: "/billing/invoices",
     icon: ReceiptText,
+    section: "billing",
   },
   {
     title: "Repair Station Compliance",
     href: "/compliance/audit-trail",
     icon: ShieldCheck,
+    section: "compliance",
   },
 ];
 
@@ -81,17 +99,27 @@ const bottomNav: NavItem[] = [
     title: "Personnel",
     href: "/personnel",
     icon: Users,
+    section: "personnel",
   },
   {
     title: "Settings",
     href: "/settings/shop",
     icon: Settings,
+    section: "settings",
   },
 ];
 
 export function AppSidebar() {
   const { pathname } = useLocation();
   const { organization } = useOrganization();
+  const { role } = useUserRole();
+
+  const filteredMainNav = mainNav.filter(
+    (item) => !item.section || canAccessNav(role ?? undefined, item.section),
+  );
+  const filteredBottomNav = bottomNav.filter(
+    (item) => !item.section || canAccessNav(role ?? undefined, item.section),
+  );
 
   return (
     <Sidebar collapsible="icon" className="border-r border-border/50">
@@ -119,7 +147,7 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {mainNav.map((item) => {
+              {filteredMainNav.map((item) => {
                 const isActive =
                   pathname === item.href ||
                   (item.href !== "/dashboard" &&
@@ -164,7 +192,7 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {bottomNav.map((item) => {
+              {filteredBottomNav.map((item) => {
                 const isActive = pathname.startsWith(item.href);
                 return (
                   <SidebarMenuItem key={item.href}>

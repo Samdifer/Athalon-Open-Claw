@@ -72,8 +72,12 @@ import BillingSettingsPage from "@/app/(app)/billing/settings/page";
 import SchedulingPage from "@/app/(app)/scheduling/page";
 import CapacityPage from "@/app/(app)/scheduling/capacity/page";
 
+// Reports
+import ReportsPage from "@/app/(app)/reports/page";
+
 // Settings
 import ShopSettingsPage from "@/app/(app)/settings/shop/page";
+import UsersSettingsPage from "@/app/(app)/settings/users/page";
 
 // Not Found
 import AppNotFoundPage from "@/app/(app)/not-found/page";
@@ -165,8 +169,12 @@ export default function App() {
           <Route path="/scheduling" element={<SchedulingPage />} />
           <Route path="/scheduling/capacity" element={<CapacityPage />} />
 
+          {/* Reports */}
+          <Route path="/reports" element={<ReportsPage />} />
+
           {/* Settings */}
           <Route path="/settings/shop" element={<ShopSettingsPage />} />
+          <Route path="/settings/users" element={<UsersSettingsPage />} />
 
           {/* 404 catch-all */}
           <Route path="*" element={<AppNotFoundPage />} />

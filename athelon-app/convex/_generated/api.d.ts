@@ -27,6 +27,7 @@ import type * as maintenanceRecords from "../maintenanceRecords.js";
 import type * as parts from "../parts.js";
 import type * as pricing from "../pricing.js";
 import type * as returnToService from "../returnToService.js";
+import type * as roles from "../roles.js";
 import type * as seed from "../seed.js";
 import type * as taskCardVendorServices from "../taskCardVendorServices.js";
 import type * as taskCards from "../taskCards.js";
@@ -62,6 +63,7 @@ declare const fullApi: ApiFromModules<{
   parts: typeof parts;
   pricing: typeof pricing;
   returnToService: typeof returnToService;
+  roles: typeof roles;
   seed: typeof seed;
   taskCardVendorServices: typeof taskCardVendorServices;
   taskCards: typeof taskCards;

@@ -680,6 +680,18 @@ export default defineSchema({
     email: v.optional(v.string()),
     phone: v.optional(v.string()),
 
+    // MRO role for RBAC — see lib/roles.ts
+    role: v.optional(v.union(
+      v.literal("admin"),
+      v.literal("shop_manager"),
+      v.literal("qcm_inspector"),
+      v.literal("billing_manager"),
+      v.literal("lead_technician"),
+      v.literal("technician"),
+      v.literal("parts_clerk"),
+      v.literal("read_only"),
+    )),
+
     // v3: PIN hash for signature re-authentication (TD: PIN security)
     // Stored as SHA-256 hex digest. Set via setPin mutation.
     // When set, createSignatureAuthEvent verifies the PIN against this hash.
