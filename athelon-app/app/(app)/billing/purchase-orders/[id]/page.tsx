@@ -351,8 +351,8 @@ export default function PODetailPage() {
                     <TableCell className="text-sm">{item.description}</TableCell>
                     <TableCell className="text-sm text-right">{item.qty}</TableCell>
                     <TableCell className="text-sm text-right">{item.receivedQty}</TableCell>
-                    <TableCell className="text-sm text-right">${item.unitPrice.toFixed(2)}</TableCell>
-                    <TableCell className="text-sm font-medium text-right">${(item.qty * item.unitPrice).toFixed(2)}</TableCell>
+                    <TableCell className="text-sm text-right tabular-nums">${item.unitPrice.toFixed(2)}</TableCell>
+                    <TableCell className="text-sm font-medium text-right tabular-nums">${(item.qty * item.unitPrice).toFixed(2)}</TableCell>
                     <TableCell>
                       <Badge variant="outline" className={`text-[10px] border ${ITEM_STATUS_STYLES[item.status] ?? ""}`}>
                         {item.status}

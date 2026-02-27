@@ -446,7 +446,7 @@ export default function DepositsPage() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <Card className="border-border/60">
           <CardContent className="pt-5 pb-4 px-5">
             <div className="flex items-center gap-3">

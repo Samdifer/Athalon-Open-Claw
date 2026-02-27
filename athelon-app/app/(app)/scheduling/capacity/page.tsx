@@ -151,7 +151,7 @@ export default function CapacityPage() {
       {/* ── Warning Banner ─────────────────────────────────────────────── */}
       {(isNearBuffer || isOverCapacity) && (
         <div
-          className={`rounded-lg border p-4 flex items-start gap-3 ${
+          className={`rounded-lg border p-3 sm:p-4 flex items-start gap-3 ${
             isOverCapacity
               ? "border-red-500/40 bg-red-500/8"
               : "border-amber-500/40 bg-amber-500/8"

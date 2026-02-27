@@ -482,8 +482,8 @@ export default function QuoteDetailPage() {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-sm text-right">{item.qty}</TableCell>
-                    <TableCell className="text-sm text-right">${item.unitPrice.toFixed(2)}</TableCell>
-                    <TableCell className="text-sm font-medium text-right">${item.total.toFixed(2)}</TableCell>
+                    <TableCell className="text-sm text-right tabular-nums">${item.unitPrice.toFixed(2)}</TableCell>
+                    <TableCell className="text-sm font-medium text-right tabular-nums">${item.total.toFixed(2)}</TableCell>
                     {isDraft && (
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-1">

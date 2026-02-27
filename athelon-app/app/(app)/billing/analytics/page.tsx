@@ -441,7 +441,7 @@ export default function AnalyticsPage() {
                         </a>
                       </TableCell>
                       <TableCell className="text-xs text-muted-foreground">{formatDate(q.updatedAt)}</TableCell>
-                      <TableCell className="text-sm font-medium text-right">${q.total.toFixed(2)}</TableCell>
+                      <TableCell className="text-sm font-medium text-right tabular-nums">${q.total.toFixed(2)}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

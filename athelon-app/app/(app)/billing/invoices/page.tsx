@@ -721,7 +721,7 @@ export default function InvoicesPage() {
 
       {/* Floating Batch Action Bar */}
       {selectedIds.size > 0 && orgId && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-4 py-2.5 rounded-full bg-card border border-border shadow-2xl shadow-black/30 backdrop-blur-sm">
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex flex-wrap items-center justify-center gap-2 px-4 py-2.5 rounded-2xl sm:rounded-full bg-card border border-border shadow-2xl shadow-black/30 backdrop-blur-sm max-w-[95vw]">
           <span className="text-xs text-muted-foreground font-medium mr-1">
             <CheckSquare2 className="w-3.5 h-3.5 inline mr-1 text-primary" />
             {selectedIds.size} selected

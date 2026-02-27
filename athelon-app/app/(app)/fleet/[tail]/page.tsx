@@ -654,8 +654,8 @@ export default function AircraftDetailPage() {
           {/* TAB: Work Orders                                              */}
           {/* ═══════════════════════════════════════════════════════════════ */}
           <TabsContent value="work-orders" className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-foreground">Work Orders</h2>
+            <div className="flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between">
+              <h2 className="text-lg sm:text-xl font-semibold text-foreground">Work Orders</h2>
               <Button asChild variant="outline" size="sm">
                 <Link to={`/work-orders/new?aircraft=${encodeURIComponent(tailNumber)}`}>
                   <Plus className="w-3.5 h-3.5 mr-1" />
@@ -715,7 +715,7 @@ export default function AircraftDetailPage() {
           }
         }}
       >
-        <DialogContent className="max-w-sm">
+        <DialogContent className="max-w-[95vw] sm:max-w-sm">
           <DialogHeader>
             <DialogTitle>Update Total Time</DialogTitle>
             <DialogDescription>

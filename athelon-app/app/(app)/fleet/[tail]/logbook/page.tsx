@@ -375,7 +375,7 @@ export default function AircraftLogbookPage() {
             <>
               <div className="flex items-center gap-2">
                 <BookOpen className="w-5 h-5 text-muted-foreground" />
-                <h1 className="text-2xl font-bold text-foreground">
+                <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-foreground">
                   <span className="font-mono">{aircraft.currentRegistration}</span>
                   <span className="text-muted-foreground font-normal ml-2 text-lg">
                     Maintenance Logbook
@@ -395,7 +395,7 @@ export default function AircraftLogbookPage() {
       {/* Filter bar */}
       <Card className="border-border/60">
         <CardContent className="p-4">
-          <div className="flex flex-wrap items-center gap-4">
+          <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-center gap-3 sm:gap-4">
             {/* Record type filter */}
             <div className="flex items-center gap-1.5">
               {FILTER_OPTIONS.map((opt) => (

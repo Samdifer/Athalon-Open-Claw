@@ -178,7 +178,41 @@ export default function CustomersPage() {
           </CardContent>
         </Card>
       ) : (
-        <Card className="border-border/60">
+        {/* Mobile card view */}
+        <div className="md:hidden space-y-3">
+          {filtered.map((customer) => (
+            <Card
+              key={customer._id}
+              className="border-border/60 cursor-pointer hover:border-primary/30 transition-colors"
+              onClick={() => router.push(`/billing/customers/${customer._id}`)}
+            >
+              <CardContent className="p-4 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="font-medium text-sm">{customer.name}</span>
+                  {customer.active !== false ? (
+                    <Badge variant="outline" className="text-[10px] bg-green-500/15 text-green-600 dark:text-green-400 border-green-500/30">Active</Badge>
+                  ) : (
+                    <Badge variant="outline" className="text-[10px] bg-muted text-muted-foreground border-muted-foreground/30">Inactive</Badge>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <TypeBadge type={customer.customerType as CustomerType} />
+                  {customer.taxExempt && (
+                    <Badge variant="outline" className="text-[10px] bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30">Exempt</Badge>
+                  )}
+                </div>
+                {customer.companyName && <p className="text-xs text-muted-foreground">{customer.companyName}</p>}
+                <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                  {customer.email && <span>{customer.email}</span>}
+                  {customer.phone && <span>{customer.phone}</span>}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {/* Desktop table view */}
+        <Card className="border-border/60 hidden md:block">
           <CardContent className="p-0">
             <div className="overflow-x-auto">
             <Table>

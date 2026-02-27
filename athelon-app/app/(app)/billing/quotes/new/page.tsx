@@ -302,6 +302,7 @@ export default function NewQuotePage() {
                     </Button>
                   </div>
                 ))}
+                </div></div>
 
                 {/* Subtotal */}
                 <div className="flex justify-end pt-2 border-t border-border/40">
@@ -320,7 +321,7 @@ export default function NewQuotePage() {
         </Card>
 
         {/* Actions */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <FileText className="w-3.5 h-3.5 text-muted-foreground" />
             <span className="text-xs text-muted-foreground">Quote will be saved as DRAFT</span>

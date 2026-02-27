@@ -181,7 +181,7 @@ function ReceivingInspectionDialog({
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && handleClose()}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="max-w-[95vw] sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-base">
             <ClipboardCheck className="w-4 h-4 text-primary" />
@@ -354,7 +354,7 @@ function ReservePartDialog({
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && handleClose()}>
-      <DialogContent className="sm:max-w-sm">
+      <DialogContent className="max-w-[95vw] sm:max-w-sm">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-base">
             <Lock className="w-4 h-4 text-primary" />
@@ -555,9 +555,9 @@ export default function PartsPage() {
       )}
 
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-foreground flex items-center gap-2">
+          <h1 className="text-lg sm:text-xl md:text-2xl font-semibold text-foreground flex items-center gap-2">
             <Package className="w-5 h-5 text-muted-foreground" />
             Parts Inventory
           </h1>
@@ -575,12 +575,12 @@ export default function PartsPage() {
             </p>
           )}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
           <Button
             asChild
             variant="outline"
             size="sm"
-            className="h-8 text-xs border-border/60"
+            className="h-8 text-xs border-border/60 w-full sm:w-auto"
           >
             <Link to="/parts/requests">
               <Clock className="w-3.5 h-3.5 mr-1.5" />
@@ -592,7 +592,7 @@ export default function PartsPage() {
               )}
             </Link>
           </Button>
-          <Button asChild size="sm" className="h-8 text-xs">
+          <Button asChild size="sm" className="h-8 text-xs w-full sm:w-auto">
             <Link to="/parts/new">
               <Plus className="w-3.5 h-3.5 mr-1.5" />
               Add Part

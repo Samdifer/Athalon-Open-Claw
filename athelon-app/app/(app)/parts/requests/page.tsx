@@ -104,9 +104,9 @@ export default function PartsRequestsPage() {
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-foreground">
+          <h1 className="text-lg sm:text-xl md:text-2xl font-semibold text-foreground">
             Parts Queue
           </h1>
           <p className="text-sm text-muted-foreground mt-0.5">
@@ -117,7 +117,7 @@ export default function PartsRequestsPage() {
             )}
           </p>
         </div>
-        <Button size="sm" asChild>
+        <Button size="sm" asChild className="w-full sm:w-auto">
           <Link to="/parts/new">
             <Plus className="w-3.5 h-3.5 mr-1.5" />
             Receive Part

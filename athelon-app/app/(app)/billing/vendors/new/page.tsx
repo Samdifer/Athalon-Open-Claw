@@ -155,7 +155,7 @@ export default function NewVendorPage() {
             <CardTitle className="text-sm font-medium">Contact Information</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               <div className="space-y-1.5">
                 <Label className="text-xs font-medium">Contact Name</Label>
                 <Input value={contactName} onChange={(e) => setContactName(e.target.value)} className="h-9 text-sm border-border/60" placeholder="John Smith" />

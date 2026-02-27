@@ -96,7 +96,7 @@ export default function NewPartPage() {
       </div>
 
       <div>
-        <h1 className="text-xl font-semibold text-foreground flex items-center gap-2">
+        <h1 className="text-lg sm:text-xl md:text-2xl font-semibold text-foreground flex items-center gap-2">
           <Package className="w-5 h-5 text-muted-foreground" />
           Receive New Part
         </h1>
@@ -185,7 +185,7 @@ export default function NewPartPage() {
 
             <Separator className="opacity-40" />
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label htmlFor="quantity" className="text-xs font-medium">
                   Quantity <span className="text-red-600 dark:text-red-400">*</span>
