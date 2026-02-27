@@ -16,6 +16,8 @@ import RtsPage from "@/app/(app)/work-orders/[id]/rts/page";
 import SignaturePage from "@/app/(app)/work-orders/[id]/signature/page";
 import WorkOrderTemplatesPage from "@/app/(app)/work-orders/templates/page";
 import ReleaseAircraftPage from "@/app/(app)/work-orders/[id]/release/page";
+import CertificatesPage from "@/app/(app)/work-orders/[id]/certificates/page";
+import KanbanPage from "@/app/(app)/work-orders/kanban/page";
 
 // Fleet
 import FleetPage from "@/app/(app)/fleet/page";
@@ -37,6 +39,7 @@ import TrainingPage from "@/app/(app)/personnel/training/page";
 
 // Tool Crib
 import ToolCribPage from "@/app/(app)/parts/tools/page";
+import CoresPage from "@/app/(app)/parts/cores/page";
 
 // My Work
 import MyWorkPage from "@/app/(app)/my-work/page";
@@ -71,6 +74,8 @@ import BillingCreditMemosPage from "@/app/(app)/billing/credit-memos/page";
 import BillingRecurringPage from "@/app/(app)/billing/recurring/page";
 import BillingTaxConfigPage from "@/app/(app)/billing/tax-config/page";
 import BillingSettingsPage from "@/app/(app)/billing/settings/page";
+import OTCSalesPage from "@/app/(app)/billing/otc/page";
+import WarrantyPage from "@/app/(app)/billing/warranty/page";
 
 // Scheduling
 import SchedulingPage from "@/app/(app)/scheduling/page";
@@ -96,9 +101,23 @@ import CustomerFleetPage from "@/app/(customer)/portal/fleet/page";
 // Fleet Calendar
 import FleetCalendarPage from "@/app/(app)/fleet/calendar/page";
 
+// Labor Kits
+import LaborKitsPage from "@/app/(app)/billing/labor-kits/page";
+
+// Inventory Count
+import InventoryCountPage from "@/app/(app)/parts/inventory-count/page";
+
+// Gap closure modules
+import ShippingPage from "@/app/(app)/parts/shipping/page";
+import RotablesPage from "@/app/(app)/parts/rotables/page";
+import LoanersPage from "@/app/(app)/parts/loaners/page";
+import ShopLocationsPage from "@/app/(app)/settings/locations/page";
+import PredictionsPage from "@/app/(app)/fleet/predictions/page";
+
 // Import
 import ImportPage from "@/app/(app)/settings/import/page";
 import EmailLogPage from "@/app/(app)/settings/email-log/page";
+import QuickBooksPage from "@/app/(app)/settings/quickbooks/page";
 
 // Not Found
 import AppNotFoundPage from "@/app/(app)/not-found/page";
@@ -131,6 +150,7 @@ export default function App() {
 
           {/* Work Orders */}
           <Route path="/work-orders" element={<WorkOrdersPage />} />
+          <Route path="/work-orders/kanban" element={<KanbanPage />} />
           <Route path="/work-orders/new" element={<NewWorkOrderPage />} />
           <Route path="/work-orders/templates" element={<WorkOrderTemplatesPage />} />
           <Route path="/work-orders/:id" element={<WorkOrderDetailPage />} />
@@ -139,11 +159,13 @@ export default function App() {
           <Route path="/work-orders/:id/records" element={<MaintenanceRecordsPage />} />
           <Route path="/work-orders/:id/rts" element={<RtsPage />} />
           <Route path="/work-orders/:id/release" element={<ReleaseAircraftPage />} />
+          <Route path="/work-orders/:id/certificates" element={<CertificatesPage />} />
           <Route path="/work-orders/:id/signature" element={<SignaturePage />} />
 
           {/* Fleet */}
           <Route path="/fleet" element={<FleetPage />} />
           <Route path="/fleet/calendar" element={<FleetCalendarPage />} />
+          <Route path="/fleet/predictions" element={<PredictionsPage />} />
           <Route path="/fleet/:tail" element={<AircraftDetailPage />} />
           <Route path="/fleet/:tail/logbook" element={<AircraftLogbookPage />} />
 
@@ -153,6 +175,11 @@ export default function App() {
           <Route path="/parts/requests" element={<PartsRequestsPage />} />
           <Route path="/parts/receiving" element={<PartsReceivingPage />} />
           <Route path="/parts/tools" element={<ToolCribPage />} />
+          <Route path="/parts/cores" element={<CoresPage />} />
+          <Route path="/parts/inventory-count" element={<InventoryCountPage />} />
+          <Route path="/parts/shipping" element={<ShippingPage />} />
+          <Route path="/parts/rotables" element={<RotablesPage />} />
+          <Route path="/parts/loaners" element={<LoanersPage />} />
 
           {/* Squawks */}
           <Route path="/squawks" element={<SquawksPage />} />
@@ -199,6 +226,9 @@ export default function App() {
           <Route path="/billing/recurring" element={<BillingRecurringPage />} />
           <Route path="/billing/tax-config" element={<BillingTaxConfigPage />} />
           <Route path="/billing/settings" element={<BillingSettingsPage />} />
+          <Route path="/billing/otc" element={<OTCSalesPage />} />
+          <Route path="/billing/warranty" element={<WarrantyPage />} />
+          <Route path="/billing/labor-kits" element={<LaborKitsPage />} />
 
           {/* Scheduling */}
           <Route path="/scheduling" element={<SchedulingPage />} />
@@ -212,8 +242,10 @@ export default function App() {
           <Route path="/settings/shop" element={<ShopSettingsPage />} />
           <Route path="/settings/users" element={<UsersSettingsPage />} />
           <Route path="/settings/notifications" element={<NotificationPreferencesPage />} />
+          <Route path="/settings/locations" element={<ShopLocationsPage />} />
           <Route path="/settings/import" element={<ImportPage />} />
           <Route path="/settings/email-log" element={<EmailLogPage />} />
+          <Route path="/settings/quickbooks" element={<QuickBooksPage />} />
 
           {/* 404 catch-all */}
           <Route path="*" element={<AppNotFoundPage />} />

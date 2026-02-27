@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Plus, Search, PlaneTakeoff, ChevronRight, Download } from "lucide-react";
+import { Plus, Search, PlaneTakeoff, ChevronRight, Download, Radar } from "lucide-react";
 import { useQuery } from "convex/react";
 import { useOrganization } from "@clerk/clerk-react";
 import { api } from "@/convex/_generated/api";
@@ -12,6 +12,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { downloadCSV } from "@/lib/export";
 import { toast } from "sonner";
+import { FaaLookupButton } from "@/components/faa/FaaLookupButton";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 // ─── Status style helper ────────────────────────────────────────────────────
 
@@ -101,6 +109,36 @@ function FleetCardSkeleton() {
 
 // ─── Page ───────────────────────────────────────────────────────────────────
 
+function FaaLookupDialog() {
+  const [nNumber, setNNumber] = useState("");
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button variant="outline" size="sm" className="gap-1.5 text-xs">
+          <Radar className="w-3.5 h-3.5" />
+          FAA Lookup
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>FAA Aircraft Registry Lookup</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div className="flex gap-2">
+            <Input
+              placeholder="Enter N-number (e.g. N12345)"
+              value={nNumber}
+              onChange={(e) => setNNumber(e.target.value)}
+              className="flex-1"
+            />
+          </div>
+          <FaaLookupButton registration={nNumber} />
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export default function FleetPage() {
   const { organization } = useOrganization();
   const orgId = organization?.id as Id<"organizations"> | undefined;
@@ -182,6 +220,7 @@ export default function FleetPage() {
             <Download className="w-3.5 h-3.5" />
             Export CSV
           </Button>
+          <FaaLookupDialog />
           <Button size="sm" className="flex-1 sm:flex-initial">
             <Plus className="w-3.5 h-3.5 mr-1.5" />
             Add Aircraft

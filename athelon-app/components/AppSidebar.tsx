@@ -16,7 +16,13 @@ import {
   Hammer,
   FileBarChart,
   Upload,
+  ShoppingCart,
   Calendar,
+  ClipboardCheck,
+  Boxes,
+  RotateCcw,
+  Link2,
+  MapPin,
 } from "lucide-react";
 import { useUserRole } from "@/hooks/useUserRole";
 import { canAccessNav, type NavSection } from "@/lib/roles";
@@ -72,8 +78,20 @@ const mainNav: NavItem[] = [
     section: "fleet",
   },
   {
+    title: "Predictions",
+    href: "/fleet/predictions",
+    icon: CalendarDays,
+    section: "fleet",
+  },
+  {
     title: "Work Orders",
     href: "/work-orders",
+    icon: ClipboardList,
+    section: "work-orders",
+  },
+  {
+    title: "WO Kanban",
+    href: "/work-orders/kanban",
     icon: ClipboardList,
     section: "work-orders",
   },
@@ -96,9 +114,57 @@ const mainNav: NavItem[] = [
     section: "parts",
   },
   {
+    title: "Inventory Count",
+    href: "/parts/inventory-count",
+    icon: ClipboardCheck,
+    section: "parts",
+  },
+  {
+    title: "Core Tracking",
+    href: "/parts/cores",
+    icon: RotateCcw,
+    section: "parts",
+  },
+  {
+    title: "Shipping",
+    href: "/parts/shipping",
+    icon: Package,
+    section: "parts",
+  },
+  {
+    title: "Rotables",
+    href: "/parts/rotables",
+    icon: RotateCcw,
+    section: "parts",
+  },
+  {
+    title: "Loaners",
+    href: "/parts/loaners",
+    icon: Package,
+    section: "parts",
+  },
+  {
     title: "Billing",
     href: "/billing/invoices",
     icon: ReceiptText,
+    section: "billing",
+  },
+  {
+    title: "Counter Sales",
+    href: "/billing/otc",
+    icon: ShoppingCart,
+    section: "billing",
+  },
+  {
+    title: "Labor Kits",
+    href: "/billing/labor-kits",
+    icon: Boxes,
+    section: "billing",
+  },
+  {
+    title: "Warranty Claims",
+    href: "/billing/warranty",
+    icon: ShieldCheck,
     section: "billing",
   },
   {
@@ -138,6 +204,18 @@ const bottomNav: NavItem[] = [
     title: "Import Data",
     href: "/settings/import",
     icon: Upload,
+    section: "settings",
+  },
+  {
+    title: "QuickBooks",
+    href: "/settings/quickbooks",
+    icon: Link2,
+    section: "settings",
+  },
+  {
+    title: "Locations",
+    href: "/settings/locations",
+    icon: MapPin,
     section: "settings",
   },
 ];

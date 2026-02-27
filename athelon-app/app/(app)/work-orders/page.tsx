@@ -16,6 +16,7 @@ import {
   Calendar,
   TrendingUp,
   Download,
+  LayoutGrid,
 } from "lucide-react";
 import { api } from "@/convex/_generated/api";
 import { formatDate } from "@/lib/format";
@@ -192,6 +193,17 @@ export default function WorkOrdersPage() {
           </p>
         </div>
         <div className="flex gap-2 w-full sm:w-auto">
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5 text-xs"
+            asChild
+          >
+            <Link to="/work-orders/kanban">
+              <LayoutGrid className="w-3.5 h-3.5" />
+              Kanban
+            </Link>
+          </Button>
           <Button
             variant="outline"
             size="sm"

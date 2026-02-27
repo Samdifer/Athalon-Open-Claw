@@ -1,0 +1,406 @@
+"use client";
+
+import { useState, useMemo } from "react";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { useCurrentOrg } from "@/hooks/useCurrentOrg";
+import { toast } from "sonner";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  AlertTriangle,
+  CheckCircle,
+  Clock,
+  Filter,
+  Sparkles,
+  XCircle,
+  Calendar,
+  Plane,
+} from "lucide-react";
+import type { Id } from "@/convex/_generated/dataModel";
+
+type Severity = "critical" | "high" | "medium" | "low";
+
+const SEVERITY_CONFIG: Record<
+  Severity,
+  { color: string; bg: string; border: string; icon: typeof AlertTriangle }
+> = {
+  critical: {
+    color: "text-red-500",
+    bg: "bg-red-500/10",
+    border: "border-red-500/30",
+    icon: AlertTriangle,
+  },
+  high: {
+    color: "text-orange-500",
+    bg: "bg-orange-500/10",
+    border: "border-orange-500/30",
+    icon: AlertTriangle,
+  },
+  medium: {
+    color: "text-yellow-500",
+    bg: "bg-yellow-500/10",
+    border: "border-yellow-500/30",
+    icon: Clock,
+  },
+  low: {
+    color: "text-blue-500",
+    bg: "bg-blue-500/10",
+    border: "border-blue-500/30",
+    icon: CheckCircle,
+  },
+};
+
+function formatDate(ts: number) {
+  return new Date(ts).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+export default function PredictionsPage() {
+  const { orgId } = useCurrentOrg();
+  const [severityTab, setSeverityTab] = useState("all");
+  const [aircraftFilter, setAircraftFilter] = useState("all");
+  const [typeFilter, setTypeFilter] = useState("all");
+
+  const predictions = useQuery(
+    api.predictions.list,
+    orgId ? { organizationId: orgId } : "skip",
+  );
+  const aircraftList = useQuery(
+    api.aircraft.list,
+    orgId ? { organizationId: orgId } : "skip",
+  );
+  const generatePredictions = useMutation(api.predictions.generatePredictions);
+  const acknowledgePrediction = useMutation(api.predictions.acknowledge);
+  const resolvePrediction = useMutation(api.predictions.resolve);
+  const dismissPrediction = useMutation(api.predictions.dismiss);
+
+  // Build aircraft lookup
+  const aircraftMap = useMemo(() => {
+    if (!aircraftList) return new Map<string, { tail: string; label: string }>();
+    const m = new Map<string, { tail: string; label: string }>();
+    for (const ac of aircraftList) {
+      m.set(ac._id, {
+        tail: ac.currentRegistration ?? `${ac.make} ${ac.model}`,
+        label: `${ac.currentRegistration ?? ""} ${ac.make} ${ac.model}`.trim(),
+      });
+    }
+    return m;
+  }, [aircraftList]);
+
+  // Filter predictions
+  const filtered = useMemo(() => {
+    if (!predictions) return [];
+    return predictions.filter((p) => {
+      if (severityTab !== "all" && p.severity !== severityTab) return false;
+      if (aircraftFilter !== "all" && p.aircraftId !== aircraftFilter) return false;
+      if (typeFilter !== "all" && p.predictionType !== typeFilter) return false;
+      return true;
+    });
+  }, [predictions, severityTab, aircraftFilter, typeFilter]);
+
+  // Summary counts (active only)
+  const summary = useMemo(() => {
+    if (!predictions) return { critical: 0, high: 0, medium: 0, low: 0, nextDate: null as number | null };
+    const active = predictions.filter((p) => p.status === "active");
+    const counts = { critical: 0, high: 0, medium: 0, low: 0, nextDate: null as number | null };
+    for (const p of active) {
+      counts[p.severity as Severity]++;
+      if (!counts.nextDate || p.predictedDate < counts.nextDate) {
+        counts.nextDate = p.predictedDate;
+      }
+    }
+    return counts;
+  }, [predictions]);
+
+  async function handleGenerate() {
+    if (!orgId) return;
+    try {
+      const result = await generatePredictions({ organizationId: orgId });
+      toast.success(`Generated ${result.created} new prediction(s).`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to generate predictions.");
+    }
+  }
+
+  async function handleAcknowledge(id: Id<"maintenancePredictions">) {
+    try {
+      await acknowledgePrediction({ id, acknowledgedBy: "current_user" });
+      toast.success("Prediction acknowledged.");
+    } catch (err) {
+      toast.error("Failed to acknowledge.");
+    }
+  }
+
+  async function handleResolve(id: Id<"maintenancePredictions">) {
+    try {
+      await resolvePrediction({ id });
+      toast.success("Prediction resolved.");
+    } catch (err) {
+      toast.error("Failed to resolve.");
+    }
+  }
+
+  async function handleDismiss(id: Id<"maintenancePredictions">) {
+    try {
+      await dismissPrediction({ id });
+      toast.success("Prediction dismissed.");
+    } catch (err) {
+      toast.error("Failed to dismiss.");
+    }
+  }
+
+  if (!orgId || !predictions || !aircraftList) {
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-10 w-full" />
+        <div className="grid grid-cols-5 gap-4">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Skeleton key={i} className="h-24" />
+          ))}
+        </div>
+        <Skeleton className="h-[400px] w-full" />
+      </div>
+    );
+  }
+
+  const uniqueAircraft = [...new Set(predictions.map((p) => p.aircraftId))];
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div>
+          <h1 className="text-2xl font-bold">Predictive Maintenance</h1>
+          <p className="text-muted-foreground text-sm">
+            AI-generated maintenance predictions based on aircraft usage and trends
+          </p>
+        </div>
+        <Button onClick={handleGenerate}>
+          <Sparkles className="h-4 w-4 mr-2" />
+          Generate Predictions
+        </Button>
+      </div>
+
+      {/* Summary cards */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        {(["critical", "high", "medium", "low"] as Severity[]).map((sev) => {
+          const cfg = SEVERITY_CONFIG[sev];
+          const Icon = cfg.icon;
+          return (
+            <Card key={sev} className={`${cfg.bg} ${cfg.border} border`}>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2">
+                  <Icon className={`h-4 w-4 ${cfg.color}`} />
+                  <span className="text-sm font-medium capitalize">{sev}</span>
+                </div>
+                <p className={`text-2xl font-bold mt-1 ${cfg.color}`}>
+                  {summary[sev]}
+                </p>
+              </CardContent>
+            </Card>
+          );
+        })}
+        <Card className="border-primary/20">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2">
+              <Calendar className="h-4 w-4 text-primary" />
+              <span className="text-sm font-medium">Next Due</span>
+            </div>
+            <p className="text-sm font-bold mt-1">
+              {summary.nextDate ? formatDate(summary.nextDate) : "—"}
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Filters */}
+      <div className="flex items-center gap-3 flex-wrap">
+        <Select value={aircraftFilter} onValueChange={setAircraftFilter}>
+          <SelectTrigger className="w-[200px]">
+            <Plane className="h-4 w-4 mr-2" />
+            <SelectValue placeholder="All Aircraft" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Aircraft</SelectItem>
+            {uniqueAircraft.map((id) => (
+              <SelectItem key={id} value={id}>
+                {aircraftMap.get(id)?.label ?? id}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={typeFilter} onValueChange={setTypeFilter}>
+          <SelectTrigger className="w-[180px]">
+            <Filter className="h-4 w-4 mr-2" />
+            <SelectValue placeholder="All Types" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Types</SelectItem>
+            <SelectItem value="time_based">Time Based</SelectItem>
+            <SelectItem value="usage_based">Usage Based</SelectItem>
+            <SelectItem value="trend_based">Trend Based</SelectItem>
+            <SelectItem value="condition_based">Condition Based</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Severity tabs + cards */}
+      <Tabs value={severityTab} onValueChange={setSeverityTab}>
+        <TabsList>
+          <TabsTrigger value="all">
+            All ({predictions.length})
+          </TabsTrigger>
+          <TabsTrigger value="critical" className="text-red-500">
+            Critical ({summary.critical})
+          </TabsTrigger>
+          <TabsTrigger value="high" className="text-orange-500">
+            High ({summary.high})
+          </TabsTrigger>
+          <TabsTrigger value="medium" className="text-yellow-500">
+            Medium ({summary.medium})
+          </TabsTrigger>
+          <TabsTrigger value="low" className="text-blue-500">
+            Low ({summary.low})
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value={severityTab} className="mt-4">
+          {filtered.length === 0 ? (
+            <Card>
+              <CardContent className="py-12 text-center text-muted-foreground">
+                No predictions match current filters.
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid gap-4">
+              {filtered.map((pred) => {
+                const sev = SEVERITY_CONFIG[pred.severity as Severity];
+                const ac = aircraftMap.get(pred.aircraftId);
+                const SevIcon = sev.icon;
+
+                return (
+                  <Card
+                    key={pred._id}
+                    className={`${sev.border} border-l-4`}
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1 space-y-2">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <SevIcon className={`h-4 w-4 ${sev.color}`} />
+                            <Badge className={`${sev.bg} ${sev.color} ${sev.border} capitalize`}>
+                              {pred.severity}
+                            </Badge>
+                            <Badge variant="outline" className="text-[10px]">
+                              {pred.predictionType.replace("_", " ")}
+                            </Badge>
+                            <Badge variant="outline" className="text-[10px]">
+                              {pred.status}
+                            </Badge>
+                            {ac && (
+                              <span className="text-sm font-medium flex items-center gap-1">
+                                <Plane className="h-3 w-3" />
+                                {ac.tail}
+                              </span>
+                            )}
+                          </div>
+
+                          <p className="text-sm">{pred.description}</p>
+
+                          {pred.recommendation && (
+                            <p className="text-xs text-muted-foreground">
+                              💡 {pred.recommendation}
+                            </p>
+                          )}
+
+                          <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                            <span>
+                              Predicted: <strong>{formatDate(pred.predictedDate)}</strong>
+                            </span>
+                            <div className="flex items-center gap-2 w-32">
+                              <span>Confidence:</span>
+                              <Progress value={pred.confidence} className="h-2 flex-1" />
+                              <span className="font-mono">{pred.confidence}%</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-col gap-1">
+                          {pred.status === "active" && (
+                            <>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="text-xs"
+                                onClick={() =>
+                                  handleAcknowledge(
+                                    pred._id as Id<"maintenancePredictions">,
+                                  )
+                                }
+                              >
+                                Acknowledge
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="text-xs"
+                                onClick={() =>
+                                  handleDismiss(
+                                    pred._id as Id<"maintenancePredictions">,
+                                  )
+                                }
+                              >
+                                <XCircle className="h-3 w-3 mr-1" />
+                                Dismiss
+                              </Button>
+                            </>
+                          )}
+                          {(pred.status === "active" ||
+                            pred.status === "acknowledged") && (
+                            <Button
+                              size="sm"
+                              variant="default"
+                              className="text-xs"
+                              onClick={() =>
+                                handleResolve(
+                                  pred._id as Id<"maintenancePredictions">,
+                                )
+                              }
+                            >
+                              <CheckCircle className="h-3 w-3 mr-1" />
+                              Resolve
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}

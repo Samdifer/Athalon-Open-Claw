@@ -3407,4 +3407,466 @@ export default defineSchema({
   })
     .index("by_org", ["organizationId"])
     .index("by_sentAt", ["sentAt"]),
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // LABOR KITS — Reusable templates bundling labor tasks with associated parts
+  // ═══════════════════════════════════════════════════════════════════════════
+  laborKits: defineTable({
+    organizationId: v.id("organizations"),
+    name: v.string(),
+    description: v.optional(v.string()),
+    ataChapter: v.optional(v.string()),
+    aircraftType: v.optional(v.string()),
+    estimatedHours: v.number(),
+    laborRate: v.optional(v.number()),
+    laborItems: v.array(v.object({
+      description: v.string(),
+      estimatedHours: v.number(),
+      skillRequired: v.optional(v.string()),
+    })),
+    requiredParts: v.array(v.object({
+      partNumber: v.string(),
+      description: v.string(),
+      quantity: v.number(),
+      unitCost: v.optional(v.number()),
+    })),
+    externalServices: v.optional(v.array(v.object({
+      vendorName: v.optional(v.string()),
+      description: v.string(),
+      estimatedCost: v.number(),
+    }))),
+    isActive: v.boolean(),
+    createdAt: v.number(),
+  })
+    .index("by_org", ["organizationId"])
+    .index("by_org_aircraft", ["organizationId", "aircraftType"]),
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // INVENTORY COUNTS — Physical inventory count sessions
+  // ═══════════════════════════════════════════════════════════════════════════
+  inventoryCounts: defineTable({
+    organizationId: v.id("organizations"),
+    name: v.string(),
+    status: v.union(
+      v.literal("draft"),
+      v.literal("in_progress"),
+      v.literal("completed"),
+      v.literal("reconciled"),
+    ),
+    startedAt: v.optional(v.number()),
+    completedAt: v.optional(v.number()),
+    countedBy: v.optional(v.id("technicians")),
+    notes: v.optional(v.string()),
+    createdAt: v.number(),
+  })
+    .index("by_org", ["organizationId"]),
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // INVENTORY COUNT ITEMS — Individual part count entries within a count session
+  // ═══════════════════════════════════════════════════════════════════════════
+  inventoryCountItems: defineTable({
+    countId: v.id("inventoryCounts"),
+    organizationId: v.id("organizations"),
+    partId: v.id("parts"),
+    partNumber: v.string(),
+    partName: v.string(),
+    expectedQuantity: v.number(),
+    actualQuantity: v.optional(v.number()),
+    variance: v.optional(v.number()),
+    location: v.optional(v.string()),
+    countedAt: v.optional(v.number()),
+    notes: v.optional(v.string()),
+  })
+    .index("by_count", ["countId"])
+    .index("by_org", ["organizationId"]),
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // WARRANTY CLAIMS — Track warranty claims against parts, vendors, and OEMs
+  // ═══════════════════════════════════════════════════════════════════════════
+  warrantyClaims: defineTable({
+    organizationId: v.id("organizations"),
+    claimNumber: v.string(),
+    workOrderId: v.optional(v.id("workOrders")),
+    partId: v.optional(v.id("parts")),
+    vendorId: v.optional(v.id("vendors")),
+    customerId: v.optional(v.id("customers")),
+    claimType: v.union(
+      v.literal("part_defect"),
+      v.literal("workmanship"),
+      v.literal("oem_warranty"),
+      v.literal("vendor_warranty"),
+    ),
+    status: v.union(
+      v.literal("draft"),
+      v.literal("submitted"),
+      v.literal("under_review"),
+      v.literal("approved"),
+      v.literal("denied"),
+      v.literal("paid"),
+      v.literal("closed"),
+    ),
+    description: v.string(),
+    partNumber: v.optional(v.string()),
+    serialNumber: v.optional(v.string()),
+    originalInstallDate: v.optional(v.number()),
+    failureDate: v.optional(v.number()),
+    warrantyExpiresAt: v.optional(v.number()),
+    claimedAmount: v.number(),
+    approvedAmount: v.optional(v.number()),
+    creditMemoId: v.optional(v.id("creditMemos")),
+    resolution: v.optional(v.string()),
+    submittedAt: v.optional(v.number()),
+    resolvedAt: v.optional(v.number()),
+    notes: v.optional(v.string()),
+    createdAt: v.number(),
+  })
+    .index("by_org", ["organizationId", "createdAt"])
+    .index("by_org_status", ["organizationId", "status"])
+    .index("by_work_order", ["workOrderId"]),
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // CORE TRACKING — Core exchange and credit tracking for rotable parts
+  // ═══════════════════════════════════════════════════════════════════════════
+  coreTracking: defineTable({
+    organizationId: v.id("organizations"),
+    coreNumber: v.string(),
+    partId: v.id("parts"),
+    partNumber: v.string(),
+    serialNumber: v.optional(v.string()),
+    description: v.string(),
+    status: v.union(
+      v.literal("awaiting_return"),
+      v.literal("received"),
+      v.literal("inspected"),
+      v.literal("credit_issued"),
+      v.literal("scrapped"),
+      v.literal("overdue"),
+    ),
+    vendorId: v.optional(v.id("vendors")),
+    workOrderId: v.optional(v.id("workOrders")),
+    purchaseOrderId: v.optional(v.id("purchaseOrders")),
+    coreValue: v.number(),
+    creditAmount: v.optional(v.number()),
+    returnDueDate: v.optional(v.number()),
+    returnedAt: v.optional(v.number()),
+    inspectedAt: v.optional(v.number()),
+    creditIssuedAt: v.optional(v.number()),
+    notes: v.optional(v.string()),
+    createdAt: v.number(),
+  })
+    .index("by_org", ["organizationId", "createdAt"])
+    .index("by_org_status", ["organizationId", "status"])
+    .index("by_vendor", ["vendorId"]),
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // QUICKBOOKS SYNC — Integration sync log for QuickBooks Online
+  // ═══════════════════════════════════════════════════════════════════════════
+  quickbooksSync: defineTable({
+    organizationId: v.id("organizations"),
+    entityType: v.union(
+      v.literal("invoice"),
+      v.literal("payment"),
+      v.literal("customer"),
+      v.literal("vendor"),
+      v.literal("item"),
+    ),
+    entityId: v.string(),
+    qbId: v.optional(v.string()),
+    syncStatus: v.union(
+      v.literal("pending"),
+      v.literal("synced"),
+      v.literal("failed"),
+      v.literal("skipped"),
+    ),
+    lastSyncAt: v.optional(v.number()),
+    errorMessage: v.optional(v.string()),
+    createdAt: v.number(),
+  })
+    .index("by_org", ["organizationId"])
+    .index("by_entity", ["entityType", "entityId"]),
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // QUICKBOOKS SETTINGS — Per-org QuickBooks connection settings
+  // ═══════════════════════════════════════════════════════════════════════════
+  quickbooksSettings: defineTable({
+    organizationId: v.id("organizations"),
+    isConnected: v.boolean(),
+    companyName: v.optional(v.string()),
+    realmId: v.optional(v.string()),
+    syncInvoices: v.boolean(),
+    syncPayments: v.boolean(),
+    syncCustomers: v.boolean(),
+    syncVendors: v.boolean(),
+    autoSync: v.boolean(),
+    lastFullSyncAt: v.optional(v.number()),
+  })
+    .index("by_org", ["organizationId"]),
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // RELEASE CERTIFICATES (FAA 8130-3 / EASA Form 1)
+  // Generated for completed repairs to release components back to service.
+  // ═══════════════════════════════════════════════════════════════════════════
+  releaseCertificates: defineTable({
+    organizationId: v.id("organizations"),
+    workOrderId: v.id("workOrders"),
+    partId: v.optional(v.id("parts")),
+    formType: v.union(v.literal("faa_8130"), v.literal("easa_form1")),
+    certificateNumber: v.string(),
+    partDescription: v.string(),
+    partNumber: v.string(),
+    serialNumber: v.optional(v.string()),
+    batchNumber: v.optional(v.string()),
+    quantity: v.number(),
+    workPerformed: v.string(),
+    condition: v.string(),
+    remarks: v.string(),
+    inspectorTechnicianId: v.id("technicians"),
+    inspectorName: v.string(),
+    approvalNumber: v.string(),
+    organizationName: v.string(),
+    organizationAddress: v.optional(v.string()),
+    repairStationCertNumber: v.optional(v.string()),
+    signatureDate: v.number(),
+    createdAt: v.number(),
+  })
+    .index("by_organization", ["organizationId"])
+    .index("by_workOrder", ["workOrderId"])
+    .index("by_certNumber", ["organizationId", "certificateNumber"]),
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // OTC SALES — Over-the-counter walk-in sales
+  // ═══════════════════════════════════════════════════════════════════════════
+  otcSales: defineTable({
+    organizationId: v.id("organizations"),
+    receiptNumber: v.string(),
+    customerName: v.optional(v.string()),
+    customerEmail: v.optional(v.string()),
+    subtotal: v.number(),
+    taxRate: v.number(),
+    taxAmount: v.number(),
+    total: v.number(),
+    paymentMethod: v.union(
+      v.literal("cash"),
+      v.literal("card"),
+      v.literal("account"),
+      v.literal("check"),
+    ),
+    notes: v.optional(v.string()),
+    status: v.union(v.literal("completed"), v.literal("voided")),
+    createdAt: v.number(),
+  })
+    .index("by_organization", ["organizationId"])
+    .index("by_receipt", ["organizationId", "receiptNumber"]),
+
+  otcSaleItems: defineTable({
+    otcSaleId: v.id("otcSales"),
+    organizationId: v.id("organizations"),
+    partId: v.optional(v.id("parts")),
+    description: v.string(),
+    partNumber: v.optional(v.string()),
+    quantity: v.number(),
+    unitPrice: v.number(),
+    lineTotal: v.number(),
+    createdAt: v.number(),
+  })
+    .index("by_sale", ["otcSaleId"])
+    .index("by_organization", ["organizationId"]),
+
+  // === SHIPPING & RECEIVING ===
+  shipments: defineTable({
+    organizationId: v.id("organizations"),
+    shipmentNumber: v.string(),
+    type: v.union(v.literal("inbound"), v.literal("outbound")),
+    status: v.union(v.literal("pending"), v.literal("in_transit"), v.literal("delivered"), v.literal("cancelled")),
+    carrier: v.optional(v.string()),
+    trackingNumber: v.optional(v.string()),
+    estimatedDelivery: v.optional(v.number()),
+    actualDelivery: v.optional(v.number()),
+    shippedDate: v.optional(v.number()),
+    // Origin/destination
+    originName: v.optional(v.string()),
+    originAddress: v.optional(v.string()),
+    destinationName: v.optional(v.string()),
+    destinationAddress: v.optional(v.string()),
+    // Related records
+    workOrderId: v.optional(v.id("workOrders")),
+    purchaseOrderId: v.optional(v.id("purchaseOrders")),
+    customerId: v.optional(v.id("customers")),
+    vendorId: v.optional(v.id("vendors")),
+    // Costs
+    shippingCost: v.optional(v.number()),
+    insuranceValue: v.optional(v.number()),
+    // BOL
+    bolNumber: v.optional(v.string()),
+    specialInstructions: v.optional(v.string()),
+    hazmat: v.optional(v.boolean()),
+    weight: v.optional(v.number()),
+    dimensions: v.optional(v.string()),
+    notes: v.optional(v.string()),
+    createdBy: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.optional(v.number()),
+  })
+    .index("by_organization", ["organizationId"])
+    .index("by_status", ["organizationId", "status"])
+    .index("by_tracking", ["organizationId", "trackingNumber"])
+    .index("by_workOrder", ["workOrderId"])
+    .index("by_purchaseOrder", ["purchaseOrderId"]),
+
+  shipmentItems: defineTable({
+    shipmentId: v.id("shipments"),
+    organizationId: v.id("organizations"),
+    partId: v.optional(v.id("parts")),
+    partNumber: v.string(),
+    description: v.string(),
+    serialNumber: v.optional(v.string()),
+    quantity: v.number(),
+    condition: v.optional(v.union(v.literal("new"), v.literal("serviceable"), v.literal("unserviceable"), v.literal("as_removed"))),
+    traceDoc: v.optional(v.string()),
+    notes: v.optional(v.string()),
+    createdAt: v.number(),
+  })
+    .index("by_shipment", ["shipmentId"])
+    .index("by_organization", ["organizationId"]),
+
+  // === ROTABLE MANAGEMENT ===
+  rotables: defineTable({
+    organizationId: v.id("organizations"),
+    partNumber: v.string(),
+    serialNumber: v.string(),
+    description: v.string(),
+    status: v.union(v.literal("installed"), v.literal("serviceable"), v.literal("in_shop"), v.literal("at_vendor"), v.literal("condemned"), v.literal("loaned_out")),
+    condition: v.union(v.literal("serviceable"), v.literal("unserviceable"), v.literal("overhauled"), v.literal("repaired"), v.literal("inspected")),
+    aircraftId: v.optional(v.id("aircraft")),
+    positionCode: v.optional(v.string()),
+    tsnHours: v.optional(v.number()),
+    tsnCycles: v.optional(v.number()),
+    tsoHours: v.optional(v.number()),
+    tsoCycles: v.optional(v.number()),
+    tsiHours: v.optional(v.number()),
+    tsiCycles: v.optional(v.number()),
+    // Limits
+    tboHours: v.optional(v.number()),
+    tboCycles: v.optional(v.number()),
+    shelfLifeExpiry: v.optional(v.number()),
+    // Financial
+    purchasePrice: v.optional(v.number()),
+    currentValue: v.optional(v.number()),
+    coreValue: v.optional(v.number()),
+    // Vendor
+    lastOverhaulVendor: v.optional(v.string()),
+    lastOverhaulDate: v.optional(v.number()),
+    warrantyExpiry: v.optional(v.number()),
+    // Docs
+    traceDocFileId: v.optional(v.id("_storage")),
+    notes: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.optional(v.number()),
+  })
+    .index("by_organization", ["organizationId"])
+    .index("by_partSerial", ["organizationId", "partNumber", "serialNumber"])
+    .index("by_aircraft", ["aircraftId"])
+    .index("by_status", ["organizationId", "status"]),
+
+  rotableHistory: defineTable({
+    rotableId: v.id("rotables"),
+    organizationId: v.id("organizations"),
+    action: v.union(v.literal("installed"), v.literal("removed"), v.literal("sent_to_vendor"), v.literal("received_from_vendor"), v.literal("overhauled"), v.literal("condemned"), v.literal("loaned"), v.literal("returned")),
+    fromAircraftId: v.optional(v.id("aircraft")),
+    toAircraftId: v.optional(v.id("aircraft")),
+    workOrderId: v.optional(v.id("workOrders")),
+    hoursAtAction: v.optional(v.number()),
+    cyclesAtAction: v.optional(v.number()),
+    notes: v.optional(v.string()),
+    performedBy: v.optional(v.string()),
+    createdAt: v.number(),
+  })
+    .index("by_rotable", ["rotableId"])
+    .index("by_organization", ["organizationId"]),
+
+  // === RENTAL / LOANER TRACKING ===
+  loanerItems: defineTable({
+    organizationId: v.id("organizations"),
+    partNumber: v.string(),
+    serialNumber: v.optional(v.string()),
+    description: v.string(),
+    status: v.union(v.literal("available"), v.literal("loaned_out"), v.literal("maintenance"), v.literal("retired")),
+    // Current loan
+    loanedToCustomerId: v.optional(v.id("customers")),
+    loanedToWorkOrderId: v.optional(v.id("workOrders")),
+    loanedDate: v.optional(v.number()),
+    expectedReturnDate: v.optional(v.number()),
+    actualReturnDate: v.optional(v.number()),
+    dailyRate: v.optional(v.number()),
+    // Condition
+    conditionOut: v.optional(v.string()),
+    conditionIn: v.optional(v.string()),
+    notes: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.optional(v.number()),
+  })
+    .index("by_organization", ["organizationId"])
+    .index("by_status", ["organizationId", "status"])
+    .index("by_customer", ["loanedToCustomerId"]),
+
+  loanerHistory: defineTable({
+    loanerItemId: v.id("loanerItems"),
+    organizationId: v.id("organizations"),
+    action: v.union(v.literal("loaned"), v.literal("returned"), v.literal("extended"), v.literal("damaged")),
+    customerId: v.optional(v.id("customers")),
+    workOrderId: v.optional(v.id("workOrders")),
+    notes: v.optional(v.string()),
+    createdAt: v.number(),
+  })
+    .index("by_item", ["loanerItemId"])
+    .index("by_organization", ["organizationId"]),
+
+  // === MULTI-SHOP / MULTI-LOCATION ===
+  shopLocations: defineTable({
+    organizationId: v.id("organizations"),
+    name: v.string(),
+    code: v.string(),
+    address: v.optional(v.string()),
+    city: v.optional(v.string()),
+    state: v.optional(v.string()),
+    zip: v.optional(v.string()),
+    country: v.optional(v.string()),
+    phone: v.optional(v.string()),
+    email: v.optional(v.string()),
+    certificateNumber: v.optional(v.string()),
+    certificateType: v.optional(v.union(v.literal("part_145"), v.literal("part_135"), v.literal("part_121"), v.literal("part_91"))),
+    capabilities: v.optional(v.array(v.string())),
+    isActive: v.boolean(),
+    isPrimary: v.optional(v.boolean()),
+    timezone: v.optional(v.string()),
+    notes: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.optional(v.number()),
+  })
+    .index("by_organization", ["organizationId"])
+    .index("by_code", ["organizationId", "code"]),
+
+  // === PREDICTIVE MAINTENANCE ===
+  maintenancePredictions: defineTable({
+    organizationId: v.id("organizations"),
+    aircraftId: v.id("aircraft"),
+    componentPartNumber: v.optional(v.string()),
+    componentSerialNumber: v.optional(v.string()),
+    predictionType: v.union(v.literal("time_based"), v.literal("usage_based"), v.literal("trend_based"), v.literal("condition_based")),
+    predictedDate: v.number(),
+    confidence: v.number(), // 0-100
+    severity: v.union(v.literal("low"), v.literal("medium"), v.literal("high"), v.literal("critical")),
+    description: v.string(),
+    recommendation: v.optional(v.string()),
+    basedOn: v.optional(v.string()), // data source description
+    status: v.union(v.literal("active"), v.literal("acknowledged"), v.literal("scheduled"), v.literal("dismissed"), v.literal("resolved")),
+    acknowledgedBy: v.optional(v.string()),
+    resolvedDate: v.optional(v.number()),
+    createdAt: v.number(),
+    updatedAt: v.optional(v.number()),
+  })
+    .index("by_organization", ["organizationId"])
+    .index("by_aircraft", ["organizationId", "aircraftId"])
+    .index("by_status", ["organizationId", "status"])
+    .index("by_severity", ["organizationId", "severity"]),
 });

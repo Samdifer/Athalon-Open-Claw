@@ -5,6 +5,7 @@ import { TopBar } from "@/components/TopBar";
 import { OrgContextProvider } from "@/components/OrgContextProvider";
 import { CommandPalette } from "@/components/CommandPalette";
 import { KeyboardShortcuts } from "@/components/KeyboardShortcuts";
+import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 
 export function AppLayout() {
   return (
@@ -19,6 +20,7 @@ export function AppLayout() {
         </div>
         <CommandPalette />
         <KeyboardShortcuts />
+        <PWAInstallPrompt />
       </SidebarProvider>
     </OrgContextProvider>
   );

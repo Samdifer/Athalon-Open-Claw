@@ -1,0 +1,314 @@
+"use client";
+
+import { useState } from "react";
+import { useParams } from "react-router-dom";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
+import { useCurrentOrg } from "@/hooks/useCurrentOrg";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { FileText, Plus, Download } from "lucide-react";
+import { downloadPDF } from "@/lib/pdf/download";
+import { Form8130PDF } from "@/lib/pdf/Form8130PDF";
+import { EASAForm1PDF } from "@/lib/pdf/EASAForm1PDF";
+
+export default function CertificatesPage() {
+  const { id } = useParams<{ id: string }>();
+  const { orgId, org, techId } = useCurrentOrg();
+  const workOrderId = id as Id<"workOrders">;
+
+  const certificates = useQuery(
+    api.releaseCertificates.listByWorkOrder,
+    workOrderId ? { workOrderId } : "skip",
+  );
+  const workOrder = useQuery(api.workOrders.getWorkOrder, workOrderId ? { id: workOrderId } : "skip");
+  const createCert = useMutation(api.releaseCertificates.createReleaseCertificate);
+
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [formType, setFormType] = useState<"faa_8130" | "easa_form1">("faa_8130");
+  const [partDescription, setPartDescription] = useState("");
+  const [partNumber, setPartNumber] = useState("");
+  const [serialNumber, setSerialNumber] = useState("");
+  const [batchNumber, setBatchNumber] = useState("");
+  const [quantity, setQuantity] = useState("1");
+  const [workPerformed, setWorkPerformed] = useState("");
+  const [condition, setCondition] = useState("");
+  const [remarks, setRemarks] = useState("");
+  const [approvalNumber, setApprovalNumber] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  const openDialog = (type: "faa_8130" | "easa_form1") => {
+    setFormType(type);
+    // Auto-populate approval number from org cert
+    if (org?.part145CertificateNumber) {
+      setApprovalNumber(org.part145CertificateNumber);
+    }
+    setDialogOpen(true);
+  };
+
+  const handleCreate = async () => {
+    if (!orgId || !techId || !workOrderId) return;
+    setSaving(true);
+    try {
+      await createCert({
+        organizationId: orgId,
+        workOrderId,
+        formType,
+        partDescription,
+        partNumber,
+        serialNumber: serialNumber || undefined,
+        batchNumber: batchNumber || undefined,
+        quantity: parseInt(quantity) || 1,
+        workPerformed,
+        condition,
+        remarks,
+        inspectorTechnicianId: techId,
+        approvalNumber,
+      });
+      setDialogOpen(false);
+      // Reset form
+      setPartDescription("");
+      setPartNumber("");
+      setSerialNumber("");
+      setBatchNumber("");
+      setQuantity("1");
+      setWorkPerformed("");
+      setCondition("");
+      setRemarks("");
+      setApprovalNumber("");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDownload = async (cert: NonNullable<typeof certificates>[number]) => {
+    const commonProps = {
+      approvingAuthority: "Federal Aviation Administration — United States",
+      repairStationCertNumber: cert.repairStationCertNumber,
+      repairStationAddress: cert.organizationAddress,
+      formTrackingNumber: cert.certificateNumber,
+      organizationName: cert.organizationName,
+      organizationAddress: cert.organizationAddress,
+      workOrderNumber: workOrder?.workOrderNumber,
+      partDescription: cert.partDescription,
+      partNumber: cert.partNumber,
+      quantity: cert.quantity,
+      serialNumber: cert.serialNumber,
+      batchNumber: cert.batchNumber,
+      statusWork: cert.workPerformed,
+      condition: cert.condition,
+      remarks: cert.remarks,
+      inspectorName: cert.inspectorName,
+      approvalNumber: cert.approvalNumber,
+      signatureDate: cert.signatureDate,
+    };
+
+    if (cert.formType === "faa_8130") {
+      await downloadPDF(
+        <Form8130PDF {...commonProps} />,
+        `8130-3_${cert.certificateNumber}.pdf`,
+      );
+    } else {
+      await downloadPDF(
+        <EASAForm1PDF
+          {...commonProps}
+          approvalReference={cert.repairStationCertNumber}
+        />,
+        `EASA-Form1_${cert.certificateNumber}.pdf`,
+      );
+    }
+  };
+
+  if (!certificates) {
+    return (
+      <div className="p-6 space-y-4">
+        <Skeleton className="h-8 w-64" />
+        <Skeleton className="h-32 w-full" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-6 space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">Release Certificates</h1>
+          <p className="text-muted-foreground">
+            WO {workOrder?.workOrderNumber ?? "..."}
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button onClick={() => openDialog("faa_8130")}>
+            <Plus className="h-4 w-4 mr-2" />
+            Create 8130-3
+          </Button>
+          <Button variant="outline" onClick={() => openDialog("easa_form1")}>
+            <Plus className="h-4 w-4 mr-2" />
+            Create EASA Form 1
+          </Button>
+        </div>
+      </div>
+
+      {certificates.length === 0 ? (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+            <FileText className="h-12 w-12 text-muted-foreground mb-4" />
+            <h3 className="text-lg font-semibold">No Certificates Yet</h3>
+            <p className="text-muted-foreground max-w-md">
+              Create an FAA 8130-3 or EASA Form 1 release certificate for parts
+              maintained under this work order.
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid gap-4">
+          {certificates.map((cert) => (
+            <Card key={cert._id}>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <div>
+                  <CardTitle className="text-base flex items-center gap-2">
+                    {cert.certificateNumber}
+                    <Badge variant={cert.formType === "faa_8130" ? "default" : "secondary"}>
+                      {cert.formType === "faa_8130" ? "FAA 8130-3" : "EASA Form 1"}
+                    </Badge>
+                  </CardTitle>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {cert.partDescription} — P/N {cert.partNumber}
+                    {cert.serialNumber ? ` — S/N ${cert.serialNumber}` : ""}
+                  </p>
+                </div>
+                <Button size="sm" variant="outline" onClick={() => handleDownload(cert)}>
+                  <Download className="h-4 w-4 mr-1" />
+                  PDF
+                </Button>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                  <div>
+                    <p className="text-muted-foreground">Qty</p>
+                    <p className="font-medium">{cert.quantity}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Work Performed</p>
+                    <p className="font-medium">{cert.workPerformed}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Inspector</p>
+                    <p className="font-medium">{cert.inspectorName}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Date</p>
+                    <p className="font-medium">
+                      {new Date(cert.signatureDate).toLocaleDateString()}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {/* Create Certificate Dialog */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {formType === "faa_8130" ? "Create FAA 8130-3" : "Create EASA Form 1"}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Part Description *</Label>
+                <Input value={partDescription} onChange={(e) => setPartDescription(e.target.value)} placeholder="e.g. Fuel Control Unit" />
+              </div>
+              <div>
+                <Label>Part Number *</Label>
+                <Input value={partNumber} onChange={(e) => setPartNumber(e.target.value)} placeholder="e.g. 2524409-1" />
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <Label>Serial Number</Label>
+                <Input value={serialNumber} onChange={(e) => setSerialNumber(e.target.value)} />
+              </div>
+              <div>
+                <Label>Batch Number</Label>
+                <Input value={batchNumber} onChange={(e) => setBatchNumber(e.target.value)} />
+              </div>
+              <div>
+                <Label>Quantity *</Label>
+                <Input type="number" min="1" value={quantity} onChange={(e) => setQuantity(e.target.value)} />
+              </div>
+            </div>
+            <div>
+              <Label>Work Performed / Status *</Label>
+              <Select value={workPerformed} onValueChange={setWorkPerformed}>
+                <SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Overhauled">Overhauled</SelectItem>
+                  <SelectItem value="Repaired">Repaired</SelectItem>
+                  <SelectItem value="Inspected">Inspected</SelectItem>
+                  <SelectItem value="Modified">Modified</SelectItem>
+                  <SelectItem value="Tested">Tested</SelectItem>
+                  <SelectItem value="New">New</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Condition</Label>
+              <Select value={condition} onValueChange={setCondition}>
+                <SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Serviceable">Serviceable</SelectItem>
+                  <SelectItem value="New">New</SelectItem>
+                  <SelectItem value="Overhauled">Overhauled</SelectItem>
+                  <SelectItem value="Repaired">Repaired</SelectItem>
+                  <SelectItem value="Prototype">Prototype</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Remarks</Label>
+              <Textarea value={remarks} onChange={(e) => setRemarks(e.target.value)} placeholder="Work performed description, data references..." rows={3} />
+            </div>
+            <div>
+              <Label>Approval / Certificate Number *</Label>
+              <Input value={approvalNumber} onChange={(e) => setApprovalNumber(e.target.value)} placeholder="Part 145 cert number" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setDialogOpen(false)}>Cancel</Button>
+            <Button
+              onClick={handleCreate}
+              disabled={saving || !partDescription || !partNumber || !workPerformed || !approvalNumber}
+            >
+              {saving ? "Creating..." : "Create Certificate"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}

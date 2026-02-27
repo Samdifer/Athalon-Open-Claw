@@ -1831,6 +1831,77 @@ export const resolveWorkOrderRef = query({
 // LIST BY AIRCRAFT — Returns all work orders for a specific aircraft
 // ─────────────────────────────────────────────────────────────────────────────
 
+// ─────────────────────────────────────────────────────────────────────────────
+// MUTATION: updateWorkOrderStatus
+//
+// Lightweight status transition for Kanban board drag-and-drop.
+// Only allows forward/lateral transitions between active statuses.
+// For regulatory transitions (close, void), use the dedicated mutations.
+// Writes an audit log entry for every status change.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const updateWorkOrderStatus = mutation({
+  args: {
+    workOrderId: v.id("workOrders"),
+    organizationId: v.id("organizations"),
+    newStatus: workOrderStatusValidator,
+  },
+
+  handler: async (ctx, args): Promise<void> => {
+    const now = Date.now();
+    const callerUserId = await requireAuth(ctx);
+
+    const wo = await ctx.db.get(args.workOrderId);
+    if (!wo) throw new Error(`Work order ${args.workOrderId} not found.`);
+    if (wo.organizationId !== args.organizationId) {
+      throw new Error("Organization mismatch.");
+    }
+
+    const oldStatus = wo.status;
+    if (oldStatus === args.newStatus) return; // no-op
+
+    // Block transitions to/from terminal statuses via this mutation
+    const terminalStatuses = ["closed", "cancelled", "voided"];
+    if (terminalStatuses.includes(oldStatus)) {
+      throw new Error(
+        `Cannot change status of a ${oldStatus} work order. Terminal statuses are permanent.`
+      );
+    }
+    if (terminalStatuses.includes(args.newStatus)) {
+      throw new Error(
+        `Use the dedicated close/void/cancel mutation for terminal status transitions.`
+      );
+    }
+
+    // Allowed Kanban statuses
+    const kanbanStatuses = [
+      "draft", "open", "in_progress", "on_hold",
+      "pending_inspection", "pending_signoff", "open_discrepancies",
+    ];
+    if (!kanbanStatuses.includes(args.newStatus)) {
+      throw new Error(`Status "${args.newStatus}" is not a valid Kanban column.`);
+    }
+
+    await ctx.db.patch(args.workOrderId, {
+      status: args.newStatus as typeof wo.status,
+      updatedAt: now,
+    });
+
+    await ctx.db.insert("auditLog", {
+      organizationId: args.organizationId,
+      eventType: "status_changed",
+      tableName: "workOrders",
+      recordId: args.workOrderId,
+      userId: callerUserId,
+      fieldName: "status",
+      oldValue: JSON.stringify(oldStatus),
+      newValue: JSON.stringify(args.newStatus),
+      notes: `Work order ${wo.workOrderNumber} status changed from "${oldStatus}" to "${args.newStatus}" via Kanban board.`,
+      timestamp: now,
+    });
+  },
+});
+
 export const listByAircraft = query({
   args: {
     aircraftId: v.id("aircraft"),
