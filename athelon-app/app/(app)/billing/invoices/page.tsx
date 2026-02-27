@@ -16,6 +16,7 @@ import {
   Ban,
   CreditCard,
   CheckSquare2,
+  Download,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,6 +43,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { formatDate } from "@/lib/format";
+import { downloadCSV } from "@/lib/export";
+import { toast } from "sonner";
 
 type InvoiceStatus = "DRAFT" | "SENT" | "PARTIAL" | "PAID" | "VOID" | "all";
 type PaymentMethod = "cash" | "check" | "credit_card" | "wire" | "ach" | "other";
@@ -524,12 +527,37 @@ export default function InvoicesPage() {
             </p>
           )}
         </div>
-        <Button asChild size="sm">
-          <Link to="/billing/invoices/new">
-            <Plus className="w-3.5 h-3.5 mr-1.5" />
-            New Invoice
-          </Link>
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5 text-xs"
+            onClick={() => {
+              if (filtered.length) {
+                downloadCSV(
+                  filtered.map((inv) => ({
+                    "Invoice #": inv.invoiceNumber ?? "",
+                    Status: inv.status,
+                    Total: inv.total,
+                    "Due Date": inv.dueDate ? new Date(inv.dueDate).toLocaleDateString() : "",
+                    Created: new Date(inv._creationTime).toLocaleDateString(),
+                  })),
+                  "invoices.csv",
+                );
+                toast.success("Invoices exported");
+              }
+            }}
+          >
+            <Download className="w-3.5 h-3.5" />
+            Export CSV
+          </Button>
+          <Button asChild size="sm">
+            <Link to="/billing/invoices/new">
+              <Plus className="w-3.5 h-3.5 mr-1.5" />
+              New Invoice
+            </Link>
+          </Button>
+        </div>
       </div>
 
       {/* Filter Tabs + Search */}

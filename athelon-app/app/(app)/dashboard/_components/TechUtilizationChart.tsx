@@ -56,7 +56,7 @@ export function TechUtilizationChart() {
                 fontSize: "12px",
                 color: "hsl(var(--popover-foreground))",
               }}
-              formatter={(value: number) => [`${value}h`, "Hours"]}
+              formatter={(value: any) => [`${value}h`, "Hours"]}
             />
             <Bar dataKey="hours" fill="#06b6d4" radius={[0, 4, 4, 0]} />
           </BarChart>

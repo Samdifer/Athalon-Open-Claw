@@ -15,6 +15,7 @@ import {
   Filter,
   Calendar,
   TrendingUp,
+  Download,
 } from "lucide-react";
 import { api } from "@/convex/_generated/api";
 import { formatDate } from "@/lib/format";
@@ -26,6 +27,8 @@ import {
   type WoType,
 } from "@/lib/mro-constants";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
+import { downloadCSV } from "@/lib/export";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -188,12 +191,38 @@ export default function WorkOrdersPage() {
             {workOrders.filter((w) => w.status === "in_progress").length} in progress
           </p>
         </div>
-        <Button asChild size="sm" className="w-full sm:w-auto">
-          <Link to="/work-orders/new">
-            <Plus className="w-3.5 h-3.5 mr-1.5" />
-            New Work Order
-          </Link>
-        </Button>
+        <div className="flex gap-2 w-full sm:w-auto">
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5 text-xs"
+            onClick={() => {
+              if (filtered.length) {
+                downloadCSV(
+                  filtered.map((wo) => ({
+                    "WO Number": wo.number,
+                    Status: wo.status,
+                    Type: wo.typeLabel,
+                    Aircraft: wo.aircraft ?? "",
+                    Priority: wo.priority,
+                    Created: new Date(wo.openedAt).toLocaleDateString(),
+                  })),
+                  "work-orders.csv",
+                );
+                toast.success("Work orders exported");
+              }
+            }}
+          >
+            <Download className="w-3.5 h-3.5" />
+            Export CSV
+          </Button>
+          <Button asChild size="sm" className="flex-1 sm:flex-initial">
+            <Link to="/work-orders/new">
+              <Plus className="w-3.5 h-3.5 mr-1.5" />
+              New Work Order
+            </Link>
+          </Button>
+        </div>
       </div>
 
       <div className="flex flex-col gap-3">

@@ -85,7 +85,7 @@ export default function ReportsPage() {
   const throughputData = useMemo(() => {
     if (!woResult?.page) return [];
     const monthly: Record<string, number> = {};
-    for (const wo of woResult.page) {
+    for (const wo of woResult.page as any[]) {
       const ts = wo.completedAt ?? wo._creationTime;
       if (ts < fromTs || ts > toTs) continue;
       const d = new Date(ts);
@@ -195,7 +195,7 @@ export default function ReportsPage() {
                     <YAxis tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} tickFormatter={(v: number) => `$${(v / 1000).toFixed(0)}k`} />
                     <Tooltip
                       contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: "12px", color: "hsl(var(--popover-foreground))" }}
-                      formatter={(value: number) => [`$${value.toLocaleString()}`, "Revenue"]}
+                      formatter={(value: any) => [`$${value?.toLocaleString?.() ?? value}`, "Revenue"]}
                     />
                     <Line type="monotone" dataKey="revenue" stroke="#3b82f6" strokeWidth={2} dot={{ r: 3, fill: "#3b82f6" }} />
                   </LineChart>
@@ -245,7 +245,7 @@ export default function ReportsPage() {
                     <YAxis tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} allowDecimals={false} />
                     <Tooltip
                       contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: "12px", color: "hsl(var(--popover-foreground))" }}
-                      formatter={(value: number) => [value, "Completed"]}
+                      formatter={(value: any) => [value, "Completed"]}
                     />
                     <Bar dataKey="completed" fill="#22c55e" radius={[4, 4, 0, 0]} />
                   </BarChart>

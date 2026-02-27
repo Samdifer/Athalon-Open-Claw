@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Plus, Search, PlaneTakeoff, ChevronRight } from "lucide-react";
+import { Plus, Search, PlaneTakeoff, ChevronRight, Download } from "lucide-react";
 import { useQuery } from "convex/react";
 import { useOrganization } from "@clerk/clerk-react";
 import { api } from "@/convex/_generated/api";
@@ -10,6 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { downloadCSV } from "@/lib/export";
+import { toast } from "sonner";
 
 // ─── Status style helper ────────────────────────────────────────────────────
 
@@ -156,10 +158,35 @@ export default function FleetPage() {
               : `${totalCount} aircraft registered`}
           </p>
         </div>
-        <Button size="sm" className="w-full sm:w-auto">
-          <Plus className="w-3.5 h-3.5 mr-1.5" />
-          Add Aircraft
-        </Button>
+        <div className="flex gap-2 w-full sm:w-auto">
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5 text-xs"
+            onClick={() => {
+              if (filtered?.length) {
+                downloadCSV(
+                  filtered.map((ac) => ({
+                    Registration: ac.currentRegistration ?? "",
+                    Make: ac.make ?? "",
+                    Model: ac.model ?? "",
+                    "Serial Number": ac.serialNumber ?? "",
+                    Status: ac.status ?? "",
+                  })),
+                  "fleet.csv",
+                );
+                toast.success("Fleet exported");
+              }
+            }}
+          >
+            <Download className="w-3.5 h-3.5" />
+            Export CSV
+          </Button>
+          <Button size="sm" className="flex-1 sm:flex-initial">
+            <Plus className="w-3.5 h-3.5 mr-1.5" />
+            Add Aircraft
+          </Button>
+        </div>
       </div>
 
       {/* Search + filter bar */}

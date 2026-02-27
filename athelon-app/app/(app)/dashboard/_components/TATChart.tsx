@@ -30,15 +30,15 @@ export function TATChart() {
     if (!woResult?.page) return [];
 
     return woResult.page
-      .filter((wo) => wo.completedAt && wo._creationTime)
+      .filter((wo: any) => wo.completedAt && wo._creationTime)
       .slice(0, 15)
-      .map((wo) => {
+      .map((wo: any) => {
         const days = Math.max(
           1,
-          Math.round((wo.completedAt! - wo._creationTime) / (1000 * 60 * 60 * 24)),
+          Math.round((wo.completedAt - wo._creationTime) / (1000 * 60 * 60 * 24)),
         );
         return {
-          wo: wo.woNumber ?? wo._id.slice(-6),
+          wo: wo.number ?? wo._id.slice(-6),
           days,
         };
       })
@@ -87,7 +87,7 @@ export function TATChart() {
                   fontSize: "12px",
                   color: "hsl(var(--popover-foreground))",
                 }}
-                formatter={(value: number) => [`${value} days`, "TAT"]}
+                formatter={(value: any) => [`${value} days`, "TAT"]}
               />
               <Bar dataKey="days" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
             </BarChart>

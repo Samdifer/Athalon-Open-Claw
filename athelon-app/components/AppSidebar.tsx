@@ -92,6 +92,12 @@ const mainNav: NavItem[] = [
     icon: ShieldCheck,
     section: "compliance",
   },
+  {
+    title: "Reports",
+    href: "/reports",
+    icon: FileBarChart,
+    section: "reports",
+  },
 ];
 
 const bottomNav: NavItem[] = [

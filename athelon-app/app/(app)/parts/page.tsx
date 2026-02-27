@@ -19,7 +19,9 @@ import {
   Lock,
   Unlock,
   ClipboardCheck,
+  Download,
 } from "lucide-react";
+import { downloadCSV } from "@/lib/export";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -591,6 +593,29 @@ export default function PartsPage() {
                 </Badge>
               )}
             </Link>
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 gap-1.5 text-xs"
+            onClick={() => {
+              if (filtered.length) {
+                downloadCSV(
+                  filtered.map((p: any) => ({
+                    "Part Number": p.partNumber ?? "",
+                    Description: p.description ?? "",
+                    Status: p.status ?? "",
+                    Quantity: p.quantityOnHand ?? p.quantity ?? "",
+                    Location: p.location ?? "",
+                  })),
+                  "parts-inventory.csv",
+                );
+                setToastMsg({ text: "Parts exported to CSV", kind: "success" });
+              }
+            }}
+          >
+            <Download className="w-3.5 h-3.5" />
+            Export CSV
           </Button>
           <Button asChild size="sm" className="h-8 text-xs w-full sm:w-auto">
             <Link to="/parts/new">

@@ -91,7 +91,7 @@ export function RevenueTrendChart() {
                   fontSize: "12px",
                   color: "hsl(var(--popover-foreground))",
                 }}
-                formatter={(value: number) => [`$${value.toLocaleString()}`, "Revenue"]}
+                formatter={((value: any) => [`$${value?.toLocaleString?.() ?? value}`, "Revenue"]) as any}
               />
               <Line
                 type="monotone"

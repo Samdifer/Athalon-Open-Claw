@@ -28,6 +28,18 @@ import {
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDate } from "@/lib/format";
+import {
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Cell,
+} from "recharts";
 
 const STATUS_STYLES: Record<string, string> = {
   DRAFT: "bg-muted text-muted-foreground border-muted-foreground/30",
@@ -206,6 +218,40 @@ export default function AnalyticsPage() {
       .slice(0, 5);
   }, [quotes, customers]);
 
+  // ── AR Aging buckets ────────────────────────────────────────────────────
+  const arAging = useMemo(() => {
+    if (!invoices) return [];
+    const now = Date.now();
+    const buckets = { Current: 0, "30 Days": 0, "60 Days": 0, "90+ Days": 0 };
+    for (const inv of invoices) {
+      if (inv.status === "PAID" || inv.status === "VOID") continue;
+      const age = (now - inv.createdAt) / (1000 * 60 * 60 * 24);
+      if (age <= 30) buckets.Current += inv.balance;
+      else if (age <= 60) buckets["30 Days"] += inv.balance;
+      else if (age <= 90) buckets["60 Days"] += inv.balance;
+      else buckets["90+ Days"] += inv.balance;
+    }
+    return Object.entries(buckets).map(([name, amount]) => ({ name, amount: Math.round(amount) }));
+  }, [invoices]);
+
+  // ── Top customers by revenue ───────────────────────────────────────────
+  const topCustomersByRevenue = useMemo(() => {
+    if (!invoices || !customers) return [];
+    const byCustomer = new Map<string, { name: string; total: number }>();
+    for (const inv of invoices) {
+      if (inv.status === "VOID") continue;
+      const custId = inv.customerId as string;
+      if (!byCustomer.has(custId)) {
+        const customer = customers?.find((c) => c._id === custId);
+        byCustomer.set(custId, { name: customer?.name ?? "Unknown", total: 0 });
+      }
+      byCustomer.get(custId)!.total += inv.total;
+    }
+    return Array.from(byCustomer.values())
+      .sort((a, b) => b.total - a.total)
+      .slice(0, 8);
+  }, [invoices, customers]);
+
   const recentConversions = useMemo(() => {
     if (!quotes) return [];
     return quotes
@@ -308,6 +354,81 @@ export default function AnalyticsPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* ── Charts Row: Revenue Trend + AR Aging + Top Customers ─────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* Revenue by Month Chart */}
+        <Card className="border-border/60">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Revenue by Month</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {monthlyData.length === 0 ? (
+              <div className="h-[200px] flex items-center justify-center text-sm text-muted-foreground">No data</div>
+            ) : (
+              <ResponsiveContainer width="100%" height={200}>
+                <LineChart data={monthlyData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="label" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
+                  <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} tickFormatter={(v: number) => `$${(v / 1000).toFixed(0)}k`} />
+                  <Tooltip contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: "12px", color: "hsl(var(--popover-foreground))" }} formatter={((v: any) => [`$${v?.toLocaleString?.() ?? v}`, ""]) as any} />
+                  <Line type="monotone" dataKey="invoiced" stroke="#3b82f6" strokeWidth={2} dot={{ r: 2 }} name="Invoiced" />
+                  <Line type="monotone" dataKey="collected" stroke="#22c55e" strokeWidth={2} dot={{ r: 2 }} name="Collected" />
+                </LineChart>
+              </ResponsiveContainer>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* AR Aging Chart */}
+        <Card className="border-border/60">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">AR Aging</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {arAging.every((b) => b.amount === 0) ? (
+              <div className="h-[200px] flex items-center justify-center text-sm text-muted-foreground">No outstanding AR</div>
+            ) : (
+              <ResponsiveContainer width="100%" height={200}>
+                <BarChart data={arAging}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="name" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
+                  <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} tickFormatter={(v: number) => `$${(v / 1000).toFixed(0)}k`} />
+                  <Tooltip contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: "12px", color: "hsl(var(--popover-foreground))" }} formatter={((v: any) => [`$${v?.toLocaleString?.() ?? v}`, "Balance"]) as any} />
+                  <Bar dataKey="amount" radius={[4, 4, 0, 0]}>
+                    {arAging.map((_, i) => {
+                      const colors = ["#22c55e", "#f59e0b", "#f97316", "#ef4444"];
+                      return <Cell key={i} fill={colors[i] ?? "#6b7280"} />;
+                    })}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Top Customers */}
+        <Card className="border-border/60">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Top Customers by Revenue</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {topCustomersByRevenue.length === 0 ? (
+              <div className="h-[200px] flex items-center justify-center text-sm text-muted-foreground">No data</div>
+            ) : (
+              <ResponsiveContainer width="100%" height={200}>
+                <BarChart data={topCustomersByRevenue} layout="vertical" margin={{ left: 10 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis type="number" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} tickFormatter={(v: number) => `$${(v / 1000).toFixed(0)}k`} />
+                  <YAxis dataKey="name" type="category" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} width={80} />
+                  <Tooltip contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: "12px", color: "hsl(var(--popover-foreground))" }} formatter={((v: any) => [`$${v?.toLocaleString?.() ?? v}`, "Revenue"]) as any} />
+                  <Bar dataKey="total" fill="#8b5cf6" radius={[0, 4, 4, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </CardContent>
+        </Card>
+      </div>
 
       {/* ── Quote Funnel ──────────────────────────────────────────────────── */}
       <Card className="border-border/60">
