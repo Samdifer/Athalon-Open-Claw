@@ -199,9 +199,9 @@ function ClaimDetailDialog({
   const [resolution, setResolution] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
 
-  if (!claimId) return null;
+  if (!claimId) return;
 
-  const handleAction = async (fn: () => Promise<void>) => {
+  const handleAction = async (fn: () => Promise<unknown>) => {
     setActionLoading(true);
     try {
       await fn();

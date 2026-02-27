@@ -1,3 +1,293 @@
-export default function PlaceholderPage() {
-  return <div className="p-6"><h1 className="text-2xl font-bold">Loading...</h1><p className="text-muted-foreground">This page is being built.</p></div>;
+"use client";
+
+import { useState, useMemo } from "react";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
+import { useCurrentOrg } from "@/hooks/useCurrentOrg";
+import {
+  Plus, Search, ChevronDown, ChevronRight, Truck, Package, AlertTriangle, Trash2,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
+
+const STATUS_COLORS: Record<string, string> = {
+  pending: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
+  in_transit: "bg-blue-500/20 text-blue-400 border-blue-500/30",
+  delivered: "bg-green-500/20 text-green-400 border-green-500/30",
+  cancelled: "bg-red-500/20 text-red-400 border-red-500/30",
+};
+
+export default function ShippingPage() {
+  const { orgId: organizationId } = useCurrentOrg();
+  const orgId = organizationId as Id<"organizations"> | undefined;
+  const shipments = useQuery(api.shipping.list, orgId ? { organizationId: orgId } : "skip");
+  const createShipment = useMutation(api.shipping.create);
+  const updateStatus = useMutation(api.shipping.updateStatus);
+
+  const [tab, setTab] = useState("all");
+  const [search, setSearch] = useState("");
+  const [expanded, setExpanded] = useState<string | null>(null);
+  const [showCreate, setShowCreate] = useState(false);
+
+  // Create form state
+  const [formType, setFormType] = useState<"inbound" | "outbound">("outbound");
+  const [formCarrier, setFormCarrier] = useState("");
+  const [formTracking, setFormTracking] = useState("");
+  const [formOrigin, setFormOrigin] = useState("");
+  const [formDest, setFormDest] = useState("");
+  const [formHazmat, setFormHazmat] = useState(false);
+  const [formNotes, setFormNotes] = useState("");
+
+  const filtered = useMemo(() => {
+    if (!shipments) return [];
+    let list = shipments;
+    if (tab !== "all") list = list.filter((s) => s.status === tab);
+    if (search) {
+      const q = search.toLowerCase();
+      list = list.filter(
+        (s) =>
+          s.shipmentNumber.toLowerCase().includes(q) ||
+          s.trackingNumber?.toLowerCase().includes(q) ||
+          s.carrier?.toLowerCase().includes(q)
+      );
+    }
+    return list;
+  }, [shipments, tab, search]);
+
+  const handleCreate = async () => {
+    if (!orgId) return;
+    try {
+      await createShipment({
+        organizationId: orgId,
+        type: formType,
+        carrier: formCarrier || undefined,
+        trackingNumber: formTracking || undefined,
+        originName: formOrigin || undefined,
+        destinationName: formDest || undefined,
+        hazmat: formHazmat || undefined,
+        notes: formNotes || undefined,
+      });
+      toast.success("Shipment created");
+      setShowCreate(false);
+      setFormCarrier(""); setFormTracking(""); setFormOrigin(""); setFormDest(""); setFormHazmat(false); setFormNotes("");
+    } catch {
+      toast.error("Failed to create shipment");
+    }
+  };
+
+  const handleStatusUpdate = async (id: Id<"shipments">, status: "pending" | "in_transit" | "delivered" | "cancelled") => {
+    try {
+      await updateStatus({ id, status });
+      toast.success(`Status updated to ${status.replace("_", " ")}`);
+    } catch {
+      toast.error("Failed to update status");
+    }
+  };
+
+  const counts = useMemo(() => {
+    if (!shipments) return { all: 0, pending: 0, in_transit: 0, delivered: 0 };
+    return {
+      all: shipments.length,
+      pending: shipments.filter((s) => s.status === "pending").length,
+      in_transit: shipments.filter((s) => s.status === "in_transit").length,
+      delivered: shipments.filter((s) => s.status === "delivered").length,
+    };
+  }, [shipments]);
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold flex items-center gap-2"><Truck className="h-6 w-6" /> Shipping & Receiving</h1>
+          <p className="text-muted-foreground">Track inbound and outbound shipments</p>
+        </div>
+        <Dialog open={showCreate} onOpenChange={setShowCreate}>
+          <DialogTrigger asChild>
+            <Button><Plus className="h-4 w-4 mr-2" /> New Shipment</Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-lg">
+            <DialogHeader><DialogTitle>Create Shipment</DialogTitle></DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label>Type</Label>
+                <Select value={formType} onValueChange={(v) => setFormType(v as "inbound" | "outbound")}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="outbound">Outbound</SelectItem>
+                    <SelectItem value="inbound">Inbound</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div><Label>Carrier</Label><Input value={formCarrier} onChange={(e) => setFormCarrier(e.target.value)} placeholder="FedEx, UPS..." /></div>
+                <div><Label>Tracking #</Label><Input value={formTracking} onChange={(e) => setFormTracking(e.target.value)} placeholder="1Z999..." /></div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div><Label>Origin</Label><Input value={formOrigin} onChange={(e) => setFormOrigin(e.target.value)} placeholder="Origin name" /></div>
+                <div><Label>Destination</Label><Input value={formDest} onChange={(e) => setFormDest(e.target.value)} placeholder="Destination name" /></div>
+              </div>
+              <div className="flex items-center gap-2">
+                <input type="checkbox" id="hazmat" checked={formHazmat} onChange={(e) => setFormHazmat(e.target.checked)} />
+                <Label htmlFor="hazmat" className="flex items-center gap-1"><AlertTriangle className="h-4 w-4 text-yellow-500" /> Hazmat</Label>
+              </div>
+              <div><Label>Notes</Label><Input value={formNotes} onChange={(e) => setFormNotes(e.target.value)} placeholder="Special instructions..." /></div>
+              <Button onClick={handleCreate} className="w-full">Create Shipment</Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      {/* Summary Cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        {[
+          { label: "Total", value: counts.all, icon: Package },
+          { label: "Pending", value: counts.pending, color: "text-yellow-400" },
+          { label: "In Transit", value: counts.in_transit, color: "text-blue-400" },
+          { label: "Delivered", value: counts.delivered, color: "text-green-400" },
+        ].map((c) => (
+          <Card key={c.label}><CardContent className="p-4 text-center">
+            <p className="text-sm text-muted-foreground">{c.label}</p>
+            <p className={`text-2xl font-bold ${c.color ?? ""}`}>{c.value}</p>
+          </CardContent></Card>
+        ))}
+      </div>
+
+      {/* Filters */}
+      <div className="flex flex-col sm:flex-row gap-4">
+        <Tabs value={tab} onValueChange={setTab}>
+          <TabsList>
+            <TabsTrigger value="all">All</TabsTrigger>
+            <TabsTrigger value="pending">Pending</TabsTrigger>
+            <TabsTrigger value="in_transit">In Transit</TabsTrigger>
+            <TabsTrigger value="delivered">Delivered</TabsTrigger>
+          </TabsList>
+        </Tabs>
+        <div className="relative flex-1 max-w-xs">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input className="pl-9" placeholder="Search shipments..." value={search} onChange={(e) => setSearch(e.target.value)} />
+        </div>
+      </div>
+
+      {/* Shipment List */}
+      <div className="space-y-2">
+        {!shipments && <p className="text-muted-foreground">Loading...</p>}
+        {filtered.length === 0 && shipments && <p className="text-muted-foreground">No shipments found.</p>}
+        {filtered.map((s) => (
+          <Card key={s._id} className="overflow-hidden">
+            <div
+              className="flex items-center gap-4 p-4 cursor-pointer hover:bg-muted/50 transition-colors"
+              onClick={() => setExpanded(expanded === s._id ? null : s._id)}
+            >
+              {expanded === s._id ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-mono font-medium">{s.shipmentNumber}</span>
+                  <Badge variant="outline" className={STATUS_COLORS[s.status] ?? ""}>
+                    {s.status.replace("_", " ")}
+                  </Badge>
+                  <Badge variant="outline">{s.type}</Badge>
+                  {s.hazmat && <Badge variant="destructive" className="text-xs"><AlertTriangle className="h-3 w-3 mr-1" />HAZMAT</Badge>}
+                </div>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {s.carrier && <span>{s.carrier} • </span>}
+                  {s.trackingNumber && <span>#{s.trackingNumber} • </span>}
+                  {s.originName && s.destinationName && <span>{s.originName} → {s.destinationName}</span>}
+                </p>
+              </div>
+              <div className="flex gap-2">
+                {s.status === "pending" && (
+                  <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); handleStatusUpdate(s._id, "in_transit"); }}>
+                    Mark Shipped
+                  </Button>
+                )}
+                {s.status === "in_transit" && (
+                  <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); handleStatusUpdate(s._id, "delivered"); }}>
+                    Mark Delivered
+                  </Button>
+                )}
+                {s.status !== "cancelled" && s.status !== "delivered" && (
+                  <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); handleStatusUpdate(s._id, "cancelled"); }}>
+                    <Trash2 className="h-4 w-4 text-red-400" />
+                  </Button>
+                )}
+              </div>
+            </div>
+            {expanded === s._id && (
+              <ShipmentDetails shipmentId={s._id} orgId={orgId!} />
+            )}
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ShipmentDetails({ shipmentId, orgId }: { shipmentId: Id<"shipments">; orgId: Id<"organizations"> }) {
+  const items = useQuery(api.shipping.getItems, { shipmentId });
+  const addItem = useMutation(api.shipping.addItem);
+  const removeItem = useMutation(api.shipping.removeItem);
+  const [showAdd, setShowAdd] = useState(false);
+  const [pn, setPn] = useState("");
+  const [desc, setDesc] = useState("");
+  const [qty, setQty] = useState("1");
+  const [sn, setSn] = useState("");
+
+  const handleAdd = async () => {
+    if (!pn || !desc) return;
+    try {
+      await addItem({ shipmentId, organizationId: orgId, partNumber: pn, description: desc, quantity: Number(qty) || 1, serialNumber: sn || undefined });
+      toast.success("Item added");
+      setPn(""); setDesc(""); setQty("1"); setSn(""); setShowAdd(false);
+    } catch {
+      toast.error("Failed to add item");
+    }
+  };
+
+  return (
+    <div className="border-t p-4 bg-muted/30 space-y-3">
+      <div className="flex items-center justify-between">
+        <h4 className="font-medium text-sm">Items ({items?.length ?? 0})</h4>
+        <Button size="sm" variant="outline" onClick={() => setShowAdd(!showAdd)}><Plus className="h-3 w-3 mr-1" /> Add Item</Button>
+      </div>
+      {showAdd && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <Input placeholder="Part #" value={pn} onChange={(e) => setPn(e.target.value)} />
+          <Input placeholder="Description" value={desc} onChange={(e) => setDesc(e.target.value)} />
+          <Input placeholder="Qty" type="number" value={qty} onChange={(e) => setQty(e.target.value)} />
+          <div className="flex gap-2">
+            <Input placeholder="S/N" value={sn} onChange={(e) => setSn(e.target.value)} />
+            <Button size="sm" onClick={handleAdd}>Add</Button>
+          </div>
+        </div>
+      )}
+      {items && items.length > 0 ? (
+        <div className="space-y-1">
+          {items.map((item) => (
+            <div key={item._id} className="flex items-center justify-between text-sm p-2 rounded bg-background">
+              <div>
+                <span className="font-mono">{item.partNumber}</span> — {item.description}
+                {item.serialNumber && <span className="text-muted-foreground ml-2">S/N: {item.serialNumber}</span>}
+                <span className="text-muted-foreground ml-2">Qty: {item.quantity}</span>
+              </div>
+              <Button size="sm" variant="ghost" onClick={() => removeItem({ id: item._id })}><Trash2 className="h-3 w-3 text-red-400" /></Button>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="text-sm text-muted-foreground">No items yet.</p>
+      )}
+    </div>
+  );
 }

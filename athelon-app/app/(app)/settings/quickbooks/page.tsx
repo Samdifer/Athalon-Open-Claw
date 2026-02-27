@@ -94,7 +94,7 @@ export default function QuickBooksPage() {
           </CardTitle>
           <CardDescription>
             {settings?.isConnected
-              ? `Connected to ${settings.companyName ?? "QuickBooks"} (Realm: ${settings.realmId ?? "—"})`
+              ? `Connected to ${"companyName" in settings ? settings.companyName ?? "QuickBooks" : "QuickBooks"} (Realm: ${"realmId" in settings ? settings.realmId ?? "—" : "—"})`
               : "Connect your QuickBooks Online account to enable automatic sync."}
           </CardDescription>
         </CardHeader>

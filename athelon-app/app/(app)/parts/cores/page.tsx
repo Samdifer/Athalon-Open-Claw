@@ -176,9 +176,9 @@ function CoreDetailDialog({
   const [creditAmount, setCreditAmount] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
 
-  if (!coreId) return null;
+  if (!coreId) return;
 
-  const handleAction = async (fn: () => Promise<void>) => {
+  const handleAction = async (fn: () => Promise<unknown>) => {
     setActionLoading(true);
     try {
       await fn();

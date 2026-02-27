@@ -41,7 +41,7 @@ export default function CertificatesPage() {
     api.releaseCertificates.listByWorkOrder,
     workOrderId ? { workOrderId } : "skip",
   );
-  const workOrder = useQuery(api.workOrders.getWorkOrder, workOrderId ? { id: workOrderId } : "skip");
+  const workOrder = useQuery(api.workOrders.getWorkOrder, workOrderId && orgId ? { workOrderId, organizationId: orgId } : "skip");
   const createCert = useMutation(api.releaseCertificates.createReleaseCertificate);
 
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -109,7 +109,7 @@ export default function CertificatesPage() {
       formTrackingNumber: cert.certificateNumber,
       organizationName: cert.organizationName,
       organizationAddress: cert.organizationAddress,
-      workOrderNumber: workOrder?.workOrderNumber,
+      workOrderNumber: workOrder?.workOrder?.workOrderNumber,
       partDescription: cert.partDescription,
       partNumber: cert.partNumber,
       quantity: cert.quantity,
@@ -154,7 +154,7 @@ export default function CertificatesPage() {
         <div>
           <h1 className="text-2xl font-bold">Release Certificates</h1>
           <p className="text-muted-foreground">
-            WO {workOrder?.workOrderNumber ?? "..."}
+            WO {workOrder?.workOrder?.workOrderNumber ?? "..."}
           </p>
         </div>
         <div className="flex gap-2">
