@@ -83,8 +83,8 @@ export const importParts = mutation({
       const row = args.rows[i];
       try {
         const now = Date.now();
-        const condition = (["new", "overhauled", "serviceable", "unserviceable", "scrap", "prototype"].includes(row.condition ?? ""))
-          ? (row.condition as "new" | "overhauled" | "serviceable" | "unserviceable" | "scrap" | "prototype")
+        const condition = (["new", "overhauled", "serviceable", "repaired", "unserviceable", "quarantine", "scrapped"].includes(row.condition ?? ""))
+          ? (row.condition as "new" | "overhauled" | "serviceable" | "repaired" | "unserviceable" | "quarantine" | "scrapped")
           : "new";
         const location = (["inventory", "installed", "quarantine", "scrapped", "pending_inspection", "removed_pending_disposition", "returned_to_vendor"].includes(row.location ?? ""))
           ? (row.location as "inventory" | "installed" | "quarantine" | "scrapped" | "pending_inspection" | "removed_pending_disposition" | "returned_to_vendor")

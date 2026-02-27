@@ -20,6 +20,7 @@ import type * as customerPortal from "../customerPortal.js";
 import type * as customers from "../customers.js";
 import type * as discrepancies from "../discrepancies.js";
 import type * as documents from "../documents.js";
+import type * as fleetCalendar from "../fleetCalendar.js";
 import type * as gapFixes from "../gapFixes.js";
 import type * as hangarBays from "../hangarBays.js";
 import type * as lib_authHelpers from "../lib/authHelpers.js";
@@ -61,6 +62,7 @@ declare const fullApi: ApiFromModules<{
   customers: typeof customers;
   discrepancies: typeof discrepancies;
   documents: typeof documents;
+  fleetCalendar: typeof fleetCalendar;
   gapFixes: typeof gapFixes;
   hangarBays: typeof hangarBays;
   "lib/authHelpers": typeof lib_authHelpers;

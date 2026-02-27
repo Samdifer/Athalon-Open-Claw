@@ -53,7 +53,8 @@ type LocationFilter =
   | "pending_inspection"
   | "installed"
   | "quarantine"
-  | "removed_pending_disposition";
+  | "removed_pending_disposition"
+  | "low_stock";
 
 type InspectionResult = "approved" | "rejected";
 
@@ -73,6 +74,8 @@ interface PartDoc {
   reservedForWorkOrderId?: Id<"workOrders">;
   reservedByTechnicianId?: Id<"technicians">;
   description?: string;
+  minStockLevel?: number;
+  reorderPoint?: number;
 }
 
 const LOCATION_LABEL: Record<string, string> = {
@@ -492,7 +495,11 @@ export default function PartsPage() {
         : parts;
 
     // Location filter (skip for pending_inspection — already filtered)
-    if (activeTab !== "all" && activeTab !== "pending_inspection") {
+    if (activeTab === "low_stock") {
+      result = result.filter(
+        (p) => p.reorderPoint != null && p.location === "inventory",
+      );
+    } else if (activeTab !== "all" && activeTab !== "pending_inspection") {
       result = result.filter((p) => p.location === activeTab);
     }
 
@@ -520,6 +527,9 @@ export default function PartsPage() {
     quarantine: parts.filter((p) => p.location === "quarantine").length,
     removed_pending_disposition: parts.filter(
       (p) => p.location === "removed_pending_disposition",
+    ).length,
+    low_stock: parts.filter(
+      (p) => p.reorderPoint != null && p.location === "inventory",
     ).length,
   };
 
@@ -642,6 +652,7 @@ export default function PartsPage() {
                 ["installed", "Installed"],
                 ["quarantine", "Quarantine"],
                 ["removed_pending_disposition", "Disposition"],
+                ["low_stock", "Low Stock"],
               ] as const
             ).map(([tab, label]) => (
               <TabsTrigger
@@ -853,6 +864,11 @@ export default function PartsPage() {
                             {isQuarantine && (
                               <Badge className="text-[10px] bg-orange-500/15 text-orange-600 dark:text-orange-400 border border-orange-500/30">
                                 ⚠ Quarantine
+                              </Badge>
+                            )}
+                            {part.reorderPoint != null && isInventory && (
+                              <Badge className="text-[10px] bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
+                                ⚠ Low Stock
                               </Badge>
                             )}
                             {isReserved && (

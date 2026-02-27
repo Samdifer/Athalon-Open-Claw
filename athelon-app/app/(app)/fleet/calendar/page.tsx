@@ -63,7 +63,7 @@ export default function FleetCalendarPage() {
       const tail = wo.tailNumber ?? "N/A";
 
       let type: ScheduleEvent["type"] = "routine";
-      if (d < today && wo.status !== "complete" && wo.status !== "closed") {
+      if (d < today && wo.status !== "closed" && wo.status !== "cancelled") {
         type = "overdue";
       } else {
         const diff = d.getTime() - today.getTime();
