@@ -14,6 +14,8 @@ import {
   CalendarDays,
   Hammer,
   FileBarChart,
+  Upload,
+  Calendar,
 } from "lucide-react";
 import { useUserRole } from "@/hooks/useUserRole";
 import { canAccessNav, type NavSection } from "@/lib/roles";
@@ -60,6 +62,12 @@ const mainNav: NavItem[] = [
     title: "Fleet",
     href: "/fleet",
     icon: PlaneTakeoff,
+    section: "fleet",
+  },
+  {
+    title: "Fleet Calendar",
+    href: "/fleet/calendar",
+    icon: Calendar,
     section: "fleet",
   },
   {
@@ -111,6 +119,12 @@ const bottomNav: NavItem[] = [
     title: "Settings",
     href: "/settings/shop",
     icon: Settings,
+    section: "settings",
+  },
+  {
+    title: "Import Data",
+    href: "/settings/import",
+    icon: Upload,
     section: "settings",
   },
 ];

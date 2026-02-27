@@ -45,6 +45,18 @@ import {
 import { WOComplianceTab } from "@/app/(app)/work-orders/[id]/_components/WOComplianceTab";
 import { DocumentAttachmentPanel } from "@/app/(app)/work-orders/[id]/_components/DocumentAttachmentPanel";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
+import { ActivityTimeline } from "@/app/(app)/work-orders/[id]/_components/ActivityTimeline";
+
+type AuditEventForTimeline = {
+  _id: string;
+  eventType: string;
+  notes?: string | null;
+  userId?: string | null;
+  timestamp: number;
+  fieldName?: string | null;
+  oldValue?: string | null;
+  newValue?: string | null;
+};
 
 type RiskLevel = "overdue" | "at_risk" | "on_track" | "no_date";
 
@@ -565,31 +577,7 @@ export default function WorkOrderDetailPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-0">
-              {auditEvents.length === 0 ? (
-                <div className="py-6 text-sm text-muted-foreground">No audit events yet.</div>
-              ) : (
-                <div className="space-y-3">
-                  {auditEvents.map((ev, i) => (
-                    <div key={String(ev._id)}>
-                      {i > 0 && <Separator className="opacity-30 mb-3" />}
-                      <div className="flex items-start gap-3">
-                        <div className="w-1.5 h-1.5 rounded-full bg-muted-foreground/40 mt-1.5 flex-shrink-0" />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs text-foreground">{ev.notes ?? ev.eventType}</p>
-                          <div className="flex items-center gap-1.5 mt-0.5">
-                            <User className="w-3 h-3 text-muted-foreground/60" />
-                            <span className="text-[11px] text-muted-foreground">{ev.userId ?? "System"}</span>
-                            <span className="text-muted-foreground/40">·</span>
-                            <span className="font-mono text-[10px] text-muted-foreground/70">
-                              {new Date(ev.timestamp).toLocaleString()}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+              <ActivityTimeline events={auditEvents as AuditEventForTimeline[]} />
             </CardContent>
           </Card>
         </TabsContent>

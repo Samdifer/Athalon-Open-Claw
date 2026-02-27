@@ -81,6 +81,20 @@ import ShopSettingsPage from "@/app/(app)/settings/shop/page";
 import UsersSettingsPage from "@/app/(app)/settings/users/page";
 import NotificationPreferencesPage from "@/app/(app)/settings/notifications/page";
 
+// Customer Portal
+import { CustomerLayout } from "@/app/(customer)/layout";
+import CustomerDashboardPage from "@/app/(customer)/portal/page";
+import CustomerWorkOrdersPage from "@/app/(customer)/portal/work-orders/page";
+import CustomerQuotesPage from "@/app/(customer)/portal/quotes/page";
+import CustomerInvoicesPage from "@/app/(customer)/portal/invoices/page";
+import CustomerFleetPage from "@/app/(customer)/portal/fleet/page";
+
+// Fleet Calendar
+import FleetCalendarPage from "@/app/(app)/fleet/calendar/page";
+
+// Import
+import ImportPage from "@/app/(app)/settings/import/page";
+
 // Not Found
 import AppNotFoundPage from "@/app/(app)/not-found/page";
 
@@ -93,6 +107,17 @@ export default function App() {
       {/* Public auth routes — wildcard handles Clerk's OAuth/MFA sub-paths */}
       <Route path="/sign-in/*" element={<SignInPage />} />
       <Route path="/sign-up/*" element={<SignUpPage />} />
+
+      {/* Customer Portal routes — require Clerk session */}
+      <Route element={<ProtectedRoute />}>
+        <Route element={<CustomerLayout />}>
+          <Route path="/portal" element={<CustomerDashboardPage />} />
+          <Route path="/portal/work-orders" element={<CustomerWorkOrdersPage />} />
+          <Route path="/portal/quotes" element={<CustomerQuotesPage />} />
+          <Route path="/portal/invoices" element={<CustomerInvoicesPage />} />
+          <Route path="/portal/fleet" element={<CustomerFleetPage />} />
+        </Route>
+      </Route>
 
       {/* Protected app routes — all require an active Clerk session */}
       <Route element={<ProtectedRoute />}>
@@ -113,6 +138,7 @@ export default function App() {
 
           {/* Fleet */}
           <Route path="/fleet" element={<FleetPage />} />
+          <Route path="/fleet/calendar" element={<FleetCalendarPage />} />
           <Route path="/fleet/:tail" element={<AircraftDetailPage />} />
           <Route path="/fleet/:tail/logbook" element={<AircraftLogbookPage />} />
 
@@ -179,6 +205,7 @@ export default function App() {
           <Route path="/settings/shop" element={<ShopSettingsPage />} />
           <Route path="/settings/users" element={<UsersSettingsPage />} />
           <Route path="/settings/notifications" element={<NotificationPreferencesPage />} />
+          <Route path="/settings/import" element={<ImportPage />} />
 
           {/* 404 catch-all */}
           <Route path="*" element={<AppNotFoundPage />} />

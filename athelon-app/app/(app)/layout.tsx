@@ -3,6 +3,8 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { TopBar } from "@/components/TopBar";
 import { OrgContextProvider } from "@/components/OrgContextProvider";
+import { CommandPalette } from "@/components/CommandPalette";
+import { KeyboardShortcuts } from "@/components/KeyboardShortcuts";
 
 export function AppLayout() {
   return (
@@ -15,6 +17,8 @@ export function AppLayout() {
             <Outlet />
           </main>
         </div>
+        <CommandPalette />
+        <KeyboardShortcuts />
       </SidebarProvider>
     </OrgContextProvider>
   );

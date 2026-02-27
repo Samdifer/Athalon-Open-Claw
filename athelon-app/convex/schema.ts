@@ -1958,6 +1958,10 @@ export default defineSchema({
 
     notes: v.optional(v.string()),
 
+    // v9: Reorder alerts (Phase 9 polish)
+    minStockLevel: v.optional(v.number()),
+    reorderPoint: v.optional(v.number()),
+
     createdAt: v.number(),
     updatedAt: v.number(),
   })
