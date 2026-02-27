@@ -595,6 +595,7 @@ export const listMyWorkEnhanced = query({
       const ac = await ctx.db.get(card.aircraftId);
       results.push({
         ...card,
+        workOrderId: card?.workOrderId ?? null,
         workOrderNumber: wo?.workOrderNumber ?? "Unknown",
         aircraftRegistration: ac?.currentRegistration ?? "Unknown",
         aircraftMakeModel: ac ? `${ac.make} ${ac.model}` : "Unknown",

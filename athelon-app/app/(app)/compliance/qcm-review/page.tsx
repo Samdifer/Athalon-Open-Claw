@@ -38,6 +38,7 @@ import { Separator } from "@/components/ui/separator";
 type IAStep = {
   _id: string;
   taskCardId: Id<"taskCards">;
+  workOrderId: Id<"workOrders"> | null;
   stepNumber: number;
   description: string;
   status: string;
@@ -356,7 +357,7 @@ export default function QcmReviewPage() {
                               className="h-7 text-xs gap-1 border-primary/40 text-primary hover:bg-primary/5"
                             >
                               <Link
-                                to={`/work-orders/${step.taskCardId}/tasks/${step.taskCardId}`}
+                                to={`/work-orders/${step.workOrderId}/tasks/${step.taskCardId}`}
                               >
                                 IA Sign Off
                                 <ChevronRight className="w-3 h-3" />

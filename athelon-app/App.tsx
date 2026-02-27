@@ -26,6 +26,7 @@ import AircraftLogbookPage from "@/app/(app)/fleet/[tail]/logbook/page";
 import PartsPage from "@/app/(app)/parts/page";
 import NewPartPage from "@/app/(app)/parts/new/page";
 import PartsRequestsPage from "@/app/(app)/parts/requests/page";
+import PartsReceivingPage from "@/app/(app)/parts/receiving/page";
 
 // Squawks
 import SquawksPage from "@/app/(app)/squawks/page";
@@ -113,6 +114,7 @@ export default function App() {
           <Route path="/parts" element={<PartsPage />} />
           <Route path="/parts/new" element={<NewPartPage />} />
           <Route path="/parts/requests" element={<PartsRequestsPage />} />
+          <Route path="/parts/receiving" element={<PartsReceivingPage />} />
 
           {/* Squawks */}
           <Route path="/squawks" element={<SquawksPage />} />

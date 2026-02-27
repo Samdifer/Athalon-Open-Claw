@@ -48,6 +48,7 @@ interface ReleaseConfirmation {
 }
 
 function ReleaseConfirmationCard({ data }: { data: ReleaseConfirmation }) {
+  const { id: woId } = useParams();
   return (
     <Card className="border-green-500/30 bg-green-500/5">
       <CardHeader className="pb-3">
@@ -100,7 +101,7 @@ function ReleaseConfirmationCard({ data }: { data: ReleaseConfirmation }) {
 
         <div className="flex gap-2">
           <Button asChild size="sm" variant="outline" className="gap-1.5">
-            <Link to={`/work-orders/${data.workOrderNumber}`}>
+            <Link to={`/work-orders/${woId}`}>
               <FileText className="w-3.5 h-3.5" />
               View Work Order
             </Link>
