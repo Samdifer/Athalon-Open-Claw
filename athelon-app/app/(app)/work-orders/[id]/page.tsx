@@ -20,6 +20,8 @@ import {
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { formatDate } from "@/lib/format";
+import { Download } from "lucide-react";
+import { toast } from "sonner";
 import {
   WO_STATUS_LABEL,
   WO_STATUS_STYLES,
@@ -307,7 +309,41 @@ export default function WorkOrderDetailPage() {
             <p className="text-sm text-muted-foreground mt-1">{wo.description}</p>
           </div>
 
-          <div className="w-full sm:w-auto flex-shrink-0">
+          <div className="w-full sm:w-auto flex-shrink-0 flex flex-col gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5 text-xs"
+              onClick={async () => {
+                try {
+                  const { WorkOrderPDF } = await import("@/lib/pdf/WorkOrderPDF");
+                  const { downloadPDF } = await import("@/lib/pdf/download");
+                  const el = WorkOrderPDF({
+                    orgName: "Athelon Aviation",
+                    workOrderNumber: wo.workOrderNumber,
+                    status: wo.status,
+                    type: wo.workOrderType,
+                    createdAt: wo._creationTime,
+                    promisedDeliveryDate: wo.promisedDeliveryDate ?? undefined,
+                    aircraftRegistration: aircraft?.currentRegistration ?? undefined,
+                    aircraftType: aircraft ? `${aircraft.make} ${aircraft.model}` : undefined,
+                    taskCards: taskCards.map((tc) => ({
+                      cardNumber: tc.taskCardNumber ?? "—",
+                      title: tc.title ?? "—",
+                      status: tc.status ?? "—",
+                      assignedTo: undefined,
+                    })),
+                  });
+                  await downloadPDF(el, `WO-${wo.workOrderNumber}.pdf`);
+                  toast.success("Work Order PDF downloaded");
+                } catch (err) {
+                  toast.error(err instanceof Error ? err.message : "Failed to generate PDF");
+                }
+              }}
+            >
+              <Download className="w-3.5 h-3.5" />
+              Download PDF
+            </Button>
             {canClose ? (
               <Button asChild className="gap-2">
                 <Link to={`/work-orders/${workOrderId}/signature`}>

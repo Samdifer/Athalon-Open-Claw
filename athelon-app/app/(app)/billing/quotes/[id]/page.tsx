@@ -44,6 +44,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDate } from "@/lib/format";
+import { Download } from "lucide-react";
+import { toast } from "sonner";
 
 const STATUS_STYLES: Record<string, string> = {
   DRAFT: "bg-muted text-muted-foreground border-muted-foreground/30",
@@ -126,6 +128,42 @@ export default function QuoteDetailPage() {
   const [deleteItemId, setDeleteItemId] = useState<Id<"quoteLineItems"> | null>(null);
 
   const isLoading = !isLoaded || quote === undefined;
+
+  // PDF Download
+  const handleDownloadPDF = async () => {
+    setActionLoading("pdf"); setError(null);
+    try {
+      const { QuotePDF } = await import("@/lib/pdf/QuotePDF");
+      const { downloadPDF } = await import("@/lib/pdf/download");
+      const el = QuotePDF({
+        orgName: "Athelon Aviation",
+        quoteNumber: quote!.quoteNumber,
+        createdAt: quote!.createdAt,
+        expiresAt: quote!.expiresAt ?? undefined,
+        status: quote!.status,
+        validityDays: quote!.expiresAt
+          ? Math.ceil((quote!.expiresAt - quote!.createdAt) / (1000 * 60 * 60 * 24))
+          : undefined,
+        lineItems: quote!.lineItems.map((li) => ({
+          description: li.description,
+          type: li.type,
+          qty: li.qty,
+          unitPrice: li.unitPrice,
+          discountPercent: li.discountPercent,
+          total: li.total,
+        })),
+        subtotal: quote!.subtotal,
+        tax: quote!.tax,
+        total: quote!.total,
+      });
+      await downloadPDF(el, `Quote-${quote!.quoteNumber}.pdf`);
+      toast.success("Quote PDF downloaded");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to generate PDF.");
+    } finally {
+      setActionLoading(null);
+    }
+  };
 
   const handleSend = async () => {
     if (!orgId) return;
@@ -347,6 +385,16 @@ export default function QuoteDetailPage() {
 
         {/* Actions */}
         <div className="flex items-center gap-2 flex-wrap justify-end">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleDownloadPDF}
+            disabled={actionLoading === "pdf"}
+            className="h-8 gap-1.5 text-xs"
+          >
+            <Download className="w-3.5 h-3.5" />
+            {actionLoading === "pdf" ? "Generating..." : "Download PDF"}
+          </Button>
           {canSend && (
             <Button size="sm" onClick={handleSend} disabled={actionLoading === "send"} className="h-8 gap-1.5 text-xs">
               <Send className="w-3.5 h-3.5" />

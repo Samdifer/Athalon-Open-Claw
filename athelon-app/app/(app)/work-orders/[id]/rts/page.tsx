@@ -13,7 +13,9 @@ import {
   CheckCircle2,
   XCircle,
   Loader2,
+  Download,
 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -183,18 +185,51 @@ export default function RtsPage() {
             {report.aircraftMake} {report.aircraftModel}
           </p>
         </div>
-        <Badge
-          variant="outline"
-          className={`text-[11px] font-medium border ${
-            report.isReadyForRts
-              ? "bg-green-500/15 text-green-600 dark:text-green-400 border-green-500/30"
-              : "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30"
-          }`}
-        >
-          {report.isReadyForRts
-            ? "Ready for RTS"
-            : `${report.blockers.length} Blocker${report.blockers.length !== 1 ? "s" : ""}`}
-        </Badge>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 gap-1.5 text-xs"
+            onClick={async () => {
+              try {
+                const { RtsPDF } = await import("@/lib/pdf/RtsPDF");
+                const { downloadPDF } = await import("@/lib/pdf/download");
+                const el = RtsPDF({
+                  orgName: "Athelon Aviation",
+                  workOrderNumber: report.workOrderNumber,
+                  aircraftRegistration: report.aircraftRegistration,
+                  aircraftType: `${report.aircraftMake} ${report.aircraftModel}`,
+                  taskCards: (report.taskCards ?? []).map((tc) => ({
+                    cardNumber: tc.taskCardNumber ?? "—",
+                    title: tc.title ?? "—",
+                    ataChapter: undefined,
+                    status: tc.status ?? "—",
+                  })),
+                  rtsDate: Date.now(),
+                });
+                await downloadPDF(el, `RTS-${report.workOrderNumber}.pdf`);
+                toast.success("RTS document downloaded");
+              } catch (err) {
+                toast.error(err instanceof Error ? err.message : "Failed to generate PDF");
+              }
+            }}
+          >
+            <Download className="w-3.5 h-3.5" />
+            Download RTS PDF
+          </Button>
+          <Badge
+            variant="outline"
+            className={`text-[11px] font-medium border ${
+              report.isReadyForRts
+                ? "bg-green-500/15 text-green-600 dark:text-green-400 border-green-500/30"
+                : "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30"
+            }`}
+          >
+            {report.isReadyForRts
+              ? "Ready for RTS"
+              : `${report.blockers.length} Blocker${report.blockers.length !== 1 ? "s" : ""}`}
+          </Badge>
+        </div>
       </div>
 
       {/* 9 Preconditions */}
