@@ -98,6 +98,7 @@ import FleetCalendarPage from "@/app/(app)/fleet/calendar/page";
 
 // Import
 import ImportPage from "@/app/(app)/settings/import/page";
+import EmailLogPage from "@/app/(app)/settings/email-log/page";
 
 // Not Found
 import AppNotFoundPage from "@/app/(app)/not-found/page";
@@ -212,6 +213,7 @@ export default function App() {
           <Route path="/settings/users" element={<UsersSettingsPage />} />
           <Route path="/settings/notifications" element={<NotificationPreferencesPage />} />
           <Route path="/settings/import" element={<ImportPage />} />
+          <Route path="/settings/email-log" element={<EmailLogPage />} />
 
           {/* 404 catch-all */}
           <Route path="*" element={<AppNotFoundPage />} />

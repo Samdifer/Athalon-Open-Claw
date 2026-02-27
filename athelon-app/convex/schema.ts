@@ -3390,4 +3390,21 @@ export default defineSchema({
   })
     .index("by_org", ["organizationId"])
     .index("by_pair", ["organizationId", "fromCurrency", "toCurrency"]),
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // EMAIL LOG — Tracks all outbound emails sent by the system
+  // ═══════════════════════════════════════════════════════════════════════════
+  emailLog: defineTable({
+    to: v.string(),
+    subject: v.string(),
+    status: v.union(v.literal("sent"), v.literal("failed")),
+    stub: v.boolean(),
+    errorMessage: v.optional(v.string()),
+    organizationId: v.optional(v.string()),
+    relatedTable: v.optional(v.string()),
+    relatedId: v.optional(v.string()),
+    sentAt: v.number(),
+  })
+    .index("by_org", ["organizationId"])
+    .index("by_sentAt", ["sentAt"]),
 });

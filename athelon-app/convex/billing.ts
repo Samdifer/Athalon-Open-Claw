@@ -27,6 +27,8 @@ import { mutation, query } from "./_generated/server";
 import type { MutationCtx } from "./_generated/server";
 import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
+import { internal } from "./_generated/api";
+import { invoiceSentTemplate, quoteSentTemplate, paymentReceivedTemplate } from "./emailTemplates";
 import { requireAuth } from "./lib/authHelpers";
 import { getNextNumber } from "./lib/numberGenerator";
 import {
@@ -349,6 +351,25 @@ export const sendQuote = mutation({
       notes: `Quote ${quote.quoteNumber} sent to customer at ${new Date(now).toISOString()}.`,
       timestamp: now,
     });
+
+    // Send email notification to customer
+    const customer = await ctx.db.get(quote.customerId);
+    if (customer?.email) {
+      const html = quoteSentTemplate(
+        quote.quoteNumber,
+        customer.name,
+        "30 days",
+        `${process.env.APP_URL ?? "https://app.athelon.aero"}/portal/quotes/${args.quoteId}`,
+      );
+      await ctx.scheduler.runAfter(0, internal.email.sendEmailInternal, {
+        to: customer.email,
+        subject: `Quote ${quote.quoteNumber} — Athelon MRO`,
+        html,
+        organizationId: args.orgId as string,
+        relatedTable: "quotes",
+        relatedId: args.quoteId as string,
+      });
+    }
   },
 });
 
@@ -1170,6 +1191,29 @@ export const sendInvoice = mutation({
         });
       }
     }
+
+    // Send email notification to customer
+    const customer = await ctx.db.get(invoice.customerId);
+    if (customer?.email) {
+      const dueDate = invoice.dueDate
+        ? new Date(invoice.dueDate).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })
+        : "Upon receipt";
+      const html = invoiceSentTemplate(
+        invoice.invoiceNumber,
+        customer.name,
+        `$${invoice.total.toFixed(2)}`,
+        dueDate,
+        `${process.env.APP_URL ?? "https://app.athelon.aero"}/portal/invoices/${args.invoiceId}`,
+      );
+      await ctx.scheduler.runAfter(0, internal.email.sendEmailInternal, {
+        to: customer.email,
+        subject: `Invoice ${invoice.invoiceNumber} — $${invoice.total.toFixed(2)} — Athelon MRO`,
+        html,
+        organizationId: args.orgId as string,
+        relatedTable: "invoices",
+        relatedId: args.invoiceId as string,
+      });
+    }
   },
 });
 
@@ -1311,6 +1355,24 @@ export const recordPayment = mutation({
           });
         }
       }
+    }
+
+    // Send payment confirmation email to customer
+    const customer = await ctx.db.get(invoice.customerId);
+    if (customer?.email) {
+      const html = paymentReceivedTemplate(
+        invoice.invoiceNumber,
+        `$${args.amount.toFixed(2)}`,
+        `$${newBalance.toFixed(2)}`,
+      );
+      await ctx.scheduler.runAfter(0, internal.email.sendEmailInternal, {
+        to: customer.email,
+        subject: `Payment Received — Invoice ${invoice.invoiceNumber} — Athelon MRO`,
+        html,
+        organizationId: args.orgId as string,
+        relatedTable: "payments",
+        relatedId: paymentId as string,
+      });
     }
 
     return paymentId;

@@ -5,9 +5,9 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import { toast } from "sonner";
-import { Settings, Building2, FileText, FileCheck, ShieldCheck, Save, DollarSign, Plus, Trash2 } from "lucide-react";
+import { Settings, Building2, FileText, FileCheck, ShieldCheck, Save, DollarSign, Plus, Trash2, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -704,6 +704,70 @@ export default function BillingSettingsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* ─── Email Settings ─── */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Mail className="h-5 w-5" />
+            Email Notifications
+          </CardTitle>
+          <CardDescription>
+            Configure outbound email settings for invoices, quotes, and payment confirmations.
+            Emails are sent via Resend API. Set the <code>RESEND_API_KEY</code> environment variable
+            in your Convex dashboard to enable live sending.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="emailFromName">From Name</Label>
+              <Input id="emailFromName" placeholder="Athelon MRO" disabled />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="emailFromAddress">From Email</Label>
+              <Input id="emailFromAddress" placeholder="noreply@athelon.app" disabled />
+            </div>
+            <div className="space-y-2 sm:col-span-2">
+              <Label htmlFor="emailReplyTo">Reply-To Email</Label>
+              <Input id="emailReplyTo" placeholder="billing@yourcompany.com" disabled />
+            </div>
+          </div>
+          <Separator />
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium">Send invoice emails on send</p>
+                <p className="text-xs text-muted-foreground">Automatically email customers when an invoice is sent</p>
+              </div>
+              <Badge variant="outline" className="text-green-600 border-green-600">Active</Badge>
+            </div>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium">Send payment confirmations</p>
+                <p className="text-xs text-muted-foreground">Email customers when a payment is recorded</p>
+              </div>
+              <Badge variant="outline" className="text-green-600 border-green-600">Active</Badge>
+            </div>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium">Send overdue reminders</p>
+                <p className="text-xs text-muted-foreground">Automatically remind customers about overdue invoices</p>
+              </div>
+              <Badge variant="secondary">Coming Soon</Badge>
+            </div>
+          </div>
+          <Separator />
+          <div className="space-y-2">
+            <Label htmlFor="resendApiKey">Resend API Key</Label>
+            <Input id="resendApiKey" type="password" placeholder="re_••••••••••••" disabled />
+            <p className="text-xs text-muted-foreground">
+              Set via <code>RESEND_API_KEY</code> environment variable in your Convex dashboard.
+              Without it, emails are logged to console in stub mode.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Bottom save button for convenience */}
       <div className="flex justify-end">
