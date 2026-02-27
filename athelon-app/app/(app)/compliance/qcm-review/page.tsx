@@ -240,9 +240,9 @@ export default function QcmReviewPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-foreground flex items-center gap-2">
+          <h1 className="text-lg sm:text-xl md:text-2xl font-semibold text-foreground flex items-center gap-2">
             <ShieldCheck className="w-5 h-5 text-muted-foreground" />
             QCM Review Dashboard
           </h1>
@@ -316,9 +316,9 @@ export default function QcmReviewPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="pt-0">
-                  <div className="rounded-md border border-border/40 overflow-hidden">
+                  <div className="rounded-md border border-border/40 overflow-x-auto">
                     {/* Table header */}
-                    <div className="grid grid-cols-[80px_120px_1fr_60px_1fr_100px_100px] gap-2 px-3 py-2 bg-muted/30 text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">
+                    <div className="grid grid-cols-[80px_120px_1fr_60px_1fr_100px_100px] gap-2 px-3 py-2 bg-muted/30 text-[10px] font-semibold text-muted-foreground uppercase tracking-wide min-w-[700px]">
                       <span>WO #</span>
                       <span>Aircraft</span>
                       <span>Task Card</span>
@@ -331,7 +331,7 @@ export default function QcmReviewPage() {
                     {steps.map((step, i) => (
                       <div key={step._id}>
                         {i > 0 && <Separator className="opacity-30" />}
-                        <div className="grid grid-cols-[80px_120px_1fr_60px_1fr_100px_100px] gap-2 px-3 py-2.5 items-center hover:bg-muted/20 transition-colors">
+                        <div className="grid grid-cols-[80px_120px_1fr_60px_1fr_100px_100px] gap-2 px-3 py-2.5 items-center hover:bg-muted/20 transition-colors min-w-[700px]">
                           <span className="font-mono text-xs text-muted-foreground truncate">
                             {step.workOrderNumber}
                           </span>

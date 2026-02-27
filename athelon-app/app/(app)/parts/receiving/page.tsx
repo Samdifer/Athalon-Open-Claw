@@ -116,7 +116,7 @@ function InspectDialog({ open, onClose, part, techId }: InspectDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && handleClose()}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="max-w-[95vw] sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-base">
             <ClipboardCheck className="w-4 h-4 text-muted-foreground" />
@@ -269,9 +269,9 @@ export default function PartsReceivingPage() {
   return (
     <div className="space-y-5">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-lg font-semibold text-foreground flex items-center gap-2">
+          <h1 className="text-lg sm:text-xl md:text-2xl font-semibold text-foreground flex items-center gap-2">
             <Package className="w-5 h-5 text-muted-foreground" />
             Parts Receiving Inspection
           </h1>
@@ -306,7 +306,7 @@ export default function PartsReceivingPage() {
           </div>
         </div>
       ) : (
-        <div className="rounded-lg border border-border/60 overflow-hidden">
+        <div className="rounded-lg border border-border/60 overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow className="bg-muted/20">

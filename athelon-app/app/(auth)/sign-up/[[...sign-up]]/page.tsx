@@ -2,7 +2,7 @@ import { SignUp } from "@clerk/clerk-react";
 
 export default function SignUpPage() {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-background">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-background px-4 sm:px-6">
       <div className="mb-8 text-center">
         <div className="flex items-center justify-center gap-2 mb-2">
           <div className="w-8 h-8 rounded-md bg-primary flex items-center justify-center">

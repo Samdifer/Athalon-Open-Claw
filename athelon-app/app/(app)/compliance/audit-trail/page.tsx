@@ -194,7 +194,7 @@ function AdCompliancePanel({
   return (
     <div className="space-y-4">
       {/* Summary Row */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         <Card className="border-border/60">
           <CardContent className="p-3">
             <p className="text-[11px] text-muted-foreground mb-1">Total ADs</p>
@@ -284,9 +284,9 @@ export default function AuditTrailPage() {
   return (
     <div className="space-y-5">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-foreground flex items-center gap-2">
+          <h1 className="text-lg sm:text-xl md:text-2xl font-semibold text-foreground flex items-center gap-2">
             <ShieldCheck className="w-5 h-5 text-muted-foreground" />
             AD Compliance Audit
           </h1>

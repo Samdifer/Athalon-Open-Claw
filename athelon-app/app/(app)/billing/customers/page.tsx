@@ -178,6 +178,7 @@ export default function CustomersPage() {
           </CardContent>
         </Card>
       ) : (
+        <>
         {/* Mobile card view */}
         <div className="md:hidden space-y-3">
           {filtered.map((customer) => (
@@ -287,6 +288,7 @@ export default function CustomersPage() {
             </div>
           </CardContent>
         </Card>
+        </>
       )}
 
       <CreateCustomerDialog open={dialogOpen} onOpenChange={setDialogOpen} />

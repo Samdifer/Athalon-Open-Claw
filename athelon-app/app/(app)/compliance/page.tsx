@@ -44,9 +44,9 @@ export default function CompliancePage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-foreground flex items-center gap-2">
+          <h1 className="text-lg sm:text-xl md:text-2xl font-semibold text-foreground flex items-center gap-2">
             <ShieldAlert className="w-5 h-5 text-muted-foreground" />
             AD Compliance
           </h1>
@@ -58,7 +58,7 @@ export default function CompliancePage() {
           asChild
           variant="outline"
           size="sm"
-          className="h-8 gap-1.5 text-xs border-border/60"
+          className="h-8 gap-1.5 text-xs border-border/60 w-full sm:w-auto"
         >
           <Link to="/compliance/audit-trail">
             <FileSearch className="w-3.5 h-3.5" />
@@ -69,7 +69,7 @@ export default function CompliancePage() {
 
       {/* Fleet stats */}
       {isFleetLoading ? (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {[1, 2, 3, 4].map((i) => (
             <Card key={i} className="border-border/60">
               <CardContent className="p-4">

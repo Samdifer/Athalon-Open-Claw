@@ -367,7 +367,7 @@ export default function PersonnelPage() {
   return (
     <div className="space-y-5">
       <div>
-        <h1 className="text-xl font-semibold text-foreground flex items-center gap-2">
+        <h1 className="text-lg sm:text-xl md:text-2xl font-semibold text-foreground flex items-center gap-2">
           <Users className="w-5 h-5 text-muted-foreground" />
           Personnel
         </h1>
