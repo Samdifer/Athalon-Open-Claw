@@ -319,7 +319,7 @@ export default function QuoteDetailPage() {
   return (
     <div className="space-y-5 max-w-3xl">
       {/* Header */}
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="sm" onClick={() => router.back()} className="h-8 gap-1.5 text-xs">
             <ArrowLeft className="w-3.5 h-3.5" />
@@ -327,7 +327,7 @@ export default function QuoteDetailPage() {
           </Button>
           <div>
             <div className="flex items-center gap-2 flex-wrap">
-              <h1 className="text-xl font-semibold text-foreground font-mono">{quote.quoteNumber}</h1>
+              <h1 className="text-lg sm:text-xl font-semibold text-foreground font-mono">{quote.quoteNumber}</h1>
               <Badge variant="outline" className={`text-[10px] font-medium border ${STATUS_STYLES[quote.status] ?? ""}`}>
                 {quote.status}
               </Badge>
@@ -454,6 +454,7 @@ export default function QuoteDetailPage() {
               <p className="text-xs text-muted-foreground">No line items on this quote.</p>
             </div>
           ) : (
+            <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow className="border-border/50">
@@ -520,6 +521,7 @@ export default function QuoteDetailPage() {
                 ))}
               </TableBody>
             </Table>
+            </div>
           )}
         </CardContent>
       </Card>
@@ -543,7 +545,7 @@ export default function QuoteDetailPage() {
 
       {/* Decline Dialog */}
       <Dialog open={declineDialog} onOpenChange={setDeclineDialog}>
-        <DialogContent>
+        <DialogContent className="max-w-[95vw] sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Decline Quote</DialogTitle>
             <DialogDescription>Provide a reason for declining this quote.</DialogDescription>
@@ -575,7 +577,7 @@ export default function QuoteDetailPage() {
 
       {/* Convert to WO Dialog */}
       <Dialog open={convertDialog} onOpenChange={setConvertDialog}>
-        <DialogContent>
+        <DialogContent className="max-w-[95vw] sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Convert to Work Order</DialogTitle>
             <DialogDescription>Create a new work order from this approved quote.</DialogDescription>
@@ -599,7 +601,7 @@ export default function QuoteDetailPage() {
                 className="h-9 text-sm"
               />
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label className="text-xs">Type</Label>
                 <select
@@ -644,7 +646,7 @@ export default function QuoteDetailPage() {
 
       {/* GAP-13: Create Invoice from Quote Dialog */}
       <Dialog open={createInvoiceDialog} onOpenChange={setCreateInvoiceDialog}>
-        <DialogContent>
+        <DialogContent className="max-w-[95vw] sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Create Invoice from Quote</DialogTitle>
             <DialogDescription>
@@ -687,7 +689,7 @@ export default function QuoteDetailPage() {
 
       {/* GAP-06: Edit Line Item Dialog */}
       <Dialog open={editItemDialog} onOpenChange={setEditItemDialog}>
-        <DialogContent>
+        <DialogContent className="max-w-[95vw] sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Edit Line Item</DialogTitle>
             <DialogDescription>Update the details for this line item.</DialogDescription>
@@ -701,7 +703,7 @@ export default function QuoteDetailPage() {
                 className="h-9 text-sm"
               />
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label className="text-xs">Quantity</Label>
                 <Input
@@ -750,7 +752,7 @@ export default function QuoteDetailPage() {
 
       {/* GAP-06: Delete Line Item Confirm */}
       <Dialog open={deleteItemDialog} onOpenChange={setDeleteItemDialog}>
-        <DialogContent>
+        <DialogContent className="max-w-[95vw] sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Remove Line Item</DialogTitle>
             <DialogDescription>

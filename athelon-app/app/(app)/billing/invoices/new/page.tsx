@@ -315,7 +315,7 @@ export default function NewInvoicePage() {
           Back
         </Button>
         <div>
-          <h1 className="text-xl font-semibold text-foreground">New Invoice</h1>
+          <h1 className="text-lg sm:text-xl font-semibold text-foreground">New Invoice</h1>
           <p className="text-xs text-muted-foreground mt-0.5">
             Generate from a work order or create manually
           </p>
@@ -336,7 +336,7 @@ export default function NewInvoicePage() {
             <CardTitle className="text-sm font-medium">Invoice Source</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <button
                 type="button"
                 onClick={() => setMode("from_wo")}

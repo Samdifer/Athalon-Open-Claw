@@ -173,7 +173,7 @@ export default function SignaturePage() {
       {/* Header */}
       <div className="text-center space-y-1">
         <ShieldCheck className="w-8 h-8 text-primary mx-auto mb-2" />
-        <h1 className="text-xl font-semibold text-foreground">
+        <h1 className="text-lg sm:text-xl md:text-2xl font-semibold text-foreground">
           Re-Authentication Required
         </h1>
         <p className="text-sm text-muted-foreground">

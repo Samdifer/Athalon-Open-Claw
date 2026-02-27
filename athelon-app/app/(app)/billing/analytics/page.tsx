@@ -62,7 +62,7 @@ function MetricCard({ title, value, subtitle, icon, color = "" }: MetricCardProp
         <div className="flex items-start justify-between">
           <div>
             <p className="text-[10px] uppercase text-muted-foreground font-medium mb-1">{title}</p>
-            <p className={`text-2xl font-bold ${color}`}>{value}</p>
+            <p className={`text-xl sm:text-2xl font-bold ${color}`}>{value}</p>
             {subtitle && <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>}
           </div>
           {icon && (
@@ -235,7 +235,7 @@ export default function AnalyticsPage() {
   return (
     <div className="space-y-5">
       <div>
-        <h1 className="text-xl font-semibold text-foreground">Billing Analytics</h1>
+        <h1 className="text-lg sm:text-xl font-semibold text-foreground">Billing Analytics</h1>
         <p className="text-sm text-muted-foreground mt-0.5">Revenue, AR, and pipeline overview</p>
       </div>
 
@@ -284,6 +284,7 @@ export default function AnalyticsPage() {
           <CardTitle className="text-sm font-medium">Monthly Revenue — Last 6 Months</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
+          <div className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow className="border-border/50">
@@ -304,6 +305,7 @@ export default function AnalyticsPage() {
               ))}
             </TableBody>
           </Table>
+          </div>
         </CardContent>
       </Card>
 
@@ -377,6 +379,7 @@ export default function AnalyticsPage() {
                 <p className="text-xs text-muted-foreground">No customer data yet.</p>
               </div>
             ) : (
+              <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow className="border-border/50">
@@ -402,6 +405,7 @@ export default function AnalyticsPage() {
                   ))}
                 </TableBody>
               </Table>
+              </div>
             )}
           </CardContent>
         </Card>
@@ -419,6 +423,7 @@ export default function AnalyticsPage() {
                 <p className="text-xs text-muted-foreground/60 mt-1">Approved quotes converted to work orders will appear here.</p>
               </div>
             ) : (
+              <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow className="border-border/50">
@@ -441,6 +446,7 @@ export default function AnalyticsPage() {
                   ))}
                 </TableBody>
               </Table>
+              </div>
             )}
           </CardContent>
         </Card>

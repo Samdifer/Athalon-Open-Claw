@@ -130,7 +130,7 @@ export default function NewPOPage() {
           Back
         </Button>
         <div>
-          <h1 className="text-xl font-semibold text-foreground">New Purchase Order</h1>
+          <h1 className="text-lg sm:text-xl font-semibold text-foreground">New Purchase Order</h1>
           <p className="text-xs text-muted-foreground mt-0.5">Create a PO for an approved vendor</p>
         </div>
       </div>
@@ -196,7 +196,7 @@ export default function NewPOPage() {
               <p className="text-xs text-muted-foreground text-center py-4">No line items. Add one above.</p>
             ) : (
               <>
-                <div className="grid grid-cols-[1fr_100px_100px_36px] gap-2 px-1">
+                <div className="overflow-x-auto"><div className="min-w-[400px]"><div className="grid grid-cols-[1fr_100px_100px_36px] gap-2 px-1">
                   <span className="text-[10px] font-medium text-muted-foreground uppercase">Description / Part</span>
                   <span className="text-[10px] font-medium text-muted-foreground uppercase text-right">Qty</span>
                   <span className="text-[10px] font-medium text-muted-foreground uppercase text-right">Unit $</span>
@@ -231,6 +231,7 @@ export default function NewPOPage() {
                     </Button>
                   </div>
                 ))}
+                </div></div>
                 <div className="flex justify-end pt-2 border-t border-border/40">
                   <div className="flex items-center gap-8 text-xs">
                     <span className="text-muted-foreground">Subtotal</span>

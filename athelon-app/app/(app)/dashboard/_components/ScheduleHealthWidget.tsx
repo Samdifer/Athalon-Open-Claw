@@ -43,7 +43,7 @@ export function ScheduleHealthWidget() {
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-0 space-y-3">
-          <div className="grid grid-cols-4 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {Array.from({ length: 4 }).map((_, i) => (
               <Skeleton key={i} className="h-14 rounded-lg" />
             ))}
@@ -80,7 +80,7 @@ export function ScheduleHealthWidget() {
 
       <CardContent className="pt-0 space-y-4">
         {/* Summary tiles */}
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
           <div className="rounded-lg bg-red-500/10 border border-red-500/20 p-2.5 text-center">
             <p className={`text-xl font-bold ${stats.overdue > 0 ? "text-red-400" : "text-muted-foreground/50"}`}>
               {stats.overdue}

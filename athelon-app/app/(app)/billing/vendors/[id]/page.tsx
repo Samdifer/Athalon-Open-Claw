@@ -257,7 +257,7 @@ export default function VendorDetailPage() {
 
   return (
     <div className="space-y-5 max-w-2xl">
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="sm" onClick={() => router.back()} className="h-8 gap-1.5 text-xs">
             <ArrowLeft className="w-3.5 h-3.5" />
@@ -265,7 +265,7 @@ export default function VendorDetailPage() {
           </Button>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-xl font-semibold text-foreground">{vendor.name}</h1>
+              <h1 className="text-lg sm:text-xl font-semibold text-foreground">{vendor.name}</h1>
               {vendor.isApproved ? (
                 <Badge className="bg-green-500/15 text-green-600 dark:text-green-400 border border-green-500/30 text-[10px] gap-0.5">
                   <CheckCircle2 className="w-2.5 h-2.5" />
@@ -328,7 +328,7 @@ export default function VendorDetailPage() {
               <CardTitle className="text-sm font-medium">Contact Information</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <p className="text-[10px] uppercase text-muted-foreground font-medium mb-0.5">Contact</p>
                   <p className="text-sm">{vendor.contactName ?? "—"}</p>
@@ -384,7 +384,7 @@ export default function VendorDetailPage() {
                 Update Cert
               </Button>
             </CardHeader>
-            <CardContent className="grid grid-cols-2 gap-4">
+            <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <p className="text-[10px] uppercase text-muted-foreground font-medium mb-0.5">Cert Number</p>
                 <p className="text-sm font-mono">{vendor.certNumber ?? "—"}</p>
@@ -590,7 +590,7 @@ export default function VendorDetailPage() {
 
       {/* Update Cert Dialog */}
       <Dialog open={certDialog} onOpenChange={setCertDialog}>
-        <DialogContent>
+        <DialogContent className="max-w-[95vw] sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Update Certificate</DialogTitle>
             <DialogDescription>Update the certification number and expiry date for {vendor.name}.</DialogDescription>

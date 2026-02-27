@@ -74,7 +74,7 @@ export function TaskStepRow({
   return (
     <div>
       {idx > 0 && <Separator className="opacity-20 my-0" />}
-      <div className="py-3 flex items-start gap-3">
+      <div className="py-3 flex items-start gap-2 sm:gap-3">
         {/* Status icon */}
         <div className="flex-shrink-0 mt-0.5">
           {step.status === "completed" ? (
@@ -157,7 +157,7 @@ export function TaskStepRow({
         </div>
 
         {/* Action buttons */}
-        <div className="flex items-center gap-1.5 flex-shrink-0">
+        <div className="flex items-center gap-1.5 flex-shrink-0 flex-wrap">
           {/* Start button — for pending steps (GAP-18) */}
           {isPending &&
             !cardIsVoided &&

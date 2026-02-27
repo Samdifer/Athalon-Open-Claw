@@ -158,7 +158,7 @@ export function SignStepDialog({
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="max-w-[95vw] sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-base">
             <PenLine className="w-4 h-4 text-primary" />
@@ -282,7 +282,7 @@ export function SignStepDialog({
             {partsInstalled.map((part, idx) => (
               <div
                 key={idx}
-                className="grid grid-cols-[1fr_1fr_2fr_60px_24px] gap-1.5 mb-1.5 items-end"
+                className="grid grid-cols-2 sm:grid-cols-[1fr_1fr_2fr_60px_24px] gap-1.5 mb-1.5 items-end"
               >
                 <Input
                   placeholder="P/N"

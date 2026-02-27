@@ -105,9 +105,9 @@ export default function VendorsPage() {
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold text-foreground">Vendors</h1>
+          <h1 className="text-lg sm:text-xl font-semibold text-foreground">Vendors</h1>
           {isLoading ? <Skeleton className="h-4 w-40 mt-1" /> : (
             <p className="text-sm text-muted-foreground mt-0.5">
               {all.length} total · {counts.approved} approved

@@ -115,7 +115,7 @@ export default function NewWorkOrderPage() {
             Work Orders
           </Link>
         </Button>
-        <h1 className="text-xl font-semibold text-foreground">
+        <h1 className="text-lg sm:text-xl md:text-2xl font-semibold text-foreground">
           New Work Order
         </h1>
         <p className="text-sm text-muted-foreground mt-0.5">
@@ -508,7 +508,7 @@ export default function NewWorkOrderPage() {
           )}
 
           {/* Actions */}
-          <div className="flex items-center gap-3 pt-1">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-1">
             <Button
               type="submit"
               disabled={

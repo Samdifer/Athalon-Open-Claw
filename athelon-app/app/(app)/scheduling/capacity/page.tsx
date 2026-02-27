@@ -33,7 +33,7 @@ function CapacitySkeleton() {
   return (
     <div className="space-y-5">
       {/* Stats row skeleton */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         {[1, 2, 3, 4].map((i) => (
           <Card key={i} className="border-border/60">
             <CardContent className="p-4 space-y-2">
@@ -131,9 +131,9 @@ export default function CapacityPage() {
   return (
     <div className="space-y-5">
       {/* ── Header ─────────────────────────────────────────────────────── */}
-      <div className="flex items-start justify-between gap-4 flex-wrap">
+      <div className="flex flex-col sm:flex-row gap-2 sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-foreground flex items-center gap-2">
+          <h1 className="text-lg sm:text-xl md:text-2xl font-semibold text-foreground flex items-center gap-2">
             <BarChart3 className="w-5 h-5 text-muted-foreground" />
             Capacity — Next 4 Weeks
           </h1>
@@ -141,7 +141,7 @@ export default function CapacityPage() {
             Available and committed hours across all active technicians.
           </p>
         </div>
-        <Button variant="outline" size="sm" asChild>
+        <Button variant="outline" size="sm" asChild className="w-full sm:w-auto">
           <Link to="/personnel">
             Adjust Shifts
           </Link>
@@ -184,7 +184,7 @@ export default function CapacityPage() {
       )}
 
       {/* ── Stats Row ──────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         <StatCard
           label="Available"
           value={`${round1(totalAvailableHours)}h`}

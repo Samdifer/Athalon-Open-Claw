@@ -121,7 +121,7 @@ function CreateCreditMemoDialog({
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-[95vw] sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>New Credit Memo</DialogTitle>
         </DialogHeader>
@@ -266,7 +266,7 @@ function ApplyInvoiceDialog({
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-sm">
+      <DialogContent className="max-w-[95vw] sm:max-w-sm">
         <DialogHeader>
           <DialogTitle>Apply Credit Memo to Invoice</DialogTitle>
         </DialogHeader>
@@ -371,9 +371,9 @@ export default function CreditMemosPage() {
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold text-foreground">Credit Memos</h1>
+          <h1 className="text-lg sm:text-xl font-semibold text-foreground">Credit Memos</h1>
           <p className="text-sm text-muted-foreground mt-0.5">{sortedCMs.length} credit memo{sortedCMs.length !== 1 ? "s" : ""}</p>
         </div>
         <Button size="sm" onClick={() => setCreateOpen(true)}>
@@ -397,6 +397,7 @@ export default function CreditMemosPage() {
               <p className="text-xs text-muted-foreground/60 mt-1">Create one using the button above.</p>
             </div>
           ) : (
+            <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow className="border-border/50">
@@ -481,6 +482,7 @@ export default function CreditMemosPage() {
                 ))}
               </TableBody>
             </Table>
+            </div>
           )}
         </CardContent>
       </Card>

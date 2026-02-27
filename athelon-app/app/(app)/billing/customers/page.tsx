@@ -98,9 +98,9 @@ export default function CustomersPage() {
   return (
     <div className="space-y-5">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold text-foreground">Customers</h1>
+          <h1 className="text-lg sm:text-xl font-semibold text-foreground">Customers</h1>
           {isLoading ? (
             <Skeleton className="h-4 w-40 mt-1" />
           ) : (
@@ -131,6 +131,7 @@ export default function CustomersPage() {
       {isLoading ? (
         <Card className="border-border/60">
           <CardContent className="p-0">
+            <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -149,6 +150,7 @@ export default function CustomersPage() {
                 ))}
               </TableBody>
             </Table>
+            </div>
           </CardContent>
         </Card>
       ) : filtered.length === 0 ? (
@@ -178,6 +180,7 @@ export default function CustomersPage() {
       ) : (
         <Card className="border-border/60">
           <CardContent className="p-0">
+            <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -247,6 +250,7 @@ export default function CustomersPage() {
                 ))}
               </TableBody>
             </Table>
+            </div>
           </CardContent>
         </Card>
       )}

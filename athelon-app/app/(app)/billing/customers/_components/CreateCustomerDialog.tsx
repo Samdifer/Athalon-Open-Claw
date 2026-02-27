@@ -117,7 +117,7 @@ export function CreateCustomerDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[540px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-[95vw] sm:max-w-[540px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Add Customer</DialogTitle>
         </DialogHeader>
@@ -179,7 +179,7 @@ export function CreateCustomerDialog({
           </div>
 
           {/* Phone + Email */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <Label htmlFor="cust-phone">Phone</Label>
               <Input
@@ -202,7 +202,7 @@ export function CreateCustomerDialog({
           </div>
 
           {/* Payment Terms */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <Label htmlFor="cust-terms">Default Payment Terms</Label>
               <Input

@@ -93,7 +93,7 @@ export default function NewVendorPage() {
           Back
         </Button>
         <div>
-          <h1 className="text-xl font-semibold text-foreground">New Vendor</h1>
+          <h1 className="text-lg sm:text-xl font-semibold text-foreground">New Vendor</h1>
           <p className="text-xs text-muted-foreground mt-0.5">New vendors start unapproved — approve after review</p>
         </div>
       </div>

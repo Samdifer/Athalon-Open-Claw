@@ -168,9 +168,9 @@ export default function RtsPage() {
       </Button>
 
       {/* Header */}
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col sm:flex-row gap-2 sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-foreground flex items-center gap-2">
+          <h1 className="text-lg sm:text-xl md:text-2xl font-semibold text-foreground flex items-center gap-2">
             <ShieldCheck className="w-5 h-5 text-muted-foreground" />
             Return to Service Authorization
           </h1>
@@ -230,7 +230,7 @@ export default function RtsPage() {
       )}
 
       {/* Authorize Button */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
         <div className="text-[11px] text-muted-foreground">
           {allPass
             ? "All preconditions passed — ready to authorize."

@@ -109,9 +109,9 @@ export default function MaintenanceRecordsPage() {
       </Button>
 
       {/* Header */}
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col sm:flex-row gap-2 sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-foreground flex items-center gap-2">
+          <h1 className="text-lg sm:text-xl md:text-2xl font-semibold text-foreground flex items-center gap-2">
             <FileText className="w-5 h-5 text-muted-foreground" />
             Maintenance Records
           </h1>

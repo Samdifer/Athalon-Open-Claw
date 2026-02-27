@@ -67,7 +67,7 @@ function TemplatePickerDialog({ open, onClose, orgId, onSelect }: TemplatePicker
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-[95vw] sm:max-w-lg max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-base">
             <LayoutTemplate className="w-4 h-4 text-muted-foreground" />
@@ -328,7 +328,7 @@ export default function NewTaskCardPage() {
     <>
       <form onSubmit={handleSubmit} className="max-w-2xl mx-auto space-y-6">
         {/* Header */}
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
           <Button asChild variant="ghost" size="sm" className="h-8 gap-1.5 text-xs">
             <Link to={`/work-orders/${workOrderId}`}>
               <ArrowLeft className="w-3.5 h-3.5" />
@@ -440,7 +440,7 @@ export default function NewTaskCardPage() {
         )}
 
         {/* Actions */}
-        <div className="flex items-center justify-end gap-3 pb-8">
+        <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-3 pb-8">
           <Button
             asChild
             variant="outline"

@@ -342,7 +342,7 @@ function CreateTemplateDialog({ open, onClose, orgId }: CreateTemplateDialogProp
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && handleClose()}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <LayoutTemplate className="w-4 h-4 text-muted-foreground" />
@@ -352,7 +352,7 @@ function CreateTemplateDialog({ open, onClose, orgId }: CreateTemplateDialogProp
 
         <form onSubmit={handleSubmit} className="space-y-5">
           {/* Header fields */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="col-span-2">
               <Label className="text-xs text-muted-foreground mb-1 block">
                 Template name <span className="text-destructive">*</span>
@@ -423,7 +423,7 @@ function CreateTemplateDialog({ open, onClose, orgId }: CreateTemplateDialogProp
 
           {/* Steps section */}
           <div className="space-y-3">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between">
               <div>
                 <h3 className="text-sm font-semibold text-foreground">
                   Steps
@@ -512,7 +512,7 @@ export default function TemplatesPage() {
       {/* Page header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-lg font-semibold text-foreground flex items-center gap-2">
+          <h1 className="text-lg sm:text-xl md:text-2xl font-semibold text-foreground flex items-center gap-2">
             <LayoutTemplate className="w-5 h-5 text-muted-foreground" />
             Inspection Templates
           </h1>
@@ -523,7 +523,7 @@ export default function TemplatesPage() {
         {orgId && (
           <Button
             size="sm"
-            className="h-9 gap-1.5"
+            className="h-9 gap-1.5 w-full sm:w-auto"
             onClick={() => setDialogOpen(true)}
           >
             <Plus className="w-3.5 h-3.5" />
@@ -562,6 +562,7 @@ export default function TemplatesPage() {
         </div>
       ) : (
         <div className="rounded-lg border border-border/60 overflow-hidden">
+          <div className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow className="bg-muted/20">
@@ -614,6 +615,7 @@ export default function TemplatesPage() {
               ))}
             </TableBody>
           </Table>
+          </div>
         </div>
       )}
 

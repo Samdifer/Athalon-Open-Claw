@@ -154,7 +154,7 @@ function VoidBatchDialog({ open, count, onClose, onConfirm }: VoidDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-[95vw] sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Void {count} Invoice{count !== 1 ? "s" : ""}</DialogTitle>
           <DialogDescription>
@@ -272,7 +272,7 @@ function BatchPaymentDialog({
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) handleClose(); }}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-[95vw] sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>Record Batch Payments</DialogTitle>
           <DialogDescription>
@@ -513,9 +513,9 @@ export default function InvoicesPage() {
   return (
     <div className="space-y-5 pb-24">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold text-foreground">Invoices</h1>
+          <h1 className="text-lg sm:text-xl font-semibold text-foreground">Invoices</h1>
           {isLoading ? (
             <Skeleton className="h-4 w-40 mt-1" />
           ) : (

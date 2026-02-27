@@ -166,7 +166,7 @@ export default function NewQuotePage() {
           Back
         </Button>
         <div>
-          <h1 className="text-xl font-semibold text-foreground">New Quote</h1>
+          <h1 className="text-lg sm:text-xl font-semibold text-foreground">New Quote</h1>
           <p className="text-xs text-muted-foreground mt-0.5">Create a quote in DRAFT status</p>
         </div>
       </div>
@@ -246,7 +246,7 @@ export default function NewQuotePage() {
             ) : (
               <>
                 {/* Header */}
-                <div className="grid grid-cols-[1fr_120px_100px_100px_36px] gap-2 px-1">
+                <div className="overflow-x-auto"><div className="min-w-[500px]"><div className="grid grid-cols-[1fr_120px_100px_100px_36px] gap-2 px-1">
                   <span className="text-[10px] font-medium text-muted-foreground uppercase">Description</span>
                   <span className="text-[10px] font-medium text-muted-foreground uppercase">Type</span>
                   <span className="text-[10px] font-medium text-muted-foreground uppercase text-right">Qty</span>

@@ -89,7 +89,7 @@ export function BacklogSidebar({ workOrders, isOpen, onClose }: BacklogSidebarPr
 
   return (
     <div
-      className="fixed top-12 right-0 bottom-0 w-[280px] z-50 flex flex-col bg-background border-l border-border/50 shadow-2xl"
+      className="fixed top-12 right-0 bottom-0 w-full sm:w-[280px] z-50 flex flex-col bg-background border-l border-border/50 shadow-2xl"
       role="dialog"
       aria-label="Unscheduled Work Orders"
     >

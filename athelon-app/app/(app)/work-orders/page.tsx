@@ -180,15 +180,15 @@ export default function WorkOrdersPage() {
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-foreground">Work Orders</h1>
+          <h1 className="text-lg sm:text-xl md:text-2xl font-semibold text-foreground">Work Orders</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
             {workOrders.length} total ·{" "}
             {workOrders.filter((w) => w.status === "in_progress").length} in progress
           </p>
         </div>
-        <Button asChild size="sm">
+        <Button asChild size="sm" className="w-full sm:w-auto">
           <Link to="/work-orders/new">
             <Plus className="w-3.5 h-3.5 mr-1.5" />
             New Work Order
@@ -196,13 +196,13 @@ export default function WorkOrdersPage() {
         </Button>
       </div>
 
-      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+      <div className="flex flex-col gap-3">
         <Tabs
           value={activeTab}
           onValueChange={(v) => setActiveTab(v as FilterTab)}
           className="w-full sm:w-auto"
         >
-          <TabsList className="h-8 bg-muted/40 p-0.5">
+          <TabsList className="h-8 bg-muted/40 p-0.5 overflow-x-auto max-w-full">
             {(
               [
                 ["active", "Active", counts.active],
@@ -236,14 +236,14 @@ export default function WorkOrdersPage() {
           </TabsList>
         </Tabs>
 
-        <div className="flex items-center gap-2 ml-auto">
+        <div className="flex items-center gap-2 w-full sm:w-auto sm:ml-auto">
           <div className="relative">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
             <Input
               placeholder="Search WO#, aircraft, description..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="h-8 pl-8 pr-3 text-xs w-64 bg-muted/30 border-border/60"
+              className="h-8 pl-8 pr-3 text-xs w-full sm:w-64 bg-muted/30 border-border/60"
             />
           </div>
           <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs border-border/60">

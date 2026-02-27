@@ -93,9 +93,9 @@ export default function QuotesPage() {
   return (
     <div className="space-y-5">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold text-foreground">Quotes</h1>
+          <h1 className="text-lg sm:text-xl font-semibold text-foreground">Quotes</h1>
           {isLoading ? (
             <Skeleton className="h-4 w-40 mt-1" />
           ) : (

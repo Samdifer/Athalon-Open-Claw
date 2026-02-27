@@ -192,7 +192,7 @@ function CreateRecurringTemplateDialog({ open, onClose, orgId, techId }: CreateT
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) { reset(); onClose(); } }}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>New Recurring Template</DialogTitle>
         </DialogHeader>
@@ -247,7 +247,7 @@ function CreateRecurringTemplateDialog({ open, onClose, orgId, techId }: CreateT
           </div>
 
           {/* Frequency */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label>Frequency</Label>
               <Select value={frequency} onValueChange={(v) => setFrequency(v as Frequency)}>
@@ -276,7 +276,7 @@ function CreateRecurringTemplateDialog({ open, onClose, orgId, techId }: CreateT
           </div>
 
           {/* Payment Terms */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="tpl-terms">Payment Terms</Label>
               <Input
@@ -312,6 +312,7 @@ function CreateRecurringTemplateDialog({ open, onClose, orgId, techId }: CreateT
             </div>
 
             <div className="rounded-md border border-border/60 overflow-hidden">
+              <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/30 hover:bg-muted/30">
@@ -382,6 +383,7 @@ function CreateRecurringTemplateDialog({ open, onClose, orgId, techId }: CreateT
                   ))}
                 </TableBody>
               </Table>
+              </div>
             </div>
 
             {/* Subtotal */}
@@ -455,7 +457,7 @@ export default function RecurringBillingPage() {
         <div className="flex items-center gap-3">
           <RefreshCw className="w-5 h-5 text-muted-foreground" />
           <div>
-            <h1 className="text-xl font-semibold text-foreground">Recurring Billing</h1>
+            <h1 className="text-lg sm:text-xl font-semibold text-foreground">Recurring Billing</h1>
             {isLoading ? (
               <Skeleton className="h-4 w-40 mt-1" />
             ) : (
@@ -495,6 +497,7 @@ export default function RecurringBillingPage() {
         </Card>
       ) : (
         <div className="rounded-md border border-border/60 overflow-hidden">
+          <div className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow className="bg-muted/30 hover:bg-muted/30">
@@ -567,6 +570,7 @@ export default function RecurringBillingPage() {
               ))}
             </TableBody>
           </Table>
+          </div>
         </div>
       )}
 

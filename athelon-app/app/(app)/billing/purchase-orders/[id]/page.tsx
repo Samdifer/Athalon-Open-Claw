@@ -142,7 +142,7 @@ export default function PODetailPage() {
 
   return (
     <div className="space-y-5 max-w-3xl">
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="sm" onClick={() => router.back()} className="h-8 gap-1.5 text-xs">
             <ArrowLeft className="w-3.5 h-3.5" />
@@ -150,7 +150,7 @@ export default function PODetailPage() {
           </Button>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-xl font-semibold font-mono">{po.poNumber}</h1>
+              <h1 className="text-lg sm:text-xl font-semibold font-mono">{po.poNumber}</h1>
               <Badge variant="outline" className={`text-[10px] font-medium border ${STATUS_STYLES[po.status] ?? ""}`}>
                 {po.status}
               </Badge>
@@ -200,7 +200,7 @@ export default function PODetailPage() {
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-medium">PO Summary</CardTitle>
         </CardHeader>
-        <CardContent className="grid grid-cols-3 gap-4">
+        <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <div>
             <p className="text-[10px] uppercase text-muted-foreground font-medium mb-0.5">Subtotal</p>
             <p className="text-sm font-semibold">${po.subtotal.toFixed(2)}</p>
@@ -252,7 +252,7 @@ export default function PODetailPage() {
                 <div className="text-xs text-muted-foreground">Loading budget data...</div>
               ) : (
                 <>
-                  <div className="grid grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     <div>
                       <p className="text-[10px] uppercase text-muted-foreground font-medium mb-0.5">
                         Quoted Parts Budget
@@ -333,6 +333,7 @@ export default function PODetailPage() {
               <p className="text-xs text-muted-foreground">No line items on this PO.</p>
             </div>
           ) : (
+            <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow className="border-border/50">
@@ -361,13 +362,14 @@ export default function PODetailPage() {
                 ))}
               </TableBody>
             </Table>
+            </div>
           )}
         </CardContent>
       </Card>
 
       {/* Receive Items Dialog */}
       <Dialog open={receiveDialog} onOpenChange={setReceiveDialog}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-[95vw] sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Receive Items</DialogTitle>
             <DialogDescription>

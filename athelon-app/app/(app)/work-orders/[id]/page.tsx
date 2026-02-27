@@ -271,10 +271,10 @@ export default function WorkOrderDetailPage() {
             Work Orders
           </Link>
         </Button>
-        <div className="flex items-start justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
           <div>
             <div className="flex items-center gap-2.5 mb-1 flex-wrap">
-              <h1 className="text-xl font-semibold font-mono text-foreground">{wo.workOrderNumber}</h1>
+              <h1 className="text-lg sm:text-xl md:text-2xl font-semibold font-mono text-foreground">{wo.workOrderNumber}</h1>
               <Badge
                 variant="outline"
                 className={`text-[11px] font-medium border ${
@@ -307,7 +307,7 @@ export default function WorkOrderDetailPage() {
             <p className="text-sm text-muted-foreground mt-1">{wo.description}</p>
           </div>
 
-          <div className="flex-shrink-0">
+          <div className="w-full sm:w-auto flex-shrink-0">
             {canClose ? (
               <Button asChild className="gap-2">
                 <Link to={`/work-orders/${workOrderId}/signature`}>
@@ -325,7 +325,7 @@ export default function WorkOrderDetailPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
         <Card className="border-border/60">
           <CardContent className="p-3">
             <p className="text-[11px] text-muted-foreground mb-1">Task Progress</p>
@@ -422,7 +422,7 @@ export default function WorkOrderDetailPage() {
       )}
 
       <Tabs defaultValue="squawks">
-        <TabsList className="h-9 bg-muted/40 p-0.5 mb-4">
+        <TabsList className="h-9 bg-muted/40 p-0.5 mb-4 overflow-x-auto max-w-full flex-wrap">
           {(
             [
               { value: "squawks", label: "Squawks", Icon: AlertTriangle, count: workItems.length, indicator: null },

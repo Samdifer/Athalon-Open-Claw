@@ -109,7 +109,7 @@ export function SignCardDialog({
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="max-w-[95vw] sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-base">
             <Lock className="w-4 h-4 text-green-400" aria-hidden="true" />

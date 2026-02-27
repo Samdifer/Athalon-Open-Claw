@@ -137,9 +137,9 @@ export default function PricingPage() {
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold text-foreground">Pricing</h1>
+          <h1 className="text-lg sm:text-xl font-semibold text-foreground">Pricing</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
             {(profiles ?? []).length} profiles · {(rules ?? []).length} rules
           </p>
@@ -174,6 +174,7 @@ export default function PricingPage() {
               </Button>
             </div>
           ) : (
+            <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow className="border-border/50">
@@ -213,6 +214,7 @@ export default function PricingPage() {
                 })}
               </TableBody>
             </Table>
+            </div>
           )}
         </CardContent>
       </Card>
@@ -230,6 +232,7 @@ export default function PricingPage() {
               <p className="text-xs text-muted-foreground/60 mt-1">Pricing rules are created via the Convex backend or API.</p>
             </div>
           ) : (
+            <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow className="border-border/50">
@@ -261,13 +264,14 @@ export default function PricingPage() {
                 ))}
               </TableBody>
             </Table>
+            </div>
           )}
         </CardContent>
       </Card>
 
       {/* New Profile Dialog */}
       <Dialog open={profileDialog} onOpenChange={setProfileDialog}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-[95vw] sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>New Pricing Profile</DialogTitle>
             <DialogDescription>Set labor rates and parts markup for a customer or org-wide.</DialogDescription>
@@ -291,7 +295,7 @@ export default function PricingPage() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label className="text-xs">Labor Rate Override ($/hr)</Label>
                 <Input value={profileLaborRate} onChange={(e) => setProfileLaborRate(e.target.value)} type="number" min="0" step="0.01" className="h-9 text-sm" placeholder="e.g. 125.00" />
@@ -309,7 +313,7 @@ export default function PricingPage() {
                 <Input value={profileDiscount} onChange={(e) => setProfileDiscount(e.target.value)} type="number" min="0" step="0.1" className="h-9 text-sm" placeholder="e.g. 5" />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label className="text-xs">Effective Date *</Label>
                 <Input type="date" value={profileEffective} onChange={(e) => setProfileEffective(e.target.value)} className="h-9 text-sm" />

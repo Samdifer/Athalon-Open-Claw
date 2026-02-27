@@ -234,7 +234,7 @@ export function GanttBoard({ workOrders, onOpenBacklog, unscheduledCount }: Gant
   return (
     <div className="flex flex-col h-full">
       {/* ── Toolbar ──────────────────────────────────────────────────────── */}
-      <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border/50 bg-background/80 backdrop-blur-sm flex-shrink-0">
+      <div className="flex flex-wrap items-center gap-2 px-2 sm:px-4 py-2.5 border-b border-border/50 bg-background/80 backdrop-blur-sm flex-shrink-0">
         {/* View mode toggles */}
         <div className="flex items-center rounded-md border border-border/60 overflow-hidden">
           <button

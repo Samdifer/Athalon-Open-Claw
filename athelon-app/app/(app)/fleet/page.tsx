@@ -147,23 +147,23 @@ export default function FleetPage() {
   return (
     <div className="space-y-5">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-foreground">Fleet</h1>
+          <h1 className="text-lg sm:text-xl md:text-2xl font-semibold text-foreground">Fleet</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
             {isFiltering
               ? `${filteredCount} of ${totalCount} aircraft`
               : `${totalCount} aircraft registered`}
           </p>
         </div>
-        <Button size="sm">
+        <Button size="sm" className="w-full sm:w-auto">
           <Plus className="w-3.5 h-3.5 mr-1.5" />
           Add Aircraft
         </Button>
       </div>
 
       {/* Search + filter bar */}
-      <div className="flex items-center gap-3">
+      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 sm:items-center">
         <div className="relative flex-1">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
           <Input
@@ -261,7 +261,7 @@ export default function FleetPage() {
                       />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2.5 mb-0.5">
-                          <span className="font-mono font-bold text-xl text-foreground">
+                          <span className="font-mono font-bold text-base sm:text-xl text-foreground">
                             {ac.currentRegistration ?? ac.serialNumber}
                           </span>
                           <Badge

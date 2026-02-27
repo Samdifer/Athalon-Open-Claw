@@ -59,7 +59,7 @@ function ReleaseConfirmationCard({ data }: { data: ReleaseConfirmation }) {
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <p className="text-[10px] text-muted-foreground uppercase tracking-wide font-semibold mb-1">
               Work Order
@@ -266,7 +266,7 @@ export default function ReleaseAircraftPage() {
 
       {/* Header */}
       <div>
-        <h1 className="text-xl font-semibold text-foreground flex items-center gap-2">
+        <h1 className="text-lg sm:text-xl md:text-2xl font-semibold text-foreground flex items-center gap-2">
           <PlaneTakeoff className="w-5 h-5 text-muted-foreground" />
           Release Aircraft to Customer
         </h1>
@@ -281,7 +281,7 @@ export default function ReleaseAircraftPage() {
           <CardTitle className="text-sm font-medium">Work Order Details</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <p className="text-[10px] text-muted-foreground uppercase tracking-wide font-semibold mb-1">
                 Work Order
@@ -422,7 +422,7 @@ export default function ReleaseAircraftPage() {
           </CardContent>
         </Card>
 
-        <div className="flex gap-2 justify-end">
+        <div className="flex flex-col-reverse sm:flex-row gap-2 sm:justify-end">
           <Button
             type="button"
             variant="outline"

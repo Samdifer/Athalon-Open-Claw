@@ -307,7 +307,7 @@ export default function InvoiceDetailPage() {
 
       <div className="space-y-5 max-w-3xl print-invoice">
         {/* Header — no-print wrapper for actions */}
-        <div className="flex items-center justify-between gap-3 no-print">
+        <div className="flex flex-wrap items-center justify-between gap-3 no-print">
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="sm" onClick={() => router.back()} className="h-8 gap-1.5 text-xs">
               <ArrowLeft className="w-3.5 h-3.5" />
@@ -315,7 +315,7 @@ export default function InvoiceDetailPage() {
             </Button>
             <div>
               <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-xl font-semibold font-mono">{invoice.invoiceNumber}</h1>
+                <h1 className="text-lg sm:text-xl font-semibold font-mono">{invoice.invoiceNumber}</h1>
                 <Badge variant="outline" className={`text-[10px] font-medium border ${STATUS_STYLES[invoice.status] ?? ""}`}>
                   {invoice.status}
                 </Badge>
@@ -390,7 +390,7 @@ export default function InvoiceDetailPage() {
 
         {/* Print Header (visible only when printing) */}
         <div className="print-only mb-6">
-          <h1 className="text-2xl font-bold">Invoice {invoice.invoiceNumber}</h1>
+          <h1 className="text-xl sm:text-2xl font-bold">Invoice {invoice.invoiceNumber}</h1>
           <p className="text-sm text-gray-500">Status: {invoice.status} · {formatDate(invoice.createdAt)}</p>
         </div>
 
@@ -440,6 +440,7 @@ export default function InvoiceDetailPage() {
                 <p className="text-xs text-muted-foreground">No line items on this invoice.</p>
               </div>
             ) : (
+              <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow className="border-border/50">
@@ -509,6 +510,7 @@ export default function InvoiceDetailPage() {
                   ))}
                 </TableBody>
               </Table>
+              </div>
             )}
           </CardContent>
         </Card>
@@ -526,6 +528,7 @@ export default function InvoiceDetailPage() {
               </div>
             ) : (
               <>
+                <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow className="border-border/50">
@@ -552,6 +555,7 @@ export default function InvoiceDetailPage() {
                     ))}
                   </TableBody>
                 </Table>
+                </div>
                 {/* Payments subtotal */}
                 <div className="flex items-center justify-end gap-4 px-4 py-2 border-t border-border/40">
                   <span className="text-xs text-muted-foreground">Total Paid</span>
@@ -592,7 +596,7 @@ export default function InvoiceDetailPage() {
 
         {/* GAP-04: Set Due Date Dialog */}
         <Dialog open={dueDateDialog} onOpenChange={setDueDateDialog}>
-          <DialogContent>
+          <DialogContent className="max-w-[95vw] sm:max-w-lg">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <CalendarDays className="w-4 h-4" />
@@ -637,7 +641,7 @@ export default function InvoiceDetailPage() {
 
         {/* GAP-06: Edit Line Item Dialog */}
         <Dialog open={editItemDialog} onOpenChange={setEditItemDialog}>
-          <DialogContent>
+          <DialogContent className="max-w-[95vw] sm:max-w-lg">
             <DialogHeader>
               <DialogTitle>Edit Line Item</DialogTitle>
               <DialogDescription>Update the details for this line item. Leave fields blank to keep existing values.</DialogDescription>
@@ -651,7 +655,7 @@ export default function InvoiceDetailPage() {
                   className="h-9 text-sm"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label className="text-xs">Quantity</Label>
                   <Input
@@ -700,7 +704,7 @@ export default function InvoiceDetailPage() {
 
         {/* GAP-06: Delete Line Item Confirm */}
         <Dialog open={deleteItemDialog} onOpenChange={setDeleteItemDialog}>
-          <DialogContent>
+          <DialogContent className="max-w-[95vw] sm:max-w-lg">
             <DialogHeader>
               <DialogTitle>Remove Line Item</DialogTitle>
               <DialogDescription>
@@ -723,7 +727,7 @@ export default function InvoiceDetailPage() {
 
         {/* Record Payment Dialog */}
         <Dialog open={paymentDialog} onOpenChange={setPaymentDialog}>
-          <DialogContent>
+          <DialogContent className="max-w-[95vw] sm:max-w-lg">
             <DialogHeader>
               <DialogTitle>Record Payment</DialogTitle>
               <DialogDescription>
@@ -731,7 +735,7 @@ export default function InvoiceDetailPage() {
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-3 py-2">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label className="text-xs">Amount *</Label>
                   <Input
@@ -778,7 +782,7 @@ export default function InvoiceDetailPage() {
 
         {/* Void Dialog */}
         <Dialog open={voidDialog} onOpenChange={setVoidDialog}>
-          <DialogContent>
+          <DialogContent className="max-w-[95vw] sm:max-w-lg">
             <DialogHeader>
               <DialogTitle>Void Invoice</DialogTitle>
               <DialogDescription>

@@ -135,7 +135,7 @@ export default function TimeApprovalPage() {
       <div className="flex items-center gap-3">
         <ClipboardCheck className="w-5 h-5 text-muted-foreground" />
         <div>
-          <h1 className="text-xl font-semibold text-foreground">Time Clock Approval</h1>
+          <h1 className="text-lg sm:text-xl font-semibold text-foreground">Time Clock Approval</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
             Review and approve technician time entries
           </p>
@@ -190,6 +190,7 @@ export default function TimeApprovalPage() {
             </Card>
           ) : (
             <div className="rounded-md border border-border/60 overflow-hidden">
+              <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/30 hover:bg-muted/30">
@@ -251,6 +252,7 @@ export default function TimeApprovalPage() {
                   ))}
                 </TableBody>
               </Table>
+              </div>
             </div>
           )}
         </TabsContent>
@@ -268,6 +270,7 @@ export default function TimeApprovalPage() {
             </Card>
           ) : (
             <div className="rounded-md border border-border/60 overflow-hidden">
+              <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/30 hover:bg-muted/30">
@@ -308,6 +311,7 @@ export default function TimeApprovalPage() {
                   ))}
                 </TableBody>
               </Table>
+              </div>
             </div>
           )}
         </TabsContent>
@@ -325,6 +329,7 @@ export default function TimeApprovalPage() {
             </Card>
           ) : (
             <div className="rounded-md border border-border/60 overflow-hidden">
+              <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/30 hover:bg-muted/30">
@@ -365,6 +370,7 @@ export default function TimeApprovalPage() {
                   ))}
                 </TableBody>
               </Table>
+              </div>
             </div>
           )}
         </TabsContent>
@@ -375,7 +381,7 @@ export default function TimeApprovalPage() {
         open={rejectDialog.open}
         onOpenChange={(open) => setRejectDialog((s) => ({ ...s, open }))}
       >
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-[95vw] sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Reject Time Entry</DialogTitle>
           </DialogHeader>

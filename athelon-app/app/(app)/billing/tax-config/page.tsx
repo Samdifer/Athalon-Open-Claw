@@ -84,7 +84,7 @@ function AddTaxRateDialog({ open, onClose, orgId }: AddTaxRateDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-sm">
+      <DialogContent className="max-w-[95vw] sm:max-w-sm">
         <DialogHeader>
           <DialogTitle>Add Tax Rate</DialogTitle>
         </DialogHeader>
@@ -187,9 +187,9 @@ export default function TaxConfigPage() {
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold text-foreground">Tax Configuration</h1>
+          <h1 className="text-lg sm:text-xl font-semibold text-foreground">Tax Configuration</h1>
           <p className="text-sm text-muted-foreground mt-0.5">Manage tax rates for invoices</p>
         </div>
         <Button size="sm" onClick={() => setAddOpen(true)}>
@@ -213,6 +213,7 @@ export default function TaxConfigPage() {
               <p className="text-xs text-muted-foreground/60 mt-1">Add a tax rate to apply to invoices.</p>
             </div>
           ) : (
+            <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow className="border-border/50">
@@ -258,6 +259,7 @@ export default function TaxConfigPage() {
                 ))}
               </TableBody>
             </Table>
+            </div>
           )}
         </CardContent>
       </Card>

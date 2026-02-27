@@ -26,7 +26,7 @@ export function StatCards({
   isLoading,
 }: StatCardsProps) {
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
       {/* Open Work Orders */}
       <Link to="/work-orders">
         <Card className="hover:bg-card/80 transition-colors cursor-pointer border-border/60">

@@ -317,7 +317,7 @@ export default function TaskCardPage() {
       </Button>
 
       {/* Header */}
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1 flex-wrap">
             <span className="font-mono text-xs text-muted-foreground font-medium">
@@ -337,7 +337,7 @@ export default function TaskCardPage() {
                 : TASK_STATUS_LABEL[taskCard.status as TaskStatus] ?? taskCard.status}
             </Badge>
           </div>
-          <h1 className="text-lg font-semibold text-foreground">
+          <h1 className="text-lg sm:text-xl md:text-2xl font-semibold text-foreground">
             {taskCard.title}
           </h1>
           <p className="text-xs text-muted-foreground mt-0.5">
@@ -1086,7 +1086,7 @@ export default function TaskCardPage() {
           }`}
         >
           <CardContent className="p-4">
-            <div className="flex items-center justify-between gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
                 <p className="text-sm font-medium text-foreground flex items-center gap-2">
                   {cardIsComplete ? (

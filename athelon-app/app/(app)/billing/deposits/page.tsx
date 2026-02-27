@@ -125,7 +125,7 @@ function RecordDepositDialog({ open, onClose, orgId, techId, customers }: Record
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) { resetForm(); onClose(); } }}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-[95vw] sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Record Deposit</DialogTitle>
         </DialogHeader>
@@ -296,7 +296,7 @@ function ApplyDepositDialog({
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) { resetForm(); onClose(); } }}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-[95vw] sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Apply Deposit to Invoice</DialogTitle>
         </DialogHeader>
@@ -415,7 +415,7 @@ export default function DepositsPage() {
     return (
       <div className="space-y-5">
         <Skeleton className="h-8 w-56" />
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {Array.from({ length: 3 }).map((_, i) => (
             <Skeleton key={i} className="h-24 w-full rounded-lg" />
           ))}
@@ -432,9 +432,9 @@ export default function DepositsPage() {
   return (
     <div className="space-y-5">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold text-foreground">Deposits</h1>
+          <h1 className="text-lg sm:text-xl font-semibold text-foreground">Deposits</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
             {sortedDeposits.length} deposit{sortedDeposits.length !== 1 ? "s" : ""}
           </p>
@@ -506,6 +506,7 @@ export default function DepositsPage() {
               </p>
             </div>
           ) : (
+            <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow className="border-border/50">
@@ -576,6 +577,7 @@ export default function DepositsPage() {
                 ))}
               </TableBody>
             </Table>
+            </div>
           )}
         </CardContent>
       </Card>

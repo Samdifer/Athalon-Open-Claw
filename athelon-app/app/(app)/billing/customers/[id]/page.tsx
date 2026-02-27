@@ -377,7 +377,7 @@ export default function CustomerDetailPage() {
             ) : (
               <>
                 <div className="flex items-center gap-2">
-                  <h1 className="text-xl font-semibold text-foreground">
+                  <h1 className="text-lg sm:text-xl font-semibold text-foreground">
                     {customer?.name}
                   </h1>
                   {customer && (
@@ -534,7 +534,7 @@ export default function CustomerDetailPage() {
                   </div>
 
                   {/* Phone + Email */}
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
                       <Label htmlFor="detail-phone">Phone</Label>
                       <Input
@@ -555,7 +555,7 @@ export default function CustomerDetailPage() {
                   </div>
 
                   {/* Payment Terms */}
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
                       <Label htmlFor="detail-terms">
                         Default Payment Terms
@@ -889,6 +889,7 @@ export default function CustomerDetailPage() {
                   </p>
                 </div>
               ) : (
+                <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -935,6 +936,7 @@ export default function CustomerDetailPage() {
                     })}
                   </TableBody>
                 </Table>
+                </div>
               )}
             </CardContent>
           </Card>
@@ -944,7 +946,7 @@ export default function CustomerDetailPage() {
         <TabsContent value="invoices" className="mt-4 space-y-4">
           {/* AR Summary */}
           {invoices && invoices.length > 0 && (
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Card className="border-border/60">
                 <CardContent className="p-4">
                   <p className="text-xs text-muted-foreground mb-1">Outstanding Balance</p>
@@ -984,6 +986,7 @@ export default function CustomerDetailPage() {
                   </p>
                 </div>
               ) : (
+                <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -1041,6 +1044,7 @@ export default function CustomerDetailPage() {
                     })}
                   </TableBody>
                 </Table>
+                </div>
               )}
             </CardContent>
           </Card>
@@ -1069,6 +1073,7 @@ export default function CustomerDetailPage() {
                   </p>
                 </div>
               ) : (
+                <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -1097,6 +1102,7 @@ export default function CustomerDetailPage() {
                     ))}
                   </TableBody>
                 </Table>
+                </div>
               )}
             </CardContent>
           </Card>

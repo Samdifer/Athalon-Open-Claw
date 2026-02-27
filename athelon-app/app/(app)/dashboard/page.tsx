@@ -250,14 +250,14 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-foreground">Dashboard</h1>
+          <h1 className="text-lg sm:text-xl md:text-2xl font-semibold text-foreground">Dashboard</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
             Rocky Mountain Turbine Service — Mon, Feb 23, 2026
           </p>
         </div>
-        <Button asChild size="sm">
+        <Button asChild size="sm" className="w-full sm:w-auto">
           <Link to="/work-orders/new">
             <Wrench className="w-3.5 h-3.5 mr-1.5" />
             New Work Order
@@ -266,7 +266,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Stats Row */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         {stats.map((stat) => (
           <Link key={stat.title} to={stat.href}>
             <Card className="hover:bg-card/80 transition-colors cursor-pointer border-border/60">
@@ -293,7 +293,7 @@ export default function DashboardPage() {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
         {/* Left: Attention Queue + Work Orders */}
         <div className="lg:col-span-2 space-y-6">
           {/* Attention Queue */}

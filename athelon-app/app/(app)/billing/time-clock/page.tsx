@@ -183,9 +183,9 @@ export default function TimeClockPage() {
   return (
     <div className="space-y-5">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold text-foreground">Time Clock</h1>
+          <h1 className="text-lg sm:text-xl font-semibold text-foreground">Time Clock</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
             {activeEntries.length} active · {(entries ?? []).length} total entries
           </p>
@@ -255,6 +255,7 @@ export default function TimeClockPage() {
                 <p className="text-xs text-muted-foreground">No entries today.</p>
               </div>
             ) : (
+              <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow className="border-border/50">
@@ -273,6 +274,7 @@ export default function TimeClockPage() {
                   ))}
                 </TableBody>
               </Table>
+              </div>
             )}
           </CardContent>
         </Card>
@@ -322,6 +324,7 @@ export default function TimeClockPage() {
                   <p className="text-sm text-muted-foreground">No time entries found.</p>
                 </div>
               ) : (
+                <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow className="border-border/50">
@@ -352,6 +355,7 @@ export default function TimeClockPage() {
                     ))}
                   </TableBody>
                 </Table>
+                </div>
               )}
             </CardContent>
           </Card>
@@ -360,7 +364,7 @@ export default function TimeClockPage() {
 
       {/* Clock In Dialog */}
       <Dialog open={clockInDialog} onOpenChange={setClockInDialog}>
-        <DialogContent>
+        <DialogContent className="max-w-[95vw] sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Clock In</DialogTitle>
             <DialogDescription>Select technician and work order to clock in.</DialogDescription>

@@ -41,7 +41,7 @@ function KpiCard({ title, value, subtitle, icon, color = "" }: KpiCardProps) {
         <div className="flex items-start justify-between">
           <div>
             <p className="text-[10px] uppercase text-muted-foreground font-medium mb-1">{title}</p>
-            <p className={`text-2xl font-bold ${color}`}>{value}</p>
+            <p className={`text-xl sm:text-2xl font-bold ${color}`}>{value}</p>
             {subtitle && <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>}
           </div>
           {icon && (
@@ -128,7 +128,7 @@ export default function ArDashboardPage() {
   return (
     <div className="space-y-5">
       <div>
-        <h1 className="text-xl font-semibold text-foreground">AR Dashboard</h1>
+        <h1 className="text-lg sm:text-xl font-semibold text-foreground">AR Dashboard</h1>
         <p className="text-sm text-muted-foreground mt-0.5">
           Accounts receivable command center — {aging?.invoiceCount ?? 0} outstanding invoices
         </p>
@@ -180,6 +180,7 @@ export default function ArDashboardPage() {
               <p className="text-xs text-muted-foreground">No overdue invoices — great work!</p>
             </div>
           ) : (
+            <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow className="border-border/50">
@@ -240,6 +241,7 @@ export default function ArDashboardPage() {
                 ))}
               </TableBody>
             </Table>
+            </div>
           )}
         </CardContent>
       </Card>
@@ -255,6 +257,7 @@ export default function ArDashboardPage() {
               <p className="text-xs text-muted-foreground">No outstanding customer balances.</p>
             </div>
           ) : (
+            <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow className="border-border/50">
@@ -283,6 +286,7 @@ export default function ArDashboardPage() {
                 ))}
               </TableBody>
             </Table>
+            </div>
           )}
         </CardContent>
       </Card>

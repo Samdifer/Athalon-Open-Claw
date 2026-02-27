@@ -259,8 +259,8 @@ export default function AircraftDetailPage() {
             </div>
           ) : (
             <>
-              <div className="flex items-center gap-3">
-                <h1 className="text-2xl font-bold font-mono text-foreground">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                <h1 className="text-lg sm:text-xl md:text-2xl font-bold font-mono text-foreground">
                   {aircraft!.currentRegistration}
                 </h1>
                 <Badge
@@ -284,7 +284,7 @@ export default function AircraftDetailPage() {
         <DetailSkeleton />
       ) : (
         <Tabs defaultValue="aircraft-info" className="space-y-4">
-          <TabsList>
+          <TabsList className="flex-wrap h-auto gap-1">
             <TabsTrigger value="aircraft-info">
               <ClipboardList className="w-3.5 h-3.5 mr-1.5" />
               Aircraft Info
@@ -318,16 +318,16 @@ export default function AircraftDetailPage() {
                 <CardTitle className="text-sm font-semibold">Identification</CardTitle>
               </CardHeader>
               <CardContent className="pt-0">
-                <div className="grid grid-cols-2 gap-x-8 gap-y-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3">
                   <FieldRow label="Registration" value={aircraft!.currentRegistration ?? "—"} mono />
                   <FieldRow label="Serial Number" value={aircraft!.serialNumber} mono />
-                  <Separator className="col-span-2 opacity-40" />
+                  <Separator className="col-span-full opacity-40" />
                   <FieldRow
                     label="Make / Model / Series"
                     value={`${aircraft!.make} ${aircraft!.model}${aircraft!.series ? ` ${aircraft!.series}` : ""}`}
                   />
                   <FieldRow label="Year of Manufacture" value={aircraft!.yearOfManufacture?.toString() ?? "—"} />
-                  <Separator className="col-span-2 opacity-40" />
+                  <Separator className="col-span-full opacity-40" />
                   <FieldRow label="Type Certificate Number" value={aircraft!.typeCertificateNumber ?? "—"} />
                   <div>
                     <p className="text-[11px] text-muted-foreground uppercase tracking-wide font-medium">
@@ -342,7 +342,7 @@ export default function AircraftDetailPage() {
                       )}
                     </div>
                   </div>
-                  <Separator className="col-span-2 opacity-40" />
+                  <Separator className="col-span-full opacity-40" />
                   <FieldRow
                     label="Operating Regulation"
                     value={formatRegulation(aircraft!.operatingRegulation)}
@@ -353,7 +353,7 @@ export default function AircraftDetailPage() {
                   />
                   <FieldRow label="Base Location" value={aircraft!.baseLocation ?? "—"} mono />
                   <div />
-                  <Separator className="col-span-2 opacity-40" />
+                  <Separator className="col-span-full opacity-40" />
                   <FieldRow label="Owner Name" value={aircraft!.ownerName ?? "—"} />
                   <FieldRow label="Owner Address" value={aircraft!.ownerAddress ?? "—"} />
                 </div>
