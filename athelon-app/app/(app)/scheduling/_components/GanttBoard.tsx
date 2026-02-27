@@ -1,9 +1,13 @@
 "use client";
 
-import { useState, useRef, useMemo, useEffect } from "react";
+import { useState, useRef, useMemo, useEffect, useCallback } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
 import {
   ChevronLeft,
   ChevronRight,
@@ -11,11 +15,11 @@ import {
   ZoomOut,
   CalendarDays,
   Plus,
+  AlertTriangle,
 } from "lucide-react";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// LOCAL TYPE: WorkOrderWithRisk
-// Mirrors the return shape of convex/workOrders.ts getWorkOrdersWithScheduleRisk
+// TYPES
 // ─────────────────────────────────────────────────────────────────────────────
 
 type WorkOrderWithRisk = {
@@ -36,88 +40,116 @@ type WorkOrderWithRisk = {
   aircraft: { currentRegistration: string | undefined; make: string; model: string } | null;
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// PROPS
-// ─────────────────────────────────────────────────────────────────────────────
+type Bay = {
+  _id: string;
+  name: string;
+  type: string;
+  status: string;
+};
 
 interface GanttBoardProps {
   workOrders: WorkOrderWithRisk[];
   onOpenBacklog: () => void;
   unscheduledCount: number;
+  bays?: Bay[];
+  conflicts?: { type: string; severity: string; message: string; woIds: string[] }[];
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CONSTANTS
 // ─────────────────────────────────────────────────────────────────────────────
 
-const ZOOM_LEVELS = [20, 30, 40, 60, 80, 120, 180] as const;
-const ROW_HEIGHT = 48; // px
-const BAR_HEIGHT = 28; // px
-const LABEL_WIDTH = 160; // px
+const ROW_HEIGHT = 52;
+const BAR_HEIGHT = 32;
+const LABEL_WIDTH = 170;
+const DAY_MS = 24 * 60 * 60 * 1000;
 const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;
 
-type ViewMode = "wo_timeline" | "tech_view";
+type ViewMode = "day" | "week" | "month";
+
+const VIEW_CELL_WIDTHS: Record<ViewMode, number> = {
+  day: 40,
+  week: 10,
+  month: 4,
+};
 
 // ─────────────────────────────────────────────────────────────────────────────
 // HELPERS
 // ─────────────────────────────────────────────────────────────────────────────
 
 function msToDay(ms: number): number {
-  return Math.floor(ms / (24 * 60 * 60 * 1000));
+  return Math.floor(ms / DAY_MS);
 }
 
 function getBarColor(wo: WorkOrderWithRisk): string {
-  if (wo.priority === "aog") {
-    return "bg-red-600/80 border border-red-500 text-white";
-  }
-  if (wo.priority === "urgent") {
-    return "bg-orange-500/70 border border-orange-400 text-white";
-  }
-  if (wo.riskLevel === "overdue") {
-    return "bg-red-400/60 border border-red-500 text-white";
-  }
-  if (wo.riskLevel === "at_risk") {
-    return "bg-amber-500/60 border border-amber-400 text-foreground";
-  }
-  if (wo.riskLevel === "on_track") {
-    return "bg-sky-500/60 border border-sky-400 text-white";
-  }
+  if (wo.status === "closed") return "bg-slate-400/50 border border-slate-400 text-slate-300";
+  if (wo.priority === "aog") return "bg-red-600/80 border border-red-500 text-white";
+  if (wo.priority === "urgent") return "bg-orange-500/70 border border-orange-400 text-white";
+  if (wo.riskLevel === "overdue") return "bg-red-400/60 border border-red-500 text-white";
+  if (wo.riskLevel === "at_risk") return "bg-amber-500/60 border border-amber-400 text-foreground";
+  if (wo.riskLevel === "on_track") return "bg-sky-500/60 border border-sky-400 text-white";
   return "bg-slate-600/70 border border-slate-500 text-muted-foreground";
+}
+
+function getStatusLabel(status: string): string {
+  return status.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
 
-export function GanttBoard({ workOrders, onOpenBacklog, unscheduledCount }: GanttBoardProps) {
+export function GanttBoard({
+  workOrders,
+  onOpenBacklog,
+  unscheduledCount,
+  bays,
+  conflicts,
+}: GanttBoardProps) {
   const navigate = useNavigate();
   const scrollRef = useRef<HTMLDivElement>(null);
+  const updateSchedule = useMutation(api.scheduling.updateWOSchedule);
 
-  const [cellWidth, setCellWidth] = useState<number>(40);
-  const [viewMode, setViewMode] = useState<ViewMode>("wo_timeline");
+  const [viewMode, setViewMode] = useState<ViewMode>("day");
+  const [showConflicts, setShowConflicts] = useState(true);
 
-  // ── Today ──────────────────────────────────────────────────────────────────
+  const cellWidth = VIEW_CELL_WIDTHS[viewMode];
+
+  // ── Drag state ─────────────────────────────────────────────────────────
+  const [dragState, setDragState] = useState<{
+    woId: string;
+    type: "move" | "resize";
+    startX: number;
+    origStartDate: number;
+    origEndDate: number;
+  } | null>(null);
+  const [dragDelta, setDragDelta] = useState(0);
+
+  // ── Today ──────────────────────────────────────────────────────────────
   const today = useMemo(() => {
     const d = new Date();
     d.setHours(0, 0, 0, 0);
     return d;
   }, []);
 
-  // ── Date range ─────────────────────────────────────────────────────────────
-  const days = useMemo(() => {
-    // Default: 30 days before today to 60 days after
-    let rangeStartMs = today.getTime() - 30 * 24 * 60 * 60 * 1000;
-    let rangeEndMs = today.getTime() + 60 * 24 * 60 * 60 * 1000;
+  // ── Only scheduled WOs ─────────────────────────────────────────────────
+  const scheduledWOs = useMemo(
+    () => workOrders.filter((wo) => wo.scheduledStartDate && wo.promisedDeliveryDate),
+    [workOrders],
+  );
 
-    // Expand to cover all WO dates
-    for (const wo of workOrders) {
-      const startMs = wo.scheduledStartDate ?? wo.openedAt;
-      const endMs = wo.promisedDeliveryDate ?? startMs + 30 * 24 * 60 * 60 * 1000;
+  // ── Date range ─────────────────────────────────────────────────────────
+  const days = useMemo(() => {
+    let rangeStartMs = today.getTime() - 30 * DAY_MS;
+    let rangeEndMs = today.getTime() + 60 * DAY_MS;
+
+    for (const wo of scheduledWOs) {
+      const startMs = wo.scheduledStartDate!;
+      const endMs = wo.promisedDeliveryDate!;
       if (startMs < rangeStartMs) rangeStartMs = startMs;
       if (endMs > rangeEndMs) rangeEndMs = endMs;
     }
 
-    // Normalize to midnight
     const startDay = new Date(rangeStartMs);
     startDay.setHours(0, 0, 0, 0);
     const endDay = new Date(rangeEndMs);
@@ -130,90 +162,205 @@ export function GanttBoard({ workOrders, onOpenBacklog, unscheduledCount }: Gant
       cursor.setDate(cursor.getDate() + 1);
     }
     return result;
-  }, [today, workOrders]);
+  }, [today, scheduledWOs]);
 
-  // ── Pre-computed WO bar positions ─────────────────────────────────────────
   const rangeStartDay = useMemo(() => msToDay(days[0]?.getTime() ?? 0), [days]);
 
+  // ── Conflict WO ids ────────────────────────────────────────────────────
+  const conflictWoIds = useMemo(() => {
+    const set = new Set<string>();
+    for (const c of conflicts ?? []) {
+      for (const id of c.woIds) set.add(id);
+    }
+    return set;
+  }, [conflicts]);
+
+  // ── Bar positions ──────────────────────────────────────────────────────
+  // Use bays as row groups if available, otherwise use WO list
+  const rows = useMemo(() => {
+    if (bays && bays.length > 0) {
+      return bays.map((bay) => ({
+        id: bay._id,
+        label: bay.name,
+        sublabel: bay.type,
+        wos: scheduledWOs.filter(() => true), // all WOs shown; bay assignment TBD
+      }));
+    }
+    return scheduledWOs.map((wo) => ({
+      id: wo._id,
+      label: wo.aircraft?.currentRegistration ?? wo.workOrderNumber,
+      sublabel: wo.workOrderNumber,
+      wos: [wo],
+    }));
+  }, [bays, scheduledWOs]);
+
   const woPositions = useMemo(() => {
-    return workOrders.map((wo) => {
-      const startMs = wo.scheduledStartDate ?? wo.openedAt;
-      const endMs =
-        wo.promisedDeliveryDate ?? startMs + 30 * 24 * 60 * 60 * 1000;
+    return scheduledWOs.map((wo) => {
+      let startMs = wo.scheduledStartDate!;
+      let endMs = wo.promisedDeliveryDate!;
+
+      // Apply drag delta
+      if (dragState && dragState.woId === wo._id) {
+        const daysDelta = Math.round(dragDelta / cellWidth);
+        if (dragState.type === "move") {
+          startMs = dragState.origStartDate + daysDelta * DAY_MS;
+          endMs = dragState.origEndDate + daysDelta * DAY_MS;
+        } else {
+          endMs = Math.max(
+            dragState.origStartDate + DAY_MS,
+            dragState.origEndDate + daysDelta * DAY_MS,
+          );
+        }
+      }
 
       const startDayIdx = msToDay(startMs) - rangeStartDay;
       const endDayIdx = msToDay(endMs) - rangeStartDay;
       const maxDayIdx = days.length - 1;
 
-      const clampedStart = Math.max(0, Math.min(startDayIdx, maxDayIdx));
-      const clampedEnd = Math.max(clampedStart, Math.min(endDayIdx, maxDayIdx));
-
       return {
         wo,
-        startDayIdx: clampedStart,
-        endDayIdx: clampedEnd,
+        startDayIdx: Math.max(0, Math.min(startDayIdx, maxDayIdx)),
+        endDayIdx: Math.max(0, Math.min(endDayIdx, maxDayIdx)),
+        isConflict: conflictWoIds.has(wo._id),
       };
     });
-  }, [workOrders, rangeStartDay, days.length]);
+  }, [scheduledWOs, rangeStartDay, days.length, dragState, dragDelta, cellWidth, conflictWoIds]);
 
-  // ── Today column index ─────────────────────────────────────────────────────
+  // ── Today column ───────────────────────────────────────────────────────
   const todayIndex = useMemo(
     () => days.findIndex((d) => d.toDateString() === today.toDateString()),
     [days, today],
   );
 
-  // ── Auto-scroll to today on mount / cellWidth change ──────────────────────
+  // ── Auto-scroll to today ──────────────────────────────────────────────
   useEffect(() => {
     if (scrollRef.current && todayIndex >= 0) {
-      const scrollX = Math.max(0, todayIndex * cellWidth - 120);
-      scrollRef.current.scrollLeft = scrollX;
+      scrollRef.current.scrollLeft = Math.max(0, todayIndex * cellWidth - 200);
     }
   }, [todayIndex, cellWidth]);
 
-  // ── Zoom helpers ───────────────────────────────────────────────────────────
-  function zoomIn() {
-    const idx = ZOOM_LEVELS.indexOf(cellWidth as (typeof ZOOM_LEVELS)[number]);
-    if (idx < ZOOM_LEVELS.length - 1) {
-      setCellWidth(ZOOM_LEVELS[idx + 1]);
-    } else if (idx === -1) {
-      // Not in list — find next larger
-      const next = ZOOM_LEVELS.find((z) => z > cellWidth);
-      if (next !== undefined) setCellWidth(next);
-    }
-  }
+  // ── Drag handlers ─────────────────────────────────────────────────────
+  const handleMouseDown = useCallback(
+    (e: React.MouseEvent, wo: WorkOrderWithRisk, type: "move" | "resize") => {
+      e.preventDefault();
+      e.stopPropagation();
+      setDragState({
+        woId: wo._id,
+        type,
+        startX: e.clientX,
+        origStartDate: wo.scheduledStartDate!,
+        origEndDate: wo.promisedDeliveryDate!,
+      });
+      setDragDelta(0);
+    },
+    [],
+  );
 
-  function zoomOut() {
-    const idx = ZOOM_LEVELS.indexOf(cellWidth as (typeof ZOOM_LEVELS)[number]);
-    if (idx > 0) {
-      setCellWidth(ZOOM_LEVELS[idx - 1]);
-    } else if (idx === -1) {
-      // Not in list — find next smaller
-      const prev = [...ZOOM_LEVELS].reverse().find((z) => z < cellWidth);
-      if (prev !== undefined) setCellWidth(prev);
-    }
-  }
+  useEffect(() => {
+    if (!dragState) return;
 
+    function handleMouseMove(e: MouseEvent) {
+      setDragDelta(e.clientX - dragState!.startX);
+    }
+
+    async function handleMouseUp(e: MouseEvent) {
+      const delta = e.clientX - dragState!.startX;
+      const daysDelta = Math.round(delta / cellWidth);
+
+      if (daysDelta !== 0) {
+        let newStart: number;
+        let newEnd: number;
+
+        if (dragState!.type === "move") {
+          newStart = dragState!.origStartDate + daysDelta * DAY_MS;
+          newEnd = dragState!.origEndDate + daysDelta * DAY_MS;
+        } else {
+          newStart = dragState!.origStartDate;
+          newEnd = Math.max(
+            dragState!.origStartDate + DAY_MS,
+            dragState!.origEndDate + daysDelta * DAY_MS,
+          );
+        }
+
+        try {
+          await updateSchedule({
+            woId: dragState!.woId as Id<"workOrders">,
+            startDate: newStart,
+            endDate: newEnd,
+          });
+          toast.success("Schedule updated");
+        } catch (err) {
+          toast.error(err instanceof Error ? err.message : "Failed to update schedule");
+        }
+      }
+
+      setDragState(null);
+      setDragDelta(0);
+    }
+
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [dragState, cellWidth, updateSchedule]);
+
+  // ── Zoom / scroll helpers ──────────────────────────────────────────────
   function scrollToToday() {
     if (scrollRef.current && todayIndex >= 0) {
-      const scrollX = Math.max(0, todayIndex * cellWidth - 120);
-      scrollRef.current.scrollLeft = scrollX;
+      scrollRef.current.scrollLeft = Math.max(0, todayIndex * cellWidth - 200);
     }
   }
 
-  // ── Date range label ───────────────────────────────────────────────────────
   const dateRangeLabel = useMemo(() => {
     if (days.length === 0) return "";
-    const first = days[0];
-    const last = days[days.length - 1];
     const fmt = (d: Date) =>
       d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-    return `${fmt(first)} – ${fmt(last)}`;
+    return `${fmt(days[0])} – ${fmt(days[days.length - 1])}`;
   }, [days]);
 
-  // ── Total timeline width ───────────────────────────────────────────────────
   const timelineWidth = days.length * cellWidth;
 
-  // ── Empty state ────────────────────────────────────────────────────────────
+  // ── Month headers (for week/month views) ───────────────────────────────
+  const monthHeaders = useMemo(() => {
+    if (viewMode === "day") return null;
+    const headers: { label: string; startIdx: number; span: number }[] = [];
+    let currentMonth = -1;
+    let currentStart = 0;
+
+    days.forEach((day, i) => {
+      const month = day.getMonth();
+      if (month !== currentMonth) {
+        if (currentMonth !== -1) {
+          headers.push({
+            label: days[currentStart].toLocaleDateString("en-US", {
+              month: "short",
+              year: "numeric",
+            }),
+            startIdx: currentStart,
+            span: i - currentStart,
+          });
+        }
+        currentMonth = month;
+        currentStart = i;
+      }
+    });
+    // last group
+    if (days.length > 0) {
+      headers.push({
+        label: days[currentStart].toLocaleDateString("en-US", {
+          month: "short",
+          year: "numeric",
+        }),
+        startIdx: currentStart,
+        span: days.length - currentStart,
+      });
+    }
+    return headers;
+  }, [days, viewMode]);
+
+  // ── Empty state ────────────────────────────────────────────────────────
   if (workOrders.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-full gap-4 py-20">
@@ -232,39 +379,29 @@ export function GanttBoard({ workOrders, onOpenBacklog, unscheduledCount }: Gant
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full select-none">
       {/* ── Toolbar ──────────────────────────────────────────────────────── */}
-      <div className="flex flex-wrap items-center gap-2 px-2 sm:px-4 py-2.5 border-b border-border/50 bg-background/80 backdrop-blur-sm flex-shrink-0">
+      <div className="flex flex-wrap items-center gap-2 px-2 sm:px-4 py-2 border-b border-border/50 bg-background/80 backdrop-blur-sm flex-shrink-0">
         {/* View mode toggles */}
         <div className="flex items-center rounded-md border border-border/60 overflow-hidden">
-          <button
-            className={`px-3 py-1.5 text-xs font-medium transition-colors ${
-              viewMode === "wo_timeline"
-                ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground hover:bg-muted/50"
-            }`}
-            onClick={() => setViewMode("wo_timeline")}
-          >
-            WO Timeline
-          </button>
-          <button
-            className={`px-3 py-1.5 text-xs font-medium transition-colors border-l border-border/60 ${
-              viewMode === "tech_view"
-                ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground hover:bg-muted/50"
-            }`}
-            onClick={() => setViewMode("tech_view")}
-          >
-            Tech View
-          </button>
+          {(["day", "week", "month"] as ViewMode[]).map((mode) => (
+            <button
+              key={mode}
+              className={`px-3 py-1.5 text-xs font-medium transition-colors ${
+                viewMode === mode
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:bg-muted/50"
+              } ${mode !== "day" ? "border-l border-border/60" : ""}`}
+              onClick={() => setViewMode(mode)}
+            >
+              {mode.charAt(0).toUpperCase() + mode.slice(1)}
+            </button>
+          ))}
         </div>
 
         <div className="w-px h-5 bg-border/50 mx-1" />
 
-        {/* Date range */}
-        <span className="text-xs text-muted-foreground hidden md:block">
-          {dateRangeLabel}
-        </span>
+        <span className="text-xs text-muted-foreground hidden md:block">{dateRangeLabel}</span>
 
         <div className="flex-1" />
 
@@ -281,178 +418,158 @@ export function GanttBoard({ workOrders, onOpenBacklog, unscheduledCount }: Gant
           </button>
         )}
 
-        <div className="w-px h-5 bg-border/50 mx-1" />
-
-        {/* Zoom controls */}
-        <div className="flex items-center gap-1">
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            onClick={zoomOut}
-            disabled={cellWidth <= ZOOM_LEVELS[0]}
-            aria-label="Zoom out"
+        {/* Conflict toggle */}
+        {conflicts && conflicts.length > 0 && (
+          <button
+            className={`flex items-center gap-1.5 text-xs font-medium rounded-md px-2.5 py-1.5 border transition-colors ${
+              showConflicts
+                ? "text-red-700 dark:text-red-400 bg-red-100 dark:bg-red-950/50 border-red-300 dark:border-red-800"
+                : "text-muted-foreground bg-muted/30 border-border/50"
+            }`}
+            onClick={() => setShowConflicts(!showConflicts)}
           >
-            <ZoomOut className="w-3.5 h-3.5" />
-          </Button>
-          <span className="text-[11px] text-muted-foreground w-14 text-center tabular-nums">
-            {cellWidth}px/d
-          </span>
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            onClick={zoomIn}
-            disabled={cellWidth >= ZOOM_LEVELS[ZOOM_LEVELS.length - 1]}
-            aria-label="Zoom in"
-          >
-            <ZoomIn className="w-3.5 h-3.5" />
-          </Button>
-        </div>
+            <AlertTriangle className="w-3.5 h-3.5" />
+            {conflicts.length} conflicts
+          </button>
+        )}
 
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={scrollToToday}
-          className="text-xs h-7"
-        >
+        <Button variant="outline" size="sm" onClick={scrollToToday} className="text-xs h-7">
           <CalendarDays className="w-3.5 h-3.5" />
           Today
         </Button>
       </div>
 
-      {/* ── Tech View placeholder ─────────────────────────────────────────── */}
-      {viewMode === "tech_view" && (
-        <div className="flex flex-col items-center justify-center flex-1 gap-3 py-20 px-8 text-center">
-          <p className="text-sm text-muted-foreground max-w-md">
-            Technician workload view — assign task cards to technicians on their
-            task cards to populate this view.
-          </p>
-          <Button asChild variant="outline" size="sm">
-            <Link to="/personnel">Go to Personnel</Link>
-          </Button>
+      {/* ── Conflict warnings banner ──────────────────────────────────────── */}
+      {showConflicts && conflicts && conflicts.length > 0 && (
+        <div className="border-b border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-950/30 px-4 py-2 flex-shrink-0 overflow-y-auto max-h-32">
+          {conflicts.map((c, i) => (
+            <div
+              key={i}
+              className={`flex items-start gap-2 text-xs py-0.5 ${
+                c.severity === "error" ? "text-red-700 dark:text-red-400" : "text-amber-700 dark:text-amber-400"
+              }`}
+            >
+              <AlertTriangle className="w-3 h-3 mt-0.5 flex-shrink-0" />
+              <span>{c.message}</span>
+            </div>
+          ))}
         </div>
       )}
 
-      {/* ── WO Timeline ──────────────────────────────────────────────────── */}
-      {viewMode === "wo_timeline" && (
-        <div className="flex flex-1 overflow-hidden">
-          {/* Left sticky labels */}
+      {/* ── Gantt chart ──────────────────────────────────────────────────── */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* Left sticky labels */}
+        <div
+          className="flex-shrink-0 bg-background border-r border-border/40 z-10 overflow-y-auto"
+          style={{ width: LABEL_WIDTH }}
+        >
           <div
-            className="flex-shrink-0 bg-background border-r border-border/40 z-10"
-            style={{ width: LABEL_WIDTH }}
+            className="border-b border-border/40 bg-muted/30 flex items-center px-3 sticky top-0"
+            style={{ height: ROW_HEIGHT }}
           >
-            {/* Header placeholder */}
+            <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
+              {bays && bays.length > 0 ? "Bay" : "Aircraft / WO"}
+            </span>
+          </div>
+          {(bays && bays.length > 0 ? rows : woPositions.map(({ wo }) => ({
+            id: wo._id,
+            label: wo.aircraft?.currentRegistration ?? "",
+            sublabel: wo.workOrderNumber,
+          }))).map((row) => (
             <div
-              className="border-b border-border/40 bg-muted/30 flex items-center px-3"
+              key={row.id}
+              className="flex flex-col justify-center px-3 border-b border-border/30 hover:bg-muted/20 transition-colors cursor-pointer"
               style={{ height: ROW_HEIGHT }}
+              onClick={() => {
+                if (!bays || bays.length === 0) navigate(`/work-orders/${row.id}`);
+              }}
             >
-              <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
-                Aircraft / WO
+              <span className="text-[11px] font-semibold text-foreground truncate">
+                {row.label}
+              </span>
+              <span className="text-[10px] font-mono text-muted-foreground truncate">
+                {row.sublabel}
               </span>
             </div>
-            {/* Row labels */}
-            {woPositions.map(({ wo }) => (
+          ))}
+        </div>
+
+        {/* Right scrollable timeline */}
+        <div ref={scrollRef} className="flex-1 overflow-auto">
+          <div className="relative" style={{ width: timelineWidth, minHeight: "100%" }}>
+            {/* Today vertical line — red dashed */}
+            {todayIndex >= 0 && (
               <div
-                key={wo._id}
-                className="flex flex-col justify-center px-3 border-b border-border/30 hover:bg-muted/20 transition-colors cursor-pointer"
-                style={{ height: ROW_HEIGHT }}
-                onClick={() => navigate(`/work-orders/${wo._id}`)}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    navigate(`/work-orders/${wo._id}`);
-                  }
+                className="absolute top-0 bottom-0 z-20 pointer-events-none"
+                style={{
+                  left: todayIndex * cellWidth + cellWidth / 2,
+                  width: 2,
+                  background:
+                    "repeating-linear-gradient(to bottom, #ef4444 0px, #ef4444 4px, transparent 4px, transparent 8px)",
                 }}
-              >
-                {wo.aircraft ? (
-                  <span className="text-[11px] font-semibold text-foreground truncate">
-                    {wo.aircraft.currentRegistration}
-                  </span>
-                ) : null}
-                <span className="text-[10px] font-mono text-muted-foreground truncate">
-                  {wo.workOrderNumber}
-                </span>
-              </div>
-            ))}
-          </div>
+              />
+            )}
 
-          {/* Right scrollable timeline */}
-          <div
-            ref={scrollRef}
-            className="flex-1 overflow-x-auto overflow-y-hidden"
-          >
-            <div className="relative" style={{ width: timelineWidth }}>
-              {/* Today indicator */}
-              {todayIndex >= 0 && (
-                <div
-                  className="absolute top-0 bottom-0 bg-primary/60 z-20 pointer-events-none"
-                  style={{
-                    left: todayIndex * cellWidth + cellWidth / 2,
-                    width: 1,
-                  }}
-                />
-              )}
-
-              {/* Header row — day cells */}
-              <div
-                className="flex border-b border-border/40 bg-muted/30 sticky top-0 z-10"
-                style={{ height: ROW_HEIGHT }}
-              >
-                {days.map((day, i) => {
-                  const isWeekend = day.getDay() === 0 || day.getDay() === 6;
-                  const isToday = day.toDateString() === today.toDateString();
-                  return (
-                    <div
-                      key={i}
-                      className={`flex flex-col items-center justify-center flex-shrink-0 border-r border-border/20 select-none ${
-                        isToday
-                          ? "bg-primary/10 font-bold text-primary"
-                          : isWeekend
-                            ? "bg-muted/20 text-muted-foreground/50"
-                            : "text-muted-foreground"
-                      }`}
-                      style={{ width: cellWidth }}
-                    >
-                      {cellWidth >= 30 && (
-                        <>
-                          <span className="text-[10px] leading-none">
-                            {day.getDate()}
+            {/* Header row */}
+            <div
+              className="flex border-b border-border/40 bg-muted/30 sticky top-0 z-10"
+              style={{ height: ROW_HEIGHT }}
+            >
+              {viewMode === "day"
+                ? days.map((day, i) => {
+                    const isWeekend = day.getDay() === 0 || day.getDay() === 6;
+                    const isToday = day.toDateString() === today.toDateString();
+                    return (
+                      <div
+                        key={i}
+                        className={`flex flex-col items-center justify-center flex-shrink-0 border-r border-border/20 ${
+                          isToday
+                            ? "bg-primary/10 font-bold text-primary"
+                            : isWeekend
+                              ? "bg-muted/20 text-muted-foreground/50"
+                              : "text-muted-foreground"
+                        }`}
+                        style={{ width: cellWidth }}
+                      >
+                        <span className="text-[10px] leading-none">{day.getDate()}</span>
+                        {cellWidth >= 30 && (
+                          <span className="text-[9px] leading-none mt-0.5">
+                            {DAY_NAMES[day.getDay()]}
                           </span>
-                          {cellWidth >= 40 && (
-                            <span className="text-[9px] leading-none mt-0.5">
-                              {DAY_NAMES[day.getDay()]}
-                            </span>
-                          )}
-                        </>
-                      )}
-                      {cellWidth < 30 && (
-                        <span className="text-[9px] leading-none">
-                          {day.getDate()}
-                        </span>
-                      )}
+                        )}
+                      </div>
+                    );
+                  })
+                : monthHeaders?.map((mh) => (
+                    <div
+                      key={mh.startIdx}
+                      className="flex items-center justify-center flex-shrink-0 border-r border-border/30 text-[10px] text-muted-foreground font-medium"
+                      style={{ width: mh.span * cellWidth }}
+                    >
+                      {mh.label}
                     </div>
-                  );
-                })}
-              </div>
+                  ))}
+            </div>
 
-              {/* WO rows */}
-              {woPositions.map(({ wo, startDayIdx, endDayIdx }) => {
-                const barLeft = startDayIdx * cellWidth;
-                const barWidth = Math.max(
-                  cellWidth,
-                  (endDayIdx - startDayIdx) * cellWidth,
-                );
-                const barTop = (ROW_HEIGHT - BAR_HEIGHT) / 2;
-                const colorClass = getBarColor(wo);
+            {/* WO rows */}
+            {woPositions.map(({ wo, startDayIdx, endDayIdx, isConflict }) => {
+              const barLeft = startDayIdx * cellWidth;
+              const barWidth = Math.max(cellWidth, (endDayIdx - startDayIdx) * cellWidth);
+              const barTop = (ROW_HEIGHT - BAR_HEIGHT) / 2;
+              const colorClass = isConflict
+                ? "bg-red-500/70 border-2 border-red-400 text-white ring-2 ring-red-400/50"
+                : getBarColor(wo);
+              const isDragging = dragState?.woId === wo._id;
 
-                return (
-                  <div
-                    key={wo._id}
-                    className="relative border-b border-border/30"
-                    style={{ height: ROW_HEIGHT, width: timelineWidth }}
-                  >
-                    {/* Weekend column shading */}
-                    {days.map((day, i) => {
+              return (
+                <div
+                  key={wo._id}
+                  className="relative border-b border-border/30"
+                  style={{ height: ROW_HEIGHT, width: timelineWidth }}
+                >
+                  {/* Weekend column shading (day view only) */}
+                  {viewMode === "day" &&
+                    days.map((day, i) => {
                       const isWeekend = day.getDay() === 0 || day.getDay() === 6;
                       if (!isWeekend) return null;
                       return (
@@ -464,36 +581,48 @@ export function GanttBoard({ workOrders, onOpenBacklog, unscheduledCount }: Gant
                       );
                     })}
 
-                    {/* WO bar */}
-                    <div
-                      className={`absolute rounded flex items-center px-1.5 cursor-pointer overflow-hidden text-[11px] font-medium transition-opacity hover:opacity-90 ${colorClass}`}
-                      style={{
-                        left: barLeft,
-                        width: barWidth,
-                        top: barTop,
-                        height: BAR_HEIGHT,
-                      }}
-                      onClick={() => navigate(`/work-orders/${wo._id}`)}
-                      role="button"
-                      tabIndex={0}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" || e.key === " ") {
-                          navigate(`/work-orders/${wo._id}`);
-                        }
-                      }}
-                      title={`${wo.workOrderNumber} — ${wo.description}`}
-                    >
-                      <span className="truncate">
-                        {wo.workOrderNumber}
-                      </span>
+                  {/* WO bar */}
+                  <div
+                    className={`absolute rounded-md flex items-center overflow-hidden text-[11px] font-medium transition-shadow ${colorClass} ${
+                      isDragging ? "opacity-80 shadow-lg z-30" : "hover:shadow-md cursor-grab"
+                    }`}
+                    style={{
+                      left: barLeft + (isDragging && dragState?.type === "move" ? dragDelta : 0),
+                      width:
+                        barWidth +
+                        (isDragging && dragState?.type === "resize" ? dragDelta : 0),
+                      top: barTop,
+                      height: BAR_HEIGHT,
+                    }}
+                    onMouseDown={(e) => handleMouseDown(e, wo, "move")}
+                    onDoubleClick={() => navigate(`/work-orders/${wo._id}`)}
+                    title={`${wo.workOrderNumber} — ${wo.aircraft?.currentRegistration ?? ""} — ${wo.description}`}
+                  >
+                    {/* Bar content */}
+                    <div className="flex items-center gap-1.5 px-2 min-w-0 flex-1">
+                      <span className="font-semibold truncate">{wo.workOrderNumber}</span>
+                      {wo.aircraft?.currentRegistration && barWidth > 120 && (
+                        <span className="text-[10px] opacity-80 truncate">
+                          {wo.aircraft.currentRegistration}
+                        </span>
+                      )}
                     </div>
+
+                    {/* Resize handle */}
+                    <div
+                      className="absolute right-0 top-0 bottom-0 w-2 cursor-ew-resize hover:bg-white/20"
+                      onMouseDown={(e) => {
+                        e.stopPropagation();
+                        handleMouseDown(e, wo, "resize");
+                      }}
+                    />
                   </div>
-                );
-              })}
-            </div>
+                </div>
+              );
+            })}
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }

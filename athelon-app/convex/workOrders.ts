@@ -28,6 +28,7 @@ import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 import { paginationOptsValidator } from "convex/server";
 import type { Id } from "./_generated/dataModel";
+import { createNotificationHelper } from "./notifications";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // INTERNAL HELPER TYPES
@@ -439,6 +440,21 @@ export const openWorkOrder = mutation({
           : ""),
       timestamp: now,
     });
+
+    // ── Notify assigned technicians ─────────────────────────────────────────
+    for (const techId of args.assignedTechnicianIds) {
+      const tech = await ctx.db.get(techId);
+      if (tech?.userId) {
+        await createNotificationHelper(ctx, {
+          organizationId: args.organizationId,
+          recipientUserId: tech.userId,
+          type: "assignment",
+          title: "Work Order Assignment",
+          message: `You have been assigned to work order ${wo.workOrderNumber}.`,
+          linkTo: `/work-orders/${wo.workOrderNumber}`,
+        });
+      }
+    }
   },
 });
 

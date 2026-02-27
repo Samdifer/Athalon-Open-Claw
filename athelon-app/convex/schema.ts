@@ -3180,6 +3180,47 @@ export default defineSchema({
   // by IA-qualified inspectors. Each inspection references a work order and
   // task card, records which steps were reviewed, and captures findings.
   // ═══════════════════════════════════════════════════════════════════════════
+  // ═══════════════════════════════════════════════════════════════════════════
+  // NOTIFICATIONS (Phase 6)
+  // In-app notification system for work order updates, billing events, etc.
+  // ═══════════════════════════════════════════════════════════════════════════
+  notifications: defineTable({
+    organizationId: v.id("organizations"),
+    recipientUserId: v.string(),
+    type: v.union(
+      v.literal("wo_status_change"),
+      v.literal("quote_approved"),
+      v.literal("quote_declined"),
+      v.literal("invoice_overdue"),
+      v.literal("invoice_paid"),
+      v.literal("discrepancy_critical"),
+      v.literal("part_received"),
+      v.literal("task_completed"),
+      v.literal("rts_ready"),
+      v.literal("assignment"),
+      v.literal("system"),
+    ),
+    title: v.string(),
+    message: v.string(),
+    linkTo: v.optional(v.string()),
+    read: v.boolean(),
+    createdAt: v.number(),
+  })
+    .index("by_recipient", ["recipientUserId", "createdAt"])
+    .index("by_org", ["organizationId", "createdAt"]),
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // NOTIFICATION PREFERENCES (Phase 6)
+  // Per-user toggle for each notification type.
+  // ═══════════════════════════════════════════════════════════════════════════
+  notificationPreferences: defineTable({
+    userId: v.string(),
+    organizationId: v.id("organizations"),
+    disabledTypes: v.array(v.string()),
+    updatedAt: v.number(),
+  })
+    .index("by_user", ["userId"]),
+
   conformityInspections: defineTable({
     organizationId: v.id("organizations"),
     workOrderId: v.id("workOrders"),
@@ -3196,4 +3237,33 @@ export default defineSchema({
     .index("by_org", ["organizationId"])
     .index("by_work_order", ["workOrderId"])
     .index("by_task_card", ["taskCardId"]),
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // HANGAR BAYS — Phase 7 Scheduling
+  //
+  // Tracks physical hangar bays, ramp spots, and paint bays available for
+  // aircraft maintenance. Used by the scheduling Gantt board and auto-scheduler.
+  // ═══════════════════════════════════════════════════════════════════════════
+  hangarBays: defineTable({
+    organizationId: v.id("organizations"),
+    name: v.string(),
+    description: v.optional(v.string()),
+    type: v.union(
+      v.literal("hangar"),
+      v.literal("ramp"),
+      v.literal("paint"),
+    ),
+    capacity: v.number(),
+    status: v.union(
+      v.literal("available"),
+      v.literal("occupied"),
+      v.literal("maintenance"),
+    ),
+    currentAircraftId: v.optional(v.id("aircraft")),
+    currentWorkOrderId: v.optional(v.id("workOrders")),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_org", ["organizationId"])
+    .index("by_org_status", ["organizationId", "status"]),
 });

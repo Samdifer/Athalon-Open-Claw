@@ -8,6 +8,7 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
+import { createNotificationHelper } from "./notifications";
 
 // ─── Auth helper ──────────────────────────────────────────────────────────────
 async function requireAuth(ctx: {
@@ -1050,6 +1051,30 @@ export const releaseAircraftToCustomer = mutation({
           totalTimeAirframeHours: args.aircraftTotalTimeAtRelease,
           totalTimeAirframeAsOfDate: now,
           updatedAt: now,
+        });
+      }
+    }
+
+    // Notify shop managers about aircraft release
+    const managers = await ctx.db
+      .query("technicians")
+      .withIndex("by_organization", (q) => q.eq("organizationId", wo.organizationId))
+      .filter((q) =>
+        q.or(
+          q.eq(q.field("role"), "shop_manager"),
+          q.eq(q.field("role"), "admin"),
+        ),
+      )
+      .collect();
+    for (const mgr of managers) {
+      if (mgr.userId) {
+        await createNotificationHelper(ctx, {
+          organizationId: wo.organizationId,
+          recipientUserId: mgr.userId,
+          type: "rts_ready",
+          title: "Aircraft Released to Customer",
+          message: `Work order ${wo.workOrderNumber} — aircraft released to customer.`,
+          linkTo: `/work-orders/${wo.workOrderNumber}`,
         });
       }
     }

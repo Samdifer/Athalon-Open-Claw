@@ -34,6 +34,7 @@ import {
   getInvoiceLineItems,
   getPOLineItems,
 } from "./lib/billingHelpers";
+import { createNotificationHelper } from "./notifications";
 
 // generateUniqueNumber replaced by getNextNumber (convex/lib/numberGenerator.ts)
 // which uses an atomic orgCounters document instead of a scan-based loop.
@@ -1150,6 +1151,25 @@ export const sendInvoice = mutation({
         `Invoice is now immutable. Total: $${invoice.total.toFixed(2)}.`,
       timestamp: now,
     });
+
+    // Notify billing managers about sent invoice
+    const techs = await ctx.db
+      .query("technicians")
+      .withIndex("by_organization", (q) => q.eq("organizationId", args.orgId))
+      .filter((q) => q.eq(q.field("role"), "billing_manager"))
+      .collect();
+    for (const tech of techs) {
+      if (tech.userId) {
+        await createNotificationHelper(ctx, {
+          organizationId: args.orgId,
+          recipientUserId: tech.userId,
+          type: "system",
+          title: "Invoice Sent",
+          message: `Invoice ${invoice.invoiceNumber} ($${invoice.total.toFixed(2)}) has been sent.`,
+          linkTo: `/billing/invoices/${args.invoiceId}`,
+        });
+      }
+    }
   },
 });
 
@@ -1270,6 +1290,27 @@ export const recordPayment = mutation({
         notes: `Invoice ${invoice.invoiceNumber} partially paid. Paid: $${newAmountPaid.toFixed(2)}, Remaining: $${newBalance.toFixed(2)}.`,
         timestamp: now,
       });
+    }
+
+    // Notify billing managers about payment
+    if (nowPaid) {
+      const billingTechs = await ctx.db
+        .query("technicians")
+        .withIndex("by_organization", (q) => q.eq("organizationId", args.orgId))
+        .filter((q) => q.eq(q.field("role"), "billing_manager"))
+        .collect();
+      for (const tech of billingTechs) {
+        if (tech.userId) {
+          await createNotificationHelper(ctx, {
+            organizationId: args.orgId,
+            recipientUserId: tech.userId,
+            type: "invoice_paid",
+            title: "Invoice Paid",
+            message: `Invoice ${invoice.invoiceNumber} has been fully paid ($${newAmountPaid.toFixed(2)}).`,
+            linkTo: `/billing/invoices/${args.invoiceId}`,
+          });
+        }
+      }
     }
 
     return paymentId;

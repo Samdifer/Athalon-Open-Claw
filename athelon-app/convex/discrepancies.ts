@@ -44,6 +44,7 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
+import { createNotificationHelper } from "./notifications";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // MEL CATEGORY EXPIRY INTERVALS
@@ -322,6 +323,32 @@ export const openDiscrepancy = mutation({
         `Found by: ${findingTech.legalName}.`,
       timestamp: now,
     });
+
+    // Notify shop manager + QCM for critical discrepancies
+    if (args.discrepancyType === "mandatory") {
+      const managers = await ctx.db
+        .query("technicians")
+        .withIndex("by_organization", (q) => q.eq("organizationId", args.organizationId))
+        .filter((q) =>
+          q.or(
+            q.eq(q.field("role"), "shop_manager"),
+            q.eq(q.field("role"), "qcm_inspector"),
+          ),
+        )
+        .collect();
+      for (const mgr of managers) {
+        if (mgr.userId) {
+          await createNotificationHelper(ctx, {
+            organizationId: args.organizationId,
+            recipientUserId: mgr.userId,
+            type: "discrepancy_critical",
+            title: "Critical Discrepancy Opened",
+            message: `Mandatory discrepancy ${discrepancyNumber} on WO ${workOrder.workOrderNumber}: ${args.description.trim().slice(0, 100)}`,
+            linkTo: `/work-orders/${workOrder.workOrderNumber}`,
+          });
+        }
+      }
+    }
 
     return discrepancyId;
   },

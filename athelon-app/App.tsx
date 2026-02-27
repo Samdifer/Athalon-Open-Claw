@@ -71,6 +71,7 @@ import BillingSettingsPage from "@/app/(app)/billing/settings/page";
 // Scheduling
 import SchedulingPage from "@/app/(app)/scheduling/page";
 import CapacityPage from "@/app/(app)/scheduling/capacity/page";
+import BaysPage from "@/app/(app)/scheduling/bays/page";
 
 // Reports
 import ReportsPage from "@/app/(app)/reports/page";
@@ -78,6 +79,7 @@ import ReportsPage from "@/app/(app)/reports/page";
 // Settings
 import ShopSettingsPage from "@/app/(app)/settings/shop/page";
 import UsersSettingsPage from "@/app/(app)/settings/users/page";
+import NotificationPreferencesPage from "@/app/(app)/settings/notifications/page";
 
 // Not Found
 import AppNotFoundPage from "@/app/(app)/not-found/page";
@@ -175,6 +177,7 @@ export default function App() {
           {/* Settings */}
           <Route path="/settings/shop" element={<ShopSettingsPage />} />
           <Route path="/settings/users" element={<UsersSettingsPage />} />
+          <Route path="/settings/notifications" element={<NotificationPreferencesPage />} />
 
           {/* 404 catch-all */}
           <Route path="*" element={<AppNotFoundPage />} />

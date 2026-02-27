@@ -1,12 +1,20 @@
 "use client";
 
-import { useState } from "react";
-import { useQuery } from "convex/react";
+import { useState, useMemo } from "react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
+import type { Id } from "@/convex/_generated/dataModel";
 import { GanttBoard } from "./_components/GanttBoard";
 import { BacklogSidebar } from "./_components/BacklogSidebar";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
+import { Sparkles, Warehouse } from "lucide-react";
+import { toast } from "sonner";
+import { autoSchedule } from "@/lib/scheduling/autoSchedule";
+import { detectConflicts } from "@/lib/scheduling/conflicts";
+import type { ScheduledWO } from "@/lib/scheduling/conflicts";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // LOADING SKELETON
@@ -15,7 +23,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 function GanttSkeleton() {
   return (
     <div className="flex flex-col h-full">
-      {/* Toolbar skeleton */}
       <div className="flex items-center gap-3 px-4 py-2.5 border-b border-border/50">
         <Skeleton className="h-7 w-40 rounded-md" />
         <Skeleton className="h-4 w-px" />
@@ -26,7 +33,6 @@ function GanttSkeleton() {
         <Skeleton className="h-7 w-7" />
         <Skeleton className="h-7 w-16" />
       </div>
-      {/* Row skeletons */}
       <div className="flex flex-1 overflow-hidden">
         <div className="w-40 flex-shrink-0 border-r border-border/40 space-y-0">
           {Array.from({ length: 6 }).map((_, i) => (
@@ -69,18 +75,114 @@ function GanttSkeleton() {
 export default function SchedulingPage() {
   const { orgId, isLoaded } = useCurrentOrg();
   const [backlogOpen, setBacklogOpen] = useState(false);
+  const [autoScheduling, setAutoScheduling] = useState(false);
 
   const data = useQuery(
     api.workOrders.getWorkOrdersWithScheduleRisk,
     orgId ? { organizationId: orgId } : "skip",
   );
 
+  const bays = useQuery(
+    api.hangarBays.listBays,
+    orgId ? { organizationId: orgId } : "skip",
+  );
+
+  const updateSchedule = useMutation(api.scheduling.updateWOSchedule);
+
   const workOrders = data ?? [];
   const unscheduledCount = workOrders.filter(
     (wo) => !wo.promisedDeliveryDate || !wo.scheduledStartDate,
   ).length;
 
-  // Show skeleton while auth/org context is loading or query is in-flight
+  // ── Conflict detection ────────────────────────────────────────────────
+  const conflicts = useMemo(() => {
+    const scheduled: ScheduledWO[] = workOrders
+      .filter((wo) => wo.scheduledStartDate && wo.promisedDeliveryDate)
+      .map((wo) => ({
+        woId: wo._id,
+        workOrderNumber: wo.workOrderNumber,
+        startDate: wo.scheduledStartDate!,
+        endDate: wo.promisedDeliveryDate!,
+        promisedDeliveryDate: wo.promisedDeliveryDate,
+      }));
+    return detectConflicts(scheduled);
+  }, [workOrders]);
+
+  // ── Auto-schedule handler ─────────────────────────────────────────────
+  async function handleAutoSchedule() {
+    if (!orgId) return;
+
+    const unscheduled = workOrders.filter(
+      (wo) => !wo.scheduledStartDate || !wo.promisedDeliveryDate,
+    );
+
+    if (unscheduled.length === 0) {
+      toast.info("All work orders are already scheduled");
+      return;
+    }
+
+    const bayList = (bays ?? []).map((b) => ({
+      bayId: b._id,
+      name: b.name,
+      bookings: workOrders
+        .filter((wo) => wo.scheduledStartDate && wo.promisedDeliveryDate)
+        .map((wo) => ({
+          startDate: wo.scheduledStartDate!,
+          endDate: wo.promisedDeliveryDate!,
+        })),
+    }));
+
+    // If no bays, create a virtual bay
+    if (bayList.length === 0) {
+      bayList.push({
+        bayId: "virtual",
+        name: "Default",
+        bookings: workOrders
+          .filter((wo) => wo.scheduledStartDate && wo.promisedDeliveryDate)
+          .map((wo) => ({
+            startDate: wo.scheduledStartDate!,
+            endDate: wo.promisedDeliveryDate!,
+          })),
+      });
+    }
+
+    const assignments = autoSchedule(
+      unscheduled.map((wo) => ({
+        woId: wo._id,
+        priority: wo.priority,
+        promisedDeliveryDate: wo.promisedDeliveryDate,
+        estimatedDurationDays: Math.max(1, Math.ceil(wo.effectiveEstimatedHours / 8)),
+      })),
+      bayList,
+    );
+
+    if (assignments.length === 0) {
+      toast.warning("Could not find slots for any work orders");
+      return;
+    }
+
+    setAutoScheduling(true);
+    try {
+      let successCount = 0;
+      for (const a of assignments) {
+        try {
+          await updateSchedule({
+            woId: a.woId as Id<"workOrders">,
+            startDate: a.startDate,
+            endDate: a.endDate,
+          });
+          successCount++;
+        } catch {
+          // Continue with remaining
+        }
+      }
+      toast.success(`Auto-scheduled ${successCount} work order${successCount !== 1 ? "s" : ""}`);
+    } finally {
+      setAutoScheduling(false);
+    }
+  }
+
+  // Loading
   if (!isLoaded || data === undefined) {
     return (
       <div className="h-full flex flex-col">
@@ -91,11 +193,45 @@ export default function SchedulingPage() {
 
   return (
     <div className="h-full flex flex-col relative">
-      <GanttBoard
-        workOrders={workOrders}
-        onOpenBacklog={() => setBacklogOpen(true)}
-        unscheduledCount={unscheduledCount}
-      />
+      {/* Sub-nav toolbar */}
+      <div className="flex items-center gap-2 px-2 sm:px-4 py-2 border-b border-border/30 bg-muted/20 flex-shrink-0">
+        <Button variant="ghost" size="sm" className="text-xs h-7" asChild>
+          <Link to="/scheduling">Gantt Board</Link>
+        </Button>
+        <Button variant="ghost" size="sm" className="text-xs h-7" asChild>
+          <Link to="/scheduling/bays">
+            <Warehouse className="w-3.5 h-3.5" />
+            Bays
+          </Link>
+        </Button>
+        <Button variant="ghost" size="sm" className="text-xs h-7" asChild>
+          <Link to="/scheduling/capacity">Capacity</Link>
+        </Button>
+
+        <div className="flex-1" />
+
+        <Button
+          variant="outline"
+          size="sm"
+          className="text-xs h-7"
+          onClick={handleAutoSchedule}
+          disabled={autoScheduling}
+        >
+          <Sparkles className="w-3.5 h-3.5" />
+          {autoScheduling ? "Scheduling..." : "Auto Schedule"}
+        </Button>
+      </div>
+
+      <div className="flex-1 min-h-0">
+        <GanttBoard
+          workOrders={workOrders}
+          onOpenBacklog={() => setBacklogOpen(true)}
+          unscheduledCount={unscheduledCount}
+          bays={bays as { _id: string; name: string; type: string; status: string }[] | undefined}
+          conflicts={conflicts}
+        />
+      </div>
+
       <BacklogSidebar
         workOrders={workOrders}
         isOpen={backlogOpen}
