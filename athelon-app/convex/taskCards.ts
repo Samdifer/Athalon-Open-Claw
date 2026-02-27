@@ -612,6 +612,43 @@ export const completeStep = mutation({
         );
       }
 
+      // ── Rating-to-certificate authorization check ─────────────────────────
+      // Verify that each exercised rating is actually held on the technician's
+      // certificate. Skip validation for "none" (non-regulatory steps).
+      if (!args.ratingsExercised.includes("none")) {
+        for (const rating of args.ratingsExercised) {
+          if (rating === "ia") {
+            // IA authorization checked separately below via signOffRequiresIa logic
+            if (!cert.hasIaAuthorization) {
+              throw new Error(
+                `Rating authorization failed: Technician ${args.callerTechnicianId} ` +
+                `(${callerTech.legalName}) is exercising "ia" rating but does not hold ` +
+                `an Inspection Authorization on their certificate ${cert.certificateNumber}. ` +
+                `Per 14 CFR 65.91, an IA is required to exercise this rating.`,
+              );
+            }
+            if (!cert.iaExpiryDate || cert.iaExpiryDate < now) {
+              throw new Error(
+                `Rating authorization failed: Technician ${args.callerTechnicianId} ` +
+                `(${callerTech.legalName}) is exercising "ia" rating but their IA ` +
+                `${!cert.iaExpiryDate ? "has no expiry date on file" : `expired on ${new Date(cert.iaExpiryDate).toISOString()}`}. ` +
+                `Per 14 CFR 65.92, IAs expire annually with no grace period.`,
+              );
+            }
+          } else {
+            // "airframe" or "powerplant" — must be present in cert.ratings
+            if (!cert.ratings.includes(rating as "airframe" | "powerplant")) {
+              throw new Error(
+                `Rating authorization failed: Technician ${args.callerTechnicianId} ` +
+                `(${callerTech.legalName}) is exercising "${rating}" rating but their ` +
+                `certificate ${cert.certificateNumber} only holds ratings: [${cert.ratings.join(", ")}]. ` +
+                `Per 14 CFR 65.85/65.87, a mechanic may only exercise ratings held on their certificate.`,
+              );
+            }
+          }
+        }
+      }
+
       // ── IA currency check for IA-required steps ───────────────────────────
       // Per Marcus (signoff-rts-flow.md §1.3 / §4.3):
       //   An annual inspection step signed by a technician whose IA expired —

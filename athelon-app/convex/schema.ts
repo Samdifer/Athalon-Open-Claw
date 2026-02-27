@@ -3160,4 +3160,28 @@ export default defineSchema({
     .index("by_attachment", ["attachedToTable", "attachedToId"])
     .index("by_org", ["organizationId"])
     .index("by_org_uploaded", ["organizationId", "uploadedAt"]),
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // CONFORMITY INSPECTIONS (Phase 1)
+  //
+  // Tracks buy-back, final, and in-process conformity inspections performed
+  // by IA-qualified inspectors. Each inspection references a work order and
+  // task card, records which steps were reviewed, and captures findings.
+  // ═══════════════════════════════════════════════════════════════════════════
+  conformityInspections: defineTable({
+    organizationId: v.id("organizations"),
+    workOrderId: v.id("workOrders"),
+    taskCardId: v.id("taskCards"),
+    inspectorTechnicianId: v.id("technicians"),
+    inspectionType: v.union(v.literal("buy_back"), v.literal("final"), v.literal("in_process")),
+    status: v.union(v.literal("pending"), v.literal("passed"), v.literal("failed"), v.literal("conditional")),
+    findings: v.optional(v.string()),
+    stepsReviewed: v.optional(v.array(v.id("taskCardSteps"))),
+    approvedDataReference: v.optional(v.string()),
+    completedAt: v.optional(v.number()),
+    createdAt: v.number(),
+  })
+    .index("by_org", ["organizationId"])
+    .index("by_work_order", ["workOrderId"])
+    .index("by_task_card", ["taskCardId"]),
 });

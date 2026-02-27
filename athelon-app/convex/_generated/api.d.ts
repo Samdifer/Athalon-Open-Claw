@@ -14,6 +14,7 @@ import type * as billing from "../billing.js";
 import type * as billingV4 from "../billingV4.js";
 import type * as billingV4b from "../billingV4b.js";
 import type * as capacity from "../capacity.js";
+import type * as conformityInspections from "../conformityInspections.js";
 import type * as customers from "../customers.js";
 import type * as discrepancies from "../discrepancies.js";
 import type * as documents from "../documents.js";
@@ -48,6 +49,7 @@ declare const fullApi: ApiFromModules<{
   billingV4: typeof billingV4;
   billingV4b: typeof billingV4b;
   capacity: typeof capacity;
+  conformityInspections: typeof conformityInspections;
   customers: typeof customers;
   discrepancies: typeof discrepancies;
   documents: typeof documents;

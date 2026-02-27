@@ -699,7 +699,7 @@ export const createInvoiceFromWorkOrder = mutation({
     customerId: v.id("customers"),
     createdByTechId: v.id("technicians"),
     quoteId: v.optional(v.id("quotes")),
-    taxRate: v.optional(v.number()),          // Percentage, e.g. 8.5 for 8.5%
+    taxRateId: v.optional(v.id("taxRates")),
     isProgressBill: v.optional(v.boolean()),
     depositAmount: v.optional(v.number()),
   },
@@ -718,6 +718,33 @@ export const createInvoiceFromWorkOrder = mutation({
       );
     }
 
+    // ── Resolve tax rate ──────────────────────────────────────────────────
+    let taxRatePercent = 0;
+    if (args.taxRateId) {
+      const taxRate = await ctx.db.get(args.taxRateId);
+      if (!taxRate || taxRate.orgId !== args.orgId || !taxRate.active) {
+        throw new Error(`Tax rate ${args.taxRateId} not found, inactive, or does not belong to org.`);
+      }
+      taxRatePercent = taxRate.rate;
+
+      // Check customer tax exemption
+      const exemption = await ctx.db
+        .query("customerTaxExemptions")
+        .withIndex("by_org_customer", (q) =>
+          q.eq("orgId", args.orgId).eq("customerId", args.customerId),
+        )
+        .first();
+      if (exemption) {
+        const notExpired = !exemption.expiresAt || exemption.expiresAt > now;
+        if (notExpired) {
+          if (exemption.exemptionType === "full") {
+            taxRatePercent = 0;
+          }
+          // partial exemptions (parts_only, labor_only) handled at line-item level if needed
+        }
+      }
+    }
+
     const invoiceNumber = await getNextNumber(ctx, args.orgId, "invoice", "INV");
 
     const invoiceId = await ctx.db.insert("invoices", {
@@ -731,7 +758,7 @@ export const createInvoiceFromWorkOrder = mutation({
       laborTotal: 0,
       partsTotal: 0,
       subtotal: 0,
-      tax: 0,
+      tax: 0, // Will be recalculated after line items are totaled
       total: 0,
       amountPaid: 0,
       balance: 0,
@@ -740,6 +767,48 @@ export const createInvoiceFromWorkOrder = mutation({
       createdAt: now,
       updatedAt: now,
     });
+
+    // ── Look up pricing profile for labor rates ─────────────────────────────
+    // Try customer-specific profile first, then org default
+    let laborRate = 0;
+    const customerProfile = await ctx.db
+      .query("pricingProfiles")
+      .withIndex("by_org_customer", (q) =>
+        q.eq("orgId", args.orgId).eq("customerId", args.customerId),
+      )
+      .filter((q) =>
+        q.and(
+          q.lte(q.field("effectiveDate"), now),
+          q.or(
+            q.eq(q.field("expiryDate"), undefined),
+            q.gte(q.field("expiryDate"), now),
+          ),
+        ),
+      )
+      .first();
+
+    if (customerProfile?.laborRateOverride !== undefined) {
+      laborRate = customerProfile.laborRateOverride;
+    } else {
+      const defaultProfile = await ctx.db
+        .query("pricingProfiles")
+        .withIndex("by_org_default", (q) =>
+          q.eq("orgId", args.orgId).eq("isDefault", true),
+        )
+        .filter((q) =>
+          q.and(
+            q.lte(q.field("effectiveDate"), now),
+            q.or(
+              q.eq(q.field("expiryDate"), undefined),
+              q.gte(q.field("expiryDate"), now),
+            ),
+          ),
+        )
+        .first();
+      if (defaultProfile?.laborRateOverride !== undefined) {
+        laborRate = defaultProfile.laborRateOverride;
+      }
+    }
 
     // Auto-populate labor line items from time entries
     const timeEntries = await ctx.db
@@ -760,23 +829,41 @@ export const createInvoiceFromWorkOrder = mutation({
       byTech.get(key)!.totalMinutes += minutes;
     }
 
+    let laborTotal = 0;
     for (const [, { techId, totalMinutes }] of byTech) {
       if (totalMinutes <= 0) continue;
       const tech = await ctx.db.get(techId);
       const hours = Math.round((totalMinutes / 60) * 100) / 100;
+      const unitPrice = laborRate;
+      const lineTotal = Math.round(hours * unitPrice * 100) / 100;
+      laborTotal += lineTotal;
+      const rateNote = laborRate === 0 ? " [WARNING: No pricing profile found — rate defaults to $0]" : "";
       await ctx.db.insert("invoiceLineItems", {
         orgId: args.orgId,
         invoiceId,
         type: "labor",
-        description: `Labor — ${tech?.legalName ?? String(techId)} (${hours} hrs)`,
+        description: `Labor — ${tech?.legalName ?? String(techId)} (${hours} hrs)${rateNote}`,
         qty: hours,
-        unitPrice: 0,   // Pricing rules applied separately
-        total: 0,
+        unitPrice,
+        total: lineTotal,
         technicianId: techId,
         createdAt: now,
         updatedAt: now,
       });
     }
+
+    // ── Recalculate invoice totals with tax ─────────────────────────────────
+    const subtotal = laborTotal;
+    const tax = Math.round(subtotal * (taxRatePercent / 100) * 100) / 100;
+    const total = subtotal + tax;
+    await ctx.db.patch(invoiceId, {
+      laborTotal,
+      subtotal,
+      tax,
+      total,
+      balance: total,
+      updatedAt: now,
+    });
 
     await ctx.db.insert("auditLog", {
       organizationId: args.orgId,
@@ -808,6 +895,7 @@ export const createInvoiceManual = mutation({
     createdByTechId: v.id("technicians"),
     workOrderId: v.optional(v.id("workOrders")),
     quoteId: v.optional(v.id("quotes")),
+    taxRateId: v.optional(v.id("taxRates")),
     isProgressBill: v.optional(v.boolean()),
     depositAmount: v.optional(v.number()),
   },
@@ -824,8 +912,33 @@ export const createInvoiceManual = mutation({
       throw new Error(`Customer ${args.customerId} not found or does not belong to org.`);
     }
 
+    // ── Resolve tax rate ──────────────────────────────────────────────────
+    let taxRatePercent = 0;
+    if (args.taxRateId) {
+      const taxRate = await ctx.db.get(args.taxRateId);
+      if (!taxRate || taxRate.orgId !== args.orgId || !taxRate.active) {
+        throw new Error(`Tax rate ${args.taxRateId} not found, inactive, or does not belong to org.`);
+      }
+      taxRatePercent = taxRate.rate;
+
+      // Check customer tax exemption
+      const exemption = await ctx.db
+        .query("customerTaxExemptions")
+        .withIndex("by_org_customer", (q) =>
+          q.eq("orgId", args.orgId).eq("customerId", args.customerId),
+        )
+        .first();
+      if (exemption) {
+        const notExpired = !exemption.expiresAt || exemption.expiresAt > now;
+        if (notExpired && exemption.exemptionType === "full") {
+          taxRatePercent = 0;
+        }
+      }
+    }
+
     const invoiceNumber = await getNextNumber(ctx, args.orgId, "invoice", "INV");
 
+    // Manual invoices start with 0 subtotal; tax will be recalculated when line items are added
     const invoiceId = await ctx.db.insert("invoices", {
       orgId: args.orgId,
       workOrderId: args.workOrderId,
@@ -837,7 +950,7 @@ export const createInvoiceManual = mutation({
       laborTotal: 0,
       partsTotal: 0,
       subtotal: 0,
-      tax: 0,
+      tax: 0, // Recalculated when line items are added; taxRateId stored for future recalc
       total: 0,
       amountPaid: 0,
       balance: 0,
@@ -1246,6 +1359,7 @@ export const createPurchaseOrder = mutation({
     vendorId: v.id("vendors"),
     workOrderId: v.optional(v.id("workOrders")),
     requestedByTechId: v.id("technicians"),
+    taxRateId: v.optional(v.id("taxRates")),
     notes: v.optional(v.string()),
   },
 
@@ -1281,7 +1395,7 @@ export const createPurchaseOrder = mutation({
       requestedByTechId: args.requestedByTechId,
       notes: args.notes,
       subtotal: 0,
-      tax: 0,
+      tax: 0, // Recalculated when PO line items are added/updated; taxRateId resolved at that time
       total: 0,
       createdAt: now,
       updatedAt: now,
