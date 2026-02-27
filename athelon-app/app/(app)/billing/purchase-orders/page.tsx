@@ -18,9 +18,9 @@ type POStatus = "DRAFT" | "SUBMITTED" | "PARTIAL" | "RECEIVED" | "CLOSED" | "all
 
 const STATUS_STYLES: Record<string, string> = {
   DRAFT: "bg-muted text-muted-foreground border-muted-foreground/30",
-  SUBMITTED: "bg-blue-500/15 text-blue-400 border-blue-500/30",
-  PARTIAL: "bg-amber-500/15 text-amber-400 border-amber-500/30",
-  RECEIVED: "bg-green-500/15 text-green-400 border-green-500/30",
+  SUBMITTED: "bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/30",
+  PARTIAL: "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30",
+  RECEIVED: "bg-green-500/15 text-green-600 dark:text-green-400 border-green-500/30",
   CLOSED: "bg-muted text-muted-foreground border-muted-foreground/30",
 };
 

@@ -44,13 +44,13 @@ export default function WorkOrderErrorBoundary({ error, reset }: ErrorPageProps)
     <div className="flex items-center justify-center min-h-[50vh] p-4">
       <Card className="border-red-500/30 bg-red-500/5 w-full max-w-md">
         <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-base text-red-400">
+          <CardTitle className="flex items-center gap-2 text-base text-red-600 dark:text-red-400">
             <ShieldAlert className="w-5 h-5 flex-shrink-0" />
             Work Order Error
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <p className="text-xs font-semibold text-amber-400 bg-amber-500/10 border border-amber-500/30 px-3 py-2 rounded">
+          <p className="text-xs font-semibold text-amber-600 dark:text-amber-400 bg-amber-500/10 border border-amber-500/30 px-3 py-2 rounded">
             Compliance notice: if you were in the middle of a sign-off or
             return-to-service operation, do not assume the action completed.
             Verify the record status after recovery.

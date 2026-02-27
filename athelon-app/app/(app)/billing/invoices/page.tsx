@@ -43,15 +43,15 @@ import {
 } from "@/components/ui/select";
 import { formatDate } from "@/lib/format";
 
-type InvoiceStatus = "DRAFT" | "SENT" | "PAID" | "VOID" | "all";
+type InvoiceStatus = "DRAFT" | "SENT" | "PARTIAL" | "PAID" | "VOID" | "all";
 type PaymentMethod = "cash" | "check" | "credit_card" | "wire" | "ach" | "other";
 
 const STATUS_STYLES: Record<string, string> = {
   DRAFT: "bg-muted text-muted-foreground border-muted-foreground/30",
-  SENT: "bg-blue-500/15 text-blue-400 border-blue-500/30",
-  PARTIAL: "bg-amber-500/15 text-amber-400 border-amber-500/30",
-  PAID: "bg-green-500/15 text-green-400 border-green-500/30",
-  VOID: "bg-red-500/15 text-red-400 border-red-500/30",
+  SENT: "bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/30",
+  PARTIAL: "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30",
+  PAID: "bg-green-500/15 text-green-600 dark:text-green-400 border-green-500/30",
+  VOID: "bg-red-500/15 text-red-600 dark:text-red-400 border-red-500/30",
 };
 
 const PAYMENT_METHODS: { value: PaymentMethod; label: string }[] = [
@@ -72,10 +72,10 @@ function AgingBadge({ days }: { days: number }) {
   if (days <= 30) return null;
   const cls =
     days > 90
-      ? "bg-red-500/15 text-red-400 border-red-500/30"
+      ? "bg-red-500/15 text-red-600 dark:text-red-400 border-red-500/30"
       : days > 60
-        ? "bg-amber-500/15 text-amber-400 border-amber-500/30"
-        : "bg-yellow-500/15 text-yellow-400 border-yellow-500/30";
+        ? "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30"
+        : "bg-yellow-500/15 text-yellow-600 dark:text-yellow-400 border-yellow-500/30";
   return (
     <Badge
       variant="outline"
@@ -92,7 +92,7 @@ function OverdueBadge() {
   return (
     <Badge
       variant="outline"
-      className="text-[10px] border bg-red-500/15 text-red-400 border-red-500/30 gap-0.5"
+      className="text-[10px] border bg-red-500/15 text-red-600 dark:text-red-400 border-red-500/30 gap-0.5"
       aria-label="Invoice overdue"
     >
       <span className="w-1.5 h-1.5 rounded-full bg-red-400 inline-block" />
@@ -170,7 +170,7 @@ function VoidBatchDialog({ open, count, onClose, onConfirm }: VoidDialogProps) {
             rows={3}
             className="text-sm resize-none"
           />
-          {error && <p className="text-xs text-red-400">{error}</p>}
+          {error && <p className="text-xs text-red-600 dark:text-red-400">{error}</p>}
         </div>
         <DialogFooter>
           <Button variant="outline" size="sm" onClick={onClose} disabled={loading}>Cancel</Button>
@@ -282,15 +282,15 @@ function BatchPaymentDialog({
 
         {result ? (
           <div className="space-y-3 py-2">
-            <div className="p-3 rounded-md bg-green-500/10 border border-green-500/30 text-sm text-green-400">
+            <div className="p-3 rounded-md bg-green-500/10 border border-green-500/30 text-sm text-green-600 dark:text-green-400">
               ✓ {result.recorded} payment{result.recorded !== 1 ? "s" : ""} recorded successfully.
             </div>
             {result.errors.length > 0 && (
               <div className="p-3 rounded-md bg-red-500/10 border border-red-500/30">
-                <p className="text-xs font-medium text-red-400 mb-1">Errors:</p>
+                <p className="text-xs font-medium text-red-600 dark:text-red-400 mb-1">Errors:</p>
                 <ul className="space-y-0.5">
                   {result.errors.map((e, i) => (
-                    <li key={i} className="text-xs text-red-400">• {e}</li>
+                    <li key={i} className="text-xs text-red-600 dark:text-red-400">• {e}</li>
                   ))}
                 </ul>
               </div>
@@ -379,7 +379,7 @@ function BatchPaymentDialog({
               ))}
 
               {error && (
-                <p className="text-xs text-red-400 pt-1">{error}</p>
+                <p className="text-xs text-red-600 dark:text-red-400 pt-1">{error}</p>
               )}
             </div>
 
@@ -435,6 +435,7 @@ export default function InvoicesPage() {
     all: all.length,
     DRAFT: all.filter((i) => i.status === "DRAFT").length,
     SENT: all.filter((i) => i.status === "SENT").length,
+    PARTIAL: all.filter((i) => i.status === "PARTIAL").length,
     PAID: all.filter((i) => i.status === "PAID").length,
     VOID: all.filter((i) => i.status === "VOID").length,
   };
@@ -443,6 +444,7 @@ export default function InvoicesPage() {
     { value: "all", label: "All" },
     { value: "DRAFT", label: "Draft" },
     { value: "SENT", label: "Sent" },
+    { value: "PARTIAL", label: "Partial" },
     { value: "PAID", label: "Paid" },
     { value: "VOID", label: "Void" },
   ];
@@ -518,7 +520,7 @@ export default function InvoicesPage() {
             <Skeleton className="h-4 w-40 mt-1" />
           ) : (
             <p className="text-sm text-muted-foreground mt-0.5">
-              {all.length} total · {counts.SENT} outstanding
+              {all.length} total · {counts.SENT + counts.PARTIAL} outstanding
             </p>
           )}
         </div>
@@ -682,7 +684,7 @@ export default function InvoicesPage() {
                               </span>
                             )}
                             {inv.dueDate && (
-                              <span className={`text-xs ${overdue ? "text-red-400 font-medium" : "text-muted-foreground"}`}>
+                              <span className={`text-xs ${overdue ? "text-red-600 dark:text-red-400 font-medium" : "text-muted-foreground"}`}>
                                 · Due {formatDate(inv.dueDate)}
                               </span>
                             )}
@@ -697,7 +699,7 @@ export default function InvoicesPage() {
                               </p>
                             )}
                             {inv.status === "PARTIAL" && inv.balance > 0 && (
-                              <p className="text-[10px] text-amber-400">
+                              <p className="text-[10px] text-amber-600 dark:text-amber-400">
                                 Balance: ${inv.balance.toFixed(2)}
                               </p>
                             )}
@@ -742,7 +744,7 @@ export default function InvoicesPage() {
           <Button
             size="sm"
             variant="outline"
-            className="h-7 text-xs gap-1.5 text-red-400 border-red-500/30 hover:bg-red-500/10"
+            className="h-7 text-xs gap-1.5 text-red-600 dark:text-red-400 border-red-500/30 hover:bg-red-500/10"
             onClick={() => setVoidDialogOpen(true)}
           >
             <Ban className="w-3 h-3" />

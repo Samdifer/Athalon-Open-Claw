@@ -65,6 +65,7 @@ const MODULE_ROUTES: RouteEntry[] = [
   { path: "/work-orders/placeholder_id_000/records", label: "Work Order records (placeholder)" },
   { path: "/work-orders/placeholder_id_000/rts", label: "Work Order RTS (placeholder)" },
   { path: "/work-orders/placeholder_id_000/signature", label: "Work Order signature (placeholder)" },
+  { path: "/work-orders/templates", label: "Work Order templates" },
 
   // Parts
   { path: "/parts", label: "Parts list" },
@@ -72,6 +73,8 @@ const MODULE_ROUTES: RouteEntry[] = [
   { path: "/parts/requests", label: "Parts requests" },
 
   // Billing
+  { path: "/billing/customers", label: "Billing customers list" },
+  { path: "/billing/customers/placeholder_id_000", label: "Billing customer detail (placeholder)" },
   { path: "/billing/quotes", label: "Billing quotes list" },
   { path: "/billing/quotes/new", label: "Billing quote new" },
   { path: "/billing/quotes/placeholder_id_000", label: "Billing quote detail (placeholder)" },
@@ -87,6 +90,13 @@ const MODULE_ROUTES: RouteEntry[] = [
   { path: "/billing/vendors/placeholder_id_000", label: "Billing vendor detail (placeholder)" },
   { path: "/billing/pricing", label: "Billing pricing" },
   { path: "/billing/analytics", label: "Billing analytics" },
+  { path: "/billing/ar-dashboard", label: "Billing AR dashboard" },
+  { path: "/billing/time-approval", label: "Billing time approval" },
+  { path: "/billing/deposits", label: "Billing deposits" },
+  { path: "/billing/credit-memos", label: "Billing credit memos" },
+  { path: "/billing/recurring", label: "Billing recurring templates" },
+  { path: "/billing/tax-config", label: "Billing tax config" },
+  { path: "/billing/settings", label: "Billing settings" },
 
   // Personnel
   { path: "/personnel", label: "Personnel" },
@@ -94,6 +104,7 @@ const MODULE_ROUTES: RouteEntry[] = [
   // Compliance
   { path: "/compliance", label: "Compliance" },
   { path: "/compliance/audit-trail", label: "Compliance audit trail" },
+  { path: "/compliance/certificates", label: "Compliance certificates alias" },
 
   // Squawks
   { path: "/squawks", label: "Squawks" },

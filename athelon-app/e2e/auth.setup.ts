@@ -10,6 +10,10 @@ import path from "path";
 
 export const AUTH_FILE = path.join(__dirname, "../playwright/.auth/user.json");
 const TEST_CODE = "424242";
+const TEST_EMAIL =
+  process.env.PLAYWRIGHT_TEST_EMAIL ?? "athelon.e2e+clerk_test@gmail.com";
+const TEST_PASSWORD =
+  process.env.PLAYWRIGHT_TEST_PASSWORD ?? "ClerkTest123!";
 
 async function fillOtp(page: import("@playwright/test").Page, code: string) {
   await page.waitForTimeout(500);
@@ -21,7 +25,7 @@ async function fillOtp(page: import("@playwright/test").Page, code: string) {
 
 setup.setTimeout(120_000);
 setup("create or authenticate Clerk test user", async ({ page }) => {
-  const email = process.env.PLAYWRIGHT_TEST_EMAIL!;
+  const email = TEST_EMAIL;
 
   // Navigate — Clerk redirects to sign-in
   await page.goto("/", { waitUntil: "domcontentloaded" });
@@ -67,7 +71,7 @@ setup("create or authenticate Clerk test user", async ({ page }) => {
 
     const password = page.locator('input[type="password"]').first();
     if (await password.count() > 0) {
-      await password.fill(process.env.PLAYWRIGHT_TEST_PASSWORD!);
+      await password.fill(TEST_PASSWORD);
     }
 
     await page.getByRole("button", { name: "Continue", exact: true }).click();
@@ -87,7 +91,7 @@ setup("create or authenticate Clerk test user", async ({ page }) => {
     console.log("Password screen — filling password...");
     const pwInput = page.locator('input[type="password"]').first();
     await pwInput.waitFor({ state: "visible", timeout: 5_000 });
-    await pwInput.fill(process.env.PLAYWRIGHT_TEST_PASSWORD!);
+    await pwInput.fill(TEST_PASSWORD);
     await page.getByRole("button", { name: "Continue", exact: true }).click();
 
   } else if (hasOtp) {

@@ -190,6 +190,23 @@ export const createTaskCard = mutation({
     // At least one step required. Steps must have sequential numbers starting at 1.
     steps: v.array(stepInputValidator),
 
+    // Aircraft system classification (Phase 1 — Squawks Unification)
+    aircraftSystem: v.optional(v.union(
+      v.literal("airframe"),
+      v.literal("engine_left"),
+      v.literal("engine_right"),
+      v.literal("engine_center"),
+      v.literal("engine_single"),
+      v.literal("avionics"),
+      v.literal("landing_gear"),
+      v.literal("fuel_system"),
+      v.literal("hydraulics"),
+      v.literal("electrical"),
+      v.literal("other"),
+    )),
+    isInspectionItem: v.optional(v.boolean()),
+    isCustomerReported: v.optional(v.boolean()),
+
     notes: v.optional(v.string()),
     callerIpAddress: v.optional(v.string()),
   },
@@ -306,6 +323,10 @@ export const createTaskCard = mutation({
       completedStepCount: 0,
       naStepCount: 0,
       notes: args.notes,
+      // Phase 1 — Squawks Unification fields (all optional)
+      ...(args.aircraftSystem !== undefined && { aircraftSystem: args.aircraftSystem }),
+      ...(args.isInspectionItem !== undefined && { isInspectionItem: args.isInspectionItem }),
+      ...(args.isCustomerReported !== undefined && { isCustomerReported: args.isCustomerReported }),
       createdAt: now,
       updatedAt: now,
     });
@@ -1251,10 +1272,26 @@ export const listTaskCardsForTechnician = query({
         const pendingSteps = steps.filter((s) => s.status === "pending").length;
         const totalSteps = steps.length;
 
+        // Schedule risk: simple overdue/at_risk check from parent WO promisedDeliveryDate
+        const now = Date.now();
+        const promisedDeliveryDate = wo?.promisedDeliveryDate;
+        let scheduleRisk: "overdue" | "at_risk" | "on_track" | "no_date" = "no_date";
+        if (promisedDeliveryDate) {
+          if (promisedDeliveryDate < now) {
+            scheduleRisk = "overdue";
+          } else {
+            const daysLeft = (promisedDeliveryDate - now) / (1000 * 60 * 60 * 24);
+            scheduleRisk = daysLeft <= 2 ? "at_risk" : "on_track";
+          }
+        }
+
         return {
           ...tc,
           workOrderNumber: wo?.workOrderNumber ?? "—",
+          workOrderPriority: wo?.priority ?? "routine",
           aircraftRegistration: "", // Will be enriched by caller if needed
+          promisedDeliveryDate,
+          scheduleRisk,
           pendingSteps,
           totalSteps,
         };

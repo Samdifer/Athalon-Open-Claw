@@ -3,6 +3,7 @@
 
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { requireAuth } from "./lib/authHelpers";
 
 /**
  * List all aircraft for an organization with their current status.
@@ -131,5 +132,66 @@ export const create = mutation({
     });
 
     return aircraftId;
+  },
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ENGINES / PROPELLERS — Component queries for aircraft detail page
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const listEnginesForAircraft = query({
+  args: {
+    aircraftId: v.id("aircraft"),
+    organizationId: v.id("organizations"),
+  },
+  handler: async (ctx, args) => {
+    await requireAuth(ctx);
+    return await ctx.db
+      .query("engines")
+      .filter((q) => q.eq(q.field("currentAircraftId"), args.aircraftId))
+      .collect();
+  },
+});
+
+export const listPropellersForAircraft = query({
+  args: {
+    aircraftId: v.id("aircraft"),
+    organizationId: v.id("organizations"),
+  },
+  handler: async (ctx, args) => {
+    await requireAuth(ctx);
+    return await ctx.db
+      .query("propellers")
+      .withIndex("by_aircraft", (q) => q.eq("aircraftId", args.aircraftId))
+      .collect();
+  },
+});
+
+export const addPropeller = mutation({
+  args: {
+    aircraftId: v.id("aircraft"),
+    organizationId: v.id("organizations"),
+    position: v.union(
+      v.literal("single"),
+      v.literal("left"),
+      v.literal("right"),
+      v.literal("rear"),
+      v.literal("forward"),
+    ),
+    make: v.string(),
+    model: v.string(),
+    serialNumber: v.string(),
+    totalTimeHours: v.optional(v.number()),
+    timeSinceOverhaulHours: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    await requireAuth(ctx);
+    const now = Date.now();
+    return await ctx.db.insert("propellers", {
+      ...args,
+      totalTimeAsOfDate: now,
+      createdAt: now,
+      updatedAt: now,
+    });
   },
 });

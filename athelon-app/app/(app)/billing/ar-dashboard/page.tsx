@@ -67,10 +67,10 @@ function overdueRowClass(days: number) {
 
 function overdueBadge(days: number) {
   if (days >= 60)
-    return <Badge variant="outline" className="text-[10px] border-red-500/40 text-red-400 bg-red-500/10">{days}d</Badge>;
+    return <Badge variant="outline" className="text-[10px] border-red-500/40 text-red-600 dark:text-red-400 bg-red-500/10">{days}d</Badge>;
   if (days >= 30)
-    return <Badge variant="outline" className="text-[10px] border-orange-500/40 text-orange-400 bg-orange-500/10">{days}d</Badge>;
-  return <Badge variant="outline" className="text-[10px] border-yellow-500/40 text-yellow-400 bg-yellow-500/10">{days}d</Badge>;
+    return <Badge variant="outline" className="text-[10px] border-orange-500/40 text-orange-600 dark:text-orange-400 bg-orange-500/10">{days}d</Badge>;
+  return <Badge variant="outline" className="text-[10px] border-yellow-500/40 text-yellow-600 dark:text-yellow-400 bg-yellow-500/10">{days}d</Badge>;
 }
 
 export default function ArDashboardPage() {
@@ -141,28 +141,28 @@ export default function ArDashboardPage() {
           value={fmt(buckets.total)}
           subtitle={`${aging?.invoiceCount ?? 0} invoices`}
           icon={<DollarSign className="w-4 h-4" />}
-          color="text-amber-400"
+          color="text-amber-600 dark:text-amber-400"
         />
         <KpiCard
           title="Current"
           value={fmt(buckets.current)}
           subtitle="Not yet overdue"
           icon={<Clock className="w-4 h-4" />}
-          color="text-green-400"
+          color="text-green-600 dark:text-green-400"
         />
         <KpiCard
           title="30–60 Days Overdue"
           value={fmt(buckets.over30)}
           subtitle="Needs attention"
           icon={<AlertTriangle className="w-4 h-4" />}
-          color="text-orange-400"
+          color="text-orange-600 dark:text-orange-400"
         />
         <KpiCard
           title="60+ Days Overdue"
           value={fmt(buckets.over60 + buckets.over90)}
           subtitle="Critical"
           icon={<TrendingDown className="w-4 h-4" />}
-          color="text-red-400"
+          color="text-red-600 dark:text-red-400"
         />
       </div>
 
@@ -170,7 +170,7 @@ export default function ArDashboardPage() {
       <Card className="border-border/60">
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-medium flex items-center gap-2">
-            <AlertTriangle className="w-4 h-4 text-amber-400" />
+            <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400" />
             Overdue Invoices
           </CardTitle>
         </CardHeader>
@@ -214,7 +214,7 @@ export default function ArDashboardPage() {
                       {inv.dueDate ? formatDate(inv.dueDate) : "—"}
                     </TableCell>
                     <TableCell className="text-xs text-right">{fmt(inv.total)}</TableCell>
-                    <TableCell className="text-xs text-right font-semibold text-amber-400">
+                    <TableCell className="text-xs text-right font-semibold text-amber-600 dark:text-amber-400">
                       {fmt(inv.balance)}
                     </TableCell>
                     <TableCell className="text-center">
@@ -223,7 +223,7 @@ export default function ArDashboardPage() {
                     <TableCell>
                       <Badge
                         variant="outline"
-                        className="text-[10px] border-blue-500/30 text-blue-400 bg-blue-500/10"
+                        className="text-[10px] border-blue-500/30 text-blue-600 dark:text-blue-400 bg-blue-500/10"
                       >
                         {inv.status}
                       </Badge>
@@ -269,12 +269,12 @@ export default function ArDashboardPage() {
                     <TableCell className="text-sm">
                       {customerMap.get(cb.customerId) ?? cb.customerId}
                     </TableCell>
-                    <TableCell className="text-sm font-semibold text-right text-amber-400">
+                    <TableCell className="text-sm font-semibold text-right text-amber-600 dark:text-amber-400">
                       {fmt(cb.balance)}
                     </TableCell>
                     <TableCell className="text-sm text-right text-muted-foreground">
                       {cb.oldest > 0 ? (
-                        <span className={cb.oldest >= 60 ? "text-red-400" : cb.oldest >= 30 ? "text-orange-400" : "text-yellow-400"}>
+                        <span className={cb.oldest >= 60 ? "text-red-600 dark:text-red-400" : cb.oldest >= 30 ? "text-orange-600 dark:text-orange-400" : "text-yellow-600 dark:text-yellow-400"}>
                           {cb.oldest}d
                         </span>
                       ) : "Current"}

@@ -5,12 +5,13 @@ import {
   PlaneTakeoff,
   ClipboardList,
   Package,
-  AlertTriangle,
+  ReceiptText,
   ShieldCheck,
   Users,
   Settings,
   ChevronRight,
   Wrench,
+  CalendarDays,
 } from "lucide-react";
 import {
   Sidebar,
@@ -27,7 +28,17 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
-const mainNav = [
+type NavItem = {
+  title: string;
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+  badgeCount?: number;
+  badgeVariant?: "default" | "secondary" | "destructive" | "outline";
+};
+
+import type React from "react";
+
+const mainNav: NavItem[] = [
   {
     title: "Dashboard",
     href: "/dashboard",
@@ -44,25 +55,28 @@ const mainNav = [
     icon: ClipboardList,
   },
   {
+    title: "Schedule",
+    href: "/scheduling",
+    icon: CalendarDays,
+  },
+  {
     title: "Parts",
     href: "/parts/requests",
     icon: Package,
   },
   {
-    title: "Squawks",
-    href: "/squawks",
-    icon: AlertTriangle,
-    badgeCount: 1, // Demo: 1 open squawk
-    badgeVariant: "destructive" as const,
+    title: "Billing",
+    href: "/billing/invoices",
+    icon: ReceiptText,
   },
   {
-    title: "Compliance",
+    title: "Repair Station Compliance",
     href: "/compliance/audit-trail",
     icon: ShieldCheck,
   },
 ];
 
-const bottomNav = [
+const bottomNav: NavItem[] = [
   {
     title: "Personnel",
     href: "/personnel",

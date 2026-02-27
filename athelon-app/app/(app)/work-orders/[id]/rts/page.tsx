@@ -95,7 +95,7 @@ export default function RtsPage() {
         </Button>
         <Card className="border-green-500/30 bg-green-500/5">
           <CardContent className="p-6 text-center">
-            <CheckCircle2 className="w-10 h-10 text-green-400 mx-auto mb-3" />
+            <CheckCircle2 className="w-10 h-10 text-green-600 dark:text-green-400 mx-auto mb-3" />
             <h2 className="text-lg font-semibold text-foreground mb-1">
               Aircraft Returned to Service
             </h2>
@@ -187,8 +187,8 @@ export default function RtsPage() {
           variant="outline"
           className={`text-[11px] font-medium border ${
             report.isReadyForRts
-              ? "bg-green-500/15 text-green-400 border-green-500/30"
-              : "bg-amber-500/15 text-amber-400 border-amber-500/30"
+              ? "bg-green-500/15 text-green-600 dark:text-green-400 border-green-500/30"
+              : "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30"
           }`}
         >
           {report.isReadyForRts
@@ -218,12 +218,12 @@ export default function RtsPage() {
       {submitError && (
         <Card className="border-red-500/30 bg-red-500/5">
           <CardContent className="p-3 flex items-start gap-2.5">
-            <XCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+            <XCircle className="w-4 h-4 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
             <div>
-              <p className="text-xs font-semibold text-red-400 mb-0.5">
+              <p className="text-xs font-semibold text-red-600 dark:text-red-400 mb-0.5">
                 RTS Authorization Failed
               </p>
-              <p className="text-[11px] text-red-300/80">{submitError}</p>
+              <p className="text-[11px] text-red-500/80 dark:text-red-300/80">{submitError}</p>
             </div>
           </CardContent>
         </Card>
@@ -260,7 +260,7 @@ export default function RtsPage() {
       {anyFail && !allPass && (
         <Card className="border-red-500/20 bg-red-500/5">
           <CardContent className="p-3">
-            <p className="text-xs text-red-400 font-medium mb-1.5 flex items-center gap-1.5">
+            <p className="text-xs text-red-600 dark:text-red-400 font-medium mb-1.5 flex items-center gap-1.5">
               <XCircle className="w-3.5 h-3.5" />
               The following conditions are blocking RTS authorization:
             </p>
@@ -272,7 +272,7 @@ export default function RtsPage() {
                     key={p.id}
                     className="text-[11px] text-muted-foreground flex items-start gap-1.5"
                   >
-                    <span className="text-red-400 font-mono font-bold">✗</span>
+                    <span className="text-red-600 dark:text-red-400 font-mono font-bold">✗</span>
                     <span>
                       <strong>{p.label}:</strong>{" "}
                       {p.failureMessage ?? p.description}

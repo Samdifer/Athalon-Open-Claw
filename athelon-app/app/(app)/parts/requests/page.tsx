@@ -20,27 +20,27 @@ function getLocationStyle(location: string): {
   const map: Record<string, { label: string; color: string }> = {
     pending_inspection: {
       label: "Pending Inspection",
-      color: "text-amber-400 border-amber-500/30 bg-amber-500/10",
+      color: "text-amber-600 dark:text-amber-400 border-amber-500/30 bg-amber-500/10",
     },
     inventory: {
       label: "In Stock",
-      color: "text-green-400 border-green-500/30 bg-green-500/10",
+      color: "text-green-600 dark:text-green-400 border-green-500/30 bg-green-500/10",
     },
     installed: {
       label: "Installed",
-      color: "text-sky-400 border-sky-500/30 bg-sky-500/10",
+      color: "text-sky-600 dark:text-sky-400 border-sky-500/30 bg-sky-500/10",
     },
     removed_pending_disposition: {
       label: "Removed — Pending",
-      color: "text-orange-400 border-orange-500/30 bg-orange-500/10",
+      color: "text-orange-600 dark:text-orange-400 border-orange-500/30 bg-orange-500/10",
     },
     quarantine: {
       label: "Quarantine",
-      color: "text-red-400 border-red-500/30 bg-red-500/10",
+      color: "text-red-600 dark:text-red-400 border-red-500/30 bg-red-500/10",
     },
     scrapped: {
       label: "Scrapped",
-      color: "text-slate-400 border-slate-500/30 bg-slate-500/10",
+      color: "text-slate-500 dark:text-slate-400 border-slate-500/30 bg-slate-500/10",
     },
     returned_to_vendor: {
       label: "Returned to Vendor",
@@ -158,7 +158,7 @@ export default function PartsRequestsPage() {
                         </span>
                         {part.condition === "unserviceable" ||
                         part.location === "quarantine" ? (
-                          <Badge className="bg-red-500/15 text-red-400 border border-red-500/30 text-[10px] font-semibold">
+                          <Badge className="bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/30 text-[10px] font-semibold">
                             UNSERVICEABLE
                           </Badge>
                         ) : null}

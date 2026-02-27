@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "@/hooks/useRouter";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
@@ -19,18 +19,27 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 
-type VendorType = "parts_supplier" | "contract_maintenance" | "calibration_lab" | "DER" | "other";
+type VendorType =
+  | "parts_supplier"
+  | "contract_maintenance"
+  | "calibration_lab"
+  | "DER"
+  | "consumables_supplier"
+  | "service_provider"
+  | "other";
 
 const VENDOR_TYPES: { value: VendorType; label: string }[] = [
   { value: "parts_supplier", label: "Parts Supplier" },
   { value: "contract_maintenance", label: "Contract Maintenance" },
   { value: "calibration_lab", label: "Calibration Lab" },
   { value: "DER", label: "DER (Designated Engineering Rep)" },
+  { value: "consumables_supplier", label: "Consumables Supplier" },
+  { value: "service_provider", label: "Service Provider" },
   { value: "other", label: "Other" },
 ];
 
 export default function NewVendorPage() {
-  const navigate = useNavigate();
+  const router = useRouter();
   const { orgId, isLoaded } = useCurrentOrg();
 
   const createVendor = useMutation(api.vendors.createVendor);
@@ -67,7 +76,7 @@ export default function NewVendorPage() {
         certExpiry: certExpiry ? new Date(certExpiry).getTime() : undefined,
         notes: notes.trim() || undefined,
       });
-      navigate(`/billing/vendors/${vendorId}`);
+      router.push(`/billing/vendors/${vendorId}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create vendor.");
       setSubmitting(false);
@@ -79,7 +88,7 @@ export default function NewVendorPage() {
   return (
     <div className="space-y-5 max-w-2xl">
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="h-8 gap-1.5 text-xs">
+        <Button variant="ghost" size="sm" onClick={() => router.back()} className="h-8 gap-1.5 text-xs">
           <ArrowLeft className="w-3.5 h-3.5" />
           Back
         </Button>
@@ -90,7 +99,7 @@ export default function NewVendorPage() {
       </div>
 
       {error && (
-        <div className="flex items-center gap-2 p-3 rounded-md bg-red-500/10 border border-red-500/30 text-sm text-red-400">
+        <div className="flex items-center gap-2 p-3 rounded-md bg-red-500/10 border border-red-500/30 text-sm text-red-600 dark:text-red-400">
           <AlertCircle className="w-4 h-4 flex-shrink-0" />
           {error}
         </div>
@@ -192,7 +201,7 @@ export default function NewVendorPage() {
         </Card>
 
         <div className="flex gap-2 justify-end">
-          <Button type="button" variant="outline" size="sm" onClick={() => navigate(-1)}>Cancel</Button>
+          <Button type="button" variant="outline" size="sm" onClick={() => router.back()}>Cancel</Button>
           <Button type="submit" size="sm" disabled={submitting}>
             {submitting ? "Creating..." : "Create Vendor"}
           </Button>

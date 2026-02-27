@@ -32,9 +32,11 @@ export const createVendor = mutation({
     name: v.string(),
     type: v.union(
       v.literal("parts_supplier"),
+      v.literal("consumables_supplier"),
       v.literal("contract_maintenance"),
       v.literal("calibration_lab"),
       v.literal("DER"),
+      v.literal("service_provider"),
       v.literal("other"),
     ),
     address: v.optional(v.string()),
@@ -104,9 +106,11 @@ export const updateVendor = mutation({
     name: v.optional(v.string()),
     type: v.optional(v.union(
       v.literal("parts_supplier"),
+      v.literal("consumables_supplier"),
       v.literal("contract_maintenance"),
       v.literal("calibration_lab"),
       v.literal("DER"),
+      v.literal("service_provider"),
       v.literal("other"),
     )),
     address: v.optional(v.string()),
@@ -128,7 +132,7 @@ export const updateVendor = mutation({
 
     const patch: Partial<{
       name: string;
-      type: "parts_supplier" | "contract_maintenance" | "calibration_lab" | "DER" | "other";
+      type: "parts_supplier" | "consumables_supplier" | "contract_maintenance" | "calibration_lab" | "DER" | "service_provider" | "other";
       address: string;
       contactName: string;
       contactEmail: string;
@@ -172,9 +176,11 @@ export const listVendors = query({
     orgId: v.id("organizations"),
     type: v.optional(v.union(
       v.literal("parts_supplier"),
+      v.literal("consumables_supplier"),
       v.literal("contract_maintenance"),
       v.literal("calibration_lab"),
       v.literal("DER"),
+      v.literal("service_provider"),
       v.literal("other"),
     )),
     isApproved: v.optional(v.boolean()),
@@ -378,5 +384,132 @@ export const updateVendorCert = mutation({
         timestamp: now,
       });
     }
+  },
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// VENDOR SERVICES
+//
+// Catalog of services each vendor provides. Used when attaching outsourced
+// work to task cards via taskCardVendorServices.
+// ─────────────────────────────────────────────────────────────────────────────
+
+const serviceTypeValidator = v.union(
+  v.literal("repair"),
+  v.literal("overhaul"),
+  v.literal("test"),
+  v.literal("calibration"),
+  v.literal("inspection"),
+  v.literal("fabrication"),
+  v.literal("cleaning"),
+  v.literal("plating"),
+  v.literal("painting"),
+  v.literal("ndt"),
+  v.literal("other"),
+);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MUTATION: createVendorService
+//
+// Creates a new service offering for an existing vendor. Validates that the
+// vendor exists and belongs to the specified organization.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Creates a new vendor service record. */
+export const createVendorService = mutation({
+  args: {
+    vendorId: v.id("vendors"),
+    orgId: v.id("organizations"),
+    serviceName: v.string(),
+    serviceType: serviceTypeValidator,
+    description: v.optional(v.string()),
+    estimatedCost: v.optional(v.number()),
+    certificationRequired: v.optional(v.string()),
+  },
+
+  handler: async (ctx, args): Promise<Id<"vendorServices">> => {
+    const now = Date.now();
+
+    const vendor = await ctx.db.get(args.vendorId);
+    if (!vendor) {
+      throw new Error(`Vendor ${args.vendorId} not found.`);
+    }
+    if (vendor.orgId !== args.orgId) {
+      throw new Error(`Vendor ${args.vendorId} does not belong to organization ${args.orgId}.`);
+    }
+
+    return await ctx.db.insert("vendorServices", {
+      vendorId: args.vendorId,
+      orgId: args.orgId,
+      serviceName: args.serviceName,
+      serviceType: args.serviceType,
+      description: args.description,
+      estimatedCost: args.estimatedCost,
+      certificationRequired: args.certificationRequired,
+      isActive: true,
+      createdAt: now,
+      updatedAt: now,
+    });
+  },
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MUTATION: updateVendorService
+//
+// Updates a vendor service record. Only patches fields that are provided.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Updates fields on an existing vendor service. */
+export const updateVendorService = mutation({
+  args: {
+    serviceId: v.id("vendorServices"),
+    serviceName: v.optional(v.string()),
+    serviceType: v.optional(serviceTypeValidator),
+    description: v.optional(v.string()),
+    estimatedCost: v.optional(v.number()),
+    certificationRequired: v.optional(v.string()),
+    isActive: v.optional(v.boolean()),
+  },
+
+  handler: async (ctx, args): Promise<void> => {
+    const now = Date.now();
+
+    const service = await ctx.db.get(args.serviceId);
+    if (!service) {
+      throw new Error(`Vendor service ${args.serviceId} not found.`);
+    }
+
+    const patch: Record<string, string | number | boolean> = { updatedAt: now };
+
+    if (args.serviceName !== undefined) patch.serviceName = args.serviceName;
+    if (args.serviceType !== undefined) patch.serviceType = args.serviceType;
+    if (args.description !== undefined) patch.description = args.description;
+    if (args.estimatedCost !== undefined) patch.estimatedCost = args.estimatedCost;
+    if (args.certificationRequired !== undefined) patch.certificationRequired = args.certificationRequired;
+    if (args.isActive !== undefined) patch.isActive = args.isActive;
+
+    await ctx.db.patch(args.serviceId, patch);
+  },
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// QUERY: listVendorServices
+//
+// Returns active services for a vendor, using the by_vendor index.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Lists active services for the given vendor. */
+export const listVendorServices = query({
+  args: {
+    vendorId: v.id("vendors"),
+  },
+
+  handler: async (ctx, args) => {
+    const services = await ctx.db
+      .query("vendorServices")
+      .withIndex("by_vendor", (q) => q.eq("vendorId", args.vendorId))
+      .collect();
+
+    return services.filter((s) => s.isActive);
   },
 });

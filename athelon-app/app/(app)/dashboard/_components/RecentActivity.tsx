@@ -51,16 +51,16 @@ interface RecentActivityProps {
 
 function getStatusBadge(status: string) {
   const map: Record<string, string> = {
-    in_progress: "bg-sky-500/15 text-sky-400 border border-sky-500/30",
+    in_progress: "bg-sky-500/15 text-sky-600 dark:text-sky-400 border border-sky-500/30",
     pending_signoff:
-      "bg-amber-500/15 text-amber-400 border border-amber-500/30",
-    on_hold: "bg-orange-500/15 text-orange-400 border border-orange-500/30",
-    draft: "bg-slate-500/15 text-slate-400 border border-slate-500/30",
-    closed: "bg-green-500/15 text-green-400 border border-green-500/30",
-    open: "bg-sky-500/15 text-sky-400 border border-sky-500/30",
+      "bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30",
+    on_hold: "bg-orange-500/15 text-orange-600 dark:text-orange-400 border border-orange-500/30",
+    draft: "bg-slate-500/15 text-slate-500 dark:text-slate-400 border border-slate-500/30",
+    closed: "bg-green-500/15 text-green-600 dark:text-green-400 border border-green-500/30",
+    open: "bg-sky-500/15 text-sky-600 dark:text-sky-400 border border-sky-500/30",
     pending_inspection:
-      "bg-amber-500/15 text-amber-400 border border-amber-500/30",
-    open_discrepancies: "bg-red-500/15 text-red-400 border border-red-500/30",
+      "bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30",
+    open_discrepancies: "bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/30",
   };
   const statusLabels: Record<string, string> = {
     in_progress: "In Progress",
@@ -89,17 +89,17 @@ function getSeverityStyles(severity: AttentionSeverity) {
   > = {
     critical: {
       border: "border-l-red-500",
-      icon: "text-red-400",
+      icon: "text-red-600 dark:text-red-400",
       bg: "bg-red-500/5",
     },
     warning: {
       border: "border-l-amber-500",
-      icon: "text-amber-400",
+      icon: "text-amber-600 dark:text-amber-400",
       bg: "bg-amber-500/5",
     },
     info: {
       border: "border-l-sky-500",
-      icon: "text-sky-400",
+      icon: "text-sky-600 dark:text-sky-400",
       bg: "bg-sky-500/5",
     },
   };
@@ -120,12 +120,12 @@ export function RecentActivity({
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <CardTitle className="text-sm font-semibold flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 text-amber-400" />
+              <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400" />
               Attention Required
               {!statsLoading && (
                 <Badge
                   variant="secondary"
-                  className="text-[10px] bg-amber-500/15 text-amber-400 border border-amber-500/30"
+                  className="text-[10px] bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30"
                 >
                   {attentionItems.length}
                 </Badge>
@@ -217,7 +217,7 @@ export function RecentActivity({
               return (
                 <div key={wo._id}>
                   {i > 0 && <Separator className="my-1 opacity-40" />}
-                  <Link to={`/work-orders/${wo.workOrderNumber}`}>
+                  <Link to={`/work-orders/${wo._id}`}>
                     <div className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-muted/40 transition-colors cursor-pointer">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-0.5">

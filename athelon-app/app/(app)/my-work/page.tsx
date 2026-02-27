@@ -9,6 +9,8 @@ import {
   Wrench,
   AlertTriangle,
   ArrowRight,
+  Calendar,
+  TrendingUp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -19,7 +21,7 @@ import {
   TASK_STATUS_LABEL,
   TASK_STATUS_STYLES,
 } from "@/lib/mro-constants";
-import { formatDateTime } from "@/lib/format";
+import { formatDateTime, formatDate } from "@/lib/format";
 
 // ─── Loading skeleton ─────────────────────────────────────────────────────────
 
@@ -93,7 +95,7 @@ export default function MyWorkPage() {
             <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide mb-1">
               In Progress
             </p>
-            <p className="text-2xl font-bold text-sky-400">{inProgressCount}</p>
+            <p className="text-2xl font-bold text-sky-600 dark:text-sky-400">{inProgressCount}</p>
             <p className="text-xs text-muted-foreground mt-0.5">active cards</p>
           </CardContent>
         </Card>
@@ -103,7 +105,7 @@ export default function MyWorkPage() {
             <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide mb-1">
               Pending Steps
             </p>
-            <p className="text-2xl font-bold text-amber-400">
+            <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">
               {totalPendingSteps}
             </p>
             <p className="text-xs text-muted-foreground mt-0.5">
@@ -146,10 +148,24 @@ export default function MyWorkPage() {
                 ? card.handoffNotes[card.handoffNotes.length - 1]
                 : null;
 
+            const scheduleRisk = card.scheduleRisk ?? "no_date";
+            const riskBorderClass =
+              scheduleRisk === "overdue"
+                ? "border-l-4 border-l-red-500"
+                : scheduleRisk === "at_risk"
+                  ? "border-l-4 border-l-amber-500"
+                  : "";
+            const dueDateTextClass =
+              scheduleRisk === "overdue"
+                ? "text-red-400"
+                : scheduleRisk === "at_risk"
+                  ? "text-amber-400"
+                  : "text-muted-foreground";
+
             return (
               <Card
                 key={card._id}
-                className="border-border/60 hover:border-primary/30 transition-all"
+                className={`border-border/60 hover:border-primary/30 transition-all ${riskBorderClass}`}
               >
                 <CardContent className="p-4 space-y-3">
                   {/* Row 1: Card number + title + status + continue button */}
@@ -184,16 +200,30 @@ export default function MyWorkPage() {
                     </Button>
                   </div>
 
-                  {/* Row 2: Work order link */}
-                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                    <Wrench className="w-3 h-3 flex-shrink-0" />
-                    <span>Work Order</span>
-                    <Link
-                      to={`/work-orders/${card.workOrderId}`}
-                      className="font-mono text-primary hover:underline"
-                    >
-                      {card.workOrderNumber}
-                    </Link>
+                  {/* Row 2: Work order link + due date */}
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <Wrench className="w-3 h-3 flex-shrink-0" />
+                      <span>Work Order</span>
+                      <Link
+                        to={`/work-orders/${card.workOrderId}`}
+                        className="font-mono text-primary hover:underline"
+                      >
+                        {card.workOrderNumber}
+                      </Link>
+                    </div>
+                    {card.promisedDeliveryDate && (
+                      <div className={`flex items-center gap-1 text-xs ${dueDateTextClass}`}>
+                        {scheduleRisk === "overdue" && (
+                          <TrendingUp className="w-3 h-3 flex-shrink-0" />
+                        )}
+                        <Calendar className="w-3 h-3 flex-shrink-0" />
+                        <span>
+                          {scheduleRisk === "overdue" ? "Overdue — " : scheduleRisk === "at_risk" ? "Due soon — " : "Due "}
+                          {formatDate(card.promisedDeliveryDate)}
+                        </span>
+                      </div>
+                    )}
                   </div>
 
                   {/* Row 3: Step progress bar */}
@@ -216,8 +246,8 @@ export default function MyWorkPage() {
                   {lastHandoffNote && (
                     <div className="rounded-md bg-amber-500/10 border border-amber-500/20 px-3 py-2">
                       <div className="flex items-center gap-1.5 mb-1">
-                        <AlertTriangle className="w-3 h-3 text-amber-400 flex-shrink-0" />
-                        <span className="text-[10px] font-medium text-amber-400 uppercase tracking-wide">
+                        <AlertTriangle className="w-3 h-3 text-amber-600 dark:text-amber-400 flex-shrink-0" />
+                        <span className="text-[10px] font-medium text-amber-600 dark:text-amber-400 uppercase tracking-wide">
                           Handoff Note
                         </span>
                         <span className="text-[10px] text-muted-foreground ml-auto">

@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useRouter } from "@/hooks/useRouter";
+import { useParams } from "react-router-dom";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
@@ -46,10 +47,10 @@ import { formatDate } from "@/lib/format";
 
 const STATUS_STYLES: Record<string, string> = {
   DRAFT: "bg-muted text-muted-foreground border-muted-foreground/30",
-  SENT: "bg-blue-500/15 text-blue-400 border-blue-500/30",
-  APPROVED: "bg-green-500/15 text-green-400 border-green-500/30",
-  CONVERTED: "bg-purple-500/15 text-purple-400 border-purple-500/30",
-  DECLINED: "bg-red-500/15 text-red-400 border-red-500/30",
+  SENT: "bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/30",
+  APPROVED: "bg-green-500/15 text-green-600 dark:text-green-400 border-green-500/30",
+  CONVERTED: "bg-purple-500/15 text-purple-600 dark:text-purple-400 border-purple-500/30",
+  DECLINED: "bg-red-500/15 text-red-600 dark:text-red-400 border-red-500/30",
 };
 
 const LINE_TYPE_LABELS: Record<string, string> = {
@@ -72,7 +73,7 @@ const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 
 export default function QuoteDetailPage() {
   const params = useParams();
-  const navigate = useNavigate();
+  const router = useRouter();
   const quoteId = params.id as Id<"quotes">;
   const { orgId, techId, isLoaded } = useCurrentOrg();
 
@@ -176,7 +177,7 @@ export default function QuoteDetailPage() {
         description: woDescription.trim() || `Work order from quote ${quote?.quoteNumber ?? ""}`,
       });
       setConvertDialog(false);
-      navigate(`/work-orders/${newWoId}`);
+      router.push(`/work-orders/${newWoId}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to convert quote.");
     } finally {
@@ -194,7 +195,7 @@ export default function QuoteDetailPage() {
         originalQuoteId: quoteId,
         createdByTechId: techId as Id<"technicians">,
       });
-      navigate(`/billing/quotes/${newQuoteId}`);
+      router.push(`/billing/quotes/${newQuoteId}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create revision.");
     } finally {
@@ -215,7 +216,7 @@ export default function QuoteDetailPage() {
         paymentTerms: invoicePaymentTerms.trim() || undefined,
       });
       setCreateInvoiceDialog(false);
-      navigate(`/billing/invoices/${newInvoiceId}`);
+      router.push(`/billing/invoices/${newInvoiceId}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create invoice.");
     } finally {
@@ -289,7 +290,7 @@ export default function QuoteDetailPage() {
         <CardContent className="py-16 text-center">
           <AlertCircle className="w-8 h-8 text-red-400/60 mx-auto mb-3" />
           <p className="text-sm text-muted-foreground">Quote not found.</p>
-          <Button variant="outline" size="sm" className="mt-4" onClick={() => navigate(-1)}>Go Back</Button>
+          <Button variant="outline" size="sm" className="mt-4" onClick={() => router.back()}>Go Back</Button>
         </CardContent>
       </Card>
     );
@@ -320,7 +321,7 @@ export default function QuoteDetailPage() {
       {/* Header */}
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="h-8 gap-1.5 text-xs">
+          <Button variant="ghost" size="sm" onClick={() => router.back()} className="h-8 gap-1.5 text-xs">
             <ArrowLeft className="w-3.5 h-3.5" />
             Back
           </Button>
@@ -332,7 +333,7 @@ export default function QuoteDetailPage() {
               </Badge>
               {/* GAP-07: EXPIRED badge */}
               {isExpired && (
-                <Badge variant="outline" className="text-[10px] font-medium border bg-amber-500/15 text-amber-400 border-amber-500/30">
+                <Badge variant="outline" className="text-[10px] font-medium border bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30">
                   EXPIRED
                 </Badge>
               )}
@@ -359,7 +360,7 @@ export default function QuoteDetailPage() {
             </Button>
           )}
           {canDecline && (
-            <Button size="sm" variant="outline" onClick={() => setDeclineDialog(true)} className="h-8 gap-1.5 text-xs border-red-500/40 text-red-400 hover:bg-red-500/10">
+            <Button size="sm" variant="outline" onClick={() => setDeclineDialog(true)} className="h-8 gap-1.5 text-xs border-red-500/40 text-red-600 dark:text-red-400 hover:bg-red-500/10">
               <XCircle className="w-3.5 h-3.5" />
               Decline
             </Button>
@@ -403,14 +404,14 @@ export default function QuoteDetailPage() {
 
       {/* GAP-07: Expires soon warning banner */}
       {isExpiringSoon && (
-        <div className="flex items-center gap-2 p-3 rounded-md bg-amber-500/10 border border-amber-500/30 text-sm text-amber-400">
+        <div className="flex items-center gap-2 p-3 rounded-md bg-amber-500/10 border border-amber-500/30 text-sm text-amber-600 dark:text-amber-400">
           <AlertCircle className="w-4 h-4 flex-shrink-0" />
           This quote expires soon ({formatDate(quote.expiresAt!)}). Consider sending a revision or obtaining approval before expiry.
         </div>
       )}
 
       {error && (
-        <div className="flex items-center gap-2 p-3 rounded-md bg-red-500/10 border border-red-500/30 text-sm text-red-400">
+        <div className="flex items-center gap-2 p-3 rounded-md bg-red-500/10 border border-red-500/30 text-sm text-red-600 dark:text-red-400">
           <AlertCircle className="w-4 h-4 flex-shrink-0" />
           {error}
         </div>
@@ -471,7 +472,7 @@ export default function QuoteDetailPage() {
                       <div>{item.description}</div>
                       {/* GAP-06: Show discount percentage label */}
                       {item.discountPercent ? (
-                        <div className="text-[10px] text-amber-400 mt-0.5">- {item.discountPercent}%</div>
+                        <div className="text-[10px] text-amber-600 dark:text-amber-400 mt-0.5">- {item.discountPercent}%</div>
                       ) : null}
                     </TableCell>
                     <TableCell>

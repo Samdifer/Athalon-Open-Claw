@@ -1,229 +1,269 @@
+"use client";
+
+import { useMemo } from "react";
 import { Link, useParams } from "react-router-dom";
+import { useQuery } from "convex/react";
 import {
   ArrowLeft,
-  ClipboardList,
   AlertTriangle,
   Package,
   FileText,
-  CheckCircle2,
-  Circle,
-  Clock,
-  Wrench,
-  ChevronRight,
-  PenLine,
   ShieldCheck,
   XCircle,
-  Timer,
+  Clock,
   User,
+  Calendar,
+  TrendingUp,
+  Paperclip,
+  CheckCircle2,
 } from "lucide-react";
+import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
+import { formatDate } from "@/lib/format";
+import {
+  WO_STATUS_LABEL,
+  WO_STATUS_STYLES,
+  WO_TYPE_LABEL,
+  type WoStatus,
+  type WoType,
+} from "@/lib/mro-constants";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  WorkItemsList,
+  type WorkItem,
+  type TaskCardItem,
+  type DiscrepancyItem,
+} from "@/app/(app)/work-orders/[id]/_components/WorkItemsList";
+import { WOComplianceTab } from "@/app/(app)/work-orders/[id]/_components/WOComplianceTab";
+import { DocumentAttachmentPanel } from "@/app/(app)/work-orders/[id]/_components/DocumentAttachmentPanel";
+import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 
-// Demo data — will be replaced with Convex queries
-const demoWO = {
-  "WO-2026-0041": {
-    number: "WO-2026-0041",
-    aircraft: "N192AK",
-    aircraftMake: "Cessna",
-    aircraftModel: "172S",
-    aircraftSerial: "172S11234",
-    customer: "High Country Charter LLC",
-    description:
-      "100-hour inspection per Cessna 172S Maintenance Manual. Includes engine compression check, oil change, brake inspection, and required AD compliance checks.",
-    type: "100_hour",
-    typeLabel: "100-Hour Inspection",
-    status: "in_progress",
-    statusLabel: "In Progress",
-    priority: "normal",
-    openedDate: "Feb 20, 2026",
-    aircraftHoursAtOpen: 3847.2,
-    assignedTechs: ["Ray Kowalski", "Sandra Mercado"],
-    taskCards: [
-      {
-        id: "tc-1",
-        number: "TC-001",
-        title: "Engine Compression Check — All Cylinders",
-        type: "Inspection",
-        status: "complete",
-        statusLabel: "Signed",
-        stepsComplete: 3,
-        stepsTotal: 3,
-        signedBy: "Ray Kowalski",
-        signedAt: "Feb 21, 2026 14:22Z",
-        href: "/work-orders/WO-2026-0041/tasks/TC-001",
-      },
-      {
-        id: "tc-2",
-        number: "TC-002",
-        title: "Engine Oil Change & Filter Replacement",
-        type: "Maintenance",
-        status: "complete",
-        statusLabel: "Signed",
-        stepsComplete: 4,
-        stepsTotal: 4,
-        signedBy: "Ray Kowalski",
-        signedAt: "Feb 21, 2026 16:05Z",
-        href: "/work-orders/WO-2026-0041/tasks/TC-002",
-      },
-      {
-        id: "tc-3",
-        number: "TC-003",
-        title: "Brake System Inspection — Main & Nose",
-        type: "Inspection",
-        status: "in_progress",
-        statusLabel: "In Progress",
-        stepsComplete: 2,
-        stepsTotal: 5,
-        signedBy: null,
-        signedAt: null,
-        href: "/work-orders/WO-2026-0041/tasks/TC-003",
-      },
-      {
-        id: "tc-4",
-        number: "TC-004",
-        title: "Airworthiness Directive Compliance Review",
-        type: "Compliance",
-        status: "not_started",
-        statusLabel: "Not Started",
-        stepsComplete: 0,
-        stepsTotal: 2,
-        signedBy: null,
-        signedAt: null,
-        href: "/work-orders/WO-2026-0041/tasks/TC-004",
-      },
-    ],
-    parts: [
-      {
-        id: "p-1",
-        partNumber: "AV-OIL-W80",
-        name: "Aviation Oil 15W-50 AeroShell W80",
-        qty: "6 qt",
-        status: "installed",
-        statusLabel: "Installed",
-        eightOneThirty: "8130-RMTS-2026-0412",
-      },
-      {
-        id: "p-2",
-        partNumber: "AV17-FILTER-CH48109-1",
-        name: "Engine Oil Filter — Champion CH48109-1",
-        qty: "1 ea",
-        status: "installed",
-        statusLabel: "Installed",
-        eightOneThirty: "8130-RMTS-2026-0413",
-      },
-      {
-        id: "p-3",
-        partNumber: "MIL-PRF-5606-QT",
-        name: "Hydraulic Fluid MIL-PRF-5606",
-        qty: "1 qt",
-        status: "inventory",
-        statusLabel: "In Storeroom",
-        eightOneThirty: null,
-      },
-    ],
-    squawks: [
-      {
-        id: "sq-1",
-        number: "SQ-2026-041-001",
-        description:
-          "Right main gear shimmy dampener shows intermittent hesitation on taxi. Suspect worn piston seal.",
-        severity: "airworthiness",
-        status: "open",
-        statusLabel: "Open",
-        foundBy: "Ray Kowalski",
-        foundDate: "Feb 22, 2026",
-        requiresCustomerAuth: true,
-      },
-    ],
-    auditEvents: [
-      {
-        id: "ev-1",
-        event: "status_changed",
-        description: "Status changed: open → in_progress (first task card created)",
-        user: "Devraj A.",
-        timestamp: "Feb 21, 2026 13:47Z",
-      },
-      {
-        id: "ev-2",
-        event: "task_signed",
-        description: "TC-001 signed by Ray Kowalski — Engine compression check complete",
-        user: "Ray Kowalski",
-        timestamp: "Feb 21, 2026 14:22Z",
-      },
-      {
-        id: "ev-3",
-        event: "task_signed",
-        description: "TC-002 signed by Ray Kowalski — Oil change complete",
-        user: "Ray Kowalski",
-        timestamp: "Feb 21, 2026 16:05Z",
-      },
-      {
-        id: "ev-4",
-        event: "discrepancy_created",
-        description: "SQ-2026-041-001 opened — shimmy dampener finding",
-        user: "Ray Kowalski",
-        timestamp: "Feb 22, 2026 09:14Z",
-      },
-    ],
-    closeReadiness: {
-      canClose: false,
-      blockers: [
-        "2 task cards not yet signed (TC-003, TC-004)",
-        "1 open squawk requires disposition (SQ-2026-041-001)",
-      ],
-    },
-  },
-};
+type RiskLevel = "overdue" | "at_risk" | "on_track" | "no_date";
 
-function getTaskStatusBadge(status: string, label: string) {
-  const map: Record<string, string> = {
-    complete: "bg-green-500/15 text-green-400 border-green-500/30",
-    in_progress: "bg-sky-500/15 text-sky-400 border-sky-500/30",
-    not_started: "bg-slate-500/15 text-slate-400 border-slate-500/30",
-    voided: "bg-slate-500/15 text-slate-400 border-slate-500/30",
-  };
-  return (
-    <Badge
-      variant="outline"
-      className={`text-[10px] font-medium border ${map[status] ?? "bg-muted text-muted-foreground"}`}
-    >
-      {status === "complete" && <CheckCircle2 className="w-2.5 h-2.5 mr-1" />}
-      {status === "in_progress" && <Circle className="w-2.5 h-2.5 mr-1" />}
-      {label}
-    </Badge>
-  );
+function isWorkOrderNumberRef(value: string): boolean {
+  return /^WO-/i.test(value.trim());
 }
 
-function getPartStatusBadge(status: string, label: string) {
+function isConvexIdLike(value: string): boolean {
+  return /^[A-Za-z0-9]{10,}$/.test(value);
+}
+
+function getScheduleRiskLevel(promisedDeliveryDateMs: number | null | undefined): RiskLevel {
+  if (!promisedDeliveryDateMs) return "no_date";
+  const now = Date.now();
+  if (promisedDeliveryDateMs < now) return "overdue";
+  const daysLeft = (promisedDeliveryDateMs - now) / (1000 * 60 * 60 * 24);
+  return daysLeft <= 2 ? "at_risk" : "on_track";
+}
+
+function normalizeDiscrepancyStatus(
+  status: string,
+  disposition?: string,
+): "open" | "deferred" | "corrected" {
+  if (status !== "dispositioned") return "open";
+  if (disposition === "deferred_mel" || disposition === "deferred_grounded") return "deferred";
+  return "corrected";
+}
+
+function partStatusLabel(location: string): string {
+  const map: Record<string, string> = {
+    pending_inspection: "Pending Inspection",
+    inventory: "Inventory",
+    installed: "Installed",
+    removed_pending_disposition: "Removed",
+    quarantine: "Quarantine",
+    scrapped: "Scrapped",
+    returned_to_vendor: "Returned",
+  };
+  return map[location] ?? location;
+}
+
+function partStatusStyle(location: string): string {
   const map: Record<string, string> = {
     installed: "bg-green-500/15 text-green-400 border-green-500/30",
-    inventory: "bg-amber-500/15 text-amber-400 border-amber-500/30",
-    on_order: "bg-sky-500/15 text-sky-400 border-sky-500/30",
+    inventory: "bg-sky-500/15 text-sky-400 border-sky-500/30",
+    pending_inspection: "bg-amber-500/15 text-amber-400 border-amber-500/30",
+    quarantine: "bg-red-500/15 text-red-400 border-red-500/30",
+    removed_pending_disposition: "bg-orange-500/15 text-orange-400 border-orange-500/30",
   };
+  return map[location] ?? "bg-slate-500/15 text-slate-400 border-slate-500/30";
+}
+
+function ScheduleRiskChip({ riskLevel }: { riskLevel: RiskLevel }) {
+  if (riskLevel === "no_date") return null;
+  const styles = {
+    overdue: "bg-red-500/15 text-red-400 border-red-500/30",
+    at_risk: "bg-amber-500/15 text-amber-400 border-amber-500/30",
+    on_track: "bg-green-500/15 text-green-400 border-green-500/30",
+  } as const;
+  const labels = { overdue: "Overdue", at_risk: "At Risk", on_track: "On Track" } as const;
   return (
-    <Badge
-      variant="outline"
-      className={`text-[10px] font-medium border ${map[status] ?? "bg-muted"}`}
-    >
-      {label}
+    <Badge variant="outline" className={`text-[10px] font-medium border gap-1 ${styles[riskLevel]}`}>
+      <TrendingUp className="w-2.5 h-2.5" />
+      {labels[riskLevel]}
     </Badge>
   );
 }
 
 export default function WorkOrderDetailPage() {
-  const { id } = useParams<{ id: string }>();
-  const wo = demoWO[id as keyof typeof demoWO] ?? demoWO["WO-2026-0041"];
+  const { id: routeRef = "" } = useParams<{ id: string }>();
+  const { orgId, isLoaded } = useCurrentOrg();
 
-  const tasksComplete = wo.taskCards.filter((tc) => tc.status === "complete").length;
-  const tasksTotal = wo.taskCards.length;
+  const legacyResolution = useQuery(
+    api.workOrders.resolveWorkOrderRef,
+    orgId && isWorkOrderNumberRef(routeRef)
+      ? { organizationId: orgId, workOrderRef: routeRef }
+      : "skip",
+  );
+
+  const workOrderId = useMemo(() => {
+    if (!routeRef) return undefined;
+    if (isWorkOrderNumberRef(routeRef)) return legacyResolution?.workOrderId;
+    if (isConvexIdLike(routeRef)) return routeRef as Id<"workOrders">;
+    return undefined;
+  }, [legacyResolution?.workOrderId, routeRef]);
+
+  const data = useQuery(
+    api.workOrders.getWorkOrder,
+    orgId && workOrderId ? { workOrderId, organizationId: orgId } : "skip",
+  );
+
+  const closeReadiness = useQuery(
+    api.workOrders.getCloseReadiness,
+    orgId && workOrderId ? { workOrderId, organizationId: orgId } : "skip",
+  );
+
+  const allParts = useQuery(
+    api.parts.listParts,
+    orgId ? { organizationId: orgId } : "skip",
+  );
+
+  const isLegacyRefResolving =
+    isWorkOrderNumberRef(routeRef) && orgId && legacyResolution === undefined;
+  const isDataLoading = Boolean(orgId && workOrderId && data === undefined);
+
+  if (!isLoaded || isLegacyRefResolving || isDataLoading) {
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-10 w-40" />
+        <Skeleton className="h-20 w-full" />
+        <Skeleton className="h-24 w-full" />
+        <Skeleton className="h-64 w-full" />
+      </div>
+    );
+  }
+
+  if (!orgId) {
+    return (
+      <Card className="border-border/60">
+        <CardContent className="py-10 text-center text-sm text-muted-foreground">
+          Unable to resolve organization context.
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!workOrderId) {
+    return (
+      <Card className="border-border/60">
+        <CardContent className="py-10 text-center">
+          <p className="text-sm font-medium text-foreground">Invalid work order reference</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Ref: <span className="font-mono">{routeRef || "—"}</span>
+          </p>
+          <Button asChild size="sm" className="mt-4">
+            <Link to="/work-orders">Back to Work Orders</Link>
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!data) {
+    return (
+      <Card className="border-border/60">
+        <CardContent className="py-10 text-center">
+          <p className="text-sm font-medium text-foreground">Work order not found</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            ID: <span className="font-mono">{String(workOrderId)}</span>
+          </p>
+          <Button asChild size="sm" className="mt-4">
+            <Link to="/work-orders">Back to Work Orders</Link>
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const wo = data.workOrder;
+  const aircraft = data.aircraft;
+  const taskCards = data.taskCards ?? [];
+  const discrepancies = data.discrepancies ?? [];
+  const auditEvents = data.auditEvents ?? [];
+
+  const tasksComplete = taskCards.filter((tc) => tc.status === "complete").length;
+  const tasksTotal = taskCards.length;
+  const openSquawks = discrepancies.filter(
+    (d) => d.status === "open" || d.status === "under_evaluation",
+  ).length;
+  const riskLevel = getScheduleRiskLevel(wo.promisedDeliveryDate);
+
+  const workItems: WorkItem[] = [
+    ...taskCards.map(
+      (tc): TaskCardItem => ({
+        kind: "task",
+        id: String(tc._id),
+        number: tc.taskCardNumber,
+        title: tc.title,
+        status: tc.status,
+        taskType: tc.taskType,
+        stepCount: tc.stepCount ?? tc.steps.length,
+        completedStepCount:
+          tc.completedStepCount ??
+          tc.steps.filter((s) => s.status === "completed" || s.status === "na").length,
+        aircraftSystem: tc.aircraftSystem,
+        isInspectionItem: tc.isInspectionItem,
+        isCustomerReported: tc.isCustomerReported,
+      }),
+    ),
+    ...discrepancies.map(
+      (sq): DiscrepancyItem => ({
+        kind: "finding",
+        id: String(sq._id),
+        number: sq.discrepancyNumber,
+        description: sq.description,
+        status: normalizeDiscrepancyStatus(sq.status, sq.disposition),
+        disposition: sq.disposition,
+        foundBy: sq.foundByTechnicianId,
+        foundDate: formatDate(sq.foundAt),
+        aircraftSystem: sq.aircraftSystem,
+        squawkOrigin: sq.squawkOrigin,
+        isCustomerReported: sq.isCustomerReported,
+        foundDuringRts: sq.foundDuringRts,
+      }),
+    ),
+  ];
+
+  const partsForThisWorkOrder = (allParts ?? []).filter(
+    (part) =>
+      part.receivingWorkOrderId === workOrderId ||
+      part.reservedForWorkOrderId === workOrderId ||
+      part.installedByWorkOrderId === workOrderId ||
+      part.installedOnWorkOrderId === workOrderId ||
+      part.removedByWorkOrderId === workOrderId,
+  );
+
+  const readinessBlockers = closeReadiness?.blockers ?? [];
+  const canClose = closeReadiness?.canClose ?? false;
 
   return (
     <div className="space-y-5">
-      {/* Back + Header */}
       <div>
         <Button asChild variant="ghost" size="sm" className="h-7 -ml-2 mb-3 text-xs text-muted-foreground">
           <Link to="/work-orders">
@@ -233,41 +273,44 @@ export default function WorkOrderDetailPage() {
         </Button>
         <div className="flex items-start justify-between gap-4">
           <div>
-            <div className="flex items-center gap-2.5 mb-1">
-              <h1 className="text-xl font-semibold font-mono text-foreground">
-                {wo.number}
-              </h1>
+            <div className="flex items-center gap-2.5 mb-1 flex-wrap">
+              <h1 className="text-xl font-semibold font-mono text-foreground">{wo.workOrderNumber}</h1>
               <Badge
                 variant="outline"
-                className="bg-sky-500/15 text-sky-400 border-sky-500/30 text-[11px] font-medium"
+                className={`text-[11px] font-medium border ${
+                  WO_STATUS_STYLES[wo.status as WoStatus] ?? "bg-muted text-muted-foreground"
+                }`}
               >
-                {wo.statusLabel}
+                {WO_STATUS_LABEL[wo.status as WoStatus] ?? wo.status}
               </Badge>
-              <Badge
-                variant="outline"
-                className="text-[10px] text-muted-foreground border-border/40"
-              >
-                {wo.typeLabel}
+              <Badge variant="outline" className="text-[10px] text-muted-foreground border-border/40">
+                {WO_TYPE_LABEL[wo.workOrderType as WoType] ?? wo.workOrderType}
               </Badge>
+              <ScheduleRiskChip riskLevel={riskLevel} />
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <span className="font-mono font-bold text-2xl text-foreground">
-                {wo.aircraft}
+                {aircraft?.currentRegistration ?? "—"}
               </span>
-              <span className="text-base text-muted-foreground">
-                {wo.aircraftMake} {wo.aircraftModel}
-              </span>
-              <span className="text-muted-foreground/40">·</span>
-              <span className="text-sm text-muted-foreground">S/N {wo.aircraftSerial}</span>
+              {aircraft && (
+                <span className="text-base text-muted-foreground">
+                  {aircraft.make} {aircraft.model}
+                </span>
+              )}
+              {aircraft?.serialNumber && (
+                <>
+                  <span className="text-muted-foreground/40">·</span>
+                  <span className="text-sm text-muted-foreground">S/N {aircraft.serialNumber}</span>
+                </>
+              )}
             </div>
-            <p className="text-sm text-muted-foreground mt-1">{wo.customer}</p>
+            <p className="text-sm text-muted-foreground mt-1">{wo.description}</p>
           </div>
 
-          {/* Close Readiness / Sign-Off Button */}
           <div className="flex-shrink-0">
-            {wo.closeReadiness.canClose ? (
+            {canClose ? (
               <Button asChild className="gap-2">
-                <Link to={`/work-orders/${wo.number}/sign-off`}>
+                <Link to={`/work-orders/${workOrderId}/signature`}>
                   <ShieldCheck className="w-4 h-4" />
                   Sign Off & Close
                 </Link>
@@ -282,8 +325,7 @@ export default function WorkOrderDetailPage() {
         </div>
       </div>
 
-      {/* Quick Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         <Card className="border-border/60">
           <CardContent className="p-3">
             <p className="text-[11px] text-muted-foreground mb-1">Task Progress</p>
@@ -291,55 +333,83 @@ export default function WorkOrderDetailPage() {
               <span className="text-lg font-bold text-foreground">
                 {tasksComplete}/{tasksTotal}
               </span>
-              <Progress
-                value={(tasksComplete / tasksTotal) * 100}
-                className="h-1.5 flex-1"
-              />
+              <Progress value={tasksTotal > 0 ? (tasksComplete / tasksTotal) * 100 : 0} className="h-1.5 flex-1" />
             </div>
           </CardContent>
         </Card>
         <Card className="border-border/60">
           <CardContent className="p-3">
             <p className="text-[11px] text-muted-foreground mb-1">Open Squawks</p>
-            <span className={`text-lg font-bold ${wo.squawks.length > 0 ? "text-red-400" : "text-foreground"}`}>
-              {wo.squawks.filter((s) => s.status === "open").length}
+            <span className={`text-lg font-bold ${openSquawks > 0 ? "text-red-400" : "text-foreground"}`}>
+              {openSquawks}
             </span>
           </CardContent>
         </Card>
         <Card className="border-border/60">
           <CardContent className="p-3">
-            <p className="text-[11px] text-muted-foreground mb-1">Parts On Order</p>
-            <span className="text-lg font-bold text-foreground">
-              {wo.parts.filter((p) => p.status === "on_order").length}
-            </span>
+            <p className="text-[11px] text-muted-foreground mb-1">Parts Linked</p>
+            <span className="text-lg font-bold text-foreground">{partsForThisWorkOrder.length}</span>
           </CardContent>
         </Card>
         <Card className="border-border/60">
           <CardContent className="p-3">
-            <p className="text-[11px] text-muted-foreground mb-1">Hours at Open</p>
-            <span className="text-lg font-bold font-mono text-foreground">
-              {wo.aircraftHoursAtOpen.toFixed(1)}
-            </span>
+            <p className="text-[11px] text-muted-foreground mb-1">Opened</p>
+            <span className="text-sm font-semibold text-foreground">{formatDate(wo.openedAt)}</span>
+          </CardContent>
+        </Card>
+        <Card
+          className={`border-border/60 ${
+            riskLevel === "overdue"
+              ? "border-red-500/40 bg-red-500/5"
+              : riskLevel === "at_risk"
+                ? "border-amber-500/40 bg-amber-500/5"
+                : ""
+          }`}
+        >
+          <CardContent className="p-3">
+            <div className="flex items-center gap-1 mb-1">
+              <Calendar className="w-3 h-3 text-muted-foreground" />
+              <p className="text-[11px] text-muted-foreground">Promised Delivery</p>
+            </div>
+            {wo.promisedDeliveryDate ? (
+              <span
+                className={`text-sm font-semibold ${
+                  riskLevel === "overdue"
+                    ? "text-red-400"
+                    : riskLevel === "at_risk"
+                      ? "text-amber-400"
+                      : "text-foreground"
+                }`}
+              >
+                {formatDate(wo.promisedDeliveryDate)}
+              </span>
+            ) : (
+              <span className="text-sm text-muted-foreground/60">Not set</span>
+            )}
+            {wo.estimatedLaborHoursOverride !== undefined && (
+              <div className="flex items-center gap-1 mt-1">
+                <Clock className="w-3 h-3 text-muted-foreground/60" />
+                <span className="text-[10px] text-muted-foreground">
+                  {wo.estimatedLaborHoursOverride}h est.
+                </span>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
 
-      {/* Close Readiness Warning */}
-      {!wo.closeReadiness.canClose && (
+      {!canClose && readinessBlockers.length > 0 && (
         <Card className="border-amber-500/30 bg-amber-500/5">
           <CardContent className="p-3">
             <div className="flex items-start gap-2.5">
               <AlertTriangle className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
               <div>
                 <p className="text-xs font-semibold text-amber-400 mb-1">
-                  Cannot close WO — {wo.closeReadiness.blockers.length} blockers
+                  Cannot close WO — {readinessBlockers.length} blockers
                 </p>
                 <ul className="space-y-0.5">
-                  {wo.closeReadiness.blockers.map((b, i) => (
-                    <li
-                      key={i}
-                      className="text-[11px] text-muted-foreground flex items-center gap-1.5"
-                    >
+                  {readinessBlockers.map((b) => (
+                    <li key={b} className="text-[11px] text-muted-foreground flex items-center gap-1.5">
                       <XCircle className="w-3 h-3 text-red-400 flex-shrink-0" />
                       {b}
                     </li>
@@ -351,17 +421,17 @@ export default function WorkOrderDetailPage() {
         </Card>
       )}
 
-      {/* Tabs */}
-      <Tabs defaultValue="tasks">
+      <Tabs defaultValue="squawks">
         <TabsList className="h-9 bg-muted/40 p-0.5 mb-4">
           {(
             [
-              { value: "tasks", label: "Task Cards", Icon: ClipboardList, count: tasksComplete, total: tasksTotal },
-              { value: "squawks", label: "Squawks", Icon: AlertTriangle, count: wo.squawks.filter(s => s.status === "open").length, total: null },
-              { value: "parts", label: "Parts", Icon: Package, count: null, total: null },
-              { value: "notes", label: "Notes & Activity", Icon: FileText, count: null, total: null },
+              { value: "squawks", label: "Squawks", Icon: AlertTriangle, count: workItems.length, indicator: null },
+              { value: "compliance", label: "Compliance", Icon: ShieldCheck, count: null, indicator: "amber" as const },
+              { value: "parts", label: "Parts", Icon: Package, count: partsForThisWorkOrder.length, indicator: null },
+              { value: "documents", label: "Documents", Icon: Paperclip, count: null, indicator: null },
+              { value: "notes", label: "Notes & Activity", Icon: FileText, count: auditEvents.length, indicator: null },
             ] as const
-          ).map(({ value, label, Icon, count, total }) => (
+          ).map(({ value, label, Icon, count, indicator }) => (
             <TabsTrigger
               key={value}
               value={value}
@@ -374,173 +444,83 @@ export default function WorkOrderDetailPage() {
                   variant="secondary"
                   className="h-4 min-w-[16px] px-1 text-[9px] bg-muted-foreground/20 text-muted-foreground"
                 >
-                  {total !== null ? `${count}/${total}` : count}
+                  {count}
                 </Badge>
               )}
+              {indicator === "amber" && <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />}
             </TabsTrigger>
           ))}
         </TabsList>
 
-        {/* Task Cards Tab */}
-        <TabsContent value="tasks" className="mt-0">
-          <div className="space-y-2">
-            {wo.taskCards.map((tc) => (
-              <Link key={tc.id} to={tc.href}>
-                <Card className="border-border/60 hover:border-primary/30 hover:bg-card/80 transition-all cursor-pointer">
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-4">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="font-mono text-xs text-muted-foreground font-medium">
-                            {tc.number}
-                          </span>
-                          {getTaskStatusBadge(tc.status, tc.statusLabel)}
-                          <Badge
-                            variant="outline"
-                            className="text-[10px] text-muted-foreground border-border/40"
-                          >
-                            {tc.type}
-                          </Badge>
-                        </div>
-                        <p className="text-sm font-medium text-foreground">
-                          {tc.title}
-                        </p>
-                        {tc.signedBy && (
-                          <p className="text-[11px] text-muted-foreground mt-0.5 flex items-center gap-1">
-                            <User className="w-3 h-3" />
-                            Signed by {tc.signedBy} · {tc.signedAt}
-                          </p>
-                        )}
-                      </div>
-                      <div className="flex-shrink-0 flex items-center gap-3">
-                        {tc.stepsTotal > 0 && (
-                          <div className="text-right">
-                            <div className="flex items-center gap-1.5 mb-1 justify-end">
-                              <span className="text-[11px] text-muted-foreground">
-                                {tc.stepsComplete}/{tc.stepsTotal} steps
-                              </span>
-                            </div>
-                            <Progress
-                              value={(tc.stepsComplete / tc.stepsTotal) * 100}
-                              className="h-1 w-16"
-                            />
-                          </div>
-                        )}
-                        <ChevronRight className="w-4 h-4 text-muted-foreground/50" />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
-            <Button variant="outline" size="sm" className="w-full h-9 text-xs border-border/60 border-dashed gap-1.5 mt-2">
-              <Wrench className="w-3.5 h-3.5" />
-              Add Task Card
-            </Button>
-          </div>
+        <TabsContent value="squawks" className="mt-0">
+          <WorkItemsList items={workItems} workOrderId={String(workOrderId)} />
         </TabsContent>
 
-        {/* Squawks Tab */}
-        <TabsContent value="squawks" className="mt-0">
-          <div className="space-y-2">
-            {wo.squawks.length === 0 ? (
-              <Card className="border-border/60">
-                <CardContent className="py-10 text-center">
-                  <CheckCircle2 className="w-6 h-6 text-green-400/60 mx-auto mb-2" />
-                  <p className="text-sm text-muted-foreground">No squawks on this work order</p>
-                </CardContent>
-              </Card>
-            ) : (
-              wo.squawks.map((sq) => (
-                <Card key={sq.id} className="border-l-4 border-l-red-500 border-border/60">
+        <TabsContent value="compliance" className="mt-0">
+          <WOComplianceTab workOrderId={String(workOrderId)} />
+        </TabsContent>
+
+        <TabsContent value="parts" className="mt-0">
+          {partsForThisWorkOrder.length === 0 ? (
+            <Card className="border-border/60">
+              <CardContent className="py-10 text-center text-sm text-muted-foreground">
+                No parts currently linked to this work order.
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-2">
+              {partsForThisWorkOrder.map((part) => (
+                <Card key={String(part._id)} className="border-border/60">
                   <CardContent className="p-4">
                     <div className="flex items-start gap-3">
-                      <AlertTriangle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+                      <Package className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-0.5" />
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="font-mono text-xs text-muted-foreground">
-                            {sq.number}
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <span className="font-mono text-xs font-semibold text-foreground">
+                            P/N: {part.partNumber}
                           </span>
-                          <Badge className="bg-red-500/15 text-red-400 border border-red-500/30 text-[10px]">
-                            Open
-                          </Badge>
                           <Badge
                             variant="outline"
-                            className="text-[10px] text-amber-400 border-amber-500/30"
+                            className={`text-[10px] font-medium border ${partStatusStyle(part.location)}`}
                           >
-                            Airworthiness
+                            {partStatusLabel(part.location)}
                           </Badge>
-                          {sq.requiresCustomerAuth && (
-                            <Badge
-                              variant="outline"
-                              className="text-[10px] text-muted-foreground border-border/40"
-                            >
-                              Customer Auth Required
-                            </Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground">{part.partName}</p>
+                        <div className="flex items-center gap-3 mt-1 flex-wrap">
+                          {part.serialNumber && (
+                            <span className="text-[11px] font-mono text-muted-foreground">
+                              S/N: {part.serialNumber}
+                            </span>
+                          )}
+                          {part.supplier && (
+                            <span className="text-[11px] text-muted-foreground">
+                              Supplier: {part.supplier}
+                            </span>
+                          )}
+                          {part.eightOneThirtyId && (
+                            <span className="text-[11px] text-muted-foreground">
+                              8130-3 attached
+                            </span>
                           )}
                         </div>
-                        <p className="text-sm text-foreground">{sq.description}</p>
-                        <p className="text-[11px] text-muted-foreground mt-1">
-                          Found by {sq.foundBy} · {sq.foundDate}
-                        </p>
                       </div>
-                      <Button asChild variant="outline" size="sm" className="h-7 text-xs flex-shrink-0">
-                        <Link to={`/squawks/${sq.id}`}>View</Link>
-                      </Button>
                     </div>
                   </CardContent>
                 </Card>
-              ))
-            )}
-            <Button variant="outline" size="sm" className="w-full h-9 text-xs border-border/60 border-dashed gap-1.5 mt-2">
-              <AlertTriangle className="w-3.5 h-3.5" />
-              Log Squawk
-            </Button>
-          </div>
+              ))}
+            </div>
+          )}
         </TabsContent>
 
-        {/* Parts Tab */}
-        <TabsContent value="parts" className="mt-0">
-          <div className="space-y-2">
-            {wo.parts.map((part) => (
-              <Card key={part.id} className="border-border/60">
-                <CardContent className="p-4">
-                  <div className="flex items-start gap-3">
-                    <Package className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-0.5" />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-0.5">
-                        <span className="font-mono text-xs font-semibold text-foreground">
-                          P/N: {part.partNumber}
-                        </span>
-                        {getPartStatusBadge(part.status, part.statusLabel)}
-                      </div>
-                      <p className="text-sm text-muted-foreground">{part.name}</p>
-                      <div className="flex items-center gap-3 mt-1">
-                        <span className="text-[11px] text-muted-foreground">
-                          Qty: {part.qty}
-                        </span>
-                        {part.eightOneThirty && (
-                          <>
-                            <span className="text-muted-foreground/40">·</span>
-                            <span className="text-[11px] font-mono text-muted-foreground">
-                              8130-3: {part.eightOneThirty}
-                            </span>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-            <Button variant="outline" size="sm" className="w-full h-9 text-xs border-border/60 border-dashed gap-1.5 mt-2">
-              <Package className="w-3.5 h-3.5" />
-              Request Part
-            </Button>
-          </div>
+        <TabsContent value="documents" className="mt-0">
+          <DocumentAttachmentPanel
+            organizationId={orgId}
+            attachedToTable="workOrders"
+            attachedToId={String(workOrderId)}
+          />
         </TabsContent>
 
-        {/* Notes & Activity Tab */}
         <TabsContent value="notes" className="mt-0">
           <Card className="border-border/60">
             <CardHeader className="pb-3">
@@ -549,29 +529,31 @@ export default function WorkOrderDetailPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-0">
-              <div className="space-y-3">
-                {wo.auditEvents.map((ev, i) => (
-                  <div key={ev.id}>
-                    {i > 0 && <Separator className="opacity-30 mb-3" />}
-                    <div className="flex items-start gap-3">
-                      <div className="w-1.5 h-1.5 rounded-full bg-muted-foreground/40 mt-1.5 flex-shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs text-foreground">{ev.description}</p>
-                        <div className="flex items-center gap-1.5 mt-0.5">
-                          <User className="w-3 h-3 text-muted-foreground/60" />
-                          <span className="text-[11px] text-muted-foreground">
-                            {ev.user}
-                          </span>
-                          <span className="text-muted-foreground/40">·</span>
-                          <span className="font-mono text-[10px] text-muted-foreground/70">
-                            {ev.timestamp}
-                          </span>
+              {auditEvents.length === 0 ? (
+                <div className="py-6 text-sm text-muted-foreground">No audit events yet.</div>
+              ) : (
+                <div className="space-y-3">
+                  {auditEvents.map((ev, i) => (
+                    <div key={String(ev._id)}>
+                      {i > 0 && <Separator className="opacity-30 mb-3" />}
+                      <div className="flex items-start gap-3">
+                        <div className="w-1.5 h-1.5 rounded-full bg-muted-foreground/40 mt-1.5 flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs text-foreground">{ev.notes ?? ev.eventType}</p>
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <User className="w-3 h-3 text-muted-foreground/60" />
+                            <span className="text-[11px] text-muted-foreground">{ev.userId ?? "System"}</span>
+                            <span className="text-muted-foreground/40">·</span>
+                            <span className="font-mono text-[10px] text-muted-foreground/70">
+                              {new Date(ev.timestamp).toLocaleString()}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

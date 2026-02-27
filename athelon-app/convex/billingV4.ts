@@ -869,3 +869,115 @@ export const rejectTimeEntry = mutation({
     return { success: true };
   },
 });
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// CUSTOMER CRM QUERIES (Phase C)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/** List all aircraft belonging to a customer. */
+export const listAircraftForCustomer = query({
+  args: {
+    customerId: v.id("customers"),
+    organizationId: v.id("organizations"),
+  },
+  handler: async (ctx, args) => {
+    await requireAuth(ctx);
+    return await ctx.db
+      .query("aircraft")
+      .withIndex("by_customer", (q) => q.eq("customerId", args.customerId))
+      .filter((q) => q.eq(q.field("operatingOrganizationId"), args.organizationId))
+      .collect();
+  },
+});
+
+/** List all work orders for all aircraft belonging to a customer. */
+export const listWorkOrdersForCustomer = query({
+  args: {
+    customerId: v.id("customers"),
+    organizationId: v.id("organizations"),
+  },
+  handler: async (ctx, args) => {
+    await requireAuth(ctx);
+    const aircraft = await ctx.db
+      .query("aircraft")
+      .withIndex("by_customer", (q) => q.eq("customerId", args.customerId))
+      .collect();
+    const woArrays = await Promise.all(
+      aircraft.map((ac) =>
+        ctx.db
+          .query("workOrders")
+          .withIndex("by_aircraft", (q) => q.eq("aircraftId", ac._id))
+          .collect()
+      )
+    );
+    return woArrays.flat().filter((wo) => wo.organizationId === args.organizationId);
+  },
+});
+
+/** List all quotes for a customer. */
+export const listQuotesForCustomer = query({
+  args: {
+    customerId: v.id("customers"),
+    organizationId: v.id("organizations"),
+  },
+  handler: async (ctx, args) => {
+    await requireAuth(ctx);
+    return await ctx.db
+      .query("quotes")
+      .withIndex("by_org_customer", (q) =>
+        q.eq("orgId", args.organizationId).eq("customerId", args.customerId)
+      )
+      .collect();
+  },
+});
+
+/** List all invoices for a customer. */
+export const listInvoicesForCustomer = query({
+  args: {
+    customerId: v.id("customers"),
+    organizationId: v.id("organizations"),
+  },
+  handler: async (ctx, args) => {
+    await requireAuth(ctx);
+    return await ctx.db
+      .query("invoices")
+      .withIndex("by_org_customer", (q) =>
+        q.eq("orgId", args.organizationId).eq("customerId", args.customerId)
+      )
+      .collect();
+  },
+});
+
+/** List all notes for a customer (newest first). */
+export const listCustomerNotes = query({
+  args: {
+    customerId: v.id("customers"),
+    organizationId: v.id("organizations"),
+  },
+  handler: async (ctx, args) => {
+    await requireAuth(ctx);
+    return await ctx.db
+      .query("customerNotes")
+      .withIndex("by_customer", (q) => q.eq("customerId", args.customerId))
+      .order("desc")
+      .collect();
+  },
+});
+
+/** Add a note to a customer's activity log. */
+export const addCustomerNote = mutation({
+  args: {
+    customerId: v.id("customers"),
+    organizationId: v.id("organizations"),
+    content: v.string(),
+    createdByUserId: v.optional(v.string()),
+    createdByName: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    await requireAuth(ctx);
+    return await ctx.db.insert("customerNotes", {
+      ...args,
+      createdAt: Date.now(),
+    });
+  },
+});

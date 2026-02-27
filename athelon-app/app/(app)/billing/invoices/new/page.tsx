@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useRouter } from "@/hooks/useRouter";
+import { useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, usePaginatedQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
@@ -84,7 +85,7 @@ function WorkSummaryPanel({
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <div className="text-center p-2 rounded-md bg-background/60 border border-border/40">
             <div className="flex items-center justify-center gap-1 mb-1">
-              <CheckCircle2 className="w-3.5 h-3.5 text-green-400" />
+              <CheckCircle2 className="w-3.5 h-3.5 text-green-600 dark:text-green-400" />
               <p className="text-[10px] text-muted-foreground">Task Cards</p>
             </div>
             <p className="text-lg font-bold text-foreground">
@@ -97,7 +98,7 @@ function WorkSummaryPanel({
 
           <div className="text-center p-2 rounded-md bg-background/60 border border-border/40">
             <div className="flex items-center justify-center gap-1 mb-1">
-              <AlertCircle className="w-3.5 h-3.5 text-amber-400" />
+              <AlertCircle className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
               <p className="text-[10px] text-muted-foreground">Discrepancies</p>
             </div>
             <p className="text-lg font-bold text-foreground">
@@ -110,7 +111,7 @@ function WorkSummaryPanel({
 
           <div className="text-center p-2 rounded-md bg-background/60 border border-border/40">
             <div className="flex items-center justify-center gap-1 mb-1">
-              <Timer className="w-3.5 h-3.5 text-blue-400" />
+              <Timer className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
               <p className="text-[10px] text-muted-foreground">Labor Hours</p>
             </div>
             <p className="text-lg font-bold text-foreground font-mono">
@@ -120,7 +121,7 @@ function WorkSummaryPanel({
 
           <div className="text-center p-2 rounded-md bg-background/60 border border-border/40">
             <div className="flex items-center justify-center gap-1 mb-1">
-              <Package className="w-3.5 h-3.5 text-purple-400" />
+              <Package className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
               <p className="text-[10px] text-muted-foreground">Parts</p>
             </div>
             <p className="text-lg font-bold text-foreground">
@@ -164,7 +165,7 @@ function WorkSummaryPanel({
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function NewInvoicePage() {
-  const navigate = useNavigate();
+  const router = useRouter();
   const [searchParams] = useSearchParams();
   const { orgId, techId, isLoaded } = useCurrentOrg();
 
@@ -276,7 +277,7 @@ export default function NewInvoicePage() {
         });
       }
 
-      navigate(`/billing/invoices/${invoiceId}`);
+      router.push(`/billing/invoices/${invoiceId}`);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Failed to create invoice.",
@@ -307,7 +308,7 @@ export default function NewInvoicePage() {
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => navigate(-1)}
+          onClick={() => router.back()}
           className="h-8 gap-1.5 text-xs"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
@@ -322,7 +323,7 @@ export default function NewInvoicePage() {
       </div>
 
       {error && (
-        <div className="flex items-center gap-2 p-3 rounded-md bg-red-500/10 border border-red-500/30 text-sm text-red-400">
+        <div className="flex items-center gap-2 p-3 rounded-md bg-red-500/10 border border-red-500/30 text-sm text-red-600 dark:text-red-400">
           <AlertCircle className="w-4 h-4 flex-shrink-0" />
           {error}
         </div>
@@ -585,7 +586,7 @@ export default function NewInvoicePage() {
             type="button"
             variant="outline"
             size="sm"
-            onClick={() => navigate(-1)}
+            onClick={() => router.back()}
           >
             Cancel
           </Button>

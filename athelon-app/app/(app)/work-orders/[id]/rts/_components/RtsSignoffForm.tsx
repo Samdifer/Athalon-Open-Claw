@@ -50,7 +50,7 @@ export function RtsSignoffForm({
           <Label className="text-xs font-medium flex items-center gap-1.5">
             <User className="w-3.5 h-3.5 text-muted-foreground" />
             Signature Auth Event ID
-            <span className="text-red-400">*</span>
+            <span className="text-red-600 dark:text-red-400">*</span>
           </Label>
           <Input
             value={signatureAuthEventId}
@@ -75,7 +75,7 @@ export function RtsSignoffForm({
           <Label className="text-xs font-medium flex items-center gap-1.5">
             <Gauge className="w-3.5 h-3.5 text-muted-foreground" />
             Aircraft Total Time at RTS (hours)
-            <span className="text-red-400">*</span>
+            <span className="text-red-600 dark:text-red-400">*</span>
           </Label>
           <Input
             type="number"
@@ -94,13 +94,13 @@ export function RtsSignoffForm({
             <span className="flex items-center gap-1.5">
               <FileText className="w-3.5 h-3.5 text-muted-foreground" />
               Return-to-Service Statement
-              <span className="text-red-400">*</span>
+              <span className="text-red-600 dark:text-red-400">*</span>
             </span>
             <span
               className={`text-[11px] ${
                 rtsStatement.trim().length < 50
-                  ? "text-amber-400"
-                  : "text-green-400"
+                  ? "text-amber-600 dark:text-amber-400"
+                  : "text-green-600 dark:text-green-400"
               }`}
             >
               {rtsStatement.trim().length} / 50 min

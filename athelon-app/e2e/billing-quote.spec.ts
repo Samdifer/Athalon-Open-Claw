@@ -5,6 +5,7 @@
  */
 
 import { test, expect } from "@playwright/test";
+import { ensureClerkAuthenticated } from "./helpers/clerkAuth";
 
 /** Wait for Convex data to load (skeleton loaders disappear) */
 async function waitForDataLoad(page: import("@playwright/test").Page) {
@@ -38,6 +39,7 @@ test.describe("Billing: Quote page", () => {
     "quote list shows empty state or table when authenticated",
     async ({ page }) => {
       await page.goto("/billing/quotes");
+      await ensureClerkAuthenticated(page, "/billing/quotes");
       await waitForDataLoad(page);
 
       const hasEmptyState = await page

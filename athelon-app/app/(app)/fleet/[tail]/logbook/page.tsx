@@ -73,21 +73,21 @@ function getRecordTypeMeta(type: RecordType): {
     case "maintenance_43_9":
       return {
         label: "Maintenance",
-        color: "bg-sky-500/15 text-sky-400 border-sky-500/30",
+        color: "bg-sky-500/15 text-sky-600 dark:text-sky-400 border-sky-500/30",
         icon: <Wrench className="w-3 h-3" />,
         cfr: "14 CFR 43.9",
       };
     case "inspection_43_11":
       return {
         label: "Inspection",
-        color: "bg-violet-500/15 text-violet-400 border-violet-500/30",
+        color: "bg-violet-500/15 text-violet-600 dark:text-violet-400 border-violet-500/30",
         icon: <ClipboardCheck className="w-3 h-3" />,
         cfr: "14 CFR 43.11",
       };
     case "correction":
       return {
         label: "Correction",
-        color: "bg-amber-500/15 text-amber-400 border-amber-500/30",
+        color: "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30",
         icon: <AlertCircle className="w-3 h-3" />,
         cfr: "AC 43-9C",
       };
@@ -190,7 +190,7 @@ function LogbookEntry({ record }: { record: MaintenanceRecord }) {
           {record.returnedToService && (
             <Badge
               variant="outline"
-              className="text-[11px] border border-green-500/30 text-green-400 bg-green-500/10 flex items-center gap-1 ml-auto"
+              className="text-[11px] border border-green-500/30 text-green-600 dark:text-green-400 bg-green-500/10 flex items-center gap-1 ml-auto"
             >
               <CheckCircle2 className="w-3 h-3" />
               Returned to Service
@@ -221,7 +221,7 @@ function LogbookEntry({ record }: { record: MaintenanceRecord }) {
           {needsTruncation && (
             <button
               onClick={() => setExpanded(!expanded)}
-              className="mt-1 text-[11px] text-sky-400 hover:text-sky-300 flex items-center gap-1 transition-colors"
+              className="mt-1 text-[11px] text-sky-600 dark:text-sky-400 hover:text-sky-500 dark:hover:text-sky-300 flex items-center gap-1 transition-colors"
             >
               {expanded ? (
                 <>
@@ -369,7 +369,7 @@ export default function AircraftLogbookPage() {
               <h1 className="text-2xl font-bold font-mono text-foreground">
                 {tailNumber}
               </h1>
-              <p className="text-sm text-red-400 mt-0.5">Aircraft not found</p>
+              <p className="text-sm text-red-600 dark:text-red-400 mt-0.5">Aircraft not found</p>
             </>
           ) : (
             <>

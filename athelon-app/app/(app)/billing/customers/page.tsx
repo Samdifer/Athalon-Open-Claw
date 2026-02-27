@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "@/hooks/useRouter";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
@@ -31,10 +31,10 @@ type CustomerType =
 
 const TYPE_BADGE_STYLES: Record<CustomerType, string> = {
   individual: "bg-muted text-muted-foreground border-muted-foreground/30",
-  company: "bg-blue-500/15 text-blue-400 border-blue-500/30",
-  charter_operator: "bg-purple-500/15 text-purple-400 border-purple-500/30",
-  flight_school: "bg-green-500/15 text-green-400 border-green-500/30",
-  government: "bg-orange-500/15 text-orange-400 border-orange-500/30",
+  company: "bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/30",
+  charter_operator: "bg-purple-500/15 text-purple-600 dark:text-purple-400 border-purple-500/30",
+  flight_school: "bg-green-500/15 text-green-600 dark:text-green-400 border-green-500/30",
+  government: "bg-orange-500/15 text-orange-600 dark:text-orange-400 border-orange-500/30",
 };
 
 const TYPE_LABELS: Record<CustomerType, string> = {
@@ -71,7 +71,7 @@ function CustomerRowSkeleton() {
 }
 
 export default function CustomersPage() {
-  const navigate = useNavigate();
+  const router = useRouter();
   const { orgId, isLoaded } = useCurrentOrg();
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -196,7 +196,7 @@ export default function CustomersPage() {
                     key={customer._id}
                     className="cursor-pointer hover:bg-muted/40 transition-colors"
                     onClick={() =>
-                      navigate(`/billing/customers/${customer._id}`)
+                      router.push(`/billing/customers/${customer._id}`)
                     }
                   >
                     <TableCell className="font-medium text-sm">
@@ -218,7 +218,7 @@ export default function CustomersPage() {
                       {customer.taxExempt ? (
                         <Badge
                           variant="outline"
-                          className="text-[10px] bg-amber-500/15 text-amber-400 border-amber-500/30"
+                          className="text-[10px] bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30"
                         >
                           Exempt
                         </Badge>
@@ -230,7 +230,7 @@ export default function CustomersPage() {
                       {customer.active !== false ? (
                         <Badge
                           variant="outline"
-                          className="text-[10px] bg-green-500/15 text-green-400 border-green-500/30"
+                          className="text-[10px] bg-green-500/15 text-green-600 dark:text-green-400 border-green-500/30"
                         >
                           Active
                         </Badge>

@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { Link } from "react-router-dom";
+import { ScheduleHealthWidget } from "./_components/ScheduleHealthWidget";
 
 // ─── Demo data (will be replaced with Convex queries) ────────────────────────
 
@@ -53,7 +54,7 @@ const stats = [
     value: "1",
     sub: "Within 30 days",
     icon: ShieldAlert,
-    href: "/compliance/certificates",
+    href: "/compliance/audit-trail",
     color: "text-orange-400",
     bgColor: "bg-orange-500/10",
   },
@@ -68,7 +69,7 @@ const attentionItems = [
     description:
       "Sandra Mercado — IA-2019-CO-00847 expires in 8 days (Mar 2, 2026)",
     action: "Renew Now",
-    href: "/compliance/certificates",
+    href: "/compliance/audit-trail",
     icon: ShieldAlert,
   },
   {
@@ -431,8 +432,11 @@ export default function DashboardPage() {
           </Card>
         </div>
 
-        {/* Right: Fleet Status */}
+        {/* Right: Schedule Health + Fleet Status */}
         <div className="space-y-6">
+          {/* Schedule Health Widget — uses live Convex data */}
+          <ScheduleHealthWidget />
+
           <Card className="border-border/60">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">

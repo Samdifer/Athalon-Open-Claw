@@ -29,8 +29,16 @@ const TYPE_LABELS: Record<string, string> = {
   contract_maintenance: "Contract Maintenance",
   calibration_lab: "Calibration Lab",
   DER: "DER",
+  consumables_supplier: "Consumables Supplier",
+  service_provider: "Service Provider",
   other: "Other",
 };
+
+// Demo service counts — cycles through 0, 2, 1 for variety until real data is wired up
+function getDemoServiceCount(index: number): number {
+  const counts = [0, 2, 1];
+  return counts[index % counts.length];
+}
 
 const CERT_WARNING_DAYS = 30;
 
@@ -104,7 +112,7 @@ export default function VendorsPage() {
             <p className="text-sm text-muted-foreground mt-0.5">
               {all.length} total · {counts.approved} approved
               {expiringCount > 0 && (
-                <span className="text-amber-400 ml-2">· {expiringCount} cert expiring</span>
+                <span className="text-amber-600 dark:text-amber-400 ml-2">· {expiringCount} cert expiring</span>
               )}
             </p>
           )}
@@ -170,9 +178,10 @@ export default function VendorsPage() {
         </Card>
       ) : (
         <div className="space-y-2" aria-live="polite" aria-label={`Vendors list, ${filtered.length} result${filtered.length !== 1 ? "s" : ""}`}>
-          {filtered.map((vendor) => {
+          {filtered.map((vendor, vendorIndex) => {
             const certExpired = isCertExpired(vendor.certExpiry);
             const certExpiringSoon = !certExpired && isCertExpiringSoon(vendor.certExpiry);
+            const serviceCount = getDemoServiceCount(vendorIndex);
 
             return (
               <Link key={vendor._id} to={`/billing/vendors/${vendor._id}`} aria-label={`Vendor: ${vendor.name} — ${vendor.isApproved ? "Approved" : "Not Approved"}${certExpired ? " — Certificate Expired" : certExpiringSoon ? " — Certificate Expiring Soon" : ""}`}>
@@ -183,7 +192,7 @@ export default function VendorsPage() {
                         <div className="flex items-center gap-2 mb-1 flex-wrap">
                           <span className="text-sm font-medium text-foreground">{vendor.name}</span>
                           {vendor.isApproved ? (
-                            <Badge className="bg-green-500/15 text-green-400 border border-green-500/30 text-[10px] gap-0.5">
+                            <Badge className="bg-green-500/15 text-green-600 dark:text-green-400 border border-green-500/30 text-[10px] gap-0.5">
                               <CheckCircle2 className="w-2.5 h-2.5" aria-hidden="true" />
                               Approved
                             </Badge>
@@ -197,15 +206,20 @@ export default function VendorsPage() {
                             {TYPE_LABELS[vendor.type] ?? vendor.type}
                           </Badge>
                           {certExpired && (
-                            <Badge variant="outline" className="text-[10px] bg-red-500/15 text-red-400 border-red-500/30 gap-0.5">
+                            <Badge variant="outline" className="text-[10px] bg-red-500/15 text-red-600 dark:text-red-400 border-red-500/30 gap-0.5">
                               <AlertTriangle className="w-2.5 h-2.5" />
                               Cert Expired
                             </Badge>
                           )}
                           {certExpiringSoon && (
-                            <Badge variant="outline" className="text-[10px] bg-amber-500/15 text-amber-400 border-amber-500/30 gap-0.5">
+                            <Badge variant="outline" className="text-[10px] bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30 gap-0.5">
                               <AlertTriangle className="w-2.5 h-2.5" />
                               Cert Expiring
+                            </Badge>
+                          )}
+                          {serviceCount > 0 && (
+                            <Badge variant="outline" className="text-[10px] text-muted-foreground border-border/40">
+                              {serviceCount} {serviceCount === 1 ? "service" : "services"}
                             </Badge>
                           )}
                         </div>

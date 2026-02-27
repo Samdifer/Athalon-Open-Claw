@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
+import { useRouter } from "@/hooks/useRouter";
 import { Link } from "react-router-dom";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -147,7 +148,7 @@ function TemplatePickerDialog({ open, onClose, orgId, onSelect }: TemplatePicker
 
 export default function NewTaskCardPage() {
   const params = useParams();
-  const navigate = useNavigate();
+  const router = useRouter();
   const workOrderId = params.id as string;
   const { orgId, isLoaded } = useCurrentOrg();
 
@@ -155,6 +156,8 @@ export default function NewTaskCardPage() {
   const [taskCardNumber, setTaskCardNumber] = useState("");
   const [title, setTitle] = useState("");
   const [taskType, setTaskType] = useState<TaskType>("inspection");
+  const [aircraftSystem, setAircraftSystem] = useState<string>("");
+  const [isInspectionItem, setIsInspectionItem] = useState(false);
   const [approvedDataSource, setApprovedDataSource] = useState("");
   const [approvedDataRevision, setApprovedDataRevision] = useState("");
   const [assignedTechId, setAssignedTechId] = useState<string>("");
@@ -267,7 +270,7 @@ export default function NewTaskCardPage() {
         })),
       });
 
-      navigate(`/work-orders/${workOrderId}/tasks/${cardId}`);
+      router.push(`/work-orders/${workOrderId}/tasks/${cardId}`);
     } catch (err) {
       setSubmitError(
         err instanceof Error ? err.message : "Failed to create task card.",
@@ -381,6 +384,10 @@ export default function NewTaskCardPage() {
           onTitleChange={setTitle}
           taskType={taskType}
           onTaskTypeChange={setTaskType}
+          aircraftSystem={aircraftSystem}
+          onAircraftSystemChange={setAircraftSystem}
+          isInspectionItem={isInspectionItem}
+          onIsInspectionItemChange={setIsInspectionItem}
           approvedDataSource={approvedDataSource}
           onApprovedDataSourceChange={setApprovedDataSource}
           approvedDataRevision={approvedDataRevision}

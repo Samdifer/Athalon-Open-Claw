@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useRouter } from "@/hooks/useRouter";
+import { useParams } from "react-router-dom";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
@@ -34,21 +35,21 @@ import { formatDate } from "@/lib/format";
 
 const STATUS_STYLES: Record<string, string> = {
   DRAFT: "bg-muted text-muted-foreground border-muted-foreground/30",
-  SUBMITTED: "bg-blue-500/15 text-blue-400 border-blue-500/30",
-  PARTIAL: "bg-amber-500/15 text-amber-400 border-amber-500/30",
-  RECEIVED: "bg-green-500/15 text-green-400 border-green-500/30",
+  SUBMITTED: "bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/30",
+  PARTIAL: "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30",
+  RECEIVED: "bg-green-500/15 text-green-600 dark:text-green-400 border-green-500/30",
   CLOSED: "bg-muted text-muted-foreground border-muted-foreground/30",
 };
 
 const ITEM_STATUS_STYLES: Record<string, string> = {
   PENDING: "bg-muted text-muted-foreground border-muted-foreground/30",
-  PARTIAL: "bg-amber-500/15 text-amber-400 border-amber-500/30",
-  RECEIVED: "bg-green-500/15 text-green-400 border-green-500/30",
+  PARTIAL: "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30",
+  RECEIVED: "bg-green-500/15 text-green-600 dark:text-green-400 border-green-500/30",
 };
 
 export default function PODetailPage() {
   const params = useParams();
-  const navigate = useNavigate();
+  const router = useRouter();
   const purchaseOrderId = params.id as Id<"purchaseOrders">;
   const { orgId, isLoaded } = useCurrentOrg();
 
@@ -129,7 +130,7 @@ export default function PODetailPage() {
         <CardContent className="py-16 text-center">
           <AlertCircle className="w-8 h-8 text-red-400/60 mx-auto mb-3" />
           <p className="text-sm text-muted-foreground">Purchase order not found.</p>
-          <Button variant="outline" size="sm" className="mt-4" onClick={() => navigate(-1)}>Go Back</Button>
+          <Button variant="outline" size="sm" className="mt-4" onClick={() => router.back()}>Go Back</Button>
         </CardContent>
       </Card>
     );
@@ -143,7 +144,7 @@ export default function PODetailPage() {
     <div className="space-y-5 max-w-3xl">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="h-8 gap-1.5 text-xs">
+          <Button variant="ghost" size="sm" onClick={() => router.back()} className="h-8 gap-1.5 text-xs">
             <ArrowLeft className="w-3.5 h-3.5" />
             Back
           </Button>
@@ -188,7 +189,7 @@ export default function PODetailPage() {
       </div>
 
       {error && (
-        <div className="flex items-center gap-2 p-3 rounded-md bg-red-500/10 border border-red-500/30 text-sm text-red-400">
+        <div className="flex items-center gap-2 p-3 rounded-md bg-red-500/10 border border-red-500/30 text-sm text-red-600 dark:text-red-400">
           <AlertCircle className="w-4 h-4 flex-shrink-0" />
           {error}
         </div>
@@ -220,7 +221,7 @@ export default function PODetailPage() {
         <>
           {/* Over-budget warning banner */}
           {budgetStatus?.partsOverBudget && (
-            <div className="flex items-center gap-2 p-3 rounded-md bg-red-500/10 border border-red-500/30 text-sm text-red-400">
+            <div className="flex items-center gap-2 p-3 rounded-md bg-red-500/10 border border-red-500/30 text-sm text-red-600 dark:text-red-400">
               <AlertTriangle className="w-4 h-4 flex-shrink-0" />
               <span className="font-medium">Over Budget!</span>
               <span>
@@ -236,11 +237,11 @@ export default function PODetailPage() {
               <CardTitle className="text-sm font-medium flex items-center gap-2">
                 Budget Status
                 {budgetStatus?.partsOverBudget ? (
-                  <Badge variant="outline" className="text-[10px] border bg-red-500/15 text-red-400 border-red-500/30">
+                  <Badge variant="outline" className="text-[10px] border bg-red-500/15 text-red-600 dark:text-red-400 border-red-500/30">
                     Over Budget
                   </Badge>
                 ) : (budgetStatus?.quotedParts ?? 0) > 0 ? (
-                  <Badge variant="outline" className="text-[10px] border bg-green-500/15 text-green-400 border-green-500/30">
+                  <Badge variant="outline" className="text-[10px] border bg-green-500/15 text-green-600 dark:text-green-400 border-green-500/30">
                     Within Budget
                   </Badge>
                 ) : null}
@@ -266,7 +267,7 @@ export default function PODetailPage() {
                       <p className="text-[10px] uppercase text-muted-foreground font-medium mb-0.5">
                         PO Total Spent
                       </p>
-                      <p className={`text-sm font-semibold ${budgetStatus.partsOverBudget ? "text-red-400" : ""}`}>
+                      <p className={`text-sm font-semibold ${budgetStatus.partsOverBudget ? "text-red-600 dark:text-red-400" : ""}`}>
                         ${budgetStatus.poTotal.toFixed(2)}
                       </p>
                       <p className="text-[10px] text-muted-foreground">{budgetStatus.poCount} PO{budgetStatus.poCount !== 1 ? "s" : ""} for this WO</p>
@@ -278,11 +279,11 @@ export default function PODetailPage() {
                       {budgetStatus.quotedParts > 0 ? (
                         <div className="flex items-center gap-1">
                           {budgetStatus.partsOverBudget ? (
-                            <TrendingUp className="w-3.5 h-3.5 text-red-400" />
+                            <TrendingUp className="w-3.5 h-3.5 text-red-600 dark:text-red-400" />
                           ) : (
-                            <TrendingDown className="w-3.5 h-3.5 text-green-400" />
+                            <TrendingDown className="w-3.5 h-3.5 text-green-600 dark:text-green-400" />
                           )}
-                          <p className={`text-sm font-semibold ${budgetStatus.partsOverBudget ? "text-red-400" : "text-green-400"}`}>
+                          <p className={`text-sm font-semibold ${budgetStatus.partsOverBudget ? "text-red-600 dark:text-red-400" : "text-green-600 dark:text-green-400"}`}>
                             {budgetStatus.partsOverBudget ? "+" : "-"}$
                             {Math.abs(budgetStatus.partsOverageAmount).toFixed(2)}
                           </p>
@@ -297,7 +298,7 @@ export default function PODetailPage() {
                     <div className="space-y-1">
                       <div className="flex justify-between text-[10px] text-muted-foreground">
                         <span>Budget Used</span>
-                        <span className={`font-medium ${budgetStatus.partsOverBudget ? "text-red-400" : "text-foreground"}`}>
+                        <span className={`font-medium ${budgetStatus.partsOverBudget ? "text-red-600 dark:text-red-400" : "text-foreground"}`}>
                           {Math.min(
                             Math.round((budgetStatus.poTotal / budgetStatus.quotedParts) * 100),
                             200,

@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useRouter } from "@/hooks/useRouter";
+import { useParams } from "react-router-dom";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
@@ -53,10 +54,10 @@ import { formatDate } from "@/lib/format";
 
 const STATUS_STYLES: Record<string, string> = {
   DRAFT: "bg-muted text-muted-foreground border-muted-foreground/30",
-  SENT: "bg-blue-500/15 text-blue-400 border-blue-500/30",
-  PARTIAL: "bg-amber-500/15 text-amber-400 border-amber-500/30",
-  PAID: "bg-green-500/15 text-green-400 border-green-500/30",
-  VOID: "bg-red-500/15 text-red-400 border-red-500/30",
+  SENT: "bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/30",
+  PARTIAL: "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30",
+  PAID: "bg-green-500/15 text-green-600 dark:text-green-400 border-green-500/30",
+  VOID: "bg-red-500/15 text-red-600 dark:text-red-400 border-red-500/30",
 };
 
 const PAYMENT_METHODS = [
@@ -82,7 +83,7 @@ function fromDateInputValue(val: string): number {
 
 export default function InvoiceDetailPage() {
   const params = useParams();
-  const navigate = useNavigate();
+  const router = useRouter();
   const invoiceId = params.id as Id<"invoices">;
   const { orgId, techId, isLoaded } = useCurrentOrg();
 
@@ -270,7 +271,7 @@ export default function InvoiceDetailPage() {
         <CardContent className="py-16 text-center">
           <AlertCircle className="w-8 h-8 text-red-400/60 mx-auto mb-3" />
           <p className="text-sm text-muted-foreground">Invoice not found.</p>
-          <Button variant="outline" size="sm" className="mt-4" onClick={() => navigate(-1)}>Go Back</Button>
+          <Button variant="outline" size="sm" className="mt-4" onClick={() => router.back()}>Go Back</Button>
         </CardContent>
       </Card>
     );
@@ -308,7 +309,7 @@ export default function InvoiceDetailPage() {
         {/* Header — no-print wrapper for actions */}
         <div className="flex items-center justify-between gap-3 no-print">
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="h-8 gap-1.5 text-xs">
+            <Button variant="ghost" size="sm" onClick={() => router.back()} className="h-8 gap-1.5 text-xs">
               <ArrowLeft className="w-3.5 h-3.5" />
               Back
             </Button>
@@ -320,7 +321,7 @@ export default function InvoiceDetailPage() {
                 </Badge>
                 {/* GAP-04: Overdue badge */}
                 {isOverdue && (
-                  <Badge variant="outline" className="text-[10px] font-medium border bg-red-500/15 text-red-400 border-red-500/30">
+                  <Badge variant="outline" className="text-[10px] font-medium border bg-red-500/15 text-red-600 dark:text-red-400 border-red-500/30">
                     OVERDUE
                   </Badge>
                 )}
@@ -333,7 +334,7 @@ export default function InvoiceDetailPage() {
               {/* GAP-04: Due date row with set-due-date button */}
               <div className="flex items-center gap-1.5 mt-0.5">
                 {invoice.dueDate ? (
-                  <span className={`text-xs ${isOverdue ? "text-red-400" : "text-muted-foreground"}`}>
+                  <span className={`text-xs ${isOverdue ? "text-red-600 dark:text-red-400" : "text-muted-foreground"}`}>
                     Due {formatDate(invoice.dueDate)}
                     {invoice.paymentTerms ? ` · ${invoice.paymentTerms}` : ""}
                   </span>
@@ -379,7 +380,7 @@ export default function InvoiceDetailPage() {
               </Button>
             )}
             {canVoid && (
-              <Button size="sm" variant="outline" onClick={() => setVoidDialog(true)} className="h-8 gap-1.5 text-xs border-red-500/40 text-red-400 hover:bg-red-500/10">
+              <Button size="sm" variant="outline" onClick={() => setVoidDialog(true)} className="h-8 gap-1.5 text-xs border-red-500/40 text-red-600 dark:text-red-400 hover:bg-red-500/10">
                 <XCircle className="w-3.5 h-3.5" />
                 Void
               </Button>
@@ -394,7 +395,7 @@ export default function InvoiceDetailPage() {
         </div>
 
         {error && (
-          <div className="flex items-center gap-2 p-3 rounded-md bg-red-500/10 border border-red-500/30 text-sm text-red-400 no-print">
+          <div className="flex items-center gap-2 p-3 rounded-md bg-red-500/10 border border-red-500/30 text-sm text-red-600 dark:text-red-400 no-print">
             <AlertCircle className="w-4 h-4 flex-shrink-0" />
             {error}
           </div>
@@ -420,7 +421,7 @@ export default function InvoiceDetailPage() {
             </div>
             <div>
               <p className="text-[10px] uppercase text-muted-foreground font-medium mb-0.5">Balance</p>
-              <p className={`text-base font-bold ${invoice.balance > 0 ? "text-amber-400" : "text-green-400"}`}>
+              <p className={`text-base font-bold ${invoice.balance > 0 ? "text-amber-600 dark:text-amber-400" : "text-green-600 dark:text-green-400"}`}>
                 ${invoice.balance.toFixed(2)}
               </p>
             </div>
@@ -457,7 +458,7 @@ export default function InvoiceDetailPage() {
                         <div>{item.description}</div>
                         {/* GAP-06: Show discount info */}
                         {(item.discountPercent || item.discountAmount) && (
-                          <div className="text-[10px] text-amber-400 mt-0.5">
+                          <div className="text-[10px] text-amber-600 dark:text-amber-400 mt-0.5">
                             {item.discountPercent ? `- ${item.discountPercent}% discount` : ""}
                             {item.discountAmount ? `- $${item.discountAmount.toFixed(2)} discount` : ""}
                           </div>
@@ -546,7 +547,7 @@ export default function InvoiceDetailPage() {
                         </TableCell>
                         <TableCell className="text-sm font-mono text-muted-foreground">{pay.referenceNumber ?? "—"}</TableCell>
                         <TableCell className="text-sm text-muted-foreground max-w-[150px] truncate">{pay.notes ?? "—"}</TableCell>
-                        <TableCell className="text-sm font-medium text-right text-green-400">${pay.amount.toFixed(2)}</TableCell>
+                        <TableCell className="text-sm font-medium text-right text-green-600 dark:text-green-400">${pay.amount.toFixed(2)}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -554,7 +555,7 @@ export default function InvoiceDetailPage() {
                 {/* Payments subtotal */}
                 <div className="flex items-center justify-end gap-4 px-4 py-2 border-t border-border/40">
                   <span className="text-xs text-muted-foreground">Total Paid</span>
-                  <span className="text-sm font-semibold text-green-400">${paymentSubtotal.toFixed(2)}</span>
+                  <span className="text-sm font-semibold text-green-600 dark:text-green-400">${paymentSubtotal.toFixed(2)}</span>
                 </div>
               </>
             )}
@@ -578,11 +579,11 @@ export default function InvoiceDetailPage() {
               <span>Total</span><span>${invoice.total.toFixed(2)}</span>
             </div>
             <div className="flex justify-between text-xs text-muted-foreground">
-              <span>Paid</span><span className="text-green-400">${invoice.amountPaid.toFixed(2)}</span>
+              <span>Paid</span><span className="text-green-600 dark:text-green-400">${invoice.amountPaid.toFixed(2)}</span>
             </div>
             <div className="flex justify-between text-sm font-bold">
               <span>Balance Due</span>
-              <span className={invoice.balance > 0 ? "text-amber-400" : "text-green-400"}>
+              <span className={invoice.balance > 0 ? "text-amber-600 dark:text-amber-400" : "text-green-600 dark:text-green-400"}>
                 ${invoice.balance.toFixed(2)}
               </span>
             </div>

@@ -1,17 +1,12 @@
 /**
- * global-setup.ts — Playwright global setup for Clerk authentication
+ * Playwright global setup for Clerk-authenticated E2E projects.
  *
- * Strategy: Bypass Clerk's browser-based handshake entirely by injecting
- * session cookies directly from Clerk's Backend API.
+ * Uses Clerk default testing values in dev mode:
+ * - Email with `+clerk_test` subaddress
+ * - OTP code: 424242
  *
- * Clerk's middleware checks for 3 cookies on the app domain:
- *   1. __session        — Valid Clerk session JWT
- *   2. __client_uat     — Unix seconds (≤ JWT iat) indicating last session update
- *   3. __clerk_db_jwt   — Dev browser token (any non-empty string bypasses
- *                         DevBrowserMissing handshake trigger in dev mode)
- *
- * With all three present and valid, clerkMiddleware calls verifyToken()
- * directly and returns SignedIn — no handshake loop.
+ * If a test user already exists, it signs in.
+ * If not, it signs up and verifies with 424242.
  */
 
 import { chromium } from "@playwright/test";
@@ -23,14 +18,24 @@ import dotenv from "dotenv";
 dotenv.config({ path: path.resolve(__dirname, "../.env.local") });
 
 const AUTH_FILE = path.join(__dirname, "../playwright/.auth/user.json");
-const BASE_URL = "http://localhost:3000";
-const USER_ID = "user_3A9AJl5UKtXswySMSZXcYwQj5ld"; // sam.sandifer1+clerk_test@gmail.com
+const BASE_URL = process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:3000";
 
-// ─── Clerk BAPI helper ──────────────────────────────────────────────────────
+// Clerk default dev testing values
+const TEST_OTP = "424242";
+const TEST_EMAIL =
+  process.env.PLAYWRIGHT_TEST_EMAIL ?? "athelon.e2e+clerk_test@gmail.com";
+const TEST_PASSWORD =
+  process.env.PLAYWRIGHT_TEST_PASSWORD ?? "ClerkTest123!";
+const TEST_USER_ID = process.env.PLAYWRIGHT_TEST_USER_ID;
+
+interface ClerkUser {
+  id: string;
+}
+
 function clerkBAPI<T = unknown>(
   method: string,
   apiPath: string,
-  body?: object
+  body?: object,
 ): Promise<T> {
   const secret = process.env.CLERK_SECRET_KEY;
   if (!secret) throw new Error("CLERK_SECRET_KEY not set");
@@ -50,15 +55,26 @@ function clerkBAPI<T = unknown>(
       },
       (res) => {
         let raw = "";
-        res.on("data", (c) => (raw += c));
+        res.on("data", (chunk) => {
+          raw += chunk;
+        });
         res.on("end", () => {
+          const status = res.statusCode ?? 500;
+          if (status >= 400) {
+            reject(
+              new Error(
+                `Clerk BAPI ${method} ${apiPath} failed (${status}): ${raw}`,
+              ),
+            );
+            return;
+          }
           try {
             resolve(JSON.parse(raw) as T);
           } catch {
             resolve(raw as unknown as T);
           }
         });
-      }
+      },
     );
     req.on("error", reject);
     if (data) req.write(data);
@@ -66,193 +82,229 @@ function clerkBAPI<T = unknown>(
   });
 }
 
-interface Session {
-  id: string;
-  status: string;
-  expire_at: number;
-}
-
-interface TokenResult {
-  jwt?: string;
-}
-
-// ─── Get or refresh session JWT ───────────────────────────────────────────────
-async function getSessionJwt(): Promise<{ jwt: string; iat: number }> {
-  // 1) Try existing active sessions
-  const sessions = await clerkBAPI<Session[]>(
+async function findUserByEmail(email: string): Promise<ClerkUser | null> {
+  const users = await clerkBAPI<ClerkUser[]>(
     "GET",
-    `/sessions?user_id=${USER_ID}&status=active&limit=5`
+    `/users?limit=1&email_address[]=${encodeURIComponent(email)}`,
   );
+  return users[0] ?? null;
+}
 
-  let sessionId: string | null = null;
-  if (Array.isArray(sessions) && sessions.length > 0) {
-    sessionId = sessions[0].id;
-    console.log("Using existing session:", sessionId);
-  } else {
-    // 2) No session — create one via sign-in token (ticket)
-    console.log("No active session — creating sign-in ticket...");
-    const ticket = await clerkBAPI<{ url?: string }>(
-      "POST",
-      "/sign_in_tokens",
-      { user_id: USER_ID }
-    );
-    if (!ticket.url) throw new Error("Could not create sign-in ticket");
+async function createTestUser(email: string, password: string): Promise<ClerkUser> {
+  return clerkBAPI<ClerkUser>("POST", "/users", {
+    email_address: [email],
+    password,
+    first_name: "E2E",
+    last_name: "Tester",
+    skip_password_checks: true,
+  });
+}
 
-    // Navigate to ticket URL to establish a session server-side
-    const browser = await chromium.launch({ headless: true });
-    const ctx = await browser.newContext();
-    const pg = await ctx.newPage();
-    await pg.goto(ticket.url, { timeout: 30_000 });
-    await pg.waitForTimeout(3000);
-    await browser.close();
+async function ensureUserPassword(userId: string, password: string): Promise<void> {
+  await clerkBAPI("PATCH", `/users/${userId}`, {
+    password,
+    skip_password_checks: true,
+  });
+}
 
-    // Retry sessions
-    const sessions2 = await clerkBAPI<Session[]>(
-      "GET",
-      `/sessions?user_id=${USER_ID}&status=active&limit=5`
-    );
-    if (!Array.isArray(sessions2) || sessions2.length === 0) {
-      throw new Error("Still no active sessions after ticket flow");
-    }
-    sessionId = sessions2[0].id;
-    console.log("New session:", sessionId);
+async function resolveTestUserId(): Promise<string> {
+  if (TEST_USER_ID) return TEST_USER_ID;
+
+  const existing = await findUserByEmail(TEST_EMAIL);
+  if (existing) {
+    await ensureUserPassword(existing.id, TEST_PASSWORD).catch((err) => {
+      console.warn(`Could not refresh password for Clerk user ${existing.id}:`, err);
+    });
+    return existing.id;
   }
 
-  // 3) Exchange session for a 1-hour JWT (default is 60s which is too short for tests)
-  const result = await clerkBAPI<TokenResult>(
-    "POST",
-    `/sessions/${sessionId}/tokens`,
-    { expires_in_seconds: 3600 }
-  );
-  if (!result.jwt) throw new Error("No JWT in token response: " + JSON.stringify(result));
-
-  // Decode iat from JWT payload (base64url)
-  const [, payloadB64] = result.jwt.split(".");
-  const payload = JSON.parse(Buffer.from(payloadB64, "base64url").toString());
-  console.log(
-    "JWT obtained — iat:",
-    payload.iat,
-    "exp:",
-    payload.exp,
-    "sub:",
-    payload.sub
-  );
-
-  return { jwt: result.jwt, iat: payload.iat as number };
+  const created = await createTestUser(TEST_EMAIL, TEST_PASSWORD);
+  return created.id;
 }
 
-// ─── Main global setup ────────────────────────────────────────────────────────
+async function createSignInTokenUrl(userId: string): Promise<string> {
+  const result = await clerkBAPI<{ url?: string }>("POST", "/sign_in_tokens", {
+    user_id: userId,
+  });
+  if (!result.url) {
+    throw new Error(
+      `Clerk sign_in_tokens response missing url for user ${userId}`,
+    );
+  }
+  return result.url;
+}
+
+async function isAuthenticatedAtApp(
+  page: import("@playwright/test").Page,
+): Promise<boolean> {
+  const url = page.url();
+  if (url.includes("sign-in") || url.includes("accounts.dev") || url.includes("factor")) {
+    return false;
+  }
+  const emailVisible = await page
+    .locator('input[name="identifier"], input[name="emailAddress"], input[type="email"]')
+    .first()
+    .isVisible()
+    .catch(() => false);
+  return !emailVisible;
+}
+
+async function verifyAuthenticatedAtDashboard(
+  page: import("@playwright/test").Page,
+): Promise<boolean> {
+  await page.goto(`${BASE_URL}/dashboard`, {
+    waitUntil: "domcontentloaded",
+    timeout: 45_000,
+  });
+  await page.waitForTimeout(1000);
+  return isAuthenticatedAtApp(page);
+}
+
+async function clickContinue(page: import("@playwright/test").Page) {
+  const exactContinue = page.getByRole("button", {
+    name: "Continue",
+    exact: true,
+  });
+  if ((await exactContinue.count()) > 0) {
+    await exactContinue.first().click();
+    return;
+  }
+  await page.locator('button:has-text("Continue")').last().click();
+}
+
+async function fillOtp(page: import("@playwright/test").Page) {
+  const otpTarget = page
+    .locator(
+      '[data-otp-input], [data-otp-root], input[name*="code"], input[inputmode="numeric"]',
+    )
+    .first();
+  await otpTarget.click({ force: true, timeout: 10_000 }).catch(() => null);
+  await page.keyboard.type(TEST_OTP, { delay: 70 });
+  await page.waitForTimeout(600);
+  await clickContinue(page).catch(() => null);
+}
+
+async function uiSignInOrSignUp(page: import("@playwright/test").Page) {
+  await page.goto(`${BASE_URL}/sign-in`, {
+    waitUntil: "domcontentloaded",
+    timeout: 45_000,
+  });
+  await page.waitForURL(/sign-in|accounts\.dev/, { timeout: 30_000 }).catch(() => null);
+
+  const emailInput = page
+    .locator('input[name="identifier"], input[name="emailAddress"], input[type="email"]')
+    .first();
+  await emailInput.waitFor({ state: "visible", timeout: 20_000 });
+  await emailInput.fill(TEST_EMAIL);
+  const initialPassword = page.locator('input[type="password"]').first();
+  if ((await initialPassword.count()) > 0) {
+    await initialPassword.fill(TEST_PASSWORD);
+  }
+  await clickContinue(page);
+  await page.waitForTimeout(1200);
+
+  for (let attempt = 0; attempt < 6; attempt++) {
+    if (await isAuthenticatedAtApp(page)) return;
+
+    const bodyText = (await page.locator("body").innerText().catch(() => ""))
+      .toLowerCase();
+
+    const noAccount =
+      bodyText.includes("find your account") || bodyText.includes("no account");
+    const hasPassword = bodyText.includes("password");
+    const needsCode =
+      bodyText.includes("check your email") ||
+      bodyText.includes("verification") ||
+      page.url().includes("factor");
+
+    if (noAccount) {
+      await page.getByRole("link", { name: /sign up/i }).click();
+      await page.waitForURL(/sign-up|accounts\.dev/, { timeout: 20_000 });
+      await page.waitForTimeout(500);
+
+      const firstName = page.locator('input[name="firstName"]').first();
+      if (await firstName.count()) await firstName.fill("E2E");
+      const lastName = page.locator('input[name="lastName"]').first();
+      if (await lastName.count()) await lastName.fill("Tester");
+
+      const signUpEmail = page
+        .locator('input[name="emailAddress"], input[type="email"]')
+        .first();
+      await signUpEmail.fill(TEST_EMAIL);
+
+      const passwordInput = page.locator('input[type="password"]').first();
+      if (await passwordInput.count()) {
+        await passwordInput.fill(TEST_PASSWORD);
+      }
+      await clickContinue(page);
+      await page.waitForTimeout(1400);
+      continue;
+    }
+
+    if (hasPassword) {
+      const passwordInput = page.locator('input[type="password"]').first();
+      await passwordInput.waitFor({ state: "visible", timeout: 10_000 });
+      await passwordInput.fill(TEST_PASSWORD);
+      await clickContinue(page);
+      await page.waitForTimeout(1200);
+      continue;
+    }
+
+    if (needsCode) {
+      await fillOtp(page);
+      await page.waitForTimeout(1200);
+      continue;
+    }
+
+    await page.waitForTimeout(800);
+  }
+}
+
 async function globalSetup() {
   fs.mkdirSync(path.dirname(AUTH_FILE), { recursive: true });
-  console.log("🔐 Global setup: injecting Clerk session cookies");
+  console.log("🔐 Global setup: Clerk default testing auth bootstrap");
+  console.log("Using test email:", TEST_EMAIL);
 
-  const { jwt, iat } = await getSessionJwt();
-
-  // Launch browser and inject cookies on localhost
   const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext();
   const page = await context.newPage();
 
   try {
-    // First do a quick visit so the domain exists in the cookie jar
-    // (cookies can only be set for domains the browser has visited)
-    await page.goto(BASE_URL + "/", {
-      waitUntil: "commit",
-      timeout: 15_000,
-    }).catch(() => null); // ignore redirect
+    let authenticated = false;
 
-    // Inject all 3 cookies that Clerk's middleware looks for
-    const cookieExpiry = iat + 3600; // 1h from now (beyond JWT exp is fine for this)
-    await context.addCookies([
-      {
-        name: "__session",
-        value: jwt,
-        domain: "localhost",
-        path: "/",
-        httpOnly: true,
-        secure: false,
-        sameSite: "Lax",
-        expires: cookieExpiry,
-      },
-      {
-        name: "__client_uat",
-        // Must be ≤ JWT iat so the middleware doesn't trigger a handshake
-        // Clerk checks: if (iat < clientUat) → handshake needed
-        value: String(iat),
-        domain: "localhost",
-        path: "/",
-        httpOnly: false,
-        secure: false,
-        sameSite: "Strict",
-        expires: cookieExpiry,
-      },
-      {
-        name: "__clerk_db_jwt",
-        // Any non-empty value satisfies the DevBrowserMissing check.
-        // This cookie is only USED (not validated) if a handshake is needed,
-        // which it won't be since we have a valid session.
-        value: "dev-bypass",
-        domain: "localhost",
-        path: "/",
-        httpOnly: false,
-        secure: false,
-        sameSite: "Lax",
-        expires: cookieExpiry,
-      },
-    ]);
+    // Preferred path: bootstrap via Clerk BAPI + sign-in token (no OTP throttling).
+    try {
+      const userId = await resolveTestUserId();
+      const signInUrl = await createSignInTokenUrl(userId);
+      await page.goto(signInUrl, {
+        waitUntil: "domcontentloaded",
+        timeout: 45_000,
+      });
+      await page.waitForTimeout(2500);
+      authenticated = await verifyAuthenticatedAtDashboard(page);
+    } catch (err) {
+      console.warn("Sign-in token bootstrap failed, falling back to UI flow:", err);
+    }
 
-    // Also set the suffixed variants (Clerk uses suffix from publishable key)
-    // The suffix "ZAUr49H1" comes from the app's Clerk instance
-    const suffix = "ZAUr49H1";
-    await context.addCookies([
-      {
-        name: `__client_uat_${suffix}`,
-        value: String(iat),
-        domain: "localhost",
-        path: "/",
-        httpOnly: false,
-        secure: false,
-        sameSite: "Strict" as const,
-        expires: cookieExpiry,
-      },
-      {
-        name: `__clerk_db_jwt_${suffix}`,
-        value: "dev-bypass",
-        domain: "localhost",
-        path: "/",
-        httpOnly: false,
-        secure: false,
-        sameSite: "Lax" as const,
-        expires: cookieExpiry,
-      },
-    ]);
+    // Fallback path for environments where BAPI bootstrap fails.
+    if (!authenticated) {
+      try {
+        await uiSignInOrSignUp(page);
+        authenticated = await verifyAuthenticatedAtDashboard(page);
+      } catch (err) {
+        console.warn("UI fallback auth failed:", err);
+      }
+    }
 
-    // Save storage state BEFORE navigating to the app — this prevents
-    // Clerk's client-side JS from overwriting __client_uat to 0
     await context.storageState({ path: AUTH_FILE });
-    console.log("✅ Auth state saved (pre-navigation) to", AUTH_FILE);
+    console.log("✅ Saved storage state to", AUTH_FILE);
+    console.log("Auth verification URL:", page.url());
 
-    // Verify the cookies work by navigating
-    console.log("Verifying cookies by navigating to dashboard...");
-    await page.goto(BASE_URL + "/dashboard", {
-      waitUntil: "domcontentloaded",
-      timeout: 30_000,
-    });
-
-    await page.waitForTimeout(3000);
-    const finalUrl = page.url();
-    console.log("Final URL:", finalUrl);
-
-    await page
-      .screenshot({
-        path: path.join(__dirname, "../playwright/global-setup-final.png"),
-      })
-      .catch(() => null);
-
-    if (finalUrl.includes("accounts.dev") || finalUrl.includes("sign-in")) {
-      console.warn("⚠️  Cookie injection didn't work on verification, but state was saved pre-navigation");
-    } else {
-      console.log("✅ Authenticated at:", finalUrl);
+    if (!authenticated) {
+      console.warn(
+        "⚠️  Could not verify authenticated app session. " +
+          "Check Clerk app auth settings and test user credentials.",
+      );
     }
   } catch (err) {
     await page
@@ -260,55 +312,10 @@ async function globalSetup() {
         path: path.join(__dirname, "../playwright/global-setup-error.png"),
       })
       .catch(() => null);
-    console.error("Global setup failed:", err);
     throw err;
   } finally {
     await browser.close();
   }
-}
-
-// ─── UI fallback (password + OTP) ────────────────────────────────────────────
-async function uiFallbackSignIn(page: import("@playwright/test").Page) {
-  const email = process.env.PLAYWRIGHT_TEST_EMAIL!;
-  const password = process.env.PLAYWRIGHT_TEST_PASSWORD!;
-  const OTP = "424242";
-
-  await page.goto("https://ideal-airedale-92.accounts.dev/sign-in", {
-    waitUntil: "domcontentloaded",
-    timeout: 30_000,
-  });
-
-  const emailInput = page
-    .locator('input[name="identifier"], input[type="email"]')
-    .first();
-  await emailInput.waitFor({ state: "visible", timeout: 15_000 });
-  await emailInput.fill(email);
-  await page.getByRole("button", { name: "Continue", exact: true }).click();
-  await page.waitForTimeout(2000);
-
-  const text = await page.locator("body").innerText().catch(() => "");
-  if (text.toLowerCase().includes("password")) {
-    const pw = page.locator('input[type="password"]').first();
-    await pw.fill(password);
-    await page.getByRole("button", { name: "Continue", exact: true }).click();
-    await page.waitForTimeout(2000);
-  }
-
-  // MFA / factor-two
-  const text2 = await page.locator("body").innerText().catch(() => "");
-  if (
-    text2.toLowerCase().includes("check") ||
-    text2.toLowerCase().includes("verify") ||
-    page.url().includes("factor")
-  ) {
-    const otpInput = page.locator("input[data-input-otp]").first();
-    await otpInput.click({ force: true, timeout: 5000 }).catch(() => null);
-    await page.keyboard.type(OTP, { delay: 80 });
-    await page.waitForTimeout(2000);
-  }
-
-  await page.waitForURL(/localhost:3000\/(?!.*sign-in)/, { timeout: 300_000 });
-  console.log("✅ UI fallback succeeded:", page.url());
 }
 
 export default globalSetup;

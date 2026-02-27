@@ -4,6 +4,9 @@
  * RaiseFindingDialog.tsx
  * Gap 4: "Raise Finding" button inside task card execution.
  * Creates a discrepancy linked to the current work order.
+ *
+ * Phase D: OP-1003 alignment — adds classification, regulatory flags,
+ * and labor estimate fields per Elevate MRO Discrepancy Action Record.
  */
 
 import { useState } from "react";
@@ -19,6 +22,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -49,6 +53,33 @@ const FOUND_DURING_OPTIONS = [
 
 type FoundDuringValue = (typeof FOUND_DURING_OPTIONS)[number]["value"];
 
+const DISCREPANCY_TYPE_OPTIONS = [
+  { value: "mandatory", label: "Mandatory \u2014 affects airworthiness" },
+  { value: "recommended", label: "Recommended \u2014 does not affect airworthiness" },
+  { value: "customer_information", label: "Customer Information only" },
+  { value: "ops_check", label: "Ops Check required" },
+] as const;
+
+type DiscrepancyTypeValue = (typeof DISCREPANCY_TYPE_OPTIONS)[number]["value"];
+
+const SYSTEM_TYPE_OPTIONS = [
+  { value: "airframe", label: "Airframe" },
+  { value: "engine", label: "Engine" },
+  { value: "propeller", label: "Propeller" },
+  { value: "appliance", label: "Appliance" },
+] as const;
+
+type SystemTypeValue = (typeof SYSTEM_TYPE_OPTIONS)[number]["value"];
+
+const DISCOVERED_WHEN_OPTIONS = [
+  { value: "customer_report", label: "Customer Report" },
+  { value: "planning", label: "During Planning" },
+  { value: "inspection", label: "During Inspection" },
+  { value: "post_quote", label: "After Customer Quote" },
+] as const;
+
+type DiscoveredWhenValue = (typeof DISCOVERED_WHEN_OPTIONS)[number]["value"];
+
 // ─── Props ────────────────────────────────────────────────────────────────────
 
 export interface RaiseFindingDialogProps {
@@ -76,20 +107,58 @@ export function RaiseFindingDialog({
   stepDescription,
   onSuccess,
 }: RaiseFindingDialogProps) {
+  // Existing fields
   const [description, setDescription] = useState("");
   const [foundDuring, setFoundDuring] = useState<FoundDuringValue>("routine_maintenance");
   const [componentAffected, setComponentAffected] = useState("");
   const [componentPartNumber, setComponentPartNumber] = useState("");
   const [componentSerialNumber, setComponentSerialNumber] = useState("");
   const [notes, setNotes] = useState("");
+
+  // OP-1003 classification fields
+  const [discrepancyType, setDiscrepancyType] = useState<DiscrepancyTypeValue | "">("");
+  const [systemType, setSystemType] = useState<SystemTypeValue | "">("");
+  const [discoveredWhen, setDiscoveredWhen] = useState<DiscoveredWhenValue | "">("");
+
+  // Regulatory flags
+  const [riiRequired, setRiiRequired] = useState(false);
+  const [stcRelated, setStcRelated] = useState(false);
+  const [stcNumber, setStcNumber] = useState("");
+
+  // Labor estimate
+  const [mhEstimate, setMhEstimate] = useState("");
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const openDiscrepancy = useMutation(api.discrepancies.openDiscrepancy);
 
+  function resetForm() {
+    setDescription("");
+    setComponentAffected("");
+    setComponentPartNumber("");
+    setComponentSerialNumber("");
+    setNotes("");
+    setDiscrepancyType("");
+    setSystemType("");
+    setDiscoveredWhen("");
+    setRiiRequired(false);
+    setStcRelated(false);
+    setStcNumber("");
+    setMhEstimate("");
+  }
+
   async function handleSubmit() {
     if (!description.trim()) {
       setError("Description is required.");
+      return;
+    }
+    if (!discrepancyType) {
+      setError("Discrepancy type is required.");
+      return;
+    }
+    if (!systemType) {
+      setError("System type is required.");
       return;
     }
     setIsSubmitting(true);
@@ -106,14 +175,18 @@ export function RaiseFindingDialog({
         componentPartNumber: componentPartNumber.trim() || undefined,
         componentSerialNumber: componentSerialNumber.trim() || undefined,
         notes: notes.trim() || undefined,
+        // OP-1003 fields
+        discrepancyType: discrepancyType || undefined,
+        systemType: systemType || undefined,
+        discoveredWhen: discoveredWhen || undefined,
+        riiRequired: riiRequired || undefined,
+        stcRelated: stcRelated || undefined,
+        stcNumber: stcRelated && stcNumber.trim() ? stcNumber.trim() : undefined,
+        mhEstimate: mhEstimate ? parseFloat(mhEstimate) : undefined,
+        writtenByTechnicianId: techId,
       });
 
-      // Reset form
-      setDescription("");
-      setComponentAffected("");
-      setComponentPartNumber("");
-      setComponentSerialNumber("");
-      setNotes("");
+      resetForm();
       onSuccess?.();
       onClose();
     } catch (err) {
@@ -125,7 +198,7 @@ export function RaiseFindingDialog({
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-base">
             <AlertTriangle className="w-4 h-4 text-amber-400" />
@@ -141,7 +214,7 @@ export function RaiseFindingDialog({
                 Found during:{" "}
                 <span className="text-foreground font-medium">
                   {taskCardTitle}
-                  {stepDescription ? ` → ${stepDescription}` : ""}
+                  {stepDescription ? ` \u2192 ${stepDescription}` : ""}
                 </span>
               </p>
             </div>
@@ -161,6 +234,79 @@ export function RaiseFindingDialog({
               className="text-sm bg-muted/30 border-border/60 resize-none"
               aria-required="true"
             />
+          </div>
+
+          {/* ── Classification (OP-1003) ─────────────────────────────────── */}
+          <div className="space-y-3 pt-1">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+              Classification
+            </p>
+
+            {/* Discrepancy Type */}
+            <div>
+              <Label htmlFor="finding-disc-type" className="text-xs font-medium mb-1.5 block">
+                Discrepancy Type <span className="text-red-400" aria-hidden="true">*</span>
+              </Label>
+              <Select
+                value={discrepancyType}
+                onValueChange={(v) => setDiscrepancyType(v as DiscrepancyTypeValue)}
+              >
+                <SelectTrigger id="finding-disc-type" className="h-9 text-sm bg-muted/30 border-border/60" aria-required="true">
+                  <SelectValue placeholder="Select type..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {DISCREPANCY_TYPE_OPTIONS.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* System Type */}
+            <div>
+              <Label htmlFor="finding-sys-type" className="text-xs font-medium mb-1.5 block">
+                System Type <span className="text-red-400" aria-hidden="true">*</span>
+              </Label>
+              <Select
+                value={systemType}
+                onValueChange={(v) => setSystemType(v as SystemTypeValue)}
+              >
+                <SelectTrigger id="finding-sys-type" className="h-9 text-sm bg-muted/30 border-border/60" aria-required="true">
+                  <SelectValue placeholder="Select system..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {SYSTEM_TYPE_OPTIONS.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Discovered When */}
+            <div>
+              <Label htmlFor="finding-discovered-when" className="text-xs font-medium mb-1.5 block">
+                Discovered When
+              </Label>
+              <Select
+                value={discoveredWhen}
+                onValueChange={(v) => setDiscoveredWhen(v as DiscoveredWhenValue)}
+              >
+                <SelectTrigger id="finding-discovered-when" className="h-9 text-sm bg-muted/30 border-border/60">
+                  <SelectValue placeholder="Select..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {DISCOVERED_WHEN_OPTIONS.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           {/* Found During */}
@@ -223,6 +369,77 @@ export function RaiseFindingDialog({
                 className="h-9 text-sm bg-muted/30 border-border/60"
               />
             </div>
+          </div>
+
+          {/* ── Regulatory Flags (OP-1003) ───────────────────────────────── */}
+          <div className="space-y-3 pt-1">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+              Regulatory Flags
+            </p>
+
+            {/* RII Required */}
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <Label htmlFor="finding-rii" className="text-xs font-medium block">
+                  RII Required
+                </Label>
+                <p className="text-[11px] text-muted-foreground">
+                  An IA must inspect before return to service
+                </p>
+              </div>
+              <Switch
+                id="finding-rii"
+                checked={riiRequired}
+                onCheckedChange={setRiiRequired}
+              />
+            </div>
+
+            {/* STC Related */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <Label htmlFor="finding-stc" className="text-xs font-medium block">
+                    Related to STC
+                  </Label>
+                </div>
+                <Switch
+                  id="finding-stc"
+                  checked={stcRelated}
+                  onCheckedChange={setStcRelated}
+                />
+              </div>
+              {stcRelated && (
+                <div>
+                  <Label htmlFor="finding-stc-number" className="text-xs font-medium mb-1.5 block">
+                    STC Number
+                  </Label>
+                  <Input
+                    id="finding-stc-number"
+                    value={stcNumber}
+                    onChange={(e) => setStcNumber(e.target.value)}
+                    placeholder="e.g. SA02338SE"
+                    className="h-9 text-sm bg-muted/30 border-border/60"
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* ── Labor Estimate (OP-1003) ─────────────────────────────────── */}
+          <div>
+            <Label htmlFor="finding-mh-estimate" className="text-xs font-medium mb-1.5 block">
+              Estimated Man-Hours
+            </Label>
+            <Input
+              id="finding-mh-estimate"
+              type="number"
+              step="0.1"
+              min="0"
+              value={mhEstimate}
+              onChange={(e) => setMhEstimate(e.target.value)}
+              placeholder="e.g. 2.5"
+              className="h-9 text-sm bg-muted/30 border-border/60 w-32"
+            />
           </div>
 
           {/* Notes */}

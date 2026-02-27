@@ -1031,3 +1031,170 @@ export const handleAdSupersession = mutation({
     };
   },
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// QUERY: listAdRecordsForAircraft
+//
+// Phase F: Compliance Layer
+//
+// Returns all adCompliance records for a given aircraft, each joined with the
+// corresponding airworthinessDirectives row for display. Sorted by AD number.
+//
+// Used by the AircraftAdComplianceTab on the fleet detail page to show the
+// full per-aircraft AD compliance table.
+//
+// Includes both applicable and not_applicable records so the technician can
+// see the complete AD list and change applicability determinations.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const listAdRecordsForAircraft = query({
+  args: {
+    aircraftId: v.id("aircraft"),
+    organizationId: v.id("organizations"),
+  },
+  handler: async (ctx, args) => {
+    const complianceRecords = await ctx.db
+      .query("adCompliance")
+      .withIndex("by_aircraft", (q) => q.eq("aircraftId", args.aircraftId))
+      .collect();
+
+    // Join each record with its AD row
+    const joined = await Promise.all(
+      complianceRecords.map(async (cr) => {
+        const ad = await ctx.db.get(cr.adId);
+        return {
+          ...cr,
+          ad: ad
+            ? {
+                adNumber: ad.adNumber,
+                subject: ad.title,
+                effectiveDate: ad.effectiveDate,
+                adType: ad.adType,
+                complianceType: ad.complianceType,
+                recurringIntervalHours: ad.recurringIntervalHours,
+                recurringIntervalDays: ad.recurringIntervalDays,
+                recurringIntervalCycles: ad.recurringIntervalCycles,
+                emergencyAd: ad.emergencyAd,
+                supersededByAdId: ad.supersededByAdId,
+              }
+            : null,
+        };
+      }),
+    );
+
+    // Sort by AD number for stable display order
+    joined.sort((a, b) => {
+      const numA = a.ad?.adNumber ?? "";
+      const numB = b.ad?.adNumber ?? "";
+      return numA.localeCompare(numB);
+    });
+
+    return joined;
+  },
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// QUERY: getFleetAdSummary
+//
+// Phase F: Compliance Layer
+//
+// Returns aggregate AD compliance stats per aircraft for an organization.
+// Used by FleetComplianceStats to show fleet-wide AD compliance posture.
+//
+// For each aircraft in the fleet, returns:
+//   - aircraftId
+//   - total tracked ADs (applicable == true only)
+//   - overdueCount (complianceStatus == "not_complied" with nextDueDate < now OR no compliance)
+//   - pendingCount (complianceStatus == "pending_determination")
+//   - dueSoonCount (applicable, complied, nextDueDate within 30 days)
+//   - compliantCount (remainder)
+//
+// "Due soon" threshold: nextDueDate within 30 calendar days.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const getFleetAdSummary = query({
+  args: {
+    organizationId: v.id("organizations"),
+  },
+  handler: async (ctx, args) => {
+    const now = Date.now();
+    const dueSoonThresholdMs = 30 * 24 * 60 * 60 * 1000; // 30 days
+
+    // Fetch all applicable AD compliance records for this org
+    const allRecords = await ctx.db
+      .query("adCompliance")
+      .withIndex("by_status", (q) =>
+        q.eq("organizationId", args.organizationId),
+      )
+      .collect();
+
+    // Only consider aircraft-scoped, applicable records
+    const applicableRecords = allRecords.filter(
+      (r) => r.aircraftId != null && r.applicable === true,
+    );
+
+    // Aggregate per aircraft
+    const byAircraft = new Map<
+      string,
+      {
+        aircraftId: string;
+        total: number;
+        overdueCount: number;
+        pendingCount: number;
+        dueSoonCount: number;
+        compliantCount: number;
+      }
+    >();
+
+    for (const rec of applicableRecords) {
+      const key = rec.aircraftId as string;
+      if (!byAircraft.has(key)) {
+        byAircraft.set(key, {
+          aircraftId: key,
+          total: 0,
+          overdueCount: 0,
+          pendingCount: 0,
+          dueSoonCount: 0,
+          compliantCount: 0,
+        });
+      }
+      const entry = byAircraft.get(key)!;
+      entry.total++;
+
+      if (rec.complianceStatus === "pending_determination") {
+        entry.pendingCount++;
+      } else if (
+        rec.complianceStatus === "not_complied" ||
+        (rec.nextDueDate != null && rec.nextDueDate < now)
+      ) {
+        entry.overdueCount++;
+      } else if (
+        rec.nextDueDate != null &&
+        rec.nextDueDate >= now &&
+        rec.nextDueDate <= now + dueSoonThresholdMs
+      ) {
+        entry.dueSoonCount++;
+      } else {
+        entry.compliantCount++;
+      }
+    }
+
+    // Compute fleet-level totals
+    const aircraftSummaries = Array.from(byAircraft.values());
+    const fleetTotals = {
+      trackedAds: applicableRecords.length,
+      overdueAds: aircraftSummaries.reduce((s, a) => s + a.overdueCount, 0),
+      pendingAds: aircraftSummaries.reduce((s, a) => s + a.pendingCount, 0),
+      dueSoonAds: aircraftSummaries.reduce((s, a) => s + a.dueSoonCount, 0),
+      compliantAds: aircraftSummaries.reduce((s, a) => s + a.compliantCount, 0),
+      aircraftWithIssues: aircraftSummaries.filter(
+        (a) => a.overdueCount > 0 || a.pendingCount > 0,
+      ).length,
+    };
+
+    return {
+      aircraftSummaries,
+      fleetTotals,
+    };
+  },
+});

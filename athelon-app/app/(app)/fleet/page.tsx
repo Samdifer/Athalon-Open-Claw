@@ -1,68 +1,159 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Plus, Search, PlaneTakeoff, ChevronRight } from "lucide-react";
+import { useQuery } from "convex/react";
+import { useOrganization } from "@clerk/clerk-react";
+import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 
-const demoFleet = [
-  {
-    tail: "N192AK",
-    make: "Cessna",
-    model: "172S",
-    serialNumber: "172S11234",
-    year: 2008,
-    totalTime: 3847.2,
-    status: "in_maintenance",
-    statusLabel: "In Maintenance",
-    statusColor: "bg-sky-500/15 text-sky-400 border-sky-500/30",
-    statusDot: "bg-sky-400",
-    customer: "High Country Charter LLC",
-    openWos: 1,
-    lastMaint: "Feb 20, 2026",
-    href: "/fleet/N192AK",
-  },
-  {
-    tail: "N76LS",
-    make: "Bell",
-    model: "206B-III",
-    serialNumber: "4089",
-    year: 1991,
-    totalTime: 9124.4,
-    status: "in_maintenance",
-    statusLabel: "AOG / On Hold",
-    statusColor: "bg-red-500/15 text-red-400 border-red-500/30",
-    statusDot: "bg-red-500",
-    customer: "Summit Helicopters Inc.",
-    openWos: 1,
-    lastMaint: "Feb 16, 2026",
-    href: "/fleet/N76LS",
-  },
-  {
-    tail: "N416AB",
-    make: "Cessna",
-    model: "208B Grand Caravan",
-    serialNumber: "208B0947",
-    year: 2001,
-    totalTime: 18402.1,
-    status: "in_maintenance",
-    statusLabel: "In Maintenance",
-    statusColor: "bg-sky-500/15 text-sky-400 border-sky-500/30",
-    statusDot: "bg-sky-400",
-    customer: "High Country Charter LLC",
-    openWos: 2,
-    lastMaint: "Feb 18, 2026",
-    href: "/fleet/N416AB",
-  },
-];
+// ─── Status style helper ────────────────────────────────────────────────────
+
+function getStatusStyle(status: string): {
+  color: string;
+  dot: string;
+  label: string;
+} {
+  const map: Record<string, { color: string; dot: string; label: string }> = {
+    airworthy: {
+      color: "bg-green-500/15 text-green-400 border-green-500/30",
+      dot: "bg-green-400",
+      label: "Airworthy",
+    },
+    in_maintenance: {
+      color: "bg-sky-500/15 text-sky-400 border-sky-500/30",
+      dot: "bg-sky-400",
+      label: "In Maintenance",
+    },
+    out_of_service: {
+      color: "bg-amber-500/15 text-amber-400 border-amber-500/30",
+      dot: "bg-amber-400",
+      label: "Out of Service",
+    },
+    aog: {
+      color: "bg-red-500/15 text-red-400 border-red-500/30",
+      dot: "bg-red-500",
+      label: "AOG",
+    },
+    grounded_airworthiness: {
+      color: "bg-red-500/15 text-red-400 border-red-500/30",
+      dot: "bg-red-500",
+      label: "Grounded",
+    },
+    grounded_registration: {
+      color: "bg-red-500/15 text-red-400 border-red-500/30",
+      dot: "bg-red-500",
+      label: "Grounded",
+    },
+    deregistered: {
+      color: "bg-slate-500/15 text-slate-400 border-slate-500/30",
+      dot: "bg-slate-400",
+      label: "Deregistered",
+    },
+    sold: {
+      color: "bg-slate-500/15 text-slate-400 border-slate-500/30",
+      dot: "bg-slate-400",
+      label: "Sold",
+    },
+    destroyed: {
+      color: "bg-slate-500/15 text-slate-400 border-slate-500/30",
+      dot: "bg-slate-400",
+      label: "Destroyed",
+    },
+  };
+  return (
+    map[status] ?? {
+      color: "bg-muted text-muted-foreground border-border/30",
+      dot: "bg-muted-foreground",
+      label: status,
+    }
+  );
+}
+
+// ─── Loading skeleton ───────────────────────────────────────────────────────
+
+function FleetCardSkeleton() {
+  return (
+    <Card className="border-border/60">
+      <CardContent className="p-4">
+        <div className="flex items-center gap-4">
+          <Skeleton className="w-2 h-2 rounded-full flex-shrink-0" />
+          <div className="flex-1 min-w-0 space-y-2">
+            <div className="flex items-center gap-2.5">
+              <Skeleton className="h-6 w-20" />
+              <Skeleton className="h-4 w-24" />
+            </div>
+            <Skeleton className="h-4 w-48" />
+            <Skeleton className="h-3 w-64" />
+          </div>
+          <Skeleton className="w-4 h-4 rounded flex-shrink-0" />
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+// ─── Page ───────────────────────────────────────────────────────────────────
 
 export default function FleetPage() {
+  const { organization } = useOrganization();
+  const orgId = organization?.id as Id<"organizations"> | undefined;
+
+  const fleet = useQuery(
+    api.aircraft.list,
+    orgId ? { organizationId: orgId } : "skip",
+  );
+  const customers = useQuery(
+    api.billingV4.listAllCustomers,
+    orgId ? { organizationId: orgId } : "skip",
+  );
+
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterActiveWo, setFilterActiveWo] = useState(false);
+
+  // Build customer lookup map
+  const customerMap = new Map<string, string>();
+  if (customers) {
+    for (const c of customers) {
+      customerMap.set(c._id, c.name);
+    }
+  }
+
+  // Client-side filtering
+  const isFiltering = searchTerm !== "" || filterActiveWo;
+  const filtered = fleet?.filter((ac) => {
+    if (filterActiveWo && ac.openWorkOrderCount <= 0) return false;
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      const reg = (ac.currentRegistration ?? "").toLowerCase();
+      const sn = ac.serialNumber.toLowerCase();
+      const custName = (
+        ac.customerId ? customerMap.get(ac.customerId) ?? "" : ""
+      ).toLowerCase();
+      if (!reg.includes(term) && !sn.includes(term) && !custName.includes(term)) {
+        return false;
+      }
+    }
+    return true;
+  });
+
+  const totalCount = fleet?.length ?? 0;
+  const filteredCount = filtered?.length ?? 0;
+
   return (
     <div className="space-y-5">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-semibold text-foreground">Fleet</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
-            {demoFleet.length} aircraft registered
+            {isFiltering
+              ? `${filteredCount} of ${totalCount} aircraft`
+              : `${totalCount} aircraft registered`}
           </p>
         </div>
         <Button size="sm">
@@ -71,65 +162,158 @@ export default function FleetPage() {
         </Button>
       </div>
 
-      <div className="grid gap-3">
-        {demoFleet.map((ac) => (
-          <Link key={ac.tail} to={ac.href}>
-            <Card className="border-border/60 hover:border-primary/30 hover:bg-card/80 transition-all cursor-pointer">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-4">
-                  <div
-                    className={`w-2 h-2 rounded-full flex-shrink-0 ${ac.statusDot}`}
-                  />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2.5 mb-0.5">
-                      <span className="font-mono font-bold text-xl text-foreground">
-                        {ac.tail}
-                      </span>
-                      <Badge
-                        variant="outline"
-                        className={`text-[10px] border ${ac.statusColor}`}
-                      >
-                        {ac.statusLabel}
-                      </Badge>
-                      {ac.openWos > 0 && (
-                        <Badge
-                          variant="secondary"
-                          className="text-[10px] bg-muted"
-                        >
-                          {ac.openWos} open WO{ac.openWos > 1 ? "s" : ""}
-                        </Badge>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2 text-sm">
-                      <span className="text-foreground font-medium">
-                        {ac.year} {ac.make} {ac.model}
-                      </span>
-                      <span className="text-muted-foreground/50">·</span>
-                      <span className="font-mono text-xs text-muted-foreground">
-                        S/N {ac.serialNumber}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-3 mt-1">
-                      <span className="text-[11px] text-muted-foreground">
-                        {ac.customer}
-                      </span>
-                      <span className="text-muted-foreground/40 text-[11px]">·</span>
-                      <span className="text-[11px] font-mono text-muted-foreground">
-                        {ac.totalTime.toFixed(1)} TTAF
-                      </span>
-                      <span className="text-muted-foreground/40 text-[11px]">·</span>
-                      <span className="text-[11px] text-muted-foreground">
-                        Last maint: {ac.lastMaint}
-                      </span>
-                    </div>
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-muted-foreground/50 flex-shrink-0" />
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
-        ))}
+      {/* Search + filter bar */}
+      <div className="flex items-center gap-3">
+        <div className="relative flex-1">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
+          <Input
+            placeholder="Search by N number, serial, or customer..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="h-8 pl-8 pr-3 text-xs bg-muted/30 border-border/60"
+          />
+        </div>
+        <Button
+          variant={filterActiveWo ? "default" : "outline"}
+          size="sm"
+          className={`h-8 text-xs whitespace-nowrap ${
+            filterActiveWo
+              ? "bg-sky-600 hover:bg-sky-700 text-white"
+              : "border-border/60"
+          }`}
+          onClick={() => setFilterActiveWo((prev) => !prev)}
+        >
+          Has Active WO
+        </Button>
       </div>
+
+      {/* Filtered count indicator */}
+      {isFiltering && fleet && fleet.length > 0 && (
+        <p className="text-xs text-muted-foreground">
+          Showing {filteredCount} of {totalCount} aircraft
+        </p>
+      )}
+
+      {/* Loading state */}
+      {fleet === undefined && (
+        <div className="grid gap-3">
+          <FleetCardSkeleton />
+          <FleetCardSkeleton />
+          <FleetCardSkeleton />
+        </div>
+      )}
+
+      {/* Empty state: no aircraft at all */}
+      {fleet !== undefined && fleet.length === 0 && (
+        <Card className="border-border/60">
+          <CardContent className="py-16 text-center">
+            <PlaneTakeoff className="w-8 h-8 text-muted-foreground/40 mx-auto mb-3" />
+            <p className="text-sm font-medium text-muted-foreground">
+              No aircraft in your fleet
+            </p>
+            <p className="text-xs text-muted-foreground/60 mt-1">
+              Add your first aircraft to get started.
+            </p>
+            <Button size="sm" className="mt-4">
+              <Plus className="w-3.5 h-3.5 mr-1.5" />
+              Add Aircraft
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* No results state: filtering produced zero matches */}
+      {fleet !== undefined && fleet.length > 0 && filtered?.length === 0 && (
+        <Card className="border-border/60">
+          <CardContent className="py-12 text-center">
+            <Search className="w-6 h-6 text-muted-foreground/40 mx-auto mb-2" />
+            <p className="text-sm font-medium text-muted-foreground">
+              No aircraft match your search
+            </p>
+            <p className="text-xs text-muted-foreground/60 mt-1">
+              Try adjusting your search term or filters.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Aircraft cards */}
+      {filtered && filtered.length > 0 && (
+        <div className="grid gap-3">
+          {filtered.map((ac) => {
+            const style = getStatusStyle(ac.status ?? "");
+            const customerName = ac.customerId
+              ? customerMap.get(ac.customerId) ?? "Unknown Customer"
+              : "No Customer";
+            const slug =
+              ac.currentRegistration ?? ac.serialNumber;
+
+            return (
+              <Link
+                key={ac._id}
+                to={`/fleet/${encodeURIComponent(slug)}`}
+              >
+                <Card className="border-border/60 hover:border-primary/30 hover:bg-card/80 transition-all cursor-pointer">
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-4">
+                      <div
+                        className={`w-2 h-2 rounded-full flex-shrink-0 ${style.dot}`}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2.5 mb-0.5">
+                          <span className="font-mono font-bold text-xl text-foreground">
+                            {ac.currentRegistration ?? ac.serialNumber}
+                          </span>
+                          <Badge
+                            variant="outline"
+                            className={`text-[10px] border ${style.color}`}
+                          >
+                            {style.label}
+                          </Badge>
+                          {ac.openWorkOrderCount > 0 && (
+                            <Badge
+                              variant="secondary"
+                              className="text-[10px] bg-muted"
+                            >
+                              {ac.openWorkOrderCount} open WO
+                              {ac.openWorkOrderCount > 1 ? "s" : ""}
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 text-sm">
+                          <span className="text-foreground font-medium">
+                            {ac.yearOfManufacture ? `${ac.yearOfManufacture} ` : ""}
+                            {ac.make} {ac.model}
+                            {ac.series ? ` ${ac.series}` : ""}
+                          </span>
+                          <span className="text-muted-foreground/50">
+                            ·
+                          </span>
+                          <span className="font-mono text-xs text-muted-foreground">
+                            S/N {ac.serialNumber}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3 mt-1">
+                          <span className="text-[11px] text-muted-foreground">
+                            {customerName}
+                          </span>
+                          <span className="text-muted-foreground/40 text-[11px]">
+                            ·
+                          </span>
+                          <span className="text-[11px] font-mono text-muted-foreground">
+                            {ac.totalTimeAirframeHours.toFixed(1)} TTAF
+                          </span>
+                        </div>
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-muted-foreground/50 flex-shrink-0" />
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

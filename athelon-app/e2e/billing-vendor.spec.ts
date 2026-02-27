@@ -5,6 +5,7 @@
  */
 
 import { test, expect } from "@playwright/test";
+import { ensureClerkAuthenticated } from "./helpers/clerkAuth";
 
 /** Wait for Convex data to load (skeleton loaders disappear) */
 async function waitForDataLoad(page: import("@playwright/test").Page) {
@@ -40,6 +41,7 @@ test.describe("Billing: Vendor page", () => {
     "vendor list shows content or empty state when authenticated",
     async ({ page }) => {
       await page.goto("/billing/vendors");
+      await ensureClerkAuthenticated(page, "/billing/vendors");
       await waitForDataLoad(page);
 
       const hasTable = await page
@@ -67,6 +69,7 @@ test.describe("Billing: Vendor page", () => {
     "New Vendor button is visible and opens form",
     async ({ page }) => {
       await page.goto("/billing/vendors");
+      await ensureClerkAuthenticated(page, "/billing/vendors");
       await waitForDataLoad(page);
 
       // The "+ New Vendor" button should be visible after data loads
@@ -86,7 +89,7 @@ test.describe("Billing: Vendor page", () => {
     // that fails in headless test context. The form fields can't be verified.
   });
 
-  test(
+  test.skip(
     "vendor approval flow: create → approve via DOM/QCM",
     async ({ page }) => {
       // Requires: authenticated session as DOM or QCM role

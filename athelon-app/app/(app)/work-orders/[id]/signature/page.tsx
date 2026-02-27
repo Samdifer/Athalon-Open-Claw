@@ -1,7 +1,10 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useParams, useNavigate, useSearchParams, Link } from "react-router-dom";
+import { useParams } from "react-router-dom";
+import { useRouter } from "@/hooks/useRouter";
+import { useSearchParams } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
@@ -58,7 +61,7 @@ function formatCountdown(ms: number): string {
 export default function SignaturePage() {
   const params = useParams();
   const workOrderId = params.id as string;
-  const navigate = useNavigate();
+  const router = useRouter();
   const [searchParams] = useSearchParams();
 
   // Optional query params:
@@ -122,7 +125,7 @@ export default function SignaturePage() {
     const dest = returnTo
       ? `${returnTo}?authEventId=${authEvent.eventId}`
       : `/work-orders/${workOrderId}`;
-    navigate(dest);
+    router.push(dest);
   }
 
   function handleRefresh() {
@@ -138,10 +141,10 @@ export default function SignaturePage() {
 
   const urgentColor =
     remaining < 60_000
-      ? "text-red-400"
+      ? "text-red-600 dark:text-red-400"
       : remaining < 120_000
-      ? "text-amber-400"
-      : "text-green-400";
+      ? "text-amber-600 dark:text-amber-400"
+      : "text-green-600 dark:text-green-400";
 
   if (isLoading) {
     return (
@@ -197,7 +200,7 @@ export default function SignaturePage() {
             </div>
             <Badge
               variant="outline"
-              className="text-[10px] border-green-500/30 text-green-400"
+              className="text-[10px] border-green-500/30 text-green-600 dark:text-green-400"
             >
               Active
             </Badge>
@@ -251,9 +254,9 @@ export default function SignaturePage() {
 
             {/* Status */}
             <div className="flex items-start gap-2.5">
-              <CheckCircle2 className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" />
+              <CheckCircle2 className="w-4 h-4 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
               <div>
-                <p className="text-xs font-semibold text-green-400">
+                <p className="text-xs font-semibold text-green-600 dark:text-green-400">
                   Authorization Token Active
                 </p>
                 <p className="text-[11px] text-muted-foreground mt-0.5">
@@ -304,8 +307,8 @@ export default function SignaturePage() {
         <Card className="border-red-500/30 bg-red-500/5">
           <CardContent className="p-4 space-y-3">
             <div className="flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 text-red-400" />
-              <p className="text-sm font-medium text-red-400">Token Expired</p>
+              <AlertCircle className="w-4 h-4 text-red-600 dark:text-red-400" />
+              <p className="text-sm font-medium text-red-600 dark:text-red-400">Token Expired</p>
             </div>
             <p className="text-xs text-muted-foreground">
               The 5-minute authorization window has elapsed. Re-enter your PIN
@@ -343,7 +346,7 @@ export default function SignaturePage() {
             <form onSubmit={handleCreateAuthEvent} className="space-y-4">
               <div>
                 <Label className="text-xs font-medium mb-1.5 block">
-                  PIN <span className="text-red-400">*</span>
+                  PIN <span className="text-red-600 dark:text-red-400">*</span>
                 </Label>
                 <Input
                   type="password"
@@ -363,8 +366,8 @@ export default function SignaturePage() {
 
               {error && (
                 <div className="flex items-start gap-2 p-2.5 rounded-md border border-red-500/30 bg-red-500/5">
-                  <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
-                  <p className="text-xs text-red-400">{error}</p>
+                  <AlertCircle className="w-4 h-4 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+                  <p className="text-xs text-red-600 dark:text-red-400">{error}</p>
                 </div>
               )}
 

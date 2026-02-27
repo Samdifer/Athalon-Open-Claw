@@ -186,14 +186,14 @@ export function CreateRecordForm({
         {form.isCorrection ? (
           <Badge
             variant="outline"
-            className="bg-amber-500/15 text-amber-400 border-amber-500/30 text-xs"
+            className="bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30 text-xs"
           >
             Correction Record
           </Badge>
         ) : (
           <Badge
             variant="outline"
-            className="bg-sky-500/15 text-sky-400 border-sky-500/30 text-xs"
+            className="bg-sky-500/15 text-sky-600 dark:text-sky-400 border-sky-500/30 text-xs"
           >
             New Maintenance Record — 14 CFR 43.9
           </Badge>
@@ -203,7 +203,7 @@ export function CreateRecordForm({
       {/* Correction — Record Being Corrected */}
       {form.isCorrection && (
         <div className="p-3 border border-amber-500/30 rounded-md bg-amber-500/5 space-y-3">
-          <p className="text-[11px] text-amber-400 font-medium">
+          <p className="text-[11px] text-amber-600 dark:text-amber-400 font-medium">
             Correction fields — per AC 43-9C, all fields are required.
           </p>
           <div className="grid grid-cols-1 gap-2">
@@ -272,13 +272,13 @@ export function CreateRecordForm({
       <div className="space-y-1.5">
         <Label className="text-xs font-medium flex items-center justify-between">
           <span>
-            Work Performed <span className="text-red-400">*</span>
+            Work Performed <span className="text-red-600 dark:text-red-400">*</span>
           </span>
           <span
             className={`text-[11px] ${
               form.workPerformed.trim().length < 50
-                ? "text-amber-400"
-                : "text-green-400"
+                ? "text-amber-600 dark:text-amber-400"
+                : "text-green-600 dark:text-green-400"
             }`}
           >
             {form.workPerformed.trim().length} / 50 min
@@ -297,7 +297,7 @@ export function CreateRecordForm({
       {/* Approved Data Reference */}
       <div className="space-y-1.5">
         <Label className="text-xs font-medium">
-          Approved Data Reference <span className="text-red-400">*</span>
+          Approved Data Reference <span className="text-red-600 dark:text-red-400">*</span>
         </Label>
         <div className="grid grid-cols-4 gap-2">
           <div className="space-y-1">
@@ -383,7 +383,7 @@ export function CreateRecordForm({
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1.5">
           <Label className="text-xs font-medium">
-            Completion Date <span className="text-red-400">*</span>
+            Completion Date <span className="text-red-600 dark:text-red-400">*</span>
           </Label>
           <Input
             type="date"
@@ -395,7 +395,7 @@ export function CreateRecordForm({
         </div>
         <div className="space-y-1.5">
           <Label className="text-xs font-medium">
-            Ratings Exercised <span className="text-red-400">*</span>
+            Ratings Exercised <span className="text-red-600 dark:text-red-400">*</span>
           </Label>
           <Select
             value={form.ratingsExercised}
@@ -445,13 +445,13 @@ export function CreateRecordForm({
         <div className="space-y-1.5">
           <Label className="text-xs font-medium flex items-center justify-between">
             <span>
-              RTS Certification Statement <span className="text-red-400">*</span>
+              RTS Certification Statement <span className="text-red-600 dark:text-red-400">*</span>
             </span>
             <span
               className={`text-[11px] ${
                 (form.returnToServiceStatement?.trim().length ?? 0) < 50
-                  ? "text-amber-400"
-                  : "text-green-400"
+                  ? "text-amber-600 dark:text-amber-400"
+                  : "text-green-600 dark:text-green-400"
               }`}
             >
               {form.returnToServiceStatement?.trim().length ?? 0} / 50 min
@@ -473,7 +473,7 @@ export function CreateRecordForm({
       <div className="space-y-1.5">
         <Label className="text-xs font-medium flex items-center gap-1.5">
           <User className="w-3 h-3 text-muted-foreground" />
-          Signing Technician <span className="text-red-400">*</span>
+          Signing Technician <span className="text-red-600 dark:text-red-400">*</span>
         </Label>
         {technicians === undefined ? (
           <Skeleton className="h-9 w-full" />
@@ -509,7 +509,7 @@ export function CreateRecordForm({
       {/* Signature Auth Event */}
       <div className="space-y-1.5">
         <Label className="text-xs font-medium">
-          Signature Auth Event ID <span className="text-red-400">*</span>
+          Signature Auth Event ID <span className="text-red-600 dark:text-red-400">*</span>
         </Label>
         <Input
           value={form.signatureAuthEventId}
@@ -532,8 +532,8 @@ export function CreateRecordForm({
       {/* Error */}
       {error && (
         <div className="flex items-start gap-2 p-3 border border-red-500/30 bg-red-500/5 rounded-md">
-          <XCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
-          <p className="text-[11px] text-red-400">{error}</p>
+          <XCircle className="w-4 h-4 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+          <p className="text-[11px] text-red-600 dark:text-red-400">{error}</p>
         </div>
       )}
 

@@ -160,8 +160,11 @@ function CreateRecurringTemplateDialog({ open, onClose, orgId, techId }: CreateT
       return;
     }
 
-    // Use techId from org context, or a fallback placeholder
-    const createdByTechId = techId ?? ("placeholder" as Id<"technicians">);
+    if (!techId) {
+      toast.error("Unable to identify the current technician. Refresh and try again.");
+      return;
+    }
+    const createdByTechId = techId;
 
     setSubmitting(true);
     try {
@@ -400,7 +403,7 @@ function CreateRecurringTemplateDialog({ open, onClose, orgId, techId }: CreateT
           >
             Cancel
           </Button>
-          <Button size="sm" onClick={handleSubmit} disabled={submitting}>
+          <Button size="sm" onClick={handleSubmit} disabled={submitting || !techId}>
             {submitting ? "Creating..." : "Create Template"}
           </Button>
         </DialogFooter>

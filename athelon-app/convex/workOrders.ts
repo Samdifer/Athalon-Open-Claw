@@ -128,6 +128,11 @@ export const createWorkOrder = mutation({
     customerId: v.optional(v.id("customers")),
     notes: v.optional(v.string()),
 
+    // v6: Scheduling fields
+    promisedDeliveryDate: v.optional(v.number()),
+    estimatedLaborHoursOverride: v.optional(v.number()),
+    scheduledStartDate: v.optional(v.number()),
+
     // Optional: caller's IP for audit log (extracted server-side by API layer)
     callerIpAddress: v.optional(v.string()),
   },
@@ -220,6 +225,9 @@ export const createWorkOrder = mutation({
       customerId: args.customerId,
       priority: args.priority,
       notes: args.notes,
+      promisedDeliveryDate: args.promisedDeliveryDate,
+      estimatedLaborHoursOverride: args.estimatedLaborHoursOverride,
+      scheduledStartDate: args.scheduledStartDate,
       // aircraftTotalTimeAtOpen is set to 0 as a sentinel value here.
       // The real value is captured in openWorkOrder (regulatory clock start).
       // The UI must NOT display this field until the WO is in "open" status.
@@ -1433,5 +1441,391 @@ export const listActive = query({
     }
 
     return results.slice(0, limit);
+  },
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SCHEDULING — Phase 1 (Promised Delivery Date + Schedule Risk)
+//
+// These functions power the schedule risk dashboard and the WO scheduling fields.
+// Risk is always computed on-the-fly — never stored — so the audit record stays clean.
+//
+// Risk levels:
+//   "overdue"  — promisedDeliveryDate is in the past, WO still active
+//   "at_risk"  — remaining estimated hours cannot be completed before delivery date
+//                at 8 hrs/day single-tech pace (conservative baseline before Phase 2
+//                adds the full shift model)
+//   "on_track" — has delivery date, passes the risk check
+//   "no_date"  — promisedDeliveryDate is not set
+// ═══════════════════════════════════════════════════════════════════════════
+
+const ACTIVE_FOR_SCHEDULING = [
+  "draft",
+  "open",
+  "in_progress",
+  "on_hold",
+  "pending_inspection",
+  "pending_signoff",
+  "open_discrepancies",
+] as const;
+
+const HOURS_PER_DAY_BASELINE = 8; // conservative single-tech day; Phase 2 will refine
+
+/** Derive schedule risk for a single WO given precomputed inputs. Pure function. */
+function computeRiskLevel(args: {
+  status: string;
+  promisedDeliveryDate: number | undefined;
+  remainingHours: number;
+  nowMs: number;
+}): "overdue" | "at_risk" | "on_track" | "no_date" {
+  const isActive = ACTIVE_FOR_SCHEDULING.includes(
+    args.status as (typeof ACTIVE_FOR_SCHEDULING)[number],
+  );
+  if (!isActive) return "on_track"; // closed/voided WOs are always "on track" by definition
+
+  if (!args.promisedDeliveryDate) return "no_date";
+
+  if (args.promisedDeliveryDate < args.nowMs) return "overdue";
+
+  const daysUntilDelivery =
+    (args.promisedDeliveryDate - args.nowMs) / (1000 * 60 * 60 * 24);
+
+  const daysNeeded = args.remainingHours / HOURS_PER_DAY_BASELINE;
+
+  if (daysNeeded > daysUntilDelivery * 0.85) return "at_risk";
+
+  return "on_track";
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MUTATION: updateScheduleFields
+//
+// Sets the scheduling fields on a work order. Any of the three fields can be
+// updated in isolation. Writes an audit log entry so the scheduling change
+// is traceable (required for FAA chain-of-custody).
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const updateScheduleFields = mutation({
+  args: {
+    workOrderId: v.id("workOrders"),
+    organizationId: v.id("organizations"),
+    promisedDeliveryDate: v.optional(v.number()),
+    estimatedLaborHoursOverride: v.optional(v.number()),
+    scheduledStartDate: v.optional(v.number()),
+    callerIpAddress: v.optional(v.string()),
+  },
+
+  handler: async (ctx, args): Promise<void> => {
+    const now = Date.now();
+    const callerUserId = await requireAuth(ctx);
+
+    const wo = await ctx.db.get(args.workOrderId);
+    if (!wo) throw new Error(`Work order ${args.workOrderId} not found.`);
+    if (wo.organizationId !== args.organizationId) {
+      throw new Error("Organization mismatch — cannot update scheduling fields.");
+    }
+
+    const updates: {
+      promisedDeliveryDate?: number;
+      estimatedLaborHoursOverride?: number;
+      scheduledStartDate?: number;
+      updatedAt: number;
+    } = { updatedAt: now };
+
+    if (args.promisedDeliveryDate !== undefined)
+      updates.promisedDeliveryDate = args.promisedDeliveryDate;
+    if (args.estimatedLaborHoursOverride !== undefined)
+      updates.estimatedLaborHoursOverride = args.estimatedLaborHoursOverride;
+    if (args.scheduledStartDate !== undefined)
+      updates.scheduledStartDate = args.scheduledStartDate;
+
+    await ctx.db.patch(args.workOrderId, updates);
+
+    const changedFields = Object.keys(updates)
+      .filter((k) => k !== "updatedAt")
+      .join(", ");
+
+    await ctx.db.insert("auditLog", {
+      organizationId: args.organizationId,
+      eventType: "record_updated",
+      tableName: "workOrders",
+      recordId: args.workOrderId,
+      userId: callerUserId,
+      ipAddress: args.callerIpAddress,
+      notes: `Scheduling fields updated on ${wo.workOrderNumber}: ${changedFields}.`,
+      timestamp: now,
+    });
+  },
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// QUERY: getScheduleStats
+//
+// Returns aggregate schedule health counts for the dashboard widget.
+// Scoped to open/active work orders only.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const getScheduleStats = query({
+  args: {
+    organizationId: v.id("organizations"),
+  },
+
+  handler: async (ctx, args) => {
+    const now = Date.now();
+
+    // Collect all active WOs for this org
+    const rows = await ctx.db
+      .query("workOrders")
+      .withIndex("by_organization", (q) =>
+        q.eq("organizationId", args.organizationId),
+      )
+      .collect();
+
+    const activeWos = rows.filter((wo) =>
+      ACTIVE_FOR_SCHEDULING.includes(
+        wo.status as (typeof ACTIVE_FOR_SCHEDULING)[number],
+      ),
+    );
+
+    let onTrack = 0;
+    let atRisk = 0;
+    let overdue = 0;
+    let noDate = 0;
+
+    const atRiskList: Array<{
+      _id: string;
+      workOrderNumber: string;
+      promisedDeliveryDate: number | undefined;
+      riskLevel: "at_risk" | "overdue";
+    }> = [];
+
+    for (const wo of activeWos) {
+      // Compute effective estimated hours
+      let effectiveHours = wo.estimatedLaborHoursOverride;
+      if (effectiveHours === undefined) {
+        // Sum task card estimates as fallback
+        const cards = await ctx.db
+          .query("taskCards")
+          .withIndex("by_work_order", (q) => q.eq("workOrderId", wo._id))
+          .collect();
+        effectiveHours = cards.reduce((sum, c) => sum + (c.estimatedHours ?? 0), 0);
+      }
+
+      // Completed hours = sum of estimatedHours on signed task cards
+      const cards = await ctx.db
+        .query("taskCards")
+        .withIndex("by_work_order", (q) => q.eq("workOrderId", wo._id))
+        .collect();
+      const completedHours = cards
+        .filter((c) => c.status === "complete")
+        .reduce((sum, c) => sum + (c.estimatedHours ?? 0), 0);
+
+      const remainingHours = Math.max(0, (effectiveHours ?? 0) - completedHours);
+
+      const riskLevel = computeRiskLevel({
+        status: wo.status,
+        promisedDeliveryDate: wo.promisedDeliveryDate,
+        remainingHours,
+        nowMs: now,
+      });
+
+      if (riskLevel === "on_track") onTrack++;
+      else if (riskLevel === "at_risk") {
+        atRisk++;
+        atRiskList.push({
+          _id: wo._id,
+          workOrderNumber: wo.workOrderNumber,
+          promisedDeliveryDate: wo.promisedDeliveryDate,
+          riskLevel: "at_risk",
+        });
+      } else if (riskLevel === "overdue") {
+        overdue++;
+        atRiskList.push({
+          _id: wo._id,
+          workOrderNumber: wo.workOrderNumber,
+          promisedDeliveryDate: wo.promisedDeliveryDate,
+          riskLevel: "overdue",
+        });
+      } else {
+        noDate++;
+      }
+    }
+
+    return { onTrack, atRisk, overdue, noDate, atRiskList };
+  },
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// QUERY: getWorkOrdersWithScheduleRisk
+//
+// Returns all active work orders enriched with their schedule risk level.
+// Used by the WO list page and future Gantt board.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const getWorkOrdersWithScheduleRisk = query({
+  args: {
+    organizationId: v.id("organizations"),
+  },
+
+  handler: async (ctx, args) => {
+    const now = Date.now();
+
+    const [rows, allParts] = await Promise.all([
+      ctx.db
+        .query("workOrders")
+        .withIndex("by_organization", (q) =>
+          q.eq("organizationId", args.organizationId),
+        )
+        .collect(),
+      ctx.db
+        .query("parts")
+        .withIndex("by_organization", (q) =>
+          q.eq("organizationId", args.organizationId),
+        )
+        .collect(),
+    ]);
+
+    const pendingPartCountByWoId = new Map<string, number>();
+    for (const part of allParts) {
+      if (part.location !== "pending_inspection") continue;
+
+      const linkedWorkOrderIds = [
+        part.receivingWorkOrderId,
+        part.reservedForWorkOrderId,
+      ].filter(Boolean) as Id<"workOrders">[];
+
+      for (const woId of linkedWorkOrderIds) {
+        const key = String(woId);
+        pendingPartCountByWoId.set(key, (pendingPartCountByWoId.get(key) ?? 0) + 1);
+      }
+    }
+
+    const enriched = await Promise.all(
+      rows.map(async (wo) => {
+        const [aircraft, customer] = await Promise.all([
+          ctx.db.get(wo.aircraftId),
+          wo.customerId ? ctx.db.get(wo.customerId) : Promise.resolve(null),
+        ]);
+
+        // Effective estimated hours
+        let effectiveHours = wo.estimatedLaborHoursOverride;
+        const cards = await ctx.db
+          .query("taskCards")
+          .withIndex("by_work_order", (q) => q.eq("workOrderId", wo._id))
+          .collect();
+
+        if (effectiveHours === undefined) {
+          effectiveHours = cards.reduce((sum, c) => sum + (c.estimatedHours ?? 0), 0);
+        }
+        const taskCardEstimateTotal = cards.reduce(
+          (sum, c) => sum + (c.estimatedHours ?? 0),
+          0,
+        );
+        const completedHours = cards
+          .filter((c) => c.status === "complete")
+          .reduce((sum, c) => sum + (c.estimatedHours ?? 0), 0);
+        const remainingHours = Math.max(0, effectiveHours - completedHours);
+
+        const openDiscrepancies = await ctx.db
+          .query("discrepancies")
+          .withIndex("by_work_order", (q) => q.eq("workOrderId", wo._id))
+          .filter((q) =>
+            q.or(
+              q.eq(q.field("status"), "open"),
+              q.eq(q.field("status"), "under_evaluation"),
+            ),
+          )
+          .collect();
+
+        const riskLevel = computeRiskLevel({
+          status: wo.status,
+          promisedDeliveryDate: wo.promisedDeliveryDate,
+          remainingHours,
+          nowMs: now,
+        });
+
+        return {
+          _id: wo._id,
+          workOrderNumber: wo.workOrderNumber,
+          workOrderType: wo.workOrderType,
+          status: wo.status,
+          priority: wo.priority,
+          description: wo.description,
+          customerName: customer?.name ?? customer?.companyName ?? null,
+          openedAt: wo.openedAt,
+          promisedDeliveryDate: wo.promisedDeliveryDate,
+          scheduledStartDate: wo.scheduledStartDate,
+          estimatedLaborHoursOverride: wo.estimatedLaborHoursOverride,
+          taskCardEstimateTotal,
+          effectiveEstimatedHours: effectiveHours,
+          completedHours,
+          remainingHours,
+          taskCardCount: cards.length,
+          completedTaskCardCount: cards.filter((c) => c.status === "complete").length,
+          openDiscrepancyCount: openDiscrepancies.length,
+          pendingPartCount: pendingPartCountByWoId.get(String(wo._id)) ?? 0,
+          riskLevel,
+          aircraft: aircraft
+            ? {
+                currentRegistration: aircraft.currentRegistration,
+                make: aircraft.make,
+                model: aircraft.model,
+              }
+            : null,
+        };
+      }),
+    );
+
+    return enriched;
+  },
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// QUERY: resolveWorkOrderRef
+//
+// Supports legacy URL refs that use a human WO number (e.g. WO-2026-0041)
+// instead of a Convex document id. Returns the canonical workOrderId + number.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const resolveWorkOrderRef = query({
+  args: {
+    organizationId: v.id("organizations"),
+    workOrderRef: v.string(),
+  },
+
+  handler: async (ctx, args) => {
+    await requireAuth(ctx);
+
+    const ref = args.workOrderRef.trim();
+    if (!ref) return null;
+
+    const wo = await ctx.db
+      .query("workOrders")
+      .withIndex("by_number", (q) =>
+        q.eq("organizationId", args.organizationId).eq("workOrderNumber", ref),
+      )
+      .first();
+
+    if (!wo) return null;
+    return { workOrderId: wo._id, workOrderNumber: wo.workOrderNumber };
+  },
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LIST BY AIRCRAFT — Returns all work orders for a specific aircraft
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const listByAircraft = query({
+  args: {
+    aircraftId: v.id("aircraft"),
+    organizationId: v.id("organizations"),
+  },
+  handler: async (ctx, args) => {
+    await requireAuth(ctx);
+    const wos = await ctx.db
+      .query("workOrders")
+      .withIndex("by_aircraft", (q) => q.eq("aircraftId", args.aircraftId))
+      .collect();
+    return wos.filter((wo) => wo.organizationId === args.organizationId);
   },
 });

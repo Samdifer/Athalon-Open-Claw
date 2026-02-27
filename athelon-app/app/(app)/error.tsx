@@ -38,7 +38,7 @@ export default function AppErrorBoundary({ error, reset }: ErrorPageProps) {
     <div className="flex items-center justify-center min-h-[50vh] p-4">
       <Card className="border-red-500/30 bg-red-500/5 w-full max-w-md">
         <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-base text-red-400">
+          <CardTitle className="flex items-center gap-2 text-base text-red-600 dark:text-red-400">
             <AlertCircle className="w-5 h-5 flex-shrink-0" />
             Something went wrong
           </CardTitle>

@@ -5,6 +5,7 @@
  */
 
 import { test, expect } from "@playwright/test";
+import { ensureClerkAuthenticated } from "./helpers/clerkAuth";
 
 /** Wait for Convex data to load (skeleton loaders disappear) */
 async function waitForDataLoad(page: import("@playwright/test").Page) {
@@ -38,14 +39,14 @@ test.describe("Billing: Invoice page", () => {
     "invoice list shows status filter tabs when authenticated",
     async ({ page }) => {
       await page.goto("/billing/invoices");
+      await ensureClerkAuthenticated(page, "/billing/invoices");
       await waitForDataLoad(page);
 
       // Status filter tabs should be present
       const tabLabels = ["All", "Draft", "Sent", "Partial", "Paid", "Void"];
       for (const label of tabLabels) {
         const tab = page.getByRole("tab", { name: new RegExp(label, "i") });
-        const exists = await tab.isVisible().catch(() => false);
-        void exists;
+        await expect(tab).toBeVisible({ timeout: 10_000 });
       }
 
       // The page content area should exist (main element or any content container)
@@ -77,14 +78,14 @@ test.describe("Billing: Invoice page", () => {
     ).toBeVisible({ timeout: 5_000 });
   });
 
-  test(
+  test.skip(
     "invoice detail page renders for existing invoice",
     async ({ page }) => {
       // Requires seeded invoice data — placeholder test
     },
   );
 
-  test(
+  test.skip(
     "PARTIAL status badge appears after partial payment",
     async ({ page }) => {
       // Requires live backend with a SENT invoice — placeholder test

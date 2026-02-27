@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
-import { Search, Bell } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Search, Bell, Sun, Moon } from "lucide-react";
+import { useTheme } from "@/components/ThemeProvider";
 import { Button } from "@/components/ui/button";
 import {
   CommandDialog,
@@ -16,6 +18,13 @@ import { Separator } from "@/components/ui/separator";
 
 export function TopBar() {
   const [commandOpen, setCommandOpen] = useState(false);
+  const { theme, toggleTheme } = useTheme();
+  const navigate = useNavigate();
+
+  const runCommand = (path: string) => {
+    setCommandOpen(false);
+    navigate(path);
+  };
 
   // Cmd+K opens command palette — useEffect ensures proper cleanup on unmount
   useEffect(() => {
@@ -51,6 +60,22 @@ export function TopBar() {
         </Button>
 
         <div className="ml-auto flex items-center gap-1.5">
+          {/* Theme toggle */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={toggleTheme}
+            title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+            aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+          >
+            {theme === "dark" ? (
+              <Sun className="w-4 h-4" aria-hidden="true" />
+            ) : (
+              <Moon className="w-4 h-4" aria-hidden="true" />
+            )}
+          </Button>
+
           {/* Notifications */}
           <Button
             variant="ghost"
@@ -77,7 +102,8 @@ export function TopBar() {
           <CommandEmpty>No results found.</CommandEmpty>
           <CommandGroup heading="Work Orders">
             <CommandItem
-              onSelect={() => setCommandOpen(false)}
+              value="WO-2026-0041 N192AK 100-hour Inspection In Progress"
+              onSelect={() => runCommand("/work-orders/WO-2026-0041")}
               className="gap-2"
             >
               <span className="font-mono text-xs text-muted-foreground">
@@ -89,7 +115,8 @@ export function TopBar() {
               </Badge>
             </CommandItem>
             <CommandItem
-              onSelect={() => setCommandOpen(false)}
+              value="WO-2026-0039 N76LS Main Rotor AOG On Hold"
+              onSelect={() => runCommand("/work-orders/WO-2026-0039")}
               className="gap-2"
             >
               <span className="font-mono text-xs text-muted-foreground">
@@ -107,21 +134,24 @@ export function TopBar() {
           <CommandSeparator />
           <CommandGroup heading="Aircraft">
             <CommandItem
-              onSelect={() => setCommandOpen(false)}
+              value="N192AK Cessna 172S"
+              onSelect={() => runCommand("/fleet/N192AK")}
               className="gap-2"
             >
               <span className="font-mono font-medium text-sm">N192AK</span>
               <span className="text-muted-foreground">Cessna 172S</span>
             </CommandItem>
             <CommandItem
-              onSelect={() => setCommandOpen(false)}
+              value="N76LS Bell 206B-III"
+              onSelect={() => runCommand("/fleet/N76LS")}
               className="gap-2"
             >
               <span className="font-mono font-medium text-sm">N76LS</span>
               <span className="text-muted-foreground">Bell 206B-III</span>
             </CommandItem>
             <CommandItem
-              onSelect={() => setCommandOpen(false)}
+              value="N416AB Cessna 208B Grand Caravan"
+              onSelect={() => runCommand("/fleet/N416AB")}
               className="gap-2"
             >
               <span className="font-mono font-medium text-sm">N416AB</span>

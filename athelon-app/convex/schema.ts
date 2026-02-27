@@ -381,6 +381,14 @@ export default defineSchema({
     totalTimeAirframeHours: v.number(),
     totalTimeAirframeAsOfDate: v.number(), // Unix timestamp of last TT update
 
+    // Hobbs meter tracking (separate from logbook TTAF on some aircraft types)
+    hobbsReading: v.optional(v.number()),
+    hobbsAsOfDate: v.optional(v.number()), // Unix timestamp
+
+    // Landing cycle tracking (critical for airframe life-limited parts)
+    totalLandingCycles: v.optional(v.number()),
+    totalLandingCyclesAsOfDate: v.optional(v.number()), // Unix timestamp
+
     ownerName: v.optional(v.string()),
     ownerAddress: v.optional(v.string()),
     operatingOrganizationId: v.optional(v.id("organizations")),
@@ -520,6 +528,34 @@ export default defineSchema({
     .index("by_organization", ["organizationId"]), // v3: fleet-level LLP dashboard
 
   // ═══════════════════════════════════════════════════════════════════════════
+  // PROPELLERS
+  // Tracks propellers mounted to aircraft. Up to 2 per aircraft for twins.
+  // Referenced in work order cover page snapshots (OP-1003 fields).
+  // ═══════════════════════════════════════════════════════════════════════════
+  propellers: defineTable({
+    aircraftId: v.id("aircraft"),
+    organizationId: v.id("organizations"),
+    position: v.union(
+      v.literal("single"),
+      v.literal("left"),
+      v.literal("right"),
+      v.literal("rear"),
+      v.literal("forward"),
+    ),
+    make: v.string(),
+    model: v.string(),
+    serialNumber: v.string(),
+    totalTimeHours: v.optional(v.number()),
+    totalTimeAsOfDate: v.optional(v.number()),
+    timeSinceOverhaulHours: v.optional(v.number()),
+    lastOverhaulDate: v.optional(v.number()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_aircraft", ["aircraftId"])
+    .index("by_organization", ["organizationId"]),
+
+  // ═══════════════════════════════════════════════════════════════════════════
   // TEST EQUIPMENT
   //
   // v3 addition — Dale Purcell (Avionics), REQ-DP-01 / REQ-DP-02.
@@ -655,6 +691,51 @@ export default defineSchema({
     .index("by_organization", ["organizationId"])
     .index("by_user", ["userId"])
     .index("by_status", ["organizationId", "status"]),
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TECHNICIAN SHIFTS
+  //
+  // Per-technician shift patterns used for capacity calculation.
+  // Phase 2 of scheduling feature.
+  //
+  // effectiveTo: undefined = currently active shift
+  // daysOfWeek: 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat
+  // efficiencyMultiplier: 1.0 = standard, 1.2 = 20% faster, 0.8 = 20% slower
+  // ═══════════════════════════════════════════════════════════════════════════
+  technicianShifts: defineTable({
+    technicianId: v.id("technicians"),
+    organizationId: v.id("organizations"),
+    effectiveFrom: v.number(),
+    effectiveTo: v.optional(v.number()),
+    daysOfWeek: v.array(v.number()),
+    startHour: v.number(),
+    endHour: v.number(),
+    efficiencyMultiplier: v.number(),
+    notes: v.optional(v.string()),
+    createdAt: v.number(),
+    createdByUserId: v.string(),
+  })
+    .index("by_technician", ["technicianId"])
+    .index("by_org", ["organizationId"])
+    .index("by_org_active", ["organizationId", "effectiveTo"]),
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // SCHEDULING SETTINGS (per organization)
+  //
+  // Shop-level defaults for capacity calculation.
+  // Created on first access (upsert pattern in mutation).
+  // ═══════════════════════════════════════════════════════════════════════════
+  schedulingSettings: defineTable({
+    organizationId: v.id("organizations"),
+    capacityBufferPercent: v.number(),
+    defaultShiftDays: v.array(v.number()),
+    defaultStartHour: v.number(),
+    defaultEndHour: v.number(),
+    defaultEfficiencyMultiplier: v.number(),
+    updatedAt: v.number(),
+    updatedByUserId: v.string(),
+  })
+    .index("by_org", ["organizationId"]),
 
   // ═══════════════════════════════════════════════════════════════════════════
   // CERTIFICATES
@@ -859,6 +940,45 @@ export default defineSchema({
 
     notes: v.optional(v.string()),
 
+    // v6: Scheduling — Promised Delivery Date + Schedule Risk (Phase 1)
+    //   promisedDeliveryDate — customer-committed delivery date (ms). Separate from
+    //     targetCompletionDate (internal ops estimate) — this is the externally-committed date.
+    //   estimatedLaborHoursOverride — manual labor estimate set at intake/quoting.
+    //     If absent, the UI falls back to sum(taskCards.estimatedHours). This lets
+    //     estimators set a top-level figure before task cards exist.
+    //   scheduledStartDate — planned aircraft induction date for future scheduling board use.
+    promisedDeliveryDate: v.optional(v.number()),
+    estimatedLaborHoursOverride: v.optional(v.number()),
+    scheduledStartDate: v.optional(v.number()),
+
+    // Aircraft snapshot captured at work order open time (OP-1003 page 1 data)
+    // This makes the WO self-contained for FAA audit — the state at time of opening
+    // is preserved even if aircraft records are later updated.
+    aircraftSnapshotAtOpen: v.optional(v.object({
+      registration: v.string(),
+      make: v.string(),
+      model: v.string(),
+      serialNumber: v.string(),
+      totalTimeAirframeHours: v.number(),
+      hobbsReading: v.optional(v.number()),
+      totalLandingCycles: v.optional(v.number()),
+      engineSnapshots: v.array(v.object({
+        position: v.optional(v.number()),
+        make: v.string(),
+        model: v.string(),
+        serialNumber: v.string(),
+        totalTimeHours: v.number(),
+        totalCycles: v.optional(v.number()),
+      })),
+      propellerSnapshots: v.optional(v.array(v.object({
+        position: v.string(),
+        make: v.string(),
+        model: v.string(),
+        serialNumber: v.string(),
+        totalTimeHours: v.optional(v.number()),
+      }))),
+    })),
+
     createdAt: v.number(),
     updatedAt: v.number(),
   })
@@ -867,7 +987,8 @@ export default defineSchema({
     .index("by_status", ["organizationId", "status"])
     .index("by_number", ["organizationId", "workOrderNumber"])
     .index("by_aircraft_status", ["aircraftId", "status"])
-    .index("by_priority", ["organizationId", "priority", "status"]),
+    .index("by_priority", ["organizationId", "priority", "status"])
+    .index("by_delivery_date", ["organizationId", "promisedDeliveryDate"]),
 
   // ═══════════════════════════════════════════════════════════════════════════
   // DISCREPANCIES
@@ -977,6 +1098,78 @@ export default defineSchema({
     dispositionApprovedDataReference: v.optional(v.string()),
     dispositionNotes: v.optional(v.string()),
 
+    // Aircraft system classification (Phase 1 — Squawks Unification)
+    aircraftSystem: v.optional(v.union(
+      v.literal("airframe"),
+      v.literal("engine_left"),
+      v.literal("engine_right"),
+      v.literal("engine_center"),
+      v.literal("engine_single"),
+      v.literal("avionics"),
+      v.literal("landing_gear"),
+      v.literal("fuel_system"),
+      v.literal("hydraulics"),
+      v.literal("electrical"),
+      v.literal("other"),
+    )),
+    squawkOrigin: v.optional(v.union(
+      v.literal("inspection_finding"),
+      v.literal("customer_reported"),
+      v.literal("rts_finding"),
+      v.literal("routine_check"),
+      v.literal("ad_compliance_check"),
+    )),
+    isInspectionItem: v.optional(v.boolean()),
+    isCustomerReported: v.optional(v.boolean()),
+    foundDuringRts: v.optional(v.boolean()),
+
+    // ── OP-1003 Classification Fields ──────────────────────────────────────────
+    // Discrepancy type (maps to OP-1003 "Select Type" checkboxes)
+    discrepancyType: v.optional(v.union(
+      v.literal("mandatory"),           // Affects airworthiness — must be addressed
+      v.literal("recommended"),         // Does not affect airworthiness
+      v.literal("customer_information"), // Informational only
+      v.literal("ops_check"),           // Requires an operational check
+    )),
+
+    // System type (maps to OP-1003 "Select type: Airframe/Engine/Propeller/Appliance")
+    systemType: v.optional(v.union(
+      v.literal("airframe"),
+      v.literal("engine"),
+      v.literal("propeller"),
+      v.literal("appliance"),
+    )),
+
+    // When was this found (maps to OP-1003 "When was this found?" checkboxes)
+    discoveredWhen: v.optional(v.union(
+      v.literal("customer_report"),   // Reported by customer
+      v.literal("planning"),          // Found during maintenance planning
+      v.literal("inspection"),        // Found during inspection
+      v.literal("post_quote"),        // Found after customer quote was issued
+    )),
+
+    // ── Customer Approval Workflow ──────────────────────────────────────────────
+    customerApprovalStatus: v.optional(v.union(
+      v.literal("pending"),
+      v.literal("approved_by_customer"),
+      v.literal("approved_by_station"),  // Approved by station management without customer
+      v.literal("denied"),               // Customer denied — record is voided per OP-1003
+    )),
+    addedToQuote: v.optional(v.boolean()),
+    addedToQuoteInitials: v.optional(v.string()), // Initials of person who added to quote
+
+    // ── Regulatory Flags ────────────────────────────────────────────────────────
+    riiRequired: v.optional(v.boolean()),  // Required Inspection Item — needs IA for sign-off
+    stcRelated: v.optional(v.boolean()),
+    stcNumber: v.optional(v.string()),     // STC number if stcRelated is true
+
+    // ── Labor Tracking ──────────────────────────────────────────────────────────
+    mhEstimate: v.optional(v.number()),    // Man-hours estimate (in tenths, e.g. 2.5 = 2h 30m)
+    mhActual: v.optional(v.number()),      // Actual man-hours (in tenths)
+
+    // ── Attribution ─────────────────────────────────────────────────────────────
+    writtenByTechnicianId: v.optional(v.id("technicians")), // Who wrote up the squawk
+
     createdAt: v.number(),
     updatedAt: v.number(),
   })
@@ -1072,6 +1265,23 @@ export default defineSchema({
     stepCount: v.number(),
     completedStepCount: v.number(),
     naStepCount: v.number(),
+
+    // Aircraft system classification (Phase 1 — Squawks Unification)
+    aircraftSystem: v.optional(v.union(
+      v.literal("airframe"),
+      v.literal("engine_left"),
+      v.literal("engine_right"),
+      v.literal("engine_center"),
+      v.literal("engine_single"),
+      v.literal("avionics"),
+      v.literal("landing_gear"),
+      v.literal("fuel_system"),
+      v.literal("hydraulics"),
+      v.literal("electrical"),
+      v.literal("other"),
+    )),
+    isInspectionItem: v.optional(v.boolean()),
+    isCustomerReported: v.optional(v.boolean()),
 
     createdAt: v.number(),
     updatedAt: v.number(),
@@ -1204,6 +1414,59 @@ export default defineSchema({
     .index("by_work_order", ["workOrderId"])
     .index("by_org_status", ["organizationId", "status"])
     .index("by_signed_technician", ["signedByTechnicianId"]),
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TASK COMPLIANCE ITEMS
+  //
+  // Per-task regulatory compliance tracking. Each item links a task card to
+  // a specific compliance reference (AD, SB, AMM, CMM, etc.) and tracks its
+  // compliance status through a full history trail.
+  //
+  // This is NOT a signed operation — compliance items are administrative
+  // tracking records, not maintenance entries requiring signature authority.
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  taskComplianceItems: defineTable({
+    taskCardId: v.id("taskCards"),
+    workOrderId: v.id("workOrders"),
+    aircraftId: v.id("aircraft"),
+    organizationId: v.id("organizations"),
+
+    referenceType: v.union(
+      v.literal("ad"),
+      v.literal("sb"),
+      v.literal("amm"),
+      v.literal("cmm"),
+      v.literal("faa_approved_data"),
+      v.literal("part_145"),
+      v.literal("other"),
+    ),
+    reference: v.string(),
+    description: v.optional(v.string()),
+
+    complianceStatus: v.union(
+      v.literal("pending"),
+      v.literal("compliant"),
+      v.literal("non_compliant"),
+      v.literal("deferred"),
+      v.literal("na"),
+    ),
+
+    history: v.array(v.object({
+      status: v.string(),
+      notes: v.optional(v.string()),
+      changedByTechnicianId: v.id("technicians"),
+      changedByName: v.string(),
+      changedAt: v.number(),
+    })),
+
+    notes: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_task_card", ["taskCardId"])
+    .index("by_work_order", ["workOrderId"])
+    .index("by_org_status", ["organizationId", "complianceStatus"]),
 
   // ═══════════════════════════════════════════════════════════════════════════
   // MAINTENANCE RECORDS  (14 CFR 43.9)
@@ -1942,6 +2205,21 @@ export default defineSchema({
     .index("by_name", ["organizationId", "name"]),
 
   // ═══════════════════════════════════════════════════════════════════════════
+  // CUSTOMER NOTES
+  // Chronological activity/notes log per customer. Append-only.
+  // ═══════════════════════════════════════════════════════════════════════════
+  customerNotes: defineTable({
+    customerId: v.id("customers"),
+    organizationId: v.id("organizations"),
+    content: v.string(),
+    createdByUserId: v.optional(v.string()), // Clerk user ID
+    createdByName: v.optional(v.string()),   // Display name at time of creation
+    createdAt: v.number(),
+  })
+    .index("by_customer", ["customerId"])
+    .index("by_org", ["organizationId"]),
+
+  // ═══════════════════════════════════════════════════════════════════════════
   // AUDIT LOG
   //
   // Append-only. Never deleted. Captures all write events.
@@ -2084,9 +2362,11 @@ export default defineSchema({
     name: v.string(),
     type: v.union(
       v.literal("parts_supplier"),
+      v.literal("consumables_supplier"),
       v.literal("contract_maintenance"),
       v.literal("calibration_lab"),
       v.literal("DER"),
+      v.literal("service_provider"),
       v.literal("other"),
     ),
     address: v.optional(v.string()),
@@ -2113,6 +2393,75 @@ export default defineSchema({
     .index("by_org", ["orgId"])
     .index("by_org_type", ["orgId", "type"])
     .index("by_org_approved", ["orgId", "isApproved"]),
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // VENDOR SERVICES
+  //
+  // Catalog of services each vendor provides (repair, overhaul, calibration,
+  // NDT, etc.). Links to vendorId; used when attaching vendor work to task
+  // cards via taskCardVendorServices.
+  // ═══════════════════════════════════════════════════════════════════════════
+  vendorServices: defineTable({
+    vendorId: v.id("vendors"),
+    orgId: v.id("organizations"),
+    serviceName: v.string(),
+    serviceType: v.union(
+      v.literal("repair"),
+      v.literal("overhaul"),
+      v.literal("test"),
+      v.literal("calibration"),
+      v.literal("inspection"),
+      v.literal("fabrication"),
+      v.literal("cleaning"),
+      v.literal("plating"),
+      v.literal("painting"),
+      v.literal("ndt"),
+      v.literal("other"),
+    ),
+    description: v.optional(v.string()),
+    estimatedCost: v.optional(v.number()),
+    certificationRequired: v.optional(v.string()),
+    isActive: v.boolean(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_vendor", ["vendorId"])
+    .index("by_org", ["orgId"]),
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TASK CARD VENDOR SERVICES
+  //
+  // Links a vendor service to a specific task card on a work order. Tracks
+  // the status of outsourced work through planned → sent → in_progress →
+  // completed lifecycle. Denormalized vendorName/serviceName survive vendor
+  // edits for audit trail integrity.
+  // ═══════════════════════════════════════════════════════════════════════════
+  taskCardVendorServices: defineTable({
+    taskCardId: v.id("taskCards"),
+    workOrderId: v.id("workOrders"),
+    organizationId: v.id("organizations"),
+    vendorId: v.id("vendors"),
+    vendorServiceId: v.optional(v.id("vendorServices")),
+    // Denormalized for display — survives vendor edits
+    vendorName: v.string(),
+    serviceName: v.string(),
+    serviceType: v.optional(v.string()),
+    status: v.union(
+      v.literal("planned"),
+      v.literal("sent_for_work"),
+      v.literal("in_progress"),
+      v.literal("completed"),
+      v.literal("cancelled"),
+    ),
+    estimatedCost: v.optional(v.number()),
+    actualCost: v.optional(v.number()),
+    notes: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_task_card", ["taskCardId"])
+    .index("by_work_order", ["workOrderId"])
+    .index("by_vendor", ["vendorId"]),
 
   // ═══════════════════════════════════════════════════════════════════════════
   // PURCHASE ORDERS
@@ -2751,4 +3100,64 @@ export default defineSchema({
     counterType: v.string(), // "invoice" | "quote" | "po" | "credit_memo"
     lastValue: v.number(),
   }).index("by_org_type", ["orgId", "counterType"]),
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // DOCUMENTS
+  //
+  // Phase E: Document Attachment System
+  //
+  // Stores metadata for files attached to maintenance records, work orders,
+  // discrepancies, and task cards. The actual file bytes live in Convex file
+  // storage (ctx.storage); this table holds the pointer (storageId) and the
+  // display/classification metadata.
+  //
+  // Polymorphic attachment: attachedToTable + attachedToId let a single table
+  // handle attachments on any entity without per-entity junction tables.
+  //
+  // REGULATORY CONTEXT:
+  //   FAA-approved data references (AMM pages, SB text, AD documents) must be
+  //   traceable on the maintenance record. This table supports digital attachment
+  //   of the approved data used, satisfying the documentation requirement under
+  //   14 CFR Part 43.9(a)(4): "description of the work performed" must be
+  //   sufficient to determine airworthiness.
+  //
+  // INVARIANT [documents.delete]:
+  //   Documents attached to a closed work order or signed maintenance record
+  //   should not be deleted. The delete mutation warns but does not hard-block
+  //   (alpha scope) — this gate is v1.1.
+  // ═══════════════════════════════════════════════════════════════════════════
+  documents: defineTable({
+    organizationId: v.id("organizations"),
+
+    // Polymorphic FK — identifies which record this document is attached to
+    attachedToTable: v.string(), // e.g. "workOrders", "discrepancies", "taskCards"
+    attachedToId: v.string(),   // The _id of the record as a string
+
+    // Convex file storage pointer
+    storageId: v.id("_storage"),
+
+    // File metadata
+    fileName: v.string(),
+    fileSize: v.number(),   // bytes
+    mimeType: v.string(),   // e.g. "application/pdf", "image/jpeg"
+
+    // Classification — helps FAA audit trail categorization
+    documentType: v.union(
+      v.literal("approved_data"),       // AMM, SRM, SB, CMM page — FAA-approved data
+      v.literal("ad_document"),         // AD text / NPRM / final rule document
+      v.literal("work_authorization"),  // Customer WO authorization / verbal auth record
+      v.literal("photo"),               // Damage, installation, or inspection photo
+      v.literal("parts_8130"),          // FAA Form 8130-3 / export airworthiness approval
+      v.literal("vendor_invoice"),      // Parts vendor packing list or invoice
+      v.literal("other"),               // Catch-all — fileName must be descriptive
+    ),
+
+    description: v.optional(v.string()), // Human-readable note about the document
+
+    uploadedByUserId: v.string(),  // Clerk user ID of the uploader
+    uploadedAt: v.number(),        // Unix ms
+  })
+    .index("by_attachment", ["attachedToTable", "attachedToId"])
+    .index("by_org", ["organizationId"])
+    .index("by_org_uploaded", ["organizationId", "uploadedAt"]),
 });

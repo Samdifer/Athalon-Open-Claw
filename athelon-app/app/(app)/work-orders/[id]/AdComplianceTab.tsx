@@ -46,7 +46,7 @@ function AdStatusBadge({
 }) {
   if (complianceStatus === "not_complied" || complianceStatus === "pending_determination") {
     return (
-      <Badge variant="outline" className="bg-red-500/15 text-red-400 border-red-500/30 text-[10px]">
+      <Badge variant="outline" className="bg-red-500/15 text-red-600 dark:text-red-400 border-red-500/30 text-[10px]">
         <AlertTriangle className="w-2.5 h-2.5 mr-1" />
         Not Complied
       </Badge>
@@ -54,7 +54,7 @@ function AdStatusBadge({
   }
   if (isOverdue) {
     return (
-      <Badge variant="outline" className="bg-red-500/15 text-red-400 border-red-500/30 text-[10px]">
+      <Badge variant="outline" className="bg-red-500/15 text-red-600 dark:text-red-400 border-red-500/30 text-[10px]">
         <AlertTriangle className="w-2.5 h-2.5 mr-1" />
         Overdue
       </Badge>
@@ -62,14 +62,14 @@ function AdStatusBadge({
   }
   if (isDueSoon) {
     return (
-      <Badge variant="outline" className="bg-amber-500/15 text-amber-400 border-amber-500/30 text-[10px]">
+      <Badge variant="outline" className="bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30 text-[10px]">
         <Clock className="w-2.5 h-2.5 mr-1" />
         Due Soon
       </Badge>
     );
   }
   return (
-    <Badge variant="outline" className="bg-green-500/15 text-green-400 border-green-500/30 text-[10px]">
+    <Badge variant="outline" className="bg-green-500/15 text-green-600 dark:text-green-400 border-green-500/30 text-[10px]">
       <CheckCircle2 className="w-2.5 h-2.5 mr-1" />
       Complied
     </Badge>
@@ -90,9 +90,9 @@ function AdRow({ item }: { item: AdItem }) {
       : null;
 
   const appliesToColors: Record<string, string> = {
-    aircraft: "bg-sky-500/15 text-sky-400 border-sky-500/30",
-    engine:   "bg-purple-500/15 text-purple-400 border-purple-500/30",
-    part:     "bg-slate-500/15 text-slate-400 border-slate-500/30",
+    aircraft: "bg-sky-500/15 text-sky-600 dark:text-sky-400 border-sky-500/30",
+    engine:   "bg-purple-500/15 text-purple-600 dark:text-purple-400 border-purple-500/30",
+    part:     "bg-slate-500/15 text-slate-500 dark:text-slate-400 border-slate-500/30",
   };
 
   return (
@@ -120,7 +120,7 @@ function AdRow({ item }: { item: AdItem }) {
             </span>
           )}
           {item.nextDueDate != null && (
-            <span className={`text-[10px] ${item.isOverdue ? "text-red-400" : item.isDueSoon ? "text-amber-400" : "text-muted-foreground/70"}`}>
+            <span className={`text-[10px] ${item.isOverdue ? "text-red-600 dark:text-red-400" : item.isDueSoon ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground/70"}`}>
               Due: {fmt(item.nextDueDate)}
               {item.daysRemaining != null && (
                 <span> ({item.daysRemaining < 0 ? `${Math.abs(item.daysRemaining)}d overdue` : `${item.daysRemaining}d`})</span>
@@ -128,7 +128,7 @@ function AdRow({ item }: { item: AdItem }) {
             </span>
           )}
           {item.nextDueHours != null && (
-            <span className={`text-[10px] font-mono ${item.isOverdue ? "text-red-400" : item.isDueSoon ? "text-amber-400" : "text-muted-foreground/70"}`}>
+            <span className={`text-[10px] font-mono ${item.isOverdue ? "text-red-600 dark:text-red-400" : item.isDueSoon ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground/70"}`}>
               Due: {item.nextDueHours.toFixed(1)} hr
               {item.hoursRemaining != null && (
                 <span> ({item.hoursRemaining <= 0 ? `${Math.abs(item.hoursRemaining).toFixed(1)} hr over` : `${item.hoursRemaining.toFixed(1)} hr left`})</span>
@@ -215,7 +215,7 @@ function AdCompliancePanelInner({
         <Card className={`border-border/60 ${summary.overdueCount > 0 ? "border-red-500/40 bg-red-500/5" : ""}`}>
           <CardContent className="p-3">
             <p className="text-[11px] text-muted-foreground mb-1">Overdue</p>
-            <span className={`text-lg font-bold ${summary.overdueCount > 0 ? "text-red-400" : "text-foreground"}`}>
+            <span className={`text-lg font-bold ${summary.overdueCount > 0 ? "text-red-600 dark:text-red-400" : "text-foreground"}`}>
               {summary.overdueCount}
             </span>
           </CardContent>
@@ -223,7 +223,7 @@ function AdCompliancePanelInner({
         <Card className={`border-border/60 ${summary.dueSoonCount > 0 ? "border-amber-500/40 bg-amber-500/5" : ""}`}>
           <CardContent className="p-3">
             <p className="text-[11px] text-muted-foreground mb-1">Due Soon</p>
-            <span className={`text-lg font-bold ${summary.dueSoonCount > 0 ? "text-amber-400" : "text-foreground"}`}>
+            <span className={`text-lg font-bold ${summary.dueSoonCount > 0 ? "text-amber-600 dark:text-amber-400" : "text-foreground"}`}>
               {summary.dueSoonCount}
             </span>
           </CardContent>
@@ -242,8 +242,8 @@ function AdCompliancePanelInner({
       {summary.hasBlockingItems && (
         <Card className="border-red-500/30 bg-red-500/5">
           <CardContent className="p-3 flex items-center gap-2.5">
-            <AlertTriangle className="w-4 h-4 text-red-400 flex-shrink-0" />
-            <p className="text-xs text-red-400 font-medium">
+            <AlertTriangle className="w-4 h-4 text-red-600 dark:text-red-400 flex-shrink-0" />
+            <p className="text-xs text-red-600 dark:text-red-400 font-medium">
               {aircraftRegistration} has blocking AD items. Aircraft may not return to service until resolved.
             </p>
           </CardContent>
@@ -261,7 +261,7 @@ function AdCompliancePanelInner({
         <CardContent className="pt-0">
           {items.length === 0 ? (
             <div className="py-8 text-center">
-              <CheckCircle2 className="w-6 h-6 text-green-400/60 mx-auto mb-2" />
+              <CheckCircle2 className="w-6 h-6 text-green-500/60 mx-auto mb-2" />
               <p className="text-sm text-muted-foreground">No applicable ADs on file.</p>
             </div>
           ) : (

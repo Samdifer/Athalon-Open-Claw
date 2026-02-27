@@ -109,9 +109,9 @@ export default function NewPartPage() {
       {/* Success Banner */}
       {success && (
         <div className="flex items-center gap-3 p-4 rounded-lg bg-green-500/10 border border-green-500/20">
-          <CheckCircle2 className="w-5 h-5 text-green-400 flex-shrink-0" />
+          <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0" />
           <div>
-            <p className="text-sm font-medium text-green-400">
+            <p className="text-sm font-medium text-green-600 dark:text-green-400">
               {createdCount} part record{createdCount !== 1 ? "s" : ""} created
             </p>
             <p className="text-[11px] text-green-400/70 mt-0.5">
@@ -140,7 +140,7 @@ export default function NewPartPage() {
             <div className="grid gap-4">
               <div className="space-y-1.5">
                 <Label htmlFor="partNumber" className="text-xs font-medium">
-                  Part Number <span className="text-red-400">*</span>
+                  Part Number <span className="text-red-600 dark:text-red-400">*</span>
                 </Label>
                 <Input
                   id="partNumber"
@@ -155,7 +155,7 @@ export default function NewPartPage() {
 
               <div className="space-y-1.5">
                 <Label htmlFor="partName" className="text-xs font-medium">
-                  Part Name <span className="text-red-400">*</span>
+                  Part Name <span className="text-red-600 dark:text-red-400">*</span>
                 </Label>
                 <Input
                   id="partName"
@@ -188,7 +188,7 @@ export default function NewPartPage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label htmlFor="quantity" className="text-xs font-medium">
-                  Quantity <span className="text-red-400">*</span>
+                  Quantity <span className="text-red-600 dark:text-red-400">*</span>
                 </Label>
                 <Input
                   id="quantity"

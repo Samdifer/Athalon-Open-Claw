@@ -46,11 +46,11 @@ function getAircraftStatusDot(status: string): string {
 
 function getAircraftStatusColor(status: string): string {
   const map: Record<string, string> = {
-    airworthy: "text-green-400",
-    airworthy_with_limitations: "text-amber-400",
-    grounded_airworthiness: "text-red-400",
-    in_maintenance: "text-sky-400",
-    aog: "text-red-400",
+    airworthy: "text-green-600 dark:text-green-400",
+    airworthy_with_limitations: "text-amber-600 dark:text-amber-400",
+    grounded_airworthiness: "text-red-600 dark:text-red-400",
+    in_maintenance: "text-sky-600 dark:text-sky-400",
+    aog: "text-red-600 dark:text-red-400",
   };
   return map[status] ?? "text-muted-foreground";
 }

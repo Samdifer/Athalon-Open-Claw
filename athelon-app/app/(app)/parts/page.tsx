@@ -95,13 +95,13 @@ const CONDITION_LABEL: Record<string, string> = {
 
 function getConditionStyles(condition: string): string {
   const map: Record<string, string> = {
-    new: "bg-green-500/15 text-green-400 border-green-500/30",
-    serviceable: "bg-sky-500/15 text-sky-400 border-sky-500/30",
-    overhauled: "bg-blue-500/15 text-blue-400 border-blue-500/30",
-    repaired: "bg-teal-500/15 text-teal-400 border-teal-500/30",
-    unserviceable: "bg-red-500/15 text-red-400 border-red-500/30",
-    quarantine: "bg-orange-500/15 text-orange-400 border-orange-500/30",
-    scrapped: "bg-slate-500/15 text-slate-400 border-slate-500/30",
+    new: "bg-green-500/15 text-green-600 dark:text-green-400 border-green-500/30",
+    serviceable: "bg-sky-500/15 text-sky-600 dark:text-sky-400 border-sky-500/30",
+    overhauled: "bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/30",
+    repaired: "bg-teal-500/15 text-teal-600 dark:text-teal-400 border-teal-500/30",
+    unserviceable: "bg-red-500/15 text-red-600 dark:text-red-400 border-red-500/30",
+    quarantine: "bg-orange-500/15 text-orange-600 dark:text-orange-400 border-orange-500/30",
+    scrapped: "bg-slate-500/15 text-slate-500 dark:text-slate-400 border-slate-500/30",
   };
   return map[condition] ?? "bg-muted text-muted-foreground";
 }
@@ -109,13 +109,13 @@ function getConditionStyles(condition: string): string {
 function getLocationIcon(location: string) {
   switch (location) {
     case "pending_inspection":
-      return <Clock className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />;
+      return <Clock className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 flex-shrink-0" />;
     case "inventory":
-      return <CheckCircle2 className="w-3.5 h-3.5 text-green-400 flex-shrink-0" />;
+      return <CheckCircle2 className="w-3.5 h-3.5 text-green-600 dark:text-green-400 flex-shrink-0" />;
     case "quarantine":
-      return <ShieldAlert className="w-3.5 h-3.5 text-orange-400 flex-shrink-0" />;
+      return <ShieldAlert className="w-3.5 h-3.5 text-orange-600 dark:text-orange-400 flex-shrink-0" />;
     case "removed_pending_disposition":
-      return <AlertTriangle className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />;
+      return <AlertTriangle className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 flex-shrink-0" />;
     default:
       return <Package className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />;
   }
@@ -203,7 +203,7 @@ function ReceivingInspectionDialog({
             {/* Inspection result */}
             <div>
               <Label className="text-xs font-medium mb-2 block">
-                Inspection Result <span className="text-red-400">*</span>
+                Inspection Result <span className="text-red-600 dark:text-red-400">*</span>
               </Label>
               <div className="flex gap-3">
                 {(["approved", "rejected"] as const).map((r) => (
@@ -212,8 +212,8 @@ function ReceivingInspectionDialog({
                     className={`flex items-center gap-2 cursor-pointer px-3 py-2 rounded-md border text-sm transition-colors ${
                       inspectionResult === r
                         ? r === "approved"
-                          ? "bg-green-500/15 border-green-500/50 text-green-400"
-                          : "bg-red-500/15 border-red-500/50 text-red-400"
+                          ? "bg-green-500/15 border-green-500/50 text-green-600 dark:text-green-400"
+                          : "bg-red-500/15 border-red-500/50 text-red-600 dark:text-red-400"
                         : "border-border/50 text-muted-foreground hover:border-border"
                     }`}
                   >
@@ -251,7 +251,7 @@ function ReceivingInspectionDialog({
             {inspectionResult === "rejected" && (
               <div>
                 <Label htmlFor="insp-reject-reason" className="text-xs font-medium mb-1.5 block">
-                  Rejection Reason <span className="text-red-400">*</span>
+                  Rejection Reason <span className="text-red-600 dark:text-red-400">*</span>
                 </Label>
                 <Textarea
                   id="insp-reject-reason"
@@ -265,7 +265,7 @@ function ReceivingInspectionDialog({
             )}
 
             {error && (
-              <p className="text-xs text-red-400 rounded-md bg-red-500/10 border border-red-500/30 px-3 py-2">
+              <p className="text-xs text-red-600 dark:text-red-400 rounded-md bg-red-500/10 border border-red-500/30 px-3 py-2">
                 {error}
               </p>
             )}
@@ -371,7 +371,7 @@ function ReservePartDialog({
 
             <div>
               <Label className="text-xs font-medium mb-1.5 block">
-                Work Order <span className="text-red-400">*</span>
+                Work Order <span className="text-red-600 dark:text-red-400">*</span>
               </Label>
               <Select value={selectedWoId} onValueChange={setSelectedWoId}>
                 <SelectTrigger className="h-9 text-sm bg-muted/30 border-border/60">
@@ -393,7 +393,7 @@ function ReservePartDialog({
             </div>
 
             {error && (
-              <p className="text-xs text-red-400 rounded-md bg-red-500/10 border border-red-500/30 px-3 py-2">
+              <p className="text-xs text-red-600 dark:text-red-400 rounded-md bg-red-500/10 border border-red-500/30 px-3 py-2">
                 {error}
               </p>
             )}
@@ -545,8 +545,8 @@ export default function PartsPage() {
         <div
           className={`fixed bottom-6 right-6 z-50 rounded-md px-4 py-3 text-sm font-medium shadow-lg border ${
             toastMsg.kind === "success"
-              ? "bg-green-900/90 border-green-500/50 text-green-300"
-              : "bg-red-900/90 border-red-500/50 text-red-300"
+              ? "bg-green-50 dark:bg-green-900/90 border-green-500/50 text-green-700 dark:text-green-300"
+              : "bg-red-50 dark:bg-red-900/90 border-red-500/50 text-red-700 dark:text-red-300"
           }`}
         >
           {toastMsg.kind === "success" ? "✓ " : "✗ "}
@@ -567,7 +567,7 @@ export default function PartsPage() {
             <p className="text-sm text-muted-foreground mt-0.5">
               {parts.length} parts ·{" "}
               {counts.pending_inspection > 0 && (
-                <span className="text-amber-400">
+                <span className="text-amber-600 dark:text-amber-400">
                   {counts.pending_inspection} pending inspection ·{" "}
                 </span>
               )}
@@ -586,7 +586,7 @@ export default function PartsPage() {
               <Clock className="w-3.5 h-3.5 mr-1.5" />
               Receiving Queue
               {counts.pending_inspection > 0 && (
-                <Badge className="ml-1.5 bg-amber-500/20 text-amber-400 border-amber-500/30 text-[9px] h-4 px-1">
+                <Badge className="ml-1.5 bg-amber-500/20 text-amber-600 dark:text-amber-400 border-amber-500/30 text-[9px] h-4 px-1">
                   {counts.pending_inspection}
                 </Badge>
               )}
@@ -732,7 +732,7 @@ export default function PartsPage() {
                         <Button
                           size="sm"
                           variant="outline"
-                          className="h-7 text-xs gap-1.5 border-amber-500/40 text-amber-400 hover:bg-amber-500/10"
+                          className="h-7 text-xs gap-1.5 border-amber-500/40 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10"
                           onClick={() => setInspectPart(part)}
                         >
                           <ClipboardCheck className="w-3.5 h-3.5" />
@@ -821,17 +821,17 @@ export default function PartsPage() {
                               {LOCATION_LABEL[part.location] ?? part.location}
                             </Badge>
                             {isLifeLimited && (
-                              <Badge className="text-[10px] bg-purple-500/15 text-purple-400 border border-purple-500/30">
+                              <Badge className="text-[10px] bg-purple-500/15 text-purple-600 dark:text-purple-400 border border-purple-500/30">
                                 Life Limited
                               </Badge>
                             )}
                             {isQuarantine && (
-                              <Badge className="text-[10px] bg-orange-500/15 text-orange-400 border border-orange-500/30">
+                              <Badge className="text-[10px] bg-orange-500/15 text-orange-600 dark:text-orange-400 border border-orange-500/30">
                                 ⚠ Quarantine
                               </Badge>
                             )}
                             {isReserved && (
-                              <Badge className="text-[10px] bg-blue-500/15 text-blue-400 border border-blue-500/30 flex items-center gap-1">
+                              <Badge className="text-[10px] bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/30 flex items-center gap-1">
                                 <Lock className="w-2.5 h-2.5" />
                                 Reserved
                               </Badge>
@@ -851,7 +851,7 @@ export default function PartsPage() {
                               </span>
                             )}
                             {part.isOwnerSupplied && (
-                              <span className="text-[11px] text-sky-400">
+                              <span className="text-[11px] text-sky-600 dark:text-sky-400">
                                 Owner-Supplied
                               </span>
                             )}
@@ -865,7 +865,7 @@ export default function PartsPage() {
                               </span>
                             )}
                             {part.isLifeLimited && part.lifeLimitHours && (
-                              <span className="text-[11px] text-purple-400">
+                              <span className="text-[11px] text-purple-600 dark:text-purple-400">
                                 Life limit: {part.lifeLimitHours} hrs
                               </span>
                             )}

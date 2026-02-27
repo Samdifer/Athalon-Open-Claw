@@ -1,13 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "@/hooks/useRouter";
 import { Link } from "react-router-dom";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import type { Id } from "@/convex/_generated/dataModel";
-import { ArrowLeft, Plane, AlertCircle, Loader2, Users } from "lucide-react";
+import { ArrowLeft, Plane, AlertCircle, Loader2, Users, Calendar, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -27,7 +27,7 @@ import { WO_TYPES, PRIORITY_OPTIONS, type WoType } from "@/lib/mro-constants";
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function NewWorkOrderPage() {
-  const navigate = useNavigate();
+  const router = useRouter();
   const { orgId, isLoaded: orgLoaded } = useCurrentOrg();
 
   // Form state
@@ -41,6 +41,8 @@ export default function NewWorkOrderPage() {
     "routine",
   );
   const [notes, setNotes] = useState("");
+  const [promisedDeliveryDate, setPromisedDeliveryDate] = useState("");
+  const [estimatedLaborHours, setEstimatedLaborHours] = useState("");
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -79,9 +81,15 @@ export default function NewWorkOrderPage() {
         priority,
         notes: notes.trim() || undefined,
         customerId: customerId ? (customerId as Id<"customers">) : undefined,
+        promisedDeliveryDate: promisedDeliveryDate
+          ? new Date(promisedDeliveryDate).getTime()
+          : undefined,
+        estimatedLaborHoursOverride: estimatedLaborHours
+          ? parseFloat(estimatedLaborHours)
+          : undefined,
       });
 
-      navigate(`/work-orders/${woId}`);
+      router.push(`/work-orders/${woId}`);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Failed to create work order",
@@ -138,11 +146,11 @@ export default function NewWorkOrderPage() {
                   htmlFor="aircraft"
                   className="text-xs font-medium mb-1.5 block"
                 >
-                  Aircraft <span className="text-red-400">*</span>
+                  Aircraft <span className="text-red-600 dark:text-red-400">*</span>
                 </Label>
                 {aircraft && aircraft.length === 0 ? (
                   <div className="flex items-center gap-2 p-3 rounded-md bg-muted/30 border border-border/60">
-                    <AlertCircle className="w-4 h-4 text-amber-400" />
+                    <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400" />
                     <p className="text-xs text-muted-foreground">
                       No aircraft registered. Add aircraft in Fleet first.
                     </p>
@@ -189,7 +197,7 @@ export default function NewWorkOrderPage() {
                       {selectedAircraft.totalTimeAirframeHours.toFixed(1)}h TT
                     </span>
                     {selectedAircraft.openWorkOrderCount > 0 && (
-                      <Badge className="bg-amber-500/15 text-amber-400 border border-amber-500/30 text-[10px]">
+                      <Badge className="bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30 text-[10px]">
                         {selectedAircraft.openWorkOrderCount} open WO
                         {selectedAircraft.openWorkOrderCount > 1 ? "s" : ""}
                       </Badge>
@@ -223,7 +231,7 @@ export default function NewWorkOrderPage() {
                   <div className="h-9 bg-muted/30 border border-border/60 rounded-md animate-pulse" />
                 ) : customers.length === 0 ? (
                   <div className="flex items-center gap-2 p-3 rounded-md bg-muted/30 border border-border/60">
-                    <AlertCircle className="w-4 h-4 text-amber-400" />
+                    <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400" />
                     <p className="text-xs text-muted-foreground">
                       No customers yet. Add customers in Billing → Customers.
                     </p>
@@ -274,7 +282,7 @@ export default function NewWorkOrderPage() {
                   htmlFor="workOrderNumber"
                   className="text-xs font-medium mb-1.5 block"
                 >
-                  Work Order Number <span className="text-red-400">*</span>
+                  Work Order Number <span className="text-red-600 dark:text-red-400">*</span>
                 </Label>
                 <Input
                   id="workOrderNumber"
@@ -295,7 +303,7 @@ export default function NewWorkOrderPage() {
                   htmlFor="type"
                   className="text-xs font-medium mb-1.5 block"
                 >
-                  Work Order Type <span className="text-red-400">*</span>
+                  Work Order Type <span className="text-red-600 dark:text-red-400">*</span>
                 </Label>
                 <Select
                   value={workOrderType}
@@ -324,7 +332,7 @@ export default function NewWorkOrderPage() {
                   htmlFor="description"
                   className="text-xs font-medium mb-1.5 block"
                 >
-                  Description <span className="text-red-400">*</span>
+                  Description <span className="text-red-600 dark:text-red-400">*</span>
                 </Label>
                 <Textarea
                   id="description"
@@ -415,6 +423,61 @@ export default function NewWorkOrderPage() {
             </CardContent>
           </Card>
 
+          {/* Scheduling */}
+          <Card className="border-border/60">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5" />
+                Scheduling{" "}
+                <span className="text-muted-foreground font-normal normal-case">
+                  (optional)
+                </span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4 pt-0">
+              <div>
+                <Label
+                  htmlFor="promisedDeliveryDate"
+                  className="text-xs font-medium mb-1.5 block"
+                >
+                  Promised Delivery Date
+                </Label>
+                <Input
+                  id="promisedDeliveryDate"
+                  type="date"
+                  value={promisedDeliveryDate}
+                  onChange={(e) => setPromisedDeliveryDate(e.target.value)}
+                  className="h-9 text-sm bg-muted/30 border-border/60"
+                />
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  The customer-committed return date. Used for schedule risk tracking.
+                </p>
+              </div>
+              <div>
+                <Label
+                  htmlFor="estimatedLaborHours"
+                  className="text-xs font-medium mb-1.5 flex items-center gap-1.5"
+                >
+                  <Clock className="w-3 h-3" />
+                  Estimated Labor Hours
+                </Label>
+                <Input
+                  id="estimatedLaborHours"
+                  type="number"
+                  min="0"
+                  step="0.5"
+                  value={estimatedLaborHours}
+                  onChange={(e) => setEstimatedLaborHours(e.target.value)}
+                  placeholder="e.g. 16.0"
+                  className="h-9 text-sm bg-muted/30 border-border/60"
+                />
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  Top-level estimate. Leave blank to auto-sum from task card estimates as they are created.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Notes */}
           <Card className="border-border/60">
             <CardHeader className="pb-3">
@@ -439,8 +502,8 @@ export default function NewWorkOrderPage() {
           {/* Error */}
           {error && (
             <div className="flex items-start gap-2.5 p-3 rounded-md border border-red-500/30 bg-red-500/5">
-              <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
-              <p className="text-xs text-red-400">{error}</p>
+              <AlertCircle className="w-4 h-4 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+              <p className="text-xs text-red-600 dark:text-red-400">{error}</p>
             </div>
           )}
 

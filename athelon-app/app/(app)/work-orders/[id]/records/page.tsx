@@ -142,8 +142,8 @@ export default function MaintenanceRecordsPage() {
       {unsignedCount > 0 && (
         <Card className="border-amber-500/30 bg-amber-500/5">
           <CardContent className="p-3 flex items-center gap-2.5">
-            <AlertTriangle className="w-4 h-4 text-amber-400 flex-shrink-0" />
-            <p className="text-xs text-amber-400">
+            <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 flex-shrink-0" />
+            <p className="text-xs text-amber-600 dark:text-amber-400">
               {unsignedCount} record{unsignedCount !== 1 ? "s" : ""}{" "}
               {unsignedCount !== 1 ? "are" : "is"} not signed. All maintenance
               records must be signed before RTS can be authorized.
@@ -159,7 +159,7 @@ export default function MaintenanceRecordsPage() {
             <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
               {correctionTarget ? (
                 <>
-                  <RotateCcw className="w-3.5 h-3.5 text-amber-400" />
+                  <RotateCcw className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
                   Correction Record
                 </>
               ) : (

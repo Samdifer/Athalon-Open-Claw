@@ -1,0 +1,404 @@
+"use client";
+
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import {
+  ChevronRight,
+  Wrench,
+  AlertTriangle,
+  Filter,
+  ClipboardList,
+  SearchX,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { CheckCircle2, Circle } from "lucide-react";
+
+// ── Types ────────────────────────────────────────────────────────────────────
+
+type AircraftSystem =
+  | "airframe"
+  | "engine_left"
+  | "engine_right"
+  | "engine_center"
+  | "engine_single"
+  | "avionics"
+  | "landing_gear"
+  | "fuel_system"
+  | "hydraulics"
+  | "electrical"
+  | "other";
+
+type SquawkOrigin =
+  | "inspection_finding"
+  | "customer_reported"
+  | "rts_finding"
+  | "routine_check"
+  | "ad_compliance_check";
+
+export type TaskCardItem = {
+  kind: "task";
+  id: string;
+  number: string;
+  title: string;
+  status: string;
+  taskType: string;
+  stepCount: number;
+  completedStepCount: number;
+  aircraftSystem?: AircraftSystem;
+  isInspectionItem?: boolean;
+  isCustomerReported?: boolean;
+};
+
+export type DiscrepancyItem = {
+  kind: "finding";
+  id: string;
+  number: string;
+  description: string;
+  status: string;
+  severity?: string;
+  disposition?: string;
+  foundBy?: string;
+  foundDate?: string;
+  aircraftSystem?: AircraftSystem;
+  squawkOrigin?: SquawkOrigin;
+  isCustomerReported?: boolean;
+  foundDuringRts?: boolean;
+};
+
+export type WorkItem = TaskCardItem | DiscrepancyItem;
+
+export interface WorkItemsListProps {
+  items: WorkItem[];
+  workOrderId: string;
+}
+
+// ── Constants ────────────────────────────────────────────────────────────────
+
+type TypeFilter = "all" | "task" | "finding";
+
+const SYSTEM_LABELS: Record<AircraftSystem, string> = {
+  airframe: "Airframe",
+  engine_left: "Engine (L)",
+  engine_right: "Engine (R)",
+  engine_center: "Engine (C)",
+  engine_single: "Engine",
+  avionics: "Avionics",
+  landing_gear: "Landing Gear",
+  fuel_system: "Fuel System",
+  hydraulics: "Hydraulics",
+  electrical: "Electrical",
+  other: "Other",
+};
+
+const ORIGIN_LABELS: Record<SquawkOrigin, string> = {
+  inspection_finding: "Inspection Finding",
+  customer_reported: "Customer Reported",
+  rts_finding: "RTS Finding",
+  routine_check: "Routine Check",
+  ad_compliance_check: "AD Compliance Check",
+};
+
+const TASK_STATUS_STYLES: Record<string, string> = {
+  complete: "bg-green-500/15 text-green-400 border-green-500/30",
+  in_progress: "bg-sky-500/15 text-sky-400 border-sky-500/30",
+  not_started: "bg-slate-500/15 text-slate-400 border-slate-500/30",
+  incomplete_na_steps: "bg-amber-500/15 text-amber-400 border-amber-500/30",
+  voided: "bg-slate-500/15 text-slate-400 border-slate-500/30",
+};
+
+const TASK_STATUS_LABELS: Record<string, string> = {
+  complete: "Signed",
+  in_progress: "In Progress",
+  not_started: "Not Started",
+  incomplete_na_steps: "Needs IA Review",
+  voided: "Voided",
+};
+
+const FINDING_STATUS_STYLES: Record<string, string> = {
+  open: "bg-red-500/15 text-red-400 border-red-500/30",
+  deferred: "bg-amber-500/15 text-amber-400 border-amber-500/30",
+  corrected: "bg-green-500/15 text-green-400 border-green-500/30",
+};
+
+const SEVERITY_STYLES: Record<string, string> = {
+  airworthiness: "text-red-400 border-red-500/30",
+  safety: "text-amber-400 border-amber-500/30",
+  cosmetic: "text-slate-400 border-slate-500/30",
+};
+
+// ── Component ────────────────────────────────────────────────────────────────
+
+export function WorkItemsList({ items, workOrderId }: WorkItemsListProps) {
+  const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
+  const [systemFilter, setSystemFilter] = useState<string>("all");
+  const [originFilter, setOriginFilter] = useState<string>("all");
+
+  // Apply filters
+  const filtered = items.filter((item) => {
+    if (typeFilter !== "all" && item.kind !== typeFilter) return false;
+    if (systemFilter !== "all" && (item.aircraftSystem ?? "") !== systemFilter) return false;
+    if (originFilter !== "all") {
+      if (item.kind === "finding") {
+        if ((item.squawkOrigin ?? "") !== originFilter) return false;
+      } else {
+        return false;
+      }
+    }
+    return true;
+  });
+
+  const taskCount = filtered.filter((i) => i.kind === "task").length;
+  const findingCount = filtered.filter((i) => i.kind === "finding").length;
+
+  return (
+    <div className="space-y-3">
+      {/* Filter bar */}
+      <div className="flex items-center gap-2 flex-wrap">
+        <Filter className="w-3.5 h-3.5 text-muted-foreground" />
+
+        {/* Type segmented control */}
+        <div className="flex items-center rounded-md border border-border/60 overflow-hidden">
+          {(
+            [
+              { value: "all", label: "All" },
+              { value: "task", label: "Tasks" },
+              { value: "finding", label: "Findings" },
+            ] as const
+          ).map(({ value, label }) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => setTypeFilter(value)}
+              className={`px-3 py-1.5 text-xs font-medium transition-colors ${
+                typeFilter === value
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-transparent text-muted-foreground hover:bg-muted/40"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {/* System dropdown */}
+        <Select value={systemFilter} onValueChange={setSystemFilter}>
+          <SelectTrigger className="h-8 w-[150px] text-xs border-border/60">
+            <SelectValue placeholder="All Systems" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Systems</SelectItem>
+            {(Object.entries(SYSTEM_LABELS) as [AircraftSystem, string][]).map(
+              ([value, label]) => (
+                <SelectItem key={value} value={value}>
+                  {label}
+                </SelectItem>
+              ),
+            )}
+          </SelectContent>
+        </Select>
+
+        {/* Origin dropdown */}
+        <Select value={originFilter} onValueChange={setOriginFilter}>
+          <SelectTrigger className="h-8 w-[170px] text-xs border-border/60">
+            <SelectValue placeholder="All Sources" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Sources</SelectItem>
+            {(Object.entries(ORIGIN_LABELS) as [SquawkOrigin, string][]).map(
+              ([value, label]) => (
+                <SelectItem key={value} value={value}>
+                  {label}
+                </SelectItem>
+              ),
+            )}
+          </SelectContent>
+        </Select>
+
+        {/* Count summary */}
+        <span className="text-[11px] text-muted-foreground ml-auto">
+          {taskCount} task{taskCount !== 1 ? "s" : ""} · {findingCount} finding
+          {findingCount !== 1 ? "s" : ""}
+        </span>
+      </div>
+
+      {/* Items list */}
+      {filtered.length === 0 ? (
+        <div className="py-10 text-center">
+          <SearchX className="w-6 h-6 text-muted-foreground/40 mx-auto mb-2" />
+          <p className="text-sm text-muted-foreground">
+            No items match the current filters
+          </p>
+          <p className="text-xs text-muted-foreground/60 mt-1">
+            Try adjusting your filter criteria.
+          </p>
+        </div>
+      ) : (
+        <div className="divide-y divide-border/40">
+          {filtered.map((item) =>
+            item.kind === "task" ? (
+              <TaskRow key={item.id} item={item} workOrderId={workOrderId} />
+            ) : (
+              <FindingRow key={item.id} item={item} />
+            ),
+          )}
+        </div>
+      )}
+
+      {/* Action buttons */}
+      <div className="flex items-center gap-2 pt-1">
+        <Button
+          asChild
+          variant="outline"
+          size="sm"
+          className="flex-1 h-9 text-xs border-border/60 border-dashed gap-1.5"
+        >
+          <Link to={`/work-orders/${workOrderId}/tasks/new`}>
+            <Wrench className="w-3.5 h-3.5" />
+            Add Task Card
+          </Link>
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          className="flex-1 h-9 text-xs border-border/60 border-dashed gap-1.5"
+        >
+          <AlertTriangle className="w-3.5 h-3.5" />
+          Log Squawk
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// ── Task Card Row ────────────────────────────────────────────────────────────
+
+function TaskRow({
+  item,
+  workOrderId,
+}: {
+  item: TaskCardItem;
+  workOrderId: string;
+}) {
+  const statusStyle =
+    TASK_STATUS_STYLES[item.status] ?? "bg-muted text-muted-foreground";
+  const statusLabel = TASK_STATUS_LABELS[item.status] ?? item.status;
+
+  return (
+    <Link
+      to={`/work-orders/${workOrderId}/tasks/${item.id}`}
+      className="flex items-center gap-3 py-3 px-1 hover:bg-muted/20 transition-colors group"
+    >
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+          <span className="font-mono text-xs text-muted-foreground font-medium">
+            {item.number}
+          </span>
+          <Badge
+            variant="outline"
+            className="text-[10px] font-medium bg-sky-500/10 text-sky-400 border-sky-500/30"
+          >
+            TASK
+          </Badge>
+          {item.aircraftSystem && (
+            <Badge
+              variant="outline"
+              className="text-[10px] text-muted-foreground border-border/50"
+            >
+              {SYSTEM_LABELS[item.aircraftSystem] ?? item.aircraftSystem}
+            </Badge>
+          )}
+          <Badge
+            variant="outline"
+            className={`text-[10px] font-medium border ${statusStyle}`}
+          >
+            {item.status === "complete" && (
+              <CheckCircle2 className="w-2.5 h-2.5 mr-1" />
+            )}
+            {item.status === "in_progress" && (
+              <Circle className="w-2.5 h-2.5 mr-1" />
+            )}
+            {statusLabel}
+          </Badge>
+        </div>
+        <p className="text-sm font-medium text-foreground truncate">
+          {item.title}
+        </p>
+        <p className="text-[11px] text-muted-foreground mt-0.5">
+          {item.completedStepCount}/{item.stepCount} steps
+        </p>
+      </div>
+      <ChevronRight className="w-4 h-4 text-muted-foreground/40 group-hover:text-muted-foreground transition-colors flex-shrink-0" />
+    </Link>
+  );
+}
+
+// ── Finding / Discrepancy Row ────────────────────────────────────────────────
+
+function FindingRow({ item }: { item: DiscrepancyItem }) {
+  const statusStyle =
+    FINDING_STATUS_STYLES[item.status] ?? "bg-muted text-muted-foreground";
+  const statusLabel =
+    item.status.charAt(0).toUpperCase() + item.status.slice(1);
+  const severityStyle = item.severity
+    ? SEVERITY_STYLES[item.severity] ?? "text-muted-foreground border-border/40"
+    : null;
+
+  return (
+    <div className="flex items-start gap-3 py-3 px-1">
+      <AlertTriangle className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+          <span className="font-mono text-xs text-muted-foreground font-medium">
+            {item.number}
+          </span>
+          <Badge
+            variant="outline"
+            className="text-[10px] font-medium bg-amber-500/10 text-amber-400 border-amber-500/30"
+          >
+            SQUAWK
+          </Badge>
+          {item.aircraftSystem && (
+            <Badge
+              variant="outline"
+              className="text-[10px] text-muted-foreground border-border/50"
+            >
+              {SYSTEM_LABELS[item.aircraftSystem] ?? item.aircraftSystem}
+            </Badge>
+          )}
+          {item.severity && severityStyle && (
+            <Badge
+              variant="outline"
+              className={`text-[10px] border ${severityStyle}`}
+            >
+              {item.severity.charAt(0).toUpperCase() + item.severity.slice(1)}
+            </Badge>
+          )}
+          <Badge
+            variant="outline"
+            className={`text-[10px] font-medium border ${statusStyle}`}
+          >
+            {statusLabel}
+          </Badge>
+        </div>
+        <p className="text-sm text-foreground line-clamp-2">
+          {item.description}
+        </p>
+        {(item.foundBy || item.foundDate) && (
+          <p className="text-[11px] text-muted-foreground mt-0.5">
+            {item.foundBy && <>Found by {item.foundBy}</>}
+            {item.foundBy && item.foundDate && <> · </>}
+            {item.foundDate}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}

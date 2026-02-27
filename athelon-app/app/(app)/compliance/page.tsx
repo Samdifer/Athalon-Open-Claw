@@ -86,7 +86,7 @@ export default function CompliancePage() {
       <Card className="border-border/40 bg-amber-500/5 border-l-2 border-l-amber-500">
         <CardContent className="p-4">
           <div className="flex items-start gap-3">
-            <AlertTriangle className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
+            <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
             <div>
               <p className="text-xs font-medium text-foreground">
                 14 CFR 39 — Airworthiness Directives
@@ -112,7 +112,7 @@ export default function CompliancePage() {
             </h2>
             <Badge
               variant="secondary"
-              className="text-[10px] bg-sky-500/10 text-sky-400 border border-sky-500/20"
+              className="text-[10px] bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20"
             >
               {nonCompliant.length}
             </Badge>

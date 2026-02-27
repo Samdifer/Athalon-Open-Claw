@@ -62,13 +62,13 @@ function groupByWorkOrder(steps: IAStep[]): Record<string, IAStep[]> {
 function StatusBadge({ status }: { status: string }) {
   if (status === "complete")
     return (
-      <Badge className="bg-green-500/10 text-green-400 border-green-500/30 text-[10px]">
+      <Badge className="bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/30 text-[10px]">
         Complete
       </Badge>
     );
   if (status === "in_progress")
     return (
-      <Badge className="bg-blue-500/10 text-blue-400 border-blue-500/30 text-[10px]">
+      <Badge className="bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/30 text-[10px]">
         In Progress
       </Badge>
     );
@@ -156,9 +156,9 @@ function CloseReadinessPanel({
               }`}
             >
               {readiness.canClose ? (
-                <CheckCircle2 className="w-4 h-4 text-green-400 flex-shrink-0" />
+                <CheckCircle2 className="w-4 h-4 text-green-600 dark:text-green-400 flex-shrink-0" />
               ) : (
-                <XCircle className="w-4 h-4 text-red-400 flex-shrink-0" />
+                <XCircle className="w-4 h-4 text-red-600 dark:text-red-400 flex-shrink-0" />
               )}
               <span className="text-sm font-medium">
                 {readiness.canClose
@@ -177,7 +177,7 @@ function CloseReadinessPanel({
             {/* Blockers */}
             {(readiness.blockers?.length ?? 0) > 0 && (
               <div className="space-y-1.5">
-                <p className="text-xs font-semibold text-red-400 uppercase tracking-wide">
+                <p className="text-xs font-semibold text-red-600 dark:text-red-400 uppercase tracking-wide">
                   Blockers
                 </p>
                 {readiness.blockers!.map((b: string, i: number) => (
@@ -185,7 +185,7 @@ function CloseReadinessPanel({
                     key={i}
                     className="flex items-start gap-2 text-[11px] text-muted-foreground"
                   >
-                    <XCircle className="w-3 h-3 text-red-400 flex-shrink-0 mt-0.5" />
+                    <XCircle className="w-3 h-3 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
                     {b}
                   </div>
                 ))}
@@ -195,7 +195,7 @@ function CloseReadinessPanel({
             {/* Advisories */}
             {(readiness.advisories?.length ?? 0) > 0 && (
               <div className="space-y-1.5">
-                <p className="text-xs font-semibold text-amber-400 uppercase tracking-wide">
+                <p className="text-xs font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wide">
                   Advisories
                 </p>
                 {readiness.advisories!.map((a: string, i: number) => (
@@ -203,7 +203,7 @@ function CloseReadinessPanel({
                     key={i}
                     className="flex items-start gap-2 text-[11px] text-muted-foreground"
                   >
-                    <AlertTriangle className="w-3 h-3 text-amber-400 flex-shrink-0 mt-0.5" />
+                    <AlertTriangle className="w-3 h-3 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
                     {a}
                   </div>
                 ))}
@@ -263,7 +263,7 @@ export default function QcmReviewPage() {
               variant="secondary"
               className={`text-[10px] ${
                 (iaSteps?.length ?? 0) > 0
-                  ? "bg-amber-500/10 text-amber-400 border border-amber-500/20"
+                  ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20"
                   : "bg-muted"
               }`}
             >

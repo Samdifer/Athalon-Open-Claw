@@ -48,7 +48,7 @@ export function StatCards({
                 </p>
               </div>
               <div className="p-2 rounded-lg bg-sky-500/10">
-                <ClipboardList className="w-4 h-4 text-sky-400" />
+                <ClipboardList className="w-4 h-4 text-sky-600 dark:text-sky-400" />
               </div>
             </div>
           </CardContent>
@@ -76,7 +76,7 @@ export function StatCards({
                 </p>
               </div>
               <div className="p-2 rounded-lg bg-red-500/10">
-                <AlertTriangle className="w-4 h-4 text-red-400" />
+                <AlertTriangle className="w-4 h-4 text-red-600 dark:text-red-400" />
               </div>
             </div>
           </CardContent>
@@ -104,7 +104,7 @@ export function StatCards({
                 </p>
               </div>
               <div className="p-2 rounded-lg bg-amber-500/10">
-                <Package className="w-4 h-4 text-amber-400" />
+                <Package className="w-4 h-4 text-amber-600 dark:text-amber-400" />
               </div>
             </div>
           </CardContent>
@@ -132,7 +132,7 @@ export function StatCards({
                 </p>
               </div>
               <div className="p-2 rounded-lg bg-orange-500/10">
-                <ShieldAlert className="w-4 h-4 text-orange-400" />
+                <ShieldAlert className="w-4 h-4 text-orange-600 dark:text-orange-400" />
               </div>
             </div>
           </CardContent>

@@ -23,10 +23,10 @@ type QuoteStatus = "DRAFT" | "SENT" | "APPROVED" | "CONVERTED" | "DECLINED" | "a
 
 const STATUS_STYLES: Record<string, string> = {
   DRAFT: "bg-muted text-muted-foreground border-muted-foreground/30",
-  SENT: "bg-blue-500/15 text-blue-400 border-blue-500/30",
-  APPROVED: "bg-green-500/15 text-green-400 border-green-500/30",
-  CONVERTED: "bg-purple-500/15 text-purple-400 border-purple-500/30",
-  DECLINED: "bg-red-500/15 text-red-400 border-red-500/30",
+  SENT: "bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/30",
+  APPROVED: "bg-green-500/15 text-green-600 dark:text-green-400 border-green-500/30",
+  CONVERTED: "bg-purple-500/15 text-purple-600 dark:text-purple-400 border-purple-500/30",
+  DECLINED: "bg-red-500/15 text-red-600 dark:text-red-400 border-red-500/30",
 };
 
 function QuoteSkeleton() {

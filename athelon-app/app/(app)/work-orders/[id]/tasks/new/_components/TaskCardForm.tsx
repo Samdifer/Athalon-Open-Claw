@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Wrench } from "lucide-react";
 import {
   Select,
@@ -39,6 +40,33 @@ export const TASK_TYPE_OPTIONS: { value: TaskType; label: string }[] = [
   { value: "modification", label: "Modification" },
 ];
 
+export type AircraftSystem =
+  | "airframe"
+  | "engine_left"
+  | "engine_right"
+  | "engine_center"
+  | "engine_single"
+  | "avionics"
+  | "landing_gear"
+  | "fuel_system"
+  | "hydraulics"
+  | "electrical"
+  | "other";
+
+export const AIRCRAFT_SYSTEM_OPTIONS: { value: AircraftSystem; label: string }[] = [
+  { value: "airframe", label: "Airframe" },
+  { value: "avionics", label: "Avionics" },
+  { value: "engine_left", label: "Engine (Left)" },
+  { value: "engine_right", label: "Engine (Right)" },
+  { value: "engine_center", label: "Engine (Center)" },
+  { value: "engine_single", label: "Engine (Single)" },
+  { value: "landing_gear", label: "Landing Gear" },
+  { value: "fuel_system", label: "Fuel System" },
+  { value: "hydraulics", label: "Hydraulics" },
+  { value: "electrical", label: "Electrical" },
+  { value: "other", label: "Other" },
+];
+
 interface Technician {
   _id: string;
   legalName: string;
@@ -52,6 +80,10 @@ interface TaskCardFormProps {
   onTitleChange: (value: string) => void;
   taskType: TaskType;
   onTaskTypeChange: (value: TaskType) => void;
+  aircraftSystem: string;
+  onAircraftSystemChange: (value: string) => void;
+  isInspectionItem: boolean;
+  onIsInspectionItemChange: (value: boolean) => void;
   approvedDataSource: string;
   onApprovedDataSourceChange: (value: string) => void;
   approvedDataRevision: string;
@@ -72,6 +104,10 @@ export function TaskCardForm({
   onTitleChange,
   taskType,
   onTaskTypeChange,
+  aircraftSystem,
+  onAircraftSystemChange,
+  isInspectionItem,
+  onIsInspectionItemChange,
   approvedDataSource,
   onApprovedDataSourceChange,
   approvedDataRevision,
@@ -132,6 +168,50 @@ export function TaskCardForm({
                 ))}
               </SelectContent>
             </Select>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <Label
+              htmlFor="aircraftSystem"
+              className="text-xs text-muted-foreground mb-1 block"
+            >
+              Aircraft system
+            </Label>
+            <Select value={aircraftSystem} onValueChange={onAircraftSystemChange}>
+              <SelectTrigger
+                id="aircraftSystem"
+                className="h-9 text-sm border-border/60"
+              >
+                <SelectValue placeholder="None selected" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">None</SelectItem>
+                {AIRCRAFT_SYSTEM_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex items-end pb-2">
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="isInspectionItem"
+                checked={isInspectionItem}
+                onCheckedChange={(checked) =>
+                  onIsInspectionItemChange(checked === true)
+                }
+              />
+              <Label
+                htmlFor="isInspectionItem"
+                className="text-xs text-muted-foreground cursor-pointer"
+              >
+                This is an inspection item
+              </Label>
+            </div>
           </div>
         </div>
 

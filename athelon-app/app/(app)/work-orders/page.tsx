@@ -1,5 +1,8 @@
-import { useState } from "react";
+"use client";
+
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { useQuery } from "convex/react";
 import {
   Plus,
   Search,
@@ -8,10 +11,21 @@ import {
   Package,
   CheckCircle2,
   Circle,
-  Timer,
   ChevronRight,
   Filter,
+  Calendar,
+  TrendingUp,
 } from "lucide-react";
+import { api } from "@/convex/_generated/api";
+import { formatDate } from "@/lib/format";
+import {
+  WO_STATUS_LABEL,
+  WO_STATUS_STYLES,
+  WO_TYPE_LABEL,
+  type WoStatus,
+  type WoType,
+} from "@/lib/mro-constants";
+import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -19,116 +33,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
-
-// ─── Demo data ─────────────────────────────────────────────────────────────────
-
-const demoWorkOrders = [
-  {
-    id: "wo-1",
-    number: "WO-2026-0041",
-    aircraft: "N192AK",
-    aircraftType: "Cessna 172S",
-    customer: "High Country Charter LLC",
-    description: "100-hour Inspection",
-    type: "100_hour",
-    typeLabel: "100-Hour",
-    status: "in_progress",
-    statusLabel: "In Progress",
-    priority: "normal",
-    tasksComplete: 2,
-    tasksTotal: 4,
-    openSquawks: 1,
-    partsOnOrder: 1,
-    daysOpen: 3,
-    openedDate: "Feb 20, 2026",
-    assignedTo: "Ray Kowalski, Sandra Mercado",
-    href: "/work-orders/WO-2026-0041",
-  },
-  {
-    id: "wo-2",
-    number: "WO-2026-0040",
-    aircraft: "N416AB",
-    aircraftType: "Cessna 208B",
-    customer: "High Country Charter LLC",
-    description: "Oil Change & Engine Trend Monitoring",
-    type: "routine",
-    typeLabel: "Routine",
-    status: "pending_signoff",
-    statusLabel: "Pending Sign-Off",
-    priority: "normal",
-    tasksComplete: 3,
-    tasksTotal: 3,
-    openSquawks: 0,
-    partsOnOrder: 0,
-    daysOpen: 5,
-    openedDate: "Feb 18, 2026",
-    assignedTo: "Ray Kowalski",
-    href: "/work-orders/WO-2026-0040",
-  },
-  {
-    id: "wo-3",
-    number: "WO-2026-0039",
-    aircraft: "N76LS",
-    aircraftType: "Bell 206B-III",
-    customer: "Summit Helicopters Inc.",
-    description: "AOG: Main Rotor Blade Crack",
-    type: "aog",
-    typeLabel: "AOG",
-    status: "on_hold",
-    statusLabel: "On Hold",
-    priority: "aog",
-    tasksComplete: 0,
-    tasksTotal: 2,
-    openSquawks: 0,
-    partsOnOrder: 1,
-    daysOpen: 7,
-    openedDate: "Feb 16, 2026",
-    assignedTo: "Ray Kowalski",
-    href: "/work-orders/WO-2026-0039",
-  },
-  {
-    id: "wo-4",
-    number: "WO-2026-0042",
-    aircraft: "N416AB",
-    aircraftType: "Cessna 208B",
-    customer: "High Country Charter LLC",
-    description: "Fuel Selector Valve ALS Replacement",
-    type: "routine",
-    typeLabel: "Routine",
-    status: "draft",
-    statusLabel: "Draft",
-    priority: "normal",
-    tasksComplete: 0,
-    tasksTotal: 0,
-    openSquawks: 0,
-    partsOnOrder: 0,
-    daysOpen: 0,
-    openedDate: "—",
-    assignedTo: "Unassigned",
-    href: "/work-orders/WO-2026-0042",
-  },
-  {
-    id: "wo-5",
-    number: "WO-2026-0037",
-    aircraft: "N76LS",
-    aircraftType: "Bell 206B-III",
-    customer: "Summit Helicopters Inc.",
-    description: "Annual Inspection — ALS Review",
-    type: "annual",
-    typeLabel: "Annual",
-    status: "closed",
-    statusLabel: "Closed",
-    priority: "normal",
-    tasksComplete: 8,
-    tasksTotal: 8,
-    openSquawks: 0,
-    partsOnOrder: 0,
-    daysOpen: 13,
-    openedDate: "Feb 2, 2026",
-    assignedTo: "Ray Kowalski, Mia Chen",
-    href: "/work-orders/WO-2026-0037",
-  },
-];
 
 type FilterTab =
   | "active"
@@ -138,74 +42,150 @@ type FilterTab =
   | "complete"
   | "all";
 
-function filterWorkOrders(wos: typeof demoWorkOrders, tab: FilterTab) {
+type RiskLevel = "overdue" | "at_risk" | "on_track" | "no_date";
+
+type WorkOrderRow = {
+  id: string;
+  href: string;
+  number: string;
+  status: string;
+  statusLabel: string;
+  typeLabel: string;
+  priority: string;
+  description: string;
+  customer: string;
+  aircraft: string;
+  aircraftType: string;
+  promisedDeliveryDate: number | null;
+  tasksComplete: number;
+  tasksTotal: number;
+  openSquawks: number;
+  partsOnOrder: number;
+  openedAt: number;
+};
+
+function getScheduleRisk(promisedDeliveryMs: number | null | undefined): RiskLevel {
+  if (!promisedDeliveryMs) return "no_date";
+  const now = Date.now();
+  if (promisedDeliveryMs < now) return "overdue";
+  const daysLeft = (promisedDeliveryMs - now) / (1000 * 60 * 60 * 24);
+  return daysLeft <= 2 ? "at_risk" : "on_track";
+}
+
+function RiskIcon({ risk }: { risk: RiskLevel }) {
+  if (risk === "no_date") return null;
+  if (risk === "overdue") return <TrendingUp className="w-3 h-3 text-red-400 flex-shrink-0" />;
+  if (risk === "at_risk") return <TrendingUp className="w-3 h-3 text-amber-400 flex-shrink-0" />;
+  return <TrendingUp className="w-3 h-3 text-green-400 flex-shrink-0" />;
+}
+
+function filterWorkOrders(rows: WorkOrderRow[], tab: FilterTab) {
   switch (tab) {
     case "active":
-      return wos.filter((w) =>
-        ["open", "in_progress", "open_discrepancies"].includes(w.status)
-      );
+      return rows.filter((w) => ["open", "in_progress", "open_discrepancies"].includes(w.status));
     case "on_hold":
-      return wos.filter((w) => w.status === "on_hold");
+      return rows.filter((w) => w.status === "on_hold");
     case "pending":
-      return wos.filter((w) =>
-        ["pending_inspection", "pending_signoff"].includes(w.status)
-      );
+      return rows.filter((w) => ["pending_inspection", "pending_signoff"].includes(w.status));
     case "awaiting_parts":
-      return wos.filter((w) => w.partsOnOrder > 0);
+      return rows.filter((w) => w.partsOnOrder > 0);
     case "complete":
-      return wos.filter((w) => ["closed", "cancelled"].includes(w.status));
+      return rows.filter((w) => ["closed", "cancelled", "voided"].includes(w.status));
     default:
-      return wos;
+      return rows;
   }
 }
 
-function getStatusStyles(status: string) {
-  const map: Record<string, string> = {
-    in_progress: "bg-sky-500/15 text-sky-400 border-sky-500/30",
-    pending_signoff: "bg-amber-500/15 text-amber-400 border-amber-500/30",
-    pending_inspection: "bg-amber-500/15 text-amber-400 border-amber-500/30",
-    on_hold: "bg-orange-500/15 text-orange-400 border-orange-500/30",
-    draft: "bg-slate-500/15 text-slate-400 border-slate-500/30",
-    closed: "bg-green-500/15 text-green-400 border-green-500/30",
-    cancelled: "bg-slate-500/15 text-slate-400 border-slate-500/30",
-  };
-  return map[status] ?? "bg-muted text-muted-foreground";
-}
-
 export default function WorkOrdersPage() {
+  const { orgId, isLoaded } = useCurrentOrg();
+  const raw = useQuery(
+    api.workOrders.getWorkOrdersWithScheduleRisk,
+    orgId ? { organizationId: orgId } : "skip",
+  );
+
   const [activeTab, setActiveTab] = useState<FilterTab>("active");
   const [search, setSearch] = useState("");
 
-  const filtered = filterWorkOrders(demoWorkOrders, activeTab).filter(
-    (wo) =>
-      search === "" ||
-      wo.number.toLowerCase().includes(search.toLowerCase()) ||
-      wo.aircraft.toLowerCase().includes(search.toLowerCase()) ||
-      wo.description.toLowerCase().includes(search.toLowerCase())
+  const workOrders = useMemo<WorkOrderRow[]>(() => {
+    const rows = raw ?? [];
+    return rows.map((wo) => ({
+      id: String(wo._id),
+      href: `/work-orders/${wo._id}`,
+      number: wo.workOrderNumber,
+      status: wo.status,
+      statusLabel: WO_STATUS_LABEL[wo.status as WoStatus] ?? wo.status,
+      typeLabel: WO_TYPE_LABEL[wo.workOrderType as WoType] ?? wo.workOrderType,
+      priority: wo.priority,
+      description: wo.description,
+      customer: wo.customerName ?? "No customer",
+      aircraft: wo.aircraft?.currentRegistration ?? "—",
+      aircraftType: wo.aircraft
+        ? `${wo.aircraft.make} ${wo.aircraft.model}`.trim()
+        : "Aircraft unavailable",
+      promisedDeliveryDate: wo.promisedDeliveryDate ?? null,
+      tasksComplete: wo.completedTaskCardCount ?? 0,
+      tasksTotal: wo.taskCardCount ?? 0,
+      openSquawks: wo.openDiscrepancyCount ?? 0,
+      partsOnOrder: wo.pendingPartCount ?? 0,
+      openedAt: wo.openedAt,
+    }));
+  }, [raw]);
+
+  const filtered = useMemo(
+    () =>
+      filterWorkOrders(workOrders, activeTab).filter((wo) => {
+        if (!search.trim()) return true;
+        const q = search.toLowerCase();
+        return (
+          wo.number.toLowerCase().includes(q) ||
+          wo.aircraft.toLowerCase().includes(q) ||
+          wo.description.toLowerCase().includes(q)
+        );
+      }),
+    [activeTab, search, workOrders],
   );
 
-  // Count per tab for badges
-  const counts = {
-    active: filterWorkOrders(demoWorkOrders, "active").length,
-    on_hold: filterWorkOrders(demoWorkOrders, "on_hold").length,
-    pending: filterWorkOrders(demoWorkOrders, "pending").length,
-    awaiting_parts: filterWorkOrders(demoWorkOrders, "awaiting_parts").length,
-    complete: filterWorkOrders(demoWorkOrders, "complete").length,
-    all: demoWorkOrders.length,
-  };
+  const counts = useMemo(
+    () => ({
+      active: filterWorkOrders(workOrders, "active").length,
+      on_hold: filterWorkOrders(workOrders, "on_hold").length,
+      pending: filterWorkOrders(workOrders, "pending").length,
+      awaiting_parts: filterWorkOrders(workOrders, "awaiting_parts").length,
+      complete: filterWorkOrders(workOrders, "complete").length,
+      all: workOrders.length,
+    }),
+    [workOrders],
+  );
+
+  if (!isLoaded || raw === undefined) {
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-12 w-full" />
+        {Array.from({ length: 6 }).map((_, i) => (
+          <Skeleton key={i} className="h-24 w-full" />
+        ))}
+      </div>
+    );
+  }
+
+  if (!orgId) {
+    return (
+      <Card className="border-border/60">
+        <CardContent className="py-10 text-center text-sm text-muted-foreground">
+          Unable to resolve organization context.
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <div className="space-y-5">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-foreground">
-            Work Orders
-          </h1>
+          <h1 className="text-xl font-semibold text-foreground">Work Orders</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
-            {demoWorkOrders.length} total ·{" "}
-            {demoWorkOrders.filter((w) => w.status === "in_progress").length}{" "}
-            in progress
+            {workOrders.length} total ·{" "}
+            {workOrders.filter((w) => w.status === "in_progress").length} in progress
           </p>
         </div>
         <Button asChild size="sm">
@@ -216,7 +196,6 @@ export default function WorkOrdersPage() {
         </Button>
       </div>
 
-      {/* Filter Tabs + Search */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
         <Tabs
           value={activeTab}
@@ -274,14 +253,11 @@ export default function WorkOrdersPage() {
         </div>
       </div>
 
-      {/* Work Orders List */}
       {filtered.length === 0 ? (
         <Card className="border-border/60">
           <CardContent className="py-16 text-center">
             <ClipboardList className="w-8 h-8 text-muted-foreground/40 mx-auto mb-3" />
-            <p className="text-sm font-medium text-muted-foreground">
-              No work orders found
-            </p>
+            <p className="text-sm font-medium text-muted-foreground">No work orders found</p>
             <p className="text-xs text-muted-foreground/60 mt-1">
               {activeTab === "active"
                 ? "No active work orders. Create one to get started."
@@ -309,8 +285,7 @@ export default function WorkOrdersPage() {
                 <CardContent className="p-4">
                   <div className="flex items-start gap-4">
                     <div className="flex-1 min-w-0">
-                      {/* Row 1: WO# + Status + Badges */}
-                      <div className="flex items-center gap-2 mb-1">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
                         <span className="font-mono text-xs text-muted-foreground font-medium">
                           {wo.number}
                         </span>
@@ -321,7 +296,9 @@ export default function WorkOrdersPage() {
                         ) : (
                           <Badge
                             variant="outline"
-                            className={`text-[10px] font-medium border ${getStatusStyles(wo.status)}`}
+                            className={`text-[10px] font-medium border ${
+                              WO_STATUS_STYLES[wo.status as WoStatus] ?? "bg-muted text-muted-foreground"
+                            }`}
                           >
                             {wo.statusLabel}
                           </Badge>
@@ -341,51 +318,48 @@ export default function WorkOrdersPage() {
                         {wo.partsOnOrder > 0 && (
                           <Badge className="bg-amber-500/15 text-amber-400 border border-amber-500/30 text-[9px] gap-0.5">
                             <Package className="w-2.5 h-2.5" />
-                            {wo.partsOnOrder} on order
+                            {wo.partsOnOrder} awaiting
                           </Badge>
                         )}
                       </div>
 
-                      {/* Row 2: Aircraft + Description */}
                       <div className="flex items-center gap-2">
                         <span className="font-mono font-bold text-base text-foreground">
                           {wo.aircraft}
                         </span>
-                        <span className="text-sm text-muted-foreground">
-                          {wo.aircraftType}
-                        </span>
+                        <span className="text-sm text-muted-foreground">{wo.aircraftType}</span>
                         <span className="text-muted-foreground/50">·</span>
-                        <span className="text-sm text-foreground truncate">
-                          {wo.description}
-                        </span>
+                        <span className="text-sm text-foreground truncate">{wo.description}</span>
                       </div>
 
-                      {/* Row 3: Meta */}
-                      <div className="flex items-center gap-3 mt-1.5">
+                      <div className="flex items-center gap-3 mt-1.5 flex-wrap">
+                        <span className="text-[11px] text-muted-foreground">{wo.customer}</span>
+                        <span className="text-muted-foreground/40 text-[11px]">·</span>
                         <span className="text-[11px] text-muted-foreground">
-                          {wo.customer}
+                          Opened {formatDate(wo.openedAt)}
                         </span>
-                        <span className="text-muted-foreground/40 text-[11px]">
-                          ·
-                        </span>
-                        <span className="text-[11px] text-muted-foreground">
-                          {wo.assignedTo}
-                        </span>
-                        {wo.openedDate !== "—" && (
-                          <>
-                            <span className="text-muted-foreground/40 text-[11px]">
-                              ·
-                            </span>
-                            <span className="text-[11px] text-muted-foreground flex items-center gap-1">
-                              <Timer className="w-3 h-3" />
-                              Opened {wo.openedDate}
-                            </span>
-                          </>
-                        )}
+                        {wo.promisedDeliveryDate && (() => {
+                          const risk = getScheduleRisk(wo.promisedDeliveryDate);
+                          const dueDateColor =
+                            risk === "overdue"
+                              ? "text-red-400"
+                              : risk === "at_risk"
+                                ? "text-amber-400"
+                                : "text-muted-foreground";
+                          return (
+                            <>
+                              <span className="text-muted-foreground/40 text-[11px]">·</span>
+                              <span className={`text-[11px] flex items-center gap-1 ${dueDateColor}`}>
+                                <RiskIcon risk={risk} />
+                                <Calendar className="w-3 h-3" />
+                                Due {formatDate(wo.promisedDeliveryDate)}
+                              </span>
+                            </>
+                          );
+                        })()}
                       </div>
                     </div>
 
-                    {/* Right: Progress + Arrow */}
                     <div className="flex items-center gap-3 flex-shrink-0">
                       {wo.tasksTotal > 0 && (
                         <div className="text-right">

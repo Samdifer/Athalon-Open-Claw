@@ -143,8 +143,58 @@ export const openDiscrepancy = mutation({
     componentSerialNumber: v.optional(v.string()),
     componentPosition: v.optional(v.string()),
 
+    // Aircraft system classification (Phase 1 — Squawks Unification)
+    aircraftSystem: v.optional(v.union(
+      v.literal("airframe"),
+      v.literal("engine_left"),
+      v.literal("engine_right"),
+      v.literal("engine_center"),
+      v.literal("engine_single"),
+      v.literal("avionics"),
+      v.literal("landing_gear"),
+      v.literal("fuel_system"),
+      v.literal("hydraulics"),
+      v.literal("electrical"),
+      v.literal("other"),
+    )),
+    squawkOrigin: v.optional(v.union(
+      v.literal("inspection_finding"),
+      v.literal("customer_reported"),
+      v.literal("rts_finding"),
+      v.literal("routine_check"),
+      v.literal("ad_compliance_check"),
+    )),
+    isInspectionItem: v.optional(v.boolean()),
+    isCustomerReported: v.optional(v.boolean()),
+    foundDuringRts: v.optional(v.boolean()),
+
     notes: v.optional(v.string()),
     callerIpAddress: v.optional(v.string()),
+
+    // ── OP-1003 Classification Fields ──────────────────────────────────────────
+    discrepancyType: v.optional(v.union(
+      v.literal("mandatory"),
+      v.literal("recommended"),
+      v.literal("customer_information"),
+      v.literal("ops_check"),
+    )),
+    systemType: v.optional(v.union(
+      v.literal("airframe"),
+      v.literal("engine"),
+      v.literal("propeller"),
+      v.literal("appliance"),
+    )),
+    discoveredWhen: v.optional(v.union(
+      v.literal("customer_report"),
+      v.literal("planning"),
+      v.literal("inspection"),
+      v.literal("post_quote"),
+    )),
+    riiRequired: v.optional(v.boolean()),
+    stcRelated: v.optional(v.boolean()),
+    stcNumber: v.optional(v.string()),
+    mhEstimate: v.optional(v.number()),
+    writtenByTechnicianId: v.optional(v.id("technicians")),
   },
 
   handler: async (ctx, args): Promise<Id<"discrepancies">> => {
@@ -235,6 +285,21 @@ export const openDiscrepancy = mutation({
       foundByTechnicianId: args.foundByTechnicianId,
       foundAt: now,
       foundAtAircraftHours: args.foundAtAircraftHours,
+      // Phase 1 — Squawks Unification fields (all optional)
+      ...(args.aircraftSystem !== undefined && { aircraftSystem: args.aircraftSystem }),
+      ...(args.squawkOrigin !== undefined && { squawkOrigin: args.squawkOrigin }),
+      ...(args.isInspectionItem !== undefined && { isInspectionItem: args.isInspectionItem }),
+      ...(args.isCustomerReported !== undefined && { isCustomerReported: args.isCustomerReported }),
+      ...(args.foundDuringRts !== undefined && { foundDuringRts: args.foundDuringRts }),
+      // OP-1003 classification fields
+      ...(args.discrepancyType !== undefined && { discrepancyType: args.discrepancyType }),
+      ...(args.systemType !== undefined && { systemType: args.systemType }),
+      ...(args.discoveredWhen !== undefined && { discoveredWhen: args.discoveredWhen }),
+      ...(args.riiRequired !== undefined && { riiRequired: args.riiRequired }),
+      ...(args.stcRelated !== undefined && { stcRelated: args.stcRelated }),
+      ...(args.stcNumber !== undefined && { stcNumber: args.stcNumber }),
+      ...(args.mhEstimate !== undefined && { mhEstimate: args.mhEstimate }),
+      ...(args.writtenByTechnicianId !== undefined && { writtenByTechnicianId: args.writtenByTechnicianId }),
       createdAt: now,
       updatedAt: now,
     });
@@ -854,5 +919,33 @@ export const listDiscrepancies = query({
       .collect();
 
     return discrepancies;
+  },
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MUTATION: updateDiscrepancyApproval
+//
+// Updates customer approval status and labor tracking fields on a discrepancy.
+// Used by the OP-1003 customer approval workflow — station management or
+// customer approves/denies the recommended work.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const updateDiscrepancyApproval = mutation({
+  args: {
+    discrepancyId: v.id("discrepancies"),
+    customerApprovalStatus: v.union(
+      v.literal("pending"),
+      v.literal("approved_by_customer"),
+      v.literal("approved_by_station"),
+      v.literal("denied"),
+    ),
+    addedToQuote: v.optional(v.boolean()),
+    addedToQuoteInitials: v.optional(v.string()),
+    mhActual: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    await requireAuth(ctx);
+    const { discrepancyId, ...updates } = args;
+    await ctx.db.patch(discrepancyId, updates);
   },
 });

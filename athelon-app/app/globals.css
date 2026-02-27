@@ -84,14 +84,14 @@
   --chart-3: oklch(0.762 0.184 76);
   --chart-4: oklch(0.627 0.265 303.9);
   --chart-5: oklch(0.63 0.24 27);
-  /* Sidebar */
-  --sidebar: oklch(0.97 0 0);
+  /* Sidebar: subtle blue-gray tint to differentiate from main content */
+  --sidebar: oklch(0.96 0.005 240);
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: oklch(0.68 0.195 214);
   --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.93 0 0);
+  --sidebar-accent: oklch(0.925 0.006 240);
   --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-border: oklch(0.905 0.006 240);
   --sidebar-ring: oklch(0.68 0.195 214);
 }
 
@@ -155,24 +155,24 @@
 /* Aviation utility classes */
 @layer utilities {
   .status-active {
-    @apply bg-sky-500/15 text-sky-400 border border-sky-500/30;
+    @apply bg-sky-500/10 text-sky-600 border border-sky-500/25 dark:bg-sky-500/15 dark:text-sky-400 dark:border-sky-500/30;
   }
   .status-signed {
-    @apply bg-green-500/15 text-green-400 border border-green-500/30;
+    @apply bg-green-500/10 text-green-600 border border-green-500/25 dark:bg-green-500/15 dark:text-green-400 dark:border-green-500/30;
   }
   .status-warning {
-    @apply bg-amber-500/15 text-amber-400 border border-amber-500/30;
+    @apply bg-amber-500/10 text-amber-600 border border-amber-500/25 dark:bg-amber-500/15 dark:text-amber-400 dark:border-amber-500/30;
   }
   .status-critical {
-    @apply bg-red-500/15 text-red-400 border border-red-500/30;
+    @apply bg-red-500/10 text-red-600 border border-red-500/25 dark:bg-red-500/15 dark:text-red-400 dark:border-red-500/30;
   }
   .status-muted {
-    @apply bg-slate-500/15 text-slate-400 border border-slate-500/30;
+    @apply bg-slate-500/10 text-slate-500 border border-slate-500/25 dark:bg-slate-500/15 dark:text-slate-400 dark:border-slate-500/30;
   }
   .font-mono-pn {
     @apply font-mono tracking-tight tabular-nums;
   }
   .aog-indicator {
-    @apply border-l-4 border-l-red-500;
+    @apply border-l-4 border-l-red-600 dark:border-l-red-500;
   }
 }

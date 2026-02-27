@@ -77,12 +77,12 @@ export function WorkOrderHeader({ wo, aircraft, id, canClose }: WorkOrderHeaderP
               {WO_TYPE_LABEL[wo.workOrderType as WoType] ?? wo.workOrderType}
             </Badge>
             {wo.priority === "aog" && (
-              <Badge className="bg-red-500/15 text-red-400 border border-red-500/30 text-[11px] font-semibold">
+              <Badge className="bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/30 text-[11px] font-semibold">
                 AOG
               </Badge>
             )}
             {wo.priority === "urgent" && (
-              <Badge className="bg-orange-500/15 text-orange-400 border border-orange-500/30 text-[11px]">
+              <Badge className="bg-orange-500/15 text-orange-600 dark:text-orange-400 border border-orange-500/30 text-[11px]">
                 Urgent
               </Badge>
             )}
