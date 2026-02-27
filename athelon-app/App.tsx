@@ -169,6 +169,7 @@ export default function App() {
 
           {/* Scheduling */}
           <Route path="/scheduling" element={<SchedulingPage />} />
+          <Route path="/scheduling/bays" element={<BaysPage />} />
           <Route path="/scheduling/capacity" element={<CapacityPage />} />
 
           {/* Reports */}

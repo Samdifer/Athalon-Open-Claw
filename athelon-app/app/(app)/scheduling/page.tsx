@@ -121,7 +121,7 @@ export default function SchedulingPage() {
       return;
     }
 
-    const bayList = (bays ?? []).map((b) => ({
+    const bayList: { bayId: string; name: string; bookings: { startDate: number; endDate: number }[] }[] = (bays ?? []).map((b) => ({
       bayId: b._id,
       name: b.name,
       bookings: workOrders
