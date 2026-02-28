@@ -23,6 +23,10 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { formatDate, formatCurrency } from "@/lib/format";
 
@@ -174,6 +178,7 @@ export default function RotablesPage() {
   const [search, setSearch] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
+  const [condemnTarget, setCondemnTarget] = useState<{ id: Id<"rotables">; partNumber: string; serialNumber: string } | null>(null);
   const { orgId, isLoaded } = useCurrentOrg();
 
   const rotables = useQuery(
@@ -410,7 +415,7 @@ export default function RotablesPage() {
                         <Button size="sm" variant="outline" className="h-7 text-xs" onClick={(e) => { e.stopPropagation(); handleAction(rotable._id, "received_from_vendor"); }}>Receive</Button>
                       )}
                       {rotable.status !== "condemned" && (
-                        <Button size="sm" variant="ghost" className="h-7 text-xs text-red-500" onClick={(e) => { e.stopPropagation(); handleAction(rotable._id, "condemned"); }}>Condemn</Button>
+                        <Button size="sm" variant="ghost" className="h-7 text-xs text-red-500" onClick={(e) => { e.stopPropagation(); setCondemnTarget({ id: rotable._id, partNumber: rotable.partNumber, serialNumber: rotable.serialNumber }); }}>Condemn</Button>
                       )}
                     </div>
                   </div>
@@ -423,6 +428,33 @@ export default function RotablesPage() {
           })}
         </div>
       )}
+
+      <AlertDialog open={condemnTarget !== null} onOpenChange={(v) => !v && setCondemnTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Condemn Component?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently condemn <strong className="font-mono">{condemnTarget?.partNumber}</strong>
+              {condemnTarget?.serialNumber ? ` S/N ${condemnTarget.serialNumber}` : ""}. 
+              A condemned component cannot be returned to service. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-600 hover:bg-red-700 text-white"
+              onClick={() => {
+                if (condemnTarget) {
+                  void handleAction(condemnTarget.id, "condemned");
+                  setCondemnTarget(null);
+                }
+              }}
+            >
+              Condemn Component
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

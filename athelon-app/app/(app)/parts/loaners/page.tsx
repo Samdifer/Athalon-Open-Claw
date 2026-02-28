@@ -95,6 +95,10 @@ export default function LoanersPage() {
     api.loaners.list,
     orgId ? { organizationId: orgId, status: activeTab === "all" ? undefined : activeTab } : "skip",
   );
+  const customers = useQuery(
+    api.customers.listCustomers,
+    orgId ? { orgId } : "skip",
+  );
   const createLoaner = useMutation(api.loaners.create);
   const loanOut = useMutation(api.loaners.loanOut);
   const returnItem = useMutation(api.loaners.returnItem);
@@ -320,8 +324,31 @@ export default function LoanersPage() {
           <DialogHeader><DialogTitle>Loan Out Item</DialogTitle></DialogHeader>
           <form onSubmit={handleLoanOut} className="space-y-4">
             <div className="space-y-2">
-              <Label>Customer ID *</Label>
-              <Input value={loanForm.customerId} onChange={(e) => setLoanForm({ ...loanForm, customerId: e.target.value })} required placeholder="Customer ID" />
+              <Label>Customer <span className="text-red-500">*</span></Label>
+              {customers === undefined ? (
+                <div className="h-9 bg-muted/30 rounded-md border border-border/60 animate-pulse" />
+              ) : customers.length === 0 ? (
+                <p className="text-xs text-muted-foreground py-2">No active customers found.</p>
+              ) : (
+                <Select
+                  value={loanForm.customerId}
+                  onValueChange={(v) => setLoanForm({ ...loanForm, customerId: v })}
+                >
+                  <SelectTrigger className="h-9 text-sm bg-muted/30 border-border/60">
+                    <SelectValue placeholder="Select a customer…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {customers.map((c) => (
+                      <SelectItem key={c._id} value={c._id}>
+                        {c.companyName ?? c.name}
+                        {c.companyName && c.name !== c.companyName && (
+                          <span className="text-muted-foreground ml-1.5 text-xs">— {c.name}</span>
+                        )}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </div>
             <div className="space-y-2">
               <Label>Expected Return Date</Label>

@@ -46,6 +46,13 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import { Separator } from "@/components/ui/separator";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -68,22 +75,38 @@ type InspectionResult = "approved" | "rejected";
 
 interface PartDoc {
   _id: Id<"parts">;
+  _creationTime?: number;
   partNumber: string;
   partName: string;
+  description?: string;
   serialNumber?: string;
+  isSerialized?: boolean;
   condition: string;
   location: string;
   receivingDate?: number;
   receivingWorkOrderId?: Id<"workOrders">;
   supplier?: string;
+  purchaseOrderNumber?: string;
   isOwnerSupplied: boolean;
   isLifeLimited: boolean;
   lifeLimitHours?: number;
+  lifeLimitCycles?: number;
+  hasShelfLifeLimit?: boolean;
+  shelfLifeLimitDate?: number;
+  hoursAccumulatedBeforeInstall?: number;
+  cyclesAccumulatedBeforeInstall?: number;
   reservedForWorkOrderId?: Id<"workOrders">;
   reservedByTechnicianId?: Id<"technicians">;
-  description?: string;
+  reservedAt?: number;
+  receivingInspectedAt?: number;
+  receivingInspectionNotes?: string;
+  receivingRejectionReason?: string;
+  quarantineReason?: string;
+  notes?: string;
   minStockLevel?: number;
   reorderPoint?: number;
+  installPosition?: string;
+  eightOneThirtyId?: Id<"eightOneThirtyRecords">;
 }
 
 const LOCATION_LABEL: Record<string, string> = {
@@ -431,6 +454,256 @@ function ReservePartDialog({
   );
 }
 
+// ─── Part Detail Sheet ─────────────────────────────────────────────────────────
+
+interface PartDetailSheetProps {
+  part: PartDoc | null;
+  onClose: () => void;
+}
+
+function PartDetailSheet({ part, onClose }: PartDetailSheetProps) {
+  const open = !!part;
+
+  if (!part) {
+    return (
+      <Sheet open={false} onOpenChange={() => {}}>
+        <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto" />
+      </Sheet>
+    );
+  }
+
+  const shelfExpiry = part.shelfLifeLimitDate
+    ? new Date(part.shelfLifeLimitDate)
+    : null;
+  const shelfExpired = shelfExpiry ? shelfExpiry < new Date() : false;
+
+  function row(label: string, value: React.ReactNode, highlight?: "warn" | "err") {
+    if (!value && value !== 0) return null;
+    return (
+      <div className="flex justify-between items-start gap-4 py-1.5">
+        <span className="text-xs text-muted-foreground shrink-0 min-w-[130px]">{label}</span>
+        <span
+          className={`text-xs text-right font-medium ${
+            highlight === "err"
+              ? "text-red-600 dark:text-red-400"
+              : highlight === "warn"
+              ? "text-amber-600 dark:text-amber-400"
+              : "text-foreground"
+          }`}
+        >
+          {value}
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
+      <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
+        <SheetHeader className="pb-4">
+          <SheetTitle className="flex items-center gap-2 text-base font-semibold">
+            <Package className="w-4 h-4 text-muted-foreground" />
+            Part Detail
+          </SheetTitle>
+        </SheetHeader>
+
+        <div className="space-y-5">
+          {/* Identity */}
+          <div>
+            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+              Identity
+            </p>
+            <div className="bg-muted/20 rounded-md border border-border/40 px-3 py-2 space-y-0.5 divide-y divide-border/30">
+              {row("Part Number", <span className="font-mono">{part.partNumber}</span>)}
+              {row("Description", part.partName)}
+              {part.description && row("Notes", part.description)}
+              {row("Serial Number", part.serialNumber ? <span className="font-mono">{part.serialNumber}</span> : null)}
+              {row(
+                "Condition",
+                <Badge
+                  variant="outline"
+                  className={`text-[10px] border font-medium ${getConditionStyles(part.condition)}`}
+                >
+                  {CONDITION_LABEL[part.condition] ?? part.condition}
+                </Badge>,
+              )}
+              {row(
+                "Location",
+                <Badge variant="outline" className="text-[10px] border-border/40 text-muted-foreground">
+                  {LOCATION_LABEL[part.location] ?? part.location}
+                </Badge>,
+              )}
+              {part.installPosition && row("Install Position", part.installPosition)}
+            </div>
+          </div>
+
+          <Separator className="opacity-30" />
+
+          {/* Receiving */}
+          <div>
+            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+              Receiving / Traceability
+            </p>
+            <div className="bg-muted/20 rounded-md border border-border/40 px-3 py-2 divide-y divide-border/30">
+              {row(
+                "Received Date",
+                part.receivingDate
+                  ? new Date(part.receivingDate).toLocaleDateString("en-US", {
+                      month: "long",
+                      day: "numeric",
+                      year: "numeric",
+                    })
+                  : null,
+              )}
+              {row("Supplier", part.supplier)}
+              {row("P.O. Number", part.purchaseOrderNumber)}
+              {row("Owner Supplied", part.isOwnerSupplied ? "Yes" : null)}
+              {part.eightOneThirtyId && row("8130-3 Record", "On file ✓")}
+              {part.receivingInspectedAt &&
+                row(
+                  "Inspected",
+                  new Date(part.receivingInspectedAt).toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                  }),
+                )}
+              {part.receivingInspectionNotes && row("Inspection Notes", part.receivingInspectionNotes)}
+              {part.receivingRejectionReason &&
+                row("Rejection Reason", part.receivingRejectionReason, "err")}
+            </div>
+          </div>
+
+          {/* Life & Shelf Limits */}
+          {(part.isLifeLimited || part.hasShelfLifeLimit) && (
+            <>
+              <Separator className="opacity-30" />
+              <div>
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                  Life &amp; Shelf Limits
+                </p>
+                <div className="bg-muted/20 rounded-md border border-border/40 px-3 py-2 divide-y divide-border/30">
+                  {part.isLifeLimited && (
+                    <>
+                      <div className="py-1.5 flex items-center gap-1.5">
+                        <Badge className="text-[10px] bg-purple-500/15 text-purple-600 dark:text-purple-400 border border-purple-500/30">
+                          Life Limited
+                        </Badge>
+                      </div>
+                      {row("Life Limit", part.lifeLimitHours ? `${part.lifeLimitHours} hrs` : null)}
+                      {row("Life Limit Cycles", part.lifeLimitCycles ? `${part.lifeLimitCycles} cycles` : null)}
+                      {row(
+                        "Hours at Install",
+                        part.hoursAccumulatedBeforeInstall != null
+                          ? `${part.hoursAccumulatedBeforeInstall} hrs`
+                          : null,
+                      )}
+                      {row(
+                        "Cycles at Install",
+                        part.cyclesAccumulatedBeforeInstall != null
+                          ? `${part.cyclesAccumulatedBeforeInstall} cycles`
+                          : null,
+                      )}
+                      {part.lifeLimitHours != null &&
+                        part.hoursAccumulatedBeforeInstall != null &&
+                        row(
+                          "Hours Remaining",
+                          `${Math.max(0, part.lifeLimitHours - part.hoursAccumulatedBeforeInstall).toFixed(1)} hrs`,
+                          part.lifeLimitHours - (part.hoursAccumulatedBeforeInstall ?? 0) < part.lifeLimitHours * 0.1
+                            ? "err"
+                            : part.lifeLimitHours - (part.hoursAccumulatedBeforeInstall ?? 0) < part.lifeLimitHours * 0.25
+                            ? "warn"
+                            : undefined,
+                        )}
+                    </>
+                  )}
+                  {part.hasShelfLifeLimit && shelfExpiry && (
+                    <>
+                      {row(
+                        "Shelf Life Expiry",
+                        shelfExpiry.toLocaleDateString("en-US", {
+                          month: "long",
+                          day: "numeric",
+                          year: "numeric",
+                        }),
+                        shelfExpired ? "err" : undefined,
+                      )}
+                      {shelfExpired && (
+                        <div className="py-1.5">
+                          <Badge className="text-[10px] bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/30">
+                            ⚠ SHELF LIFE EXPIRED
+                          </Badge>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* Quarantine */}
+          {part.location === "quarantine" && part.quarantineReason && (
+            <>
+              <Separator className="opacity-30" />
+              <div>
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                  Quarantine
+                </p>
+                <div className="rounded-md bg-orange-500/10 border border-orange-500/30 px-3 py-2">
+                  <p className="text-xs text-orange-600 dark:text-orange-400">{part.quarantineReason}</p>
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* Reservation */}
+          {part.reservedForWorkOrderId && (
+            <>
+              <Separator className="opacity-30" />
+              <div>
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                  Reservation
+                </p>
+                <div className="bg-muted/20 rounded-md border border-border/40 px-3 py-2 divide-y divide-border/30">
+                  <div className="py-1.5 flex items-center gap-1.5">
+                    <Lock className="w-3.5 h-3.5 text-blue-500" />
+                    <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">Reserved</span>
+                  </div>
+                  {part.reservedAt &&
+                    row(
+                      "Reserved At",
+                      new Date(part.reservedAt).toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      }),
+                    )}
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* Notes */}
+          {part.notes && (
+            <>
+              <Separator className="opacity-30" />
+              <div>
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                  Notes
+                </p>
+                <p className="text-xs text-muted-foreground bg-muted/20 rounded-md border border-border/40 px-3 py-2">
+                  {part.notes}
+                </p>
+              </div>
+            </>
+          )}
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
+}
+
 // ─── Skeleton ──────────────────────────────────────────────────────────────────
 
 function PartSkeleton() {
@@ -466,6 +739,7 @@ export default function PartsPage() {
   const [scannerOpen, setScannerOpen] = useState(false);
   const [qrPart, setQrPart] = useState<PartDoc | null>(null);
   const [qrScannerOpen, setQrScannerOpen] = useState(false);
+  const [detailPart, setDetailPart] = useState<PartDoc | null>(null);
 
   // Load all parts
   const allParts = useQuery(
@@ -829,6 +1103,7 @@ export default function PartsPage() {
                     className={`border-border/60 hover:border-primary/30 hover:bg-card/80 transition-all cursor-pointer ${
                       isQuarantine ? "border-l-4 border-l-orange-500" : ""
                     }`}
+                    onClick={() => setDetailPart(part)}
                   >
                     <CardContent className="p-4">
                       <div className="flex items-start gap-4">
@@ -1040,6 +1315,12 @@ export default function PartsPage() {
 
       {/* QR Scanner */}
       <QRScannerDialog open={qrScannerOpen} onClose={() => setQrScannerOpen(false)} />
+
+      {/* Part Detail Sheet */}
+      <PartDetailSheet
+        part={detailPart}
+        onClose={() => setDetailPart(null)}
+      />
     </div>
   );
 }
