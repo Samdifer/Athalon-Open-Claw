@@ -13,12 +13,14 @@ import {
   CheckCircle2,
   Printer,
   Trash2,
+  Loader2,
 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Table,
@@ -36,6 +38,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 
@@ -59,6 +71,8 @@ export default function InventoryCountPage() {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [newName, setNewName] = useState("");
   const [newNotes, setNewNotes] = useState("");
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [reconcileConfirmOpen, setReconcileConfirmOpen] = useState(false);
 
   const counts = useQuery(
     api.physicalInventory.listCounts,
@@ -79,20 +93,37 @@ export default function InventoryCountPage() {
 
   const handleCreate = async () => {
     if (!orgId || !newName.trim()) return;
-    const id = await createCount({
-      orgId,
-      name: newName,
-      notes: newNotes || undefined,
-    });
-    setCreateDialogOpen(false);
-    setNewName("");
-    setNewNotes("");
-    setSelectedCountId(id);
+    if (actionLoading === "create") return;
+    setActionLoading("create");
+    try {
+      const id = await createCount({
+        orgId,
+        name: newName,
+        notes: newNotes || undefined,
+      });
+      toast.success("Inventory count created");
+      setCreateDialogOpen(false);
+      setNewName("");
+      setNewNotes("");
+      setSelectedCountId(id);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to create count");
+    } finally {
+      setActionLoading(null);
+    }
   };
 
   const handleStart = async () => {
-    if (!selectedCountId) return;
-    await startCount({ countId: selectedCountId, countedBy: techId });
+    if (!selectedCountId || actionLoading === "start") return;
+    setActionLoading("start");
+    try {
+      await startCount({ countId: selectedCountId, countedBy: techId });
+      toast.success("Count started — items loaded from inventory");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to start count");
+    } finally {
+      setActionLoading(null);
+    }
   };
 
   if (!isLoaded) {
@@ -131,16 +162,29 @@ export default function InventoryCountPage() {
           </div>
           <div className="flex gap-2">
             {countDetail.status === "draft" && (
-              <Button onClick={handleStart}>
-                <ClipboardCheck className="mr-2 h-4 w-4" />
-                Start Count
+              <Button onClick={handleStart} disabled={actionLoading === "start"}>
+                {actionLoading === "start" ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <ClipboardCheck className="mr-2 h-4 w-4" />
+                )}
+                {actionLoading === "start" ? "Starting…" : "Start Count"}
               </Button>
             )}
             {countDetail.status === "in_progress" && (
               <Button
-                onClick={() => {
+                disabled={actionLoading === "complete"}
+                onClick={async () => {
                   if (confirm("Complete this count? No more items can be counted after this.")) {
-                    completeCount({ countId: selectedCountId });
+                    setActionLoading("complete");
+                    try {
+                      await completeCount({ countId: selectedCountId });
+                      toast.success("Count completed");
+                    } catch (err) {
+                      toast.error(err instanceof Error ? err.message : "Failed to complete count");
+                    } finally {
+                      setActionLoading(null);
+                    }
                   }
                 }}
               >
@@ -151,15 +195,8 @@ export default function InventoryCountPage() {
             {countDetail.status === "completed" && (
               <Button
                 variant="destructive"
-                onClick={() => {
-                  if (
-                    confirm(
-                      "Reconcile inventory? This will adjust system quantities to match your actual counts.",
-                    )
-                  ) {
-                    reconcileCount({ countId: selectedCountId });
-                  }
-                }}
+                disabled={actionLoading === "reconcile"}
+                onClick={() => setReconcileConfirmOpen(true)}
               >
                 Reconcile
               </Button>
@@ -246,13 +283,17 @@ export default function InventoryCountPage() {
                             type="number"
                             className="w-20 ml-auto"
                             defaultValue={item.actualQuantity ?? ""}
-                            onBlur={(e) => {
+                            onBlur={async (e) => {
                               const val = e.target.value;
                               if (val !== "") {
-                                recordItem({
-                                  itemId: item._id,
-                                  actualQuantity: Number(val),
-                                });
+                                try {
+                                  await recordItem({
+                                    itemId: item._id,
+                                    actualQuantity: Number(val),
+                                  });
+                                } catch (err) {
+                                  toast.error(err instanceof Error ? err.message : "Failed to record count");
+                                }
                               }
                             }}
                           />
@@ -285,13 +326,17 @@ export default function InventoryCountPage() {
                             className="w-24"
                             defaultValue={item.location ?? ""}
                             placeholder="Location"
-                            onBlur={(e) => {
+                            onBlur={async (e) => {
                               if (item.actualQuantity !== undefined) {
-                                recordItem({
-                                  itemId: item._id,
-                                  actualQuantity: item.actualQuantity,
-                                  location: e.target.value || undefined,
-                                });
+                                try {
+                                  await recordItem({
+                                    itemId: item._id,
+                                    actualQuantity: item.actualQuantity,
+                                    location: e.target.value || undefined,
+                                  });
+                                } catch (err) {
+                                  toast.error("Failed to save location");
+                                }
                               }
                             }}
                           />
@@ -305,13 +350,17 @@ export default function InventoryCountPage() {
                             className="w-32"
                             defaultValue={item.notes ?? ""}
                             placeholder="Notes"
-                            onBlur={(e) => {
+                            onBlur={async (e) => {
                               if (item.actualQuantity !== undefined) {
-                                recordItem({
-                                  itemId: item._id,
-                                  actualQuantity: item.actualQuantity,
-                                  notes: e.target.value || undefined,
-                                });
+                                try {
+                                  await recordItem({
+                                    itemId: item._id,
+                                    actualQuantity: item.actualQuantity,
+                                    notes: e.target.value || undefined,
+                                  });
+                                } catch (err) {
+                                  toast.error("Failed to save notes");
+                                }
                               }
                             }}
                           />
@@ -326,6 +375,37 @@ export default function InventoryCountPage() {
             </Table>
           </Card>
         )}
+
+        <AlertDialog open={reconcileConfirmOpen} onOpenChange={setReconcileConfirmOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Reconcile Inventory?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will permanently adjust all stock quantities to match your physical count.
+                This action cannot be undone. Items with variances will be corrected in the system.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                onClick={async () => {
+                  setActionLoading("reconcile");
+                  try {
+                    await reconcileCount({ countId: selectedCountId });
+                    toast.success("Inventory reconciled — stock quantities updated");
+                  } catch (err) {
+                    toast.error(err instanceof Error ? err.message : "Failed to reconcile inventory");
+                  } finally {
+                    setActionLoading(null);
+                  }
+                }}
+              >
+                Reconcile
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     );
   }
@@ -404,10 +484,15 @@ export default function InventoryCountPage() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={(e) => {
+                        onClick={async (e) => {
                           e.stopPropagation();
                           if (confirm("Delete this draft count?")) {
-                            deleteCount({ countId: count._id });
+                            try {
+                              await deleteCount({ countId: count._id });
+                              toast.success("Count deleted");
+                            } catch (err) {
+                              toast.error(err instanceof Error ? err.message : "Failed to delete count");
+                            }
                           }
                         }}
                       >
@@ -453,7 +538,13 @@ export default function InventoryCountPage() {
             <Button variant="outline" onClick={() => setCreateDialogOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleCreate} disabled={!newName.trim()}>
+            <Button
+              onClick={handleCreate}
+              disabled={!newName.trim() || actionLoading === "create"}
+            >
+              {actionLoading === "create" && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
               Create Count
             </Button>
           </DialogFooter>

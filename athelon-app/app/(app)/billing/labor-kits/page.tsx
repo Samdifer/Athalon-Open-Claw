@@ -17,7 +17,9 @@ import {
   Clock,
   Wrench,
   X,
+  Loader2,
 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -86,6 +88,7 @@ export default function LaborKitsPage() {
   ]);
   const [requiredParts, setRequiredParts] = useState<RequiredPart[]>([]);
   const [externalServices, setExternalServices] = useState<ExternalService[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
 
   const kits = useQuery(
     api.laborKits.listLaborKits,
@@ -142,39 +145,48 @@ export default function LaborKitsPage() {
 
   const handleSave = async () => {
     if (!orgId || !name.trim()) return;
+    if (isSaving) return;
     const validLaborItems = laborItems.filter((i) => i.description.trim());
     const validParts = requiredParts.filter((p) => p.partNumber.trim());
     const validServices = externalServices.filter((s) => s.description.trim());
-
-    if (editingId) {
-      await updateKit({
-        id: editingId,
-        name,
-        description: description || undefined,
-        ataChapter: ataChapter || undefined,
-        aircraftType: aircraftType || undefined,
-        estimatedHours: totalHours,
-        laborRate,
-        laborItems: validLaborItems,
-        requiredParts: validParts,
-        externalServices: validServices.length > 0 ? validServices : undefined,
-      });
-    } else {
-      await createKit({
-        orgId,
-        name,
-        description: description || undefined,
-        ataChapter: ataChapter || undefined,
-        aircraftType: aircraftType || undefined,
-        estimatedHours: totalHours,
-        laborRate,
-        laborItems: validLaborItems,
-        requiredParts: validParts,
-        externalServices: validServices.length > 0 ? validServices : undefined,
-      });
+    setIsSaving(true);
+    try {
+      if (editingId) {
+        await updateKit({
+          id: editingId,
+          name,
+          description: description || undefined,
+          ataChapter: ataChapter || undefined,
+          aircraftType: aircraftType || undefined,
+          estimatedHours: totalHours,
+          laborRate,
+          laborItems: validLaborItems,
+          requiredParts: validParts,
+          externalServices: validServices.length > 0 ? validServices : undefined,
+        });
+        toast.success("Labor kit updated");
+      } else {
+        await createKit({
+          orgId,
+          name,
+          description: description || undefined,
+          ataChapter: ataChapter || undefined,
+          aircraftType: aircraftType || undefined,
+          estimatedHours: totalHours,
+          laborRate,
+          laborItems: validLaborItems,
+          requiredParts: validParts,
+          externalServices: validServices.length > 0 ? validServices : undefined,
+        });
+        toast.success("Labor kit created");
+      }
+      setDialogOpen(false);
+      resetForm();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to save labor kit");
+    } finally {
+      setIsSaving(false);
     }
-    setDialogOpen(false);
-    resetForm();
   };
 
   // Derive unique aircraft types for filter
@@ -302,7 +314,14 @@ export default function LaborKitsPage() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => duplicateKit({ id: kit._id })}
+                        onClick={async () => {
+                          try {
+                            await duplicateKit({ id: kit._id });
+                            toast.success("Labor kit duplicated");
+                          } catch (err) {
+                            toast.error(err instanceof Error ? err.message : "Failed to duplicate kit");
+                          }
+                        }}
                         title="Duplicate"
                       >
                         <Copy className="h-4 w-4" />
@@ -310,7 +329,14 @@ export default function LaborKitsPage() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => toggleKit({ id: kit._id })}
+                        onClick={async () => {
+                          try {
+                            await toggleKit({ id: kit._id });
+                            toast.success(kit.isActive ? "Kit deactivated" : "Kit activated");
+                          } catch (err) {
+                            toast.error(err instanceof Error ? err.message : "Failed to toggle kit status");
+                          }
+                        }}
                         title={kit.isActive ? "Deactivate" : "Activate"}
                       >
                         {kit.isActive ? (
@@ -322,9 +348,14 @@ export default function LaborKitsPage() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => {
+                        onClick={async () => {
                           if (confirm("Delete this labor kit?")) {
-                            deleteKit({ id: kit._id });
+                            try {
+                              await deleteKit({ id: kit._id });
+                              toast.success("Labor kit deleted");
+                            } catch (err) {
+                              toast.error(err instanceof Error ? err.message : "Failed to delete kit");
+                            }
                           }
                         }}
                         title="Delete"
@@ -587,8 +618,15 @@ export default function LaborKitsPage() {
             <Button variant="outline" onClick={() => { setDialogOpen(false); resetForm(); }}>
               Cancel
             </Button>
-            <Button onClick={handleSave} disabled={!name.trim()}>
-              {editingId ? "Save Changes" : "Create Kit"}
+            <Button onClick={handleSave} disabled={!name.trim() || isSaving}>
+              {isSaving ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Saving…
+                </>
+              ) : (
+                editingId ? "Save Changes" : "Create Kit"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>

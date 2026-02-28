@@ -5,7 +5,8 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { type Id } from "@/convex/_generated/dataModel";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
-import { FileX, Plus, Check, X } from "lucide-react";
+import { toast } from "sonner";
+import { FileX, Plus, Check, X, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -315,6 +316,7 @@ export default function CreditMemosPage() {
     creditMemoId: Id<"creditMemos">;
     customerId: Id<"customers">;
   } | null>(null);
+  const [issuingId, setIssuingId] = useState<string | null>(null);
 
   const issueMutation = useMutation(api.billingV4.issueCreditMemo);
 
@@ -348,11 +350,15 @@ export default function CreditMemosPage() {
   }, [invoices]);
 
   async function handleIssue(creditMemoId: Id<"creditMemos">) {
-    if (!orgId) return;
+    if (!orgId || issuingId) return;
+    setIssuingId(creditMemoId as string);
     try {
       await issueMutation({ orgId, creditMemoId });
+      toast.success("Credit memo issued");
     } catch (err) {
-      console.error("Failed to issue credit memo:", err);
+      toast.error(err instanceof Error ? err.message : "Failed to issue credit memo");
+    } finally {
+      setIssuingId(null);
     }
   }
 
@@ -442,11 +448,16 @@ export default function CreditMemosPage() {
                           <Button
                             size="sm"
                             variant="outline"
-                            className="h-7 text-xs"
+                            className="h-7 text-xs gap-1"
                             onClick={() => handleIssue(cm._id)}
+                            disabled={issuingId === (cm._id as string)}
                           >
-                            <Check className="w-3 h-3 mr-1" />
-                            Issue
+                            {issuingId === (cm._id as string) ? (
+                              <Loader2 className="w-3 h-3 animate-spin" />
+                            ) : (
+                              <Check className="w-3 h-3" />
+                            )}
+                            {issuingId === (cm._id as string) ? "Issuing…" : "Issue"}
                           </Button>
                         )}
                         {cm.status === "ISSUED" && (

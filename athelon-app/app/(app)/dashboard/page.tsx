@@ -14,9 +14,6 @@ import {
   CheckCircle2,
   Circle,
   Timer,
-  Plane,
-  Users,
-  FileWarning,
   ArrowUp,
   ArrowDown,
 } from "lucide-react";
@@ -25,6 +22,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "react-router-dom";
 import { ScheduleHealthWidget } from "./_components/ScheduleHealthWidget";
 import { WOStatusChart } from "./_components/WOStatusChart";
@@ -36,6 +34,19 @@ import {
   Area,
   ResponsiveContainer,
 } from "recharts";
+
+// ─── Status label map ─────────────────────────────────────────────────────────
+
+const STATUS_LABELS: Record<string, string> = {
+  draft: "Draft",
+  open: "Open",
+  in_progress: "In Progress",
+  pending_signoff: "Pending Sign-Off",
+  on_hold: "On Hold",
+  closed: "Closed",
+  voided: "Voided",
+  cancelled: "Cancelled",
+};
 
 // ─── KPI Sparkline ──────────────────────────────────────────────────────────
 
@@ -171,46 +182,210 @@ function LiveKPICards() {
   );
 }
 
-// ─── Demo data (will be replaced with Convex queries) ────────────────────────
+// ─── Secondary Live KPIs ──────────────────────────────────────────────────────
 
-const stats = [
-  {
-    title: "Open Work Orders",
-    value: "4",
-    sub: "3 active, 1 on hold",
-    icon: ClipboardList,
-    href: "/work-orders",
-    color: "text-sky-400",
-    bgColor: "bg-sky-500/10",
-  },
-  {
-    title: "Active Squawks",
-    value: "1",
-    sub: "1 blocking WO close",
-    icon: AlertTriangle,
-    href: "/squawks",
-    color: "text-red-400",
-    bgColor: "bg-red-500/10",
-  },
-  {
-    title: "Parts On Order",
-    value: "3",
-    sub: "2 WOs affected",
-    icon: Package,
-    href: "/parts/requests",
-    color: "text-amber-400",
-    bgColor: "bg-amber-500/10",
-  },
-  {
-    title: "Certs Expiring",
-    value: "1",
-    sub: "Within 30 days",
-    icon: ShieldAlert,
-    href: "/compliance/audit-trail",
-    color: "text-orange-400",
-    bgColor: "bg-orange-500/10",
-  },
-];
+function LiveSecondaryKPIs() {
+  const { orgId } = useCurrentOrg();
+
+  const pendingInspection = useQuery(
+    api.parts.listParts,
+    orgId ? { organizationId: orgId, location: "pending_inspection" as const } : "skip",
+  );
+
+  const expiringCerts = useQuery(
+    api.technicians.listWithExpiringCerts,
+    orgId ? { organizationId: orgId, withinDays: 30 } : "skip",
+  );
+
+  const partsCount = pendingInspection?.length ?? null;
+  const certsCount = expiringCerts?.length ?? null;
+
+  const cards = [
+    {
+      title: "Parts Awaiting Inspection",
+      value: partsCount,
+      sub: "pending receiving inspection",
+      icon: Package,
+      href: "/parts/requests",
+      color: "text-amber-400",
+      bgColor: "bg-amber-500/10",
+      alert: (partsCount ?? 0) > 0,
+    },
+    {
+      title: "Certs Expiring (30d)",
+      value: certsCount,
+      sub: "IA/AMT certificates",
+      icon: ShieldAlert,
+      href: "/compliance/audit-trail",
+      color: "text-orange-400",
+      bgColor: "bg-orange-500/10",
+      alert: (certsCount ?? 0) > 0,
+    },
+  ];
+
+  return (
+    <div className="grid grid-cols-2 gap-3">
+      {cards.map((c) => (
+        <Link key={c.title} to={c.href}>
+          <Card
+            className={`hover:bg-card/80 transition-colors cursor-pointer border-border/60 ${
+              c.alert ? "border-amber-500/30" : ""
+            }`}
+          >
+            <CardContent className="p-4">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-xs text-muted-foreground font-medium">
+                    {c.title}
+                  </p>
+                  <p className="text-2xl font-bold text-foreground mt-1">
+                    {c.value ?? <Skeleton className="h-7 w-10 inline-block" />}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">{c.sub}</p>
+                </div>
+                <div className={`p-2 rounded-lg ${c.bgColor}`}>
+                  <c.icon className={`w-4 h-4 ${c.color}`} />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
+      ))}
+    </div>
+  );
+}
+
+// ─── Live Active Work Orders ──────────────────────────────────────────────────
+
+function LiveActiveWorkOrders() {
+  const { orgId } = useCurrentOrg();
+
+  const workOrders = useQuery(
+    api.workOrders.getWorkOrdersWithScheduleRisk,
+    orgId ? { organizationId: orgId } : "skip",
+  );
+
+  const active = useMemo(() => {
+    if (!workOrders) return null;
+    return workOrders
+      .filter((wo) => !["closed", "voided", "cancelled"].includes(wo.status))
+      .sort((a, b) => {
+        // AOG first, then by openedAt desc
+        if (a.priority === "aog" && b.priority !== "aog") return -1;
+        if (b.priority === "aog" && a.priority !== "aog") return 1;
+        return (b.openedAt ?? 0) - (a.openedAt ?? 0);
+      })
+      .slice(0, 5);
+  }, [workOrders]);
+
+  if (!active) {
+    return (
+      <div className="space-y-1">
+        {[1, 2, 3].map((i) => (
+          <Skeleton key={i} className="h-14 w-full" />
+        ))}
+      </div>
+    );
+  }
+
+  if (active.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
+        <CheckCircle2 className="w-6 h-6 mb-2 text-green-400" />
+        <p className="text-sm">No active work orders</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-1">
+      {active.map((wo, i) => {
+        const daysOpen = wo.openedAt
+          ? Math.floor((Date.now() - wo.openedAt) / (1000 * 60 * 60 * 24))
+          : 0;
+        const tasksComplete = wo.completedTaskCardCount;
+        const tasksTotal = wo.taskCardCount;
+
+        return (
+          <div key={wo._id}>
+            {i > 0 && <Separator className="my-1 opacity-40" />}
+            <Link to={`/work-orders/${wo._id}`}>
+              <div
+                className={`flex items-center gap-3 p-2.5 rounded-lg hover:bg-muted/40 transition-colors cursor-pointer ${
+                  wo.priority === "aog" ? "aog-indicator pl-3" : ""
+                }`}
+              >
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <span className="font-mono text-xs text-muted-foreground font-medium">
+                      {wo.workOrderNumber ?? wo._id.slice(0, 8)}
+                    </span>
+                    {getStatusBadge(wo.status, STATUS_LABELS[wo.status] ?? wo.status, wo.priority ?? undefined)}
+                    {wo.openDiscrepancyCount > 0 && (
+                      <Badge className="bg-red-500/15 text-red-400 border-red-500/30 text-[9px] h-4 px-1">
+                        {wo.openDiscrepancyCount} squawk
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    {wo.aircraft && (
+                      <span className="font-mono text-sm font-semibold text-foreground">
+                        {wo.aircraft.currentRegistration}
+                      </span>
+                    )}
+                    {wo.aircraft && (
+                      <span className="text-xs text-muted-foreground">
+                        {wo.aircraft.make} {wo.aircraft.model}
+                      </span>
+                    )}
+                    {wo.description && (
+                      <>
+                        <span className="text-muted-foreground text-xs">·</span>
+                        <span className="text-xs text-muted-foreground truncate">
+                          {wo.description}
+                        </span>
+                      </>
+                    )}
+                  </div>
+                </div>
+                <div className="flex-shrink-0 text-right min-w-[80px]">
+                  {tasksTotal > 0 ? (
+                    <>
+                      <div className="flex items-center justify-end gap-1.5 mb-1">
+                        {tasksComplete === tasksTotal ? (
+                          <CheckCircle2 className="w-3 h-3 text-green-400" />
+                        ) : (
+                          <Circle className="w-3 h-3 text-muted-foreground" />
+                        )}
+                        <span className="text-[11px] text-muted-foreground">
+                          {tasksComplete}/{tasksTotal} tasks
+                        </span>
+                      </div>
+                      <Progress
+                        value={(tasksComplete / tasksTotal) * 100}
+                        className="h-1 w-20"
+                      />
+                    </>
+                  ) : (
+                    <span className="text-[11px] text-muted-foreground">No tasks yet</span>
+                  )}
+                  <div className="flex items-center justify-end gap-1 mt-1">
+                    <Timer className="w-3 h-3 text-muted-foreground/60" />
+                    <span className="text-[10px] text-muted-foreground/60">
+                      {daysOpen}d open
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </Link>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ─── Demo data (attention items still hardcoded) ──────────────────────────────
 
 const attentionItems = [
   {
@@ -244,73 +419,6 @@ const attentionItems = [
     action: "View WO",
     href: "/work-orders",
     icon: Package,
-  },
-];
-
-const activeWorkOrders = [
-  {
-    id: "wo-1",
-    number: "WO-2026-0041",
-    aircraft: "N192AK",
-    type: "Cessna 172S",
-    description: "100-hour Inspection",
-    status: "in_progress",
-    statusLabel: "In Progress",
-    priority: "normal",
-    tasksComplete: 2,
-    tasksTotal: 4,
-    openSquawks: 1,
-    partsOnOrder: 1,
-    daysOpen: 3,
-    href: "/work-orders/WO-2026-0041",
-  },
-  {
-    id: "wo-2",
-    number: "WO-2026-0040",
-    aircraft: "N416AB",
-    type: "Cessna 208B",
-    description: "Oil Change & Engine Trend",
-    status: "pending_signoff",
-    statusLabel: "Pending Sign-Off",
-    priority: "normal",
-    tasksComplete: 3,
-    tasksTotal: 3,
-    openSquawks: 0,
-    partsOnOrder: 0,
-    daysOpen: 5,
-    href: "/work-orders/WO-2026-0040",
-  },
-  {
-    id: "wo-3",
-    number: "WO-2026-0039",
-    aircraft: "N76LS",
-    type: "Bell 206B-III",
-    description: "Main Rotor Blade AOG",
-    status: "on_hold",
-    statusLabel: "On Hold",
-    priority: "aog",
-    tasksComplete: 0,
-    tasksTotal: 2,
-    openSquawks: 0,
-    partsOnOrder: 1,
-    daysOpen: 7,
-    href: "/work-orders/WO-2026-0039",
-  },
-  {
-    id: "wo-4",
-    number: "WO-2026-0042",
-    aircraft: "N416AB",
-    type: "Cessna 208B",
-    description: "Fuel Selector Valve ALS",
-    status: "draft",
-    statusLabel: "Draft",
-    priority: "normal",
-    tasksComplete: 0,
-    tasksTotal: 0,
-    openSquawks: 0,
-    partsOnOrder: 0,
-    daysOpen: 0,
-    href: "/work-orders/WO-2026-0042",
   },
 ];
 
@@ -399,6 +507,16 @@ function getSeverityStyles(severity: string) {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function DashboardPage() {
+  const todayLabel = useMemo(() => {
+    const d = new Date();
+    return d.toLocaleDateString("en-US", {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  }, []);
+
   return (
     <div className="space-y-6">
       {/* Page Header */}
@@ -406,7 +524,7 @@ export default function DashboardPage() {
         <div>
           <h1 className="text-lg sm:text-xl md:text-2xl font-semibold text-foreground">Dashboard</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
-            Rocky Mountain Turbine Service — Mon, Feb 23, 2026
+            Rocky Mountain Turbine Service — {todayLabel}
           </p>
         </div>
         <Button asChild size="sm" className="w-full sm:w-auto">
@@ -420,33 +538,8 @@ export default function DashboardPage() {
       {/* Live KPI Cards */}
       <LiveKPICards />
 
-      {/* Stats Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-        {stats.map((stat) => (
-          <Link key={stat.title} to={stat.href}>
-            <Card className="hover:bg-card/80 transition-colors cursor-pointer border-border/60">
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <p className="text-xs text-muted-foreground font-medium">
-                      {stat.title}
-                    </p>
-                    <p className="text-2xl font-bold text-foreground mt-1">
-                      {stat.value}
-                    </p>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">
-                      {stat.sub}
-                    </p>
-                  </div>
-                  <div className={`p-2 rounded-lg ${stat.bgColor}`}>
-                    <stat.icon className={`w-4 h-4 ${stat.color}`} />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
-        ))}
-      </div>
+      {/* Secondary Live KPIs */}
+      <LiveSecondaryKPIs />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
         {/* Left: Attention Queue + Work Orders */}
@@ -516,73 +609,8 @@ export default function DashboardPage() {
                 </Button>
               </div>
             </CardHeader>
-            <CardContent className="pt-0 space-y-1">
-              {activeWorkOrders.map((wo, i) => (
-                <div key={wo.id}>
-                  {i > 0 && <Separator className="my-1 opacity-40" />}
-                  <Link to={wo.href}>
-                    <div
-                      className={`flex items-center gap-3 p-2.5 rounded-lg hover:bg-muted/40 transition-colors cursor-pointer ${wo.priority === "aog" ? "aog-indicator pl-3" : ""}`}
-                    >
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-0.5">
-                          <span className="font-mono text-xs text-muted-foreground font-medium">
-                            {wo.number}
-                          </span>
-                          {getStatusBadge(wo.status, wo.statusLabel, wo.priority)}
-                          {wo.openSquawks > 0 && (
-                            <Badge className="bg-red-500/15 text-red-400 border-red-500/30 text-[9px] h-4 px-1">
-                              {wo.openSquawks} squawk
-                            </Badge>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                          <span className="font-mono text-sm font-semibold text-foreground">
-                            {wo.aircraft}
-                          </span>
-                          <span className="text-xs text-muted-foreground">
-                            {wo.type}
-                          </span>
-                          <span className="text-muted-foreground text-xs">·</span>
-                          <span className="text-xs text-muted-foreground truncate">
-                            {wo.description}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="flex-shrink-0 text-right min-w-[80px]">
-                        {wo.tasksTotal > 0 ? (
-                          <>
-                            <div className="flex items-center justify-end gap-1.5 mb-1">
-                              {wo.tasksComplete === wo.tasksTotal ? (
-                                <CheckCircle2 className="w-3 h-3 text-green-400" />
-                              ) : (
-                                <Circle className="w-3 h-3 text-muted-foreground" />
-                              )}
-                              <span className="text-[11px] text-muted-foreground">
-                                {wo.tasksComplete}/{wo.tasksTotal} tasks
-                              </span>
-                            </div>
-                            <Progress
-                              value={(wo.tasksComplete / wo.tasksTotal) * 100}
-                              className="h-1 w-20"
-                            />
-                          </>
-                        ) : (
-                          <span className="text-[11px] text-muted-foreground">
-                            No tasks yet
-                          </span>
-                        )}
-                        <div className="flex items-center justify-end gap-1 mt-1">
-                          <Timer className="w-3 h-3 text-muted-foreground/60" />
-                          <span className="text-[10px] text-muted-foreground/60">
-                            {wo.daysOpen}d open
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </Link>
-                </div>
-              ))}
+            <CardContent className="pt-0">
+              <LiveActiveWorkOrders />
             </CardContent>
           </Card>
         </div>
