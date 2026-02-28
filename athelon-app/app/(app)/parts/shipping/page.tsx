@@ -20,6 +20,16 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 
 const STATUS_COLORS: Record<string, string> = {
@@ -40,6 +50,7 @@ export default function ShippingPage() {
   const [search, setSearch] = useState("");
   const [expanded, setExpanded] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
+  const [cancelConfirm, setCancelConfirm] = useState<{ id: Id<"shipments">; shipmentNumber: string; type: string } | null>(null);
 
   // Create form state
   const [formType, setFormType] = useState<"inbound" | "outbound">("outbound");
@@ -218,7 +229,7 @@ export default function ShippingPage() {
                   </Button>
                 )}
                 {s.status !== "cancelled" && s.status !== "delivered" && (
-                  <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); handleStatusUpdate(s._id, "cancelled"); }}>
+                  <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); setCancelConfirm({ id: s._id, shipmentNumber: s.shipmentNumber, type: s.type }); }}>
                     <Trash2 className="h-4 w-4 text-red-400" />
                   </Button>
                 )}
@@ -230,6 +241,31 @@ export default function ShippingPage() {
           </Card>
         ))}
       </div>
+
+      <AlertDialog open={!!cancelConfirm} onOpenChange={(v) => !v && setCancelConfirm(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cancel Shipment?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Cancel {cancelConfirm?.type} shipment <strong>{cancelConfirm?.shipmentNumber}</strong>? This cannot be undone. Verify all staged parts are returned to inventory before cancelling.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Keep Shipment</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                if (cancelConfirm) {
+                  handleStatusUpdate(cancelConfirm.id, "cancelled");
+                  setCancelConfirm(null);
+                }
+              }}
+            >
+              Cancel Shipment
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
@@ -243,6 +279,7 @@ function ShipmentDetails({ shipmentId, orgId }: { shipmentId: Id<"shipments">; o
   const [desc, setDesc] = useState("");
   const [qty, setQty] = useState("1");
   const [sn, setSn] = useState("");
+  const [removeConfirmId, setRemoveConfirmId] = useState<Id<"shipmentItems"> | null>(null);
 
   const handleAdd = async () => {
     if (!pn || !desc) return;
@@ -281,13 +318,43 @@ function ShipmentDetails({ shipmentId, orgId }: { shipmentId: Id<"shipments">; o
                 {item.serialNumber && <span className="text-muted-foreground ml-2">S/N: {item.serialNumber}</span>}
                 <span className="text-muted-foreground ml-2">Qty: {item.quantity}</span>
               </div>
-              <Button size="sm" variant="ghost" onClick={() => removeItem({ id: item._id })}><Trash2 className="h-3 w-3 text-red-400" /></Button>
+              <Button size="sm" variant="ghost" onClick={() => setRemoveConfirmId(item._id)}><Trash2 className="h-3 w-3 text-red-400" /></Button>
             </div>
           ))}
         </div>
       ) : (
         <p className="text-sm text-muted-foreground">No items yet.</p>
       )}
+
+      <AlertDialog open={!!removeConfirmId} onOpenChange={(v) => !v && setRemoveConfirmId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove Item?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Remove this item from the shipment manifest? This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={async () => {
+                if (removeConfirmId) {
+                  try {
+                    await removeItem({ id: removeConfirmId });
+                    toast.success("Item removed");
+                  } catch {
+                    toast.error("Failed to remove item");
+                  }
+                  setRemoveConfirmId(null);
+                }
+              }}
+            >
+              Remove
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

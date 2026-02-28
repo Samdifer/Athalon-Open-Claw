@@ -5,6 +5,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
+import { toast } from "sonner";
 import {
   RotateCcw,
   Plus,
@@ -24,6 +25,16 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -105,8 +116,11 @@ function CreateCoreDialog({
         returnDueDate: returnDueDate ? new Date(returnDueDate).getTime() : undefined,
         notes: notes || undefined,
       });
+      toast.success("Core return created");
       reset();
       onClose();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to create core return");
     } finally {
       setSaving(false);
     }
@@ -175,81 +189,139 @@ function CoreDetailDialog({
   const scrap = useMutation(api.cores.scrapCore);
   const [creditAmount, setCreditAmount] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
+  const [scrapAlertOpen, setScrapAlertOpen] = useState(false);
 
-  if (!coreId) return;
+  if (!coreId) return null;
 
-  const handleAction = async (fn: () => Promise<unknown>) => {
+  const handleAction = async (fn: () => Promise<unknown>, successMsg?: string) => {
     setActionLoading(true);
     try {
       await fn();
+      if (successMsg) toast.success(successMsg);
       onClose();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Action failed — please try again");
     } finally {
       setActionLoading(false);
     }
   };
 
   return (
-    <Dialog open={!!coreId} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
-          <DialogTitle>Core {core?.coreNumber ?? "…"}</DialogTitle>
-        </DialogHeader>
-        {!core ? (
-          <div className="space-y-2"><Skeleton className="h-4 w-full" /><Skeleton className="h-4 w-3/4" /></div>
-        ) : (
-          <div className="space-y-3 text-sm">
-            <div className="flex items-center gap-2">
-              <span className="font-medium">Status:</span>
-              <Badge variant="outline" className={STATUS_STYLES[core.status]}>{statusLabel(core.status)}</Badge>
-            </div>
-            <div><span className="font-medium">Part #:</span> {core.partNumber}</div>
-            {core.serialNumber && <div><span className="font-medium">Serial #:</span> {core.serialNumber}</div>}
-            <div><span className="font-medium">Description:</span> {core.description}</div>
-            <div><span className="font-medium">Core Value:</span> {formatCurrency(core.coreValue)}</div>
-            {core.creditAmount !== undefined && (
-              <div><span className="font-medium">Credit Amount:</span> {formatCurrency(core.creditAmount)}</div>
-            )}
-            {core.returnDueDate && <div><span className="font-medium">Return Due:</span> {formatDate(core.returnDueDate)}</div>}
-            {core.returnedAt && <div><span className="font-medium">Returned:</span> {formatDate(core.returnedAt)}</div>}
-            {core.inspectedAt && <div><span className="font-medium">Inspected:</span> {formatDate(core.inspectedAt)}</div>}
-            {core.creditIssuedAt && <div><span className="font-medium">Credit Issued:</span> {formatDate(core.creditIssuedAt)}</div>}
-            {core.notes && <div><span className="font-medium">Notes:</span> {core.notes}</div>}
-            <div><span className="font-medium">Created:</span> {formatDate(core.createdAt)}</div>
+    <>
+      <Dialog open={!!coreId} onOpenChange={(o) => !o && onClose()}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Core {core?.coreNumber ?? "…"}</DialogTitle>
+          </DialogHeader>
+          {!core ? (
+            <div className="space-y-2"><Skeleton className="h-4 w-full" /><Skeleton className="h-4 w-3/4" /></div>
+          ) : (
+            <div className="space-y-3 text-sm">
+              <div className="flex items-center gap-2">
+                <span className="font-medium">Status:</span>
+                <Badge variant="outline" className={STATUS_STYLES[core.status]}>{statusLabel(core.status)}</Badge>
+              </div>
+              <div><span className="font-medium">Part #:</span> {core.partNumber}</div>
+              {core.serialNumber && <div><span className="font-medium">Serial #:</span> {core.serialNumber}</div>}
+              <div><span className="font-medium">Description:</span> {core.description}</div>
+              <div><span className="font-medium">Core Value:</span> {formatCurrency(core.coreValue)}</div>
+              {core.creditAmount !== undefined && (
+                <div><span className="font-medium">Credit Amount:</span> {formatCurrency(core.creditAmount)}</div>
+              )}
+              {core.returnDueDate && <div><span className="font-medium">Return Due:</span> {formatDate(core.returnDueDate)}</div>}
+              {core.returnedAt && <div><span className="font-medium">Returned:</span> {formatDate(core.returnedAt)}</div>}
+              {core.inspectedAt && <div><span className="font-medium">Inspected:</span> {formatDate(core.inspectedAt)}</div>}
+              {core.creditIssuedAt && <div><span className="font-medium">Credit Issued:</span> {formatDate(core.creditIssuedAt)}</div>}
+              {core.notes && <div><span className="font-medium">Notes:</span> {core.notes}</div>}
+              <div><span className="font-medium">Created:</span> {formatDate(core.createdAt)}</div>
 
-            {/* Status progression actions */}
-            <div className="flex gap-2 flex-wrap border-t pt-2">
-              {core.status === "awaiting_return" && (
-                <Button size="sm" onClick={() => handleAction(() => markReceived({ coreId }))} disabled={actionLoading}>
-                  <PackageCheck className="h-3.5 w-3.5 mr-1" /> Mark Received
-                </Button>
-              )}
-              {core.status === "received" && (
-                <Button size="sm" onClick={() => handleAction(() => markInspected({ coreId }))} disabled={actionLoading}>
-                  <Search className="h-3.5 w-3.5 mr-1" /> Mark Inspected
-                </Button>
-              )}
-              {core.status === "inspected" && (
-                <div className="flex gap-2 items-end w-full">
-                  <div className="flex-1">
-                    <Label>Credit Amount ($)</Label>
-                    <Input type="number" value={creditAmount} onChange={(e) => setCreditAmount(e.target.value)} />
-                  </div>
-                  <Button size="sm" disabled={actionLoading || !creditAmount}
-                    onClick={() => handleAction(() => issueCredit({ coreId, creditAmount: parseFloat(creditAmount) }))}>
-                    <CreditCard className="h-3.5 w-3.5 mr-1" /> Issue Credit
+              {/* Status progression actions */}
+              <div className="flex gap-2 flex-wrap border-t pt-2">
+                {core.status === "awaiting_return" && (
+                  <Button size="sm"
+                    onClick={() => handleAction(
+                      () => markReceived({ coreId }),
+                      `Core ${core.coreNumber} marked received`,
+                    )}
+                    disabled={actionLoading}>
+                    <PackageCheck className="h-3.5 w-3.5 mr-1" /> Mark Received
                   </Button>
-                </div>
-              )}
-              {["awaiting_return", "received", "inspected"].includes(core.status) && (
-                <Button size="sm" variant="destructive" onClick={() => handleAction(() => scrap({ coreId }))} disabled={actionLoading}>
-                  <Trash2 className="h-3.5 w-3.5 mr-1" /> Scrap
-                </Button>
-              )}
+                )}
+                {core.status === "received" && (
+                  <Button size="sm"
+                    onClick={() => handleAction(
+                      () => markInspected({ coreId }),
+                      `Core ${core.coreNumber} marked inspected`,
+                    )}
+                    disabled={actionLoading}>
+                    <Search className="h-3.5 w-3.5 mr-1" /> Mark Inspected
+                  </Button>
+                )}
+                {core.status === "inspected" && (
+                  <div className="flex gap-2 items-end w-full">
+                    <div className="flex-1">
+                      <Label>Credit Amount ($)</Label>
+                      <Input type="number" value={creditAmount} onChange={(e) => setCreditAmount(e.target.value)} />
+                    </div>
+                    <Button size="sm" disabled={actionLoading || !creditAmount}
+                      onClick={() => handleAction(
+                        () => issueCredit({ coreId, creditAmount: parseFloat(creditAmount) }),
+                        `Credit issued for core ${core.coreNumber}`,
+                      )}>
+                      <CreditCard className="h-3.5 w-3.5 mr-1" /> Issue Credit
+                    </Button>
+                  </div>
+                )}
+                {["awaiting_return", "received", "inspected"].includes(core.status) && (
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    onClick={() => setScrapAlertOpen(true)}
+                    disabled={actionLoading}
+                  >
+                    <Trash2 className="h-3.5 w-3.5 mr-1" /> Scrap
+                  </Button>
+                )}
+              </div>
             </div>
-          </div>
-        )}
-      </DialogContent>
-    </Dialog>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Scrap Confirmation Alert */}
+      <AlertDialog open={scrapAlertOpen} onOpenChange={setScrapAlertOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Scrap Core Return?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {core ? (
+                <>
+                  You are about to scrap core <strong>{core.partNumber}</strong> (Core {core.coreNumber})
+                  with a value of <strong>{formatCurrency(core.coreValue)}</strong>. This action cannot be undone.
+                </>
+              ) : (
+                "This action cannot be undone."
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                setScrapAlertOpen(false);
+                handleAction(
+                  () => scrap({ coreId }),
+                  `Core ${core?.coreNumber ?? ""} scrapped`,
+                ).catch(() => {/* handled inside handleAction */});
+              }}
+            >
+              Scrap Core
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
 
