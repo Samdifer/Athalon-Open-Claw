@@ -346,9 +346,9 @@ export function WorkItemsList({
       {dispositionFinding && workOrderIdTyped && (
         <DiscrepancyDispositionDialog
           open={Boolean(dispositionFinding)}
-          onClose={() => setDispositionFinding(null)}
+          onOpenChange={(o) => { if (!o) setDispositionFinding(null); }}
           discrepancyId={dispositionFinding.id as Id<"discrepancies">}
-          description={dispositionFinding.description}
+          discrepancyNumber={dispositionFinding.description}
           workOrderId={workOrderIdTyped}
         />
       )}
