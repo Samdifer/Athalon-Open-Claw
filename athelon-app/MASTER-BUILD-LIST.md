@@ -142,3 +142,11 @@
 | AI-003 | Make the Compliance tab badge on WO detail page dynamic — compute actual non-compliance from real AD + task compliance data instead of hardcoded amber dot. | P1 | 0.5h | `work-orders/[id]/page.tsx` | ✅ Done |
 | BUG-001 | `dashboard/page.tsx` line 90: `wo.discrepancyCount` → `wo.openDiscrepancyCount` (pre-existing TS error) | P0 | 5m | `dashboard/page.tsx` | ✅ Done |
 | BUG-002 | `work-orders/page.tsx` line 440: `wo.workOrderNumber` on `WorkOrderRow` type → `wo.number` (pre-existing TS error) | P0 | 5m | `work-orders/page.tsx` | ✅ Done |
+
+### Cycle 3 — 2026-02-28 (Parts Traceability)
+
+| ID | Description | Priority | Est | Files Affected | Status |
+|----|-------------|----------|-----|----------------|--------|
+| AI-007 | Replace hand-rolled toast state (`useState` + `setTimeout`) in `parts/page.tsx` with `toast` from `sonner`. The page currently uses a custom `<div>` overlay instead of the app-standard `sonner` toast — a direct violation of coding rules. Also removes the `showToast()` wrapper function. | P1 | 30m | `parts/page.tsx` | ⏳ |
+| AI-008 | Upgrade `parts/new/page.tsx` to capture FAA 8130-3 / cert fields at receive time. Current form only collects partNumber, partName, qty, supplier — zero traceability data. A Part 145 receiving clerk MUST record cert type, cert number, serial number, condition, and receiving date. Upgrade form to use `api.parts.receivePart` (not `createPart`) when cert data is present, with collapsible sections for life-limited and shelf-life data. | P0 | 2h | `parts/new/page.tsx` | ⏳ |
+| AI-009 | Add Inspect action to `parts/requests/page.tsx` (Parts Queue). Parts in `pending_inspection` have no action button on this page — the clerk sees the part but can't act on it without navigating elsewhere. Add inline `InspectDialog` + Inspect button using `api.gapFixes.completeReceivingInspection`. | P1 | 1h | `parts/requests/page.tsx` | ⏳ |

@@ -29,6 +29,7 @@ import { printBarcodeLabel } from "@/lib/barcode";
 import { QRCodeBadge } from "@/components/QRCodeBadge";
 import { QRScannerDialog } from "@/components/QRScannerDialog";
 import { QrCode } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -462,7 +463,6 @@ export default function PartsPage() {
   // Dialog state
   const [inspectPart, setInspectPart] = useState<PartDoc | null>(null);
   const [reservePart, setReservePart] = useState<PartDoc | null>(null);
-  const [toastMsg, setToastMsg] = useState<{ text: string; kind: "success" | "error" } | null>(null);
   const [scannerOpen, setScannerOpen] = useState(false);
   const [qrPart, setQrPart] = useState<PartDoc | null>(null);
   const [qrScannerOpen, setQrScannerOpen] = useState(false);
@@ -543,17 +543,12 @@ export default function PartsPage() {
     ).length,
   };
 
-  function showToast(text: string, kind: "success" | "error") {
-    setToastMsg({ text, kind });
-    setTimeout(() => setToastMsg(null), 3500);
-  }
-
   async function handleRelease(part: PartDoc) {
     try {
       await releasePart({ partId: part._id });
-      showToast(`Reservation released for ${part.partNumber}`, "success");
+      toast.success(`Reservation released for ${part.partNumber}`);
     } catch (err) {
-      showToast(err instanceof Error ? err.message : "Release failed", "error");
+      toast.error(err instanceof Error ? err.message : "Release failed");
     }
   }
 
@@ -562,20 +557,6 @@ export default function PartsPage() {
 
   return (
     <div className="space-y-5">
-      {/* Toast */}
-      {toastMsg && (
-        <div
-          className={`fixed bottom-6 right-6 z-50 rounded-md px-4 py-3 text-sm font-medium shadow-lg border ${
-            toastMsg.kind === "success"
-              ? "bg-green-50 dark:bg-green-900/90 border-green-500/50 text-green-700 dark:text-green-300"
-              : "bg-red-50 dark:bg-red-900/90 border-red-500/50 text-red-700 dark:text-red-300"
-          }`}
-        >
-          {toastMsg.kind === "success" ? "✓ " : "✗ "}
-          {toastMsg.text}
-        </div>
-      )}
-
       {/* Header */}
       <div className="flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between">
         <div>
@@ -630,7 +611,7 @@ export default function PartsPage() {
                   })),
                   "parts-inventory.csv",
                 );
-                setToastMsg({ text: "Parts exported to CSV", kind: "success" });
+                toast.success("Parts exported to CSV");
               }
             }}
           >
@@ -1006,9 +987,9 @@ export default function PartsPage() {
         onClose={() => setInspectPart(null)}
         onSuccess={(result) => {
           if (result === "approved") {
-            showToast(`Part approved — moved to inventory`, "success");
+            toast.success("Part approved — moved to inventory");
           } else {
-            showToast(`Part rejected — moved to quarantine`, "error");
+            toast.error("Part rejected — moved to quarantine");
           }
           setInspectPart(null);
         }}
@@ -1021,7 +1002,7 @@ export default function PartsPage() {
         onScan={(value) => {
           setSearch(value);
           setScannerOpen(false);
-          showToast(`Scanned: ${value}`, "success");
+          toast.success(`Scanned: ${value}`);
         }}
         title="Scan Part Barcode"
       />
@@ -1034,7 +1015,7 @@ export default function PartsPage() {
         workOrders={workOrderOptions}
         onClose={() => setReservePart(null)}
         onSuccess={(woNumber) => {
-          showToast(`Part reserved for ${woNumber}`, "success");
+          toast.success(`Part reserved for ${woNumber}`);
           setReservePart(null);
         }}
       />
