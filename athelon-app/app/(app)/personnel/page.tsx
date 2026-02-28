@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 import { Users, ShieldAlert, AlertTriangle, ExternalLink, Pencil, X, Check } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
@@ -163,8 +164,12 @@ function ShiftEditor({ technicianId, orgId, initial, onClose }: ShiftEditorProps
         efficiencyMultiplier: editEfficiency,
       });
       onClose();
-    } catch {
-      // Silently ignore — toast system can be added later
+    } catch (err) {
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : "Failed to save shift — please try again",
+      );
     } finally {
       setSaving(false);
     }

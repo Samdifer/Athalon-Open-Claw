@@ -11,8 +11,7 @@
  */
 
 import { useState } from "react";
-import { useParams } from "react-router-dom";
-import { Link } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
@@ -31,6 +30,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDate } from "@/lib/format";
@@ -353,9 +353,9 @@ export default function AircraftLogbookPage() {
       {/* Back + Header */}
       <div className="flex items-start gap-3">
         <Button asChild variant="ghost" size="sm" className="mt-0.5">
-          <Link to="/fleet">
+          <Link to={`/fleet/${encodeURIComponent(tailNumber)}`}>
             <ArrowLeft className="w-4 h-4 mr-1.5" />
-            Fleet
+            {tailNumber}
           </Link>
         </Button>
         <div className="flex-1">
@@ -418,29 +418,31 @@ export default function AircraftLogbookPage() {
             {/* Date range */}
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <span>From</span>
-              <input
+              <Input
                 type="date"
                 value={dateFrom}
                 onChange={(e) => setDateFrom(e.target.value)}
-                className="bg-background border border-border/60 rounded px-2 py-1 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                className="h-7 w-36 text-xs bg-muted/30 border-border/60"
               />
               <span>to</span>
-              <input
+              <Input
                 type="date"
                 value={dateTo}
                 onChange={(e) => setDateTo(e.target.value)}
-                className="bg-background border border-border/60 rounded px-2 py-1 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                className="h-7 w-36 text-xs bg-muted/30 border-border/60"
               />
               {(dateFrom || dateTo) && (
-                <button
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={() => {
                     setDateFrom("");
                     setDateTo("");
                   }}
-                  className="text-muted-foreground hover:text-foreground transition-colors"
+                  className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground"
                 >
                   ✕ Clear
-                </button>
+                </Button>
               )}
             </div>
 
