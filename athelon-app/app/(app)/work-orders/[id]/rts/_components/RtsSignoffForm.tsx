@@ -1,7 +1,7 @@
 "use client";
 
 import { Link } from "react-router-dom";
-import { FileText, User, Gauge } from "lucide-react";
+import { FileText, User, Gauge, AlertTriangle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -86,6 +86,20 @@ export function RtsSignoffForm({
             placeholder={`Current on file: ${currentHoursOnFile?.toFixed(1) ?? "?"} hr`}
             className="font-mono text-xs h-9 w-48"
           />
+          {/* Real-time regression warning — catches PRE-3 failure before Authorize is clicked */}
+          {aircraftHoursAtRts &&
+            currentHoursOnFile != null &&
+            !isNaN(parseFloat(aircraftHoursAtRts)) &&
+            parseFloat(aircraftHoursAtRts) < currentHoursOnFile && (
+              <div className="flex items-start gap-2 p-2 rounded-md border border-amber-500/40 bg-amber-500/5">
+                <AlertTriangle className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+                <p className="text-[11px] text-amber-600 dark:text-amber-400">
+                  Entered hours ({parseFloat(aircraftHoursAtRts).toFixed(1)}) are less than aircraft
+                  time on file ({currentHoursOnFile.toFixed(1)} hr). PRE-3 will fail — aircraft
+                  total time cannot decrease.
+                </p>
+              </div>
+            )}
         </div>
 
         {/* RTS Statement */}

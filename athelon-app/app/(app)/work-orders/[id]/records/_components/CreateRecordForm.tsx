@@ -122,6 +122,16 @@ export function CreateRecordForm({
     e.preventDefault();
     setError(null);
 
+    if (!form.workPerformed.trim()) {
+      setError("Work performed description is required.");
+      return;
+    }
+    if (form.workPerformed.trim().length < 50) {
+      setError(
+        `Work description must be at least 50 characters per AC 43-9C. Current: ${form.workPerformed.trim().length} chars.`,
+      );
+      return;
+    }
     if (!form.callerTechnicianId) {
       setError("Please select the signing technician.");
       return;

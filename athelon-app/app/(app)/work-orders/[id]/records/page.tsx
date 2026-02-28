@@ -16,9 +16,6 @@ import {
   Download,
   List,
   Clock,
-  ShieldCheck,
-  Wrench,
-  Eye,
   Search,
   CheckCircle2,
   Lock,
@@ -44,7 +41,6 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import { CreateRecordForm } from "./_components/CreateRecordForm";
-import { RecordsList } from "./_components/RecordsList";
 
 function inspectionBadge(type?: string) {
   if (!type) return null;
@@ -82,13 +78,6 @@ export default function MaintenanceRecordsPage() {
     orgId && workOrderId
       ? { workOrderId, organizationId: orgId }
       : "skip",
-  );
-
-  // Build signatureHash lookup map: recordId → hash
-  const hashMap = new Map<string, string>(
-    (fullRecords ?? [])
-      .filter((r) => r.signatureHash)
-      .map((r) => [r._id as string, r.signatureHash as string]),
   );
 
   // Filtered full records for the table/timeline view
@@ -459,21 +448,7 @@ export default function MaintenanceRecordsPage() {
         </div>
       )}
 
-      {/* Legacy Records List (keeping for compatibility with existing RecordsList component) */}
-      {viewMode === "table" && !searchQuery && (
-        <div className="hidden">
-          <RecordsList
-            records={records}
-            hashMap={hashMap}
-            showForm={showForm}
-            onCorrect={handleCorrect}
-            onAddFirst={() => {
-              setCorrectionTarget(null);
-              setShowForm(true);
-            }}
-          />
-        </div>
-      )}
+      {/* AI-075: Legacy RecordsList removed — replaced by filteredFullRecords table/timeline above */}
 
       {/* Regulatory Note */}
       <p className="text-[11px] text-muted-foreground/60 text-center">
