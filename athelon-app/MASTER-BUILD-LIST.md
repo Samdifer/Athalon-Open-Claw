@@ -143,6 +143,22 @@
 | BUG-001 | `dashboard/page.tsx` line 90: `wo.discrepancyCount` → `wo.openDiscrepancyCount` (pre-existing TS error) | P0 | 5m | `dashboard/page.tsx` | ✅ Done |
 | BUG-002 | `work-orders/page.tsx` line 440: `wo.workOrderNumber` on `WorkOrderRow` type → `wo.number` (pre-existing TS error) | P0 | 5m | `work-orders/page.tsx` | ✅ Done |
 
+### Cycle 4 — 2026-02-28 (UI/UX Quality)
+
+| ID | Description | Priority | Est | Files Affected | Status |
+|----|-------------|----------|-----|----------------|--------|
+| AI-010 | Fix `squawks/page.tsx` dark-mode color system — replace all hardcoded Tailwind color literals (`text-gray-900`, `text-gray-500`, `bg-blue-50`, `bg-red-50`, `bg-amber-50`, `text-blue-600`, `text-red-600`, `text-amber-600`) with CSS variable tokens matching app design system. Replace hand-rolled loading spinner with `Skeleton` components. Fix "New Squawk" disabled button — replace with a navigable link to work orders (squawks require WO context). | P1 | 30m | `squawks/page.tsx` | ✅ Done |
+| AI-011 | Fix `dashboard/page.tsx` — make date subtitle dynamic (was hardcoded "Mon, Feb 23, 2026"). Replace duplicate static `stats` grid (4 fake-data cards) with a `LiveSecondaryKPIs` component that queries real parts-awaiting-inspection count (`api.parts.listParts` with `pending_inspection` filter) and expiring cert count (`api.technicians.listWithExpiringCerts`). The old `stats` row duplicated the live KPI cards above it with fabricated numbers. | P1 | 1h | `dashboard/page.tsx` | ✅ Done |
+| AI-012 | Fix `dashboard/page.tsx` — replace hardcoded `activeWorkOrders` demo array with live Convex data from `api.workOrders.getWorkOrdersWithScheduleRisk`. Dashboard "Active Work Orders" card was showing N192AK, N76LS, N416AB with fake task/squawk counts — never reflected real WOs. Add `LiveActiveWorkOrders` component that fetches live, sorts AOG-first, caps at 5. | P1 | 1h | `dashboard/page.tsx` | ✅ Done |
+
+### Cycle 5 — 2026-02-28 (Data Integrity)
+
+| ID | Description | Priority | Est | Files Affected | Status |
+|----|-------------|----------|-----|----------------|--------|
+| AI-013 | Fix `CloseReadinessPanel.tsx` stub close handler — `handleClose()` was calling `toast.success("Work order closed successfully")` without any Convex mutation. WO never actually closed in the backend (silent data integrity failure). Replaced stub with `navigate(\`/work-orders/${workOrderId}/rts\`)` which routes to the full RTS authorization flow (signatureAuthEventId, RTS statement, aircraft hours). | P0 | 30m | `components/CloseReadinessPanel.tsx` | ✅ Done |
+| AI-014 | Fix `CloseReadinessPanel.tsx` fragile string-matching checklist — CHECKLIST_ITEMS used `b.toLowerCase().includes("task card")` etc. to detect blockers. The status blocker `"Work order status is 'X'"` matched nothing and silently showed green. Replaced with direct backend blocker display — actual blocker messages verbatim with XCircle icons. No string guessing. | P1 | 20m | `components/CloseReadinessPanel.tsx` | ✅ Done |
+| AI-015 | Fix MEL deferral in `DiscrepancyDispositionDialog.tsx` — previously showed `toast.error("MEL deferral requires pre-signing auth")` and did nothing. No "full deferral workflow" page exists. MEL deferrals are a 14 CFR 91.213/MMEL regulatory requirement. Added `signatureAuthEventId` input + `melDeferralDate` field to MEL path. Wired to `api.discrepancies.deferDiscrepancy`. Added optional `workOrderId` prop so signature page link can be constructed. Updated `squawks/page.tsx` to pass `workOrderId` to dialog. | P0 | 1h | `components/DiscrepancyDispositionDialog.tsx`, `app/(app)/squawks/page.tsx` | ✅ Done |
+
 ### Cycle 3 — 2026-02-28 (Parts Traceability)
 
 | ID | Description | Priority | Est | Files Affected | Status |

@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   AlertTriangle,
   Search,
@@ -18,13 +19,14 @@ import {
   Gavel,
 } from "lucide-react";
 import { DiscrepancyDispositionDialog } from "@/components/DiscrepancyDispositionDialog";
+import { Link } from "react-router-dom";
 import type { Id } from "@/convex/_generated/dataModel";
 
-const SEVERITY_STYLES: Record<string, { bg: string; text: string; label: string }> = {
-  mandatory: { bg: "bg-red-100", text: "text-red-700", label: "Critical" },
-  recommended: { bg: "bg-orange-100", text: "text-orange-700", label: "Major" },
-  customer_information: { bg: "bg-yellow-100", text: "text-yellow-700", label: "Minor" },
-  ops_check: { bg: "bg-blue-100", text: "text-blue-700", label: "Observation" },
+const SEVERITY_STYLES: Record<string, { bg: string; text: string; border: string; label: string }> = {
+  mandatory: { bg: "bg-red-500/15", text: "text-red-600 dark:text-red-400", border: "border-red-500/30", label: "Critical" },
+  recommended: { bg: "bg-orange-500/15", text: "text-orange-600 dark:text-orange-400", border: "border-orange-500/30", label: "Major" },
+  customer_information: { bg: "bg-yellow-500/15", text: "text-yellow-600 dark:text-yellow-400", border: "border-yellow-500/30", label: "Minor" },
+  ops_check: { bg: "bg-blue-500/15", text: "text-blue-600 dark:text-blue-400", border: "border-blue-500/30", label: "Observation" },
 };
 
 const STATUS_TABS = [
@@ -43,6 +45,7 @@ export default function SquawksPage() {
   const [dispositionTarget, setDispositionTarget] = useState<{
     id: Id<"discrepancies">;
     number: string;
+    workOrderId?: Id<"workOrders">;
   } | null>(null);
 
   const discrepancies = useQuery(
@@ -115,27 +118,41 @@ export default function SquawksPage() {
   if (!orgId) {
     return (
       <div className="flex items-center justify-center py-16">
-        <p className="text-gray-500">Loading organization…</p>
+        <p className="text-muted-foreground">Loading organization…</p>
       </div>
     );
   }
 
   if (!discrepancies) {
     return (
-      <div className="flex items-center justify-center py-16">
-        <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {[1, 2, 3].map((i) => (
+            <Card key={i} className="border-border/60">
+              <CardContent className="pt-6">
+                <Skeleton className="h-16 w-full" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+        <div className="space-y-3">
+          {[1, 2, 3].map((i) => (
+            <Skeleton key={i} className="h-20 w-full" />
+          ))}
+        </div>
       </div>
     );
   }
 
   function getSeverityBadge(type: string | undefined) {
     const style = SEVERITY_STYLES[type ?? ""] ?? {
-      bg: "bg-gray-100",
-      text: "text-gray-600",
+      bg: "bg-muted/50",
+      text: "text-muted-foreground",
+      border: "border-border/40",
       label: type ?? "Unknown",
     };
     return (
-      <Badge className={`${style.bg} ${style.text} border-0`}>
+      <Badge className={`${style.bg} ${style.text} border ${style.border}`}>
         {style.label}
       </Badge>
     );
@@ -159,60 +176,62 @@ export default function SquawksPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h1 className="text-lg sm:text-xl md:text-2xl font-semibold text-foreground">
             Squawks & Discrepancies
           </h1>
-          <p className="text-gray-500 mt-1">
+          <p className="text-muted-foreground mt-1">
             Manage aircraft discrepancies and findings
           </p>
         </div>
-        <Button className="gap-2" disabled>
-          <Plus className="w-4 h-4" />
-          New Squawk
+        <Button className="gap-2" asChild title="Squawks are logged from within a Work Order">
+          <Link to="/work-orders">
+            <Plus className="w-4 h-4" />
+            Log from Work Order
+          </Link>
         </Button>
       </div>
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Card>
+        <Card className="border-border/60">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-500">Total Open</p>
-                <p className="text-3xl font-bold text-gray-900">{totalOpen}</p>
+                <p className="text-sm font-medium text-muted-foreground">Total Open</p>
+                <p className="text-3xl font-bold text-foreground">{totalOpen}</p>
               </div>
-              <div className="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center">
-                <AlertCircle className="w-6 h-6 text-blue-600" />
+              <div className="w-12 h-12 bg-blue-500/10 rounded-lg flex items-center justify-center">
+                <AlertCircle className="w-6 h-6 text-blue-600 dark:text-blue-400" />
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card className={criticalCount > 0 ? "border-red-200" : ""}>
+        <Card className={`border-border/60 ${criticalCount > 0 ? "border-red-500/30" : ""}`}>
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-500">Critical</p>
-                <p className="text-3xl font-bold text-red-600">
+                <p className="text-sm font-medium text-muted-foreground">Critical</p>
+                <p className="text-3xl font-bold text-red-600 dark:text-red-400">
                   {criticalCount}
                 </p>
               </div>
-              <div className="w-12 h-12 bg-red-50 rounded-lg flex items-center justify-center">
-                <AlertTriangle className="w-6 h-6 text-red-600" />
+              <div className="w-12 h-12 bg-red-500/10 rounded-lg flex items-center justify-center">
+                <AlertTriangle className="w-6 h-6 text-red-600 dark:text-red-400" />
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="border-border/60">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-500">Deferred</p>
-                <p className="text-3xl font-bold text-amber-600">
+                <p className="text-sm font-medium text-muted-foreground">Deferred</p>
+                <p className="text-3xl font-bold text-amber-600 dark:text-amber-400">
                   {deferredCount}
                 </p>
               </div>
-              <div className="w-12 h-12 bg-amber-50 rounded-lg flex items-center justify-center">
-                <Clock className="w-6 h-6 text-amber-600" />
+              <div className="w-12 h-12 bg-amber-500/10 rounded-lg flex items-center justify-center">
+                <Clock className="w-6 h-6 text-amber-600 dark:text-amber-400" />
               </div>
             </div>
           </CardContent>
@@ -234,7 +253,7 @@ export default function SquawksPage() {
           </TabsList>
         </Tabs>
         <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
             placeholder="Search squawks…"
             value={search}
@@ -246,10 +265,10 @@ export default function SquawksPage() {
 
       {/* Discrepancy List */}
       {filtered.length === 0 ? (
-        <Card>
+        <Card className="border-border/60">
           <CardContent className="py-12 text-center">
-            <Eye className="w-8 h-8 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-500">No discrepancies found.</p>
+            <Eye className="w-8 h-8 text-muted-foreground/30 mx-auto mb-3" />
+            <p className="text-muted-foreground">No discrepancies found.</p>
           </CardContent>
         </Card>
       ) : (
@@ -257,7 +276,7 @@ export default function SquawksPage() {
           {filtered.map((d) => (
             <Card
               key={d._id}
-              className="hover:shadow-sm transition-shadow"
+              className="border-border/60 hover:shadow-sm transition-shadow"
             >
               <CardContent className="py-4">
                 <div className="flex items-start gap-3">
@@ -266,7 +285,7 @@ export default function SquawksPage() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap mb-1">
-                      <span className="font-mono text-sm font-semibold text-gray-900">
+                      <span className="font-mono text-sm font-semibold text-foreground">
                         {d.discrepancyNumber}
                       </span>
                       {getSeverityBadge(d.discrepancyType)}
@@ -279,10 +298,10 @@ export default function SquawksPage() {
                         </Badge>
                       )}
                     </div>
-                    <p className="text-sm text-gray-700 line-clamp-2">
+                    <p className="text-sm text-foreground/80 line-clamp-2">
                       {d.description}
                     </p>
-                    <div className="flex items-center gap-4 mt-2 text-xs text-gray-400">
+                    <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground/60">
                       {d.componentAffected && (
                         <span>Component: {d.componentAffected}</span>
                       )}
@@ -310,6 +329,7 @@ export default function SquawksPage() {
                         setDispositionTarget({
                           id: d._id as Id<"discrepancies">,
                           number: d.discrepancyNumber ?? d._id,
+                          workOrderId: d.workOrderId as Id<"workOrders"> | undefined,
                         })
                       }
                     >
@@ -331,6 +351,7 @@ export default function SquawksPage() {
           onOpenChange={(v) => { if (!v) setDispositionTarget(null); }}
           discrepancyId={dispositionTarget.id}
           discrepancyNumber={dispositionTarget.number}
+          workOrderId={dispositionTarget.workOrderId}
         />
       )}
     </div>

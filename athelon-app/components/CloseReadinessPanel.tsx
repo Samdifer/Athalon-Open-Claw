@@ -1,12 +1,28 @@
 "use client";
 
-import { useQuery, useMutation } from "convex/react";
+/**
+ * CloseReadinessPanel — AI-013 + AI-014
+ *
+ * AI-013: Fixed stub close handler — the old `handleClose` was a toast.success()
+ * that never called any backend mutation. WOs were never actually closed.
+ * Now the button navigates to /work-orders/[id]/rts which has the full
+ * authorizeReturnToService flow with signatureAuthEventId, RTS statement,
+ * and aircraft hours. closeWorkOrder requires pending_signoff status and all
+ * those fields — the RTS page is the correct entry point.
+ *
+ * AI-014: Fixed fragile string-matching checklist — the old code used
+ * b.toLowerCase().includes("task card") etc. to map backend blocker messages
+ * to synthetic checklist rows. This silently missed the status blocker
+ * ("Work order status is 'X'") which matched nothing and showed green.
+ * Now we display the actual backend blockers directly — no guessing.
+ */
+
+import { useQuery } from "convex/react";
+import { useNavigate } from "react-router-dom";
 import { api } from "@/convex/_generated/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, XCircle, Loader2, ShieldCheck } from "lucide-react";
-import { toast } from "sonner";
-import { useState } from "react";
+import { CheckCircle2, XCircle, Loader2, ShieldCheck, ArrowRight } from "lucide-react";
 import type { Id } from "@/convex/_generated/dataModel";
 
 interface CloseReadinessPanelProps {
@@ -14,23 +30,19 @@ interface CloseReadinessPanelProps {
   organizationId: Id<"organizations">;
 }
 
-interface CheckItem {
-  label: string;
-  passed: boolean;
-}
-
 export function CloseReadinessPanel({
   workOrderId,
   organizationId,
 }: CloseReadinessPanelProps) {
+  const navigate = useNavigate();
+
   const readiness = useQuery(api.workOrders.getCloseReadiness, {
     workOrderId,
     organizationId,
   });
 
-  const [closing, setClosing] = useState(false);
-
-  if (!readiness) {
+  // ── Loading state ──────────────────────────────────────────────────────────
+  if (readiness === undefined) {
     return (
       <Card>
         <CardContent className="py-8 flex justify-center">
@@ -40,33 +52,28 @@ export function CloseReadinessPanel({
     );
   }
 
+  // ── Null (WO not found or access denied) ───────────────────────────────────
+  if (readiness === null) {
+    return null;
+  }
+
   const canClose = readiness.canClose ?? false;
   const blockers: string[] = readiness.blockers ?? [];
 
-  // Build checklist from blockers
-  const CHECKLIST_ITEMS: CheckItem[] = [
-    { label: "All task cards complete", passed: !blockers.some((b) => b.toLowerCase().includes("task card") && b.toLowerCase().includes("complete")) },
-    { label: "All task cards signed (tech + inspector)", passed: !blockers.some((b) => b.toLowerCase().includes("sign")) },
-    { label: "All discrepancies resolved", passed: !blockers.some((b) => b.toLowerCase().includes("discrepan")) },
-    { label: "All parts accounted for", passed: !blockers.some((b) => b.toLowerCase().includes("part")) },
-    { label: "Time entries approved", passed: !blockers.some((b) => b.toLowerCase().includes("time")) },
-    { label: "Invoice generated", passed: !blockers.some((b) => b.toLowerCase().includes("invoice")) },
-  ];
-
-  const handleClose = async () => {
-    setClosing(true);
-    try {
-      // The close mutation would be called here
-      toast.success("Work order closed successfully.");
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to close work order");
-    } finally {
-      setClosing(false);
-    }
-  };
+  // Navigate to the RTS authorization page which has the full form:
+  // signatureAuthEventId, returnToServiceStatement, aircraftHoursAtRts
+  function handleGoToRts() {
+    navigate(`/work-orders/${workOrderId}/rts`);
+  }
 
   return (
-    <Card className={canClose ? "border-green-500/30 bg-green-500/5" : "border-amber-500/30 bg-amber-500/5"}>
+    <Card
+      className={
+        canClose
+          ? "border-green-500/30 bg-green-500/5"
+          : "border-amber-500/30 bg-amber-500/5"
+      }
+    >
       <CardHeader className="pb-2">
         <CardTitle className="text-sm font-semibold flex items-center gap-2">
           <ShieldCheck className="w-4 h-4" />
@@ -74,40 +81,55 @@ export function CloseReadinessPanel({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
-        <ul className="space-y-1.5">
-          {CHECKLIST_ITEMS.map((item) => (
-            <li key={item.label} className="flex items-center gap-2 text-xs">
-              {item.passed ? (
-                <CheckCircle2 className="w-3.5 h-3.5 text-green-500 flex-shrink-0" />
-              ) : (
-                <XCircle className="w-3.5 h-3.5 text-red-400 flex-shrink-0" />
-              )}
-              <span className={item.passed ? "text-muted-foreground" : "text-foreground font-medium"}>
-                {item.label}
-              </span>
-            </li>
-          ))}
-        </ul>
-
-        {blockers.length > 0 && (
-          <div className="text-[11px] text-muted-foreground border-t border-border/40 pt-2 space-y-0.5">
-            {blockers.map((b) => (
-              <p key={b} className="flex items-center gap-1.5">
-                <XCircle className="w-3 h-3 text-red-400 flex-shrink-0" />
-                {b}
-              </p>
-            ))}
+        {canClose ? (
+          /* ── All clear — ready for RTS sign-off ─────────────────────────── */
+          <div className="flex items-start gap-2 text-xs">
+            <CheckCircle2 className="w-3.5 h-3.5 text-green-500 flex-shrink-0 mt-0.5" />
+            <span className="text-green-700 dark:text-green-400 font-medium">
+              All pre-conditions met. Ready for Return-to-Service authorization.
+            </span>
+          </div>
+        ) : (
+          /* ── Blockers — show backend messages verbatim (no string guessing) ── */
+          <div className="space-y-1.5">
+            <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wide">
+              {blockers.length} blocker{blockers.length !== 1 ? "s" : ""} remaining
+            </p>
+            <ul className="space-y-1.5">
+              {blockers.map((blocker, idx) => (
+                <li
+                  key={idx}
+                  className="flex items-start gap-2 text-xs"
+                >
+                  <XCircle className="w-3.5 h-3.5 text-red-400 flex-shrink-0 mt-0.5" />
+                  <span className="text-foreground">{blocker}</span>
+                </li>
+              ))}
+            </ul>
           </div>
         )}
 
+        {/* ── RTS navigation button ──────────────────────────────────────────
+            Disabled when there are still blockers. When enabled, opens the
+            RTS page which calls authorizeReturnToService with all required
+            fields (signatureAuthEventId, statement, hours).
+        ─────────────────────────────────────────────────────────────────── */}
         <Button
-          className="w-full"
-          disabled={!canClose || closing}
-          onClick={handleClose}
+          className="w-full gap-2"
+          variant={canClose ? "default" : "outline"}
+          disabled={!canClose}
+          onClick={handleGoToRts}
         >
-          {closing && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-          Close Work Order
+          <ShieldCheck className="w-4 h-4" />
+          Authorize Return to Service
+          {canClose && <ArrowRight className="w-3.5 h-3.5 ml-auto" />}
         </Button>
+
+        {!canClose && (
+          <p className="text-[11px] text-muted-foreground text-center">
+            Resolve all blockers above before authorizing RTS.
+          </p>
+        )}
       </CardContent>
     </Card>
   );
