@@ -116,7 +116,7 @@ export function WorkOrderHeader({ wo, aircraft, id, canClose }: WorkOrderHeaderP
         <div className="flex-shrink-0 flex gap-2">
           {canClose ? (
             <Button asChild className="gap-2">
-              <Link to={`/work-orders/${id}/signature`}>
+              <Link to={`/work-orders/${id}/rts`}>
                 <ShieldCheck className="w-4 h-4" />
                 Sign Off & Close
               </Link>

@@ -201,7 +201,10 @@ export default function TaskCardPage() {
   const [findingOpen, setFindingOpen] = useState(false);
   const [handoffNote, setHandoffNote] = useState("");
   const [handoffSubmitting, setHandoffSubmitting] = useState(false);
+  // GAP-18: Start step tracking
+  const [startingStepId, setStartingStepId] = useState<string | null>(null);
   const addHandoffNote = useMutation(api.taskCards.addHandoffNote);
+  const startStepMutation = useMutation(api.gapFixes.startStep);
 
   // ── Compliance — Convex queries/mutations (AI-004) ────────────────────────
   const complianceItemsRaw = useQuery(
@@ -302,6 +305,19 @@ export default function TaskCardPage() {
     })),
     notes: item.notes,
   }));
+
+  // ── GAP-18: Start a step (mark as in_progress) ───────────────────────────
+  async function handleStartStep(stepId: Id<"taskCardSteps">) {
+    if (!techId) return;
+    setStartingStepId(stepId as string);
+    try {
+      await startStepMutation({ stepId, technicianId: techId });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to start step");
+    } finally {
+      setStartingStepId(null);
+    }
+  }
 
   // ── Map Convex vendor services to local shape ─────────────────────────────
   const vendorServices: AttachedVendorService[] = (vendorServicesRaw ?? []).map((svc) => ({
@@ -414,6 +430,8 @@ export default function TaskCardPage() {
                 orgId={orgId}
                 techId={techId}
                 onSignClick={setSignStepTarget}
+                onStartClick={handleStartStep}
+                isStarting={startingStepId === step._id}
               />
             ))}
         </CardContent>
@@ -481,8 +499,10 @@ export default function TaskCardPage() {
                       note: handoffNote.trim(),
                     });
                     setHandoffNote("");
-                  } catch {
-                    // Error will show in console; could add toast later
+                  } catch (err) {
+                    toast.error(
+                      err instanceof Error ? err.message : "Failed to add handoff note — please try again",
+                    );
                   } finally {
                     setHandoffSubmitting(false);
                   }
