@@ -108,6 +108,10 @@ export default function ToolCribPage() {
     api.technicians.list,
     orgId ? { organizationId: orgId } : "skip"
   );
+  const activeWorkOrders = useQuery(
+    api.workOrders.listActive,
+    orgId ? { organizationId: orgId, limit: 200 } : "skip"
+  );
 
   // Mutations
   const createTool = useMutation(api.toolCrib.createTool);
@@ -129,6 +133,7 @@ export default function ToolCribPage() {
 
   // ─── Check Out State ─────────────────────────────────────────────────────
   const [coTechId, setCoTechId] = useState("");
+  const [coWoId, setCoWoId] = useState("");
 
   // ─── Calibration State ────────────────────────────────────────────────────
   const [calProvider, setCalProvider] = useState("");
@@ -156,6 +161,27 @@ export default function ToolCribPage() {
     }
     return tools;
   }, [allTools, filterStatus, filterCategory, search]);
+
+  // AI-080: Single-pass stat counters — replaces 3 inline .filter() calls
+  const toolStats = useMemo(() => {
+    let available = 0;
+    let inUse = 0;
+    let outForCal = 0;
+    for (const t of allTools ?? []) {
+      if (t.status === "available") available++;
+      else if (t.status === "in_use") inUse++;
+      else if (t.status === "out_for_calibration") outForCal++;
+    }
+    return { available, inUse, outForCal };
+  }, [allTools]);
+
+  // AI-081: Open WOs for Check Out dropdown
+  const openWorkOrders = useMemo(
+    () => (activeWorkOrders ?? []).filter((wo) =>
+      wo.status !== "closed" && wo.status !== "cancelled"
+    ),
+    [activeWorkOrders],
+  );
 
   async function handleAddTool() {
     if (!orgId || !fToolNumber || !fDescription) {
@@ -200,10 +226,12 @@ export default function ToolCribPage() {
       await checkOutTool({
         toolId: selectedToolId,
         technicianId: coTechId as Id<"technicians">,
+        workOrderId: coWoId ? (coWoId as Id<"workOrders">) : undefined,
       });
       toast.success("Tool checked out");
       setShowCheckOutDialog(false);
       setCoTechId("");
+      setCoWoId("");
       setSelectedToolId(null);
     } catch (e: any) {
       toast.error(e.message ?? "Failed to check out");
@@ -260,26 +288,26 @@ export default function ToolCribPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6 p-4 md:p-6 max-w-7xl mx-auto">
+    <div className="flex flex-col gap-5 p-4 md:p-6 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-            <Wrench className="h-6 w-6" />
+          <h1 className="text-lg sm:text-xl md:text-2xl font-semibold text-foreground flex items-center gap-2">
+            <Wrench className="w-5 h-5 text-muted-foreground" />
             Tool Crib
           </h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            Manage tool inventory, check-out, and calibration tracking
+          <p className="text-sm text-muted-foreground mt-0.5">
+            Manage tool inventory, check-out, and calibration tracking.
           </p>
         </div>
-        <Button onClick={() => setShowAddDialog(true)}>
-          <Plus className="h-4 w-4 mr-2" />
+        <Button size="sm" className="h-9 gap-1.5" onClick={() => setShowAddDialog(true)}>
+          <Plus className="w-4 h-4" />
           Add Tool
         </Button>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
@@ -287,7 +315,7 @@ export default function ToolCribPage() {
               <div>
                 <p className="text-xs text-muted-foreground">Available</p>
                 <p className="text-xl font-bold">
-                  {(allTools ?? []).filter((t) => t.status === "available").length}
+                  {toolStats.available}
                 </p>
               </div>
             </div>
@@ -300,7 +328,7 @@ export default function ToolCribPage() {
               <div>
                 <p className="text-xs text-muted-foreground">In Use</p>
                 <p className="text-xl font-bold">
-                  {(allTools ?? []).filter((t) => t.status === "in_use").length}
+                  {toolStats.inUse}
                 </p>
               </div>
             </div>
@@ -326,7 +354,7 @@ export default function ToolCribPage() {
               <div>
                 <p className="text-xs text-muted-foreground">Out for Cal.</p>
                 <p className="text-xl font-bold">
-                  {(allTools ?? []).filter((t) => t.status === "out_for_calibration").length}
+                  {toolStats.outForCal}
                 </p>
               </div>
             </div>
@@ -690,30 +718,61 @@ export default function ToolCribPage() {
 
       {/* Check Out Dialog */}
       <Dialog open={showCheckOutDialog} onOpenChange={setShowCheckOutDialog}>
-        <DialogContent>
+        <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>Check Out Tool</DialogTitle>
+            <DialogTitle className="text-base">Check Out Tool</DialogTitle>
           </DialogHeader>
-          <div>
-            <Label>Assign to Technician</Label>
-            <Select value={coTechId} onValueChange={setCoTechId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select technician" />
-              </SelectTrigger>
-              <SelectContent>
-                {(technicians ?? []).map((t) => (
-                  <SelectItem key={t._id} value={t._id}>
-                    {t.legalName}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="space-y-4 py-2">
+            {/* Technician — required */}
+            <div>
+              <Label className="text-xs font-medium mb-1.5 block">
+                Technician <span className="text-destructive">*</span>
+              </Label>
+              <Select value={coTechId} onValueChange={setCoTechId}>
+                <SelectTrigger className="h-9 text-sm bg-muted/30 border-border/60">
+                  <SelectValue placeholder="Select technician" />
+                </SelectTrigger>
+                <SelectContent>
+                  {(technicians ?? []).map((t) => (
+                    <SelectItem key={t._id} value={t._id}>
+                      {t.legalName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {/* Work Order — optional, but required for Part 145 tool control */}
+            <div>
+              <Label className="text-xs font-medium mb-1.5 block">
+                Work Order{" "}
+                <span className="text-muted-foreground font-normal">(optional — for tool control traceability)</span>
+              </Label>
+              <Select value={coWoId} onValueChange={setCoWoId}>
+                <SelectTrigger className="h-9 text-sm bg-muted/30 border-border/60">
+                  <SelectValue placeholder="Link to work order…" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">No work order</SelectItem>
+                  {openWorkOrders.map((wo) => (
+                    <SelectItem key={wo._id} value={wo._id}>
+                      {wo.workOrderNumber ?? wo._id}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCheckOutDialog(false)}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => { setShowCheckOutDialog(false); setCoTechId(""); setCoWoId(""); }}
+            >
               Cancel
             </Button>
-            <Button onClick={handleCheckOut}>Check Out</Button>
+            <Button size="sm" onClick={handleCheckOut} disabled={!coTechId}>
+              Check Out
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
