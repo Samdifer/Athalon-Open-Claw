@@ -15,7 +15,10 @@ import {
   Clock,
   CheckCircle2,
   Eye,
+  Gavel,
 } from "lucide-react";
+import { DiscrepancyDispositionDialog } from "@/components/DiscrepancyDispositionDialog";
+import type { Id } from "@/convex/_generated/dataModel";
 
 const SEVERITY_STYLES: Record<string, { bg: string; text: string; label: string }> = {
   mandatory: { bg: "bg-red-100", text: "text-red-700", label: "Critical" },
@@ -37,6 +40,10 @@ export default function SquawksPage() {
   const { orgId } = useCurrentOrg();
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [search, setSearch] = useState("");
+  const [dispositionTarget, setDispositionTarget] = useState<{
+    id: Id<"discrepancies">;
+    number: string;
+  } | null>(null);
 
   const discrepancies = useQuery(
     api.discrepancies.listDiscrepancies,
@@ -294,11 +301,37 @@ export default function SquawksPage() {
                       )}
                     </div>
                   </div>
+                  {(d.status === "open" || d.status === "under_evaluation") && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-shrink-0 gap-1.5 text-xs"
+                      onClick={() =>
+                        setDispositionTarget({
+                          id: d._id as Id<"discrepancies">,
+                          number: d.discrepancyNumber ?? d._id,
+                        })
+                      }
+                    >
+                      <Gavel className="w-3.5 h-3.5" />
+                      Disposition
+                    </Button>
+                  )}
                 </div>
               </CardContent>
             </Card>
           ))}
         </div>
+      )}
+
+      {/* Disposition Dialog */}
+      {dispositionTarget && (
+        <DiscrepancyDispositionDialog
+          open={!!dispositionTarget}
+          onOpenChange={(v) => { if (!v) setDispositionTarget(null); }}
+          discrepancyId={dispositionTarget.id}
+          discrepancyNumber={dispositionTarget.number}
+        />
       )}
     </div>
   );

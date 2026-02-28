@@ -1269,10 +1269,25 @@ export default defineSchema({
     estimatedHours: v.optional(v.number()),
 
     // v5: Dedicated signature fields (GAP-22 — replaces notes-based sign-off)
+    // Performing technician sign-off
     signingTechnicianId: v.optional(v.id("technicians")),
     signedAt: v.optional(v.number()),
     signedCertificateNumber: v.optional(v.string()),
     cardSignatureAuthEventId: v.optional(v.id("signatureAuthEvents")),
+
+    // v6: Inspector sign-off (Part 145 dual sign-off requirement)
+    // Independent QCM/IA inspector must verify work before RTS
+    inspectorTechnicianId: v.optional(v.id("technicians")),
+    inspectorSignedAt: v.optional(v.number()),
+    inspectorCertificateNumber: v.optional(v.string()),
+    inspectorSignatureAuthEventId: v.optional(v.id("signatureAuthEvents")),
+
+    // v6: Return-to-Service sign-off (separate from inspector)
+    // IA-holder who authorizes aircraft return to service
+    rtsTechnicianId: v.optional(v.id("technicians")),
+    rtsSignedAt: v.optional(v.number()),
+    rtsCertificateNumber: v.optional(v.string()),
+    rtsSignatureAuthEventId: v.optional(v.id("signatureAuthEvents")),
 
     stepCount: v.number(),
     completedStepCount: v.number(),

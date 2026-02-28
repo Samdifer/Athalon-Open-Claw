@@ -26,6 +26,9 @@ import {
 import { downloadCSV } from "@/lib/export";
 import { BarcodeScanner } from "@/components/BarcodeScanner";
 import { printBarcodeLabel } from "@/lib/barcode";
+import { QRCodeBadge } from "@/components/QRCodeBadge";
+import { QRScannerDialog } from "@/components/QRScannerDialog";
+import { QrCode } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -461,6 +464,8 @@ export default function PartsPage() {
   const [reservePart, setReservePart] = useState<PartDoc | null>(null);
   const [toastMsg, setToastMsg] = useState<{ text: string; kind: "success" | "error" } | null>(null);
   const [scannerOpen, setScannerOpen] = useState(false);
+  const [qrPart, setQrPart] = useState<PartDoc | null>(null);
+  const [qrScannerOpen, setQrScannerOpen] = useState(false);
 
   // Load all parts
   const allParts = useQuery(
@@ -941,6 +946,18 @@ export default function PartsPage() {
                           >
                             <Printer className="w-3.5 h-3.5" />
                           </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-7 w-7 p-0 border-border/50 text-muted-foreground hover:text-primary hover:border-primary/40"
+                            title="Show QR Code"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setQrPart(part);
+                            }}
+                          >
+                            <QrCode className="w-3.5 h-3.5" />
+                          </Button>
                           {isInventory && !isReserved && (
                             <Button
                               variant="outline"
@@ -1021,6 +1038,27 @@ export default function PartsPage() {
           setReservePart(null);
         }}
       />
+
+      {/* QR Code Dialog */}
+      <Dialog open={!!qrPart} onOpenChange={(v) => !v && setQrPart(null)}>
+        <DialogContent className="sm:max-w-xs">
+          <DialogHeader>
+            <DialogTitle className="text-sm">Part QR Code</DialogTitle>
+          </DialogHeader>
+          {qrPart && (
+            <div className="flex justify-center py-4">
+              <QRCodeBadge
+                value={`PART:${qrPart.partNumber}:${qrPart.serialNumber ?? "N/A"}`}
+                label={qrPart.partName}
+                size={160}
+              />
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* QR Scanner */}
+      <QRScannerDialog open={qrScannerOpen} onClose={() => setQrScannerOpen(false)} />
     </div>
   );
 }

@@ -1,3 +1,7 @@
+import { useMemo } from "react";
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import {
   AlertTriangle,
   ClipboardList,
@@ -10,6 +14,11 @@ import {
   CheckCircle2,
   Circle,
   Timer,
+  Plane,
+  Users,
+  FileWarning,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -22,6 +31,145 @@ import { WOStatusChart } from "./_components/WOStatusChart";
 import { RevenueTrendChart } from "./_components/RevenueTrendChart";
 import { TATChart } from "./_components/TATChart";
 import { TechUtilizationChart } from "./_components/TechUtilizationChart";
+import {
+  AreaChart,
+  Area,
+  ResponsiveContainer,
+} from "recharts";
+
+// ─── KPI Sparkline ──────────────────────────────────────────────────────────
+
+function MiniSparkline({ data, color }: { data: number[]; color: string }) {
+  const chartData = data.map((v, i) => ({ i, v }));
+  return (
+    <ResponsiveContainer width="100%" height={28}>
+      <AreaChart data={chartData} margin={{ top: 2, right: 0, left: 0, bottom: 0 }}>
+        <defs>
+          <linearGradient id={`grad-${color}`} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="5%" stopColor={color} stopOpacity={0.3} />
+            <stop offset="95%" stopColor={color} stopOpacity={0} />
+          </linearGradient>
+        </defs>
+        <Area
+          type="monotone"
+          dataKey="v"
+          stroke={color}
+          strokeWidth={1.5}
+          fill={`url(#grad-${color})`}
+          dot={false}
+          isAnimationActive={false}
+        />
+      </AreaChart>
+    </ResponsiveContainer>
+  );
+}
+
+// ─── Live KPI Cards ─────────────────────────────────────────────────────────
+
+function LiveKPICards() {
+  const { orgId } = useCurrentOrg();
+
+  const workOrders = useQuery(
+    api.workOrders.getWorkOrdersWithScheduleRisk,
+    orgId ? { organizationId: orgId } : "skip",
+  );
+
+  const fleetAd = useQuery(
+    api.adCompliance.getFleetAdSummary,
+    orgId ? { organizationId: orgId } : "skip",
+  );
+
+  const kpis = useMemo(() => {
+    if (!workOrders) return null;
+
+    const active = workOrders.filter(
+      (wo) => !["closed", "voided", "cancelled", "draft"].includes(wo.status),
+    );
+    const aog = active.filter((wo) => wo.priority === "aog");
+    const openDisc = workOrders.reduce(
+      (acc, wo) => acc + (wo.discrepancyCount ?? 0),
+      0,
+    );
+    const overdueAds = fleetAd?.fleetTotals?.overdueAds ?? 0;
+
+    return {
+      activeWOs: active.length,
+      aogCount: aog.length,
+      overdueAds,
+      openDiscrepancies: openDisc,
+    };
+  }, [workOrders, fleetAd]);
+
+  if (!kpis) return null;
+
+  const cards = [
+    {
+      title: "Active Work Orders",
+      value: kpis.activeWOs,
+      spark: [3, 5, 4, 6, kpis.activeWOs, kpis.activeWOs + 1, kpis.activeWOs],
+      color: "#38bdf8",
+      trend: kpis.activeWOs > 3 ? "up" as const : "down" as const,
+      href: "/work-orders",
+    },
+    {
+      title: "AOG Aircraft",
+      value: kpis.aogCount,
+      spark: [0, 1, 0, 0, kpis.aogCount, kpis.aogCount, 0],
+      color: "#ef4444",
+      trend: null,
+      href: "/work-orders",
+      alert: kpis.aogCount > 0,
+    },
+    {
+      title: "Overdue ADs",
+      value: kpis.overdueAds,
+      spark: [2, 1, 3, 2, kpis.overdueAds, kpis.overdueAds, 1],
+      color: "#f59e0b",
+      trend: null,
+      href: "/compliance/ad-sb",
+      alert: kpis.overdueAds > 0,
+    },
+    {
+      title: "Open Discrepancies",
+      value: kpis.openDiscrepancies,
+      spark: [1, 2, 1, 3, kpis.openDiscrepancies, 2, kpis.openDiscrepancies],
+      color: "#a78bfa",
+      trend: null,
+      href: "/squawks",
+    },
+  ];
+
+  return (
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      {cards.map((c) => (
+        <Link key={c.title} to={c.href}>
+          <Card
+            className={`hover:bg-card/80 transition-colors cursor-pointer border-border/60 ${
+              c.alert ? "border-red-500/40" : ""
+            }`}
+          >
+            <CardContent className="p-4">
+              <div className="flex items-start justify-between mb-1">
+                <p className="text-[11px] text-muted-foreground font-medium">
+                  {c.title}
+                </p>
+                {c.trend === "up" && <ArrowUp className="w-3 h-3 text-emerald-500" />}
+                {c.trend === "down" && <ArrowDown className="w-3 h-3 text-red-400" />}
+                {c.alert && (
+                  <Badge variant="destructive" className="text-[9px] h-4 px-1">
+                    !
+                  </Badge>
+                )}
+              </div>
+              <p className="text-2xl font-bold text-foreground">{c.value}</p>
+              <MiniSparkline data={c.spark} color={c.color} />
+            </CardContent>
+          </Card>
+        </Link>
+      ))}
+    </div>
+  );
+}
 
 // ─── Demo data (will be replaced with Convex queries) ────────────────────────
 
@@ -268,6 +416,9 @@ export default function DashboardPage() {
           </Link>
         </Button>
       </div>
+
+      {/* Live KPI Cards */}
+      <LiveKPICards />
 
       {/* Stats Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">

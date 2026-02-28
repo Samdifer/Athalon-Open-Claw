@@ -37,6 +37,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
+import { QRCodeBadge } from "@/components/QRCodeBadge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { QrCode } from "lucide-react";
 
 type FilterTab =
   | "active"
@@ -109,6 +117,7 @@ export default function WorkOrdersPage() {
 
   const [activeTab, setActiveTab] = useState<FilterTab>("active");
   const [search, setSearch] = useState("");
+  const [qrWoNumber, setQrWoNumber] = useState<string | null>(null);
 
   const workOrders = useMemo<WorkOrderRow[]>(() => {
     const rows = raw ?? [];
@@ -420,6 +429,19 @@ export default function WorkOrdersPage() {
                           />
                         </div>
                       )}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 w-7 p-0 text-muted-foreground hover:text-primary"
+                        title="Show QR Code"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setQrWoNumber(wo.workOrderNumber);
+                        }}
+                      >
+                        <QrCode className="w-3.5 h-3.5" />
+                      </Button>
                       <ChevronRight className="w-4 h-4 text-muted-foreground/50" />
                     </div>
                   </div>
@@ -429,6 +451,23 @@ export default function WorkOrdersPage() {
           ))}
         </div>
       )}
+      {/* QR Code Dialog */}
+      <Dialog open={!!qrWoNumber} onOpenChange={(v) => !v && setQrWoNumber(null)}>
+        <DialogContent className="sm:max-w-xs">
+          <DialogHeader>
+            <DialogTitle className="text-sm">Work Order QR Code</DialogTitle>
+          </DialogHeader>
+          {qrWoNumber && (
+            <div className="flex justify-center py-4">
+              <QRCodeBadge
+                value={`WO:${qrWoNumber}`}
+                label={qrWoNumber}
+                size={160}
+              />
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

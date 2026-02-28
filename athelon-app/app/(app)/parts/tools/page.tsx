@@ -25,6 +25,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { QRCodeBadge } from "@/components/QRCodeBadge";
+import { QrCode } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -91,6 +93,7 @@ export default function ToolCribPage() {
   const [showCheckOutDialog, setShowCheckOutDialog] = useState(false);
   const [showCalibrationDialog, setShowCalibrationDialog] = useState(false);
   const [selectedToolId, setSelectedToolId] = useState<Id<"toolRecords"> | null>(null);
+  const [qrTool, setQrTool] = useState<{ id: string; calDue: string; name: string } | null>(null);
 
   // Queries
   const allTools = useQuery(
@@ -479,6 +482,23 @@ export default function ToolCribPage() {
                               Complete Cal.
                             </Button>
                           )}
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-7 w-7 p-0"
+                            title="Show QR Code"
+                            onClick={() =>
+                              setQrTool({
+                                id: tool.toolNumber,
+                                calDue: tool.nextCalibrationDue
+                                  ? new Date(tool.nextCalibrationDue).toISOString().split("T")[0]
+                                  : "N/A",
+                                name: tool.description,
+                              })
+                            }
+                          >
+                            <QrCode className="w-3.5 h-3.5" />
+                          </Button>
                         </div>
                       </td>
                     </tr>
@@ -745,6 +765,23 @@ export default function ToolCribPage() {
               {calAction === "send" ? "Send" : "Complete"}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {/* QR Code Dialog */}
+      <Dialog open={!!qrTool} onOpenChange={(v) => !v && setQrTool(null)}>
+        <DialogContent className="sm:max-w-xs">
+          <DialogHeader>
+            <DialogTitle className="text-sm">Tool QR Code</DialogTitle>
+          </DialogHeader>
+          {qrTool && (
+            <div className="flex justify-center py-4">
+              <QRCodeBadge
+                value={`TOOL:${qrTool.id}:${qrTool.calDue}`}
+                label={qrTool.name}
+                size={160}
+              />
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>

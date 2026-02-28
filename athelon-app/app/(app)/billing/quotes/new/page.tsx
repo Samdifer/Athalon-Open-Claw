@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { useRouter } from "@/hooks/useRouter";
-import { useQuery, useMutation } from "convex/react";
+import { useQuery, useMutation, useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -66,8 +66,10 @@ export default function NewQuotePage() {
 
   const createQuote = useMutation(api.billing.createQuote);
   const addQuoteLineItem = useMutation(api.billing.addQuoteLineItem);
+  const computePrice = useAction(api.pricing.computePrice);
 
   const [customerId, setCustomerId] = useState<string>("");
+  const [pricingLoading, setPricingLoading] = useState<string | null>(null);
   const [aircraftId, setAircraftId] = useState<string>("");
   const [notes, setNotes] = useState("");
   const [lineItems, setLineItems] = useState<DraftLineItem[]>([
@@ -94,6 +96,57 @@ export default function NewQuotePage() {
       prev.map((item) => item.id === id ? { ...item, [field]: value } : item),
     );
   }, []);
+
+  const lookupPrice = useCallback(async (itemId: string) => {
+    if (!orgId) return;
+    const item = lineItems.find((li) => li.id === itemId);
+    if (!item) return;
+    setPricingLoading(itemId);
+    try {
+      const result = await computePrice({
+        orgId,
+        customerId: customerId ? (customerId as Id<"customers">) : undefined,
+        itemType: item.type,
+        qty: parseFloat(item.qty) || 1,
+        baseCost: parseFloat(item.unitPrice) || 0,
+      });
+      setLineItems((prev) =>
+        prev.map((li) =>
+          li.id === itemId ? { ...li, unitPrice: result.unitPrice.toString() } : li,
+        ),
+      );
+    } catch {
+      setError("Failed to compute price. Check pricing rules are configured.");
+    } finally {
+      setPricingLoading(null);
+    }
+  }, [orgId, customerId, lineItems, computePrice]);
+
+  const lookupAllPrices = useCallback(async () => {
+    if (!orgId) return;
+    setPricingLoading("all");
+    try {
+      const updated = await Promise.all(
+        lineItems.map(async (item) => {
+          try {
+            const result = await computePrice({
+              orgId,
+              customerId: customerId ? (customerId as Id<"customers">) : undefined,
+              itemType: item.type,
+              qty: parseFloat(item.qty) || 1,
+              baseCost: parseFloat(item.unitPrice) || 0,
+            });
+            return { ...item, unitPrice: result.unitPrice.toString() };
+          } catch {
+            return item;
+          }
+        }),
+      );
+      setLineItems(updated);
+    } finally {
+      setPricingLoading(null);
+    }
+  }, [orgId, customerId, lineItems, computePrice]);
 
   const subtotal = lineItems.reduce((sum, item) => sum + calcTotal(item.qty, item.unitPrice), 0);
 
@@ -235,10 +288,22 @@ export default function NewQuotePage() {
         <Card className="border-border/60">
           <CardHeader className="pb-3 flex-row items-center justify-between">
             <CardTitle className="text-sm font-medium">Line Items</CardTitle>
-            <Button type="button" variant="outline" size="sm" onClick={addLineItem} className="h-7 text-xs gap-1.5">
-              <Plus className="w-3 h-3" />
-              Add Item
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={lookupAllPrices}
+                disabled={pricingLoading !== null || lineItems.length === 0 || !orgId}
+                className="h-7 text-xs gap-1.5"
+              >
+                {pricingLoading === "all" ? "Computing…" : "Apply Pricing Rules"}
+              </Button>
+              <Button type="button" variant="outline" size="sm" onClick={addLineItem} className="h-7 text-xs gap-1.5">
+                <Plus className="w-3 h-3" />
+                Add Item
+              </Button>
+            </div>
           </CardHeader>
           <CardContent className="space-y-3">
             {lineItems.length === 0 ? (

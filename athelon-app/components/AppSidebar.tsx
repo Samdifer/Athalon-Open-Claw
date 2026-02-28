@@ -40,6 +40,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { LocationSwitcher } from "@/components/LocationSwitcher";
 
 type NavItem = {
   title: string;
@@ -185,6 +186,12 @@ const mainNav: NavItem[] = [
     icon: FileBarChart,
     section: "reports",
   },
+  {
+    title: "Customer Portal",
+    href: "/portal",
+    icon: Users,
+    section: "billing",
+  },
 ];
 
 const bottomNav: NavItem[] = [
@@ -254,6 +261,9 @@ export function AppSidebar() {
               {organization?.name ?? "MRO Platform"}
             </span>
           </div>
+        </div>
+        <div className="mt-2 px-1 group-data-[collapsible=icon]:hidden">
+          <LocationSwitcher />
         </div>
       </SidebarHeader>
 

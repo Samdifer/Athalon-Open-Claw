@@ -16,8 +16,10 @@ import {
   TrendingUp,
   Paperclip,
   CheckCircle2,
+  MessageSquare,
 } from "lucide-react";
 import { api } from "@/convex/_generated/api";
+import { HandoffNotesPanel } from "@/components/HandoffNotesPanel";
 import type { Id } from "@/convex/_generated/dataModel";
 import { formatDate } from "@/lib/format";
 import { Download } from "lucide-react";
@@ -44,6 +46,7 @@ import {
 } from "@/app/(app)/work-orders/[id]/_components/WorkItemsList";
 import { WOComplianceTab } from "@/app/(app)/work-orders/[id]/_components/WOComplianceTab";
 import { DocumentAttachmentPanel } from "@/app/(app)/work-orders/[id]/_components/DocumentAttachmentPanel";
+import { CloseReadinessPanel } from "@/components/CloseReadinessPanel";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import { ActivityTimeline } from "@/app/(app)/work-orders/[id]/_components/ActivityTimeline";
 
@@ -582,6 +585,33 @@ export default function WorkOrderDetailPage() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Shift Handoff Notes — per task card */}
+      {taskCards.length > 0 && (
+        <div className="space-y-4">
+          <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+            <MessageSquare className="w-4 h-4 text-muted-foreground" />
+            Shift Handoff Notes
+          </h3>
+          {taskCards.map((tc) => (
+            <div key={tc._id}>
+              <p className="text-xs text-muted-foreground mb-1 font-medium">
+                {tc.taskCardNumber} — {tc.title}
+              </p>
+              <HandoffNotesPanel
+                taskCardId={tc._id}
+                notes={(tc.handoffNotes as { technicianId: string; technicianName: string; note: string; createdAt: number }[]) ?? []}
+              />
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Close Readiness Panel */}
+      <CloseReadinessPanel
+        workOrderId={workOrderId}
+        organizationId={orgId}
+      />
     </div>
   );
 }

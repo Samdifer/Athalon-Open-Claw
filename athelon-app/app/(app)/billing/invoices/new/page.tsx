@@ -188,12 +188,18 @@ export default function NewInvoicePage() {
     api.gapFixes.createInvoiceFromWorkOrderEnhanced,
   );
 
+  const taxRates = useQuery(
+    api.billingV4.listTaxRates,
+    orgId ? { orgId } : "skip",
+  );
+
   const [mode, setMode] = useState<"from_wo" | "manual">("from_wo");
   const [workOrderId, setWorkOrderId] = useState<string>("");
   const [customerId, setCustomerId] = useState<string>("");
   const [laborRate, setLaborRate] = useState<number>(125);
   const [dueDate, setDueDate] = useState<string>("");
   const [paymentTerms, setPaymentTerms] = useState<string>("");
+  const [taxRateId, setTaxRateId] = useState<string>("");
   const [useEnhanced, setUseEnhanced] = useState<boolean>(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -263,6 +269,7 @@ export default function NewInvoicePage() {
           workOrderId: workOrderId as Id<"workOrders">,
           customerId: wo.customerId as Id<"customers">,
           createdByTechId: techId as Id<"technicians">,
+          taxRateId: taxRateId ? (taxRateId as Id<"taxRates">) : undefined,
         });
       } else {
         if (!customerId) {
@@ -274,6 +281,7 @@ export default function NewInvoicePage() {
           orgId,
           customerId: customerId as Id<"customers">,
           createdByTechId: techId as Id<"technicians">,
+          taxRateId: taxRateId ? (taxRateId as Id<"taxRates">) : undefined,
         });
       }
 
@@ -561,6 +569,36 @@ export default function NewInvoicePage() {
             </CardContent>
           </Card>
         )}
+
+        {/* Tax Rate */}
+        <Card className="border-border/60">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium">Tax Rate</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium">
+                Tax Rate <span className="text-muted-foreground">(optional)</span>
+              </Label>
+              <Select value={taxRateId || "none"} onValueChange={(v) => setTaxRateId(v === "none" ? "" : v)}>
+                <SelectTrigger className="h-9 text-sm border-border/60">
+                  <SelectValue placeholder="No tax" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No tax</SelectItem>
+                  {(taxRates ?? []).map((tr) => (
+                    <SelectItem key={tr._id} value={tr._id}>
+                      {tr.name} — {tr.rate}%
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-[10px] text-muted-foreground">
+                Tax will be applied to the invoice subtotal. Configure tax rates in Billing → Tax Config.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Preview */}
         <Card className="border-border/60 bg-muted/20">

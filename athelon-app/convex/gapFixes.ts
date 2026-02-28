@@ -1128,3 +1128,53 @@ export const globalSearch = query({
     return { workOrders: matchedWOs, aircraft: matchedAC, taskCards: matchedCards };
   },
 });
+
+// Temporary helper for QCM simulation
+export const listAllOrganizations = query({
+  args: {},
+  handler: async (ctx) => {
+    return ctx.db.query("organizations").collect();
+  },
+});
+
+export const listAllWorkOrders = query({
+  args: {},
+  handler: async (ctx) => {
+    return ctx.db.query("workOrders").collect();
+  },
+});
+
+export const listAllTechnicians = query({
+  args: {},
+  handler: async (ctx) => {
+    return ctx.db.query("technicians").collect();
+  },
+});
+
+export const listAllAircraft = query({
+  args: {},
+  handler: async (ctx) => {
+    return ctx.db.query("aircraft").collect();
+  },
+});
+
+export const listAllParts = query({
+  args: {},
+  handler: async (ctx) => {
+    return ctx.db.query("parts").collect();
+  },
+});
+
+export const listAllTaskCards = query({
+  args: {},
+  handler: async (ctx) => {
+    return ctx.db.query("taskCards").collect();
+  },
+});
+
+export const listAllTaskCardSteps = query({
+  args: {},
+  handler: async (ctx) => {
+    return ctx.db.query("taskCardSteps").collect();
+  },
+});
