@@ -106,6 +106,11 @@ export function CreateRecordForm({
   const [error, setError] = useState<string | null>(null);
 
   const technicians = useQuery(api.technicians.list, { organizationId });
+  // For correction dropdown — load existing records so tech picks by human-readable seq/description
+  const existingRecords = useQuery(
+    api.maintenanceRecords.listForWorkOrder,
+    form.isCorrection ? { workOrderId, organizationId } : "skip",
+  );
   const createRecord = useMutation(api.maintenanceRecords.createMaintenanceRecord);
 
   const setField = <K extends keyof CreateFormState>(
@@ -208,13 +213,52 @@ export function CreateRecordForm({
           </p>
           <div className="grid grid-cols-1 gap-2">
             <div className="space-y-1">
-              <Label className="text-xs">Record Being Corrected (ID)</Label>
-              <Input
-                value={form.correctsRecordId}
-                onChange={(e) => setField("correctsRecordId", e.target.value)}
-                placeholder="Maintenance record Convex ID…"
-                className="font-mono text-xs h-8"
-              />
+              <Label className="text-xs">
+                Record Being Corrected <span className="text-red-600 dark:text-red-400">*</span>
+              </Label>
+              {existingRecords === undefined ? (
+                <Skeleton className="h-8 w-full" />
+              ) : (
+                <Select
+                  value={form.correctsRecordId}
+                  onValueChange={(v) => setField("correctsRecordId", v)}
+                >
+                  <SelectTrigger className="h-8 text-xs">
+                    <SelectValue placeholder="Select the record to correct…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(existingRecords ?? []).length === 0 ? (
+                      <SelectItem value="__none" disabled>
+                        No maintenance records yet
+                      </SelectItem>
+                    ) : (
+                      (existingRecords ?? []).map((r) => {
+                        const rawDesc = r.workPerformed ?? "";
+                        const desc = rawDesc.slice(0, 55);
+                        const date = r.completionDate
+                          ? new Date(r.completionDate).toLocaleDateString("en-US", {
+                              month: "short",
+                              day: "numeric",
+                            })
+                          : "no date";
+                        return (
+                          <SelectItem key={r._id} value={r._id} className="text-xs">
+                            <span className="font-mono font-semibold">#{r.sequenceNumber}</span>
+                            {" — "}
+                            {desc.length < rawDesc.length ? `${desc}…` : desc}
+                            {" ("}
+                            {date}
+                            {")"}
+                          </SelectItem>
+                        );
+                      })
+                    )}
+                  </SelectContent>
+                </Select>
+              )}
+              <p className="text-[10px] text-muted-foreground">
+                Per AC 43-9C — select the record containing an error. The correction record will reference it by ID.
+              </p>
             </div>
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1">

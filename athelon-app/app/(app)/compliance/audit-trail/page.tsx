@@ -11,6 +11,8 @@ import {
   CheckCircle2,
   Clock,
   Plane,
+  ChevronRight,
+  List,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -269,6 +271,158 @@ function AdCompliancePanel({
   );
 }
 
+// ─── Aircraft Fleet Summary Row ───────────────────────────────────────────────
+
+function AircraftComplianceSummaryRow({
+  ac,
+  organizationId,
+  isSelected,
+  onSelect,
+}: {
+  ac: { _id: Id<"aircraft">; currentRegistration?: string; make?: string; model?: string };
+  organizationId: Id<"organizations">;
+  isSelected: boolean;
+  onSelect: (id: string) => void;
+}) {
+  const result = useQuery(api.adCompliance.checkAdDueForAircraft, {
+    aircraftId: ac._id,
+    organizationId,
+  });
+
+  const loading = result === undefined;
+
+  const { total, overdueCount, dueSoonCount, notCompliedCount } = result?.summary ?? {
+    total: 0,
+    overdueCount: 0,
+    dueSoonCount: 0,
+    notCompliedCount: 0,
+  };
+
+  const hasBlockers = (overdueCount ?? 0) > 0 || (notCompliedCount ?? 0) > 0;
+  const hasDueSoon = !hasBlockers && (dueSoonCount ?? 0) > 0;
+
+  return (
+    <button
+      onClick={() => onSelect(ac._id)}
+      className={`w-full text-left flex items-center gap-3 px-4 py-3 border-b border-border/40 last:border-0 transition-colors hover:bg-muted/50 ${
+        isSelected ? "bg-primary/5" : ""
+      }`}
+    >
+      {/* Status indicator */}
+      <div className="flex-shrink-0 w-2 h-2 rounded-full mt-0.5">
+        {loading ? (
+          <div className="w-2 h-2 rounded-full bg-muted animate-pulse" />
+        ) : hasBlockers ? (
+          <div className="w-2 h-2 rounded-full bg-red-500" />
+        ) : hasDueSoon ? (
+          <div className="w-2 h-2 rounded-full bg-amber-500" />
+        ) : (
+          <div className="w-2 h-2 rounded-full bg-green-500" />
+        )}
+      </div>
+
+      {/* Tail + type */}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <span className="font-mono text-xs font-semibold text-foreground">
+            {ac.currentRegistration ?? "—"}
+          </span>
+          <span className="text-xs text-muted-foreground truncate">
+            {ac.make ?? ""} {ac.model ?? ""}
+          </span>
+        </div>
+      </div>
+
+      {/* AD counts */}
+      {loading ? (
+        <Skeleton className="h-5 w-24" />
+      ) : (
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <span className="text-[11px] text-muted-foreground">{total} AD{total !== 1 ? "s" : ""}</span>
+          {(overdueCount ?? 0) > 0 && (
+            <Badge variant="outline" className="text-[10px] bg-red-500/15 text-red-400 border-red-500/30 h-5 px-1.5">
+              <AlertTriangle className="w-2.5 h-2.5 mr-0.5" />
+              {overdueCount} overdue
+            </Badge>
+          )}
+          {(notCompliedCount ?? 0) > 0 && (
+            <Badge variant="outline" className="text-[10px] bg-red-500/15 text-red-400 border-red-500/30 h-5 px-1.5">
+              {notCompliedCount} non-complied
+            </Badge>
+          )}
+          {!hasBlockers && (dueSoonCount ?? 0) > 0 && (
+            <Badge variant="outline" className="text-[10px] bg-amber-500/15 text-amber-400 border-amber-500/30 h-5 px-1.5">
+              <Clock className="w-2.5 h-2.5 mr-0.5" />
+              {dueSoonCount} due soon
+            </Badge>
+          )}
+          {!hasBlockers && !(dueSoonCount ?? 0) && total > 0 && (
+            <Badge variant="outline" className="text-[10px] bg-green-500/15 text-green-400 border-green-500/30 h-5 px-1.5">
+              <CheckCircle2 className="w-2.5 h-2.5 mr-0.5" />
+              Compliant
+            </Badge>
+          )}
+          {total === 0 && (
+            <span className="text-[11px] text-muted-foreground/60">No ADs on file</span>
+          )}
+        </div>
+      )}
+
+      <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/50 flex-shrink-0" />
+    </button>
+  );
+}
+
+// ─── Fleet Overview Panel ─────────────────────────────────────────────────────
+
+function FleetOverviewPanel({
+  aircraft,
+  organizationId,
+  selectedAircraftId,
+  onSelect,
+}: {
+  aircraft: { _id: Id<"aircraft">; currentRegistration?: string; make?: string; model?: string }[];
+  organizationId: Id<"organizations">;
+  selectedAircraftId: string | null;
+  onSelect: (id: string) => void;
+}) {
+  if (aircraft.length === 0) {
+    return (
+      <Card className="border-border/60">
+        <CardContent className="py-8 text-center">
+          <Plane className="w-6 h-6 text-muted-foreground/40 mx-auto mb-2" />
+          <p className="text-sm text-muted-foreground">No aircraft in fleet.</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="border-border/60">
+      <CardHeader className="pb-2 pt-3 px-4">
+        <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
+          <List className="w-3.5 h-3.5" />
+          Fleet Overview — Click a row to drill in
+        </CardTitle>
+        <p className="text-[11px] text-muted-foreground">
+          All {aircraft.length} fleet aircraft · Non-compliant first · Overdue ADs block RTS
+        </p>
+      </CardHeader>
+      <CardContent className="p-0">
+        {aircraft.map((ac) => (
+          <AircraftComplianceSummaryRow
+            key={ac._id}
+            ac={ac}
+            organizationId={organizationId}
+            isSelected={selectedAircraftId === ac._id}
+            onSelect={onSelect}
+          />
+        ))}
+      </CardContent>
+    </Card>
+  );
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function AuditTrailPage() {
@@ -296,14 +450,30 @@ export default function AuditTrailPage() {
         </div>
       </div>
 
-      {/* Aircraft Selector */}
+      {/* Fleet Overview — all aircraft at a glance */}
+      {aircraft === undefined ? (
+        <Card className="border-border/60">
+          <CardContent className="p-4 space-y-2">
+            {[1, 2, 3].map((i) => <Skeleton key={i} className="h-10 w-full" />)}
+          </CardContent>
+        </Card>
+      ) : orgId ? (
+        <FleetOverviewPanel
+          aircraft={aircraft}
+          organizationId={orgId}
+          selectedAircraftId={selectedAircraftId}
+          onSelect={setSelectedAircraftId}
+        />
+      ) : null}
+
+      {/* Aircraft Selector — for manual override / drill-in */}
       <Card className="border-border/60">
         <CardContent className="p-4">
           <div className="flex items-center gap-3">
             <Plane className="w-4 h-4 text-muted-foreground flex-shrink-0" />
             <div className="flex-1">
               <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
-                Select Aircraft
+                Select Aircraft to Inspect
               </label>
               {aircraft === undefined ? (
                 <Skeleton className="h-9 w-64" />
@@ -341,7 +511,9 @@ export default function AuditTrailPage() {
         <Card className="border-border/60">
           <CardContent className="py-12 text-center">
             <Plane className="w-7 h-7 text-muted-foreground/40 mx-auto mb-3" />
-            <p className="text-sm text-muted-foreground">Select an aircraft above to view AD compliance status.</p>
+            <p className="text-sm text-muted-foreground">
+              Click an aircraft in the Fleet Overview or use the selector above to drill into full AD detail.
+            </p>
           </CardContent>
         </Card>
       ) : orgId ? (

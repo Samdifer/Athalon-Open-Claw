@@ -27,7 +27,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { FileText, Plus, Download } from "lucide-react";
+import { FileText, Plus, Download, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { downloadPDF } from "@/lib/pdf/download";
 import { Form8130PDF } from "@/lib/pdf/Form8130PDF";
 import { EASAForm1PDF } from "@/lib/pdf/EASAForm1PDF";
@@ -85,6 +86,9 @@ export default function CertificatesPage() {
         inspectorTechnicianId: techId,
         approvalNumber,
       });
+      toast.success(
+        formType === "faa_8130" ? "FAA 8130-3 certificate created" : "EASA Form 1 certificate created",
+      );
       setDialogOpen(false);
       // Reset form
       setPartDescription("");
@@ -96,6 +100,10 @@ export default function CertificatesPage() {
       setCondition("");
       setRemarks("");
       setApprovalNumber("");
+    } catch (err: unknown) {
+      toast.error(
+        err instanceof Error ? err.message : "Failed to create certificate — please try again",
+      );
     } finally {
       setSaving(false);
     }
@@ -123,25 +131,32 @@ export default function CertificatesPage() {
       signatureDate: cert.signatureDate,
     };
 
-    if (cert.formType === "faa_8130") {
-      await downloadPDF(
-        <Form8130PDF {...commonProps} />,
-        `8130-3_${cert.certificateNumber}.pdf`,
-      );
-    } else {
-      await downloadPDF(
-        <EASAForm1PDF
-          {...commonProps}
-          approvalReference={cert.repairStationCertNumber}
-        />,
-        `EASA-Form1_${cert.certificateNumber}.pdf`,
+    try {
+      if (cert.formType === "faa_8130") {
+        await downloadPDF(
+          <Form8130PDF {...commonProps} />,
+          `8130-3_${cert.certificateNumber}.pdf`,
+        );
+      } else {
+        await downloadPDF(
+          <EASAForm1PDF
+            {...commonProps}
+            approvalReference={cert.repairStationCertNumber}
+          />,
+          `EASA-Form1_${cert.certificateNumber}.pdf`,
+        );
+      }
+      toast.success(`${cert.formType === "faa_8130" ? "FAA 8130-3" : "EASA Form 1"} downloaded`);
+    } catch (err: unknown) {
+      toast.error(
+        err instanceof Error ? err.message : "Failed to generate PDF — please try again",
       );
     }
   };
 
   if (!certificates) {
     return (
-      <div className="p-6 space-y-4">
+      <div className="space-y-5">
         <Skeleton className="h-8 w-64" />
         <Skeleton className="h-32 w-full" />
       </div>
@@ -149,22 +164,30 @@ export default function CertificatesPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-5">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row gap-2 sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Release Certificates</h1>
-          <p className="text-muted-foreground">
-            WO {workOrder?.workOrder?.workOrderNumber ?? "..."}
+          <h1 className="text-lg sm:text-xl md:text-2xl font-semibold text-foreground flex items-center gap-2">
+            <FileText className="w-5 h-5 text-muted-foreground" />
+            Release Certificates
+          </h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            WO{" "}
+            <span className="font-mono">
+              {workOrder?.workOrder?.workOrderNumber ?? "…"}
+            </span>{" "}
+            · FAA 8130-3 &amp; EASA Form 1
           </p>
         </div>
         <div className="flex gap-2">
-          <Button onClick={() => openDialog("faa_8130")}>
-            <Plus className="h-4 w-4 mr-2" />
+          <Button size="sm" onClick={() => openDialog("faa_8130")} className="gap-1.5 h-8 text-xs">
+            <Plus className="h-3.5 w-3.5" />
             Create 8130-3
           </Button>
-          <Button variant="outline" onClick={() => openDialog("easa_form1")}>
-            <Plus className="h-4 w-4 mr-2" />
-            Create EASA Form 1
+          <Button size="sm" variant="outline" onClick={() => openDialog("easa_form1")} className="gap-1.5 h-8 text-xs">
+            <Plus className="h-3.5 w-3.5" />
+            EASA Form 1
           </Button>
         </div>
       </div>
@@ -299,12 +322,22 @@ export default function CertificatesPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setDialogOpen(false)}>Cancel</Button>
+            <Button variant="ghost" onClick={() => setDialogOpen(false)} disabled={saving}>
+              Cancel
+            </Button>
             <Button
               onClick={handleCreate}
               disabled={saving || !partDescription || !partNumber || !workPerformed || !approvalNumber}
+              className="gap-1.5"
             >
-              {saving ? "Creating..." : "Create Certificate"}
+              {saving ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  Creating…
+                </>
+              ) : (
+                "Create Certificate"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
