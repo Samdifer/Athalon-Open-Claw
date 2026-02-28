@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import React, { useMemo } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
@@ -16,7 +16,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-export function TATChart() {
+export const TATChart = React.memo(function TATChart() {
   const { orgId } = useCurrentOrg();
 
   const woResult = useQuery(
@@ -96,4 +96,4 @@ export function TATChart() {
       </CardContent>
     </Card>
   );
-}
+});

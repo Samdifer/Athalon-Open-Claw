@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -23,7 +24,7 @@ import { formatDate } from "@/lib/format";
 // Displays shop-wide schedule risk summary on the dashboard.
 // Uses the real Convex getScheduleStats query.
 
-export function ScheduleHealthWidget() {
+export const ScheduleHealthWidget = React.memo(function ScheduleHealthWidget() {
   const { orgId, isLoaded } = useCurrentOrg();
 
   const stats = useQuery(
@@ -171,4 +172,4 @@ export function ScheduleHealthWidget() {
       </CardContent>
     </Card>
   );
-}
+});

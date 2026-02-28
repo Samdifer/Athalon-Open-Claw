@@ -32,14 +32,11 @@ export default function CompliancePage() {
 
   const isFleetLoading = !isLoaded || fleet === undefined;
 
-  // Split fleet into buckets for the UI
-  const nonCompliant = (fleet ?? []).filter(
-    (a) => a.openWorkOrderCount > 0,
-  ) as AircraftRow[];
-
-  const noOpenWo = (fleet ?? []).filter(
-    (a) => a.openWorkOrderCount === 0,
-  ) as AircraftRow[];
+  // Show all aircraft — sorted alphabetically by registration.
+  // Per-aircraft compliance status (non-compliant / due-soon / compliant) is computed
+  // inside each AircraftComplianceCard via api.adCompliance.checkAdDueForAircraft.
+  // Grouping by openWorkOrderCount is orthogonal to AD compliance and was misleading.
+  const allAircraft = (fleet ?? []) as AircraftRow[];
 
   return (
     <div className="space-y-6">
@@ -103,75 +100,36 @@ export default function CompliancePage() {
         </CardContent>
       </Card>
 
-      {/* Aircraft with active work */}
-      {!isFleetLoading && nonCompliant.length > 0 && (
+      {/* Fleet AD Compliance Status — all aircraft, sorted alphabetically.
+          Each card queries and displays its own live compliance status.
+          Non-compliant aircraft show a red left border; due-soon amber; compliant green. */}
+      {isFleetLoading && (
         <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            <h2 className="text-sm font-semibold text-foreground">
-              Aircraft with Active Work Orders
-            </h2>
-            <Badge
-              variant="secondary"
-              className="text-[10px] bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20"
-            >
-              {nonCompliant.length}
-            </Badge>
-          </div>
+          <Skeleton className="h-5 w-48" />
           <div className="space-y-2">
-            {nonCompliant.map((aircraft) => (
-              <AircraftComplianceCard
-                key={aircraft._id}
-                aircraft={aircraft}
-                orgId={orgId!}
-              />
+            {[1, 2, 3].map((i) => (
+              <Card key={i} className="border-border/60">
+                <CardContent className="p-4">
+                  <Skeleton className="h-12 w-full" />
+                </CardContent>
+              </Card>
             ))}
           </div>
         </div>
       )}
 
-      {/* Rest of fleet */}
       {!isFleetLoading && (
         <div className="space-y-3">
           <div className="flex items-center gap-2">
             <h2 className="text-sm font-semibold text-foreground">
-              {nonCompliant.length > 0
-                ? "Other Fleet Aircraft"
-                : "All Fleet Aircraft"}
+              Fleet AD Compliance Status
             </h2>
-            {isFleetLoading ? (
-              <Skeleton className="h-4 w-8" />
-            ) : (
-              <Badge variant="secondary" className="text-[10px] bg-muted">
-                {noOpenWo.length > 0 ? noOpenWo.length : (fleet ?? []).length}
-              </Badge>
-            )}
+            <Badge variant="secondary" className="text-[10px] bg-muted">
+              {allAircraft.length}
+            </Badge>
           </div>
 
-          {isFleetLoading ? (
-            <div className="space-y-2">
-              {[1, 2, 3].map((i) => (
-                <Card key={i} className="border-border/60">
-                  <CardContent className="p-4">
-                    <Skeleton className="h-12 w-full" />
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          ) : noOpenWo.length === 0 && nonCompliant.length > 0 ? null : (
-            <div className="space-y-2">
-              {(noOpenWo.length > 0 ? noOpenWo : (fleet ?? [])).map(
-                (aircraft) => (
-                  <AircraftComplianceCard
-                    key={aircraft._id}
-                    aircraft={aircraft as AircraftRow}
-                    orgId={orgId!}
-                  />
-                ),
-              )}
-            </div>
-          )}
-
-          {!isFleetLoading && (fleet ?? []).length === 0 && (
+          {allAircraft.length === 0 ? (
             <Card className="border-border/60">
               <CardContent className="py-16 text-center">
                 <PlaneTakeoff className="w-8 h-8 text-muted-foreground/40 mx-auto mb-3" />
@@ -183,6 +141,16 @@ export default function CompliancePage() {
                 </p>
               </CardContent>
             </Card>
+          ) : (
+            <div className="space-y-2">
+              {allAircraft.map((aircraft) => (
+                <AircraftComplianceCard
+                  key={aircraft._id}
+                  aircraft={aircraft}
+                  orgId={orgId!}
+                />
+              ))}
+            </div>
           )}
         </div>
       )}

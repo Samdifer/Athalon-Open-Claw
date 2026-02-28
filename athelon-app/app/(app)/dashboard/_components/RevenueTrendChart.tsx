@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import React, { useMemo } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
@@ -21,7 +21,7 @@ const MONTH_NAMES = [
   "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
 ];
 
-export function RevenueTrendChart() {
+export const RevenueTrendChart = React.memo(function RevenueTrendChart() {
   const { orgId } = useCurrentOrg();
 
   const invoices = useQuery(
@@ -107,4 +107,4 @@ export function RevenueTrendChart() {
       </CardContent>
     </Card>
   );
-}
+});

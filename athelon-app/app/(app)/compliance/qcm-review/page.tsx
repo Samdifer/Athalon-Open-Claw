@@ -168,7 +168,7 @@ function CloseReadinessPanel({
               </span>
               {readiness.canClose && (
                 <Button asChild size="sm" className="ml-auto h-7 text-xs">
-                  <Link to={`/work-orders/${selectedWoId}/signature`}>
+                  <Link to={`/work-orders/${selectedWoId}/rts`}>
                     Sign Off &amp; Close
                   </Link>
                 </Button>

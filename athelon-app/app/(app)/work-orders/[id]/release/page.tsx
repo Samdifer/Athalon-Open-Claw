@@ -16,6 +16,8 @@ import {
   User,
   FileText,
   Pen,
+  ShieldX,
+  ShieldCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -32,6 +34,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { formatDateTime } from "@/lib/format";
+import type { CloseReadinessReport } from "@/lib/mro-types";
 import {
   WO_STATUS_LABEL,
   WO_STATUS_STYLES,
@@ -133,6 +136,14 @@ export default function ReleaseAircraftPage() {
       : "skip",
   );
 
+  // 14 CFR Part 145 gate: aircraft cannot be returned to customer without an authorized RTS record.
+  const readiness = useQuery(
+    api.returnToService.getCloseReadinessReport,
+    orgId && id
+      ? { workOrderId: id as Id<"workOrders">, organizationId: orgId }
+      : "skip",
+  );
+
   const releaseAircraft = useMutation(api.gapFixes.releaseAircraftToCustomer);
 
   const [aircraftTotalTime, setAircraftTotalTime] = useState<string>("");
@@ -142,7 +153,11 @@ export default function ReleaseAircraftPage() {
   const [error, setError] = useState<string | null>(null);
   const [released, setReleased] = useState<ReleaseConfirmation | null>(null);
 
-  const isLoading = !isLoaded || data === undefined;
+  const isLoading = !isLoaded || data === undefined || readiness === undefined;
+
+  // RTS gate: true only if the backend confirms a signed RTS record exists.
+  // 14 CFR Part 145 requires an authorized RTS record before returning aircraft to customer.
+  const isRtsSigned = (readiness as CloseReadinessReport | null)?.isAlreadySigned === true;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -342,6 +357,47 @@ export default function ReleaseAircraftPage() {
         </CardContent>
       </Card>
 
+      {/* ── RTS Gate (14 CFR Part 145) ──────────────────────────────────────── */}
+      {!isRtsSigned ? (
+        <Card className="border-red-500/40 bg-red-500/5">
+          <CardContent className="p-4">
+            <div className="flex items-start gap-3">
+              <ShieldX className="w-5 h-5 text-red-500 dark:text-red-400 flex-shrink-0 mt-0.5" />
+              <div className="space-y-2">
+                <p className="text-sm font-semibold text-red-600 dark:text-red-400">
+                  Return-to-Service Not Authorized
+                </p>
+                <p className="text-xs text-red-500/80 dark:text-red-300/80 leading-relaxed">
+                  Under 14 CFR Part 145, an aircraft <strong>cannot</strong> be returned to a
+                  customer without a signed Return-to-Service record. Complete the RTS
+                  authorization before releasing this aircraft.
+                </p>
+                <Button
+                  asChild
+                  size="sm"
+                  variant="outline"
+                  className="h-7 text-xs gap-1.5 border-red-500/40 text-red-600 dark:text-red-400 hover:bg-red-500/10"
+                >
+                  <Link to={`/work-orders/${id}/rts`}>
+                    <ShieldCheck className="w-3.5 h-3.5" />
+                    Go to RTS Authorization
+                  </Link>
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card className="border-green-500/30 bg-green-500/5">
+          <CardContent className="p-3 flex items-center gap-2.5">
+            <ShieldCheck className="w-4 h-4 text-green-600 dark:text-green-400 flex-shrink-0" />
+            <p className="text-xs text-green-600 dark:text-green-400 font-medium">
+              Return-to-Service authorized — aircraft is airworthy and ready for customer handback.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
       {error && (
         <div className="flex items-center gap-2 p-3 rounded-md bg-red-500/10 border border-red-500/30 text-sm text-red-400">
           <AlertCircle className="w-4 h-4 flex-shrink-0" />
@@ -435,8 +491,9 @@ export default function ReleaseAircraftPage() {
           <Button
             type="submit"
             size="sm"
-            disabled={submitting || !aircraftTotalTime}
+            disabled={submitting || !aircraftTotalTime || !isRtsSigned}
             className="gap-1.5"
+            title={!isRtsSigned ? "RTS must be authorized before releasing to customer" : undefined}
           >
             <PlaneTakeoff className="w-3.5 h-3.5" />
             {submitting ? "Releasing…" : "Release Aircraft to Customer"}
