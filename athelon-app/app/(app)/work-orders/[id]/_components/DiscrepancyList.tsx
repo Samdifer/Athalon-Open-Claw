@@ -7,13 +7,20 @@
  *
  * Phase D: OP-1003 alignment — displays discrepancy type, system type,
  * RII flag, customer approval status, labor estimates, and discovered-when.
+ *
+ * AI-006: Wired "Log Squawk" button — opens LogSquawkDialog when
+ * orgId, techId, and workOrderId props are provided. Without them the
+ * button is hidden (read-only portal mode).
  */
 
+import { useState } from "react";
 import { AlertTriangle, CheckCircle2, ShieldAlert, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatDate } from "@/lib/format";
+import type { Id } from "@/convex/_generated/dataModel";
+import { LogSquawkDialog } from "./LogSquawkDialog";
 
 // ─── Prop types ───────────────────────────────────────────────────────────────
 
@@ -36,6 +43,11 @@ interface Discrepancy {
 
 export interface DiscrepancyListProps {
   discrepancies: Discrepancy[];
+  /** Required to enable the Log Squawk button. Without these, button is hidden. */
+  orgId?: Id<"organizations">;
+  techId?: Id<"technicians">;
+  workOrderId?: Id<"workOrders">;
+  aircraftCurrentHours?: number | null;
 }
 
 // ─── Badge helpers ───────────────────────────────────────────────────────────
@@ -70,11 +82,21 @@ const APPROVAL_STATUS_BADGE: Record<string, { label: string; className: string }
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export function DiscrepancyList({ discrepancies }: DiscrepancyListProps) {
+export function DiscrepancyList({
+  discrepancies,
+  orgId,
+  techId,
+  workOrderId,
+  aircraftCurrentHours,
+}: DiscrepancyListProps) {
+  const [logSquawkOpen, setLogSquawkOpen] = useState(false);
+
   // Sum of mhEstimate across non-dispositioned discrepancies
   const totalMhEstimate = discrepancies
     .filter((d) => d.status !== "dispositioned")
     .reduce((sum, d) => sum + (d.mhEstimate ?? 0), 0);
+
+  const canLogSquawk = Boolean(orgId && techId && workOrderId);
 
   return (
     <div className="space-y-2">
@@ -198,14 +220,30 @@ export function DiscrepancyList({ discrepancies }: DiscrepancyListProps) {
         })
       )}
 
-      <Button
-        variant="outline"
-        size="sm"
-        className="w-full h-9 text-xs border-border/60 border-dashed gap-1.5 mt-2"
-      >
-        <AlertTriangle className="w-3.5 h-3.5" />
-        Log Squawk
-      </Button>
+      {/* Log Squawk button — hidden in read-only (portal) mode */}
+      {canLogSquawk && (
+        <Button
+          variant="outline"
+          size="sm"
+          className="w-full h-9 text-xs border-border/60 border-dashed gap-1.5 mt-2"
+          onClick={() => setLogSquawkOpen(true)}
+        >
+          <AlertTriangle className="w-3.5 h-3.5" />
+          Log Squawk
+        </Button>
+      )}
+
+      {/* Log Squawk Dialog */}
+      {canLogSquawk && orgId && techId && workOrderId && (
+        <LogSquawkDialog
+          open={logSquawkOpen}
+          onClose={() => setLogSquawkOpen(false)}
+          workOrderId={workOrderId}
+          orgId={orgId}
+          techId={techId}
+          aircraftCurrentHours={aircraftCurrentHours}
+        />
+      )}
     </div>
   );
 }

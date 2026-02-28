@@ -120,3 +120,25 @@
 - **P3 Low/Blocked**: 10 (varies)
 - **Estimated total buildable now**: 30 features, ~99h
 - **Current completion**: ~82% → Target after Sprint 3: ~95%
+
+---
+
+## Autonomous Improvements
+
+### Cycle 2 — 2026-02-28 (Workflow Fidelity)
+
+| ID | Description | Priority | Est | Files Affected | Status |
+|----|-------------|----------|-----|----------------|--------|
+| AI-004 | Wire task card compliance items to Convex backend — replace `useState(INITIAL_COMPLIANCE_ITEMS)` with `useQuery(api.taskCompliance.getComplianceItemsForTask)` + `addComplianceItem` / `updateComplianceStatus` mutations. Under a Part 145 audit, compliance changes must persist — currently all edits evaporate on page reload. | P0 | 1.5h | `tasks/[cardId]/page.tsx` | 🔄 In Progress |
+| AI-005 | Wire vendor services on task card page to Convex backend — replace `useState(INITIAL_VENDOR_SERVICES)` with `useQuery(api.taskCardVendorServices.getVendorServicesForTask)` + `addVendorServiceToTask` / `updateVendorServiceStatus` mutations. Vendor service assignments currently evaporate on page reload. | P1 | 1h | `tasks/[cardId]/page.tsx` | 🔄 In Progress |
+| AI-006 | Wire `Log Squawk` button in `DiscrepancyList` — button renders but has no `onClick`. Add a `LogSquawkDialog` component and call `api.discrepancies.openDiscrepancy`. Pass required props (`orgId`, `workOrderId`, `techId`) from the WO detail page. | P1 | 1h | `_components/DiscrepancyList.tsx`, `work-orders/[id]/page.tsx` | 🔄 In Progress |
+
+### Cycle 1 — 2026-02-28 (Regulatory Compliance)
+
+| ID | Description | Priority | Est | Files Affected | Status |
+|----|-------------|----------|-----|----------------|--------|
+| AI-001 | Replace hardcoded `demoTaskCompliance` in `WOComplianceTab` with real Convex data from `api.taskCompliance.getComplianceItemsForWorkOrder`. A DOM inspector walking in sees fake task compliance data today. | P0 | 1h | `WOComplianceTab.tsx` | ✅ Done |
+| AI-002 | Replace hardcoded `demoRtsChecklist` and `rtsCompleted = false` in `ReturnToServiceSection` with real data from `api.returnToService.getCloseReadinessReport`. RTS section always shows "not complete" even when RTS is signed. | P0 | 1h | `WOComplianceTab.tsx` | ✅ Done |
+| AI-003 | Make the Compliance tab badge on WO detail page dynamic — compute actual non-compliance from real AD + task compliance data instead of hardcoded amber dot. | P1 | 0.5h | `work-orders/[id]/page.tsx` | ✅ Done |
+| BUG-001 | `dashboard/page.tsx` line 90: `wo.discrepancyCount` → `wo.openDiscrepancyCount` (pre-existing TS error) | P0 | 5m | `dashboard/page.tsx` | ✅ Done |
+| BUG-002 | `work-orders/page.tsx` line 440: `wo.workOrderNumber` on `WorkOrderRow` type → `wo.number` (pre-existing TS error) | P0 | 5m | `work-orders/page.tsx` | ✅ Done |

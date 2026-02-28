@@ -437,7 +437,7 @@ export default function WorkOrdersPage() {
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
-                          setQrWoNumber(wo.workOrderNumber);
+                          setQrWoNumber(wo.number);
                         }}
                       >
                         <QrCode className="w-3.5 h-3.5" />

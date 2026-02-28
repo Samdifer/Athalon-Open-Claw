@@ -87,7 +87,7 @@ function LiveKPICards() {
     );
     const aog = active.filter((wo) => wo.priority === "aog");
     const openDisc = workOrders.reduce(
-      (acc, wo) => acc + (wo.discrepancyCount ?? 0),
+      (acc, wo) => acc + (wo.openDiscrepancyCount ?? 0),
       0,
     );
     const overdueAds = fleetAd?.fleetTotals?.overdueAds ?? 0;

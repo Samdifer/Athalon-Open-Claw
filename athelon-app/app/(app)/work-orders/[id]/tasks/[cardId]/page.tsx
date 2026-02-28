@@ -7,6 +7,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import type { Id } from "@/convex/_generated/dataModel";
+import { toast } from "sonner";
 import {
   ArrowLeft,
   CheckCircle2,
@@ -21,6 +22,8 @@ import {
   History,
   Clock,
   Building2,
+  Loader2,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -158,43 +161,7 @@ const VENDOR_SVC_TYPE_STYLES: Record<string, string> = {
   other: "bg-muted text-muted-foreground border-muted-foreground/30",
 };
 
-const INITIAL_VENDOR_SERVICES: AttachedVendorService[] = [
-  {
-    id: "avs-1",
-    vendorId: "v-1",
-    vendorName: "Southwest NDT Services",
-    serviceName: "Fluorescent Penetrant Inspection",
-    serviceType: "ndt",
-    status: "planned",
-    estimatedCost: 275,
-  },
-];
-
-const INITIAL_COMPLIANCE_ITEMS: TaskComplianceItem[] = [
-  {
-    id: "ci-1",
-    referenceType: "ad",
-    reference: "AD 2023-15-01",
-    description: "Brake assembly torque requirements per AD 2023-15-01",
-    complianceStatus: "compliant",
-    history: [
-      {
-        status: "pending",
-        notes: "Item added during task setup",
-        changedByName: "Ray Kowalski",
-        changedAt: Date.now() - 86400000,
-      },
-    ],
-  },
-  {
-    id: "ci-2",
-    referenceType: "amm",
-    reference: "AMM 32-40-01 Rev 5",
-    description: "Brake replacement procedure per Aircraft Maintenance Manual",
-    complianceStatus: "pending",
-    history: [],
-  },
-];
+// (INITIAL_VENDOR_SERVICES and INITIAL_COMPLIANCE_ITEMS removed — data comes from Convex)
 
 // ─── Loading skeleton ─────────────────────────────────────────────────────────
 
@@ -236,15 +203,34 @@ export default function TaskCardPage() {
   const [handoffSubmitting, setHandoffSubmitting] = useState(false);
   const addHandoffNote = useMutation(api.taskCards.addHandoffNote);
 
-  // Vendor services state
-  const [vendorServices, setVendorServices] = useState<AttachedVendorService[]>(INITIAL_VENDOR_SERVICES);
+  // ── Compliance — Convex queries/mutations (AI-004) ────────────────────────
+  const complianceItemsRaw = useQuery(
+    api.taskCompliance.getComplianceItemsForTask,
+    cardId ? { taskCardId: cardId as Id<"taskCards"> } : "skip",
+  );
+  const addComplianceItemMutation = useMutation(api.taskCompliance.addComplianceItem);
+  const updateComplianceStatusMutation = useMutation(api.taskCompliance.updateComplianceStatus);
+  const removeComplianceItemMutation = useMutation(api.taskCompliance.removeComplianceItem);
+  const selfData = useQuery(
+    api.technicians.getSelf,
+    orgId ? { organizationId: orgId } : "skip",
+  );
+
+  // ── Vendor services — Convex queries/mutations (AI-005) ───────────────────
+  const vendorServicesRaw = useQuery(
+    api.taskCardVendorServices.getVendorServicesForTask,
+    cardId ? { taskCardId: cardId as Id<"taskCards"> } : "skip",
+  );
+  const addVendorServiceMutation = useMutation(api.taskCardVendorServices.addVendorServiceToTask);
+  const updateVendorServiceMutation = useMutation(api.taskCardVendorServices.updateVendorServiceStatus);
+
+  // Vendor services UI state
   const [pickerOpen, setPickerOpen] = useState(false);
   const [updatingVendorSvcId, setUpdatingVendorSvcId] = useState<string | null>(null);
   const [vendorSvcUpdateStatus, setVendorSvcUpdateStatus] = useState<VendorServiceStatus>("planned");
   const [vendorSvcActualCost, setVendorSvcActualCost] = useState("");
 
-  // Compliance section state
-  const [complianceItems, setComplianceItems] = useState<TaskComplianceItem[]>(INITIAL_COMPLIANCE_ITEMS);
+  // Compliance UI state
   const [showAddForm, setShowAddForm] = useState(false);
   const [addRefType, setAddRefType] = useState<ReferenceType>("ad");
   const [addReference, setAddReference] = useState("");
@@ -300,6 +286,35 @@ export default function TaskCardPage() {
   const allStepsDone = pendingSteps.length === 0 && totalSteps > 0;
   const cardIsComplete = taskCard.status === "complete";
   const cardIsVoided = taskCard.status === "voided";
+
+  // ── Map Convex compliance items to local shape ────────────────────────────
+  const complianceItems: TaskComplianceItem[] = (complianceItemsRaw ?? []).map((item) => ({
+    id: item._id as string,
+    referenceType: item.referenceType as ReferenceType,
+    reference: item.reference,
+    description: item.description,
+    complianceStatus: item.complianceStatus as ComplianceStatus,
+    history: item.history.map((h) => ({
+      status: h.status as ComplianceStatus,
+      notes: h.notes,
+      changedByName: h.changedByName,
+      changedAt: h.changedAt,
+    })),
+    notes: item.notes,
+  }));
+
+  // ── Map Convex vendor services to local shape ─────────────────────────────
+  const vendorServices: AttachedVendorService[] = (vendorServicesRaw ?? []).map((svc) => ({
+    id: svc._id as string,
+    vendorId: svc.vendorId as string,
+    vendorName: svc.vendorName,
+    serviceName: svc.serviceName,
+    serviceType: svc.serviceType,
+    status: svc.status as VendorServiceStatus,
+    estimatedCost: svc.estimatedCost,
+    actualCost: svc.actualCost,
+    notes: svc.notes,
+  }));
 
   return (
     <div className="max-w-2xl mx-auto space-y-5">
@@ -611,20 +626,26 @@ export default function TaskCardPage() {
                 size="sm"
                 className="h-7 text-xs"
                 disabled={!addReference.trim()}
-                onClick={() => {
-                  const newItem: TaskComplianceItem = {
-                    id: `ci-${Date.now()}`,
-                    referenceType: addRefType,
-                    reference: addReference.trim(),
-                    description: addDescription.trim() || undefined,
-                    complianceStatus: "pending",
-                    history: [],
-                  };
-                  setComplianceItems((prev) => [...prev, newItem]);
-                  setShowAddForm(false);
-                  setAddRefType("ad");
-                  setAddReference("");
-                  setAddDescription("");
+                onClick={async () => {
+                  if (!orgId || !taskCard.workOrderId || !taskCard.aircraftId) return;
+                  try {
+                    await addComplianceItemMutation({
+                      taskCardId: cardId as Id<"taskCards">,
+                      workOrderId: taskCard.workOrderId as Id<"workOrders">,
+                      aircraftId: taskCard.aircraftId as Id<"aircraft">,
+                      organizationId: orgId,
+                      referenceType: addRefType,
+                      reference: addReference.trim(),
+                      description: addDescription.trim() || undefined,
+                    });
+                    toast.success("Compliance item added");
+                    setShowAddForm(false);
+                    setAddRefType("ad");
+                    setAddReference("");
+                    setAddDescription("");
+                  } catch {
+                    toast.error("Failed to add compliance item");
+                  }
                 }}
               >
                 Save
@@ -634,7 +655,12 @@ export default function TaskCardPage() {
         )}
 
         {/* Items list */}
-        {complianceItems.length === 0 ? (
+        {complianceItemsRaw === undefined ? (
+          <div className="flex items-center gap-2 py-4 text-muted-foreground">
+            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            <span className="text-xs">Loading compliance items…</span>
+          </div>
+        ) : complianceItems.length === 0 ? (
           <p className="text-xs text-muted-foreground italic py-4">
             No compliance items added. Use &quot;Add Item&quot; to link regulatory
             references to this task.
@@ -684,6 +710,26 @@ export default function TaskCardPage() {
                         }}
                       >
                         Update
+                      </Button>
+                    )}
+                    {!cardIsVoided && !cardIsComplete && item.history.length === 0 && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
+                        aria-label="Remove compliance item"
+                        onClick={async () => {
+                          try {
+                            await removeComplianceItemMutation({
+                              itemId: item.id as Id<"taskComplianceItems">,
+                            });
+                            toast.success("Compliance item removed");
+                          } catch {
+                            toast.error("Failed to remove compliance item");
+                          }
+                        }}
+                      >
+                        <X className="w-3 h-3" />
                       </Button>
                     )}
                   </div>
@@ -736,25 +782,22 @@ export default function TaskCardPage() {
                       <Button
                         size="sm"
                         className="h-7 text-xs"
-                        onClick={() => {
-                          setComplianceItems((prev) =>
-                            prev.map((ci) => {
-                              if (ci.id !== item.id) return ci;
-                              const historyEntry: ComplianceHistoryEntry = {
-                                status: ci.complianceStatus,
-                                notes: updateNotes.trim() || undefined,
-                                changedByName: taskCard.assignedTechnicianName ?? "Current User",
-                                changedAt: Date.now(),
-                              };
-                              return {
-                                ...ci,
-                                complianceStatus: updateStatus,
-                                history: [historyEntry, ...ci.history],
-                              };
-                            }),
-                          );
-                          setUpdatingStatusId(null);
-                          setUpdateNotes("");
+                        onClick={async () => {
+                          if (!techId) return;
+                          try {
+                            await updateComplianceStatusMutation({
+                              itemId: item.id as Id<"taskComplianceItems">,
+                              status: updateStatus,
+                              notes: updateNotes.trim() || undefined,
+                              technicianId: techId,
+                              technicianName: selfData?.legalName ?? "Unknown",
+                            });
+                            toast.success("Compliance status updated");
+                            setUpdatingStatusId(null);
+                            setUpdateNotes("");
+                          } catch {
+                            toast.error("Failed to update compliance status");
+                          }
                         }}
                       >
                         Save
@@ -895,7 +938,12 @@ export default function TaskCardPage() {
         })()}
 
         {/* Services list */}
-        {vendorServices.length === 0 ? (
+        {vendorServicesRaw === undefined ? (
+          <div className="flex items-center gap-2 py-4 text-muted-foreground">
+            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            <span className="text-xs">Loading vendor services…</span>
+          </div>
+        ) : vendorServices.length === 0 ? (
           <p className="text-xs text-muted-foreground italic py-4">
             No vendor services attached. Use &quot;Attach Service&quot; to assign
             external work to a vendor.
@@ -1008,24 +1056,24 @@ export default function TaskCardPage() {
                       <Button
                         size="sm"
                         className="h-7 text-xs"
-                        onClick={() => {
-                          const costNum = vendorSvcActualCost.trim()
-                            ? parseFloat(vendorSvcActualCost)
-                            : undefined;
-                          setVendorServices((prev) =>
-                            prev.map((item) => {
-                              if (item.id !== svc.id) return item;
-                              return {
-                                ...item,
-                                status: vendorSvcUpdateStatus,
-                                actualCost:
-                                  vendorSvcUpdateStatus === "completed" && costNum !== undefined && !isNaN(costNum)
-                                    ? costNum
-                                    : item.actualCost,
-                              };
-                            }),
-                          );
-                          setUpdatingVendorSvcId(null);
+                        onClick={async () => {
+                          try {
+                            const costNum = vendorSvcActualCost.trim()
+                              ? parseFloat(vendorSvcActualCost)
+                              : undefined;
+                            await updateVendorServiceMutation({
+                              id: svc.id as Id<"taskCardVendorServices">,
+                              status: vendorSvcUpdateStatus,
+                              actualCost:
+                                vendorSvcUpdateStatus === "completed" && costNum !== undefined && !isNaN(costNum)
+                                  ? costNum
+                                  : undefined,
+                            });
+                            toast.success("Vendor service status updated");
+                            setUpdatingVendorSvcId(null);
+                          } catch {
+                            toast.error("Failed to update vendor service status");
+                          }
                         }}
                       >
                         Save
@@ -1044,18 +1092,25 @@ export default function TaskCardPage() {
         open={pickerOpen}
         onOpenChange={setPickerOpen}
         taskCardId={cardId}
-        onAttach={(details: AttachmentDetails) => {
-          const newSvc: AttachedVendorService = {
-            id: `avs-${Date.now()}`,
-            vendorId: details.vendorId,
-            vendorName: details.vendorName,
-            serviceName: details.serviceName,
-            serviceType: details.serviceType,
-            status: details.status,
-            estimatedCost: details.estimatedCost,
-            notes: details.notes,
-          };
-          setVendorServices((prev) => [...prev, newSvc]);
+        onAttach={async (details: AttachmentDetails) => {
+          if (!orgId || !taskCard.workOrderId) return;
+          try {
+            await addVendorServiceMutation({
+              taskCardId: cardId as Id<"taskCards">,
+              workOrderId: taskCard.workOrderId as Id<"workOrders">,
+              organizationId: orgId,
+              vendorId: details.vendorId as Id<"vendors">,
+              vendorServiceId: details.vendorServiceId as Id<"vendorServices"> | undefined,
+              vendorName: details.vendorName,
+              serviceName: details.serviceName,
+              serviceType: details.serviceType,
+              estimatedCost: details.estimatedCost,
+              notes: details.notes,
+            });
+            toast.success("Vendor service attached");
+          } catch {
+            toast.error("Failed to attach vendor service");
+          }
         }}
       />
 

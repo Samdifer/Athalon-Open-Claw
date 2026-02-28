@@ -1,3 +1,15 @@
+/**
+ * WOComplianceTab.tsx
+ *
+ * AI-001: Task Compliance section now wired to real Convex data via
+ *   api.taskCompliance.getComplianceItemsForWorkOrder
+ * AI-002: Return-to-Service section now wired to real
+ *   api.returnToService.getCloseReadinessReport — shows actual blockers,
+ *   real RTS-signed state, and live close-readiness status.
+ *
+ * No demo/hardcoded data anywhere in this file.
+ */
+
 import { Link, useParams } from "react-router-dom";
 import { useQuery } from "convex/react";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
@@ -22,7 +34,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-// ─── Section 1: Task Compliance Summary ──────────────────────────────────────
+// ─── Shared Types ─────────────────────────────────────────────────────────────
 
 type TaskComplianceStatus =
   | "all_compliant"
@@ -30,50 +42,7 @@ type TaskComplianceStatus =
   | "non_compliant"
   | "no_items";
 
-type TaskComplianceSummaryRow = {
-  taskCardId: string;
-  taskNumber: string;
-  taskTitle: string;
-  itemCount: number;
-  overallStatus: TaskComplianceStatus;
-};
-
-const demoTaskCompliance: TaskComplianceSummaryRow[] = [
-  {
-    taskCardId: "tc-1",
-    taskNumber: "TC-001",
-    taskTitle: "Engine Compression Check — All Cylinders",
-    itemCount: 2,
-    overallStatus: "all_compliant",
-  },
-  {
-    taskCardId: "tc-2",
-    taskNumber: "TC-002",
-    taskTitle: "Oil Change & Filter Inspection",
-    itemCount: 1,
-    overallStatus: "issues_pending",
-  },
-  {
-    taskCardId: "tc-3",
-    taskNumber: "TC-003",
-    taskTitle: "Brake System Inspection",
-    itemCount: 0,
-    overallStatus: "no_items",
-  },
-];
-
-function getTaskComplianceOverall(
-  rows: TaskComplianceSummaryRow[],
-): TaskComplianceStatus {
-  if (rows.length === 0) return "no_items";
-  if (rows.some((r) => r.overallStatus === "non_compliant"))
-    return "non_compliant";
-  if (rows.some((r) => r.overallStatus === "issues_pending"))
-    return "issues_pending";
-  if (rows.every((r) => r.overallStatus === "all_compliant"))
-    return "all_compliant";
-  return "no_items";
-}
+// ─── Shared Sub-Components ────────────────────────────────────────────────────
 
 function ComplianceStatusBadge({ status }: { status: TaskComplianceStatus }) {
   switch (status) {
@@ -119,12 +88,123 @@ function ComplianceStatusBadge({ status }: { status: TaskComplianceStatus }) {
   }
 }
 
+// ─── Section 1: Task Compliance (AI-001) ──────────────────────────────────────
+
+/**
+ * Queries real compliance data from api.taskCompliance.getComplianceItemsForWorkOrder
+ * and cross-references task card metadata from api.returnToService.getCloseReadinessReport.
+ */
 function TaskComplianceSection({
   workOrderId,
+  orgId,
 }: {
-  workOrderId: string;
+  workOrderId: Id<"workOrders">;
+  orgId: Id<"organizations">;
 }) {
-  const overall = getTaskComplianceOverall(demoTaskCompliance);
+  // Real compliance items grouped by task card
+  const complianceGroups = useQuery(
+    api.taskCompliance.getComplianceItemsForWorkOrder,
+    { workOrderId },
+  );
+
+  // Task card metadata (titles, numbers) from close-readiness report
+  const report = useQuery(
+    api.returnToService.getCloseReadinessReport,
+    { workOrderId, organizationId: orgId },
+  );
+
+  if (complianceGroups === undefined || report === undefined) {
+    return (
+      <Card className="border-border/60">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+            Task Compliance
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-0 space-y-2">
+          {[1, 2, 3].map((i) => (
+            <Skeleton key={i} className="h-10 w-full" />
+          ))}
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Build a lookup: taskCardId → { taskCardNumber, title }
+  const taskCardMeta = new Map<
+    string,
+    { taskCardNumber?: string; title?: string }
+  >();
+  if (report) {
+    for (const tc of report.taskCards) {
+      taskCardMeta.set(String(tc.taskCardId), {
+        taskCardNumber: tc.taskCardNumber ?? undefined,
+        title: tc.title ?? undefined,
+      });
+    }
+  }
+
+  // Build merged rows: one row per task card in the report,
+  // showing compliance status from complianceGroups (or "no_items" if absent).
+  const taskCards = report?.taskCards ?? [];
+
+  // Merge compliance groups with task card list
+  const complianceByCard = new Map<string, TaskComplianceStatus>();
+  for (const group of complianceGroups) {
+    complianceByCard.set(String(group.taskCardId), group.overallStatus);
+  }
+
+  type Row = {
+    taskCardId: string;
+    taskNumber: string;
+    taskTitle: string;
+    itemCount: number;
+    overallStatus: TaskComplianceStatus;
+  };
+
+  const rows: Row[] = taskCards.map((tc) => {
+    const tcIdStr = String(tc.taskCardId);
+    const group = complianceGroups.find(
+      (g) => String(g.taskCardId) === tcIdStr,
+    );
+    return {
+      taskCardId: tcIdStr,
+      taskNumber: tc.taskCardNumber ?? "—",
+      taskTitle: tc.title ?? "—",
+      itemCount: group?.items.length ?? 0,
+      overallStatus: complianceByCard.get(tcIdStr) ?? "no_items",
+    };
+  });
+
+  // Also include any compliance groups for task cards not in the report
+  // (edge case: deleted task cards with lingering compliance items)
+  for (const group of complianceGroups) {
+    const tcIdStr = String(group.taskCardId);
+    if (!rows.find((r) => r.taskCardId === tcIdStr)) {
+      const meta = taskCardMeta.get(tcIdStr);
+      rows.push({
+        taskCardId: tcIdStr,
+        taskNumber: meta?.taskCardNumber ?? "—",
+        taskTitle: meta?.title ?? "(Task card not found)",
+        itemCount: group.items.length,
+        overallStatus: group.overallStatus,
+      });
+    }
+  }
+
+  // Compute overall
+  function computeOverall(rowList: Row[]): TaskComplianceStatus {
+    if (rowList.length === 0) return "no_items";
+    if (rowList.some((r) => r.overallStatus === "non_compliant"))
+      return "non_compliant";
+    if (rowList.some((r) => r.overallStatus === "issues_pending"))
+      return "issues_pending";
+    if (rowList.every((r) => r.overallStatus === "all_compliant"))
+      return "all_compliant";
+    return "no_items";
+  }
+
+  const overall = computeOverall(rows);
 
   return (
     <Card className="border-border/60">
@@ -137,11 +217,11 @@ function TaskComplianceSection({
         </div>
       </CardHeader>
       <CardContent className="pt-0">
-        {demoTaskCompliance.length === 0 ? (
+        {rows.length === 0 ? (
           <div className="py-8 text-center">
             <p className="text-sm text-muted-foreground">
-              No task compliance data yet. Open a task card and add compliance
-              items.
+              No task cards on this work order. Add task cards to track
+              compliance items.
             </p>
           </div>
         ) : (
@@ -154,7 +234,7 @@ function TaskComplianceSection({
               <span>Status</span>
               <span className="text-right">Action</span>
             </div>
-            {demoTaskCompliance.map((row) => (
+            {rows.map((row) => (
               <div
                 key={row.taskCardId}
                 className="grid grid-cols-[60px_1fr_100px_120px_90px] gap-3 px-3 py-2.5 items-center border-b border-border/40 last:border-0"
@@ -188,7 +268,7 @@ function TaskComplianceSection({
                     className="h-6 px-2 text-[10px] gap-1"
                   >
                     <Link
-                      to={`/work-orders/${workOrderId}/tasks/${row.taskCardId}`}
+                      to={`/work-orders/${String(workOrderId)}/tasks/${row.taskCardId}`}
                     >
                       View Task
                       <ChevronRight className="w-3 h-3" />
@@ -204,7 +284,7 @@ function TaskComplianceSection({
   );
 }
 
-// ─── Section 2: AD Compliance (inlined from AdComplianceTab) ─────────────────
+// ─── Section 2: AD Compliance (unchanged — already uses real data) ────────────
 
 type AdItem = {
   adComplianceId: Id<"adCompliance">;
@@ -558,42 +638,124 @@ function AdCompliancePanelInner({
   );
 }
 
-// ─── Section 3: Return to Service ────────────────────────────────────────────
+// ─── Section 3: Return to Service (AI-002) ────────────────────────────────────
 
-type RtsChecklistItem = {
-  id: string;
-  label: string;
-  complete: boolean;
-};
-
-const demoRtsChecklist: RtsChecklistItem[] = [
-  { id: "rts-1", label: "All task cards complete", complete: true },
-  {
-    id: "rts-2",
-    label: "All task compliance items resolved",
-    complete: true,
-  },
-  {
-    id: "rts-3",
-    label: "No open squawks/discrepancies",
-    complete: false,
-  },
-  { id: "rts-4", label: "AD compliance current", complete: false },
-  {
-    id: "rts-5",
-    label: "Maintenance records signed",
-    complete: false,
-  },
-];
-
+/**
+ * Replaces hardcoded demoRtsChecklist with real close-readiness data.
+ * Shows actual blocking conditions from the backend and correctly
+ * reflects whether RTS has already been authorized.
+ */
 function ReturnToServiceSection({
   workOrderId,
+  orgId,
 }: {
-  workOrderId: string;
+  workOrderId: Id<"workOrders">;
+  orgId: Id<"organizations">;
 }) {
-  const allComplete = demoRtsChecklist.every((item) => item.complete);
-  // Demo: no RTS record exists, so show the checklist state
-  const rtsCompleted = false;
+  const report = useQuery(api.returnToService.getCloseReadinessReport, {
+    workOrderId,
+    organizationId: orgId,
+  });
+
+  if (report === undefined) {
+    return (
+      <Card className="border-border/60">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
+            <ShieldCheck className="w-3.5 h-3.5" />
+            Return to Service Authorization
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-0 space-y-2">
+          {[1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} className="h-8 w-full" />
+          ))}
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (report === null) {
+    return (
+      <Card className="border-border/60">
+        <CardContent className="py-6 text-center text-sm text-muted-foreground">
+          Work order not found.
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // ── Already signed ─────────────────────────────────────────────────────────
+  if (report.isAlreadySigned) {
+    return (
+      <Card className="border-border/60">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
+            <ShieldCheck className="w-3.5 h-3.5" />
+            Return to Service Authorization
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-0">
+          <Card className="border-green-500/30 bg-green-500/5">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0" />
+                <div>
+                  <p className="text-sm font-semibold text-green-600 dark:text-green-400">
+                    RTS Authorized
+                  </p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">
+                    Return-to-service authorization on file.
+                    {report.existingRtsId && (
+                      <span className="font-mono ml-1">
+                        (Record: {String(report.existingRtsId).slice(0, 12)}…)
+                      </span>
+                    )}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // ── Not yet signed — derive real checklist from blockers ───────────────────
+
+  // Build readable checklist from the report's blocker codes and summary
+  const summary = report.summary;
+  const blockers = report.blockers ?? [];
+
+  type CheckItem = { id: string; label: string; complete: boolean };
+  const checkItems: CheckItem[] = [
+    {
+      id: "task_cards",
+      label: `All task cards complete (${summary.completedTaskCards}/${summary.totalTaskCards})`,
+      complete:
+        summary.completedTaskCards === summary.totalTaskCards &&
+        summary.totalTaskCards > 0,
+    },
+    {
+      id: "discrepancies",
+      label: `No open squawks/discrepancies (${summary.openDiscrepancies} open)`,
+      complete: summary.openDiscrepancies === 0,
+    },
+    {
+      id: "maintenance_records",
+      label: `Maintenance records signed (${summary.signedMaintenanceRecords}/${summary.totalMaintenanceRecords})`,
+      complete:
+        summary.totalMaintenanceRecords > 0 &&
+        summary.signedMaintenanceRecords === summary.totalMaintenanceRecords,
+    },
+    {
+      id: "blockers",
+      label: `No blocking conditions (${blockers.length} blocker${blockers.length !== 1 ? "s" : ""})`,
+      complete: blockers.length === 0,
+    },
+  ];
+
+  const allComplete = checkItems.every((item) => item.complete);
 
   return (
     <Card className="border-border/60">
@@ -604,88 +766,96 @@ function ReturnToServiceSection({
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-0">
-        {rtsCompleted ? (
-          <Card className="border-green-500/30 bg-green-500/5">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0" />
-                <div>
-                  <p className="text-sm font-semibold text-green-600 dark:text-green-400">
-                    RTS Authorized
-                  </p>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">
-                    Authorized on Feb 25, 2026 by Ray Kowalski (A&P #12345678)
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="space-y-4">
-            {/* Checklist */}
-            <div className="space-y-2">
-              {demoRtsChecklist.map((item) => (
-                <div
-                  key={item.id}
-                  className="flex items-center gap-2.5 py-1.5"
+        <div className="space-y-4">
+          {/* Live Checklist */}
+          <div className="space-y-2">
+            {checkItems.map((item) => (
+              <div key={item.id} className="flex items-center gap-2.5 py-1.5">
+                {item.complete ? (
+                  <CheckCircle2 className="w-4 h-4 text-green-600 dark:text-green-400 flex-shrink-0" />
+                ) : (
+                  <XCircle className="w-4 h-4 text-red-500/70 flex-shrink-0" />
+                )}
+                <span
+                  className={`text-sm ${item.complete ? "text-foreground" : "text-muted-foreground"}`}
                 >
-                  {item.complete ? (
-                    <CheckCircle2 className="w-4 h-4 text-green-600 dark:text-green-400 flex-shrink-0" />
-                  ) : (
-                    <XCircle className="w-4 h-4 text-red-500/70 flex-shrink-0" />
-                  )}
-                  <span
-                    className={`text-sm ${item.complete ? "text-foreground" : "text-muted-foreground"}`}
-                  >
-                    {item.label}
-                  </span>
-                </div>
-              ))}
-            </div>
-
-            {/* Action button */}
-            <div className="pt-2">
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span className="inline-block">
-                      <Button
-                        asChild={allComplete}
-                        disabled={!allComplete}
-                        className="gap-2"
-                      >
-                        {allComplete ? (
-                          <Link to={`/work-orders/${workOrderId}/rts`}>
-                            <ShieldCheck className="w-4 h-4" />
-                            Proceed to RTS Authorization
-                            <ChevronRight className="w-4 h-4" />
-                          </Link>
-                        ) : (
-                          <>
-                            <ShieldCheck className="w-4 h-4" />
-                            Proceed to RTS Authorization
-                            <ChevronRight className="w-4 h-4" />
-                          </>
-                        )}
-                      </Button>
-                    </span>
-                  </TooltipTrigger>
-                  {!allComplete && (
-                    <TooltipContent>
-                      <p>Resolve all checklist items first</p>
-                    </TooltipContent>
-                  )}
-                </Tooltip>
-              </TooltipProvider>
-            </div>
-
-            {/* Note */}
-            <p className="text-[11px] text-muted-foreground/70">
-              RTS authorization is the final step before closing this work
-              order.
-            </p>
+                  {item.label}
+                </span>
+              </div>
+            ))}
           </div>
-        )}
+
+          {/* Blocker detail */}
+          {blockers.length > 0 && (
+            <div className="p-3 border border-red-500/20 bg-red-500/5 rounded-md">
+              <p className="text-[11px] font-medium text-red-600 dark:text-red-400 mb-1.5 flex items-center gap-1.5">
+                <AlertTriangle className="w-3 h-3" />
+                Blocking Conditions ({blockers.length})
+              </p>
+              <ul className="space-y-1">
+                {blockers.map((b: { code: string; description: string }) => (
+                  <li
+                    key={b.code}
+                    className="text-[10px] text-muted-foreground flex items-start gap-1.5"
+                  >
+                    <span className="text-red-500 font-mono font-bold mt-0.5">
+                      ✗
+                    </span>
+                    <span>
+                      <span className="font-mono text-red-600 dark:text-red-400">
+                        [{b.code}]
+                      </span>{" "}
+                      {b.description}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Action Button */}
+          <div className="pt-2">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="inline-block">
+                    <Button
+                      asChild={allComplete}
+                      disabled={!allComplete}
+                      className="gap-2"
+                    >
+                      {allComplete ? (
+                        <Link
+                          to={`/work-orders/${String(workOrderId)}/rts`}
+                        >
+                          <ShieldCheck className="w-4 h-4" />
+                          Proceed to RTS Authorization
+                          <ChevronRight className="w-4 h-4" />
+                        </Link>
+                      ) : (
+                        <>
+                          <ShieldCheck className="w-4 h-4" />
+                          Proceed to RTS Authorization
+                          <ChevronRight className="w-4 h-4" />
+                        </>
+                      )}
+                    </Button>
+                  </span>
+                </TooltipTrigger>
+                {!allComplete && (
+                  <TooltipContent>
+                    <p>Resolve all checklist items first</p>
+                  </TooltipContent>
+                )}
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+
+          <p className="text-[11px] text-muted-foreground/70">
+            RTS authorization is the final step before closing this work order.
+            Per 14 CFR 43.9 and Part 145.
+          </p>
+        </div>
       </CardContent>
     </Card>
   );
@@ -698,11 +868,29 @@ export function WOComplianceTab({
 }: {
   workOrderId: string;
 }) {
+  const { orgId } = useCurrentOrg();
+  const convexWorkOrderId = workOrderId as Id<"workOrders">;
+
+  if (!orgId) {
+    return (
+      <Card className="border-border/60">
+        <CardContent className="py-10 text-center text-sm text-muted-foreground">
+          Unable to resolve organization context.
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <div className="space-y-6">
-      <TaskComplianceSection workOrderId={workOrderId} />
+      {/* AI-001: Real task compliance data */}
+      <TaskComplianceSection workOrderId={convexWorkOrderId} orgId={orgId} />
+
+      {/* Existing: AD compliance (already uses real data) */}
       <AdComplianceSection workOrderId={workOrderId} />
-      <ReturnToServiceSection workOrderId={workOrderId} />
+
+      {/* AI-002: Real RTS state */}
+      <ReturnToServiceSection workOrderId={convexWorkOrderId} orgId={orgId} />
     </div>
   );
 }

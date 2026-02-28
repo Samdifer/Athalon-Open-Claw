@@ -49,6 +49,7 @@ import { DocumentAttachmentPanel } from "@/app/(app)/work-orders/[id]/_component
 import { CloseReadinessPanel } from "@/components/CloseReadinessPanel";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import { ActivityTimeline } from "@/app/(app)/work-orders/[id]/_components/ActivityTimeline";
+import { DiscrepancyList } from "@/app/(app)/work-orders/[id]/_components/DiscrepancyList";
 
 type AuditEventForTimeline = {
   _id: string;
@@ -130,7 +131,7 @@ function ScheduleRiskChip({ riskLevel }: { riskLevel: RiskLevel }) {
 
 export default function WorkOrderDetailPage() {
   const { id: routeRef = "" } = useParams<{ id: string }>();
-  const { orgId, isLoaded } = useCurrentOrg();
+  const { orgId, techId, isLoaded } = useCurrentOrg();
 
   const legacyResolution = useQuery(
     api.workOrders.resolveWorkOrderRef,
@@ -278,6 +279,20 @@ export default function WorkOrderDetailPage() {
 
   const readinessBlockers = closeReadiness?.blockers ?? [];
   const canClose = closeReadiness?.canClose ?? false;
+
+  // AI-003: Compute live compliance indicator for the Compliance tab badge.
+  // red   → has active blockers preventing close
+  // green → fully ready to close (all clear)
+  // amber → loading or indeterminate state
+  // null  → no indicator needed (tab not relevant)
+  const complianceIndicator: "red" | "amber" | "green" | null =
+    closeReadiness === undefined
+      ? "amber"          // still loading
+      : readinessBlockers.length > 0
+        ? "red"          // has blocking conditions
+        : canClose
+          ? "green"      // fully compliant, ready to close
+          : "amber";     // something pending but not blocking
 
   return (
     <div className="space-y-5">
@@ -476,12 +491,12 @@ export default function WorkOrderDetailPage() {
         <TabsList className="h-9 bg-muted/40 p-0.5 mb-4 overflow-x-auto max-w-full flex-wrap">
           {(
             [
-              { value: "squawks", label: "Squawks", Icon: AlertTriangle, count: workItems.length, indicator: null },
-              { value: "compliance", label: "Compliance", Icon: ShieldCheck, count: null, indicator: "amber" as const },
-              { value: "parts", label: "Parts", Icon: Package, count: partsForThisWorkOrder.length, indicator: null },
-              { value: "documents", label: "Documents", Icon: Paperclip, count: null, indicator: null },
-              { value: "notes", label: "Notes & Activity", Icon: FileText, count: auditEvents.length, indicator: null },
-            ] as const
+              { value: "squawks", label: "Squawks", Icon: AlertTriangle, count: workItems.length, indicator: null as "red" | "amber" | "green" | null },
+              { value: "compliance", label: "Compliance", Icon: ShieldCheck, count: null, indicator: complianceIndicator },
+              { value: "parts", label: "Parts", Icon: Package, count: partsForThisWorkOrder.length, indicator: null as "red" | "amber" | "green" | null },
+              { value: "documents", label: "Documents", Icon: Paperclip, count: null, indicator: null as "red" | "amber" | "green" | null },
+              { value: "notes", label: "Notes & Activity", Icon: FileText, count: auditEvents.length, indicator: null as "red" | "amber" | "green" | null },
+            ]
           ).map(({ value, label, Icon, count, indicator }) => (
             <TabsTrigger
               key={value}
@@ -498,13 +513,24 @@ export default function WorkOrderDetailPage() {
                   {count}
                 </Badge>
               )}
+              {indicator === "red" && <span className="w-1.5 h-1.5 rounded-full bg-red-400" />}
               {indicator === "amber" && <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />}
+              {indicator === "green" && <span className="w-1.5 h-1.5 rounded-full bg-green-400" />}
             </TabsTrigger>
           ))}
         </TabsList>
 
         <TabsContent value="squawks" className="mt-0">
           <WorkItemsList items={workItems} workOrderId={String(workOrderId)} />
+          <div className="mt-4">
+            <DiscrepancyList
+              discrepancies={discrepancies}
+              orgId={orgId}
+              techId={techId}
+              workOrderId={workOrderId}
+              aircraftCurrentHours={wo.aircraftTotalTimeAtOpen}
+            />
+          </div>
         </TabsContent>
 
         <TabsContent value="compliance" className="mt-0">
