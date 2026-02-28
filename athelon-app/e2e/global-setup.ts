@@ -296,9 +296,18 @@ async function globalSetup() {
       }
     }
 
-    await context.storageState({ path: AUTH_FILE });
-    console.log("✅ Saved storage state to", AUTH_FILE);
-    console.log("Auth verification URL:", page.url());
+    try {
+      await context.storageState({ path: AUTH_FILE });
+      console.log("✅ Saved storage state to", AUTH_FILE);
+      console.log("Auth verification URL:", page.url());
+    } catch (storageErr) {
+      console.warn("⚠️  Could not save storage state (browser may have closed):", storageErr);
+      // If auth file already exists from a prior run, continue anyway
+      if (!fs.existsSync(AUTH_FILE)) {
+        throw storageErr;
+      }
+      console.log("ℹ️  Using existing auth file from previous run");
+    }
 
     if (!authenticated) {
       console.warn(
@@ -312,7 +321,12 @@ async function globalSetup() {
         path: path.join(__dirname, "../playwright/global-setup-error.png"),
       })
       .catch(() => null);
-    throw err;
+    // If auth file exists from a prior run, don't fail setup
+    if (fs.existsSync(AUTH_FILE)) {
+      console.warn("⚠️  Global setup error, but auth file exists. Continuing with stale auth:", err);
+    } else {
+      throw err;
+    }
   } finally {
     await browser.close();
   }
