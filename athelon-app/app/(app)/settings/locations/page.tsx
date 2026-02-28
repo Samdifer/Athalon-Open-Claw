@@ -5,7 +5,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
-import { Plus, MapPin, Building2, Phone, Mail, Star } from "lucide-react";
+import { Plus, MapPin, Building2, Phone, Mail, Star, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +18,16 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const CERT_TYPES = [
   { value: "part_145", label: "Part 145" },
@@ -33,6 +43,9 @@ export default function ShopLocationsPage() {
   const createLocation = useMutation(api.shopLocations.create);
   const updateLocation = useMutation(api.shopLocations.update);
   const removeLocation = useMutation(api.shopLocations.remove);
+
+  const [deactivateTarget, setDeactivateTarget] = useState<{ id: Id<"shopLocations">; name: string; certNumber?: string } | null>(null);
+  const [isDeactivating, setIsDeactivating] = useState(false);
 
   const [showCreate, setShowCreate] = useState(false);
   const [name, setName] = useState("");
@@ -78,13 +91,17 @@ export default function ShopLocationsPage() {
     }
   };
 
-  const handleDeactivate = async (id: Id<"shopLocations">) => {
-    if (!confirm("Deactivate this location?")) return;
+  const handleDeactivate = async () => {
+    if (!deactivateTarget) return;
+    setIsDeactivating(true);
     try {
-      await removeLocation({ id });
-      toast.success("Location deactivated");
+      await removeLocation({ id: deactivateTarget.id });
+      toast.success(`${deactivateTarget.name} deactivated`);
+      setDeactivateTarget(null);
     } catch {
-      toast.error("Failed to deactivate");
+      toast.error("Failed to deactivate location");
+    } finally {
+      setIsDeactivating(false);
     }
   };
 
@@ -98,6 +115,7 @@ export default function ShopLocationsPage() {
   };
 
   return (
+    <>
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -196,7 +214,7 @@ export default function ShopLocationsPage() {
                   <Star className={`h-3 w-3 ${loc.isPrimary ? "text-yellow-500" : ""}`} />
                 </Button>
                 {loc.isActive && (
-                  <Button size="sm" variant="ghost" className="text-red-400" onClick={() => handleDeactivate(loc._id)}>
+                  <Button size="sm" variant="ghost" className="text-red-400" onClick={() => setDeactivateTarget({ id: loc._id, name: loc.name, certNumber: loc.certificateNumber })}>
                     Deactivate
                   </Button>
                 )}
@@ -206,5 +224,31 @@ export default function ShopLocationsPage() {
         ))}
       </div>
     </div>
+
+      {/* Deactivate Confirmation */}
+      <AlertDialog open={!!deactivateTarget} onOpenChange={(open) => { if (!open) setDeactivateTarget(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Deactivate {deactivateTarget?.name}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This location will be marked inactive and removed from scheduling and work order assignment.
+              {deactivateTarget?.certNumber && (
+                <> Certificate <span className="font-mono font-semibold">{deactivateTarget.certNumber}</span> will no longer be associated with active operations.</>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeactivating}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={isDeactivating}
+              onClick={handleDeactivate}
+            >
+              {isDeactivating ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Deactivating…</> : "Deactivate"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }

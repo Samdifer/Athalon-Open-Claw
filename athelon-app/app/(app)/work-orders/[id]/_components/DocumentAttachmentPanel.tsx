@@ -51,6 +51,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { formatDateTime } from "@/lib/format";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -157,7 +167,7 @@ function DocumentRow({
     uploadedAt: number;
   };
   canDelete: boolean;
-  onDelete: (id: Id<"documents">) => void;
+  onDelete: (doc: { _id: Id<"documents">; fileName: string; documentType: DocumentType }) => void;
 }) {
   const url = useQuery(api.documents.getDocumentUrl, {
     storageId: doc.storageId,
@@ -218,7 +228,7 @@ function DocumentRow({
             size="icon"
             className="h-7 w-7 text-muted-foreground hover:text-destructive"
             title="Delete document"
-            onClick={() => onDelete(doc._id)}
+            onClick={() => onDelete(doc)}
           >
             <Trash2 className="w-3.5 h-3.5" />
           </Button>
@@ -403,6 +413,7 @@ export function DocumentAttachmentPanel({
 }: DocumentAttachmentPanelProps) {
   const [showUploadForm, setShowUploadForm] = useState(false);
   const [deletingId, setDeletingId] = useState<Id<"documents"> | null>(null);
+  const [deleteConfirmDoc, setDeleteConfirmDoc] = useState<{ id: Id<"documents">; name: string; docType: string } | null>(null);
 
   const documents = useQuery(api.documents.listDocuments, {
     attachedToTable,
@@ -411,11 +422,20 @@ export function DocumentAttachmentPanel({
 
   const deleteDocument = useMutation(api.documents.deleteDocument);
 
-  async function handleDelete(documentId: Id<"documents">) {
-    if (!confirm("Delete this document? This cannot be undone.")) return;
-    setDeletingId(documentId);
+  function requestDeleteDoc(doc: { _id: Id<"documents">; fileName: string; documentType: DocumentType }) {
+    setDeleteConfirmDoc({
+      id: doc._id,
+      name: doc.fileName,
+      docType: doc.documentType,
+    });
+  }
+
+  async function handleDelete() {
+    if (!deleteConfirmDoc) return;
+    setDeletingId(deleteConfirmDoc.id);
+    setDeleteConfirmDoc(null);
     try {
-      await deleteDocument({ documentId, organizationId });
+      await deleteDocument({ documentId: deleteConfirmDoc.id, organizationId });
       toast.success("Document deleted.");
     } catch (err) {
       toast.error(
@@ -500,7 +520,7 @@ export function DocumentAttachmentPanel({
                   key={doc._id}
                   doc={doc as Parameters<typeof DocumentRow>[0]["doc"]}
                   canDelete={canDelete && deletingId !== doc._id}
-                  onDelete={handleDelete}
+                  onDelete={requestDeleteDoc}
                 />
               ))}
             </div>
@@ -521,6 +541,36 @@ export function DocumentAttachmentPanel({
           )}
         </CardContent>
       </Card>
+
+      {/* Delete confirmation */}
+      <AlertDialog
+        open={!!deleteConfirmDoc}
+        onOpenChange={(open) => {
+          if (!open) setDeleteConfirmDoc(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete document?</AlertDialogTitle>
+            <AlertDialogDescription>
+              <span className="font-medium">{deleteConfirmDoc?.name}</span>
+              {deleteConfirmDoc?.docType && (
+                <> ({deleteConfirmDoc.docType.replace(/_/g, " ")})</>
+              )}{" "}
+              will be permanently removed from this record. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={handleDelete}
+            >
+              Delete Document
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

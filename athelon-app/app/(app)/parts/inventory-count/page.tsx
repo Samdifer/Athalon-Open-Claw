@@ -73,6 +73,8 @@ export default function InventoryCountPage() {
   const [newNotes, setNewNotes] = useState("");
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [reconcileConfirmOpen, setReconcileConfirmOpen] = useState(false);
+  const [completeConfirmOpen, setCompleteConfirmOpen] = useState(false);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<Id<"inventoryCounts"> | null>(null);
 
   const counts = useQuery(
     api.physicalInventory.listCounts,
@@ -126,6 +128,20 @@ export default function InventoryCountPage() {
     }
   };
 
+  const handleCompleteCount = async () => {
+    if (!selectedCountId) return;
+    setActionLoading("complete");
+    setCompleteConfirmOpen(false);
+    try {
+      await completeCount({ countId: selectedCountId });
+      toast.success("Count completed");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to complete count");
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   if (!isLoaded) {
     return (
       <div className="space-y-4">
@@ -174,21 +190,13 @@ export default function InventoryCountPage() {
             {countDetail.status === "in_progress" && (
               <Button
                 disabled={actionLoading === "complete"}
-                onClick={async () => {
-                  if (confirm("Complete this count? No more items can be counted after this.")) {
-                    setActionLoading("complete");
-                    try {
-                      await completeCount({ countId: selectedCountId });
-                      toast.success("Count completed");
-                    } catch (err) {
-                      toast.error(err instanceof Error ? err.message : "Failed to complete count");
-                    } finally {
-                      setActionLoading(null);
-                    }
-                  }
-                }}
+                onClick={() => setCompleteConfirmOpen(true)}
               >
-                <CheckCircle2 className="mr-2 h-4 w-4" />
+                {actionLoading === "complete" ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <CheckCircle2 className="mr-2 h-4 w-4" />
+                )}
                 Complete Count
               </Button>
             )}
@@ -406,6 +414,51 @@ export default function InventoryCountPage() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        <AlertDialog open={completeConfirmOpen} onOpenChange={setCompleteConfirmOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Complete this count?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Once completed, no more items can be counted. This action locks the count record and prepares it for reconciliation.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handleCompleteCount}>Complete Count</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        <AlertDialog open={!!deleteConfirmId} onOpenChange={(open) => { if (!open) setDeleteConfirmId(null); }}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete this draft count?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This draft inventory count will be permanently removed. This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                onClick={async () => {
+                  if (!deleteConfirmId) return;
+                  try {
+                    await deleteCount({ countId: deleteConfirmId });
+                    toast.success("Count deleted");
+                  } catch (err) {
+                    toast.error(err instanceof Error ? err.message : "Failed to delete count");
+                  } finally {
+                    setDeleteConfirmId(null);
+                  }
+                }}
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     );
   }
@@ -486,14 +539,7 @@ export default function InventoryCountPage() {
                         size="icon"
                         onClick={async (e) => {
                           e.stopPropagation();
-                          if (confirm("Delete this draft count?")) {
-                            try {
-                              await deleteCount({ countId: count._id });
-                              toast.success("Count deleted");
-                            } catch (err) {
-                              toast.error(err instanceof Error ? err.message : "Failed to delete count");
-                            }
-                          }
+                          setDeleteConfirmId(count._id);
                         }}
                       >
                         <Trash2 className="h-4 w-4 text-destructive" />
