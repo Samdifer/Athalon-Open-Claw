@@ -17,6 +17,7 @@ import {
   Mail,
   MapPin,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -31,6 +32,28 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+
+// Common IANA timezones for aviation/MRO shops in North America
+const AVIATION_TIMEZONES = [
+  { value: "America/New_York",    label: "Eastern (ET) — America/New_York" },
+  { value: "America/Detroit",     label: "Eastern (ET) — America/Detroit" },
+  { value: "America/Indiana/Indianapolis", label: "Eastern (ET) — America/Indianapolis" },
+  { value: "America/Chicago",     label: "Central (CT) — America/Chicago" },
+  { value: "America/Menominee",   label: "Central (CT) — America/Menominee" },
+  { value: "America/Denver",      label: "Mountain (MT) — America/Denver" },
+  { value: "America/Phoenix",     label: "Mountain (no DST) — America/Phoenix" },
+  { value: "America/Boise",       label: "Mountain (MT) — America/Boise" },
+  { value: "America/Los_Angeles", label: "Pacific (PT) — America/Los_Angeles" },
+  { value: "America/Anchorage",   label: "Alaska (AKT) — America/Anchorage" },
+  { value: "America/Juneau",      label: "Alaska (AKT) — America/Juneau" },
+  { value: "Pacific/Honolulu",    label: "Hawaii (HST) — Pacific/Honolulu" },
+  { value: "America/Puerto_Rico", label: "Atlantic (AST) — America/Puerto_Rico" },
+  { value: "America/Toronto",     label: "Eastern (ET) — America/Toronto" },
+  { value: "America/Winnipeg",    label: "Central (CT) — America/Winnipeg" },
+  { value: "America/Edmonton",    label: "Mountain (MT) — America/Edmonton" },
+  { value: "America/Vancouver",   label: "Pacific (PT) — America/Vancouver" },
+  { value: "UTC",                 label: "UTC / Zulu" },
+] as const;
 
 export default function ShopSettingsPage() {
   const { orgId } = useCurrentOrg();
@@ -289,12 +312,24 @@ export default function ShopSettingsPage() {
 
           <div className="space-y-1.5">
             <Label className="text-xs">Timezone</Label>
-            <Input
-              value={form.timezone}
-              onChange={(e) => update("timezone", e.target.value)}
-              placeholder="America/Denver"
-              className="h-8 text-sm"
-            />
+            <Select
+              value={form.timezone || ""}
+              onValueChange={(v) => update("timezone", v)}
+            >
+              <SelectTrigger className="h-8 text-xs">
+                <SelectValue placeholder="Select timezone…" />
+              </SelectTrigger>
+              <SelectContent>
+                {AVIATION_TIMEZONES.map((tz) => (
+                  <SelectItem key={tz.value} value={tz.value} className="text-xs">
+                    {tz.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-[10px] text-muted-foreground/60">
+              Used for scheduling calculations, shift times, and regulatory record timestamps.
+            </p>
           </div>
 
           <div className="space-y-1.5">
@@ -383,14 +418,14 @@ export default function ShopSettingsPage() {
         <CardContent className="p-4">
           <div className="flex flex-wrap gap-3">
             <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5" asChild>
-              <a href="/billing/tax-config">
+              <Link to="/billing/tax-config">
                 Tax Settings <ExternalLink className="w-3 h-3" />
-              </a>
+              </Link>
             </Button>
             <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5" asChild>
-              <a href="/billing/settings">
+              <Link to="/billing/settings">
                 Billing Settings <ExternalLink className="w-3 h-3" />
-              </a>
+              </Link>
             </Button>
           </div>
         </CardContent>

@@ -76,7 +76,7 @@ function formatDate(ts: number) {
 }
 
 export default function PredictionsPage() {
-  const { orgId } = useCurrentOrg();
+  const { orgId, techId } = useCurrentOrg();
   const [severityTab, setSeverityTab] = useState("all");
   const [aircraftFilter, setAircraftFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
@@ -144,7 +144,7 @@ export default function PredictionsPage() {
 
   async function handleAcknowledge(id: Id<"maintenancePredictions">) {
     try {
-      await acknowledgePrediction({ id, acknowledgedBy: "current_user" });
+      await acknowledgePrediction({ id, acknowledgedBy: techId ?? "unknown" });
       toast.success("Prediction acknowledged.");
     } catch (err) {
       toast.error("Failed to acknowledge.");
@@ -186,23 +186,23 @@ export default function PredictionsPage() {
   const uniqueAircraft = [...new Set(predictions.map((p) => p.aircraftId))];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-3">
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold">Predictive Maintenance</h1>
-          <p className="text-muted-foreground text-sm">
+          <h1 className="text-lg sm:text-xl md:text-2xl font-semibold text-foreground">Predictive Maintenance</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
             AI-generated maintenance predictions based on aircraft usage and trends
           </p>
         </div>
-        <Button onClick={handleGenerate}>
+        <Button size="sm" className="h-9" onClick={handleGenerate}>
           <Sparkles className="h-4 w-4 mr-2" />
           Generate Predictions
         </Button>
       </div>
 
       {/* Summary cards */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
         {(["critical", "high", "medium", "low"] as Severity[]).map((sev) => {
           const cfg = SEVERITY_CONFIG[sev];
           const Icon = cfg.icon;
@@ -220,7 +220,7 @@ export default function PredictionsPage() {
             </Card>
           );
         })}
-        <Card className="border-primary/20">
+        <Card className="border-border/60">
           <CardContent className="p-4">
             <div className="flex items-center gap-2">
               <Calendar className="h-4 w-4 text-primary" />
@@ -287,8 +287,9 @@ export default function PredictionsPage() {
         <TabsContent value={severityTab} className="mt-4">
           {filtered.length === 0 ? (
             <Card>
-              <CardContent className="py-12 text-center text-muted-foreground">
-                No predictions match current filters.
+              <CardContent className="py-12 text-center">
+                <p className="text-sm font-medium text-muted-foreground">No predictions match current filters</p>
+                <p className="text-xs text-muted-foreground/60 mt-1">Try adjusting the severity tab or filters above.</p>
               </CardContent>
             </Card>
           ) : (
