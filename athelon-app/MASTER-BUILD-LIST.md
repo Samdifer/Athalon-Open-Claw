@@ -129,9 +129,9 @@
 
 | ID | Description | Priority | Est | Files Affected | Status |
 |----|-------------|----------|-----|----------------|--------|
-| AI-004 | Wire task card compliance items to Convex backend — replace `useState(INITIAL_COMPLIANCE_ITEMS)` with `useQuery(api.taskCompliance.getComplianceItemsForTask)` + `addComplianceItem` / `updateComplianceStatus` mutations. Under a Part 145 audit, compliance changes must persist — currently all edits evaporate on page reload. | P0 | 1.5h | `tasks/[cardId]/page.tsx` | 🔄 In Progress |
-| AI-005 | Wire vendor services on task card page to Convex backend — replace `useState(INITIAL_VENDOR_SERVICES)` with `useQuery(api.taskCardVendorServices.getVendorServicesForTask)` + `addVendorServiceToTask` / `updateVendorServiceStatus` mutations. Vendor service assignments currently evaporate on page reload. | P1 | 1h | `tasks/[cardId]/page.tsx` | 🔄 In Progress |
-| AI-006 | Wire `Log Squawk` button in `DiscrepancyList` — button renders but has no `onClick`. Add a `LogSquawkDialog` component and call `api.discrepancies.openDiscrepancy`. Pass required props (`orgId`, `workOrderId`, `techId`) from the WO detail page. | P1 | 1h | `_components/DiscrepancyList.tsx`, `work-orders/[id]/page.tsx` | 🔄 In Progress |
+| AI-004 | Wire task card compliance items to Convex backend — replace `useState(INITIAL_COMPLIANCE_ITEMS)` with `useQuery(api.taskCompliance.getComplianceItemsForTask)` + `addComplianceItem` / `updateComplianceStatus` mutations. Under a Part 145 audit, compliance changes must persist — currently all edits evaporate on page reload. | P0 | 1.5h | `tasks/[cardId]/page.tsx` | ✅ Done |
+| AI-005 | Wire vendor services on task card page to Convex backend — replace `useState(INITIAL_VENDOR_SERVICES)` with `useQuery(api.taskCardVendorServices.getVendorServicesForTask)` + `addVendorServiceToTask` / `updateVendorServiceStatus` mutations. Vendor service assignments currently evaporate on page reload. | P1 | 1h | `tasks/[cardId]/page.tsx` | ✅ Done |
+| AI-006 | Wire `Log Squawk` button in `DiscrepancyList` — button renders but has no `onClick`. Add a `LogSquawkDialog` component and call `api.discrepancies.openDiscrepancy`. Pass required props (`orgId`, `workOrderId`, `techId`) from the WO detail page. | P1 | 1h | `_components/DiscrepancyList.tsx`, `work-orders/[id]/page.tsx` | ✅ Done |
 
 ### Cycle 1 — 2026-02-28 (Regulatory Compliance)
 
