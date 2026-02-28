@@ -74,5 +74,5 @@ Every 45 minutes, a cron job fires and spawns this improvement cycle:
 ## Rotation Tracker
 Track which area was last audited to ensure coverage rotation:
 ```json
-{"lastArea": "regulatory", "cycleCount": 17, "lastRun": "2026-02-28T19:45:00Z", "areas": ["regulatory", "workflow", "parts", "ui_ux", "data_integrity", "error_handling", "testing", "performance"]}
+{"lastArea": "workflow", "cycleCount": 18, "lastRun": "2026-02-28T20:09:00Z", "areas": ["regulatory", "workflow", "parts", "ui_ux", "data_integrity", "error_handling", "testing", "performance"]}
 ```
