@@ -48,6 +48,7 @@ import MyWorkPage from "@/app/(app)/my-work/page";
 import CompliancePage from "@/app/(app)/compliance/page";
 import QcmReviewPage from "@/app/(app)/compliance/qcm-review/page";
 import AuditTrailPage from "@/app/(app)/compliance/audit-trail/page";
+import AdSbCompliancePage from "@/app/(app)/compliance/ad-sb/page";
 
 // Billing
 import CustomersPage from "@/app/(app)/billing/customers/page";
@@ -195,6 +196,7 @@ export default function App() {
           <Route path="/compliance" element={<CompliancePage />} />
           <Route path="/compliance/qcm-review" element={<QcmReviewPage />} />
           <Route path="/compliance/audit-trail" element={<AuditTrailPage />} />
+          <Route path="/compliance/ad-sb" element={<AdSbCompliancePage />} />
           <Route
             path="/compliance/certificates"
             element={<Navigate to="/compliance/audit-trail" replace />}

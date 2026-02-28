@@ -174,6 +174,12 @@ const mainNav: NavItem[] = [
     section: "compliance",
   },
   {
+    title: "AD/SB Tracking",
+    href: "/compliance/ad-sb",
+    icon: ShieldCheck,
+    section: "compliance",
+  },
+  {
     title: "Reports",
     href: "/reports",
     icon: FileBarChart,

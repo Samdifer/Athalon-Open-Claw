@@ -3,21 +3,38 @@ import { api } from "@/convex/_generated/api";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Wrench, FileText, Receipt, Clock, ArrowRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Wrench,
+  FileText,
+  Receipt,
+  Clock,
+  ArrowRight,
+  Plane,
+  Activity,
+} from "lucide-react";
 import { usePortalCustomerId } from "@/hooks/usePortalCustomerId";
 
 export default function CustomerDashboardPage() {
   const customerId = usePortalCustomerId();
   const dashboard = useQuery(
     api.customerPortal.getCustomerDashboard,
-    customerId ? { customerId } : "skip"
+    customerId ? { customerId } : "skip",
+  );
+  const fleet = useQuery(
+    api.customerPortal.listCustomerAircraft,
+    customerId ? { customerId } : "skip",
   );
 
   if (!customerId) {
     return (
       <div className="text-center py-16">
-        <h2 className="text-xl font-semibold text-gray-700">No customer account linked</h2>
-        <p className="text-gray-500 mt-2">Please contact your service provider to set up portal access.</p>
+        <h2 className="text-xl font-semibold text-gray-700">
+          No customer account linked
+        </h2>
+        <p className="text-gray-500 mt-2">
+          Please contact your service provider to set up portal access.
+        </p>
       </div>
     );
   }
@@ -30,7 +47,7 @@ export default function CustomerDashboardPage() {
     );
   }
 
-  const cards = [
+  const summaryCards = [
     {
       title: "Active Work Orders",
       value: dashboard.activeWorkOrders,
@@ -40,7 +57,7 @@ export default function CustomerDashboardPage() {
       link: "/portal/work-orders",
     },
     {
-      title: "Open Quotes",
+      title: "Pending Quotes",
       value: dashboard.openQuotes,
       icon: FileText,
       color: "text-amber-600",
@@ -55,29 +72,46 @@ export default function CustomerDashboardPage() {
       bg: "bg-red-50",
       link: "/portal/invoices",
     },
+    {
+      title: "Total Fleet",
+      value: fleet?.length ?? 0,
+      icon: Plane,
+      color: "text-indigo-600",
+      bg: "bg-indigo-50",
+      link: "/portal/fleet",
+    },
   ];
 
   return (
     <div className="space-y-6">
+      {/* Welcome */}
       <div>
         <h1 className="text-2xl font-bold text-gray-900">
           Welcome, {dashboard.customer.companyName ?? dashboard.customer.name}
         </h1>
-        <p className="text-gray-500 mt-1">Here's an overview of your account.</p>
+        <p className="text-gray-500 mt-1">
+          Here's an overview of your account.
+        </p>
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {cards.map((card) => (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {summaryCards.map((card) => (
           <Link key={card.title} to={card.link}>
-            <Card className="hover:shadow-md transition-shadow cursor-pointer">
+            <Card className="hover:shadow-md transition-shadow cursor-pointer h-full">
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-500">{card.title}</p>
-                    <p className="text-3xl font-bold text-gray-900 mt-1">{card.value}</p>
+                    <p className="text-sm font-medium text-gray-500">
+                      {card.title}
+                    </p>
+                    <p className="text-3xl font-bold text-gray-900 mt-1">
+                      {card.value}
+                    </p>
                   </div>
-                  <div className={`w-12 h-12 ${card.bg} rounded-lg flex items-center justify-center`}>
+                  <div
+                    className={`w-12 h-12 ${card.bg} rounded-lg flex items-center justify-center`}
+                  >
                     <card.icon className={`w-6 h-6 ${card.color}`} />
                   </div>
                 </div>
@@ -93,57 +127,150 @@ export default function CustomerDashboardPage() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-amber-700">Outstanding Balance</p>
+                <p className="text-sm font-medium text-amber-700">
+                  Outstanding Balance
+                </p>
                 <p className="text-2xl font-bold text-amber-900">
-                  ${dashboard.outstandingBalance.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                  $
+                  {dashboard.outstandingBalance.toLocaleString("en-US", {
+                    minimumFractionDigits: 2,
+                  })}
                 </p>
               </div>
-              <Link to="/portal/invoices" className="text-amber-700 hover:text-amber-900">
-                <ArrowRight className="w-5 h-5" />
+              <Link to="/portal/invoices">
+                <Button variant="outline" size="sm" className="gap-1">
+                  View Invoices <ArrowRight className="w-4 h-4" />
+                </Button>
               </Link>
             </div>
           </CardContent>
         </Card>
       )}
 
-      {/* Recent Activity */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Recent Activity</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {dashboard.recentActivity.length === 0 ? (
-            <p className="text-gray-500 text-sm">No recent activity.</p>
-          ) : (
-            <div className="space-y-3">
-              {dashboard.recentActivity.map((activity, idx) => (
-                <div key={idx} className="flex items-start gap-3 py-2 border-b last:border-0">
-                  <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center flex-shrink-0">
-                    <Clock className="w-4 h-4 text-gray-500" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm text-gray-700">{activity.description}</p>
-                    <p className="text-xs text-gray-400 mt-0.5">
-                      {new Date(activity.timestamp).toLocaleString()}
-                    </p>
-                  </div>
-                  <Badge variant="outline" className="text-xs flex-shrink-0">
-                    {activity.type === "work_order" ? "WO" : activity.type}
-                  </Badge>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Recent Activity Timeline */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Activity className="w-5 h-5 text-gray-500" />
+              Recent Activity
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {dashboard.recentActivity.length === 0 ? (
+              <p className="text-gray-500 text-sm">No recent activity.</p>
+            ) : (
+              <div className="relative">
+                <div className="absolute left-4 top-0 bottom-0 w-px bg-gray-200" />
+                <div className="space-y-4">
+                  {dashboard.recentActivity.map(
+                    (activity: { type: string; description: string; timestamp: number; recordId: string }, idx: number) => (
+                      <div key={idx} className="flex items-start gap-3 relative">
+                        <div className="w-8 h-8 bg-white border-2 border-gray-200 rounded-full flex items-center justify-center flex-shrink-0 z-10">
+                          <Clock className="w-3.5 h-3.5 text-gray-400" />
+                        </div>
+                        <div className="flex-1 min-w-0 pt-0.5">
+                          <p className="text-sm text-gray-700">
+                            {activity.description}
+                          </p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <p className="text-xs text-gray-400">
+                              {new Date(activity.timestamp).toLocaleString()}
+                            </p>
+                            <Badge
+                              variant="outline"
+                              className="text-xs"
+                            >
+                              {activity.type === "work_order"
+                                ? "WO"
+                                : activity.type}
+                            </Badge>
+                          </div>
+                        </div>
+                      </div>
+                    ),
+                  )}
                 </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
-      {/* Quick Links */}
+        {/* Fleet Status Overview */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Plane className="w-5 h-5 text-gray-500" />
+                Fleet Status
+              </CardTitle>
+              <Link to="/portal/fleet">
+                <Button variant="ghost" size="sm" className="gap-1 text-xs">
+                  View All <ArrowRight className="w-3.5 h-3.5" />
+                </Button>
+              </Link>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {!fleet || fleet.length === 0 ? (
+              <p className="text-gray-500 text-sm">No aircraft on file.</p>
+            ) : (
+              <div className="space-y-3">
+                {fleet.slice(0, 5).map((ac) => (
+                  <div
+                    key={ac._id}
+                    className={`flex items-center justify-between p-3 rounded-lg border ${
+                      ac.activeWorkOrders > 0
+                        ? "border-blue-200 bg-blue-50/50"
+                        : "border-gray-100"
+                    }`}
+                  >
+                    <div>
+                      <p className="font-semibold text-gray-900">
+                        {ac.currentRegistration}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {ac.make} {ac.model}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {ac.activeWorkOrders > 0 && (
+                        <Badge className="bg-blue-100 text-blue-700 border-0 text-xs">
+                          {ac.activeWorkOrders} WO
+                          {ac.activeWorkOrders > 1 ? "s" : ""}
+                        </Badge>
+                      )}
+                      <Badge
+                        className={`text-xs border-0 ${
+                          ac.status === "airworthy"
+                            ? "bg-green-100 text-green-700"
+                            : ac.status === "in_maintenance"
+                              ? "bg-yellow-100 text-yellow-700"
+                              : "bg-red-100 text-red-700"
+                        }`}
+                      >
+                        {ac.status.replace(/_/g, " ")}
+                      </Badge>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Quick Action Buttons */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
-          { to: "/portal/work-orders", label: "View Work Orders", icon: Wrench },
-          { to: "/portal/quotes", label: "Review Quotes", icon: FileText },
+          {
+            to: "/portal/work-orders",
+            label: "View Work Orders",
+            icon: Wrench,
+          },
+          { to: "/portal/quotes", label: "View Quotes", icon: FileText },
           { to: "/portal/invoices", label: "View Invoices", icon: Receipt },
-          { to: "/portal/fleet", label: "My Fleet", icon: () => <span className="text-lg">✈️</span> },
+          { to: "/portal/fleet", label: "My Fleet", icon: Plane },
         ].map((link) => (
           <Link
             key={link.to}
@@ -151,7 +278,9 @@ export default function CustomerDashboardPage() {
             className="flex flex-col items-center gap-2 p-4 bg-white rounded-lg border hover:shadow-md transition-shadow text-center"
           >
             <link.icon className="w-5 h-5 text-gray-600" />
-            <span className="text-sm font-medium text-gray-700">{link.label}</span>
+            <span className="text-sm font-medium text-gray-700">
+              {link.label}
+            </span>
           </Link>
         ))}
       </div>

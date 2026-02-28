@@ -1813,9 +1813,12 @@ export const listForWorkOrder = query({
       recordType: r.recordType,
       completionDate: r.completionDate,
       workPerformed: r.workPerformed,
+      approvedDataReference: r.approvedDataReference ?? null,
+      sequenceNumber: r.sequenceNumber,
       signatureHash: r.signatureHash ?? null,
       isSigned: !!r.signatureHash?.trim(),
       corrects: r.corrects ?? null,
+      returnedToService: r.returnedToService ?? false,
     }));
   },
 });
