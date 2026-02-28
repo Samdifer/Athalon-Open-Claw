@@ -46,6 +46,7 @@ import {
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDate, formatCurrency } from "@/lib/format";
+import { toast } from "sonner";
 
 type ClaimStatus = "draft" | "submitted" | "under_review" | "approved" | "denied" | "paid" | "closed";
 type ClaimType = "part_defect" | "workmanship" | "oem_warranty" | "vendor_warranty";
@@ -122,8 +123,11 @@ function CreateClaimDialog({
         claimedAmount: parseFloat(claimedAmount),
         notes: notes || undefined,
       });
+      toast.success("Warranty claim created");
       reset();
       onClose();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to create warranty claim");
     } finally {
       setSaving(false);
     }
@@ -206,6 +210,8 @@ function ClaimDetailDialog({
     try {
       await fn();
       onClose();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Action failed — please try again");
     } finally {
       setActionLoading(false);
     }
@@ -241,7 +247,7 @@ function ClaimDetailDialog({
 
             {/* Actions */}
             {claim.status === "draft" && (
-              <Button size="sm" onClick={() => handleAction(() => submit({ claimId }))} disabled={actionLoading}>
+              <Button size="sm" onClick={() => handleAction(async () => { await submit({ claimId }); toast.success("Claim submitted for review"); })} disabled={actionLoading}>
                 <Send className="h-3.5 w-3.5 mr-1" /> Submit Claim
               </Button>
             )}
@@ -257,18 +263,18 @@ function ClaimDetailDialog({
                 </div>
                 <div className="flex gap-2">
                   <Button size="sm" variant="default" disabled={actionLoading || !approvedAmount}
-                    onClick={() => handleAction(() => approve({ claimId, approvedAmount: parseFloat(approvedAmount), resolution: resolution || undefined }))}>
+                    onClick={() => handleAction(async () => { await approve({ claimId, approvedAmount: parseFloat(approvedAmount), resolution: resolution || undefined }); toast.success("Claim approved"); })}>
                     <Check className="h-3.5 w-3.5 mr-1" /> Approve
                   </Button>
                   <Button size="sm" variant="destructive" disabled={actionLoading || !resolution}
-                    onClick={() => handleAction(() => deny({ claimId, resolution }))}>
+                    onClick={() => handleAction(async () => { await deny({ claimId, resolution }); toast.success("Claim denied"); })}>
                     <X className="h-3.5 w-3.5 mr-1" /> Deny
                   </Button>
                 </div>
               </div>
             )}
             {(claim.status === "approved" || claim.status === "paid") && (
-              <Button size="sm" variant="outline" onClick={() => handleAction(() => close({ claimId }))} disabled={actionLoading}>
+              <Button size="sm" variant="outline" onClick={() => handleAction(async () => { await close({ claimId }); toast.success("Claim closed"); })} disabled={actionLoading}>
                 <Lock className="h-3.5 w-3.5 mr-1" /> Close Claim
               </Button>
             )}

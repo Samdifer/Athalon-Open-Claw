@@ -495,11 +495,16 @@ export default function BillingSettingsPage() {
                           const updated = (currencySettings?.supportedCurrencies ?? []).filter(
                             (c) => c !== code,
                           );
-                          await updateCurrencySettings({
-                            orgId,
-                            baseCurrency: currencySettings?.baseCurrency ?? "USD",
-                            supportedCurrencies: updated,
-                          });
+                          try {
+                            await updateCurrencySettings({
+                              orgId,
+                              baseCurrency: currencySettings?.baseCurrency ?? "USD",
+                              supportedCurrencies: updated,
+                            });
+                            toast.success("Currency removed");
+                          } catch (err) {
+                            toast.error(err instanceof Error ? err.message : "Failed to remove currency");
+                          }
                         }}
                       >
                         ×
@@ -513,11 +518,16 @@ export default function BillingSettingsPage() {
                     if (!orgId || !val) return;
                     const existing = currencySettings?.supportedCurrencies ?? [];
                     if (existing.includes(val)) return;
-                    await updateCurrencySettings({
-                      orgId,
-                      baseCurrency: currencySettings?.baseCurrency ?? "USD",
-                      supportedCurrencies: [...existing, val],
-                    });
+                    try {
+                      await updateCurrencySettings({
+                        orgId,
+                        baseCurrency: currencySettings?.baseCurrency ?? "USD",
+                        supportedCurrencies: [...existing, val],
+                      });
+                      toast.success("Currency added");
+                    } catch (err) {
+                      toast.error(err instanceof Error ? err.message : "Failed to add currency");
+                    }
                   }}
                 >
                   <SelectTrigger className="h-7 w-20 text-xs border-dashed">
@@ -591,8 +601,12 @@ export default function BillingSettingsPage() {
                             size="sm"
                             className="h-7 w-7 p-0 text-muted-foreground hover:text-red-400"
                             onClick={async () => {
-                              await deleteRate({ rateId: rate._id });
-                              toast.success("Rate deleted.");
+                              try {
+                                await deleteRate({ rateId: rate._id });
+                                toast.success("Rate deleted.");
+                              } catch (err) {
+                                toast.error(err instanceof Error ? err.message : "Failed to delete rate");
+                              }
                             }}
                           >
                             <Trash2 className="w-3.5 h-3.5" />

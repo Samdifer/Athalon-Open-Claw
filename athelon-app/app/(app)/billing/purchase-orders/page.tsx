@@ -16,6 +16,16 @@ import { formatDate } from "@/lib/format";
 
 type POStatus = "DRAFT" | "SUBMITTED" | "PARTIAL" | "RECEIVED" | "CLOSED" | "all";
 
+// Module-level constant — never changes, no need to allocate on every render
+const TABS: { value: POStatus; label: string }[] = [
+  { value: "all", label: "All" },
+  { value: "DRAFT", label: "Draft" },
+  { value: "SUBMITTED", label: "Submitted" },
+  { value: "PARTIAL", label: "Partial" },
+  { value: "RECEIVED", label: "Received" },
+  { value: "CLOSED", label: "Closed" },
+];
+
 const STATUS_STYLES: Record<string, string> = {
   DRAFT: "bg-muted text-muted-foreground border-muted-foreground/30",
   SUBMITTED: "bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/30",
@@ -60,23 +70,21 @@ export default function PurchaseOrdersPage() {
   }, [pos, search]);
 
   const all = pos ?? [];
-  const counts: Record<POStatus, number> = {
-    all: all.length,
-    DRAFT: all.filter((p) => p.status === "DRAFT").length,
-    SUBMITTED: all.filter((p) => p.status === "SUBMITTED").length,
-    PARTIAL: all.filter((p) => p.status === "PARTIAL").length,
-    RECEIVED: all.filter((p) => p.status === "RECEIVED").length,
-    CLOSED: all.filter((p) => p.status === "CLOSED").length,
-  };
 
-  const tabs: { value: POStatus; label: string }[] = [
-    { value: "all", label: "All" },
-    { value: "DRAFT", label: "Draft" },
-    { value: "SUBMITTED", label: "Submitted" },
-    { value: "PARTIAL", label: "Partial" },
-    { value: "RECEIVED", label: "Received" },
-    { value: "CLOSED", label: "Closed" },
-  ];
+  // Memoized single-pass counter — only recomputes when Convex data changes,
+  // not on every search keystroke or tab selection
+  const counts = useMemo<Record<POStatus, number>>(() => {
+    const c: Record<POStatus, number> = { all: 0, DRAFT: 0, SUBMITTED: 0, PARTIAL: 0, RECEIVED: 0, CLOSED: 0 };
+    for (const p of (pos ?? [])) {
+      c.all++;
+      if (p.status === "DRAFT") c.DRAFT++;
+      else if (p.status === "SUBMITTED") c.SUBMITTED++;
+      else if (p.status === "PARTIAL") c.PARTIAL++;
+      else if (p.status === "RECEIVED") c.RECEIVED++;
+      else if (p.status === "CLOSED") c.CLOSED++;
+    }
+    return c;
+  }, [pos]);
 
   return (
     <div className="space-y-5">
@@ -98,7 +106,7 @@ export default function PurchaseOrdersPage() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as POStatus)} className="w-full sm:w-auto">
           <TabsList className="h-8 bg-muted/40 p-0.5 flex-wrap">
-            {tabs.map(({ value, label }) => (
+            {TABS.map(({ value, label }) => (
               <TabsTrigger key={value} value={value} className="h-7 px-2.5 text-xs data-[state=active]:bg-background">
                 {label}
                 {!isLoading && counts[value] > 0 && (

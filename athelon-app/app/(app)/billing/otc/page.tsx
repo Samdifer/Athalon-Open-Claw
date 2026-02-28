@@ -45,6 +45,7 @@ import {
   Printer,
   DollarSign,
 } from "lucide-react";
+import { toast } from "sonner";
 
 interface CartItem {
   partId?: Id<"parts">;
@@ -76,6 +77,7 @@ export default function OTCSalesPage() {
   const [historySearch, setHistorySearch] = useState("");
   const [voidDialog, setVoidDialog] = useState<Id<"otcSales"> | null>(null);
   const [voidReason, setVoidReason] = useState("");
+  const [isVoiding, setIsVoiding] = useState(false);
 
   // Manual item entry
   const [manualDesc, setManualDesc] = useState("");
@@ -174,6 +176,8 @@ export default function OTCSalesPage() {
       setCustomerName("");
       setCustomerEmail("");
       setNotes("");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to complete sale — please try again");
     } finally {
       setProcessing(false);
     }
@@ -181,9 +185,17 @@ export default function OTCSalesPage() {
 
   const handleVoid = async () => {
     if (!voidDialog || !voidReason) return;
-    await voidSale({ id: voidDialog, reason: voidReason });
-    setVoidDialog(null);
-    setVoidReason("");
+    setIsVoiding(true);
+    try {
+      await voidSale({ id: voidDialog, reason: voidReason });
+      toast.success("Sale voided successfully");
+      setVoidDialog(null);
+      setVoidReason("");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to void sale — please try again");
+    } finally {
+      setIsVoiding(false);
+    }
   };
 
   const lastSale = useQuery(
@@ -563,8 +575,8 @@ export default function OTCSalesPage() {
           </div>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setVoidDialog(null)}>Cancel</Button>
-            <Button variant="destructive" onClick={handleVoid} disabled={!voidReason}>
-              Void Sale
+            <Button variant="destructive" onClick={handleVoid} disabled={!voidReason || isVoiding}>
+              {isVoiding ? "Voiding..." : "Void Sale"}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -133,13 +133,26 @@ export default function TimeClockPage() {
     return Array.from(byTech.values());
   }, [entries]);
 
-  const getTechName = (techId: Id<"technicians">) => {
-    return (technicians ?? []).find((t) => t._id === techId)?.legalName ?? techId;
-  };
+  // O(1) Map lookups — replaces O(n) .find() called per-row in active entries, daily summary, and full table
+  const techMap = useMemo(
+    () => new Map((technicians ?? []).map((t) => [t._id as string, t.legalName])),
+    [technicians],
+  );
+  const woMap = useMemo(
+    () => new Map((workOrders ?? []).map((w) => [w._id as string, w.workOrderNumber])),
+    [workOrders],
+  );
 
-  const getWONumber = (woId: Id<"workOrders">) => {
-    return (workOrders ?? []).find((w) => w._id === woId)?.workOrderNumber ?? woId;
-  };
+  const getTechName = (tId: Id<"technicians">) => techMap.get(tId as string) ?? (tId as string);
+  const getWONumber = (woId: Id<"workOrders">) => woMap.get(woId as string) ?? (woId as string);
+
+  // Memoized — was an inline filter in the render body after the loading guard (violated hook ordering)
+  const openWorkOrders = useMemo(
+    () => (workOrders ?? []).filter((wo) =>
+      ["open", "in_progress", "pending_inspection", "pending_signoff", "on_hold"].includes(wo.status),
+    ),
+    [workOrders],
+  );
 
   const handleClockIn = async () => {
     if (!orgId) return;
@@ -185,10 +198,6 @@ export default function TimeClockPage() {
       </div>
     );
   }
-
-  const openWorkOrders = (workOrders ?? []).filter((wo) =>
-    ["open", "in_progress", "pending_inspection", "pending_signoff", "on_hold"].includes(wo.status),
-  );
 
   return (
     <div className="space-y-5">

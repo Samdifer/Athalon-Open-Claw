@@ -1,5 +1,5 @@
 import { Link, useParams } from "react-router-dom";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { useOrganization } from "@clerk/clerk-react";
 import { api } from "@/convex/_generated/api";
@@ -180,16 +180,6 @@ export default function AircraftDetailPage() {
     orgId ? { organizationId: orgId, tailNumber } : "skip",
   );
 
-  // Load fleet list to get denormalized openWorkOrderCount
-  const fleetList = useQuery(
-    api.aircraft.list,
-    orgId ? { organizationId: orgId } : "skip",
-  );
-
-  const enrichedAircraft = fleetList?.find(
-    (ac) => ac.currentRegistration === tailNumber,
-  );
-
   // Load engines for this aircraft
   const engines = useQuery(
     api.aircraft.listEnginesForAircraft,
@@ -214,7 +204,7 @@ export default function AircraftDetailPage() {
       : "skip",
   );
 
-  const isLoading = aircraft === undefined || fleetList === undefined;
+  const isLoading = aircraft === undefined;
 
   if (!isLoading && aircraft === null) {
     return (
@@ -226,20 +216,25 @@ export default function AircraftDetailPage() {
     );
   }
 
-  const openWoCount = enrichedAircraft?.openWorkOrderCount ?? 0;
   const status = aircraft?.status ?? "";
   const style = getStatusStyle(status);
 
-  // Work order categorization
-  const activeWOs = workOrders?.filter((wo: { status: string }) =>
-    ACTIVE_WO_STATUSES.includes(wo.status),
-  ) ?? [];
-  const plannedWOs = workOrders?.filter(
-    (wo: { status: string }) => wo.status === "draft",
-  ) ?? [];
-  const pastWOs = workOrders
-    ?.filter((wo: { status: string }) => wo.status === "closed")
-    .slice(0, 20) ?? [];
+  // Work order categorization — memoized so dialog open/close state changes don't recompute
+  const activeWOs = useMemo(
+    () => workOrders?.filter((wo: { status: string }) => ACTIVE_WO_STATUSES.includes(wo.status)) ?? [],
+    [workOrders],
+  );
+  const plannedWOs = useMemo(
+    () => workOrders?.filter((wo: { status: string }) => wo.status === "draft") ?? [],
+    [workOrders],
+  );
+  const pastWOs = useMemo(
+    () => workOrders?.filter((wo: { status: string }) => wo.status === "closed").slice(0, 20) ?? [],
+    [workOrders],
+  );
+
+  // Derive open WO count from already-loaded workOrders — eliminates the full-fleet api.aircraft.list subscription
+  const openWoCount = useMemo(() => activeWOs.length, [activeWOs]);
 
   return (
     <div className="space-y-6">
