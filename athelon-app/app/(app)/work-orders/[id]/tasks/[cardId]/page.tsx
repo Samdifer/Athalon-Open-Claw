@@ -306,6 +306,14 @@ export default function TaskCardPage() {
     notes: item.notes,
   }));
 
+  // ── AI-078: Compliance gate for Sign Card button ──────────────────────────
+  // If any compliance items are non_compliant or pending, the card cannot be
+  // signed — the AD/SB/AMM reference hasn't been complied with or is unknown.
+  const blockingComplianceItems = complianceItems.filter(
+    (item) => item.complianceStatus === "non_compliant" || item.complianceStatus === "pending",
+  );
+  const complianceBlocksSignOff = blockingComplianceItems.length > 0;
+
   // ── GAP-18: Start a step (mark as in_progress) ───────────────────────────
   async function handleStartStep(stepId: Id<"taskCardSteps">) {
     if (!techId) return;
@@ -1155,6 +1163,8 @@ export default function TaskCardPage() {
           className={`border ${
             cardIsComplete
               ? "border-green-500/30 bg-green-500/5"
+              : complianceBlocksSignOff && allStepsDone
+              ? "border-amber-500/30 bg-amber-500/5"
               : allStepsDone
               ? "border-primary/30 bg-primary/5"
               : "border-border/60"
@@ -1169,6 +1179,11 @@ export default function TaskCardPage() {
                       <CheckCircle2 className="w-4 h-4 text-green-600 dark:text-green-400" />
                       Task Card Signed &amp; Complete
                     </>
+                  ) : complianceBlocksSignOff && allStepsDone ? (
+                    <>
+                      <AlertTriangle className="w-4 h-4 text-amber-500 dark:text-amber-400" />
+                      Compliance Items Blocking Sign-Off
+                    </>
                   ) : (
                     <>
                       <Lock className="w-4 h-4 text-muted-foreground" />
@@ -1179,6 +1194,8 @@ export default function TaskCardPage() {
                 <p className="text-xs text-muted-foreground mt-0.5">
                   {cardIsComplete
                     ? "This task card has been certified per 14 CFR 43.9."
+                    : complianceBlocksSignOff && allStepsDone
+                    ? `${blockingComplianceItems.length} compliance item${blockingComplianceItems.length !== 1 ? "s" : ""} require resolution before this card can be signed. Resolve all non-compliant and pending items above.`
                     : allStepsDone
                     ? "All steps complete — ready for card-level sign-off."
                     : `Complete all ${pendingSteps.length} remaining step${
@@ -1189,9 +1206,9 @@ export default function TaskCardPage() {
 
               {!cardIsComplete && orgId && techId && (
                 <Button
-                  variant={allStepsDone ? "default" : "outline"}
+                  variant={allStepsDone && !complianceBlocksSignOff ? "default" : "outline"}
                   size="sm"
-                  disabled={!allStepsDone}
+                  disabled={!allStepsDone || complianceBlocksSignOff}
                   className="gap-1.5 flex-shrink-0"
                   onClick={() => setSignCardOpen(true)}
                 >

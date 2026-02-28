@@ -14,6 +14,7 @@ import {
   Circle,
   ChevronRight,
   Wrench,
+  Lock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -83,13 +84,19 @@ export function TaskCardList({ taskCards, workOrderId }: TaskCardListProps) {
             (s) => s.status === "completed" || s.status === "na",
           ).length;
           const totalSteps = tc.steps.length;
+          // Detect "all steps done, awaiting card-level sign-off" state
+          const awaitingSignOff =
+            totalSteps > 0 &&
+            completedSteps === totalSteps &&
+            tc.status !== "complete" &&
+            tc.status !== "voided";
 
           return (
             <Link
               key={tc._id}
               to={`/work-orders/${workOrderId}/tasks/${tc._id}`}
             >
-              <Card className="border-border/60 hover:border-primary/30 hover:bg-card/80 transition-all cursor-pointer">
+              <Card className={`border-border/60 hover:border-primary/30 hover:bg-card/80 transition-all cursor-pointer ${awaitingSignOff ? "border-amber-500/30 bg-amber-500/5" : ""}`}>
                 <CardContent className="p-4">
                   <div className="flex items-center gap-4">
                     <div className="flex-1 min-w-0">
@@ -97,6 +104,15 @@ export function TaskCardList({ taskCards, workOrderId }: TaskCardListProps) {
                         <span className="font-mono text-xs text-muted-foreground font-medium">
                           {tc.taskCardNumber}
                         </span>
+                        {awaitingSignOff ? (
+                          <Badge
+                            variant="outline"
+                            className="text-[10px] font-medium border bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30"
+                          >
+                            <Lock className="w-2.5 h-2.5 mr-1" />
+                            Awaiting Sign-Off
+                          </Badge>
+                        ) : (
                         <Badge
                           variant="outline"
                           className={`text-[10px] font-medium border ${TASK_STATUS_STYLES[tc.status as TaskStatus] ?? "bg-muted text-muted-foreground"}`}
@@ -109,6 +125,7 @@ export function TaskCardList({ taskCards, workOrderId }: TaskCardListProps) {
                           )}
                           {TASK_STATUS_LABEL[tc.status as TaskStatus] ?? tc.status}
                         </Badge>
+                        )}
                         <Badge
                           variant="outline"
                           className="text-[10px] text-muted-foreground border-border/40"

@@ -5,6 +5,7 @@ import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import {
   Select,
@@ -97,11 +98,32 @@ export function CustomerStatusControl({
 }: CustomerStatusControlProps) {
   const [updating, setUpdating] = useState(false);
   const setStatus = useMutation(api.gapFixes.setCustomerFacingStatus);
+  const navigate = useNavigate();
 
   const currentStatus = customerFacingStatus as CustomerFacingStatus | null | undefined;
   const config = currentStatus ? STATUS_CONFIG[currentStatus] : null;
 
   async function handleChange(newStatus: string) {
+    // AI-077: Gate "completed" on RTS — warn operator before marking aircraft
+    // complete without verifying RTS authorization. Under 14 CFR Part 145, an
+    // aircraft is not "completed" until RTS is signed per 14 CFR 91.407.
+    if (newStatus === "completed") {
+      toast.warning(
+        "Setting status to 'Completed' — has the Return-to-Service been authorized?",
+        {
+          description:
+            "Per 14 CFR Part 145, the aircraft must have a signed RTS record before it is returned to the customer.",
+          duration: 8000,
+          action: {
+            label: "Go to RTS →",
+            onClick: () => navigate(`/work-orders/${workOrderId}/rts`),
+          },
+        },
+      );
+      // Still allow the status change — it's a warning, not a hard block
+      // (hard block is enforced on the release page via AI-025)
+    }
+
     setUpdating(true);
     try {
       await setStatus({
