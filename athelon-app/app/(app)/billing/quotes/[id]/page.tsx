@@ -167,6 +167,11 @@ export default function QuoteDetailPage() {
 
   const handleSend = async () => {
     if (!orgId) return;
+    // Guard: cannot send a quote with no line items — blank $0 quote is invalid
+    if (!quote || quote.lineItems.length === 0) {
+      setError("Cannot send a quote with no line items. Add at least one item before sending.");
+      return;
+    }
     setActionLoading("send"); setError(null);
     try {
       await sendQuote({ orgId, quoteId });
@@ -275,11 +280,30 @@ export default function QuoteDetailPage() {
     setEditQty(String(item.qty));
     setEditUnitPrice(String(item.unitPrice));
     setEditDiscountPct(item.discountPercent != null ? String(item.discountPercent) : "");
+    setError(null); // Clear any stale page-level error when opening this dialog
     setEditItemDialog(true);
   };
 
   const handleEditItem = async () => {
     if (!orgId || !editItemId) return;
+    // Validate qty > 0 — zero-qty line items are zombie entries on the quote
+    if (editQty !== "" && parseFloat(editQty) <= 0) {
+      setError("Quantity must be greater than zero.");
+      return;
+    }
+    // Validate unitPrice >= 0
+    if (editUnitPrice !== "" && parseFloat(editUnitPrice) < 0) {
+      setError("Unit price cannot be negative.");
+      return;
+    }
+    // Validate discount 0–100%
+    if (editDiscountPct !== "") {
+      const disc = parseFloat(editDiscountPct);
+      if (disc < 0 || disc > 100) {
+        setError("Discount must be between 0 and 100%.");
+        return;
+      }
+    }
     setActionLoading("editItem"); setError(null);
     try {
       await updateQuoteLineItem({
@@ -788,9 +812,16 @@ export default function QuoteDetailPage() {
                 className="h-9 text-sm"
               />
             </div>
+            {/* Show validation errors inside the dialog so user sees them without closing */}
+            {editItemDialog && error && (
+              <div className="flex items-center gap-2 p-2 rounded-md bg-red-500/10 border border-red-500/30 text-xs text-red-600 dark:text-red-400">
+                <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+                {error}
+              </div>
+            )}
           </div>
           <DialogFooter>
-            <Button variant="outline" size="sm" onClick={() => setEditItemDialog(false)}>Cancel</Button>
+            <Button variant="outline" size="sm" onClick={() => { setEditItemDialog(false); setError(null); }}>Cancel</Button>
             <Button size="sm" onClick={handleEditItem} disabled={actionLoading === "editItem"}>
               {actionLoading === "editItem" ? "Saving..." : "Save Changes"}
             </Button>

@@ -101,8 +101,18 @@ export default function TimeClockPage() {
     let result = entries ?? [];
     if (filterTech !== "all") result = result.filter((e) => e.technicianId === filterTech);
     if (filterWO !== "all") result = result.filter((e) => e.workOrderId === filterWO);
+    // Wire the search box — previously collected input but never applied it
+    if (searchTech.trim()) {
+      const lower = searchTech.trim().toLowerCase();
+      const matchingIds = new Set(
+        (technicians ?? [])
+          .filter((t) => t.legalName.toLowerCase().includes(lower))
+          .map((t) => t._id as string),
+      );
+      result = result.filter((e) => matchingIds.has(e.technicianId as string));
+    }
     return result;
-  }, [entries, filterTech, filterWO]);
+  }, [entries, filterTech, filterWO, searchTech, technicians]);
 
   // Daily summary — group by technician
   const dailySummary = useMemo(() => {
@@ -383,6 +393,27 @@ export default function TimeClockPage() {
                 </SelectContent>
               </Select>
             </div>
+            {/* Double clock-in guard: warn if selected tech already has an active entry */}
+            {clockInTech && (() => {
+              const existingEntry = activeEntries.find(
+                (e) => (e.technicianId as string) === clockInTech,
+              );
+              if (!existingEntry) return null;
+              return (
+                <div className="flex items-start gap-2 p-3 rounded-md bg-amber-500/10 border border-amber-500/30 text-xs text-amber-600 dark:text-amber-400">
+                  <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <span className="font-semibold">Already clocked in!</span>
+                    {" "}This technician is currently active on{" "}
+                    <span className="font-mono font-semibold">
+                      {getWONumber(existingEntry.workOrderId)}
+                    </span>{" "}
+                    since {formatTime(existingEntry.clockInAt)}.{" "}
+                    Clock them out before starting a new entry, or proceed to create a concurrent entry.
+                  </div>
+                </div>
+              );
+            })()}
             <div className="space-y-1.5">
               <Label className="text-xs">Work Order *</Label>
               <Select value={clockInWO} onValueChange={setClockInWO}>

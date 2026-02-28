@@ -88,6 +88,19 @@ export default function PODetailPage() {
 
   const handleReceive = async () => {
     if (!orgId || !po) return;
+    // Client-side over-receive guard: prevent receiving more than what was ordered
+    for (const item of po.lineItems.filter((i) => i.status !== "RECEIVED")) {
+      const entered = parseFloat(receiveQtys[item._id] ?? "");
+      if (!isNaN(entered) && entered > 0) {
+        const remaining = item.qty - item.receivedQty;
+        if (entered > remaining) {
+          setError(
+            `Cannot receive ${entered} for "${item.description}" — only ${remaining} remaining on this PO.`,
+          );
+          return;
+        }
+      }
+    }
     const receipts = Object.entries(receiveQtys)
       .filter(([, qty]) => parseFloat(qty) > 0)
       .map(([lineItemId, qty]) => ({
