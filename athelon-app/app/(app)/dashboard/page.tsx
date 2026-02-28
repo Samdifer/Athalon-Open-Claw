@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
+import type { FunctionReturnType } from "convex/server";
 import {
   AlertTriangle,
   ClipboardList,
@@ -50,13 +51,14 @@ const STATUS_LABELS: Record<string, string> = {
 
 // ─── KPI Sparkline ──────────────────────────────────────────────────────────
 
-function MiniSparkline({ data, color }: { data: number[]; color: string }) {
+function MiniSparkline({ data, color, id }: { data: number[]; color: string; id: string }) {
   const chartData = data.map((v, i) => ({ i, v }));
+  const gradId = `grad-${id}-${color}`;
   return (
     <ResponsiveContainer width="100%" height={28}>
       <AreaChart data={chartData} margin={{ top: 2, right: 0, left: 0, bottom: 0 }}>
         <defs>
-          <linearGradient id={`grad-${color}`} x1="0" y1="0" x2="0" y2="1">
+          <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
             <stop offset="5%" stopColor={color} stopOpacity={0.3} />
             <stop offset="95%" stopColor={color} stopOpacity={0} />
           </linearGradient>
@@ -66,7 +68,7 @@ function MiniSparkline({ data, color }: { data: number[]; color: string }) {
           dataKey="v"
           stroke={color}
           strokeWidth={1.5}
-          fill={`url(#grad-${color})`}
+          fill={`url(#${gradId})`}
           dot={false}
           isAnimationActive={false}
         />
@@ -75,21 +77,20 @@ function MiniSparkline({ data, color }: { data: number[]; color: string }) {
   );
 }
 
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+type WorkOrdersWithRisk = FunctionReturnType<typeof api.workOrders.getWorkOrdersWithScheduleRisk>;
+type FleetAdSummary = FunctionReturnType<typeof api.adCompliance.getFleetAdSummary>;
+
 // ─── Live KPI Cards ─────────────────────────────────────────────────────────
 
-function LiveKPICards() {
-  const { orgId } = useCurrentOrg();
-
-  const workOrders = useQuery(
-    api.workOrders.getWorkOrdersWithScheduleRisk,
-    orgId ? { organizationId: orgId } : "skip",
-  );
-
-  const fleetAd = useQuery(
-    api.adCompliance.getFleetAdSummary,
-    orgId ? { organizationId: orgId } : "skip",
-  );
-
+function LiveKPICards({
+  workOrders,
+  fleetAd,
+}: {
+  workOrders: WorkOrdersWithRisk | undefined;
+  fleetAd: FleetAdSummary | undefined;
+}) {
   const kpis = useMemo(() => {
     if (!workOrders) return null;
 
@@ -173,7 +174,7 @@ function LiveKPICards() {
                 )}
               </div>
               <p className="text-2xl font-bold text-foreground">{c.value}</p>
-              <MiniSparkline data={c.spark} color={c.color} />
+              <MiniSparkline data={c.spark} color={c.color} id={c.title} />
             </CardContent>
           </Card>
         </Link>
@@ -257,14 +258,7 @@ function LiveSecondaryKPIs() {
 
 // ─── Live Active Work Orders ──────────────────────────────────────────────────
 
-function LiveActiveWorkOrders() {
-  const { orgId } = useCurrentOrg();
-
-  const workOrders = useQuery(
-    api.workOrders.getWorkOrdersWithScheduleRisk,
-    orgId ? { organizationId: orgId } : "skip",
-  );
-
+function LiveActiveWorkOrders({ workOrders }: { workOrders: WorkOrdersWithRisk | undefined }) {
   const active = useMemo(() => {
     if (!workOrders) return null;
     return workOrders
@@ -507,6 +501,20 @@ function getSeverityStyles(severity: string) {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function DashboardPage() {
+  const { orgId } = useCurrentOrg();
+
+  // Shared queries — lifted here so both LiveKPICards and LiveActiveWorkOrders
+  // receive the same data without duplicate subscriptions.
+  const workOrdersWithRisk = useQuery(
+    api.workOrders.getWorkOrdersWithScheduleRisk,
+    orgId ? { organizationId: orgId } : "skip",
+  );
+
+  const fleetAd = useQuery(
+    api.adCompliance.getFleetAdSummary,
+    orgId ? { organizationId: orgId } : "skip",
+  );
+
   const todayLabel = useMemo(() => {
     const d = new Date();
     return d.toLocaleDateString("en-US", {
@@ -536,7 +544,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Live KPI Cards */}
-      <LiveKPICards />
+      <LiveKPICards workOrders={workOrdersWithRisk} fleetAd={fleetAd} />
 
       {/* Secondary Live KPIs */}
       <LiveSecondaryKPIs />
@@ -610,7 +618,7 @@ export default function DashboardPage() {
               </div>
             </CardHeader>
             <CardContent className="pt-0">
-              <LiveActiveWorkOrders />
+              <LiveActiveWorkOrders workOrders={workOrdersWithRisk} />
             </CardContent>
           </Card>
         </div>
@@ -734,7 +742,7 @@ export default function DashboardPage() {
 
       {/* Charts Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <WOStatusChart />
+        <WOStatusChart workOrders={workOrdersWithRisk ?? []} />
         <RevenueTrendChart />
         <TATChart />
         <TechUtilizationChart />

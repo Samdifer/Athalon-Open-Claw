@@ -158,17 +158,26 @@ export default function WorkOrdersPage() {
     [activeTab, search, workOrders],
   );
 
-  const counts = useMemo(
-    () => ({
-      active: filterWorkOrders(workOrders, "active").length,
-      on_hold: filterWorkOrders(workOrders, "on_hold").length,
-      pending: filterWorkOrders(workOrders, "pending").length,
-      awaiting_parts: filterWorkOrders(workOrders, "awaiting_parts").length,
-      complete: filterWorkOrders(workOrders, "complete").length,
+  // Single-pass counter — O(n) instead of the previous O(6n) from 6 separate
+  // filterWorkOrders() calls each iterating the full array.
+  const counts = useMemo(() => {
+    const c = {
+      active: 0,
+      on_hold: 0,
+      pending: 0,
+      awaiting_parts: 0,
+      complete: 0,
       all: workOrders.length,
-    }),
-    [workOrders],
-  );
+    };
+    for (const wo of workOrders) {
+      if (["open", "in_progress", "open_discrepancies"].includes(wo.status)) c.active++;
+      if (wo.status === "on_hold") c.on_hold++;
+      if (["pending_inspection", "pending_signoff"].includes(wo.status)) c.pending++;
+      if (wo.partsOnOrder > 0) c.awaiting_parts++;
+      if (["closed", "cancelled", "voided"].includes(wo.status)) c.complete++;
+    }
+    return c;
+  }, [workOrders]);
 
   if (!isLoaded || raw === undefined) {
     return (

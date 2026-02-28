@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import React, { useMemo } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
@@ -41,20 +41,20 @@ const STATUS_LABELS: Record<string, string> = {
   voided: "Voided",
 };
 
-export function WOStatusChart() {
+export const WOStatusChart = React.memo(function WOStatusChart({ workOrders: propWorkOrders }: { workOrders?: Array<{ status: string }> }) {
   const { orgId } = useCurrentOrg();
 
   const woResult = useQuery(
     api.workOrders.listWorkOrders,
-    orgId
+    orgId && propWorkOrders === undefined
       ? { organizationId: orgId, paginationOpts: { numItems: 200, cursor: null } }
       : "skip",
   );
 
   const chartData = useMemo(() => {
-    if (!woResult?.page) return [];
+    const source = propWorkOrders ?? woResult?.page ?? [];
     const counts: Record<string, number> = {};
-    for (const wo of woResult.page) {
+    for (const wo of source) {
       counts[wo.status] = (counts[wo.status] || 0) + 1;
     }
     return Object.entries(counts).map(([status, count]) => ({
@@ -62,7 +62,7 @@ export function WOStatusChart() {
       value: count,
       color: STATUS_COLORS[status] || "#6b7280",
     }));
-  }, [woResult]);
+  }, [propWorkOrders, woResult]);
 
   if (!orgId) return null;
 
@@ -72,7 +72,7 @@ export function WOStatusChart() {
         <CardTitle className="text-sm font-semibold">WO Status Distribution</CardTitle>
       </CardHeader>
       <CardContent>
-        {!woResult ? (
+        {!propWorkOrders && !woResult ? (
           <Skeleton className="h-[250px] w-full" />
         ) : chartData.length === 0 ? (
           <div className="h-[250px] flex items-center justify-center text-sm text-muted-foreground">
@@ -115,4 +115,4 @@ export function WOStatusChart() {
       </CardContent>
     </Card>
   );
-}
+});
