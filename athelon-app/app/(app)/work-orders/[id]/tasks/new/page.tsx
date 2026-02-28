@@ -30,7 +30,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { TaskCardForm, type TaskType } from "./_components/TaskCardForm";
+import { TaskCardForm, type TaskType, type AircraftSystem } from "./_components/TaskCardForm";
 import { StepBuilder, type StepDraft } from "./_components/StepBuilder";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -254,6 +254,10 @@ export default function NewTaskCardPage() {
         taskCardNumber: taskCardNumber.trim(),
         title: title.trim(),
         taskType,
+        // AI-052: Pass aircraftSystem and isInspectionItem — were captured in
+        // form state but silently dropped before reaching the backend mutation.
+        aircraftSystem: (aircraftSystem as AircraftSystem) || undefined,
+        isInspectionItem: isInspectionItem || undefined,
         approvedDataSource: approvedDataSource.trim(),
         approvedDataRevision: approvedDataRevision.trim() || undefined,
         assignedToTechnicianId: assignedTechId

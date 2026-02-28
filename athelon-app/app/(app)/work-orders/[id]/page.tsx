@@ -521,7 +521,15 @@ export default function WorkOrderDetailPage() {
         </TabsList>
 
         <TabsContent value="squawks" className="mt-0">
-          <WorkItemsList items={workItems} workOrderId={String(workOrderId)} />
+          {/* AI-053/054: Pass org/tech context for Log Squawk + FindingRow disposition */}
+          <WorkItemsList
+            items={workItems}
+            workOrderId={String(workOrderId)}
+            workOrderIdTyped={workOrderId}
+            orgId={orgId}
+            techId={techId ?? undefined}
+            aircraftCurrentHours={wo.aircraftTotalTimeAtOpen ?? null}
+          />
           <div className="mt-4">
             <DiscrepancyList
               discrepancies={discrepancies}

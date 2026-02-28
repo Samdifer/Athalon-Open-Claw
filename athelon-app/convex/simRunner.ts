@@ -5,6 +5,18 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 
+// ── Link a Clerk user to an existing technician record ──
+export const linkClerkUser = mutation({
+  args: {
+    technicianId: v.id("technicians"),
+    clerkUserId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.technicianId, { userId: args.clerkUserId });
+    return { ok: true };
+  },
+});
+
 // ── Create Task Card (no auth) ──
 export const createTaskCard = mutation({
   args: {

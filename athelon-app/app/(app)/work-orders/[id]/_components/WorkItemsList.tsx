@@ -1,5 +1,11 @@
 "use client";
 
+/**
+ * WorkItemsList.tsx
+ * AI-053: Wire "Log Squawk" button to LogSquawkDialog (was dead/no onClick).
+ * AI-054: Make FindingRow clickable — open DiscrepancyDispositionDialog inline.
+ */
+
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -20,6 +26,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { CheckCircle2, Circle } from "lucide-react";
+import type { Id } from "@/convex/_generated/dataModel";
+import { LogSquawkDialog } from "./LogSquawkDialog";
+import { DiscrepancyDispositionDialog } from "@/components/DiscrepancyDispositionDialog";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -78,6 +87,12 @@ export type WorkItem = TaskCardItem | DiscrepancyItem;
 export interface WorkItemsListProps {
   items: WorkItem[];
   workOrderId: string;
+  /** AI-053/054: Optional Convex-typed WO ID for dialog integrations */
+  workOrderIdTyped?: Id<"workOrders">;
+  /** AI-053: Props required to open LogSquawkDialog */
+  orgId?: Id<"organizations">;
+  techId?: Id<"technicians">;
+  aircraftCurrentHours?: number | null;
 }
 
 // ── Constants ────────────────────────────────────────────────────────────────
@@ -136,10 +151,26 @@ const SEVERITY_STYLES: Record<string, string> = {
 
 // ── Component ────────────────────────────────────────────────────────────────
 
-export function WorkItemsList({ items, workOrderId }: WorkItemsListProps) {
+export function WorkItemsList({
+  items,
+  workOrderId,
+  workOrderIdTyped,
+  orgId,
+  techId,
+  aircraftCurrentHours,
+}: WorkItemsListProps) {
   const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
   const [systemFilter, setSystemFilter] = useState<string>("all");
   const [originFilter, setOriginFilter] = useState<string>("all");
+
+  // AI-053: Log Squawk dialog state
+  const [logSquawkOpen, setLogSquawkOpen] = useState(false);
+
+  // AI-054: Disposition dialog state — tracks which finding is being actioned
+  const [dispositionFinding, setDispositionFinding] = useState<{
+    id: string;
+    description: string;
+  } | null>(null);
 
   // Apply filters
   const filtered = items.filter((item) => {
@@ -246,7 +277,19 @@ export function WorkItemsList({ items, workOrderId }: WorkItemsListProps) {
             item.kind === "task" ? (
               <TaskRow key={item.id} item={item} workOrderId={workOrderId} />
             ) : (
-              <FindingRow key={item.id} item={item} />
+              <FindingRow
+                key={item.id}
+                item={item}
+                onDisposition={
+                  workOrderIdTyped
+                    ? () =>
+                        setDispositionFinding({
+                          id: item.id,
+                          description: item.description,
+                        })
+                    : undefined
+                }
+              />
             ),
           )}
         </div>
@@ -265,15 +308,50 @@ export function WorkItemsList({ items, workOrderId }: WorkItemsListProps) {
             Add Task Card
           </Link>
         </Button>
+        {/* AI-053: Wire Log Squawk button to LogSquawkDialog */}
         <Button
           variant="outline"
           size="sm"
           className="flex-1 h-9 text-xs border-border/60 border-dashed gap-1.5"
+          onClick={
+            orgId && techId && workOrderIdTyped
+              ? () => setLogSquawkOpen(true)
+              : undefined
+          }
+          disabled={!orgId || !techId || !workOrderIdTyped}
+          title={
+            !orgId || !techId || !workOrderIdTyped
+              ? "Organization or technician context not available"
+              : undefined
+          }
         >
           <AlertTriangle className="w-3.5 h-3.5" />
           Log Squawk
         </Button>
       </div>
+
+      {/* AI-053: LogSquawkDialog — wired when org/tech context is available */}
+      {orgId && techId && workOrderIdTyped && (
+        <LogSquawkDialog
+          open={logSquawkOpen}
+          onClose={() => setLogSquawkOpen(false)}
+          workOrderId={workOrderIdTyped}
+          orgId={orgId}
+          techId={techId}
+          aircraftCurrentHours={aircraftCurrentHours ?? null}
+        />
+      )}
+
+      {/* AI-054: DiscrepancyDispositionDialog — opens when a FindingRow is clicked */}
+      {dispositionFinding && workOrderIdTyped && (
+        <DiscrepancyDispositionDialog
+          open={Boolean(dispositionFinding)}
+          onClose={() => setDispositionFinding(null)}
+          discrepancyId={dispositionFinding.id as Id<"discrepancies">}
+          description={dispositionFinding.description}
+          workOrderId={workOrderIdTyped}
+        />
+      )}
     </div>
   );
 }
@@ -342,7 +420,19 @@ function TaskRow({
 
 // ── Finding / Discrepancy Row ────────────────────────────────────────────────
 
-function FindingRow({ item }: { item: DiscrepancyItem }) {
+/**
+ * AI-054: FindingRow now accepts an optional `onDisposition` callback.
+ * When provided, the row becomes interactive — clicking it opens the
+ * DiscrepancyDispositionDialog so a tech can act on the finding without
+ * navigating away from the work order detail page.
+ */
+function FindingRow({
+  item,
+  onDisposition,
+}: {
+  item: DiscrepancyItem;
+  onDisposition?: () => void;
+}) {
   const statusStyle =
     FINDING_STATUS_STYLES[item.status] ?? "bg-muted text-muted-foreground";
   const statusLabel =
@@ -351,8 +441,33 @@ function FindingRow({ item }: { item: DiscrepancyItem }) {
     ? SEVERITY_STYLES[item.severity] ?? "text-muted-foreground border-border/40"
     : null;
 
+  // Dispositioned findings (corrected/deferred) are read-only — no action needed
+  const isActionable = onDisposition && item.status === "open";
+
   return (
-    <div className="flex items-start gap-3 py-3 px-1">
+    <div
+      className={`flex items-start gap-3 py-3 px-1 ${
+        isActionable
+          ? "hover:bg-muted/20 transition-colors cursor-pointer group"
+          : ""
+      }`}
+      onClick={isActionable ? onDisposition : undefined}
+      role={isActionable ? "button" : undefined}
+      tabIndex={isActionable ? 0 : undefined}
+      onKeyDown={
+        isActionable
+          ? (e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                onDisposition();
+              }
+            }
+          : undefined
+      }
+      aria-label={
+        isActionable ? `Disposition finding ${item.number}: ${item.description}` : undefined
+      }
+    >
       <AlertTriangle className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-0.5 flex-wrap">
@@ -399,6 +514,10 @@ function FindingRow({ item }: { item: DiscrepancyItem }) {
           </p>
         )}
       </div>
+      {/* AI-054: Chevron hint for actionable open findings */}
+      {isActionable && (
+        <ChevronRight className="w-4 h-4 text-muted-foreground/40 group-hover:text-muted-foreground transition-colors flex-shrink-0 mt-0.5 self-center" />
+      )}
     </div>
   );
 }
