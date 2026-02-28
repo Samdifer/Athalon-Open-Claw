@@ -100,8 +100,16 @@ export default function ReportsPage() {
       });
   }, [woResult, fromTs, toTs]);
 
-  const totalRevenue = revenueData.reduce((s, d) => s + d.revenue, 0);
-  const totalWOs = throughputData.reduce((s, d) => s + d.completed, 0);
+  // useMemo so these aggregations don't re-run on every keystroke in the date inputs
+  // (revenueData / throughputData are already memoized; totalRevenue / totalWOs depend only on them).
+  const totalRevenue = useMemo(
+    () => revenueData.reduce((s, d) => s + d.revenue, 0),
+    [revenueData],
+  );
+  const totalWOs = useMemo(
+    () => throughputData.reduce((s, d) => s + d.completed, 0),
+    [throughputData],
+  );
 
   if (!isLoaded) return <Skeleton className="h-96 w-full" />;
   if (!orgId) {

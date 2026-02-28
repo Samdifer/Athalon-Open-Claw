@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -434,14 +434,19 @@ export default function InvoicesPage() {
   }, [invoices, search]);
 
   const all = invoices ?? [];
-  const counts: Record<InvoiceStatus, number> = {
-    all: all.length,
-    DRAFT: all.filter((i) => i.status === "DRAFT").length,
-    SENT: all.filter((i) => i.status === "SENT").length,
-    PARTIAL: all.filter((i) => i.status === "PARTIAL").length,
-    PAID: all.filter((i) => i.status === "PAID").length,
-    VOID: all.filter((i) => i.status === "VOID").length,
-  };
+
+  // Single-pass counter — O(n) instead of O(5n) separate .filter() calls.
+  // Recomputes only when the invoices array reference changes (not on selection or search keystrokes).
+  const counts = useMemo<Record<InvoiceStatus, number>>(() => {
+    const acc: Record<InvoiceStatus, number> = { all: 0, DRAFT: 0, SENT: 0, PARTIAL: 0, PAID: 0, VOID: 0 };
+    for (const inv of all) {
+      acc.all++;
+      if (inv.status in acc) acc[inv.status as InvoiceStatus]++;
+    }
+    return acc;
+  // invoices reference is the stable identity — all is derived from it inline
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [invoices]);
 
   const tabs: { value: InvoiceStatus; label: string }[] = [
     { value: "all", label: "All" },
@@ -452,12 +457,20 @@ export default function InvoicesPage() {
     { value: "VOID", label: "Void" },
   ];
 
-  // Selection helpers
-  const allFilteredIds = filtered.map((inv) => inv._id);
-  const allSelected = allFilteredIds.length > 0 && allFilteredIds.every((id) => selectedIds.has(id));
-  const someSelected = allFilteredIds.some((id) => selectedIds.has(id));
+  // Memoize ID list so selection helpers only recompute when filtered list changes.
+  const allFilteredIds = useMemo(() => filtered.map((inv) => inv._id), [filtered]);
 
-  const toggleSelectAll = () => {
+  // Selection state derived from memoized IDs — only recomputes when the list or
+  // selection set changes, not on unrelated state updates.
+  const { allSelected, someSelected } = useMemo(() => {
+    if (allFilteredIds.length === 0) return { allSelected: false, someSelected: false };
+    return {
+      allSelected: allFilteredIds.every((id) => selectedIds.has(id)),
+      someSelected: allFilteredIds.some((id) => selectedIds.has(id)),
+    };
+  }, [allFilteredIds, selectedIds]);
+
+  const toggleSelectAll = useCallback(() => {
     if (allSelected) {
       setSelectedIds((prev) => {
         const next = new Set(prev);
@@ -471,23 +484,23 @@ export default function InvoicesPage() {
         return next;
       });
     }
-  };
+  }, [allSelected, allFilteredIds]);
 
-  const toggleSelect = (id: string, checked: boolean) => {
+  const toggleSelect = useCallback((id: string, checked: boolean) => {
     setSelectedIds((prev) => {
       const next = new Set(prev);
       if (checked) next.add(id); else next.delete(id);
       return next;
     });
-  };
+  }, []);
 
-  // Selected invoice objects (for batch payment dialog)
-  const selectedInvoices = filtered.filter((inv) => selectedIds.has(inv._id));
-
-  // Draft invoices among selected (for batch send)
-  const selectedDraftIds = selectedInvoices
-    .filter((inv) => inv.status === "DRAFT")
-    .map((inv) => inv._id);
+  // Selected invoice objects + draft-only subset — memoized so batch action buttons
+  // don't trigger O(n) passes on every checkbox toggle or search keystroke.
+  const { selectedInvoices, selectedDraftIds } = useMemo(() => {
+    const selected = filtered.filter((inv) => selectedIds.has(inv._id));
+    const drafts = selected.filter((inv) => inv.status === "DRAFT").map((inv) => inv._id);
+    return { selectedInvoices: selected, selectedDraftIds: drafts };
+  }, [filtered, selectedIds]);
 
   // Overdue check helper
   const isOverdue = (inv: { dueDate?: number; status: string }) =>

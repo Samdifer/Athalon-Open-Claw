@@ -7,7 +7,7 @@
  * Uses native HTML5 drag-and-drop (no library dependencies).
  */
 
-import { useState, useMemo, type DragEvent } from "react";
+import { useState, useMemo, useCallback, memo, type DragEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useQuery, useMutation } from "convex/react";
 import {
@@ -125,7 +125,9 @@ type WoCardData = {
   aircraft: { currentRegistration?: string | null; make: string; model: string } | null;
 };
 
-function WoCard({
+// memo so that drag-state changes (dragOverColumn / draggedWoId) on the parent do NOT
+// re-render every card — only cards whose props actually changed will re-render.
+const WoCard = memo(function WoCard({
   wo,
   onDragStart,
 }: {
@@ -197,7 +199,7 @@ function WoCard({
       )}
     </div>
   );
-}
+});
 
 // ─── Main Kanban Page ───────────────────────────────────────────────────────
 
@@ -301,11 +303,13 @@ export default function KanbanPage() {
 
   // ─── Drag handlers ──────────────────────────────────────────────────────
 
-  function handleDragStart(e: DragEvent<HTMLDivElement>, woId: string) {
+  // useCallback so WoCard (memo-wrapped) receives a stable reference and skips
+  // re-rendering when only dragOverColumn / draggedWoId state changes.
+  const handleDragStart = useCallback((e: DragEvent<HTMLDivElement>, woId: string) => {
     e.dataTransfer.setData("text/plain", woId);
     e.dataTransfer.effectAllowed = "move";
     setDraggedWoId(woId);
-  }
+  }, []);
 
   function handleDragOver(e: DragEvent<HTMLDivElement>, columnKey: string) {
     e.preventDefault();
