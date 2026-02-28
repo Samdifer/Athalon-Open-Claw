@@ -514,6 +514,7 @@ export default function NewWorkOrderPage() {
               disabled={
                 isSubmitting ||
                 !aircraftId ||
+                !workOrderNumber.trim() ||
                 !description.trim()
               }
               className="gap-2"

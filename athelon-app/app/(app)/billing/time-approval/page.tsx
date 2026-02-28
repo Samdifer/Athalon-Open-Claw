@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -81,6 +81,37 @@ export default function TimeApprovalPage() {
     api.billingV4b.listRejectedTimeEntries,
     orgId ? { orgId } : "skip",
   );
+
+  // Resolve human-readable names instead of raw Convex IDs
+  const technicians = useQuery(
+    api.technicians.list,
+    orgId ? { organizationId: orgId } : "skip",
+  );
+  // listActive covers the vast majority of time entries in the approval queue
+  // (time entries are almost always against active WOs). Limit 500 to avoid
+  // pagination complexity; falls back to truncated ID for closed/historical WOs.
+  const workOrders = useQuery(
+    api.workOrders.listActive,
+    orgId ? { organizationId: orgId, limit: 500 } : "skip",
+  );
+
+  /** Map technicianId → legalName */
+  const techMap = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const t of technicians ?? []) m.set(t._id as string, t.legalName);
+    return m;
+  }, [technicians]);
+
+  /** Map workOrderId → workOrderNumber */
+  const woMap = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const wo of workOrders ?? []) m.set(wo._id as string, wo.workOrderNumber);
+    return m;
+  }, [workOrders]);
+
+  const resolveTech = (id: string) => techMap.get(id) ?? id.slice(0, 8) + "…";
+  const resolveWO = (id: string | null | undefined) =>
+    id ? (woMap.get(id) ?? id.slice(0, 8) + "…") : "—";
 
   const approveEntry = useMutation(api.billingV4.approveTimeEntry);
   const rejectEntry = useMutation(api.billingV4.rejectTimeEntry);
@@ -206,11 +237,11 @@ export default function TimeApprovalPage() {
                 <TableBody>
                   {pending!.map((entry) => (
                     <TableRow key={entry._id} className="hover:bg-muted/20">
-                      <TableCell className="text-xs font-mono text-muted-foreground truncate max-w-[100px]">
-                        {entry.technicianId}
+                      <TableCell className="text-xs font-medium text-foreground truncate max-w-[120px]">
+                        {resolveTech(entry.technicianId as string)}
                       </TableCell>
-                      <TableCell className="text-xs font-mono text-muted-foreground truncate max-w-[100px]">
-                        {entry.workOrderId ?? "—"}
+                      <TableCell className="text-xs font-mono text-muted-foreground truncate max-w-[110px]">
+                        {resolveWO(entry.workOrderId as string | undefined)}
                       </TableCell>
                       <TableCell className="text-xs text-muted-foreground">
                         {fmtTs(entry.clockInAt)}
@@ -286,11 +317,11 @@ export default function TimeApprovalPage() {
                 <TableBody>
                   {approved.map((entry) => (
                     <TableRow key={entry._id} className="hover:bg-muted/20">
-                      <TableCell className="text-xs font-mono text-muted-foreground truncate max-w-[100px]">
-                        {entry.technicianId}
+                      <TableCell className="text-xs font-medium text-foreground truncate max-w-[120px]">
+                        {resolveTech(entry.technicianId as string)}
                       </TableCell>
-                      <TableCell className="text-xs font-mono text-muted-foreground truncate max-w-[100px]">
-                        {entry.workOrderId ?? "—"}
+                      <TableCell className="text-xs font-mono text-muted-foreground truncate max-w-[110px]">
+                        {resolveWO(entry.workOrderId as string | undefined)}
                       </TableCell>
                       <TableCell className="text-xs text-muted-foreground">
                         {fmtTs(entry.clockInAt)}
@@ -304,8 +335,10 @@ export default function TimeApprovalPage() {
                       <TableCell className="text-xs text-muted-foreground">
                         {fmtTs((entry as { approvedAt?: number }).approvedAt)}
                       </TableCell>
-                      <TableCell className="text-xs font-mono text-muted-foreground truncate max-w-[100px]">
-                        {(entry as { approvedByTechId?: string }).approvedByTechId ?? "—"}
+                      <TableCell className="text-xs font-medium text-foreground truncate max-w-[120px]">
+                        {(entry as { approvedByTechId?: string }).approvedByTechId
+                          ? resolveTech((entry as { approvedByTechId: string }).approvedByTechId)
+                          : "—"}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -345,11 +378,11 @@ export default function TimeApprovalPage() {
                 <TableBody>
                   {rejected.map((entry) => (
                     <TableRow key={entry._id} className="hover:bg-muted/20">
-                      <TableCell className="text-xs font-mono text-muted-foreground truncate max-w-[100px]">
-                        {entry.technicianId}
+                      <TableCell className="text-xs font-medium text-foreground truncate max-w-[120px]">
+                        {resolveTech(entry.technicianId as string)}
                       </TableCell>
-                      <TableCell className="text-xs font-mono text-muted-foreground truncate max-w-[100px]">
-                        {entry.workOrderId ?? "—"}
+                      <TableCell className="text-xs font-mono text-muted-foreground truncate max-w-[110px]">
+                        {resolveWO(entry.workOrderId as string | undefined)}
                       </TableCell>
                       <TableCell className="text-xs text-muted-foreground">
                         {fmtTs(entry.clockInAt)}

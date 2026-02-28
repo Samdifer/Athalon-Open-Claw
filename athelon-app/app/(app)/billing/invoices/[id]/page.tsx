@@ -151,9 +151,17 @@ export default function InvoiceDetailPage() {
   };
 
   const handlePayment = async () => {
-    if (!orgId || !techId) return;
+    if (!orgId || !techId || !invoice) return;
     const amount = parseFloat(payAmount);
     if (isNaN(amount) || amount <= 0) { setError("Enter a valid payment amount."); return; }
+    // Guard against overpayment — prevent recording more than the outstanding balance
+    if (amount > invoice.balance + 0.005) {
+      setError(
+        `Payment amount ($${amount.toFixed(2)}) exceeds the remaining balance ($${invoice.balance.toFixed(2)}). ` +
+        `Reduce the amount or contact billing to split the payment.`,
+      );
+      return;
+    }
     setActionLoading("payment"); setError(null);
     try {
       await recordPayment({
@@ -783,12 +791,20 @@ export default function InvoiceDetailPage() {
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-3 py-2">
+              {/* Balance summary */}
+              <div className="flex items-center justify-between px-3 py-2 rounded-md bg-muted/40 border border-border/50">
+                <span className="text-xs text-muted-foreground">Outstanding balance</span>
+                <span className={`text-sm font-semibold tabular-nums ${invoice!.balance > 0 ? "text-amber-600 dark:text-amber-400" : "text-green-600 dark:text-green-400"}`}>
+                  ${invoice!.balance.toFixed(2)}
+                </span>
+              </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <Label className="text-xs">Amount *</Label>
+                  <Label className="text-xs">Amount * <span className="text-muted-foreground font-normal">(max ${invoice!.balance.toFixed(2)})</span></Label>
                   <Input
                     type="number"
                     min="0.01"
+                    max={invoice!.balance}
                     step="0.01"
                     value={payAmount}
                     onChange={(e) => setPayAmount(e.target.value)}
@@ -819,11 +835,22 @@ export default function InvoiceDetailPage() {
                 <Textarea value={payNotes} onChange={(e) => setPayNotes(e.target.value)} className="resize-none h-20 text-sm" />
               </div>
             </div>
-            <DialogFooter>
-              <Button variant="outline" size="sm" onClick={() => setPaymentDialog(false)}>Cancel</Button>
-              <Button size="sm" onClick={handlePayment} disabled={actionLoading === "payment"} className="bg-green-600 hover:bg-green-700">
-                {actionLoading === "payment" ? "Recording..." : "Record Payment"}
+            <DialogFooter className="flex-wrap gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                type="button"
+                onClick={() => setPayAmount(invoice!.balance.toFixed(2))}
+                className="text-xs text-muted-foreground"
+              >
+                Pay Full Balance
               </Button>
+              <div className="flex gap-2 ml-auto">
+                <Button variant="outline" size="sm" onClick={() => setPaymentDialog(false)}>Cancel</Button>
+                <Button size="sm" onClick={handlePayment} disabled={actionLoading === "payment"} className="bg-green-600 hover:bg-green-700">
+                  {actionLoading === "payment" ? "Recording..." : "Record Payment"}
+                </Button>
+              </div>
             </DialogFooter>
           </DialogContent>
         </Dialog>
