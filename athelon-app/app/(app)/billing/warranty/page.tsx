@@ -5,6 +5,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
+import { usePagePrereqs } from "@/hooks/usePagePrereqs";
 import {
   ShieldCheck,
   Plus,
@@ -47,6 +48,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDate, formatCurrency } from "@/lib/format";
 import { toast } from "sonner";
+import { ActionableEmptyState } from "@/components/zero-state/ActionableEmptyState";
 
 type ClaimStatus = "draft" | "submitted" | "under_review" | "approved" | "denied" | "paid" | "closed";
 type ClaimType = "part_defect" | "workmanship" | "oem_warranty" | "vendor_warranty";
@@ -288,7 +290,7 @@ function ClaimDetailDialog({
 // ─── Main Page ───────────────────────────────────────────────────────────────
 
 export default function WarrantyPage() {
-  const { orgId } = useCurrentOrg();
+  const { orgId, isLoaded } = useCurrentOrg();
   const [tab, setTab] = useState<ClaimStatus | "all">("all");
   const [createOpen, setCreateOpen] = useState(false);
   const [selectedClaim, setSelectedClaim] = useState<Id<"warrantyClaims"> | null>(null);
@@ -297,6 +299,10 @@ export default function WarrantyPage() {
     api.warranty.listClaims,
     orgId ? { organizationId: orgId, status: tab === "all" ? undefined : tab } : "skip",
   );
+  const prereq = usePagePrereqs({
+    requiresOrg: true,
+    isDataLoading: !isLoaded || claims === undefined,
+  });
 
   const stats = useMemo(() => {
     if (!claims) return { total: 0, pending: 0, approved: 0, recoveryRate: 0 };
@@ -309,8 +315,32 @@ export default function WarrantyPage() {
     const recoveryRate = totalClaimed > 0 ? (approved / totalClaimed) * 100 : 0;
     return { total, pending, approved, recoveryRate };
   }, [claims]);
+  const claimRows = claims ?? [];
 
-  if (!orgId) return <div className="p-6"><Skeleton className="h-8 w-48" /></div>;
+  if (prereq.state === "loading_context" || prereq.state === "loading_data") {
+    return (
+      <div className="p-6 space-y-3" data-testid="page-loading-state">
+        <Skeleton className="h-8 w-56" />
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Skeleton key={i} className="h-10 w-full" />
+        ))}
+      </div>
+    );
+  }
+
+  if (prereq.state === "missing_context") {
+    return (
+      <ActionableEmptyState
+        title="Warranty claims require organization setup"
+        missingInfo="Complete onboarding before creating or resolving warranty claims."
+        primaryActionLabel="Complete Setup"
+        primaryActionType="link"
+        primaryActionTarget="/onboarding"
+      />
+    );
+  }
+
+  if (!orgId) return null;
 
   return (
     <div className="p-6 space-y-6">
@@ -349,10 +379,14 @@ export default function WarrantyPage() {
       </div>
 
       {/* Claims Table */}
-      {!claims ? (
-        <div className="space-y-2">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}</div>
-      ) : claims.length === 0 ? (
-        <div className="text-center py-12 text-muted-foreground">No warranty claims found.</div>
+      {claimRows.length === 0 ? (
+        <ActionableEmptyState
+          title="No warranty claims found"
+          missingInfo="Create your first claim to track warranty recovery against vendors and OEMs."
+          primaryActionLabel="New Claim"
+          primaryActionType="button"
+          primaryActionTarget={() => setCreateOpen(true)}
+        />
       ) : (
         <Table>
           <TableHeader>
@@ -367,7 +401,7 @@ export default function WarrantyPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {claims.map((claim) => (
+            {claimRows.map((claim) => (
               <TableRow key={claim._id} className="cursor-pointer hover:bg-muted/50"
                 onClick={() => setSelectedClaim(claim._id)}>
                 <TableCell className="font-mono text-sm">{claim.claimNumber}</TableCell>

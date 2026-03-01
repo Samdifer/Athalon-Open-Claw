@@ -5,6 +5,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
+import { usePagePrereqs } from "@/hooks/usePagePrereqs";
 import { toast } from "sonner";
 import {
   Plus,
@@ -43,6 +44,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ActionableEmptyState } from "@/components/zero-state/ActionableEmptyState";
+import { MissingPrereqBanner } from "@/components/zero-state/MissingPrereqBanner";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -428,7 +431,13 @@ export default function RecurringBillingPage() {
   const toggleTemplate = useMutation(api.billingV4b.toggleRecurringTemplate);
   const generateNow = useMutation(api.billingV4b.generateInvoiceFromTemplate);
 
-  const isLoading = !isLoaded || templates === undefined;
+  const prereq = usePagePrereqs({
+    requiresOrg: true,
+    requiresTech: true,
+    isDataLoading: !isLoaded || templates === undefined,
+  });
+  const templateRows = templates ?? [];
+  const isLoading = prereq.state === "loading_context" || prereq.state === "loading_data";
 
   async function handleToggle(templateId: Id<"recurringBillingTemplates">, currentActive: boolean) {
     if (!orgId) return;
@@ -450,6 +459,20 @@ export default function RecurringBillingPage() {
     }
   }
 
+  if (prereq.state === "missing_context") {
+    return (
+      <ActionableEmptyState
+        title="Recurring billing setup required"
+        missingInfo="Your account needs organization and technician setup before creating templates."
+        primaryActionLabel="Complete Setup"
+        primaryActionType="link"
+        primaryActionTarget="/onboarding"
+        secondaryActionLabel="Go to Personnel"
+        secondaryActionTarget="/personnel"
+      />
+    );
+  }
+
   return (
     <div className="space-y-5">
       {/* Header */}
@@ -462,39 +485,57 @@ export default function RecurringBillingPage() {
               <Skeleton className="h-4 w-40 mt-1" />
             ) : (
               <p className="text-sm text-muted-foreground mt-0.5">
-                {templates.length} template{templates.length !== 1 ? "s" : ""} ·{" "}
-                {templates.filter((t) => t.active).length} active
+                {templateRows.length} template{templateRows.length !== 1 ? "s" : ""} ·{" "}
+                {templateRows.filter((t) => t.active).length} active
               </p>
             )}
           </div>
         </div>
-        <Button size="sm" onClick={() => setCreateOpen(true)}>
+        <Button
+          size="sm"
+          onClick={() => {
+            if (!orgId || !techId) {
+              toast.error("Complete setup before creating recurring templates.");
+              return;
+            }
+            setCreateOpen(true);
+          }}
+          data-testid="empty-state-primary-action"
+        >
           <Plus className="w-3.5 h-3.5 mr-1.5" />
           New Template
         </Button>
       </div>
 
+      {!techId && (
+        <MissingPrereqBanner
+          kind="needs_technician_profile"
+          actionLabel="Go to Personnel"
+          actionTarget="/personnel"
+        />
+      )}
+
       {/* Table */}
       {isLoading ? (
-        <div className="space-y-2">
+        <div className="space-y-2" data-testid="page-loading-state">
           {Array.from({ length: 4 }).map((_, i) => (
             <Skeleton key={i} className="h-14 w-full rounded-lg" />
           ))}
         </div>
-      ) : templates.length === 0 ? (
-        <Card className="border-border/60">
-          <CardContent className="py-16 text-center">
-            <RefreshCw className="w-8 h-8 text-muted-foreground/40 mx-auto mb-3" />
-            <p className="text-sm font-medium text-muted-foreground">No recurring templates</p>
-            <p className="text-xs text-muted-foreground/60 mt-1">
-              Create a template to automate recurring invoice generation.
-            </p>
-            <Button size="sm" className="mt-4" onClick={() => setCreateOpen(true)}>
-              <Plus className="w-3.5 h-3.5 mr-1.5" />
-              New Template
-            </Button>
-          </CardContent>
-        </Card>
+      ) : templateRows.length === 0 ? (
+        <ActionableEmptyState
+          title="No recurring templates"
+          missingInfo="Create a template to automate recurring invoice generation."
+          primaryActionLabel="New Template"
+          primaryActionType="button"
+          primaryActionTarget={() => {
+            if (!techId) {
+              toast.error("A technician profile is required to create a template.");
+              return;
+            }
+            setCreateOpen(true);
+          }}
+        />
       ) : (
         <div className="rounded-md border border-border/60 overflow-hidden">
           <div className="overflow-x-auto">
@@ -511,7 +552,7 @@ export default function RecurringBillingPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {templates.map((tpl) => (
+              {templateRows.map((tpl) => (
                 <TableRow key={tpl._id} className="hover:bg-muted/20">
                   <TableCell className="text-sm font-medium">{tpl.name}</TableCell>
                   <TableCell className="text-xs font-mono text-muted-foreground truncate max-w-[120px]">
@@ -575,7 +616,7 @@ export default function RecurringBillingPage() {
       )}
 
       {/* Create Dialog */}
-      {orgId && (
+      {orgId && techId && (
         <CreateRecurringTemplateDialog
           open={createOpen}
           onClose={() => setCreateOpen(false)}

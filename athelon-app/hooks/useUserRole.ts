@@ -7,13 +7,21 @@ import type { MRORole } from "@/lib/roles";
 
 export function useUserRole(): { role: MRORole | null | undefined; isLoading: boolean } {
   const { orgId, isLoaded } = useCurrentOrg();
-
   const role = useQuery(
     api.roles.getMyRole,
     orgId ? { organizationId: orgId } : "skip",
   );
 
-  if (!isLoaded || role === undefined) {
+  if (!isLoaded) {
+    return { role: undefined, isLoading: true };
+  }
+
+  if (!orgId) {
+    // During onboarding bootstrap there is no org-scoped role yet.
+    return { role: null, isLoading: false };
+  }
+
+  if (role === undefined) {
     return { role: undefined, isLoading: true };
   }
 

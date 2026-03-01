@@ -1,6 +1,8 @@
 import { lazy, Suspense } from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, Outlet } from "react-router-dom";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { OnboardingGate } from "@/components/OnboardingGate";
+import { OrgContextProvider } from "@/components/OrgContextProvider";
 import { AppLayout } from "@/app/(app)/layout";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -10,6 +12,7 @@ import SignUpPage from "@/app/(auth)/sign-up/[[...sign-up]]/page";
 
 // Lazy page imports
 const DashboardPage = lazy(() => import("@/app/(app)/dashboard/page"));
+const OnboardingPage = lazy(() => import("@/app/(app)/onboarding/page"));
 
 // Work Orders
 const WorkOrdersPage = lazy(() => import("@/app/(app)/work-orders/page"));
@@ -141,6 +144,14 @@ function LoadingFallback() {
   );
 }
 
+function ProtectedAppContext() {
+  return (
+    <OrgContextProvider>
+      <Outlet />
+    </OrgContextProvider>
+  );
+}
+
 export default function App() {
   return (
     <Suspense fallback={<LoadingFallback />}>
@@ -165,111 +176,117 @@ export default function App() {
 
         {/* Protected app routes — all require an active Clerk session */}
         <Route element={<ProtectedRoute />}>
-          <Route element={<AppLayout />}>
-            <Route path="/dashboard" element={<DashboardPage />} />
+          <Route element={<ProtectedAppContext />}>
+            <Route path="/onboarding" element={<OnboardingPage />} />
 
-            {/* Work Orders */}
-            <Route path="/work-orders" element={<WorkOrdersPage />} />
-            <Route path="/work-orders/kanban" element={<KanbanPage />} />
-            <Route path="/work-orders/new" element={<NewWorkOrderPage />} />
-            <Route path="/work-orders/templates" element={<WorkOrderTemplatesPage />} />
-            <Route path="/work-orders/:id" element={<WorkOrderDetailPage />} />
-            <Route path="/work-orders/:id/tasks/new" element={<NewTaskCardPage />} />
-            <Route path="/work-orders/:id/tasks/:cardId" element={<TaskCardPage />} />
-            <Route path="/work-orders/:id/records" element={<MaintenanceRecordsPage />} />
-            <Route path="/work-orders/:id/rts" element={<RtsPage />} />
-            <Route path="/work-orders/:id/release" element={<ReleaseAircraftPage />} />
-            <Route path="/work-orders/:id/certificates" element={<CertificatesPage />} />
-            <Route path="/work-orders/:id/signature" element={<SignaturePage />} />
+            <Route element={<OnboardingGate />}>
+              <Route element={<AppLayout />}>
+                <Route path="/dashboard" element={<DashboardPage />} />
 
-            {/* Fleet */}
-            <Route path="/fleet" element={<FleetPage />} />
-            <Route path="/fleet/calendar" element={<FleetCalendarPage />} />
-            <Route path="/fleet/predictions" element={<PredictionsPage />} />
-            <Route path="/fleet/:tail" element={<AircraftDetailPage />} />
-            <Route path="/fleet/:tail/logbook" element={<AircraftLogbookPage />} />
+                {/* Work Orders */}
+                <Route path="/work-orders" element={<WorkOrdersPage />} />
+                <Route path="/work-orders/kanban" element={<KanbanPage />} />
+                <Route path="/work-orders/new" element={<NewWorkOrderPage />} />
+                <Route path="/work-orders/templates" element={<WorkOrderTemplatesPage />} />
+                <Route path="/work-orders/:id" element={<WorkOrderDetailPage />} />
+                <Route path="/work-orders/:id/tasks/new" element={<NewTaskCardPage />} />
+                <Route path="/work-orders/:id/tasks/:cardId" element={<TaskCardPage />} />
+                <Route path="/work-orders/:id/records" element={<MaintenanceRecordsPage />} />
+                <Route path="/work-orders/:id/rts" element={<RtsPage />} />
+                <Route path="/work-orders/:id/release" element={<ReleaseAircraftPage />} />
+                <Route path="/work-orders/:id/certificates" element={<CertificatesPage />} />
+                <Route path="/work-orders/:id/signature" element={<SignaturePage />} />
 
-            {/* Parts */}
-            <Route path="/parts" element={<PartsPage />} />
-            <Route path="/parts/new" element={<NewPartPage />} />
-            <Route path="/parts/requests" element={<PartsRequestsPage />} />
-            <Route path="/parts/receiving" element={<PartsReceivingPage />} />
-            <Route path="/parts/tools" element={<ToolCribPage />} />
-            <Route path="/parts/cores" element={<CoresPage />} />
-            <Route path="/parts/inventory-count" element={<InventoryCountPage />} />
-            <Route path="/parts/shipping" element={<ShippingPage />} />
-            <Route path="/parts/rotables" element={<RotablesPage />} />
-            <Route path="/parts/loaners" element={<LoanersPage />} />
+                {/* Fleet */}
+                <Route path="/fleet" element={<FleetPage />} />
+                <Route path="/fleet/calendar" element={<FleetCalendarPage />} />
+                <Route path="/fleet/predictions" element={<PredictionsPage />} />
+                <Route path="/fleet/:tail" element={<AircraftDetailPage />} />
+                <Route path="/fleet/:tail/logbook" element={<AircraftLogbookPage />} />
 
-            {/* Squawks */}
-            <Route path="/squawks" element={<SquawksPage />} />
+                {/* Parts */}
+                <Route path="/parts" element={<PartsPage />} />
+                <Route path="/parts/new" element={<NewPartPage />} />
+                <Route path="/parts/requests" element={<PartsRequestsPage />} />
+                <Route path="/parts/receiving" element={<PartsReceivingPage />} />
+                <Route path="/parts/tools" element={<ToolCribPage />} />
+                <Route path="/parts/cores" element={<CoresPage />} />
+                <Route path="/parts/inventory-count" element={<InventoryCountPage />} />
+                <Route path="/parts/shipping" element={<ShippingPage />} />
+                <Route path="/parts/rotables" element={<RotablesPage />} />
+                <Route path="/parts/loaners" element={<LoanersPage />} />
 
-            {/* Personnel */}
-            <Route path="/personnel" element={<PersonnelPage />} />
-            <Route path="/personnel/training" element={<TrainingPage />} />
+                {/* Squawks */}
+                <Route path="/squawks" element={<SquawksPage />} />
 
-            {/* My Work */}
-            <Route path="/my-work" element={<MyWorkPage />} />
+                {/* Personnel */}
+                <Route path="/personnel" element={<PersonnelPage />} />
+                <Route path="/personnel/training" element={<TrainingPage />} />
 
-            {/* Compliance */}
-            <Route path="/compliance" element={<CompliancePage />} />
-            <Route path="/compliance/qcm-review" element={<QcmReviewPage />} />
-            <Route path="/compliance/audit-trail" element={<AuditTrailPage />} />
-            <Route path="/compliance/ad-sb" element={<AdSbCompliancePage />} />
-            <Route
-              path="/compliance/certificates"
-              element={<Navigate to="/compliance/audit-trail" replace />}
-            />
+                {/* My Work */}
+                <Route path="/my-work" element={<MyWorkPage />} />
 
-            {/* Billing */}
-            <Route path="/billing" element={<Navigate to="/billing/customers" replace />} />
-            <Route path="/billing/customers" element={<CustomersPage />} />
-            <Route path="/billing/customers/:id" element={<CustomerDetailPage />} />
-            <Route path="/billing/invoices" element={<InvoicesPage />} />
-            <Route path="/billing/invoices/new" element={<NewInvoicePage />} />
-            <Route path="/billing/invoices/:id" element={<InvoiceDetailPage />} />
-            <Route path="/billing/quotes" element={<QuotesPage />} />
-            <Route path="/billing/quotes/new" element={<NewQuotePage />} />
-            <Route path="/billing/quotes/:id" element={<QuoteDetailPage />} />
-            <Route path="/billing/purchase-orders" element={<PurchaseOrdersPage />} />
-            <Route path="/billing/purchase-orders/new" element={<NewPOPage />} />
-            <Route path="/billing/purchase-orders/:id" element={<PODetailPage />} />
-            <Route path="/billing/vendors" element={<VendorsPage />} />
-            <Route path="/billing/vendors/new" element={<NewVendorPage />} />
-            <Route path="/billing/vendors/:id" element={<VendorDetailPage />} />
-            <Route path="/billing/ar-dashboard" element={<ArDashboardPage />} />
-            <Route path="/billing/analytics" element={<BillingAnalyticsPage />} />
-            <Route path="/billing/pricing" element={<BillingPricingPage />} />
-            <Route path="/billing/time-clock" element={<BillingTimeClockPage />} />
-            <Route path="/billing/time-approval" element={<BillingTimeApprovalPage />} />
-            <Route path="/billing/deposits" element={<BillingDepositsPage />} />
-            <Route path="/billing/credit-memos" element={<BillingCreditMemosPage />} />
-            <Route path="/billing/recurring" element={<BillingRecurringPage />} />
-            <Route path="/billing/tax-config" element={<BillingTaxConfigPage />} />
-            <Route path="/billing/settings" element={<BillingSettingsPage />} />
-            <Route path="/billing/otc" element={<OTCSalesPage />} />
-            <Route path="/billing/warranty" element={<WarrantyPage />} />
-            <Route path="/billing/labor-kits" element={<LaborKitsPage />} />
+                {/* Compliance */}
+                <Route path="/compliance" element={<CompliancePage />} />
+                <Route path="/compliance/qcm-review" element={<QcmReviewPage />} />
+                <Route path="/compliance/audit-trail" element={<AuditTrailPage />} />
+                <Route path="/compliance/ad-sb" element={<AdSbCompliancePage />} />
+                <Route
+                  path="/compliance/certificates"
+                  element={<Navigate to="/compliance/audit-trail" replace />}
+                />
 
-            {/* Scheduling */}
-            <Route path="/scheduling" element={<SchedulingPage />} />
-            <Route path="/scheduling/bays" element={<BaysPage />} />
-            <Route path="/scheduling/capacity" element={<CapacityPage />} />
+                {/* Billing */}
+                <Route path="/billing" element={<Navigate to="/billing/customers" replace />} />
+                <Route path="/billing/customers" element={<CustomersPage />} />
+                <Route path="/billing/customers/:id" element={<CustomerDetailPage />} />
+                <Route path="/billing/invoices" element={<InvoicesPage />} />
+                <Route path="/billing/invoices/new" element={<NewInvoicePage />} />
+                <Route path="/billing/invoices/:id" element={<InvoiceDetailPage />} />
+                <Route path="/billing/quotes" element={<QuotesPage />} />
+                <Route path="/billing/quotes/new" element={<NewQuotePage />} />
+                <Route path="/billing/quotes/:id" element={<QuoteDetailPage />} />
+                <Route path="/billing/purchase-orders" element={<PurchaseOrdersPage />} />
+                <Route path="/billing/purchase-orders/new" element={<NewPOPage />} />
+                <Route path="/billing/purchase-orders/:id" element={<PODetailPage />} />
+                <Route path="/billing/vendors" element={<VendorsPage />} />
+                <Route path="/billing/vendors/new" element={<NewVendorPage />} />
+                <Route path="/billing/vendors/:id" element={<VendorDetailPage />} />
+                <Route path="/billing/ar-dashboard" element={<ArDashboardPage />} />
+                <Route path="/billing/analytics" element={<BillingAnalyticsPage />} />
+                <Route path="/billing/pricing" element={<BillingPricingPage />} />
+                <Route path="/billing/time-clock" element={<BillingTimeClockPage />} />
+                <Route path="/billing/time-approval" element={<BillingTimeApprovalPage />} />
+                <Route path="/billing/deposits" element={<BillingDepositsPage />} />
+                <Route path="/billing/credit-memos" element={<BillingCreditMemosPage />} />
+                <Route path="/billing/recurring" element={<BillingRecurringPage />} />
+                <Route path="/billing/tax-config" element={<BillingTaxConfigPage />} />
+                <Route path="/billing/settings" element={<BillingSettingsPage />} />
+                <Route path="/billing/otc" element={<OTCSalesPage />} />
+                <Route path="/billing/warranty" element={<WarrantyPage />} />
+                <Route path="/billing/labor-kits" element={<LaborKitsPage />} />
 
-            {/* Reports */}
-            <Route path="/reports" element={<ReportsPage />} />
+                {/* Scheduling */}
+                <Route path="/scheduling" element={<SchedulingPage />} />
+                <Route path="/scheduling/bays" element={<BaysPage />} />
+                <Route path="/scheduling/capacity" element={<CapacityPage />} />
 
-            {/* Settings */}
-            <Route path="/settings/shop" element={<ShopSettingsPage />} />
-            <Route path="/settings/users" element={<UsersSettingsPage />} />
-            <Route path="/settings/notifications" element={<NotificationPreferencesPage />} />
-            <Route path="/settings/locations" element={<ShopLocationsPage />} />
-            <Route path="/settings/import" element={<ImportPage />} />
-            <Route path="/settings/email-log" element={<EmailLogPage />} />
-            <Route path="/settings/quickbooks" element={<QuickBooksPage />} />
+                {/* Reports */}
+                <Route path="/reports" element={<ReportsPage />} />
 
-            {/* 404 catch-all */}
-            <Route path="*" element={<AppNotFoundPage />} />
+                {/* Settings */}
+                <Route path="/settings/shop" element={<ShopSettingsPage />} />
+                <Route path="/settings/users" element={<UsersSettingsPage />} />
+                <Route path="/settings/notifications" element={<NotificationPreferencesPage />} />
+                <Route path="/settings/locations" element={<ShopLocationsPage />} />
+                <Route path="/settings/import" element={<ImportPage />} />
+                <Route path="/settings/email-log" element={<EmailLogPage />} />
+                <Route path="/settings/quickbooks" element={<QuickBooksPage />} />
+
+                {/* 404 catch-all */}
+                <Route path="*" element={<AppNotFoundPage />} />
+              </Route>
+            </Route>
           </Route>
         </Route>
       </Routes>

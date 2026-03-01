@@ -15,6 +15,8 @@ import { toast } from "sonner";
 import { autoSchedule } from "@/lib/scheduling/autoSchedule";
 import { detectConflicts } from "@/lib/scheduling/conflicts";
 import type { ScheduledWO } from "@/lib/scheduling/conflicts";
+import { usePagePrereqs } from "@/hooks/usePagePrereqs";
+import { ActionableEmptyState } from "@/components/zero-state/ActionableEmptyState";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // LOADING SKELETON
@@ -88,6 +90,10 @@ export default function SchedulingPage() {
   );
 
   const updateSchedule = useMutation(api.scheduling.updateWOSchedule);
+  const prereq = usePagePrereqs({
+    requiresOrg: true,
+    isDataLoading: !isLoaded || data === undefined || bays === undefined,
+  });
 
   const workOrders = data ?? [];
   const unscheduledCount = workOrders.filter(
@@ -182,12 +188,39 @@ export default function SchedulingPage() {
     }
   }
 
-  // Loading
-  if (!isLoaded || data === undefined) {
+  if (prereq.state === "loading_context" || prereq.state === "loading_data") {
     return (
-      <div className="h-full flex flex-col">
+      <div className="h-full flex flex-col" data-testid="page-loading-state">
         <GanttSkeleton />
       </div>
+    );
+  }
+
+  if (prereq.state === "missing_context") {
+    return (
+      <ActionableEmptyState
+        title="Scheduling requires organization setup"
+        missingInfo="Complete onboarding before creating or scheduling work orders."
+        primaryActionLabel="Complete Setup"
+        primaryActionType="link"
+        primaryActionTarget="/onboarding"
+      />
+    );
+  }
+
+  if (!orgId || !data || !bays) return null;
+
+  if (workOrders.length === 0) {
+    return (
+      <ActionableEmptyState
+        title="No work orders to schedule yet"
+        missingInfo="Create your first work order to populate the Gantt board and assign bay time."
+        primaryActionLabel="Create Work Order"
+        primaryActionType="link"
+        primaryActionTarget="/work-orders/new"
+        secondaryActionLabel="Manage Bays"
+        secondaryActionTarget="/scheduling/bays"
+      />
     );
   }
 

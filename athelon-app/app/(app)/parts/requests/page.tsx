@@ -13,6 +13,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
@@ -154,6 +155,9 @@ function InspectDialog({ open, onClose, part, techId }: InspectDialogProps) {
             <ClipboardCheck className="w-4 h-4 text-primary" />
             Receiving Inspection
           </DialogTitle>
+          <DialogDescription className="text-xs">
+            Inspect the incoming part and record your findings.
+          </DialogDescription>
         </DialogHeader>
 
         {part && (
@@ -333,7 +337,7 @@ export default function PartsRequestsPage() {
           <h1 className="text-lg sm:text-xl md:text-2xl font-semibold text-foreground">
             Parts Queue
           </h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
+          <span className="block text-sm text-muted-foreground mt-0.5">
             {isLoading ? (
               <Skeleton className="h-3 w-32 inline-block" />
             ) : (
@@ -344,7 +348,7 @@ export default function PartsRequestsPage() {
                 )}
               </>
             )}
-          </p>
+          </span>
         </div>
         <Button size="sm" asChild className="w-full sm:w-auto">
           <Link to="/parts/new">

@@ -5,6 +5,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
+import { usePagePrereqs } from "@/hooks/usePagePrereqs";
 import { Plus, MapPin, Building2, Phone, Mail, Star, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,6 +29,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ActionableEmptyState } from "@/components/zero-state/ActionableEmptyState";
 
 const CERT_TYPES = [
   { value: "part_145", label: "Part 145" },
@@ -37,7 +40,7 @@ const CERT_TYPES = [
 ];
 
 export default function ShopLocationsPage() {
-  const { orgId: organizationId } = useCurrentOrg();
+  const { orgId: organizationId, isLoaded } = useCurrentOrg();
   const orgId = organizationId as Id<"organizations"> | undefined;
   const locations = useQuery(api.shopLocations.list, orgId ? { organizationId: orgId } : "skip");
   const createLocation = useMutation(api.shopLocations.create);
@@ -60,6 +63,10 @@ export default function ShopLocationsPage() {
   const [certType, setCertType] = useState<string>("");
   const [isPrimary, setIsPrimary] = useState(false);
   const [capabilities, setCapabilities] = useState("");
+  const prereq = usePagePrereqs({
+    requiresOrg: true,
+    isDataLoading: !isLoaded || locations === undefined,
+  });
 
   const resetForm = () => {
     setName(""); setCode(""); setAddress(""); setCity(""); setState(""); setZip("");
@@ -113,6 +120,33 @@ export default function ShopLocationsPage() {
       toast.error("Failed to update");
     }
   };
+
+  if (prereq.state === "loading_context" || prereq.state === "loading_data") {
+    return (
+      <div className="space-y-4" data-testid="page-loading-state">
+        <Skeleton className="h-8 w-56" />
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Skeleton key={i} className="h-40 w-full" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (prereq.state === "missing_context") {
+    return (
+      <ActionableEmptyState
+        title="Shop locations require organization setup"
+        missingInfo="Complete onboarding before adding shop locations and certificates."
+        primaryActionLabel="Complete Setup"
+        primaryActionType="link"
+        primaryActionTarget="/onboarding"
+      />
+    );
+  }
+
+  if (!orgId || !locations) return null;
 
   return (
     <>
@@ -176,9 +210,18 @@ export default function ShopLocationsPage() {
 
       {/* Location Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {!locations && <p className="text-muted-foreground col-span-full">Loading...</p>}
-        {locations?.length === 0 && <p className="text-muted-foreground col-span-full">No locations yet. Add your first shop location.</p>}
-        {locations?.map((loc) => (
+        {locations.length === 0 && (
+          <div className="col-span-full">
+            <ActionableEmptyState
+              title="No locations yet"
+              missingInfo="Add your first shop location to support bay scheduling and compliance workflows."
+              primaryActionLabel="Add Location"
+              primaryActionType="button"
+              primaryActionTarget={() => setShowCreate(true)}
+            />
+          </div>
+        )}
+        {locations.map((loc) => (
           <Card key={loc._id} className={!loc.isActive ? "opacity-50" : ""}>
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">

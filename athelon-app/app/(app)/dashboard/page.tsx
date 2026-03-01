@@ -239,9 +239,9 @@ function LiveSecondaryKPIs() {
                   <p className="text-xs text-muted-foreground font-medium">
                     {c.title}
                   </p>
-                  <p className="text-2xl font-bold text-foreground mt-1">
+                  <span className="block text-2xl font-bold text-foreground mt-1">
                     {c.value ?? <Skeleton className="h-7 w-10 inline-block" />}
-                  </p>
+                  </span>
                   <p className="text-[11px] text-muted-foreground mt-0.5">{c.sub}</p>
                 </div>
                 <div className={`p-2 rounded-lg ${c.bgColor}`}>

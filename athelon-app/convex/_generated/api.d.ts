@@ -38,6 +38,7 @@ import type * as loaners from "../loaners.js";
 import type * as logbook from "../logbook.js";
 import type * as maintenanceRecords from "../maintenanceRecords.js";
 import type * as notifications from "../notifications.js";
+import type * as onboarding from "../onboarding.js";
 import type * as otcSales from "../otcSales.js";
 import type * as parts from "../parts.js";
 import type * as physicalInventory from "../physicalInventory.js";
@@ -105,6 +106,7 @@ declare const fullApi: ApiFromModules<{
   logbook: typeof logbook;
   maintenanceRecords: typeof maintenanceRecords;
   notifications: typeof notifications;
+  onboarding: typeof onboarding;
   otcSales: typeof otcSales;
   parts: typeof parts;
   physicalInventory: typeof physicalInventory;

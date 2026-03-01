@@ -1,9 +1,8 @@
 import { Link, useParams } from "react-router-dom";
 import { useState, useMemo } from "react";
 import { useQuery, useMutation } from "convex/react";
-import { useOrganization } from "@clerk/clerk-react";
 import { api } from "@/convex/_generated/api";
-import type { Id } from "@/convex/_generated/dataModel";
+import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import { toast } from "sonner";
 import { NotFoundCard } from "@/components/NotFoundCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -138,8 +137,7 @@ export default function AircraftDetailPage() {
   const { tail = "" } = useParams<{ tail: string }>();
   const tailNumber = decodeURIComponent(tail);
 
-  const { organization } = useOrganization();
-  const orgId = organization?.id as Id<"organizations"> | undefined;
+  const { orgId } = useCurrentOrg();
 
   // Update TT dialog state
   const [updateTTOpen, setUpdateTTOpen] = useState(false);

@@ -56,13 +56,43 @@ export default function MyWorkPage() {
     orgId && techId ? { organizationId: orgId, technicianId: techId } : "skip",
   );
 
-  const isLoading = !isLoaded || taskCards === undefined;
-
-  if (isLoading) {
+  // Still waiting for OrgContext to resolve
+  if (!isLoaded) {
     return <MyWorkSkeleton />;
   }
 
-  const cards = taskCards ?? [];
+  // Context loaded but no technician record — query is skipped, show empty state
+  if (!orgId || !techId) {
+    return (
+      <div className="space-y-5">
+        <div>
+          <h1 className="text-lg sm:text-xl md:text-2xl font-semibold text-foreground">My Work</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">Your assigned task cards</p>
+        </div>
+        <Card className="border-border/60">
+          <CardContent className="py-16 text-center" data-testid="empty-state">
+            <ClipboardCheck className="w-8 h-8 text-muted-foreground/40 mx-auto mb-3" />
+            <p className="text-sm font-medium text-muted-foreground">
+              No technician profile linked
+            </p>
+            <p className="text-xs text-muted-foreground/60 mt-1">
+              Your account isn't linked to a technician record yet. Visit Personnel to create or connect one.
+            </p>
+            <Button asChild size="sm" className="mt-4" data-testid="empty-state-primary-action">
+              <Link to="/personnel">Go to Personnel</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Query is active but still loading
+  if (taskCards === undefined) {
+    return <MyWorkSkeleton />;
+  }
+
+  const cards = taskCards;
   const inProgressCount = cards.filter((c) => c.status === "in_progress").length;
   const totalPendingSteps = cards.reduce((sum, c) => sum + c.pendingSteps, 0);
 
@@ -118,7 +148,7 @@ export default function MyWorkPage() {
       {/* Task card list */}
       {cards.length === 0 ? (
         <Card className="border-border/60">
-          <CardContent className="py-16 text-center">
+          <CardContent className="py-16 text-center" data-testid="empty-state">
             <ClipboardCheck className="w-8 h-8 text-muted-foreground/40 mx-auto mb-3" />
             <p className="text-sm font-medium text-muted-foreground">
               No task cards assigned to you

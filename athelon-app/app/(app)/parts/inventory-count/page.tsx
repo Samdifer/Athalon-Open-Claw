@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
+import { usePagePrereqs } from "@/hooks/usePagePrereqs";
 import type { Id } from "@/convex/_generated/dataModel";
 import {
   Plus,
@@ -50,6 +51,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
+import { ActionableEmptyState } from "@/components/zero-state/ActionableEmptyState";
 
 const STATUS_STYLES: Record<string, string> = {
   draft: "bg-zinc-500/15 text-zinc-400 border-zinc-500/30",
@@ -92,9 +94,17 @@ export default function InventoryCountPage() {
   const completeCount = useMutation(api.physicalInventory.completeCount);
   const reconcileCount = useMutation(api.physicalInventory.reconcileCount);
   const deleteCount = useMutation(api.physicalInventory.deleteCount);
+  const prereq = usePagePrereqs({
+    requiresOrg: true,
+    isDataLoading: !isLoaded || counts === undefined,
+  });
 
   const handleCreate = async () => {
-    if (!orgId || !newName.trim()) return;
+    if (!orgId) {
+      toast.error("Complete organization setup before starting a count.");
+      return;
+    }
+    if (!newName.trim()) return;
     if (actionLoading === "create") return;
     setActionLoading("create");
     try {
@@ -142,16 +152,37 @@ export default function InventoryCountPage() {
     }
   };
 
-  if (!isLoaded) {
+  if (prereq.state === "loading_context") {
     return (
-      <div className="space-y-4">
+      <div className="space-y-4" data-testid="page-loading-state">
         <Skeleton className="h-8 w-48" />
         <Skeleton className="h-64 w-full" />
       </div>
     );
   }
 
+  if (prereq.state === "missing_context") {
+    return (
+      <ActionableEmptyState
+        title="Inventory count setup required"
+        missingInfo="This page requires organization setup before inventory sessions can be created."
+        primaryActionLabel="Complete Setup"
+        primaryActionType="link"
+        primaryActionTarget="/onboarding"
+      />
+    );
+  }
+
   // Detail view
+  if (selectedCountId && countDetail === undefined) {
+    return (
+      <div className="space-y-4" data-testid="page-loading-state">
+        <Skeleton className="h-8 w-64" />
+        <Skeleton className="h-72 w-full" />
+      </div>
+    );
+  }
+
   if (selectedCountId && countDetail) {
     const items = countDetail.items ?? [];
     const counted = items.filter((i) => i.actualQuantity !== undefined).length;
@@ -480,19 +511,13 @@ export default function InventoryCountPage() {
       </div>
 
       {!counts || counts.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <ClipboardCheck className="h-12 w-12 text-muted-foreground mb-4" />
-            <p className="text-muted-foreground">No inventory counts yet</p>
-            <Button
-              variant="outline"
-              className="mt-4"
-              onClick={() => setCreateDialogOpen(true)}
-            >
-              Start your first count
-            </Button>
-          </CardContent>
-        </Card>
+        <ActionableEmptyState
+          title="No inventory counts yet"
+          missingInfo="Start your first physical inventory session."
+          primaryActionLabel="Start New Count"
+          primaryActionType="button"
+          primaryActionTarget={() => setCreateDialogOpen(true)}
+        />
       ) : (
         <Card>
           <Table>

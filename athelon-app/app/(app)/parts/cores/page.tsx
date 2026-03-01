@@ -5,6 +5,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
+import { usePagePrereqs } from "@/hooks/usePagePrereqs";
 import { toast } from "sonner";
 import {
   RotateCcw,
@@ -48,6 +49,7 @@ import {
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDate, formatCurrency } from "@/lib/format";
+import { ActionableEmptyState } from "@/components/zero-state/ActionableEmptyState";
 
 type CoreStatus = "awaiting_return" | "received" | "inspected" | "credit_issued" | "scrapped" | "overdue";
 
@@ -328,7 +330,7 @@ function CoreDetailDialog({
 // ─── Main Page ───────────────────────────────────────────────────────────────
 
 export default function CoresPage() {
-  const { orgId } = useCurrentOrg();
+  const { orgId, isLoaded } = useCurrentOrg();
   const [tab, setTab] = useState<CoreStatus | "all">("all");
   const [createOpen, setCreateOpen] = useState(false);
   const [selectedCore, setSelectedCore] = useState<Id<"coreTracking"> | null>(null);
@@ -341,6 +343,10 @@ export default function CoresPage() {
     api.cores.listOverdueCores,
     orgId ? { organizationId: orgId } : "skip",
   );
+  const prereq = usePagePrereqs({
+    requiresOrg: true,
+    isDataLoading: !isLoaded || cores === undefined || overdueCores === undefined,
+  });
 
   const stats = useMemo(() => {
     if (!cores) return { totalOut: 0, valueOutstanding: 0, overdueCount: 0 };
@@ -351,8 +357,32 @@ export default function CoresPage() {
       overdueCount: overdueCores?.length ?? 0,
     };
   }, [cores, overdueCores]);
+  const coreRows = cores ?? [];
 
-  if (!orgId) return <div className="p-6"><Skeleton className="h-8 w-48" /></div>;
+  if (prereq.state === "loading_context" || prereq.state === "loading_data") {
+    return (
+      <div className="p-6 space-y-3" data-testid="page-loading-state">
+        <Skeleton className="h-8 w-48" />
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Skeleton key={i} className="h-10 w-full" />
+        ))}
+      </div>
+    );
+  }
+
+  if (prereq.state === "missing_context") {
+    return (
+      <ActionableEmptyState
+        title="Core tracking requires organization setup"
+        missingInfo="Complete onboarding to track core returns, inspections, and credits."
+        primaryActionLabel="Complete Setup"
+        primaryActionType="link"
+        primaryActionTarget="/onboarding"
+      />
+    );
+  }
+
+  if (!orgId) return null;
 
   return (
     <div className="p-6 space-y-6">
@@ -400,10 +430,14 @@ export default function CoresPage() {
       </div>
 
       {/* Cores Table */}
-      {!cores ? (
-        <div className="space-y-2">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}</div>
-      ) : cores.length === 0 ? (
-        <div className="text-center py-12 text-muted-foreground">No core returns found.</div>
+      {coreRows.length === 0 ? (
+        <ActionableEmptyState
+          title="No core returns found"
+          missingInfo="Create your first core return to track due dates and supplier credits."
+          primaryActionLabel="New Core Return"
+          primaryActionType="button"
+          primaryActionTarget={() => setCreateOpen(true)}
+        />
       ) : (
         <Table>
           <TableHeader>
@@ -418,7 +452,7 @@ export default function CoresPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {cores.map((core) => (
+            {coreRows.map((core) => (
               <TableRow key={core._id} className="cursor-pointer hover:bg-muted/50"
                 onClick={() => setSelectedCore(core._id)}>
                 <TableCell className="font-mono text-sm">{core.coreNumber}</TableCell>

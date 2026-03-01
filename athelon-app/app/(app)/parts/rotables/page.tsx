@@ -5,6 +5,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
+import { usePagePrereqs } from "@/hooks/usePagePrereqs";
 import {
   Plus, Search, Cog, ChevronDown, ChevronRight, DollarSign,
 } from "lucide-react";
@@ -29,6 +30,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { formatDate, formatCurrency } from "@/lib/format";
+import { ActionableEmptyState } from "@/components/zero-state/ActionableEmptyState";
 
 type RotableFilter = "all" | "installed" | "serviceable" | "in_shop" | "at_vendor" | "condemned" | "loaned_out";
 
@@ -197,6 +199,10 @@ export default function RotablesPage() {
   });
 
   const isLoading = !isLoaded || rotables === undefined;
+  const prereq = usePagePrereqs({
+    requiresOrg: true,
+    isDataLoading: isLoading,
+  });
 
   const filtered = useMemo(() => {
     if (!rotables) return [];
@@ -223,7 +229,10 @@ export default function RotablesPage() {
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
-    if (!orgId) return;
+    if (!orgId) {
+      toast.error("Organization context is required");
+      return;
+    }
     try {
       await createRotable({
         organizationId: orgId,
@@ -249,7 +258,10 @@ export default function RotablesPage() {
   }
 
   async function handleAction(rotableId: Id<"rotables">, action: "installed" | "removed" | "sent_to_vendor" | "received_from_vendor" | "condemned") {
-    if (!orgId) return;
+    if (!orgId) {
+      toast.error("Organization context is required");
+      return;
+    }
     try {
       await recordAction({ rotableId, organizationId: orgId, action });
       toast.success(`${ACTION_LABELS[action]} recorded`);
@@ -257,6 +269,28 @@ export default function RotablesPage() {
       toast.error("Failed to record action");
     }
   }
+
+  if (prereq.state === "loading_context" || prereq.state === "loading_data") {
+    return (
+      <div className="space-y-2" data-testid="page-loading-state">
+        {Array.from({ length: 4 }).map((_, i) => <RotableSkeleton key={i} />)}
+      </div>
+    );
+  }
+
+  if (prereq.state === "missing_context") {
+    return (
+      <ActionableEmptyState
+        title="Rotable tracking requires organization setup"
+        missingInfo="Complete onboarding before managing rotable component lifecycle."
+        primaryActionLabel="Complete Setup"
+        primaryActionType="link"
+        primaryActionTarget="/onboarding"
+      />
+    );
+  }
+
+  if (!orgId || !rotables) return null;
 
   return (
     <div className="space-y-5">
@@ -364,15 +398,14 @@ export default function RotablesPage() {
         </div>
       </div>
 
-      {isLoading ? (
-        <div className="space-y-2">{Array.from({ length: 4 }).map((_, i) => <RotableSkeleton key={i} />)}</div>
-      ) : filtered.length === 0 ? (
-        <Card className="border-border/60">
-          <CardContent className="py-16 text-center">
-            <Cog className="w-8 h-8 text-muted-foreground/40 mx-auto mb-3" />
-            <p className="text-sm font-medium text-muted-foreground">No rotable components found</p>
-          </CardContent>
-        </Card>
+      {filtered.length === 0 ? (
+        <ActionableEmptyState
+          title="No rotable components found"
+          missingInfo="Create your first rotable to track status, TBO, and value."
+          primaryActionLabel="New Rotable"
+          primaryActionType="button"
+          primaryActionTarget={() => setCreateOpen(true)}
+        />
       ) : (
         <div className="space-y-2">
           {filtered.map((rotable) => {

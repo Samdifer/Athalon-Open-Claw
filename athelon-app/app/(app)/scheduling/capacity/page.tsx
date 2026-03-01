@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
+import { usePagePrereqs } from "@/hooks/usePagePrereqs";
+import { ActionableEmptyState } from "@/components/zero-state/ActionableEmptyState";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -100,10 +102,14 @@ export default function CapacityPage() {
     api.capacity.getCapacityUtilization,
     orgId ? { organizationId: orgId, periodWeeks: 4 } : "skip",
   );
+  const prereq = usePagePrereqs({
+    requiresOrg: true,
+    isDataLoading: !isLoaded || utilization === undefined,
+  });
 
-  if (!isLoaded || utilization === undefined) {
+  if (prereq.state === "loading_context" || prereq.state === "loading_data") {
     return (
-      <div className="space-y-5">
+      <div className="space-y-5" data-testid="page-loading-state">
         <div className="flex items-center justify-between">
           <div>
             <Skeleton className="h-6 w-56 mb-1" />
@@ -115,6 +121,20 @@ export default function CapacityPage() {
       </div>
     );
   }
+
+  if (prereq.state === "missing_context") {
+    return (
+      <ActionableEmptyState
+        title="Capacity planning requires organization setup"
+        missingInfo="Complete onboarding before tracking technician capacity."
+        primaryActionLabel="Complete Setup"
+        primaryActionType="link"
+        primaryActionTarget="/onboarding"
+      />
+    );
+  }
+
+  if (!orgId || !utilization) return null;
 
   const {
     totalAvailableHours,
@@ -219,19 +239,13 @@ export default function CapacityPage() {
         </CardHeader>
         <CardContent className="p-0">
           {byTechnician.length === 0 ? (
-            <div className="py-12 text-center px-4">
-              <Users className="w-7 h-7 text-muted-foreground/30 mx-auto mb-2" />
-              <p className="text-sm text-muted-foreground">
-                No active technicians found. Add technicians in{" "}
-                <Link
-                  to="/personnel"
-                  className="underline underline-offset-2 hover:opacity-80 transition-opacity"
-                >
-                  Personnel
-                </Link>{" "}
-                to see capacity.
-              </p>
-            </div>
+            <ActionableEmptyState
+              title="No active technicians yet"
+              missingInfo="Add technicians and shifts to start tracking available capacity."
+              primaryActionLabel="Open Personnel"
+              primaryActionType="link"
+              primaryActionTarget="/personnel"
+            />
           ) : (
             <div className="divide-y divide-border/40">
               {byTechnician.map((tech) => {

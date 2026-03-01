@@ -21,6 +21,8 @@ import {
   type AircraftRow,
 } from "./_components/AircraftComplianceCard";
 import { FleetComplianceStats } from "./_components/FleetComplianceStats";
+import { usePagePrereqs } from "@/hooks/usePagePrereqs";
+import { ActionableEmptyState } from "@/components/zero-state/ActionableEmptyState";
 
 export default function CompliancePage() {
   const { orgId, isLoaded } = useCurrentOrg();
@@ -31,12 +33,55 @@ export default function CompliancePage() {
   );
 
   const isFleetLoading = !isLoaded || fleet === undefined;
+  const prereq = usePagePrereqs({
+    requiresOrg: true,
+    isDataLoading: isFleetLoading,
+  });
 
   // Show all aircraft — sorted alphabetically by registration.
   // Per-aircraft compliance status (non-compliant / due-soon / compliant) is computed
   // inside each AircraftComplianceCard via api.adCompliance.checkAdDueForAircraft.
   // Grouping by openWorkOrderCount is orthogonal to AD compliance and was misleading.
   const allAircraft = (fleet ?? []) as AircraftRow[];
+
+  if (prereq.state === "loading_context" || prereq.state === "loading_data") {
+    return (
+      <div className="space-y-6" data-testid="page-loading-state">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          {[1, 2, 3, 4].map((i) => (
+            <Card key={i} className="border-border/60">
+              <CardContent className="p-4">
+                <Skeleton className="h-12 w-full" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+        <div className="space-y-3">
+          {[1, 2, 3].map((i) => (
+            <Card key={i} className="border-border/60">
+              <CardContent className="p-4">
+                <Skeleton className="h-12 w-full" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (prereq.state === "missing_context") {
+    return (
+      <ActionableEmptyState
+        title="Compliance tracking requires organization setup"
+        missingInfo="Complete onboarding before monitoring AD compliance."
+        primaryActionLabel="Complete Setup"
+        primaryActionType="link"
+        primaryActionTarget="/onboarding"
+      />
+    );
+  }
+
+  if (!orgId || !fleet) return null;
 
   return (
     <div className="space-y-6">
@@ -65,19 +110,7 @@ export default function CompliancePage() {
       </div>
 
       {/* Fleet stats */}
-      {isFleetLoading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          {[1, 2, 3, 4].map((i) => (
-            <Card key={i} className="border-border/60">
-              <CardContent className="p-4">
-                <Skeleton className="h-12 w-full" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      ) : (
-        <FleetComplianceStats fleet={fleet ?? []} orgId={orgId!} />
-      )}
+      <FleetComplianceStats fleet={fleet} orgId={orgId} />
 
       {/* Regulatory notice */}
       <Card className="border-border/40 bg-amber-500/5 border-l-2 border-l-amber-500">
@@ -103,60 +136,39 @@ export default function CompliancePage() {
       {/* Fleet AD Compliance Status — all aircraft, sorted alphabetically.
           Each card queries and displays its own live compliance status.
           Non-compliant aircraft show a red left border; due-soon amber; compliant green. */}
-      {isFleetLoading && (
-        <div className="space-y-3">
-          <Skeleton className="h-5 w-48" />
+      <div className="space-y-3">
+        <div className="flex items-center gap-2">
+          <h2 className="text-sm font-semibold text-foreground">
+            Fleet AD Compliance Status
+          </h2>
+          <Badge variant="secondary" className="text-[10px] bg-muted">
+            {allAircraft.length}
+          </Badge>
+        </div>
+
+        {allAircraft.length === 0 ? (
+          <ActionableEmptyState
+            title="No aircraft registered"
+            missingInfo="Add aircraft to your fleet before tracking AD compliance and due items."
+            primaryActionLabel="Add Aircraft"
+            primaryActionType="link"
+            primaryActionTarget="/fleet"
+          />
+        ) : (
           <div className="space-y-2">
-            {[1, 2, 3].map((i) => (
-              <Card key={i} className="border-border/60">
-                <CardContent className="p-4">
-                  <Skeleton className="h-12 w-full" />
-                </CardContent>
-              </Card>
+            {allAircraft.map((aircraft) => (
+              <AircraftComplianceCard
+                key={aircraft._id}
+                aircraft={aircraft}
+                orgId={orgId}
+              />
             ))}
           </div>
-        </div>
-      )}
-
-      {!isFleetLoading && (
-        <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            <h2 className="text-sm font-semibold text-foreground">
-              Fleet AD Compliance Status
-            </h2>
-            <Badge variant="secondary" className="text-[10px] bg-muted">
-              {allAircraft.length}
-            </Badge>
-          </div>
-
-          {allAircraft.length === 0 ? (
-            <Card className="border-border/60">
-              <CardContent className="py-16 text-center">
-                <PlaneTakeoff className="w-8 h-8 text-muted-foreground/40 mx-auto mb-3" />
-                <p className="text-sm font-medium text-muted-foreground">
-                  No aircraft registered
-                </p>
-                <p className="text-xs text-muted-foreground/60 mt-1">
-                  Add aircraft to your fleet to track AD compliance.
-                </p>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="space-y-2">
-              {allAircraft.map((aircraft) => (
-                <AircraftComplianceCard
-                  key={aircraft._id}
-                  aircraft={aircraft}
-                  orgId={orgId!}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Quick links */}
-      {!isFleetLoading && (fleet ?? []).length > 0 && (
+      {(fleet ?? []).length > 0 && (
         <>
           <Separator className="opacity-40" />
           <div>

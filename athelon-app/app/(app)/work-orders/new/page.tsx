@@ -24,6 +24,8 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { WO_TYPES, PRIORITY_OPTIONS, type WoType } from "@/lib/mro-constants";
 
+const NO_CUSTOMER_VALUE = "__no_customer__";
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function NewWorkOrderPage() {
@@ -239,7 +241,11 @@ export default function NewWorkOrderPage() {
                 ) : (
                   <Select
                     value={customerId}
-                    onValueChange={(v) => setCustomerId(v as Id<"customers">)}
+                    onValueChange={(v) =>
+                      setCustomerId(
+                        v === NO_CUSTOMER_VALUE ? "" : (v as Id<"customers">),
+                      )
+                    }
                   >
                     <SelectTrigger
                       id="customer"
@@ -248,7 +254,7 @@ export default function NewWorkOrderPage() {
                       <SelectValue placeholder="Select customer..." />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">
+                      <SelectItem value={NO_CUSTOMER_VALUE}>
                         <span className="text-muted-foreground">— No customer —</span>
                       </SelectItem>
                       {customers.map((c) => (

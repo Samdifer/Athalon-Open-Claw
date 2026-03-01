@@ -21,6 +21,8 @@ export interface OrgContextValue {
   orgId: Id<"organizations"> | undefined;
   techId: Id<"technicians"> | undefined;
   isLoaded: boolean;
+  bootstrapStatus: "loading" | "needs_bootstrap" | "ready";
+  needsBootstrap: boolean;
   tech: NonNullable<ReturnType<typeof useQuery<typeof api.technicians.getMyContext>>>["tech"] | null;
   org: NonNullable<ReturnType<typeof useQuery<typeof api.technicians.getMyContext>>>["org"] | null;
 }
@@ -44,16 +46,21 @@ export function useOrgContext(): OrgContextValue {
  * share a single getMyContext subscription.
  */
 export function OrgContextProvider({ children }: { children: React.ReactNode }) {
+  const bootstrap = useQuery(api.onboarding.getBootstrapStatus);
   const ctx = useQuery(api.technicians.getMyContext);
 
-  // ctx === undefined → still loading
-  // ctx === null → loaded but no technician found for this user
-  const isLoaded = ctx !== undefined;
+  const bootstrapStatus = bootstrap?.status ?? "loading";
+  const needsBootstrap = bootstrapStatus === "needs_bootstrap";
+  const isLoaded =
+    bootstrap !== undefined &&
+    (bootstrapStatus !== "ready" || ctx !== undefined);
 
   const value: OrgContextValue = {
-    orgId: ctx?.tech.organizationId,
-    techId: ctx?.tech._id,
+    orgId: bootstrap?.orgId ?? ctx?.tech.organizationId,
+    techId: bootstrap?.techId ?? ctx?.tech._id,
     isLoaded,
+    bootstrapStatus,
+    needsBootstrap,
     tech: ctx?.tech ?? null,
     org: ctx?.org ?? null,
   };
