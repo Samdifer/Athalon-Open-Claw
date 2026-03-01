@@ -41,6 +41,10 @@ const markupTierValidator = v.array(
   }),
 );
 
+const shopLocationFilterValidator = v.optional(
+  v.union(v.id("shopLocations"), v.literal("all")),
+);
+
 type AssignmentWindow = {
   startDate: number;
   endDate: number;
@@ -56,6 +60,21 @@ type BackfillOptions = {
 
 function rangesOverlap(a: AssignmentWindow, b: AssignmentWindow): boolean {
   return a.startDate < b.endDate && b.startDate < a.endDate;
+}
+
+async function ensureShopLocationBelongsToOrg(
+  ctx: {
+    db: {
+      get: (id: Id<"shopLocations">) => Promise<any>;
+    };
+  },
+  organizationId: Id<"organizations">,
+  shopLocationId: Id<"shopLocations">,
+) {
+  const location = await ctx.db.get(shopLocationId);
+  if (!location || location.organizationId !== organizationId) {
+    throw new Error("Shop location does not belong to this organization");
+  }
 }
 
 function chooseBackfillBayId(
@@ -155,6 +174,7 @@ async function runLegacyScheduleBackfill(
     if (!options.dryRun) {
       const bayId = await ctx.db.insert("hangarBays", {
         organizationId: options.organizationId,
+        shopLocationId: undefined,
         name: "Backfill Bay 1",
         description: "Auto-created to support legacy scheduling migration",
         type: "hangar",
@@ -172,6 +192,7 @@ async function runLegacyScheduleBackfill(
         {
           _id: "dry_run_backfill_bay" as Id<"hangarBays">,
           organizationId: options.organizationId,
+          shopLocationId: undefined,
           name: "Backfill Bay 1",
           description: "dry run",
           type: "hangar",
@@ -187,6 +208,7 @@ async function runLegacyScheduleBackfill(
   }
 
   const sortedBays = [...bays].sort((a, b) => a.name.localeCompare(b.name));
+  const bayById = new Map(sortedBays.map((bay) => [String(bay._id), bay]));
 
   const allAssignments = await ctx.db
     .query("scheduleAssignments")
@@ -253,13 +275,18 @@ async function runLegacyScheduleBackfill(
     const existing = assignmentByWorkOrder.get(String(wo._id));
     if (existing) {
       existingAssignments++;
+      const existingBay = bayById.get(String(existing.hangarBayId));
+      const inferredLocationId =
+        existing.shopLocationId ?? wo.shopLocationId ?? existingBay?.shopLocationId;
+      const needsLocationPatch = existing.shopLocationId !== inferredLocationId;
       if (
-        linkedQuoteId &&
-        existing.sourceQuoteId !== linkedQuoteId
+        (linkedQuoteId && existing.sourceQuoteId !== linkedQuoteId) ||
+        needsLocationPatch
       ) {
         if (!options.dryRun) {
           await ctx.db.patch(existing._id, {
-            sourceQuoteId: linkedQuoteId,
+            sourceQuoteId: linkedQuoteId ?? existing.sourceQuoteId,
+            shopLocationId: inferredLocationId,
             updatedAt: now,
             updatedByUserId: options.actorUserId,
           });
@@ -283,6 +310,8 @@ async function runLegacyScheduleBackfill(
       windowsByBay,
       targetWindow,
     );
+    const selectedBay = bayById.get(String(selectedBayId));
+    const resolvedShopLocationId = wo.shopLocationId ?? selectedBay?.shopLocationId;
 
     if (!options.dryRun) {
       const assignmentId = await ctx.db.insert("scheduleAssignments", {
@@ -290,6 +319,7 @@ async function runLegacyScheduleBackfill(
         workOrderId: wo._id,
         sourceQuoteId: linkedQuoteId,
         hangarBayId: selectedBayId,
+        shopLocationId: resolvedShopLocationId,
         startDate: wo.scheduledStartDate,
         endDate: wo.promisedDeliveryDate,
         isLocked: false,
@@ -337,6 +367,7 @@ export const upsertScheduleAssignment = mutation({
     workOrderId: v.id("workOrders"),
     sourceQuoteId: v.optional(v.id("quotes")),
     hangarBayId: v.id("hangarBays"),
+    shopLocationId: v.optional(v.id("shopLocations")),
     startDate: v.number(),
     endDate: v.number(),
     isLocked: v.optional(v.boolean()),
@@ -364,6 +395,12 @@ export const upsertScheduleAssignment = mutation({
     }
     if (bay.organizationId !== args.organizationId) {
       throw new Error("Hangar bay does not belong to this organization");
+    }
+    if (args.shopLocationId) {
+      await ensureShopLocationBelongsToOrg(ctx, args.organizationId, args.shopLocationId);
+    }
+    if (args.shopLocationId && bay.shopLocationId && args.shopLocationId !== bay.shopLocationId) {
+      throw new Error("Selected shop location does not match the selected bay location");
     }
 
     let linkedQuoteId = args.sourceQuoteId;
@@ -411,9 +448,23 @@ export const upsertScheduleAssignment = mutation({
       )
       .first();
 
+    const resolvedShopLocationId =
+      args.shopLocationId ?? bay.shopLocationId ?? wo.shopLocationId;
+    if (resolvedShopLocationId) {
+      await ensureShopLocationBelongsToOrg(ctx, args.organizationId, resolvedShopLocationId);
+    }
+    if (
+      wo.shopLocationId &&
+      resolvedShopLocationId &&
+      wo.shopLocationId !== resolvedShopLocationId
+    ) {
+      throw new Error("Work order location does not match the selected scheduling location");
+    }
+
     const patch = {
       sourceQuoteId: linkedQuoteId,
       hangarBayId: args.hangarBayId,
+      shopLocationId: resolvedShopLocationId,
       startDate: args.startDate,
       endDate: args.endDate,
       isLocked: args.isLocked,
@@ -442,6 +493,7 @@ export const upsertScheduleAssignment = mutation({
     await ctx.db.patch(args.workOrderId, {
       scheduledStartDate: args.startDate,
       promisedDeliveryDate: args.endDate,
+      shopLocationId: resolvedShopLocationId,
       updatedAt: now,
     });
 
@@ -497,15 +549,37 @@ export const listScheduleAssignments = query({
   args: {
     organizationId: v.id("organizations"),
     includeArchived: v.optional(v.boolean()),
+    shopLocationId: shopLocationFilterValidator,
   },
-  handler: async (ctx, { organizationId, includeArchived }) => {
+  handler: async (ctx, { organizationId, includeArchived, shopLocationId }) => {
     const rows = await ctx.db
       .query("scheduleAssignments")
       .withIndex("by_org", (q) => q.eq("organizationId", organizationId))
       .collect();
 
-    if (includeArchived) return rows;
-    return rows.filter((row) => row.archivedAt === undefined);
+    const unarchivedRows = includeArchived
+      ? rows
+      : rows.filter((row) => row.archivedAt === undefined);
+
+    if (!shopLocationId || shopLocationId === "all") {
+      return unarchivedRows;
+    }
+
+    await ensureShopLocationBelongsToOrg(ctx, organizationId, shopLocationId);
+
+    const withLocation = await Promise.all(
+      unarchivedRows.map(async (row) => {
+        const [wo, bay] = await Promise.all([
+          ctx.db.get(row.workOrderId),
+          ctx.db.get(row.hangarBayId),
+        ]);
+        const resolvedLocationId =
+          row.shopLocationId ?? wo?.shopLocationId ?? bay?.shopLocationId;
+        return resolvedLocationId === shopLocationId ? row : null;
+      }),
+    );
+
+    return withLocation.filter((row): row is NonNullable<typeof row> => row !== null);
   },
 });
 
@@ -513,8 +587,12 @@ export const listPlannerProjects = query({
   args: {
     organizationId: v.id("organizations"),
     includeArchived: v.optional(v.boolean()),
+    shopLocationId: shopLocationFilterValidator,
   },
-  handler: async (ctx, { organizationId, includeArchived }) => {
+  handler: async (ctx, { organizationId, includeArchived, shopLocationId }) => {
+    if (shopLocationId && shopLocationId !== "all") {
+      await ensureShopLocationBelongsToOrg(ctx, organizationId, shopLocationId);
+    }
     const assignments = await ctx.db
       .query("scheduleAssignments")
       .withIndex("by_org", (q) => q.eq("organizationId", organizationId))
@@ -552,11 +630,20 @@ export const listPlannerProjects = query({
             .first();
         }
 
-        const aircraft = await ctx.db.get(workOrder.aircraftId);
+        const [aircraft, bay] = await Promise.all([
+          ctx.db.get(workOrder.aircraftId),
+          ctx.db.get(assignment.hangarBayId),
+        ]);
+        const resolvedLocationId =
+          assignment.shopLocationId ?? workOrder.shopLocationId ?? bay?.shopLocationId;
+        if (shopLocationId && shopLocationId !== "all" && resolvedLocationId !== shopLocationId) {
+          return null;
+        }
 
         return {
           assignmentId: assignment._id,
           workOrderId: workOrder._id,
+          shopLocationId: resolvedLocationId,
           workOrderNumber: workOrder.workOrderNumber,
           workOrderStatus: workOrder.status,
           priority: workOrder.priority,

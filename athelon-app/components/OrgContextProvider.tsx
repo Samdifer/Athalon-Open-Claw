@@ -13,6 +13,7 @@
 
 import React, { createContext, useContext } from "react";
 import { useQuery } from "convex/react";
+import { useOrganization } from "@clerk/clerk-react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 
@@ -46,8 +47,17 @@ export function useOrgContext(): OrgContextValue {
  * share a single getMyContext subscription.
  */
 export function OrgContextProvider({ children }: { children: React.ReactNode }) {
-  const bootstrap = useQuery(api.onboarding.getBootstrapStatus);
-  const ctx = useQuery(api.technicians.getMyContext);
+  const { organization } = useOrganization();
+  const preferredClerkOrganizationId = organization?.id ?? undefined;
+  const preferredOrganizationName = organization?.name ?? undefined;
+  const bootstrap = useQuery(api.onboarding.getBootstrapStatus, {
+    preferredClerkOrganizationId,
+    preferredOrganizationName,
+  });
+  const ctx = useQuery(api.technicians.getMyContext, {
+    preferredClerkOrganizationId,
+    preferredOrganizationName,
+  });
 
   const bootstrapStatus = bootstrap?.status ?? "loading";
   const needsBootstrap = bootstrapStatus === "needs_bootstrap";

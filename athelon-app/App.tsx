@@ -94,6 +94,7 @@ const BaysPage = lazy(() => import("@/app/(app)/scheduling/bays/page"));
 const FinancialPlanningPage = lazy(
   () => import("@/app/(app)/scheduling/financial-planning/page"),
 );
+const SeedAuditPage = lazy(() => import("@/app/(app)/scheduling/seed-audit/page"));
 
 // Reports
 const ReportsPage = lazy(() => import("@/app/(app)/reports/page"));
@@ -281,6 +282,7 @@ export default function App() {
                   path="/scheduling/financial-planning"
                   element={<FinancialPlanningPage />}
                 />
+                <Route path="/scheduling/seed-audit" element={<SeedAuditPage />} />
 
                 {/* Reports */}
                 <Route path="/reports" element={<ReportsPage />} />

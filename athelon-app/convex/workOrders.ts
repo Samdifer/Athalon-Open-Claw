@@ -84,6 +84,10 @@ const workOrderStatusValidator = v.union(
   v.literal("voided"),
 );
 
+const shopLocationFilterValidator = v.optional(
+  v.union(v.id("shopLocations"), v.literal("all")),
+);
+
 // ─────────────────────────────────────────────────────────────────────────────
 // INTERNAL UTILITY: REQUIRE AUTHENTICATED USER
 //
@@ -101,6 +105,67 @@ async function requireAuth(ctx: { auth: { getUserIdentity: () => Promise<{ subje
     );
   }
   return identity.subject; // Clerk user ID (sub claim from JWT)
+}
+
+async function ensureShopLocationBelongsToOrg(
+  ctx: { db: { get: (id: Id<"shopLocations">) => Promise<any> } },
+  organizationId: Id<"organizations">,
+  shopLocationId: Id<"shopLocations">,
+) {
+  const location = await ctx.db.get(shopLocationId);
+  if (!location || location.organizationId !== organizationId) {
+    throw new Error(
+      `Shop location ${shopLocationId} not found or does not belong to organization ${organizationId}.`,
+    );
+  }
+}
+
+async function ensureAircraftLinkedToOrganization(
+  ctx: {
+    db: {
+      get: (id: Id<"aircraft">) => Promise<any>;
+      patch: (id: Id<"aircraft">, value: Partial<any>) => Promise<void>;
+    };
+  },
+  organizationId: Id<"organizations">,
+  aircraftId: Id<"aircraft">,
+  now: number,
+): Promise<{ aircraft: any; autoLinkedToOrg: boolean }> {
+  const aircraft = await ctx.db.get(aircraftId);
+  if (!aircraft) {
+    throw new Error(`Aircraft ${aircraftId} not found.`);
+  }
+
+  if (
+    aircraft.operatingOrganizationId &&
+    aircraft.operatingOrganizationId !== organizationId
+  ) {
+    throw new Error(
+      `Aircraft ${aircraftId} belongs to organization ` +
+      `${aircraft.operatingOrganizationId}, not ${organizationId}.`,
+    );
+  }
+
+  if (!aircraft.operatingOrganizationId) {
+    await ctx.db.patch(aircraftId, {
+      operatingOrganizationId: organizationId,
+      createdByOrganizationId:
+        aircraft.createdByOrganizationId ?? organizationId,
+      updatedAt: now,
+    });
+    return {
+      aircraft: {
+        ...aircraft,
+        operatingOrganizationId: organizationId,
+        createdByOrganizationId:
+          aircraft.createdByOrganizationId ?? organizationId,
+        updatedAt: now,
+      },
+      autoLinkedToOrg: true,
+    };
+  }
+
+  return { aircraft, autoLinkedToOrg: false };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -121,6 +186,7 @@ export const createWorkOrder = mutation({
   args: {
     organizationId: v.id("organizations"),
     aircraftId: v.id("aircraft"),
+    shopLocationId: v.optional(v.id("shopLocations")),
 
     workOrderType: workOrderTypeValidator,
     description: v.string(),
@@ -157,12 +223,17 @@ export const createWorkOrder = mutation({
         `Work orders may only be created for active organizations.`,
       );
     }
+    if (args.shopLocationId) {
+      await ensureShopLocationBelongsToOrg(ctx, args.organizationId, args.shopLocationId);
+    }
 
     // ── Aircraft validation ─────────────────────────────────────────────────
-    const aircraft = await ctx.db.get(args.aircraftId);
-    if (!aircraft) {
-      throw new Error(`Aircraft ${args.aircraftId} not found.`);
-    }
+    const { aircraft, autoLinkedToOrg } = await ensureAircraftLinkedToOrganization(
+      ctx,
+      args.organizationId,
+      args.aircraftId,
+      now,
+    );
     // Destroyed and sold aircraft cannot receive new work orders.
     // Per Marcus: creating a WO for a destroyed aircraft indicates either an error
     // or an attempt to falsify maintenance records for an aircraft that no longer exists.
@@ -219,6 +290,7 @@ export const createWorkOrder = mutation({
     const workOrderId = await ctx.db.insert("workOrders", {
       workOrderNumber,
       organizationId: args.organizationId,
+      shopLocationId: args.shopLocationId,
       aircraftId: args.aircraftId,
       status: "draft",
       workOrderType: args.workOrderType,
@@ -259,6 +331,25 @@ export const createWorkOrder = mutation({
         `Type: ${args.workOrderType}. Priority: ${args.priority}.`,
       timestamp: now,
     });
+
+    if (autoLinkedToOrg) {
+      await ctx.db.insert("auditLog", {
+        organizationId: args.organizationId,
+        eventType: "record_updated",
+        tableName: "aircraft",
+        recordId: args.aircraftId,
+        userId: callerUserId,
+        ipAddress: args.callerIpAddress,
+        fieldName: "operatingOrganizationId",
+        oldValue: JSON.stringify(null),
+        newValue: JSON.stringify(args.organizationId),
+        notes:
+          `Aircraft ${aircraft.currentRegistration ?? aircraft.serialNumber} ` +
+          `auto-linked to organization ${args.organizationId} because it was ` +
+          `used on work order ${workOrderNumber}.`,
+        timestamp: now,
+      });
+    }
 
     return workOrderId;
   },
@@ -923,28 +1014,25 @@ export const listWorkOrders = query({
     organizationId: v.id("organizations"),
     status: v.optional(workOrderStatusValidator),
     priority: v.optional(priorityValidator),
+    shopLocationId: shopLocationFilterValidator,
     paginationOpts: paginationOptsValidator,
   },
 
   handler: async (ctx, args) => {
     await requireAuth(ctx);
+    const scopedLocationId =
+      args.shopLocationId && args.shopLocationId !== "all"
+        ? args.shopLocationId
+        : undefined;
 
-    if (args.status) {
-      // Status-filtered query uses the by_status index
-      // (organizationId, status) — correct for this access pattern
-      const result = await ctx.db
-        .query("workOrders")
-        .withIndex("by_status", (q) =>
-          q
-            .eq("organizationId", args.organizationId)
-            .eq("status", args.status!),
-        )
-        .paginate(args.paginationOpts);
+    if (scopedLocationId) {
+      await ensureShopLocationBelongsToOrg(ctx, args.organizationId, scopedLocationId);
+    }
 
-      // Enrich each WO with denormalized aircraft data for list rendering
+    const enrich = async (result: any) => {
       const enriched = await Promise.all(
-        result.page.map(async (wo) => {
-          const aircraft = await ctx.db.get(wo.aircraftId);
+        result.page.map(async (wo: any) => {
+          const aircraft = (await ctx.db.get(wo.aircraftId)) as any;
           return {
             ...wo,
             aircraft: aircraft
@@ -961,74 +1049,79 @@ export const listWorkOrders = query({
       );
 
       return { ...result, page: enriched };
+    };
+
+    if (args.status) {
+      const result = scopedLocationId
+        ? await ctx.db
+            .query("workOrders")
+            .withIndex("by_org_location_status", (q) =>
+              q
+                .eq("organizationId", args.organizationId)
+                .eq("shopLocationId", scopedLocationId)
+                .eq("status", args.status!),
+            )
+            .paginate(args.paginationOpts)
+        : await ctx.db
+            .query("workOrders")
+            .withIndex("by_status", (q) =>
+              q
+                .eq("organizationId", args.organizationId)
+                .eq("status", args.status!),
+            )
+            .paginate(args.paginationOpts);
+
+      return enrich(result);
     }
 
     if (args.priority) {
-      // Priority-filtered query uses the by_priority index
-      // (organizationId, priority, status)
-      // We return all non-terminal statuses for the given priority
-      const result = await ctx.db
-        .query("workOrders")
-        .withIndex("by_priority", (q) =>
-          q
-            .eq("organizationId", args.organizationId)
-            .eq("priority", args.priority!),
-        )
-        .filter((q) =>
-          q.and(
-            q.neq(q.field("status"), "closed"),
-            q.neq(q.field("status"), "voided"),
-            q.neq(q.field("status"), "cancelled"),
-          ),
-        )
-        .paginate(args.paginationOpts);
+      const result = scopedLocationId
+        ? await ctx.db
+            .query("workOrders")
+            .withIndex("by_org_location", (q) =>
+              q.eq("organizationId", args.organizationId).eq("shopLocationId", scopedLocationId),
+            )
+            .filter((q) =>
+              q.and(
+                q.eq(q.field("priority"), args.priority!),
+                q.neq(q.field("status"), "closed"),
+                q.neq(q.field("status"), "voided"),
+                q.neq(q.field("status"), "cancelled"),
+              ),
+            )
+            .paginate(args.paginationOpts)
+        : await ctx.db
+            .query("workOrders")
+            .withIndex("by_priority", (q) =>
+              q
+                .eq("organizationId", args.organizationId)
+                .eq("priority", args.priority!),
+            )
+            .filter((q) =>
+              q.and(
+                q.neq(q.field("status"), "closed"),
+                q.neq(q.field("status"), "voided"),
+                q.neq(q.field("status"), "cancelled"),
+              ),
+            )
+            .paginate(args.paginationOpts);
 
-      const enriched = await Promise.all(
-        result.page.map(async (wo) => {
-          const aircraft = await ctx.db.get(wo.aircraftId);
-          return {
-            ...wo,
-            aircraft: aircraft
-              ? {
-                  make: aircraft.make,
-                  model: aircraft.model,
-                  serialNumber: aircraft.serialNumber,
-                  currentRegistration: aircraft.currentRegistration,
-                  status: aircraft.status,
-                }
-              : null,
-          };
-        }),
-      );
-
-      return { ...result, page: enriched };
+      return enrich(result);
     }
 
-    // No filter: return all org WOs paginated
-    const result = await ctx.db
-      .query("workOrders")
-      .withIndex("by_organization", (q) => q.eq("organizationId", args.organizationId))
-      .paginate(args.paginationOpts);
+    const result = scopedLocationId
+      ? await ctx.db
+          .query("workOrders")
+          .withIndex("by_org_location", (q) =>
+            q.eq("organizationId", args.organizationId).eq("shopLocationId", scopedLocationId),
+          )
+          .paginate(args.paginationOpts)
+      : await ctx.db
+          .query("workOrders")
+          .withIndex("by_organization", (q) => q.eq("organizationId", args.organizationId))
+          .paginate(args.paginationOpts);
 
-    const enriched = await Promise.all(
-      result.page.map(async (wo) => {
-        const aircraft = await ctx.db.get(wo.aircraftId);
-        return {
-          ...wo,
-          aircraft: aircraft
-            ? {
-                make: aircraft.make,
-                model: aircraft.model,
-                serialNumber: aircraft.serialNumber,
-                currentRegistration: aircraft.currentRegistration,
-                status: aircraft.status,
-              }
-            : null,
-        };
-      }),
-    );
-
-    return { ...result, page: enriched };
+    return enrich(result);
   },
 });
 
@@ -1417,6 +1510,7 @@ export const listActive = query({
   args: {
     organizationId: v.id("organizations"),
     limit: v.optional(v.number()),
+    shopLocationId: shopLocationFilterValidator,
   },
   handler: async (ctx, args) => {
     const activeStatuses = [
@@ -1429,17 +1523,34 @@ export const listActive = query({
     ] as const;
 
     const limit = args.limit ?? 10;
+    const scopedLocationId =
+      args.shopLocationId && args.shopLocationId !== "all"
+        ? args.shopLocationId
+        : undefined;
+    if (scopedLocationId) {
+      await ensureShopLocationBelongsToOrg(ctx, args.organizationId, scopedLocationId);
+    }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const results: any[] = [];
 
     for (const status of activeStatuses) {
       if (results.length >= limit) break;
-      const rows = await ctx.db
-        .query("workOrders")
-        .withIndex("by_status", (q) =>
-          q.eq("organizationId", args.organizationId).eq("status", status),
-        )
-        .take(limit - results.length);
+      const rows = scopedLocationId
+        ? await ctx.db
+            .query("workOrders")
+            .withIndex("by_org_location_status", (q) =>
+              q
+                .eq("organizationId", args.organizationId)
+                .eq("shopLocationId", scopedLocationId)
+                .eq("status", status),
+            )
+            .take(limit - results.length)
+        : await ctx.db
+            .query("workOrders")
+            .withIndex("by_status", (q) =>
+              q.eq("organizationId", args.organizationId).eq("status", status),
+            )
+            .take(limit - results.length);
 
       for (const wo of rows) {
         const aircraft = await ctx.db.get(wo.aircraftId);
@@ -1685,18 +1796,35 @@ export const getScheduleStats = query({
 export const getWorkOrdersWithScheduleRisk = query({
   args: {
     organizationId: v.id("organizations"),
+    shopLocationId: shopLocationFilterValidator,
   },
 
   handler: async (ctx, args) => {
     const now = Date.now();
+    const scopedLocationId =
+      args.shopLocationId && args.shopLocationId !== "all"
+        ? args.shopLocationId
+        : undefined;
+    if (scopedLocationId) {
+      await ensureShopLocationBelongsToOrg(ctx, args.organizationId, scopedLocationId);
+    }
 
     const [rows, allParts] = await Promise.all([
-      ctx.db
-        .query("workOrders")
-        .withIndex("by_organization", (q) =>
-          q.eq("organizationId", args.organizationId),
-        )
-        .collect(),
+      scopedLocationId
+        ? ctx.db
+            .query("workOrders")
+            .withIndex("by_org_location", (q) =>
+              q
+                .eq("organizationId", args.organizationId)
+                .eq("shopLocationId", scopedLocationId),
+            )
+            .collect()
+        : ctx.db
+            .query("workOrders")
+            .withIndex("by_organization", (q) =>
+              q.eq("organizationId", args.organizationId),
+            )
+            .collect(),
       ctx.db
         .query("parts")
         .withIndex("by_organization", (q) =>
@@ -1777,6 +1905,7 @@ export const getWorkOrdersWithScheduleRisk = query({
 
         return {
           _id: wo._id,
+          shopLocationId: wo.shopLocationId,
           workOrderNumber: wo.workOrderNumber,
           workOrderType: wo.workOrderType,
           status: wo.status,

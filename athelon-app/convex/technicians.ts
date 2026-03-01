@@ -4,6 +4,82 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 
+function normalizeOrganizationName(value?: string | null): string | null {
+  const trimmed = value?.trim().toLowerCase();
+  return trimmed && trimmed.length > 0 ? trimmed : null;
+}
+
+function pickLatestTechnician(technicians: any[]) {
+  if (technicians.length === 0) return null;
+  const sorted = [...technicians].sort((a: any, b: any) => {
+    const bStamp = b.updatedAt ?? b.createdAt ?? 0;
+    const aStamp = a.updatedAt ?? a.createdAt ?? 0;
+    if (bStamp !== aStamp) return bStamp - aStamp;
+    return b._creationTime - a._creationTime;
+  });
+  return sorted[0];
+}
+
+async function resolvePreferredContext(
+  ctx: { db: any },
+  userId: string,
+  preferredClerkOrganizationId?: string,
+  preferredOrganizationName?: string,
+) {
+  const technicians = await ctx.db
+    .query("technicians")
+    .withIndex("by_user", (q: any) => q.eq("userId", userId))
+    .collect();
+
+  if (technicians.length === 0) return null;
+
+  if (preferredClerkOrganizationId) {
+    const preferredOrg = await ctx.db
+      .query("organizations")
+      .withIndex("by_clerk_organization", (q: any) =>
+        q.eq("clerkOrganizationId", preferredClerkOrganizationId),
+      )
+      .first();
+
+    if (preferredOrg) {
+      const scoped = technicians.filter(
+        (tech: any) => tech.organizationId === preferredOrg._id,
+      );
+      const scopedTech = pickLatestTechnician(scoped);
+      if (scopedTech) {
+        return { tech: scopedTech, org: preferredOrg };
+      }
+    }
+  }
+
+  const enriched = (
+    await Promise.all(
+      technicians.map(async (tech: any) => ({
+        tech,
+        org: await ctx.db.get(tech.organizationId),
+      })),
+    )
+  ).filter((entry: any) => entry.org !== null);
+
+  if (enriched.length === 0) return null;
+
+  const preferred = normalizeOrganizationName(preferredOrganizationName);
+  if (preferred) {
+    const matched = enriched.find(
+      (entry: any) =>
+        normalizeOrganizationName(entry.org.name) === preferred,
+    );
+    if (matched) return matched;
+  }
+
+  const fallbackTech = pickLatestTechnician(enriched.map((entry: any) => entry.tech));
+  if (!fallbackTech) return null;
+  const fallbackOrg = enriched.find((entry: any) => entry.tech._id === fallbackTech._id)?.org ?? null;
+  if (!fallbackOrg) return null;
+
+  return { tech: fallbackTech, org: fallbackOrg };
+}
+
 /**
  * List all technicians for an organization.
  */
@@ -52,21 +128,23 @@ export const getSelf = query({
  * the org context for all subsequent queries.
  */
 export const getMyContext = query({
-  args: {},
-  handler: async (ctx) => {
+  args: {
+    preferredClerkOrganizationId: v.optional(v.string()),
+    preferredOrganizationName: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return null;
 
-    // Find the technician record for this Clerk user (across all orgs)
-    const tech = await ctx.db
-      .query("technicians")
-      .filter((q) => q.eq(q.field("userId"), identity.subject))
-      .first();
+    const resolved = await resolvePreferredContext(
+      ctx,
+      identity.subject,
+      args.preferredClerkOrganizationId,
+      args.preferredOrganizationName,
+    );
+    if (!resolved) return null;
 
-    if (!tech) return null;
-
-    const org = await ctx.db.get(tech.organizationId);
-    return { tech, org };
+    return { tech: resolved.tech, org: resolved.org };
   },
 });
 

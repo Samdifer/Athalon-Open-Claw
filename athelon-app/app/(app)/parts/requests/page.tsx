@@ -29,6 +29,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
+import { useSelectedLocation } from "@/components/LocationSwitcher";
 import { toast } from "sonner";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -311,19 +312,28 @@ function PartsSkeleton() {
 
 export default function PartsRequestsPage() {
   const { orgId, techId, isLoaded } = useCurrentOrg();
+  const { selectedLocationId } = useSelectedLocation(orgId);
+  const selectedShopLocationId =
+    selectedLocationId === "all"
+      ? "all"
+      : (selectedLocationId as Id<"shopLocations">);
 
   const [inspectTarget, setInspectTarget] = useState<PartItem | null>(null);
 
   // Parts pending receiving inspection
   const pendingParts = useQuery(
     api.parts.listParts,
-    orgId ? { organizationId: orgId, location: "pending_inspection" } : "skip",
+    orgId
+      ? { organizationId: orgId, location: "pending_inspection", shopLocationId: selectedShopLocationId }
+      : "skip",
   );
 
   // Parts removed from aircraft, awaiting disposition decision
   const removedParts = useQuery(
     api.parts.listParts,
-    orgId ? { organizationId: orgId, location: "removed_pending_disposition" } : "skip",
+    orgId
+      ? { organizationId: orgId, location: "removed_pending_disposition", shopLocationId: selectedShopLocationId }
+      : "skip",
   );
 
   const isLoading = !isLoaded || pendingParts === undefined || removedParts === undefined;

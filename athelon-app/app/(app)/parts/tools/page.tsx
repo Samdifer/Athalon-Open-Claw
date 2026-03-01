@@ -6,6 +6,7 @@ import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import { usePagePrereqs } from "@/hooks/usePagePrereqs";
+import { useSelectedLocation } from "@/components/LocationSwitcher";
 import {
   Wrench,
   Plus,
@@ -87,6 +88,11 @@ function categoryLabel(cat: string) {
 
 export default function ToolCribPage() {
   const { orgId, isLoaded } = useCurrentOrg();
+  const { selectedLocationId } = useSelectedLocation(orgId);
+  const selectedShopLocationId =
+    selectedLocationId === "all"
+      ? "all"
+      : (selectedLocationId as Id<"shopLocations">);
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [filterCategory, setFilterCategory] = useState<string>("all");
@@ -100,11 +106,11 @@ export default function ToolCribPage() {
   // Queries
   const allTools = useQuery(
     api.toolCrib.listTools,
-    orgId ? { orgId } : "skip"
+    orgId ? { orgId, shopLocationId: selectedShopLocationId } : "skip"
   );
   const calibrationDue = useQuery(
     api.toolCrib.listCalibrationDue,
-    orgId ? { orgId, withinDays: 30 } : "skip"
+    orgId ? { orgId, withinDays: 30, shopLocationId: selectedShopLocationId } : "skip"
   );
   const technicians = useQuery(
     api.technicians.list,
@@ -206,6 +212,8 @@ export default function ToolCribPage() {
     try {
       await createTool({
         organizationId: orgId,
+        shopLocationId:
+          selectedShopLocationId === "all" ? undefined : selectedShopLocationId,
         toolNumber: fToolNumber,
         description: fDescription,
         serialNumber: fSerialNumber || undefined,

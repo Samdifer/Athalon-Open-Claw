@@ -59,6 +59,54 @@ function assertInvoiceEditable(status: string, invoiceId: string): void {
   }
 }
 
+async function ensureAircraftLinkedForWorkOrder(
+  ctx: MutationCtx,
+  organizationId: Id<"organizations">,
+  aircraftId: Id<"aircraft">,
+  now: number,
+): Promise<{ aircraft: any; autoLinkedToOrg: boolean }> {
+  const aircraft = await ctx.db.get(aircraftId);
+  if (!aircraft) throw new Error(`Aircraft ${aircraftId} not found.`);
+
+  if (
+    aircraft.operatingOrganizationId &&
+    aircraft.operatingOrganizationId !== organizationId
+  ) {
+    throw new Error(
+      `Aircraft ${aircraftId} belongs to organization ` +
+      `${aircraft.operatingOrganizationId}, not ${organizationId}.`,
+    );
+  }
+
+  if (aircraft.status === "destroyed" || aircraft.status === "sold") {
+    throw new Error(
+      `Aircraft ${aircraftId} has status "${aircraft.status}" and cannot receive a work order.`,
+    );
+  }
+
+  if (!aircraft.operatingOrganizationId) {
+    await ctx.db.patch(aircraftId, {
+      operatingOrganizationId: organizationId,
+      createdByOrganizationId:
+        aircraft.createdByOrganizationId ?? organizationId,
+      updatedAt: now,
+    });
+
+    return {
+      aircraft: {
+        ...aircraft,
+        operatingOrganizationId: organizationId,
+        createdByOrganizationId:
+          aircraft.createdByOrganizationId ?? organizationId,
+        updatedAt: now,
+      },
+      autoLinkedToOrg: true,
+    };
+  }
+
+  return { aircraft, autoLinkedToOrg: false };
+}
+
 // ═════════════════════════════════════════════════════════════════════════════
 // QUOTES
 // ═════════════════════════════════════════════════════════════════════════════
@@ -630,6 +678,13 @@ export const convertQuoteToWorkOrder = mutation({
       );
     }
 
+    const { aircraft, autoLinkedToOrg } = await ensureAircraftLinkedForWorkOrder(
+      ctx,
+      args.orgId,
+      quote.aircraftId,
+      now,
+    );
+
     let workOrderNumber: string | null = null;
     for (let attempt = 0; attempt < 5; attempt += 1) {
       const candidate = await reserveNextWorkOrderNumber(ctx, args.orgId);
@@ -700,6 +755,25 @@ export const convertQuoteToWorkOrder = mutation({
       notes: `Work order ${workOrderNumber} created from quote ${quote.quoteNumber}.`,
       timestamp: now,
     });
+
+    if (autoLinkedToOrg) {
+      await ctx.db.insert("auditLog", {
+        organizationId: args.orgId,
+        eventType: "record_updated",
+        tableName: "aircraft",
+        recordId: quote.aircraftId,
+        userId: callerUserId,
+        ipAddress: args.callerIpAddress,
+        fieldName: "operatingOrganizationId",
+        oldValue: JSON.stringify(null),
+        newValue: JSON.stringify(args.orgId),
+        notes:
+          `Aircraft ${aircraft.currentRegistration ?? aircraft.serialNumber} ` +
+          `auto-linked to organization ${args.orgId} during quote-to-work-order conversion ` +
+          `for ${workOrderNumber}.`,
+        timestamp: now,
+      });
+    }
 
     return workOrderId;
   },

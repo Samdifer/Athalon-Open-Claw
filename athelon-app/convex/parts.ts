@@ -1215,6 +1215,7 @@ export const tagPartUnserviceable = mutation({
 export const listParts = query({
   args: {
     organizationId: v.id("organizations"),
+    shopLocationId: v.optional(v.union(v.id("shopLocations"), v.literal("all"))),
     location: v.optional(
       v.union(
         v.literal("pending_inspection"),
@@ -1228,8 +1229,9 @@ export const listParts = query({
     ),
   },
   handler: async (ctx, args) => {
+    let parts;
     if (args.location) {
-      return ctx.db
+      parts = await ctx.db
         .query("parts")
         .withIndex("by_location", (q) =>
           q
@@ -1237,13 +1239,18 @@ export const listParts = query({
             .eq("location", args.location!),
         )
         .collect();
+    } else {
+      parts = await ctx.db
+        .query("parts")
+        .withIndex("by_organization", (q) =>
+          q.eq("organizationId", args.organizationId),
+        )
+        .collect();
     }
-    return ctx.db
-      .query("parts")
-      .withIndex("by_organization", (q) =>
-        q.eq("organizationId", args.organizationId),
-      )
-      .collect();
+    if (args.shopLocationId && args.shopLocationId !== "all") {
+      parts = parts.filter((part) => part.shopLocationId === args.shopLocationId);
+    }
+    return parts;
   },
 });
 
@@ -1258,6 +1265,7 @@ export const listParts = query({
 export const createPart = mutation({
   args: {
     organizationId: v.id("organizations"),
+    shopLocationId: v.optional(v.id("shopLocations")),
     partNumber: v.string(),
     partName: v.string(),
     description: v.optional(v.string()),
@@ -1277,6 +1285,7 @@ export const createPart = mutation({
     for (let i = 0; i < Math.max(1, args.quantity); i++) {
       const partId = await ctx.db.insert("parts", {
         organizationId: args.organizationId,
+        shopLocationId: args.shopLocationId,
         partNumber: args.partNumber,
         partName: args.partName,
         description: args.description,

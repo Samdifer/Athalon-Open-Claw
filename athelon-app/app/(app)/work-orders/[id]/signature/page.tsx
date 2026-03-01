@@ -188,7 +188,7 @@ export default function SignaturePage() {
         <Card className="border-border/60">
           <CardContent className="p-3 flex items-center gap-3">
             <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary flex-shrink-0">
-              {tech.legalName.split(" ").map((n) => n[0]).join("").slice(0, 2)}
+              {tech.legalName.split(" ").map((n: string) => n[0]).join("").slice(0, 2)}
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-foreground">

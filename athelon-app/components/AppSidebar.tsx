@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { UserButton, useOrganization } from "@clerk/clerk-react";
+import { OrganizationSwitcher, UserButton, useOrganization } from "@clerk/clerk-react";
 import {
   LayoutDashboard,
   PlaneTakeoff,
@@ -9,7 +9,6 @@ import {
   ShieldCheck,
   Users,
   Settings,
-  ChevronRight,
   Wrench,
   GraduationCap,
   CalendarDays,
@@ -24,9 +23,10 @@ import {
   Link2,
   MapPin,
   TrendingUp,
+  ChevronRight,
 } from "lucide-react";
 import { useUserRole } from "@/hooks/useUserRole";
-import { canAccessNav, type NavSection } from "@/lib/roles";
+import { canAccessNav, type NavSection, type MRORole } from "@/lib/roles";
 import {
   Sidebar,
   SidebarContent,
@@ -37,24 +37,44 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
   SidebarSeparator,
 } from "@/components/ui/sidebar";
-import { Badge } from "@/components/ui/badge";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
 import { LocationSwitcher } from "@/components/LocationSwitcher";
+
+import type React from "react";
 
 type NavItem = {
   title: string;
   href: string;
-  icon: React.ComponentType<{ className?: string }>;
-  section?: NavSection;
-  badgeCount?: number;
-  badgeVariant?: "default" | "secondary" | "destructive" | "outline";
+  icon?: React.ComponentType<{ className?: string }>;
 };
 
-import type React from "react";
+type NavGroup = {
+  title: string;
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+  section: NavSection;
+  children: NavItem[];
+};
 
-const mainNav: NavItem[] = [
+type NavEntry = (NavItem & { section: NavSection; icon: React.ComponentType<{ className?: string }> }) | NavGroup;
+
+function isGroup(entry: NavEntry): entry is NavGroup {
+  return "children" in entry;
+}
+
+// --- Main navigation data ---
+
+const mainNav: NavEntry[] = [
   {
     title: "Dashboard",
     href: "/dashboard",
@@ -72,203 +92,231 @@ const mainNav: NavItem[] = [
     href: "/fleet",
     icon: PlaneTakeoff,
     section: "fleet",
-  },
-  {
-    title: "Fleet Calendar",
-    href: "/fleet/calendar",
-    icon: Calendar,
-    section: "fleet",
-  },
-  {
-    title: "Predictions",
-    href: "/fleet/predictions",
-    icon: CalendarDays,
-    section: "fleet",
+    children: [
+      { title: "Calendar", href: "/fleet/calendar" },
+      { title: "Predictions", href: "/fleet/predictions" },
+    ],
   },
   {
     title: "Work Orders",
     href: "/work-orders",
     icon: ClipboardList,
     section: "work-orders",
-  },
-  {
-    title: "WO Kanban",
-    href: "/work-orders/kanban",
-    icon: ClipboardList,
-    section: "work-orders",
+    children: [
+      { title: "Kanban", href: "/work-orders/kanban" },
+    ],
   },
   {
     title: "Schedule",
     href: "/scheduling",
     icon: CalendarDays,
     section: "scheduling",
+    children: [
+      { title: "Seed Audit", href: "/scheduling/seed-audit" },
+    ],
   },
   {
     title: "Parts",
     href: "/parts/requests",
     icon: Package,
     section: "parts",
-  },
-  {
-    title: "Tool Crib",
-    href: "/parts/tools",
-    icon: Wrench,
-    section: "parts",
-  },
-  {
-    title: "Inventory Count",
-    href: "/parts/inventory-count",
-    icon: ClipboardCheck,
-    section: "parts",
-  },
-  {
-    title: "Core Tracking",
-    href: "/parts/cores",
-    icon: RotateCcw,
-    section: "parts",
-  },
-  {
-    title: "Shipping",
-    href: "/parts/shipping",
-    icon: Package,
-    section: "parts",
-  },
-  {
-    title: "Rotables",
-    href: "/parts/rotables",
-    icon: RotateCcw,
-    section: "parts",
-  },
-  {
-    title: "Loaners",
-    href: "/parts/loaners",
-    icon: Package,
-    section: "parts",
+    children: [
+      { title: "Tool Crib", href: "/parts/tools" },
+      { title: "Inventory Count", href: "/parts/inventory-count" },
+      { title: "Core Tracking", href: "/parts/cores" },
+      { title: "Shipping", href: "/parts/shipping" },
+      { title: "Rotables", href: "/parts/rotables" },
+      { title: "Loaners", href: "/parts/loaners" },
+    ],
   },
   {
     title: "Billing",
     href: "/billing/invoices",
     icon: ReceiptText,
     section: "billing",
+    children: [
+      { title: "Counter Sales", href: "/billing/otc" },
+      { title: "Labor Kits", href: "/billing/labor-kits" },
+      { title: "Warranty Claims", href: "/billing/warranty" },
+      { title: "Customer Portal", href: "/portal" },
+    ],
   },
   {
-    title: "Counter Sales",
-    href: "/billing/otc",
-    icon: ShoppingCart,
-    section: "billing",
-  },
-  {
-    title: "Labor Kits",
-    href: "/billing/labor-kits",
-    icon: Boxes,
-    section: "billing",
-  },
-  {
-    title: "Warranty Claims",
-    href: "/billing/warranty",
-    icon: ShieldCheck,
-    section: "billing",
-  },
-  {
-    title: "Repair Station Compliance",
+    title: "Compliance",
     href: "/compliance/audit-trail",
     icon: ShieldCheck,
     section: "compliance",
-  },
-  {
-    title: "AD/SB Tracking",
-    href: "/compliance/ad-sb",
-    icon: ShieldCheck,
-    section: "compliance",
+    children: [
+      { title: "AD/SB Tracking", href: "/compliance/ad-sb" },
+    ],
   },
   {
     title: "Reports",
     href: "/reports",
     icon: FileBarChart,
     section: "reports",
-  },
-  {
-    title: "Financials",
-    href: "/reports/financials",
-    icon: TrendingUp,
-    section: "reports",
-  },
-  {
-    title: "Forecast",
-    href: "/reports/financials/forecast",
-    icon: TrendingUp,
-    section: "reports",
-  },
-  {
-    title: "Profitability",
-    href: "/reports/financials/profitability",
-    icon: TrendingUp,
-    section: "reports",
-  },
-  {
-    title: "Runway",
-    href: "/reports/financials/runway",
-    icon: TrendingUp,
-    section: "reports",
-  },
-  {
-    title: "Customer Portal",
-    href: "/portal",
-    icon: Users,
-    section: "billing",
+    children: [
+      { title: "Financials", href: "/reports/financials" },
+      { title: "Forecast", href: "/reports/financials/forecast" },
+      { title: "Profitability", href: "/reports/financials/profitability" },
+      { title: "Runway", href: "/reports/financials/runway" },
+    ],
   },
 ];
 
-const bottomNav: NavItem[] = [
+const bottomNav: NavEntry[] = [
   {
     title: "Personnel",
     href: "/personnel",
     icon: Users,
     section: "personnel",
-  },
-  {
-    title: "Training",
-    href: "/personnel/training",
-    icon: GraduationCap,
-    section: "personnel",
+    children: [
+      { title: "Training", href: "/personnel/training" },
+    ],
   },
   {
     title: "Settings",
     href: "/settings/shop",
     icon: Settings,
     section: "settings",
-  },
-  {
-    title: "Import Data",
-    href: "/settings/import",
-    icon: Upload,
-    section: "settings",
-  },
-  {
-    title: "QuickBooks",
-    href: "/settings/quickbooks",
-    icon: Link2,
-    section: "settings",
-  },
-  {
-    title: "Locations",
-    href: "/settings/locations",
-    icon: MapPin,
-    section: "settings",
+    children: [
+      { title: "Import Data", href: "/settings/import" },
+      { title: "QuickBooks", href: "/settings/quickbooks" },
+      { title: "Locations", href: "/settings/locations" },
+    ],
   },
 ];
+
+// --- Components ---
+
+function NavStandaloneItem({
+  item,
+  pathname,
+}: {
+  item: NavItem & { icon: React.ComponentType<{ className?: string }> };
+  pathname: string;
+}) {
+  const isActive =
+    pathname === item.href ||
+    (item.href !== "/dashboard" && pathname.startsWith(item.href));
+
+  return (
+    <SidebarMenuItem>
+      <SidebarMenuButton
+        asChild
+        isActive={isActive}
+        tooltip={item.title}
+        className={cn(
+          "h-9 gap-2.5",
+          isActive && "bg-primary/10 text-primary hover:bg-primary/15",
+        )}
+      >
+        <Link to={item.href}>
+          <item.icon className="w-4 h-4 flex-shrink-0" />
+          <span className="flex-1">{item.title}</span>
+        </Link>
+      </SidebarMenuButton>
+    </SidebarMenuItem>
+  );
+}
+
+function NavGroupItem({
+  group,
+  pathname,
+}: {
+  group: NavGroup;
+  pathname: string;
+}) {
+  const isGroupActive =
+    pathname === group.href || pathname.startsWith(group.href);
+  const isChildActive = group.children.some(
+    (child) => pathname === child.href || pathname.startsWith(child.href),
+  );
+  const isOpen = isGroupActive || isChildActive;
+
+  return (
+    <Collapsible defaultOpen={isOpen} className="group/collapsible">
+      <SidebarMenuItem>
+        <CollapsibleTrigger asChild>
+          <SidebarMenuButton
+            asChild
+            isActive={isGroupActive && !isChildActive}
+            tooltip={group.title}
+            className={cn(
+              "h-9 gap-2.5",
+              isGroupActive &&
+                !isChildActive &&
+                "bg-primary/10 text-primary hover:bg-primary/15",
+            )}
+          >
+            <Link to={group.href}>
+              <group.icon className="w-4 h-4 flex-shrink-0" />
+              <span className="flex-1">{group.title}</span>
+              <ChevronRight className="ml-auto w-4 h-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+            </Link>
+          </SidebarMenuButton>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <SidebarMenuSub>
+            {group.children.map((child) => {
+              const isActive =
+                pathname === child.href || pathname.startsWith(child.href);
+              return (
+                <SidebarMenuSubItem key={child.href}>
+                  <SidebarMenuSubButton
+                    asChild
+                    isActive={isActive}
+                    className={cn(
+                      isActive &&
+                        "bg-primary/10 text-primary hover:bg-primary/15",
+                    )}
+                  >
+                    <Link to={child.href}>
+                      <span>{child.title}</span>
+                    </Link>
+                  </SidebarMenuSubButton>
+                </SidebarMenuSubItem>
+              );
+            })}
+          </SidebarMenuSub>
+        </CollapsibleContent>
+      </SidebarMenuItem>
+    </Collapsible>
+  );
+}
+
+function NavSection({
+  entries,
+  pathname,
+  role,
+}: {
+  entries: NavEntry[];
+  pathname: string;
+  role: MRORole | null | undefined;
+}) {
+  return (
+    <>
+      {entries
+        .filter((entry) => canAccessNav(role ?? undefined, entry.section))
+        .map((entry) =>
+          isGroup(entry) ? (
+            <NavGroupItem key={entry.href} group={entry} pathname={pathname} />
+          ) : (
+            <NavStandaloneItem
+              key={entry.href}
+              item={entry}
+              pathname={pathname}
+            />
+          ),
+        )}
+    </>
+  );
+}
 
 export function AppSidebar() {
   const { pathname } = useLocation();
   const { organization } = useOrganization();
   const { role } = useUserRole();
-
-  const filteredMainNav = mainNav.filter(
-    (item) => !item.section || canAccessNav(role ?? undefined, item.section),
-  );
-  const filteredBottomNav = bottomNav.filter(
-    (item) => !item.section || canAccessNav(role ?? undefined, item.section),
-  );
 
   return (
     <Sidebar collapsible="icon" className="border-r border-border/50">
@@ -299,41 +347,7 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {filteredMainNav.map((item) => {
-                const isActive =
-                  pathname === item.href ||
-                  (item.href !== "/dashboard" &&
-                    pathname.startsWith(item.href));
-
-                return (
-                  <SidebarMenuItem key={item.href}>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={isActive}
-                      tooltip={item.title}
-                      className={cn(
-                        "h-9 gap-2.5",
-                        isActive &&
-                          "bg-primary/10 text-primary hover:bg-primary/15"
-                      )}
-                    >
-                      <Link to={item.href}>
-                        <item.icon className="w-4 h-4 flex-shrink-0" />
-                        <span className="flex-1">{item.title}</span>
-                        {item.badgeCount !== undefined &&
-                          item.badgeCount > 0 && (
-                            <Badge
-                              variant={item.badgeVariant ?? "secondary"}
-                              className="ml-auto h-4.5 min-w-[18px] px-1 text-[10px] font-medium group-data-[collapsible=icon]:hidden"
-                            >
-                              {item.badgeCount}
-                            </Badge>
-                          )}
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
+              <NavSection entries={mainNav} pathname={pathname} role={role} />
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -344,28 +358,11 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {filteredBottomNav.map((item) => {
-                const isActive = pathname.startsWith(item.href);
-                return (
-                  <SidebarMenuItem key={item.href}>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={isActive}
-                      tooltip={item.title}
-                      className={cn(
-                        "h-9 gap-2.5",
-                        isActive &&
-                          "bg-primary/10 text-primary hover:bg-primary/15"
-                      )}
-                    >
-                      <Link to={item.href}>
-                        <item.icon className="w-4 h-4 flex-shrink-0" />
-                        <span>{item.title}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
+              <NavSection
+                entries={bottomNav}
+                pathname={pathname}
+                role={role}
+              />
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -375,30 +372,31 @@ export function AppSidebar() {
       <SidebarFooter className="p-3">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              tooltip="Account"
-              className="h-10 gap-2.5 w-full"
-            >
-              <div className="flex items-center gap-2.5 w-full">
-                <UserButton
-                  appearance={{
-                    elements: {
-                      avatarBox: "w-6 h-6",
-                    },
-                  }}
-                />
-                <div className="flex flex-col min-w-0 flex-1 group-data-[collapsible=icon]:hidden">
-                  <span className="text-xs font-medium text-foreground truncate">
-                    My Account
-                  </span>
-                  <span className="text-[10px] text-muted-foreground truncate">
-                    Director of Maintenance
-                  </span>
-                </div>
-                <ChevronRight className="w-3.5 h-3.5 text-muted-foreground group-data-[collapsible=icon]:hidden" />
-              </div>
-            </SidebarMenuButton>
+            <OrganizationSwitcher
+              hidePersonal={false}
+              afterSelectOrganizationUrl="/dashboard"
+              appearance={{
+                elements: {
+                  organizationSwitcherTrigger:
+                    "peer/menu-button ring-sidebar-ring hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 flex h-10 w-full items-center gap-2.5 rounded-md px-2 text-left text-xs group-data-[collapsible=icon]:size-8 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-2",
+                  organizationSwitcherTriggerIcon:
+                    "w-3.5 h-3.5 text-muted-foreground group-data-[collapsible=icon]:hidden",
+                },
+              }}
+            />
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <UserButton
+              showName
+              afterSignOutUrl="/sign-in"
+              appearance={{
+                elements: {
+                  userButtonTrigger:
+                    "peer/menu-button ring-sidebar-ring hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 flex h-10 w-full items-center justify-start gap-2.5 rounded-md px-2 text-left group-data-[collapsible=icon]:size-8 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-2",
+                  avatarBox: "w-6 h-6",
+                },
+              }}
+            />
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>

@@ -13,8 +13,9 @@ export const listTools = query({
     orgId: v.id("organizations"),
     status: v.optional(v.string()),
     category: v.optional(v.string()),
+    shopLocationId: v.optional(v.union(v.id("shopLocations"), v.literal("all"))),
   },
-  handler: async (ctx, { orgId, status, category }) => {
+  handler: async (ctx, { orgId, status, category, shopLocationId }) => {
     let tools;
     if (status) {
       tools = await ctx.db
@@ -29,6 +30,9 @@ export const listTools = query({
         .withIndex("by_org", (q) => q.eq("organizationId", orgId))
         .collect();
     }
+    if (shopLocationId && shopLocationId !== "all") {
+      tools = tools.filter((tool) => tool.shopLocationId === shopLocationId);
+    }
     if (category) {
       tools = tools.filter((t) => t.category === category);
     }
@@ -37,20 +41,33 @@ export const listTools = query({
 });
 
 export const listCalibrationDue = query({
-  args: { orgId: v.id("organizations"), withinDays: v.number() },
-  handler: async (ctx, { orgId, withinDays }) => {
+  args: {
+    orgId: v.id("organizations"),
+    withinDays: v.number(),
+    shopLocationId: v.optional(v.union(v.id("shopLocations"), v.literal("all"))),
+  },
+  handler: async (ctx, { orgId, withinDays, shopLocationId }) => {
     const cutoff = Date.now() + withinDays * 24 * 60 * 60 * 1000;
-    const tools = await ctx.db
-      .query("toolRecords")
-      .withIndex("by_calibration_due", (q) => q.eq("organizationId", orgId))
-      .collect();
-    return tools.filter(
+    const tools =
+      shopLocationId && shopLocationId !== "all"
+        ? await ctx.db
+            .query("toolRecords")
+            .withIndex("by_org_location_calibration_due", (q) =>
+              q.eq("organizationId", orgId).eq("shopLocationId", shopLocationId as any)
+            )
+            .collect()
+        : await ctx.db
+            .query("toolRecords")
+            .withIndex("by_calibration_due", (q) => q.eq("organizationId", orgId))
+            .collect();
+    let filtered = tools.filter(
       (t) =>
         t.calibrationRequired &&
         t.nextCalibrationDue !== undefined &&
         t.nextCalibrationDue <= cutoff &&
         t.status !== "retired"
     );
+    return filtered;
   },
 });
 
@@ -59,6 +76,7 @@ export const listCalibrationDue = query({
 export const createTool = mutation({
   args: {
     organizationId: v.id("organizations"),
+    shopLocationId: v.optional(v.id("shopLocations")),
     toolNumber: v.string(),
     description: v.string(),
     serialNumber: v.optional(v.string()),
@@ -92,6 +110,7 @@ export const updateTool = mutation({
     toolId: v.id("toolRecords"),
     description: v.optional(v.string()),
     location: v.optional(v.string()),
+    shopLocationId: v.optional(v.id("shopLocations")),
     calibrationRequired: v.optional(v.boolean()),
     calibrationIntervalDays: v.optional(v.number()),
     calibrationProvider: v.optional(v.string()),

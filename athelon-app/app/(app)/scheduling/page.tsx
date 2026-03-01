@@ -11,13 +11,19 @@ import {
 } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
+import { useSelectedLocation } from "@/components/LocationSwitcher";
 import { GanttBoard } from "./_components/GanttBoard";
 import { BacklogSidebar } from "./_components/BacklogSidebar";
+import { GraveyardSidebar } from "./_components/GraveyardSidebar";
 import DailyFinancialTracker, {
   type DailyFinancialPoint,
 } from "./_components/DailyFinancialTracker";
 import CapacityForecaster, { type CapacityPoint } from "./_components/CapacityForecaster";
+import SchedulingAnalyticsPanel from "./_components/SchedulingAnalyticsPanel";
+import SchedulingRosterPanel from "./_components/SchedulingRosterPanel";
+import { SchedulingCommandCenterDialog } from "./_components/SchedulingCommandCenterDialog";
 import DraggableWindow from "./_components/DraggableWindow";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -31,8 +37,19 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Link } from "react-router-dom";
-import { ArrowDown, ArrowUp, Sparkles, Warehouse } from "lucide-react";
+import { Link, useSearchParams } from "react-router-dom";
+import {
+  ArrowDown,
+  ArrowUp,
+  Archive,
+  BarChart3,
+  Command,
+  Maximize2,
+  Minimize2,
+  Sparkles,
+  Users,
+  Warehouse,
+} from "lucide-react";
 import { toast } from "sonner";
 import { autoSchedule } from "@/lib/scheduling/autoSchedule";
 import { magicSchedule } from "@/lib/scheduling/magicSchedule";
@@ -101,8 +118,23 @@ const DEFAULT_TIMELINE_DAYS = 120;
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function SchedulingPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const { orgId, isLoaded } = useCurrentOrg();
+  const { selectedLocationId } = useSelectedLocation(orgId);
+  const selectedShopLocationFilter = useMemo(
+    () =>
+      selectedLocationId === "all"
+        ? "all"
+        : (selectedLocationId as Id<"shopLocations">),
+    [selectedLocationId],
+  );
+  const selectedShopLocationIdForMutations =
+    selectedLocationId === "all"
+      ? undefined
+      : (selectedLocationId as Id<"shopLocations">);
   const [backlogOpen, setBacklogOpen] = useState(false);
+  const [graveyardOpen, setGraveyardOpen] = useState(false);
+  const [commandCenterOpen, setCommandCenterOpen] = useState(false);
   const [autoScheduling, setAutoScheduling] = useState(false);
   const [magicOpen, setMagicOpen] = useState(false);
   const [magicRunning, setMagicRunning] = useState(false);
@@ -119,13 +151,26 @@ export default function SchedulingPage() {
   >([]);
   const [pnlOpen, setPnlOpen] = useState(true);
   const [capacityOpen, setCapacityOpen] = useState(true);
+  const [analyticsOpen, setAnalyticsOpen] = useState(false);
+  const [rosterOpen, setRosterOpen] = useState(false);
   const [pnlPopout, setPnlPopout] = useState(false);
   const [capacityPopout, setCapacityPopout] = useState(false);
-  const [panelHeights, setPanelHeights] = useState({ pnl: 208, capacity: 176 });
+  const [analyticsPopout, setAnalyticsPopout] = useState(false);
+  const [rosterPopout, setRosterPopout] = useState(false);
+  const [panelHeights, setPanelHeights] = useState({
+    pnl: 208,
+    capacity: 176,
+    analytics: 176,
+  });
+  const [rosterWidth, setRosterWidth] = useState(320);
   const [resizingPanel, setResizingPanel] = useState<{
-    target: "pnl" | "capacity";
+    target: "pnl" | "capacity" | "analytics";
     startY: number;
     startHeight: number;
+  } | null>(null);
+  const [resizingRoster, setResizingRoster] = useState<{
+    startX: number;
+    startWidth: number;
   } | null>(null);
   const [timelineConfig, setTimelineConfig] = useState(() => {
     const today = new Date();
@@ -137,6 +182,7 @@ export default function SchedulingPage() {
       todayIndex: 30,
     };
   });
+  const isFullscreen = searchParams.get("view") === "fullscreen";
 
   const ganttScrollRef = useRef<HTMLDivElement>(null);
   const trackerScrollRef = useRef<HTMLDivElement>(null);
@@ -144,28 +190,55 @@ export default function SchedulingPage() {
 
   const data = useQuery(
     api.workOrders.getWorkOrdersWithScheduleRisk,
-    orgId ? { organizationId: orgId } : "skip",
+    orgId
+      ? { organizationId: orgId, shopLocationId: selectedShopLocationFilter }
+      : "skip",
   );
 
   const bays = useQuery(
     api.hangarBays.listBays,
-    orgId ? { organizationId: orgId } : "skip",
+    orgId
+      ? { organizationId: orgId, shopLocationId: selectedShopLocationFilter }
+      : "skip",
   );
 
   const plannerProjects = useQuery(
     api.schedulerPlanning.listPlannerProjects,
-    orgId ? { organizationId: orgId, includeArchived: false } : "skip",
+    orgId
+      ? {
+          organizationId: orgId,
+          includeArchived: true,
+          shopLocationId: selectedShopLocationFilter,
+        }
+      : "skip",
   );
   const technicianWorkload = useQuery(
     api.capacity.getTechnicianWorkload,
-    orgId ? { organizationId: orgId } : "skip",
+    orgId
+      ? { organizationId: orgId, shopLocationId: selectedShopLocationFilter }
+      : "skip",
   );
   const planningFinancialSettings = useQuery(
     api.schedulerPlanning.getPlanningFinancialSettings,
     orgId ? { organizationId: orgId } : "skip",
   );
+  const schedulingSettings = useQuery(
+    api.capacity.getSchedulingSettings,
+    orgId ? { organizationId: orgId } : "skip",
+  );
 
   const upsertScheduleAssignment = useMutation(api.schedulerPlanning.upsertScheduleAssignment);
+  const reorderBays = useMutation(api.hangarBays.reorderBays);
+  const archiveScheduleAssignment = useMutation(
+    api.schedulerPlanning.archiveScheduleAssignment,
+  );
+  const restoreScheduleAssignment = useMutation(
+    api.schedulerPlanning.restoreScheduleAssignment,
+  );
+  const upsertPlanningFinancialSettings = useMutation(
+    api.schedulerPlanning.upsertPlanningFinancialSettings,
+  );
+  const upsertSchedulingSettings = useMutation(api.capacity.upsertSchedulingSettings);
   const prereq = usePagePrereqs({
     requiresOrg: true,
     isDataLoading:
@@ -174,11 +247,20 @@ export default function SchedulingPage() {
       bays === undefined ||
       plannerProjects === undefined ||
       technicianWorkload === undefined ||
-      planningFinancialSettings === undefined,
+      planningFinancialSettings === undefined ||
+      schedulingSettings === undefined,
   });
 
   const workOrders = data ?? [];
-  const scheduledProjects = plannerProjects ?? [];
+  const allPlannerProjects = plannerProjects ?? [];
+  const scheduledProjects = useMemo(
+    () => allPlannerProjects.filter((project) => project.archivedAt === undefined),
+    [allPlannerProjects],
+  );
+  const archivedProjects = useMemo(
+    () => allPlannerProjects.filter((project) => project.archivedAt !== undefined),
+    [allPlannerProjects],
+  );
 
   const scheduledWoIds = useMemo(
     () => new Set(scheduledProjects.map((p) => p.workOrderId as string)),
@@ -239,6 +321,28 @@ export default function SchedulingPage() {
     };
   }, [resizingPanel]);
 
+  useEffect(() => {
+    if (!resizingRoster) return;
+    const activeResize = resizingRoster;
+
+    function handleMouseMove(e: MouseEvent) {
+      const delta = activeResize.startX - e.clientX;
+      const nextWidth = Math.max(220, Math.min(560, activeResize.startWidth + delta));
+      setRosterWidth(nextWidth);
+    }
+
+    function handleMouseUp() {
+      setResizingRoster(null);
+    }
+
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [resizingRoster]);
+
   const syncTimelineScroll = useCallback((scrollLeft: number) => {
     const refs = [ganttScrollRef, trackerScrollRef, capacityScrollRef];
     for (const ref of refs) {
@@ -267,10 +371,10 @@ export default function SchedulingPage() {
   useEffect(() => {
     if (!ganttScrollRef.current) return;
     syncTimelineScroll(ganttScrollRef.current.scrollLeft);
-  }, [timelineConfig, pnlPopout, capacityPopout, syncTimelineScroll]);
+  }, [timelineConfig, pnlPopout, capacityPopout, analyticsPopout, syncTimelineScroll]);
 
   const startPanelResize = useCallback(
-    (e: ReactMouseEvent, target: "pnl" | "capacity") => {
+    (e: ReactMouseEvent, target: "pnl" | "capacity" | "analytics") => {
       e.preventDefault();
       e.stopPropagation();
       setResizingPanel({
@@ -281,6 +385,15 @@ export default function SchedulingPage() {
     },
     [panelHeights],
   );
+
+  const startRosterResize = useCallback((e: ReactMouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setResizingRoster({
+      startX: e.clientX,
+      startWidth: rosterWidth,
+    });
+  }, [rosterWidth]);
 
   const timelineStartMs = timelineConfig.timelineStartMs;
   const timelineTotalDays = Math.max(1, timelineConfig.totalDays);
@@ -524,6 +637,101 @@ export default function SchedulingPage() {
     workOrderMap,
   ]);
 
+  const analyticsMetrics = useMemo(() => {
+    const quoteLinkedCount = scheduledProjects.filter((project) => !!project.sourceQuoteId).length;
+    const quoteCoveragePercent =
+      scheduledProjects.length > 0 ? (quoteLinkedCount / scheduledProjects.length) * 100 : 0;
+
+    let utilizationTotal = 0;
+    let utilizationDays = 0;
+    let utilizationPeak = 0;
+    for (const point of dailyCapacityData) {
+      if (point.capacity > 0) {
+        utilizationTotal += point.utilization;
+        utilizationDays++;
+      }
+      if (point.utilization > utilizationPeak) {
+        utilizationPeak = point.utilization;
+      }
+    }
+
+    const projectedNet = dailyFinancialData.reduce((sum, point) => sum + point.net, 0);
+    const overtimeHours = dailyFinancialData.reduce((sum, point) => sum + point.otHours, 0);
+    const overtimeCost = dailyFinancialData.reduce((sum, point) => sum + point.otCost, 0);
+
+    return {
+      scheduledCount: scheduledProjects.length,
+      unscheduledCount,
+      conflictsCount: conflicts.length,
+      quoteCoveragePercent,
+      avgUtilization: utilizationDays > 0 ? utilizationTotal / utilizationDays : 0,
+      peakUtilization: utilizationPeak,
+      projectedNet,
+      overtimeHours,
+      overtimeCost,
+    };
+  }, [scheduledProjects, unscheduledCount, conflicts, dailyCapacityData, dailyFinancialData]);
+
+  const rosterTechnicians = useMemo(
+    () =>
+      (technicianWorkload ?? []).map((tech) => ({
+        technicianId: String(tech.technicianId),
+        name: tech.name,
+        employeeId: tech.employeeId,
+        daysOfWeek: tech.daysOfWeek,
+        startHour: tech.startHour,
+        endHour: tech.endHour,
+        efficiencyMultiplier: tech.efficiencyMultiplier,
+        usingDefaultShift: tech.usingDefaultShift,
+        assignedActiveCards: tech.assignedActiveCards,
+        estimatedRemainingHours: tech.estimatedRemainingHours,
+      })),
+    [technicianWorkload],
+  );
+
+  const commandCenterRosterSummary = useMemo(
+    () => ({
+      activeTechnicians: rosterTechnicians.length,
+      assignedCards: rosterTechnicians.reduce((sum, tech) => sum + tech.assignedActiveCards, 0),
+      remainingHours: rosterTechnicians.reduce(
+        (sum, tech) => sum + tech.estimatedRemainingHours,
+        0,
+      ),
+    }),
+    [rosterTechnicians],
+  );
+
+  const commandCenterConfigSummary = useMemo(
+    () => ({
+      baysCount: (bays ?? []).length,
+      scheduledCount: scheduledProjects.length,
+      unscheduledCount,
+      conflictsCount: conflicts.length,
+    }),
+    [bays, scheduledProjects.length, unscheduledCount, conflicts.length],
+  );
+
+  const commandCenterFinancialSummary = useMemo(
+    () => ({
+      defaultShopRate: planningRates.defaultShopRate,
+      defaultLaborCostRate: planningRates.defaultLaborCostRate,
+      monthlyFixedOverhead: planningRates.monthlyFixedOverhead,
+      monthlyVariableOverhead: planningRates.monthlyVariableOverhead,
+      annualCapexAssumption: planningRates.annualCapexAssumption,
+    }),
+    [planningRates],
+  );
+
+  const commandCenterSchedulingSettings = useMemo(
+    () => ({
+      capacityBufferPercent: schedulingSettings?.capacityBufferPercent ?? 15,
+      defaultStartHour: schedulingSettings?.defaultStartHour ?? 7,
+      defaultEndHour: schedulingSettings?.defaultEndHour ?? 17,
+      defaultEfficiencyMultiplier: schedulingSettings?.defaultEfficiencyMultiplier ?? 1,
+    }),
+    [schedulingSettings],
+  );
+
   // ── Auto-schedule handler ─────────────────────────────────────────────
   async function handleAutoSchedule() {
     if (!orgId) return;
@@ -573,6 +781,7 @@ export default function SchedulingPage() {
             organizationId: orgId,
             workOrderId: a.woId as any,
             hangarBayId: a.bayId as any,
+            shopLocationId: selectedShopLocationIdForMutations,
             startDate: a.startDate,
             endDate: a.endDate,
           });
@@ -599,11 +808,96 @@ export default function SchedulingPage() {
       organizationId: orgId,
       workOrderId: args.workOrderId as any,
       hangarBayId: args.hangarBayId as any,
+      shopLocationId: selectedShopLocationIdForMutations,
       startDate: args.startDate,
       endDate: args.endDate,
       sourceQuoteId: args.sourceQuoteId as any,
     });
   }
+
+  const setFullscreen = useCallback(
+    (enabled: boolean) => {
+      const next = new URLSearchParams(searchParams);
+      if (enabled) {
+        next.set("view", "fullscreen");
+      } else {
+        next.delete("view");
+      }
+      setSearchParams(next, { replace: true });
+    },
+    [searchParams, setSearchParams],
+  );
+
+  const handleReorderBays = useCallback(
+    async (orderedBayIds: string[]) => {
+      if (!orgId) throw new Error("Missing organization context");
+      await reorderBays({
+        organizationId: orgId,
+        orderedBayIds: orderedBayIds as Id<"hangarBays">[],
+        shopLocationId: selectedShopLocationIdForMutations,
+      });
+    },
+    [orgId, reorderBays, selectedShopLocationIdForMutations],
+  );
+
+  const handleArchiveAssignment = useCallback(
+    async (assignmentId: string) => {
+      await archiveScheduleAssignment({
+        assignmentId: assignmentId as Id<"scheduleAssignments">,
+      });
+    },
+    [archiveScheduleAssignment],
+  );
+
+  const handleRestoreAssignment = useCallback(
+    async (assignmentId: string) => {
+      await restoreScheduleAssignment({
+        assignmentId: assignmentId as Id<"scheduleAssignments">,
+      });
+      toast.success("Assignment restored");
+    },
+    [restoreScheduleAssignment],
+  );
+
+  const handleSaveCommandCenterFinancial = useCallback(
+    async (next: {
+      defaultShopRate: number;
+      defaultLaborCostRate: number;
+      monthlyFixedOverhead: number;
+      monthlyVariableOverhead: number;
+      annualCapexAssumption: number;
+    }) => {
+      if (!orgId) throw new Error("Missing organization context");
+      await upsertPlanningFinancialSettings({
+        organizationId: orgId,
+        defaultShopRate: next.defaultShopRate,
+        defaultLaborCostRate: next.defaultLaborCostRate,
+        monthlyFixedOverhead: next.monthlyFixedOverhead,
+        monthlyVariableOverhead: next.monthlyVariableOverhead,
+        annualCapexAssumption: next.annualCapexAssumption,
+      });
+    },
+    [orgId, upsertPlanningFinancialSettings],
+  );
+
+  const handleSaveCommandCenterScheduling = useCallback(
+    async (next: {
+      capacityBufferPercent: number;
+      defaultStartHour: number;
+      defaultEndHour: number;
+      defaultEfficiencyMultiplier: number;
+    }) => {
+      if (!orgId) throw new Error("Missing organization context");
+      await upsertSchedulingSettings({
+        organizationId: orgId,
+        capacityBufferPercent: next.capacityBufferPercent,
+        defaultStartHour: next.defaultStartHour,
+        defaultEndHour: next.defaultEndHour,
+        defaultEfficiencyMultiplier: next.defaultEfficiencyMultiplier,
+      });
+    },
+    [orgId, upsertSchedulingSettings],
+  );
 
   function openMagicScheduler() {
     const ids = magicCandidates.map((wo) => wo._id as string);
@@ -698,6 +992,7 @@ export default function SchedulingPage() {
           workOrderId: assignment.woId as any,
           sourceQuoteId: wo.sourceQuoteId as any,
           hangarBayId: assignment.bayId as any,
+          shopLocationId: selectedShopLocationIdForMutations,
           startDate: assignment.startDate,
           endDate: assignment.endDate,
         });
@@ -747,7 +1042,8 @@ export default function SchedulingPage() {
     !bays ||
     !plannerProjects ||
     !technicianWorkload ||
-    !planningFinancialSettings
+    !planningFinancialSettings ||
+    !schedulingSettings
   ) {
     return null;
   }
@@ -767,9 +1063,16 @@ export default function SchedulingPage() {
   }
 
   return (
-    <div className="h-full flex flex-col relative">
+    <div
+      className={
+        isFullscreen
+          ? "fixed inset-0 z-50 bg-background flex flex-col"
+          : "h-full flex flex-col relative"
+      }
+    >
       {/* Sub-nav toolbar */}
-      <div className="flex items-center gap-2 px-2 sm:px-4 py-2 border-b border-border/30 bg-muted/20 flex-shrink-0">
+      {!isFullscreen && (
+        <div className="flex items-center gap-2 px-2 sm:px-4 py-2 border-b border-border/30 bg-muted/20 flex-shrink-0">
         <Button variant="ghost" size="sm" className="text-xs h-7" asChild>
           <Link to="/scheduling">Gantt Board</Link>
         </Button>
@@ -792,6 +1095,68 @@ export default function SchedulingPage() {
           variant="outline"
           size="sm"
           className="text-xs h-7"
+          onClick={() => setFullscreen(true)}
+          data-testid="scheduling-enter-fullscreen"
+        >
+          <Maximize2 className="w-3.5 h-3.5" />
+          Fullscreen
+        </Button>
+
+        <Button
+          variant={commandCenterOpen ? "secondary" : "outline"}
+          size="sm"
+          className="text-xs h-7"
+          onClick={() => setCommandCenterOpen(true)}
+          data-testid="toggle-command-center"
+        >
+          <Command className="w-3.5 h-3.5" />
+          Command Center
+        </Button>
+
+        <Button
+          variant={graveyardOpen ? "secondary" : "outline"}
+          size="sm"
+          className="text-xs h-7"
+          onClick={() => {
+            setBacklogOpen(false);
+            setGraveyardOpen((prev) => !prev);
+          }}
+        >
+          <Archive className="w-3.5 h-3.5" />
+          Graveyard
+          {archivedProjects.length > 0 && (
+            <Badge variant="secondary" className="h-4 px-1 text-[10px]">
+              {archivedProjects.length}
+            </Badge>
+          )}
+        </Button>
+
+        <Button
+          variant={analyticsOpen ? "secondary" : "outline"}
+          size="sm"
+          className="text-xs h-7"
+          onClick={() => setAnalyticsOpen((prev) => !prev)}
+          data-testid="toggle-analytics-panel"
+        >
+          <BarChart3 className="w-3.5 h-3.5" />
+          Analytics
+        </Button>
+
+        <Button
+          variant={rosterOpen ? "secondary" : "outline"}
+          size="sm"
+          className="text-xs h-7"
+          onClick={() => setRosterOpen((prev) => !prev)}
+          data-testid="toggle-roster-panel"
+        >
+          <Users className="w-3.5 h-3.5" />
+          Roster
+        </Button>
+
+        <Button
+          variant="outline"
+          size="sm"
+          className="text-xs h-7"
           onClick={openMagicScheduler}
         >
           <Sparkles className="w-3.5 h-3.5" />
@@ -808,75 +1173,138 @@ export default function SchedulingPage() {
           <Sparkles className="w-3.5 h-3.5" />
           {autoScheduling ? "Scheduling..." : "Auto Schedule"}
         </Button>
-      </div>
-
-      <div className="flex-1 min-h-0 flex flex-col">
-        <div className="flex-1 min-h-0">
-          <GanttBoard
-            workOrders={workOrders}
-            scheduledProjects={scheduledProjects}
-            onOpenBacklog={() => setBacklogOpen(true)}
-            unscheduledCount={unscheduledCount}
-            onScheduleChange={handleScheduleChange}
-            bays={bays as { _id: string; name: string; type: string; status: string }[] | undefined}
-            conflicts={conflicts}
-            scrollRef={ganttScrollRef}
-            onTimelineScroll={handleTimelineScroll}
-            onTimelineConfigChange={setTimelineConfig}
-          />
         </div>
+      )}
 
-        <div className="flex flex-col shrink-0 border-t border-slate-800 bg-slate-900 z-30 relative">
-          {!pnlPopout && (
-            <div id="panel-pnl" className="relative">
-              {pnlOpen && (
-                <div
-                  className="h-1 w-full cursor-row-resize hover:bg-cyan-500/50 absolute top-0 left-0 z-50 transition-colors"
-                  onMouseDown={(e) => startPanelResize(e, "pnl")}
-                />
+      {isFullscreen && (
+        <div className="absolute top-3 right-3 z-50">
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-xs h-8 bg-background/85 backdrop-blur-sm"
+            onClick={() => setFullscreen(false)}
+            data-testid="scheduling-exit-fullscreen"
+          >
+            <Minimize2 className="w-3.5 h-3.5" />
+            Exit Fullscreen
+          </Button>
+        </div>
+      )}
+
+      <div className="flex-1 min-h-0 flex">
+        <div className="flex-1 min-w-0 flex flex-col">
+          <div className="flex-1 min-h-0">
+            <GanttBoard
+              workOrders={workOrders}
+              scheduledProjects={scheduledProjects}
+              onOpenBacklog={() => {
+                setGraveyardOpen(false);
+                setBacklogOpen(true);
+              }}
+              unscheduledCount={unscheduledCount}
+              onScheduleChange={handleScheduleChange}
+              onReorderBays={handleReorderBays}
+              onArchiveAssignment={handleArchiveAssignment}
+              bays={bays as { _id: string; name: string; type: string; status: string }[] | undefined}
+              conflicts={conflicts}
+              scrollRef={ganttScrollRef}
+              onTimelineScroll={handleTimelineScroll}
+              onTimelineConfigChange={setTimelineConfig}
+            />
+          </div>
+
+          {!isFullscreen && (
+            <div className="flex flex-col shrink-0 border-t border-slate-800 bg-slate-900 z-30 relative">
+              {!pnlPopout && (
+                <div id="panel-pnl" className="relative">
+                  {pnlOpen && (
+                    <div
+                      className="h-1 w-full cursor-row-resize hover:bg-cyan-500/50 absolute top-0 left-0 z-50 transition-colors"
+                      onMouseDown={(e) => startPanelResize(e, "pnl")}
+                    />
+                  )}
+                  <DailyFinancialTracker
+                    data={dailyFinancialData}
+                    timelineStartMs={timelineStartMs}
+                    cellWidth={timelineCellWidth}
+                    isOpen={pnlOpen}
+                    onToggle={() => setPnlOpen((prev) => !prev)}
+                    isPoppedOut={false}
+                    onPopOut={() => setPnlPopout(true)}
+                    scrollRef={trackerScrollRef}
+                    onScroll={handlePanelTimelineScroll}
+                    height={panelHeights.pnl}
+                    currentDayIndex={currentTimelineDay}
+                    holidayDayIndexes={[]}
+                  />
+                </div>
               )}
-              <DailyFinancialTracker
-                data={dailyFinancialData}
-                timelineStartMs={timelineStartMs}
-                cellWidth={timelineCellWidth}
-                isOpen={pnlOpen}
-                onToggle={() => setPnlOpen((prev) => !prev)}
-                isPoppedOut={false}
-                onPopOut={() => setPnlPopout(true)}
-                scrollRef={trackerScrollRef}
-                onScroll={handlePanelTimelineScroll}
-                height={panelHeights.pnl}
-                currentDayIndex={currentTimelineDay}
-                holidayDayIndexes={[]}
-              />
+
+              {!capacityPopout && (
+                <div id="panel-capacity" className="relative">
+                  {capacityOpen && (
+                    <div
+                      className="h-1 w-full cursor-row-resize hover:bg-cyan-500/50 absolute top-0 left-0 z-50 transition-colors"
+                      onMouseDown={(e) => startPanelResize(e, "capacity")}
+                    />
+                  )}
+                  <CapacityForecaster
+                    data={dailyCapacityData}
+                    timelineStartMs={timelineStartMs}
+                    cellWidth={timelineCellWidth}
+                    isOpen={capacityOpen}
+                    onToggle={() => setCapacityOpen((prev) => !prev)}
+                    isPoppedOut={false}
+                    onPopOut={() => setCapacityPopout(true)}
+                    scrollRef={capacityScrollRef}
+                    onScroll={handlePanelTimelineScroll}
+                    height={panelHeights.capacity}
+                    currentDayIndex={currentTimelineDay}
+                    holidayDayIndexes={[]}
+                  />
+                </div>
+              )}
+
+              {!analyticsPopout && (
+                <div id="panel-analytics" className="relative">
+                  {analyticsOpen && (
+                    <div
+                      className="h-1 w-full cursor-row-resize hover:bg-indigo-500/50 absolute top-0 left-0 z-50 transition-colors"
+                      onMouseDown={(e) => startPanelResize(e, "analytics")}
+                    />
+                  )}
+                  <SchedulingAnalyticsPanel
+                    metrics={analyticsMetrics}
+                    isOpen={analyticsOpen}
+                    onToggle={() => setAnalyticsOpen((prev) => !prev)}
+                    isPoppedOut={false}
+                    onPopOut={() => setAnalyticsPopout(true)}
+                    height={panelHeights.analytics}
+                  />
+                </div>
+              )}
             </div>
           )}
-
-          {!capacityPopout && (
-            <div id="panel-capacity" className="relative">
-              {capacityOpen && (
-                <div
-                  className="h-1 w-full cursor-row-resize hover:bg-cyan-500/50 absolute top-0 left-0 z-50 transition-colors"
-                  onMouseDown={(e) => startPanelResize(e, "capacity")}
-                />
-              )}
-              <CapacityForecaster
-                data={dailyCapacityData}
-                timelineStartMs={timelineStartMs}
-                cellWidth={timelineCellWidth}
-                isOpen={capacityOpen}
-                onToggle={() => setCapacityOpen((prev) => !prev)}
-                isPoppedOut={false}
-                onPopOut={() => setCapacityPopout(true)}
-                scrollRef={capacityScrollRef}
-                onScroll={handlePanelTimelineScroll}
-                height={panelHeights.capacity}
-                currentDayIndex={currentTimelineDay}
-                holidayDayIndexes={[]}
-              />
-            </div>
-          )}
         </div>
+
+        {!isFullscreen && !rosterPopout && (
+          <div id="panel-roster" className="h-full relative flex z-30">
+            {rosterOpen && (
+              <div
+                className="w-1 h-full cursor-col-resize hover:bg-indigo-500/50 transition-colors"
+                onMouseDown={startRosterResize}
+              />
+            )}
+            <SchedulingRosterPanel
+              technicians={rosterTechnicians}
+              isOpen={rosterOpen}
+              onToggle={() => setRosterOpen((prev) => !prev)}
+              width={rosterWidth}
+              isPoppedOut={false}
+              onPopOut={() => setRosterPopout(true)}
+            />
+          </div>
+        )}
       </div>
 
       {pnlPopout && (
@@ -927,10 +1355,69 @@ export default function SchedulingPage() {
         </DraggableWindow>
       )}
 
+      {analyticsPopout && (
+        <DraggableWindow
+          title="Scheduling Analytics"
+          onClose={() => {
+            setAnalyticsPopout(false);
+            setAnalyticsOpen(false);
+          }}
+          initialWidth={900}
+          initialHeight={420}
+        >
+          <SchedulingAnalyticsPanel
+            metrics={analyticsMetrics}
+            isOpen
+            onToggle={() => {}}
+            isPoppedOut
+            onPopOut={() => {}}
+          />
+        </DraggableWindow>
+      )}
+
+      {rosterPopout && (
+        <DraggableWindow
+          title="Roster"
+          onClose={() => {
+            setRosterPopout(false);
+            setRosterOpen(false);
+          }}
+          initialWidth={460}
+          initialHeight={640}
+        >
+          <SchedulingRosterPanel
+            technicians={rosterTechnicians}
+            isOpen
+            onToggle={() => {}}
+            width={420}
+            isPoppedOut
+            onPopOut={() => {}}
+          />
+        </DraggableWindow>
+      )}
+
       <BacklogSidebar
         workOrders={unscheduledWorkOrders}
         isOpen={backlogOpen}
         onClose={() => setBacklogOpen(false)}
+      />
+
+      <GraveyardSidebar
+        projects={archivedProjects}
+        isOpen={graveyardOpen}
+        onClose={() => setGraveyardOpen(false)}
+        onRestore={handleRestoreAssignment}
+      />
+
+      <SchedulingCommandCenterDialog
+        open={commandCenterOpen}
+        onOpenChange={setCommandCenterOpen}
+        rosterSummary={commandCenterRosterSummary}
+        configSummary={commandCenterConfigSummary}
+        financialSummary={commandCenterFinancialSummary}
+        schedulingSettingsSummary={commandCenterSchedulingSettings}
+        onSaveFinancialSummary={handleSaveCommandCenterFinancial}
+        onSaveSchedulingSettings={handleSaveCommandCenterScheduling}
       />
 
       <Dialog open={magicOpen} onOpenChange={setMagicOpen}>

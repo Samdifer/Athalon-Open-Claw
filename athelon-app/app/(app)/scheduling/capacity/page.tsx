@@ -7,7 +7,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
+import { useSelectedLocation } from "@/components/LocationSwitcher";
 import { usePagePrereqs } from "@/hooks/usePagePrereqs";
 import { ActionableEmptyState } from "@/components/zero-state/ActionableEmptyState";
 
@@ -97,10 +99,21 @@ function StatCard({ label, value, sub, valueClass }: StatCardProps) {
 
 export default function CapacityPage() {
   const { orgId, isLoaded } = useCurrentOrg();
+  const { selectedLocationId } = useSelectedLocation(orgId);
+  const selectedShopLocationFilter =
+    selectedLocationId === "all"
+      ? "all"
+      : (selectedLocationId as Id<"shopLocations">);
 
   const utilization = useQuery(
     api.capacity.getCapacityUtilization,
-    orgId ? { organizationId: orgId, periodWeeks: 4 } : "skip",
+    orgId
+      ? {
+          organizationId: orgId,
+          periodWeeks: 4,
+          shopLocationId: selectedShopLocationFilter,
+        }
+      : "skip",
   );
   const prereq = usePagePrereqs({
     requiresOrg: true,

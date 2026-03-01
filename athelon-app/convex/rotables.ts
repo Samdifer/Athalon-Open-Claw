@@ -2,11 +2,22 @@ import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 
 export const list = query({
-  args: { organizationId: v.id("organizations"), status: v.optional(v.string()) },
+  args: {
+    organizationId: v.id("organizations"),
+    status: v.optional(v.string()),
+    shopLocationId: v.optional(v.union(v.id("shopLocations"), v.literal("all"))),
+  },
   handler: async (ctx, args) => {
-    const all = await ctx.db.query("rotables").withIndex("by_organization", (q) => q.eq("organizationId", args.organizationId)).collect();
-    if (args.status) return all.filter((r) => r.status === args.status);
-    return all.sort((a, b) => b.createdAt - a.createdAt);
+    const all = await ctx.db
+      .query("rotables")
+      .withIndex("by_organization", (q) => q.eq("organizationId", args.organizationId))
+      .collect();
+    let filtered = all;
+    if (args.shopLocationId && args.shopLocationId !== "all") {
+      filtered = filtered.filter((row) => row.shopLocationId === args.shopLocationId);
+    }
+    if (args.status) return filtered.filter((r) => r.status === args.status);
+    return filtered.sort((a, b) => b.createdAt - a.createdAt);
   },
 });
 
@@ -25,6 +36,7 @@ export const getHistory = query({
 export const create = mutation({
   args: {
     organizationId: v.id("organizations"),
+    shopLocationId: v.optional(v.id("shopLocations")),
     partNumber: v.string(),
     serialNumber: v.string(),
     description: v.string(),
@@ -51,6 +63,7 @@ export const create = mutation({
 export const update = mutation({
   args: {
     id: v.id("rotables"),
+    shopLocationId: v.optional(v.id("shopLocations")),
     status: v.optional(v.union(v.literal("installed"), v.literal("serviceable"), v.literal("in_shop"), v.literal("at_vendor"), v.literal("condemned"), v.literal("loaned_out"))),
     condition: v.optional(v.union(v.literal("serviceable"), v.literal("unserviceable"), v.literal("overhauled"), v.literal("repaired"), v.literal("inspected"))),
     aircraftId: v.optional(v.id("aircraft")),

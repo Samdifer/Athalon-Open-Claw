@@ -9,6 +9,200 @@ const SEEDED_AUTH_FILE = path.join(
 test.use({ storageState: SEEDED_AUTH_FILE });
 
 test.describe("Wave 8: Seeded scheduler user stories", () => {
+  test("backlog work orders can be dropped onto a bay lane to create assignments", async ({
+    page,
+  }) => {
+    await page.goto("/scheduling", {
+      waitUntil: "domcontentloaded",
+      timeout: 45_000,
+    });
+
+    const unscheduledButton = page
+      .locator("button")
+      .filter({ hasText: /unscheduled/i })
+      .first();
+    if ((await unscheduledButton.count()) === 0) {
+      test.skip(true, "Seeded org has no unscheduled work orders.");
+    }
+
+    await unscheduledButton.click();
+
+    const firstBacklogCard = page.locator('[data-testid^="backlog-card-"]').first();
+    await expect(firstBacklogCard).toBeVisible({ timeout: 15_000 });
+
+    const cardLabel = await firstBacklogCard
+      .locator("span.font-mono.font-semibold")
+      .first()
+      .innerText();
+    const targetLane = page.locator('[data-testid^="gantt-lane-"]').first();
+    await expect(targetLane).toBeVisible({ timeout: 15_000 });
+
+    const laneBox = await targetLane.boundingBox();
+    if (!laneBox) {
+      test.skip(true, "Could not resolve lane bounds for drop.");
+    }
+    const clientX = laneBox!.x + Math.min(40, laneBox!.width / 2);
+    const clientY = laneBox!.y + laneBox!.height / 2;
+
+    const dataTransfer = await page.evaluateHandle(() => new DataTransfer());
+    await firstBacklogCard.dispatchEvent("dragstart", { dataTransfer });
+    await targetLane.dispatchEvent("dragover", { dataTransfer, clientX, clientY });
+    await targetLane.dispatchEvent("drop", { dataTransfer, clientX, clientY });
+
+    await expect(page.getByText("Work order scheduled")).toBeVisible({ timeout: 15_000 });
+    await expect(page.locator(`[title*="${cardLabel}"]`).first()).toBeVisible({
+      timeout: 20_000,
+    });
+  });
+
+  test("bay row reorder controls update persisted board ordering", async ({ page }) => {
+    await page.goto("/scheduling", {
+      waitUntil: "domcontentloaded",
+      timeout: 45_000,
+    });
+
+    const rowLabels = page.locator('[data-testid^="gantt-row-label-"]');
+    if ((await rowLabels.count()) < 2) {
+      await page.goto("/scheduling/bays", {
+        waitUntil: "domcontentloaded",
+        timeout: 45_000,
+      });
+      await expect(
+        page.getByRole("heading", { name: "Hangar Bays" }),
+      ).toBeVisible({ timeout: 15_000 });
+      await page.getByRole("button", { name: "Add Bay" }).click();
+      await page.getByLabel("Name").fill(`E2E Bay ${Date.now()}`);
+      await page.getByRole("button", { name: "Create" }).click();
+      await expect(page.getByText("Bay created")).toBeVisible({ timeout: 15_000 });
+
+      await page.goto("/scheduling", {
+        waitUntil: "domcontentloaded",
+        timeout: 45_000,
+      });
+    }
+
+    await expect(rowLabels.nth(1)).toBeVisible({ timeout: 20_000 });
+
+    const firstRowLabelBefore = (await rowLabels.nth(0).innerText()).split("\n")[0].trim();
+    const secondRowLabelBefore = (await rowLabels.nth(1).innerText()).split("\n")[0].trim();
+
+    await page.locator('[data-testid^="bay-row-down-"]').first().click();
+    await expect(page.getByText("Bay order updated")).toBeVisible({ timeout: 10_000 });
+    await expect(rowLabels.nth(0)).toContainText(secondRowLabelBefore, { timeout: 15_000 });
+
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await expect(rowLabels.nth(0)).toContainText(secondRowLabelBefore, { timeout: 20_000 });
+    await expect(rowLabels.nth(1)).toContainText(firstRowLabelBefore, { timeout: 20_000 });
+  });
+
+  test("scheduler graveyard supports archive and restore flows", async ({ page }) => {
+    await page.goto("/scheduling", {
+      waitUntil: "domcontentloaded",
+      timeout: 45_000,
+    });
+
+    const archiveButton = page.locator('[data-testid^="archive-assignment-"]').first();
+    if ((await archiveButton.count()) === 0) {
+      test.skip(true, "No scheduled bars are currently visible to archive.");
+    }
+
+    const archiveLabel = (await archiveButton.getAttribute("aria-label")) ?? "";
+    const archivedWoNumber = archiveLabel.replace(/^Archive\s+/, "").trim();
+
+    await archiveButton.click();
+    await expect(page.getByText("Assignment archived")).toBeVisible({ timeout: 15_000 });
+
+    await page.getByRole("button", { name: /Graveyard/i }).click();
+    await expect(
+      page.getByRole("dialog", { name: "Archived Assignments" }),
+    ).toBeVisible({ timeout: 15_000 });
+
+    const archivedRow = archivedWoNumber
+      ? page.locator("li", { hasText: archivedWoNumber }).first()
+      : page.locator('[data-testid^="graveyard-item-"]').first();
+    await expect(archivedRow).toBeVisible({ timeout: 15_000 });
+
+    await archivedRow.getByRole("button", { name: "Restore" }).click();
+    await expect(page.getByText("Assignment restored")).toBeVisible({ timeout: 15_000 });
+  });
+
+  test("scheduler supports fullscreen route mode and exit", async ({ page }) => {
+    await page.goto("/scheduling", {
+      waitUntil: "domcontentloaded",
+      timeout: 45_000,
+    });
+
+    await page.getByTestId("scheduling-enter-fullscreen").click();
+    await expect(page.getByTestId("scheduling-exit-fullscreen")).toBeVisible({
+      timeout: 15_000,
+    });
+    await expect(page).toHaveURL(/\/scheduling\?view=fullscreen/);
+
+    await page.getByTestId("scheduling-exit-fullscreen").click();
+    await expect(page.getByTestId("scheduling-enter-fullscreen")).toBeVisible({
+      timeout: 15_000,
+    });
+    await expect(page).not.toHaveURL(/view=fullscreen/);
+  });
+
+  test("scheduler toggles analytics and roster panels and supports popout", async ({
+    page,
+  }) => {
+    await page.goto("/scheduling", {
+      waitUntil: "domcontentloaded",
+      timeout: 45_000,
+    });
+
+    await page.getByTestId("toggle-analytics-panel").click();
+    await expect(page.getByTestId("analytics-panel")).toBeVisible({ timeout: 15_000 });
+    await page.getByRole("button", { name: "Pop out analytics" }).click();
+    await expect(page.getByRole("button", { name: "Stow Tray" })).toBeVisible({
+      timeout: 15_000,
+    });
+    await page.getByRole("button", { name: "Stow Tray" }).click();
+
+    await page.getByTestId("toggle-roster-panel").click();
+    await expect(page.getByTestId("roster-panel")).toBeVisible({ timeout: 15_000 });
+    await page.getByRole("button", { name: "Pop out roster" }).click();
+    await expect(page.getByRole("button", { name: "Stow Tray" })).toBeVisible({
+      timeout: 15_000,
+    });
+    await page.getByRole("button", { name: "Stow Tray" }).click();
+  });
+
+  test("scheduler command center supports quick configuration and financial saves", async ({
+    page,
+  }) => {
+    await page.goto("/scheduling", {
+      waitUntil: "domcontentloaded",
+      timeout: 45_000,
+    });
+
+    await page.getByTestId("toggle-command-center").click();
+    await expect(
+      page.getByRole("heading", { name: "Scheduling Command Center" }),
+    ).toBeVisible({ timeout: 15_000 });
+
+    await page.getByTestId("command-center-tab-configuration").click();
+    const capacityBufferInput = page.getByLabel("Capacity Buffer %");
+    await capacityBufferInput.fill("18");
+    await page.getByTestId("command-center-save-scheduling").click();
+    await expect(page.getByText("Scheduling settings saved")).toBeVisible({ timeout: 15_000 });
+
+    await page.getByTestId("command-center-tab-financial").click();
+    const shopRateInput = page.getByLabel("Default Shop Rate");
+    await shopRateInput.fill("189");
+    await page.getByTestId("command-center-save-financial").click();
+    await expect(
+      page.getByText("Command center financial settings saved"),
+    ).toBeVisible({ timeout: 15_000 });
+
+    await page.keyboard.press("Escape");
+    await expect(
+      page.getByRole("heading", { name: "Scheduling Command Center" }),
+    ).toBeHidden({ timeout: 15_000 });
+  });
+
   test("planner sees converted quote continuity in Magic Scheduler", async ({
     page,
   }) => {

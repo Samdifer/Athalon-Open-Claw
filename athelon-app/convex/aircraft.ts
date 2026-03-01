@@ -14,39 +14,59 @@ export const list = query({
     organizationId: v.id("organizations"),
   },
   handler: async (ctx, args) => {
-    const aircraft = await ctx.db
+    const scopedAircraft = await ctx.db
       .query("aircraft")
       .withIndex("by_organization", (q) =>
         q.eq("operatingOrganizationId", args.organizationId)
       )
       .collect();
 
-    // For each aircraft, get open work order count
-    const enriched = await Promise.all(
-      aircraft.map(async (ac) => {
-        const openWos = await ctx.db
-          .query("workOrders")
-          .withIndex("by_aircraft", (q) => q.eq("aircraftId", ac._id))
-          .filter((q) =>
-            q.or(
-              q.eq(q.field("status"), "open"),
-              q.eq(q.field("status"), "in_progress"),
-              q.eq(q.field("status"), "pending_inspection"),
-              q.eq(q.field("status"), "pending_signoff"),
-              q.eq(q.field("status"), "on_hold"),
-              q.eq(q.field("status"), "open_discrepancies")
-            )
-          )
-          .collect();
+    const orgWorkOrders = await ctx.db
+      .query("workOrders")
+      .withIndex("by_organization", (q) =>
+        q.eq("organizationId", args.organizationId)
+      )
+      .collect();
 
-        return {
-          ...ac,
-          openWorkOrderCount: openWos.length,
-        };
-      })
+    const openStatuses = new Set([
+      "open",
+      "in_progress",
+      "pending_inspection",
+      "pending_signoff",
+      "on_hold",
+      "open_discrepancies",
+    ]);
+
+    const openCountByAircraft = new Map<string, number>();
+    for (const wo of orgWorkOrders) {
+      if (!openStatuses.has(wo.status)) continue;
+      const key = wo.aircraftId;
+      openCountByAircraft.set(key, (openCountByAircraft.get(key) ?? 0) + 1);
+    }
+
+    // Self-heal read path: include aircraft referenced by org work orders even if
+    // operatingOrganizationId has not been linked yet.
+    const aircraftById = new Map(scopedAircraft.map((ac) => [ac._id, ac]));
+    const uniqueWorkOrderAircraftIds = new Set(
+      orgWorkOrders.map((wo) => wo.aircraftId),
     );
+    for (const aircraftId of uniqueWorkOrderAircraftIds) {
+      if (aircraftById.has(aircraftId)) continue;
+      const aircraft = await ctx.db.get(aircraftId);
+      if (!aircraft) continue;
+      if (
+        aircraft.operatingOrganizationId &&
+        aircraft.operatingOrganizationId !== args.organizationId
+      ) {
+        continue;
+      }
+      aircraftById.set(aircraft._id, aircraft);
+    }
 
-    return enriched;
+    return Array.from(aircraftById.values()).map((ac) => ({
+      ...ac,
+      openWorkOrderCount: openCountByAircraft.get(ac._id) ?? 0,
+    }));
   },
 });
 
@@ -59,13 +79,43 @@ export const getByTailNumber = query({
     tailNumber: v.string(),
   },
   handler: async (ctx, args) => {
-    return ctx.db
+    const scopedAircraft = await ctx.db
       .query("aircraft")
       .withIndex("by_registration", (q) =>
         q.eq("currentRegistration", args.tailNumber)
       )
-      .filter((q) => q.eq(q.field("operatingOrganizationId"), args.organizationId))
+      .filter((q) =>
+        q.eq(q.field("operatingOrganizationId"), args.organizationId)
+      )
       .first();
+
+    if (scopedAircraft) return scopedAircraft;
+
+    const candidates = await ctx.db
+      .query("aircraft")
+      .withIndex("by_registration", (q) =>
+        q.eq("currentRegistration", args.tailNumber)
+      )
+      .collect();
+
+    for (const candidate of candidates) {
+      if (
+        candidate.operatingOrganizationId &&
+        candidate.operatingOrganizationId !== args.organizationId
+      ) {
+        continue;
+      }
+
+      const hasOrgWorkOrder = await ctx.db
+        .query("workOrders")
+        .withIndex("by_aircraft", (q) => q.eq("aircraftId", candidate._id))
+        .filter((q) => q.eq(q.field("organizationId"), args.organizationId))
+        .first();
+
+      if (hasOrgWorkOrder) return candidate;
+    }
+
+    return null;
   },
 });
 
@@ -171,6 +221,96 @@ export const create = mutation({
     });
 
     return aircraftId;
+  },
+});
+
+/**
+ * Repair utility: links org work-order aircraft into the fleet scope when
+ * operatingOrganizationId is missing.
+ */
+export const backfillOperatingOrganizationFromWorkOrders = mutation({
+  args: {
+    organizationId: v.id("organizations"),
+    dryRun: v.optional(v.boolean()),
+  },
+  handler: async (ctx, args) => {
+    const userId = await requireAuth(ctx);
+    const now = Date.now();
+    const dryRun = args.dryRun ?? false;
+
+    const workOrders = await ctx.db
+      .query("workOrders")
+      .withIndex("by_organization", (q) =>
+        q.eq("organizationId", args.organizationId)
+      )
+      .collect();
+
+    const uniqueAircraftIds = Array.from(
+      new Set(workOrders.map((wo) => wo.aircraftId)),
+    );
+
+    const linkedAircraftIds: string[] = [];
+    const alreadyLinkedAircraftIds: string[] = [];
+    const crossOrgAircraftIds: string[] = [];
+    const missingAircraftIds: string[] = [];
+
+    for (const aircraftId of uniqueAircraftIds) {
+      const aircraft = await ctx.db.get(aircraftId);
+      if (!aircraft) {
+        missingAircraftIds.push(aircraftId);
+        continue;
+      }
+
+      if (aircraft.operatingOrganizationId === args.organizationId) {
+        alreadyLinkedAircraftIds.push(aircraftId);
+        continue;
+      }
+
+      if (aircraft.operatingOrganizationId) {
+        crossOrgAircraftIds.push(aircraftId);
+        continue;
+      }
+
+      linkedAircraftIds.push(aircraftId);
+      if (dryRun) continue;
+
+      await ctx.db.patch(aircraftId, {
+        operatingOrganizationId: args.organizationId,
+        createdByOrganizationId: aircraft.createdByOrganizationId ?? args.organizationId,
+        updatedAt: now,
+      });
+    }
+
+    if (!dryRun && linkedAircraftIds.length > 0) {
+      await ctx.db.insert("auditLog", {
+        organizationId: args.organizationId,
+        eventType: "record_updated",
+        tableName: "aircraft",
+        recordId: `org:${args.organizationId}`,
+        userId,
+        fieldName: "operatingOrganizationId",
+        oldValue: JSON.stringify(null),
+        newValue: JSON.stringify(args.organizationId),
+        notes:
+          `Backfilled operatingOrganizationId for ${linkedAircraftIds.length} ` +
+          `aircraft referenced by org work orders.`,
+        timestamp: now,
+      });
+    }
+
+    return {
+      dryRun,
+      totalWorkOrders: workOrders.length,
+      totalReferencedAircraft: uniqueAircraftIds.length,
+      linkedCount: linkedAircraftIds.length,
+      alreadyLinkedCount: alreadyLinkedAircraftIds.length,
+      crossOrgCount: crossOrgAircraftIds.length,
+      missingAircraftCount: missingAircraftIds.length,
+      linkedAircraftIds,
+      alreadyLinkedAircraftIds,
+      crossOrgAircraftIds,
+      missingAircraftIds,
+    };
   },
 });
 

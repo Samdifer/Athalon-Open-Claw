@@ -6,6 +6,7 @@ import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import { usePagePrereqs } from "@/hooks/usePagePrereqs";
+import { useSelectedLocation } from "@/components/LocationSwitcher";
 import {
   Plus, Search, Cog, ChevronDown, ChevronRight, DollarSign, Loader2,
 } from "lucide-react";
@@ -184,10 +185,21 @@ export default function RotablesPage() {
   const [removeTarget, setRemoveTarget] = useState<{ id: Id<"rotables">; partNumber: string; serialNumber: string } | null>(null);
   const [actioningId, setActioningId] = useState<string | null>(null);
   const { orgId, isLoaded } = useCurrentOrg();
+  const { selectedLocationId } = useSelectedLocation(orgId);
+  const selectedShopLocationId =
+    selectedLocationId === "all"
+      ? "all"
+      : (selectedLocationId as Id<"shopLocations">);
 
   const rotables = useQuery(
     api.rotables.list,
-    orgId ? { organizationId: orgId, status: activeTab === "all" ? undefined : activeTab } : "skip",
+    orgId
+      ? {
+          organizationId: orgId,
+          status: activeTab === "all" ? undefined : activeTab,
+          shopLocationId: selectedShopLocationId,
+        }
+      : "skip",
   );
   const createRotable = useMutation(api.rotables.create);
   const recordAction = useMutation(api.rotables.recordAction);
@@ -238,6 +250,8 @@ export default function RotablesPage() {
     try {
       await createRotable({
         organizationId: orgId,
+        shopLocationId:
+          selectedShopLocationId === "all" ? undefined : selectedShopLocationId,
         partNumber: form.partNumber,
         serialNumber: form.serialNumber,
         description: form.description,

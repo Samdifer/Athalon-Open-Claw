@@ -26,6 +26,7 @@ type WorkOrderWithRisk = {
   remainingHours: number;
   riskLevel: "overdue" | "at_risk" | "on_track" | "no_date";
   aircraft: { currentRegistration: string | undefined; make: string; model: string } | null;
+  sourceQuoteId?: string;
   quoteNumber?: string | null;
   quoteStatus?: string | null;
   quoteTotal?: number | null;
@@ -134,7 +135,21 @@ export function BacklogSidebar({ workOrders, isOpen, onClose }: BacklogSidebarPr
         ) : (
           <ul className="divide-y divide-border/40">
             {sorted.map((wo) => (
-              <li key={wo._id} className="px-3 py-3 hover:bg-muted/30 transition-colors">
+              <li
+                key={wo._id}
+                className="px-3 py-3 hover:bg-muted/30 transition-colors cursor-grab active:cursor-grabbing"
+                draggable
+                onDragStart={(event) => {
+                  const payload = JSON.stringify({
+                    workOrderId: String(wo._id),
+                    sourceQuoteId: wo.sourceQuoteId,
+                  });
+                  event.dataTransfer.effectAllowed = "move";
+                  event.dataTransfer.setData("application/x-athelon-work-order", payload);
+                  event.dataTransfer.setData("text/plain", payload);
+                }}
+                data-testid={`backlog-card-${wo._id}`}
+              >
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex flex-col gap-0.5 min-w-0">
                     {/* Aircraft registration */}

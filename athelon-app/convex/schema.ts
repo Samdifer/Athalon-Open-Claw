@@ -309,6 +309,7 @@ export default defineSchema({
   // ═══════════════════════════════════════════════════════════════════════════
   organizations: defineTable({
     name: v.string(),
+    clerkOrganizationId: v.optional(v.string()),
     part145CertificateNumber: v.optional(v.string()),
     part145Ratings: v.array(v.string()), // e.g. ["Class A Airframe", "Class A Powerplant"]
     address: v.string(),
@@ -336,7 +337,8 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
   })
-    .index("by_part145_cert", ["part145CertificateNumber"]),
+    .index("by_part145_cert", ["part145CertificateNumber"])
+    .index("by_clerk_organization", ["clerkOrganizationId"]),
 
   // ═══════════════════════════════════════════════════════════════════════════
   // AIRCRAFT
@@ -670,6 +672,7 @@ export default defineSchema({
     userId: v.optional(v.string()),   // Clerk user ID (null = no system account)
     employeeId: v.optional(v.string()),
     organizationId: v.id("organizations"),
+    primaryShopLocationId: v.optional(v.id("shopLocations")),
 
     status: v.union(
       v.literal("active"),
@@ -702,7 +705,8 @@ export default defineSchema({
   })
     .index("by_organization", ["organizationId"])
     .index("by_user", ["userId"])
-    .index("by_status", ["organizationId", "status"]),
+    .index("by_status", ["organizationId", "status"])
+    .index("by_org_location", ["organizationId", "primaryShopLocationId"]),
 
   // ═══════════════════════════════════════════════════════════════════════════
   // TECHNICIAN SHIFTS
@@ -761,6 +765,7 @@ export default defineSchema({
     workOrderId: v.id("workOrders"),
     sourceQuoteId: v.optional(v.id("quotes")),
     hangarBayId: v.id("hangarBays"),
+    shopLocationId: v.optional(v.id("shopLocations")),
     startDate: v.number(),
     endDate: v.number(),
 
@@ -784,6 +789,8 @@ export default defineSchema({
     .index("by_org_wo", ["organizationId", "workOrderId"])
     .index("by_org_quote", ["organizationId", "sourceQuoteId"])
     .index("by_org_bay", ["organizationId", "hangarBayId"])
+    .index("by_org_location", ["organizationId", "shopLocationId"])
+    .index("by_org_location_start", ["organizationId", "shopLocationId", "startDate"])
     .index("by_org_start", ["organizationId", "startDate"])
     .index("by_org_archived", ["organizationId", "archivedAt"]),
 
@@ -973,6 +980,7 @@ export default defineSchema({
   workOrders: defineTable({
     workOrderNumber: v.string(),     // Human-readable, org-unique
     organizationId: v.id("organizations"),
+    shopLocationId: v.optional(v.id("shopLocations")),
     aircraftId: v.id("aircraft"),
 
     status: workOrderStatus,
@@ -1114,6 +1122,8 @@ export default defineSchema({
     updatedAt: v.number(),
   })
     .index("by_organization", ["organizationId"])
+    .index("by_org_location", ["organizationId", "shopLocationId"])
+    .index("by_org_location_status", ["organizationId", "shopLocationId", "status"])
     .index("by_aircraft", ["aircraftId"])
     .index("by_status", ["organizationId", "status"])
     .index("by_number", ["organizationId", "workOrderNumber"])
@@ -2057,6 +2067,7 @@ export default defineSchema({
     removedByWorkOrderId: v.optional(v.id("workOrders")),
 
     organizationId: v.id("organizations"),
+    shopLocationId: v.optional(v.id("shopLocations")),
     receivingDate: v.optional(v.number()),
     receivingWorkOrderId: v.optional(v.id("workOrders")),
     supplier: v.optional(v.string()),
@@ -2100,6 +2111,7 @@ export default defineSchema({
     updatedAt: v.number(),
   })
     .index("by_organization", ["organizationId"])
+    .index("by_org_shop_location", ["organizationId", "shopLocationId"])
     .index("by_part_number", ["partNumber"])
     .index("by_serial", ["partNumber", "serialNumber"])
     .index("by_aircraft", ["currentAircraftId"])
@@ -3397,6 +3409,7 @@ export default defineSchema({
   // ═══════════════════════════════════════════════════════════════════════════
   hangarBays: defineTable({
     organizationId: v.id("organizations"),
+    shopLocationId: v.optional(v.id("shopLocations")),
     name: v.string(),
     description: v.optional(v.string()),
     type: v.union(
@@ -3412,10 +3425,12 @@ export default defineSchema({
     ),
     currentAircraftId: v.optional(v.id("aircraft")),
     currentWorkOrderId: v.optional(v.id("workOrders")),
+    displayOrder: v.optional(v.number()),
     createdAt: v.number(),
     updatedAt: v.number(),
   })
     .index("by_org", ["organizationId"])
+    .index("by_org_location", ["organizationId", "shopLocationId"])
     .index("by_org_status", ["organizationId", "status"]),
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -3479,6 +3494,7 @@ export default defineSchema({
   // ═══════════════════════════════════════════════════════════════════════════
   toolRecords: defineTable({
     organizationId: v.id("organizations"),
+    shopLocationId: v.optional(v.id("shopLocations")),
     toolNumber: v.string(),
     description: v.string(),
     serialNumber: v.optional(v.string()),
@@ -3509,8 +3525,11 @@ export default defineSchema({
     createdAt: v.number(),
   })
     .index("by_org", ["organizationId"])
+    .index("by_org_location", ["organizationId", "shopLocationId"])
     .index("by_org_status", ["organizationId", "status"])
-    .index("by_calibration_due", ["organizationId", "nextCalibrationDue"]),
+    .index("by_org_location_status", ["organizationId", "shopLocationId", "status"])
+    .index("by_calibration_due", ["organizationId", "nextCalibrationDue"])
+    .index("by_org_location_calibration_due", ["organizationId", "shopLocationId", "nextCalibrationDue"]),
 
   // ═══════════════════════════════════════════════════════════════════════════
   // CURRENCY RATES — Multi-Currency Support
@@ -3867,6 +3886,7 @@ export default defineSchema({
   // === ROTABLE MANAGEMENT ===
   rotables: defineTable({
     organizationId: v.id("organizations"),
+    shopLocationId: v.optional(v.id("shopLocations")),
     partNumber: v.string(),
     serialNumber: v.string(),
     description: v.string(),
@@ -3899,6 +3919,7 @@ export default defineSchema({
     updatedAt: v.optional(v.number()),
   })
     .index("by_organization", ["organizationId"])
+    .index("by_org_location", ["organizationId", "shopLocationId"])
     .index("by_partSerial", ["organizationId", "partNumber", "serialNumber"])
     .index("by_aircraft", ["aircraftId"])
     .index("by_status", ["organizationId", "status"]),

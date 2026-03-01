@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useMemo, useSyncExternalStore } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
@@ -14,28 +14,68 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 
-// ─── Tiny shared store (no deps) ──────────────────────────────────────────
+const DEFAULT_LOCATION_ID = "all";
+const STORAGE_PREFIX = "athelon:selected-location:";
 
-let _locationId = "all";
-const _listeners = new Set<() => void>();
+const listeners = new Set<() => void>();
+const selectedByOrg = new Map<string, string>();
 
-function _setLocationId(id: string) {
-  _locationId = id;
-  _listeners.forEach((l) => l());
-}
-function _subscribe(cb: () => void) {
-  _listeners.add(cb);
-  return () => { _listeners.delete(cb); };
-}
-function _getSnapshot() { return _locationId; }
-
-/** Hook to read/write the currently-selected shop location. */
-export function useSelectedLocation() {
-  const locationId = useSyncExternalStore(_subscribe, _getSnapshot, _getSnapshot);
-  return { selectedLocationId: locationId, setSelectedLocationId: _setLocationId };
+function storageKey(orgKey: string) {
+  return `${STORAGE_PREFIX}${orgKey}`;
 }
 
-// ─── Component ─────────────────────────────────────────────────────────────
+function subscribe(cb: () => void) {
+  listeners.add(cb);
+  return () => {
+    listeners.delete(cb);
+  };
+}
+
+function emitChange() {
+  listeners.forEach((listener) => listener());
+}
+
+function readSelection(orgKey: string) {
+  if (selectedByOrg.has(orgKey)) {
+    return selectedByOrg.get(orgKey)!;
+  }
+
+  if (typeof window !== "undefined") {
+    const stored = window.localStorage.getItem(storageKey(orgKey));
+    if (stored) {
+      selectedByOrg.set(orgKey, stored);
+      return stored;
+    }
+  }
+
+  selectedByOrg.set(orgKey, DEFAULT_LOCATION_ID);
+  return DEFAULT_LOCATION_ID;
+}
+
+function writeSelection(orgKey: string, value: string) {
+  selectedByOrg.set(orgKey, value);
+  if (typeof window !== "undefined") {
+    window.localStorage.setItem(storageKey(orgKey), value);
+  }
+  emitChange();
+}
+
+/** Hook to read/write the currently-selected shop location for an organization. */
+export function useSelectedLocation(orgId?: string | null) {
+  const orgKey = orgId ?? "global";
+
+  const getSnapshot = useCallback(() => readSelection(orgKey), [orgKey]);
+  const selectedLocationId = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
+
+  const setSelectedLocationId = useCallback(
+    (nextLocationId: string) => {
+      writeSelection(orgKey, nextLocationId);
+    },
+    [orgKey],
+  );
+
+  return { selectedLocationId, setSelectedLocationId };
+}
 
 export function LocationSwitcher() {
   const { orgId } = useCurrentOrg();
@@ -44,9 +84,23 @@ export function LocationSwitcher() {
     orgId ? { organizationId: orgId } : "skip",
   );
 
-  const { selectedLocationId, setSelectedLocationId } = useSelectedLocation();
+  const { selectedLocationId, setSelectedLocationId } = useSelectedLocation(orgId);
 
-  const selectedLocation = locations?.find((l) => l._id === selectedLocationId);
+  const selectedLocation = useMemo(
+    () => locations?.find((location) => location._id === selectedLocationId),
+    [locations, selectedLocationId],
+  );
+
+  useEffect(() => {
+    if (!locations || locations.length === 0) return;
+    if (selectedLocationId === DEFAULT_LOCATION_ID) return;
+
+    const stillExists = locations.some((location) => location._id === selectedLocationId);
+    if (!stillExists) {
+      setSelectedLocationId(DEFAULT_LOCATION_ID);
+    }
+  }, [locations, selectedLocationId, setSelectedLocationId]);
+
   const label = selectedLocation?.name ?? "All Locations";
 
   return (
@@ -64,23 +118,23 @@ export function LocationSwitcher() {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-[200px]">
         <DropdownMenuItem
-          onClick={() => setSelectedLocationId("all")}
+          onClick={() => setSelectedLocationId(DEFAULT_LOCATION_ID)}
           className="gap-2 text-xs"
         >
           <Globe className="h-3.5 w-3.5" />
           All Locations
         </DropdownMenuItem>
         {locations && locations.length > 0 && <DropdownMenuSeparator />}
-        {locations?.filter((l) => l.isActive !== false).map((loc) => (
+        {locations?.filter((location) => location.isActive !== false).map((location) => (
           <DropdownMenuItem
-            key={loc._id}
-            onClick={() => setSelectedLocationId(loc._id)}
+            key={location._id}
+            onClick={() => setSelectedLocationId(location._id)}
             className="gap-2 text-xs"
           >
             <MapPin className="h-3.5 w-3.5" />
-            <span className="truncate">{loc.name}</span>
+            <span className="truncate">{location.name}</span>
             <span className="ml-auto text-[10px] text-muted-foreground font-mono">
-              {loc.code}
+              {location.code}
             </span>
           </DropdownMenuItem>
         ))}

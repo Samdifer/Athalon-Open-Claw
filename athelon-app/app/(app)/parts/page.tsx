@@ -6,6 +6,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
+import { useSelectedLocation } from "@/components/LocationSwitcher";
 import {
   Package,
   Plus,
@@ -76,6 +77,7 @@ type InspectionResult = "approved" | "rejected";
 interface PartDoc {
   _id: Id<"parts">;
   _creationTime?: number;
+  shopLocationId?: Id<"shopLocations">;
   partNumber: string;
   partName: string;
   description?: string;
@@ -732,6 +734,11 @@ export default function PartsPage() {
   const [activeTab, setActiveTab] = useState<LocationFilter>("all");
   const [search, setSearch] = useState("");
   const { orgId, isLoaded } = useCurrentOrg();
+  const { selectedLocationId } = useSelectedLocation(orgId);
+  const selectedShopLocationId =
+    selectedLocationId === "all"
+      ? "all"
+      : (selectedLocationId as Id<"shopLocations">);
 
   // Dialog state
   const [inspectPart, setInspectPart] = useState<PartDoc | null>(null);
@@ -744,7 +751,12 @@ export default function PartsPage() {
   // Load all parts
   const allParts = useQuery(
     api.parts.listParts,
-    orgId ? { organizationId: orgId } : "skip",
+    orgId
+      ? {
+          organizationId: orgId,
+          shopLocationId: selectedShopLocationId,
+        }
+      : "skip",
   );
 
   // Load pending inspection parts (server-indexed query)
@@ -775,7 +787,9 @@ export default function PartsPage() {
   const filtered = useMemo(() => {
     let result =
       activeTab === "pending_inspection"
-        ? ((pendingInspectionParts ?? []) as PartDoc[])
+        ? ((pendingInspectionParts ?? []) as PartDoc[]).filter((part) =>
+            selectedShopLocationId === "all" ? true : part.shopLocationId === selectedShopLocationId,
+          )
         : parts;
 
     // Location filter (skip for pending_inspection — already filtered)
@@ -800,7 +814,7 @@ export default function PartsPage() {
     }
 
     return result;
-  }, [parts, pendingInspectionParts, activeTab, search]);
+  }, [parts, pendingInspectionParts, activeTab, search, selectedShopLocationId]);
 
   // Count per tab
   const counts: Record<LocationFilter, number> = {

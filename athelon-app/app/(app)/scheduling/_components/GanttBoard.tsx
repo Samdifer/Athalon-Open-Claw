@@ -8,6 +8,12 @@ import {
   CalendarDays,
   Plus,
   AlertTriangle,
+  ArrowDown,
+  ArrowUp,
+  Archive,
+  Ban,
+  CheckCircle2,
+  SlidersHorizontal,
 } from "lucide-react";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -54,6 +60,8 @@ type ScheduledPlannerProject = {
   promisedDeliveryDate: number;
   hangarBayId: string;
   sourceQuoteId?: string;
+  dailyEffort?: { dayOffset: number; effortHours: number }[];
+  nonWorkDays?: number[];
   quoteNumber?: string | null;
   quoteStatus?: string | null;
   quoteTotal?: number | null;
@@ -84,6 +92,19 @@ interface GanttBoardProps {
     cellWidth: number;
     todayIndex: number;
   }) => void;
+  onReorderBays?: (orderedBayIds: string[]) => Promise<void>;
+  onArchiveAssignment?: (assignmentId: string) => Promise<void>;
+  interactionMode?: "normal" | "distribute" | "block";
+  magicSelectionMode?: boolean;
+  selectedMagicWorkOrderIds?: string[];
+  onToggleMagicWorkOrder?: (workOrderId: string) => void;
+  onApplyDayModelEdit?: (args: {
+    assignmentId: string;
+    workOrderId: string;
+    dayOffset: number;
+    mode: "distribute" | "block";
+    adjustment: 1 | -1;
+  }) => Promise<void>;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -126,6 +147,26 @@ function getStatusLabel(status: string): string {
   return status.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
+type BacklogDropPayload = {
+  workOrderId: string;
+  sourceQuoteId?: string;
+};
+
+function parseBacklogPayload(raw: string): BacklogDropPayload | null {
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed.workOrderId !== "string") return null;
+    return {
+      workOrderId: parsed.workOrderId,
+      sourceQuoteId:
+        typeof parsed.sourceQuoteId === "string" ? parsed.sourceQuoteId : undefined,
+    };
+  } catch {
+    return null;
+  }
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
@@ -141,13 +182,24 @@ export function GanttBoard({
   scrollRef,
   onTimelineScroll,
   onTimelineConfigChange,
+  onReorderBays,
+  onArchiveAssignment,
+  interactionMode = "normal",
+  magicSelectionMode = false,
+  selectedMagicWorkOrderIds = [],
+  onToggleMagicWorkOrder,
+  onApplyDayModelEdit,
 }: GanttBoardProps) {
   const navigate = useNavigate();
   const internalScrollRef = useRef<HTMLDivElement>(null);
   const timelineScrollRef = scrollRef ?? internalScrollRef;
+  const timelineCanvasRef = useRef<HTMLDivElement>(null);
 
   const [viewMode, setViewMode] = useState<ViewMode>("day");
   const [showConflicts, setShowConflicts] = useState(true);
+  const isEditMode = interactionMode !== "normal";
+  const dayEditMode: "distribute" | "block" =
+    interactionMode === "normal" ? "distribute" : interactionMode;
 
   const cellWidth = VIEW_CELL_WIDTHS[viewMode];
 
@@ -162,6 +214,8 @@ export function GanttBoard({
     origEndDate: number;
   } | null>(null);
   const [dragDelta, setDragDelta] = useState(0);
+  const [dragHoverBayId, setDragHoverBayId] = useState<string | null>(null);
+  const [laneDropTargetId, setLaneDropTargetId] = useState<string | null>(null);
 
   // ── Today ──────────────────────────────────────────────────────────────
   const today = useMemo(() => {
@@ -262,6 +316,21 @@ export function GanttBoard({
     [dragState, dragDelta, cellWidth, rangeStartDay, days.length],
   );
 
+  const resolveHoveredBayId = useCallback(
+    (clientY: number): string | null => {
+      if (!bays || bays.length === 0) return null;
+      const canvas = timelineCanvasRef.current;
+      if (!canvas) return null;
+      const rect = canvas.getBoundingClientRect();
+      const relativeY = clientY - rect.top - ROW_HEIGHT;
+      if (relativeY < 0) return null;
+      const rowIndex = Math.floor(relativeY / ROW_HEIGHT);
+      if (rowIndex < 0 || rowIndex >= rows.length) return null;
+      return rows[rowIndex]?.id ?? null;
+    },
+    [bays, rows],
+  );
+
   // ── Today column ───────────────────────────────────────────────────────
   const todayIndex = useMemo(
     () => days.findIndex((d) => d.toDateString() === today.toDateString()),
@@ -290,22 +359,32 @@ export function GanttBoard({
         origEndDate: wo.promisedDeliveryDate,
       });
       setDragDelta(0);
+      setDragHoverBayId(null);
     },
     [],
   );
 
   useEffect(() => {
     if (!dragState) return;
+    if (isEditMode || magicSelectionMode) return;
 
     function handleMouseMove(e: MouseEvent) {
       setDragDelta(e.clientX - dragState!.startX);
+      if (dragState?.type === "move") {
+        setDragHoverBayId(resolveHoveredBayId(e.clientY));
+      }
     }
 
     async function handleMouseUp(e: MouseEvent) {
       const delta = e.clientX - dragState!.startX;
       const daysDelta = Math.round(delta / cellWidth);
+      const nextHangarBayId =
+        dragState!.type === "move"
+          ? dragHoverBayId ?? dragState!.hangarBayId
+          : dragState!.hangarBayId;
+      const didMoveAcrossBay = nextHangarBayId !== dragState!.hangarBayId;
 
-      if (daysDelta !== 0) {
+      if (daysDelta !== 0 || didMoveAcrossBay) {
         let newStart: number;
         let newEnd: number;
 
@@ -325,7 +404,7 @@ export function GanttBoard({
             workOrderId: dragState!.workOrderId,
             startDate: newStart,
             endDate: newEnd,
-            hangarBayId: dragState!.hangarBayId,
+            hangarBayId: nextHangarBayId,
             sourceQuoteId: dragState!.sourceQuoteId,
           });
           toast.success("Schedule updated");
@@ -336,6 +415,7 @@ export function GanttBoard({
 
       setDragState(null);
       setDragDelta(0);
+      setDragHoverBayId(null);
     }
 
     window.addEventListener("mousemove", handleMouseMove);
@@ -344,7 +424,36 @@ export function GanttBoard({
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseup", handleMouseUp);
     };
-  }, [dragState, cellWidth, onScheduleChange]);
+  }, [
+    dragState,
+    cellWidth,
+    onScheduleChange,
+    dragHoverBayId,
+    resolveHoveredBayId,
+    isEditMode,
+    magicSelectionMode,
+  ]);
+
+  const moveBayRow = useCallback(
+    async (bayId: string, direction: -1 | 1) => {
+      if (isEditMode || magicSelectionMode) return;
+      if (!onReorderBays || !bays || bays.length < 2) return;
+      const ids = rows.map((row) => row.id);
+      const currentIdx = ids.indexOf(bayId);
+      if (currentIdx < 0) return;
+      const nextIdx = currentIdx + direction;
+      if (nextIdx < 0 || nextIdx >= ids.length) return;
+      const next = [...ids];
+      [next[currentIdx], next[nextIdx]] = [next[nextIdx], next[currentIdx]];
+      try {
+        await onReorderBays(next);
+        toast.success("Bay order updated");
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : "Failed to reorder bays");
+      }
+    },
+    [onReorderBays, bays, rows, isEditMode, magicSelectionMode],
+  );
 
   // ── Zoom / scroll helpers ──────────────────────────────────────────────
   function scrollToToday() {
@@ -489,6 +598,32 @@ export function GanttBoard({
         </Button>
       </div>
 
+      {isEditMode && (
+        <div
+          className={`px-4 py-1.5 border-b text-xs flex items-center justify-between ${
+            dayEditMode === "distribute"
+              ? "border-amber-500/40 bg-amber-500/10 text-amber-300"
+              : "border-rose-500/40 bg-rose-500/10 text-rose-300"
+          }`}
+          data-testid="gantt-edit-mode-banner"
+        >
+          <span className="flex items-center gap-2">
+            {dayEditMode === "distribute" ? (
+              <>
+                <SlidersHorizontal className="h-3.5 w-3.5" />
+                Distribute mode: click a day slice to add 1.0h, shift-click to remove 1.0h.
+              </>
+            ) : (
+              <>
+                <Ban className="h-3.5 w-3.5" />
+                Block mode: click a day slice to toggle non-work days.
+              </>
+            )}
+          </span>
+          <span className="text-[11px] opacity-80">Drag/resize is paused in edit mode.</span>
+        </div>
+      )}
+
       {/* ── Conflict warnings banner ──────────────────────────────────────── */}
       {showConflicts && conflicts && conflicts.length > 0 && (
         <div className="border-b border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-950/30 px-4 py-2 flex-shrink-0 overflow-y-auto max-h-32">
@@ -524,18 +659,55 @@ export function GanttBoard({
           {rows.map((row) => (
             <div
               key={row.id}
-              className="flex flex-col justify-center px-3 border-b border-border/30 hover:bg-muted/20 transition-colors cursor-pointer"
+              className={`border-b border-border/30 hover:bg-muted/20 transition-colors ${
+                bays && bays.length > 0 ? "px-2" : "px-3 cursor-pointer"
+              }`}
               style={{ height: ROW_HEIGHT }}
+              data-testid={`gantt-row-label-${row.id}`}
               onClick={() => {
                 if (!bays || bays.length === 0) navigate(`/work-orders/${row.id}`);
               }}
             >
-              <span className="text-[11px] font-semibold text-foreground truncate">
-                {row.label}
-              </span>
-              <span className="text-[10px] font-mono text-muted-foreground truncate">
-                {row.sublabel} {bays && row.wos.length > 0 ? `• ${row.wos.length} WO` : ""}
-              </span>
+              <div className="flex h-full items-center gap-2">
+                <div className="min-w-0 flex-1">
+                  <span className="text-[11px] font-semibold text-foreground truncate block">
+                    {row.label}
+                  </span>
+                  <span className="text-[10px] font-mono text-muted-foreground truncate block">
+                    {row.sublabel} {bays && row.wos.length > 0 ? `• ${row.wos.length} WO` : ""}
+                  </span>
+                </div>
+                {bays && bays.length > 0 && (
+                  <div className="flex flex-col gap-0.5">
+                    <button
+                      type="button"
+                      className="h-4 w-4 rounded border border-border/60 text-muted-foreground hover:bg-muted/50 disabled:opacity-30"
+                      disabled={isEditMode || magicSelectionMode}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        void moveBayRow(row.id, -1);
+                      }}
+                      aria-label={`Move ${row.label} up`}
+                      data-testid={`bay-row-up-${row.id}`}
+                    >
+                      <ArrowUp className="h-2.5 w-2.5 mx-auto" />
+                    </button>
+                    <button
+                      type="button"
+                      className="h-4 w-4 rounded border border-border/60 text-muted-foreground hover:bg-muted/50 disabled:opacity-30"
+                      disabled={isEditMode || magicSelectionMode}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        void moveBayRow(row.id, 1);
+                      }}
+                      aria-label={`Move ${row.label} down`}
+                      data-testid={`bay-row-down-${row.id}`}
+                    >
+                      <ArrowDown className="h-2.5 w-2.5 mx-auto" />
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           ))}
         </div>
@@ -547,7 +719,11 @@ export function GanttBoard({
           onScroll={(e) => onTimelineScroll?.(e.currentTarget.scrollLeft)}
           data-testid="gantt-timeline-scroll"
         >
-          <div className="relative" style={{ width: timelineWidth, minHeight: "100%" }}>
+          <div
+            ref={timelineCanvasRef}
+            className="relative"
+            style={{ width: timelineWidth, minHeight: "100%" }}
+          >
             {/* Today vertical line — red dashed */}
             {todayIndex >= 0 && (
               <div
@@ -606,8 +782,77 @@ export function GanttBoard({
             {rows.map((row) => (
               <div
                 key={row.id}
-                className="relative border-b border-border/30"
+                className={`relative border-b border-border/30 ${
+                  laneDropTargetId === row.id ? "bg-primary/10" : ""
+                } ${dragHoverBayId === row.id ? "ring-1 ring-inset ring-primary/50" : ""}`}
                 style={{ height: ROW_HEIGHT, width: timelineWidth }}
+                data-testid={`gantt-lane-${row.id}`}
+                onDragOver={(event) => {
+                  if (isEditMode || magicSelectionMode) return;
+                  if (!bays || bays.length === 0) return;
+                  const payload =
+                    parseBacklogPayload(
+                      event.dataTransfer.getData("application/x-athelon-work-order"),
+                    ) ?? parseBacklogPayload(event.dataTransfer.getData("text/plain"));
+                  if (!payload) return;
+                  event.preventDefault();
+                  event.dataTransfer.dropEffect = "move";
+                  setLaneDropTargetId(row.id);
+                }}
+                onDragLeave={(event) => {
+                  if (
+                    event.relatedTarget instanceof Node &&
+                    event.currentTarget.contains(event.relatedTarget)
+                  ) {
+                    return;
+                  }
+                  setLaneDropTargetId(null);
+                }}
+                onDrop={async (event) => {
+                  if (isEditMode || magicSelectionMode) return;
+                  if (!bays || bays.length === 0) return;
+                  event.preventDefault();
+                  setLaneDropTargetId(null);
+                  const payload =
+                    parseBacklogPayload(
+                      event.dataTransfer.getData("application/x-athelon-work-order"),
+                    ) ?? parseBacklogPayload(event.dataTransfer.getData("text/plain"));
+                  if (!payload) {
+                    toast.error("Invalid drop payload");
+                    return;
+                  }
+                  const workOrder = workOrderMap.get(payload.workOrderId);
+                  if (!workOrder) {
+                    toast.error("Work order not found in backlog");
+                    return;
+                  }
+
+                  const rect = event.currentTarget.getBoundingClientRect();
+                  const relativeX = Math.max(0, event.clientX - rect.left);
+                  const dayIndex = Math.max(
+                    0,
+                    Math.min(days.length - 1, Math.floor(relativeX / cellWidth)),
+                  );
+                  const startDate = days[dayIndex]?.getTime() ?? Date.now();
+                  const durationDays = Math.max(
+                    1,
+                    Math.ceil(Math.max(1, workOrder.effectiveEstimatedHours || 1) / 8),
+                  );
+                  const endDate = startDate + durationDays * DAY_MS;
+
+                  try {
+                    await onScheduleChange({
+                      workOrderId: payload.workOrderId,
+                      startDate,
+                      endDate,
+                      hangarBayId: row.id,
+                      sourceQuoteId: payload.sourceQuoteId ?? workOrder.sourceQuoteId,
+                    });
+                    toast.success("Work order scheduled");
+                  } catch (err) {
+                    toast.error(err instanceof Error ? err.message : "Failed to schedule work order");
+                  }
+                }}
               >
                 {/* Weekend column shading (day view only) */}
                 {viewMode === "day" &&
@@ -625,11 +870,29 @@ export function GanttBoard({
 
                 {row.wos.map((wo) => {
                   const { startDayIdx, endDayIdx } = getProjectPosition(wo);
+                  const durationDays = Math.max(
+                    1,
+                    Math.ceil((wo.promisedDeliveryDate - wo.scheduledStartDate) / DAY_MS),
+                  );
                   const barLeft = startDayIdx * cellWidth;
                   const barWidth = Math.max(cellWidth, (endDayIdx - startDayIdx) * cellWidth);
                   const barTop = (ROW_HEIGHT - BAR_HEIGHT) / 2;
                   const isConflict = conflictWoIds.has(wo.workOrderId);
+                  const isMagicSelected = selectedMagicWorkOrderIds.includes(wo.workOrderId);
+                  const interactionPaused = isEditMode || magicSelectionMode;
                   const mapped = workOrderMap.get(wo.workOrderId);
+                  const dayEffortMap = new Map<number, number>(
+                    (wo.dailyEffort ?? []).map((row) => [row.dayOffset, row.effortHours]),
+                  );
+                  const nonWorkDaySet = new Set<number>(
+                    (wo.nonWorkDays ?? []).filter((offset) => offset >= 0 && offset < durationDays),
+                  );
+                  const maxDayEffort = Math.max(
+                    0,
+                    ...Array.from({ length: durationDays }, (_, offset) =>
+                      nonWorkDaySet.has(offset) ? 0 : Math.max(0, dayEffortMap.get(offset) ?? 0),
+                    ),
+                  );
                   const colorClass = isConflict
                     ? "bg-red-500/70 border-2 border-red-400 text-white ring-2 ring-red-400/50"
                     : getBarColor(
@@ -656,7 +919,15 @@ export function GanttBoard({
                     <div
                       key={`${row.id}-${wo.workOrderId}`}
                       className={`absolute rounded-md flex items-center overflow-hidden text-[11px] font-medium transition-shadow ${colorClass} ${
-                        isDragging ? "opacity-80 shadow-lg z-30" : "hover:shadow-md cursor-grab"
+                        isDragging
+                          ? "opacity-80 shadow-lg z-30"
+                          : interactionPaused
+                            ? "hover:shadow-md cursor-pointer"
+                            : "hover:shadow-md cursor-grab"
+                      } ${
+                        isMagicSelected
+                          ? "ring-2 ring-violet-300/90 ring-offset-1 ring-offset-background"
+                          : ""
                       }`}
                       style={{
                         left: barLeft + (isDragging && dragState?.type === "move" ? dragDelta : 0),
@@ -666,11 +937,25 @@ export function GanttBoard({
                         top: barTop,
                         height: BAR_HEIGHT,
                       }}
-                      onMouseDown={(e) => handleMouseDown(e, wo, "move")}
-                      onDoubleClick={() => navigate(`/work-orders/${wo.workOrderId}`)}
+                      onMouseDown={(e) => {
+                        if (interactionPaused) return;
+                        handleMouseDown(e, wo, "move");
+                      }}
+                      onClick={(e) => {
+                        if (!magicSelectionMode) return;
+                        e.preventDefault();
+                        e.stopPropagation();
+                        onToggleMagicWorkOrder?.(wo.workOrderId);
+                      }}
+                      onDoubleClick={() => {
+                        if (interactionPaused || magicSelectionMode) return;
+                        navigate(`/work-orders/${wo.workOrderId}`);
+                      }}
                       title={`${wo.workOrderNumber} — ${wo.aircraft?.currentRegistration ?? ""} — ${wo.description}${wo.quoteNumber ? ` — ${wo.quoteNumber}` : ""}`}
+                      data-testid={`gantt-bar-${wo.assignmentId}`}
+                      data-magic-selected={isMagicSelected ? "true" : "false"}
                     >
-                      <div className="flex items-center gap-1.5 px-2 min-w-0 flex-1">
+                      <div className="flex items-center gap-1.5 px-2 pr-6 min-w-0 flex-1">
                         <span className="font-semibold truncate">{wo.workOrderNumber}</span>
                         {wo.aircraft?.currentRegistration && barWidth > 120 && (
                           <span className="text-[10px] opacity-80 truncate">
@@ -682,15 +967,104 @@ export function GanttBoard({
                             {wo.quoteNumber}
                           </span>
                         )}
+                        {isMagicSelected && (
+                          <span
+                            className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-violet-500/80 text-white"
+                            title="Selected for Magic Scheduler"
+                          >
+                            <CheckCircle2 className="h-3 w-3" />
+                          </span>
+                        )}
                       </div>
 
-                      <div
-                        className="absolute right-0 top-0 bottom-0 w-2 cursor-ew-resize hover:bg-white/20"
-                        onMouseDown={(e) => {
-                          e.stopPropagation();
-                          handleMouseDown(e, wo, "resize");
-                        }}
-                      />
+                      {onArchiveAssignment && !interactionPaused && (
+                        <button
+                          type="button"
+                          className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 rounded border border-white/30 bg-black/20 text-white hover:bg-black/35 flex items-center justify-center"
+                          aria-label={`Archive ${wo.workOrderNumber}`}
+                          data-testid={`archive-assignment-${wo.assignmentId}`}
+                          onMouseDown={(e) => {
+                            e.stopPropagation();
+                          }}
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            try {
+                              await onArchiveAssignment(wo.assignmentId);
+                              toast.success("Assignment archived");
+                            } catch (err) {
+                              toast.error(
+                                err instanceof Error
+                                  ? err.message
+                                  : "Failed to archive assignment",
+                              );
+                            }
+                          }}
+                        >
+                          <Archive className="h-2.5 w-2.5" />
+                        </button>
+                      )}
+
+                      {!interactionPaused && (
+                        <div
+                          className="absolute right-0 top-0 bottom-0 w-2 cursor-ew-resize hover:bg-white/20"
+                          onMouseDown={(e) => {
+                            e.stopPropagation();
+                            handleMouseDown(e, wo, "resize");
+                          }}
+                        />
+                      )}
+
+                      {isEditMode && viewMode === "day" && onApplyDayModelEdit && (
+                        <div className="absolute inset-0 z-20 flex">
+                          {Array.from({ length: durationDays }).map((_, dayOffset) => {
+                            const isBlocked = nonWorkDaySet.has(dayOffset);
+                            const effortHours = Math.max(0, dayEffortMap.get(dayOffset) ?? 0);
+                            const intensity = maxDayEffort > 0 ? effortHours / maxDayEffort : 0;
+                            const backgroundColor =
+                              dayEditMode === "block"
+                                ? isBlocked
+                                  ? "rgba(244,63,94,0.52)"
+                                  : "rgba(255,255,255,0.06)"
+                                : isBlocked
+                                  ? "rgba(244,63,94,0.42)"
+                                  : `rgba(245,158,11,${0.2 + intensity * 0.65})`;
+                            const adjustment: 1 | -1 = 1;
+                            return (
+                              <button
+                                key={`${wo.assignmentId}-${dayOffset}`}
+                                type="button"
+                                className="h-full border-l border-black/20 first:border-l-0"
+                                style={{
+                                  width: `${100 / durationDays}%`,
+                                  backgroundColor,
+                                }}
+                                title={
+                                  dayEditMode === "distribute"
+                                    ? `Day ${dayOffset + 1}: ${effortHours.toFixed(1)}h (${isBlocked ? "blocked" : "active"})`
+                                    : `Day ${dayOffset + 1}: ${isBlocked ? "blocked" : "active"}`
+                                }
+                                data-testid={`gantt-day-segment-${wo.assignmentId}-${dayOffset}`}
+                                onMouseDown={(event) => {
+                                  event.preventDefault();
+                                  event.stopPropagation();
+                                }}
+                                onClick={(event) => {
+                                  event.preventDefault();
+                                  event.stopPropagation();
+                                  const nextAdjustment: 1 | -1 = event.shiftKey ? -1 : adjustment;
+                                  void onApplyDayModelEdit({
+                                    assignmentId: wo.assignmentId,
+                                    workOrderId: wo.workOrderId,
+                                    dayOffset,
+                                    mode: dayEditMode,
+                                    adjustment: nextAdjustment,
+                                  });
+                                }}
+                              />
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
                   );
                 })}

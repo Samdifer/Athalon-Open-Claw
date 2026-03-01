@@ -4,7 +4,9 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
+import { useSelectedLocation } from "@/components/LocationSwitcher";
 import { usePagePrereqs } from "@/hooks/usePagePrereqs";
 import { ActionableEmptyState } from "@/components/zero-state/ActionableEmptyState";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -22,6 +24,11 @@ function money(n: number): string {
 
 export default function FinancialPlanningPage() {
   const { orgId, isLoaded } = useCurrentOrg();
+  const { selectedLocationId } = useSelectedLocation(orgId);
+  const selectedShopLocationFilter =
+    selectedLocationId === "all"
+      ? "all"
+      : (selectedLocationId as Id<"shopLocations">);
   const [saving, setSaving] = useState(false);
 
   const settings = useQuery(
@@ -30,11 +37,19 @@ export default function FinancialPlanningPage() {
   );
   const projects = useQuery(
     api.schedulerPlanning.listPlannerProjects,
-    orgId ? { organizationId: orgId, includeArchived: false } : "skip",
+    orgId
+      ? {
+          organizationId: orgId,
+          includeArchived: false,
+          shopLocationId: selectedShopLocationFilter,
+        }
+      : "skip",
   );
   const workOrders = useQuery(
     api.workOrders.getWorkOrdersWithScheduleRisk,
-    orgId ? { organizationId: orgId } : "skip",
+    orgId
+      ? { organizationId: orgId, shopLocationId: selectedShopLocationFilter }
+      : "skip",
   );
   const saveSettings = useMutation(api.schedulerPlanning.upsertPlanningFinancialSettings);
 
@@ -286,4 +301,3 @@ export default function FinancialPlanningPage() {
     </div>
   );
 }
-

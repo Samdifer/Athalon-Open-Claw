@@ -5,6 +5,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import { usePagePrereqs } from "@/hooks/usePagePrereqs";
+import { useSelectedLocation } from "@/components/LocationSwitcher";
 import type { Id } from "@/convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -81,11 +82,13 @@ function BayFormDialog({
   open,
   onClose,
   orgId,
+  selectedShopLocationId,
   editBay,
 }: {
   open: boolean;
   onClose: () => void;
   orgId: Id<"organizations">;
+  selectedShopLocationId?: Id<"shopLocations">;
   editBay?: Bay;
 }) {
   const createBay = useMutation(api.hangarBays.createBay);
@@ -120,6 +123,7 @@ function BayFormDialog({
           description: description.trim() || undefined,
           type,
           capacity: Number(capacity) || 1,
+          shopLocationId: selectedShopLocationId,
         });
         toast.success("Bay created");
       }
@@ -281,9 +285,20 @@ function BayDetailPanel({
 
 export default function BaysPage() {
   const { orgId, isLoaded } = useCurrentOrg();
+  const { selectedLocationId } = useSelectedLocation(orgId);
+  const selectedShopLocationFilter =
+    selectedLocationId === "all"
+      ? "all"
+      : (selectedLocationId as Id<"shopLocations">);
+  const selectedShopLocationId =
+    selectedLocationId === "all"
+      ? undefined
+      : (selectedLocationId as Id<"shopLocations">);
   const bays = useQuery(
     api.hangarBays.listBays,
-    orgId ? { organizationId: orgId } : "skip",
+    orgId
+      ? { organizationId: orgId, shopLocationId: selectedShopLocationFilter }
+      : "skip",
   );
   const prereq = usePagePrereqs({
     requiresOrg: true,
@@ -400,6 +415,7 @@ export default function BaysPage() {
             setEditBay(undefined);
           }}
           orgId={orgId}
+          selectedShopLocationId={selectedShopLocationId}
           editBay={editBay}
         />
       )}

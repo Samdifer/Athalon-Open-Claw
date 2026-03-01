@@ -8,6 +8,7 @@
 //   - Capacity utilization vs. committed hours
 
 import { mutation, query } from "./_generated/server";
+import type { Id } from "./_generated/dataModel";
 import { v } from "convex/values";
 
 // ─── Defaults ─────────────────────────────────────────────────────────────────
@@ -20,11 +21,26 @@ const DEFAULT_SETTINGS = {
   defaultEfficiencyMultiplier: 1.0,
 };
 
+const shopLocationFilterValidator = v.optional(
+  v.union(v.id("shopLocations"), v.literal("all")),
+);
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function requireAuth(identity: { subject: string } | null): string {
   if (!identity) throw new Error("Not authenticated");
   return identity.subject;
+}
+
+async function ensureShopLocationBelongsToOrg(
+  ctx: { db: { get: (id: Id<"shopLocations">) => Promise<any> } },
+  organizationId: Id<"organizations">,
+  shopLocationId: Id<"shopLocations">,
+) {
+  const location = await ctx.db.get(shopLocationId);
+  if (!location || location.organizationId !== organizationId) {
+    throw new Error("Shop location does not belong to this organization");
+  }
 }
 
 /** Returns true if the shift is currently active (no effectiveTo, or effectiveTo in future). */
@@ -215,17 +231,30 @@ export const upsertTechnicianShift = mutation({
 // ─── getTechnicianWorkload ────────────────────────────────────────────────────
 
 export const getTechnicianWorkload = query({
-  args: { organizationId: v.id("organizations") },
+  args: {
+    organizationId: v.id("organizations"),
+    shopLocationId: shopLocationFilterValidator,
+  },
   handler: async (ctx, args) => {
     const nowMs = Date.now();
+    const scopedLocationId =
+      args.shopLocationId && args.shopLocationId !== "all"
+        ? args.shopLocationId
+        : undefined;
+    if (scopedLocationId) {
+      await ensureShopLocationBelongsToOrg(ctx, args.organizationId, scopedLocationId);
+    }
 
     // Fetch all active technicians
-    const techs = await ctx.db
+    const allTechs = await ctx.db
       .query("technicians")
       .withIndex("by_status", (q) =>
         q.eq("organizationId", args.organizationId).eq("status", "active"),
       )
       .collect();
+    const techs = scopedLocationId
+      ? allTechs.filter((tech) => tech.primaryShopLocationId === scopedLocationId)
+      : allTechs;
 
     // Fetch org settings for defaults
     const settings = await ctx.db
@@ -275,6 +304,7 @@ export const getTechnicianWorkload = query({
           technicianId: tech._id,
           name: tech.legalName,
           employeeId: tech.employeeId,
+          primaryShopLocationId: tech.primaryShopLocationId,
           daysOfWeek,
           startHour,
           endHour,
@@ -295,18 +325,29 @@ export const getTechnicianWorkload = query({
 export const getShopCapacity = query({
   args: {
     organizationId: v.id("organizations"),
+    shopLocationId: shopLocationFilterValidator,
     startDateMs: v.number(),
     endDateMs: v.number(),
   },
   handler: async (ctx, args) => {
     const nowMs = Date.now();
+    const scopedLocationId =
+      args.shopLocationId && args.shopLocationId !== "all"
+        ? args.shopLocationId
+        : undefined;
+    if (scopedLocationId) {
+      await ensureShopLocationBelongsToOrg(ctx, args.organizationId, scopedLocationId);
+    }
 
-    const techs = await ctx.db
+    const allTechs = await ctx.db
       .query("technicians")
       .withIndex("by_status", (q) =>
         q.eq("organizationId", args.organizationId).eq("status", "active"),
       )
       .collect();
+    const techs = scopedLocationId
+      ? allTechs.filter((tech) => tech.primaryShopLocationId === scopedLocationId)
+      : allTechs;
 
     const settings = await ctx.db
       .query("schedulingSettings")
@@ -322,6 +363,7 @@ export const getShopCapacity = query({
     const byTechnician: Array<{
       technicianId: string;
       name: string;
+      primaryShopLocationId?: string;
       availableHours: number;
       shiftDays: number[];
       startHour: number;
@@ -358,6 +400,7 @@ export const getShopCapacity = query({
       byTechnician.push({
         technicianId: tech._id,
         name: tech.legalName,
+        primaryShopLocationId: tech.primaryShopLocationId,
         availableHours,
         shiftDays: daysOfWeek,
         startHour,
@@ -375,18 +418,29 @@ export const getShopCapacity = query({
 export const getCapacityUtilization = query({
   args: {
     organizationId: v.id("organizations"),
+    shopLocationId: shopLocationFilterValidator,
     periodWeeks: v.number(),
   },
   handler: async (ctx, args) => {
     const nowMs = Date.now();
     const endDateMs = nowMs + args.periodWeeks * 7 * 24 * 60 * 60 * 1000;
+    const scopedLocationId =
+      args.shopLocationId && args.shopLocationId !== "all"
+        ? args.shopLocationId
+        : undefined;
+    if (scopedLocationId) {
+      await ensureShopLocationBelongsToOrg(ctx, args.organizationId, scopedLocationId);
+    }
 
-    const techs = await ctx.db
+    const allTechs = await ctx.db
       .query("technicians")
       .withIndex("by_status", (q) =>
         q.eq("organizationId", args.organizationId).eq("status", "active"),
       )
       .collect();
+    const techs = scopedLocationId
+      ? allTechs.filter((tech) => tech.primaryShopLocationId === scopedLocationId)
+      : allTechs;
 
     const settings = await ctx.db
       .query("schedulingSettings")
@@ -405,6 +459,7 @@ export const getCapacityUtilization = query({
     const byTechnician: Array<{
       technicianId: string;
       name: string;
+      primaryShopLocationId?: string;
       availableHours: number;
       assignedEstimatedHours: number;
       utilizationPercent: number;
@@ -457,6 +512,7 @@ export const getCapacityUtilization = query({
       byTechnician.push({
         technicianId: tech._id,
         name: tech.legalName,
+        primaryShopLocationId: tech.primaryShopLocationId,
         availableHours,
         assignedEstimatedHours,
         utilizationPercent: techUtil,

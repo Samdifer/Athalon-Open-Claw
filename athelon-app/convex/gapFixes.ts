@@ -19,6 +19,37 @@ async function requireAuth(ctx: {
   return identity.subject;
 }
 
+// Utility: map a Clerk organization ID to a Convex organization record.
+export const setClerkOrganizationMapping = mutation({
+  args: {
+    organizationId: v.id("organizations"),
+    clerkOrganizationId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const org = await ctx.db.get(args.organizationId);
+    if (!org) throw new Error("Organization not found.");
+
+    const existing = await ctx.db
+      .query("organizations")
+      .withIndex("by_clerk_organization", (q) =>
+        q.eq("clerkOrganizationId", args.clerkOrganizationId),
+      )
+      .first();
+    if (existing && existing._id !== args.organizationId) {
+      throw new Error(
+        `Clerk org ${args.clerkOrganizationId} is already mapped to a different organization.`,
+      );
+    }
+
+    await ctx.db.patch(args.organizationId, {
+      clerkOrganizationId: args.clerkOrganizationId,
+      updatedAt: Date.now(),
+    });
+
+    return { ok: true };
+  },
+});
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // PHASE 1: AIRCRAFT & INDUCTION (GAP-01, GAP-02, GAP-03, GAP-04)
 // ═══════════════════════════════════════════════════════════════════════════════

@@ -64,6 +64,40 @@ export const update = mutation({
 export const remove = mutation({
   args: { id: v.id("shopLocations") },
   handler: async (ctx, args) => {
+    const location = await ctx.db.get(args.id);
+    if (!location) throw new Error("Location not found");
+
+    const [assignmentsAtLocation, activeWorkOrders] = await Promise.all([
+      ctx.db
+        .query("scheduleAssignments")
+        .withIndex("by_org_location", (q) =>
+          q.eq("organizationId", location.organizationId).eq("shopLocationId", args.id),
+        )
+        .collect(),
+      ctx.db
+        .query("workOrders")
+        .withIndex("by_org_location", (q) =>
+          q.eq("organizationId", location.organizationId).eq("shopLocationId", args.id),
+        )
+        .filter((q) =>
+          q.and(
+            q.neq(q.field("status"), "closed"),
+            q.neq(q.field("status"), "cancelled"),
+            q.neq(q.field("status"), "voided"),
+          ),
+        )
+        .take(1),
+    ]);
+    const activeAssignments = assignmentsAtLocation.filter(
+      (assignment) => assignment.archivedAt === undefined,
+    );
+
+    if (activeAssignments.length > 0 || activeWorkOrders.length > 0) {
+      throw new Error(
+        "Cannot deactivate a location with active schedule assignments or active work orders.",
+      );
+    }
+
     await ctx.db.patch(args.id, { isActive: false, updatedAt: Date.now() });
   },
 });
