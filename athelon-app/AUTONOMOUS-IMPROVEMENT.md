@@ -74,5 +74,11 @@ Every 45 minutes, a cron job fires and spawns this improvement cycle:
 ## Rotation Tracker
 Track which area was last audited to ensure coverage rotation:
 ```json
-{"lastArea": "parts", "cycleCount": 27, "lastRun": "2026-02-28T22:15:00Z", "areas": ["regulatory", "workflow", "parts", "ui_ux", "data_integrity", "error_handling", "testing", "performance"]}
+{"lastArea": "ui_ux", "cycleCount": 28, "lastRun": "2026-03-01T12:29:00Z", "areas": ["regulatory", "workflow", "parts", "ui_ux", "data_integrity", "error_handling", "testing", "performance"]}
+```
+
+## Bug Hunter Rotation
+Track which user persona was last tested (bug hunter cron):
+```json
+{"lastPersona": "lead_technician", "cycleCount": 2, "lastRun": "2026-03-01T15:16:00Z", "personas": ["shop_manager", "lead_technician", "parts_clerk", "billing_manager", "qcm_inspector", "dom"]}
 ```
