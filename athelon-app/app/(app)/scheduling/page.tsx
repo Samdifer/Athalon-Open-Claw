@@ -5,16 +5,17 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import type { Id } from "@/convex/_generated/dataModel";
-import { GanttBoard } from "./_components/GanttBoard";
+import { GanttChart } from "./_components/GanttChart";
 import { BacklogSidebar } from "./_components/BacklogSidebar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { Sparkles, Warehouse } from "lucide-react";
+import { Sparkles, Warehouse, BarChart3, CalendarDays } from "lucide-react";
 import { toast } from "sonner";
 import { autoSchedule } from "@/lib/scheduling/autoSchedule";
 import { detectConflicts } from "@/lib/scheduling/conflicts";
 import type { ScheduledWO } from "@/lib/scheduling/conflicts";
+import { cn } from "@/lib/utils";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // LOADING SKELETON
@@ -30,12 +31,11 @@ function GanttSkeleton() {
         <div className="flex-1" />
         <Skeleton className="h-7 w-24" />
         <Skeleton className="h-7 w-7" />
-        <Skeleton className="h-7 w-7" />
         <Skeleton className="h-7 w-16" />
       </div>
       <div className="flex flex-1 overflow-hidden">
-        <div className="w-40 flex-shrink-0 border-r border-border/40 space-y-0">
-          {Array.from({ length: 6 }).map((_, i) => (
+        <div className="w-[200px] flex-shrink-0 border-r border-border/40 space-y-0">
+          {Array.from({ length: 8 }).map((_, i) => (
             <div
               key={i}
               className="flex flex-col justify-center px-3 border-b border-border/30"
@@ -47,7 +47,7 @@ function GanttSkeleton() {
           ))}
         </div>
         <div className="flex-1 overflow-hidden space-y-0">
-          {Array.from({ length: 6 }).map((_, i) => (
+          {Array.from({ length: 8 }).map((_, i) => (
             <div
               key={i}
               className="relative border-b border-border/30 px-3 flex items-center"
@@ -69,7 +69,19 @@ function GanttSkeleton() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// PAGE COMPONENT
+// SUB-NAV TABS
+// ─────────────────────────────────────────────────────────────────────────────
+
+type ScheduleTab = "gantt" | "bays" | "capacity";
+
+const TABS: { id: ScheduleTab; label: string; icon: React.ElementType; to: string }[] = [
+  { id: "gantt", label: "Gantt", icon: CalendarDays, to: "/scheduling" },
+  { id: "bays", label: "Bays", icon: Warehouse, to: "/scheduling/bays" },
+  { id: "capacity", label: "Capacity", icon: BarChart3, to: "/scheduling/capacity" },
+];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PAGE
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function SchedulingPage() {
@@ -93,20 +105,6 @@ export default function SchedulingPage() {
   const unscheduledCount = workOrders.filter(
     (wo) => !wo.promisedDeliveryDate || !wo.scheduledStartDate,
   ).length;
-
-  // ── Conflict detection ────────────────────────────────────────────────
-  const conflicts = useMemo(() => {
-    const scheduled: ScheduledWO[] = workOrders
-      .filter((wo) => wo.scheduledStartDate && wo.promisedDeliveryDate)
-      .map((wo) => ({
-        woId: wo._id,
-        workOrderNumber: wo.workOrderNumber,
-        startDate: wo.scheduledStartDate!,
-        endDate: wo.promisedDeliveryDate!,
-        promisedDeliveryDate: wo.promisedDeliveryDate,
-      }));
-    return detectConflicts(scheduled);
-  }, [workOrders]);
 
   // ── Auto-schedule handler ─────────────────────────────────────────────
   async function handleAutoSchedule() {
@@ -132,7 +130,6 @@ export default function SchedulingPage() {
         })),
     }));
 
-    // If no bays, create a virtual bay
     if (bayList.length === 0) {
       bayList.push({
         bayId: "virtual",
@@ -173,7 +170,7 @@ export default function SchedulingPage() {
           });
           successCount++;
         } catch {
-          // Continue with remaining
+          // Continue
         }
       }
       toast.success(`Auto-scheduled ${successCount} work order${successCount !== 1 ? "s" : ""}`);
@@ -193,20 +190,26 @@ export default function SchedulingPage() {
 
   return (
     <div className="h-full flex flex-col relative">
-      {/* Sub-nav toolbar */}
-      <div className="flex items-center gap-2 px-2 sm:px-4 py-2 border-b border-border/30 bg-muted/20 flex-shrink-0">
-        <Button variant="ghost" size="sm" className="text-xs h-7" asChild>
-          <Link to="/scheduling">Gantt Board</Link>
-        </Button>
-        <Button variant="ghost" size="sm" className="text-xs h-7" asChild>
-          <Link to="/scheduling/bays">
-            <Warehouse className="w-3.5 h-3.5" />
-            Bays
-          </Link>
-        </Button>
-        <Button variant="ghost" size="sm" className="text-xs h-7" asChild>
-          <Link to="/scheduling/capacity">Capacity</Link>
-        </Button>
+      {/* Sub-navigation toolbar */}
+      <div className="flex items-center gap-1 px-2 sm:px-4 py-1.5 border-b border-border/30 bg-muted/20 flex-shrink-0">
+        {TABS.map((tab) => {
+          const Icon = tab.icon;
+          const isActive = tab.id === "gantt";
+          return (
+            <Button
+              key={tab.id}
+              variant={isActive ? "secondary" : "ghost"}
+              size="sm"
+              className={cn("text-xs h-7 gap-1.5", isActive && "font-semibold")}
+              asChild
+            >
+              <Link to={tab.to}>
+                <Icon className="w-3.5 h-3.5" />
+                {tab.label}
+              </Link>
+            </Button>
+          );
+        })}
 
         <div className="flex-1" />
 
@@ -222,16 +225,16 @@ export default function SchedulingPage() {
         </Button>
       </div>
 
+      {/* Main Gantt chart */}
       <div className="flex-1 min-h-0">
-        <GanttBoard
+        <GanttChart
           workOrders={workOrders}
           onOpenBacklog={() => setBacklogOpen(true)}
           unscheduledCount={unscheduledCount}
-          bays={bays as { _id: string; name: string; type: string; status: string }[] | undefined}
-          conflicts={conflicts}
         />
       </div>
 
+      {/* Backlog sidebar overlay */}
       <BacklogSidebar
         workOrders={workOrders}
         isOpen={backlogOpen}

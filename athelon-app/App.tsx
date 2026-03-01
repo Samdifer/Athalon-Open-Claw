@@ -91,6 +91,10 @@ const BaysPage = lazy(() => import("@/app/(app)/scheduling/bays/page"));
 
 // Reports
 const ReportsPage = lazy(() => import("@/app/(app)/reports/page"));
+const FinancialDashboardPage = lazy(() => import("@/app/(app)/reports/financials/page"));
+const FinancialForecastPage = lazy(() => import("@/app/(app)/reports/financials/forecast/page"));
+const FinancialProfitabilityPage = lazy(() => import("@/app/(app)/reports/financials/profitability/page"));
+const FinancialRunwayPage = lazy(() => import("@/app/(app)/reports/financials/runway/page"));
 
 // Settings
 const ShopSettingsPage = lazy(() => import("@/app/(app)/settings/shop/page"));
@@ -258,6 +262,10 @@ export default function App() {
 
             {/* Reports */}
             <Route path="/reports" element={<ReportsPage />} />
+            <Route path="/reports/financials" element={<FinancialDashboardPage />} />
+            <Route path="/reports/financials/forecast" element={<FinancialForecastPage />} />
+            <Route path="/reports/financials/profitability" element={<FinancialProfitabilityPage />} />
+            <Route path="/reports/financials/runway" element={<FinancialRunwayPage />} />
 
             {/* Settings */}
             <Route path="/settings/shop" element={<ShopSettingsPage />} />

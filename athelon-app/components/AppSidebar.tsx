@@ -23,6 +23,7 @@ import {
   RotateCcw,
   Link2,
   MapPin,
+  TrendingUp,
 } from "lucide-react";
 import { useUserRole } from "@/hooks/useUserRole";
 import { canAccessNav, type NavSection } from "@/lib/roles";
@@ -184,6 +185,30 @@ const mainNav: NavItem[] = [
     title: "Reports",
     href: "/reports",
     icon: FileBarChart,
+    section: "reports",
+  },
+  {
+    title: "Financials",
+    href: "/reports/financials",
+    icon: TrendingUp,
+    section: "reports",
+  },
+  {
+    title: "Forecast",
+    href: "/reports/financials/forecast",
+    icon: TrendingUp,
+    section: "reports",
+  },
+  {
+    title: "Profitability",
+    href: "/reports/financials/profitability",
+    icon: TrendingUp,
+    section: "reports",
+  },
+  {
+    title: "Runway",
+    href: "/reports/financials/runway",
+    icon: TrendingUp,
     section: "reports",
   },
   {
