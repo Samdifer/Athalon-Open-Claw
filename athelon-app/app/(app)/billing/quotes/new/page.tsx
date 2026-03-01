@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useRouter } from "@/hooks/useRouter";
 import { useQuery, useMutation, useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -12,6 +12,8 @@ import {
   ArrowLeft,
   FileText,
   AlertCircle,
+  Package,
+  Wrench,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,6 +29,7 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
+import { Link } from "react-router-dom";
 
 type LineItemType = "labor" | "part" | "external_service";
 
@@ -36,6 +39,36 @@ interface DraftLineItem {
   description: string;
   qty: string;
   unitPrice: string;
+}
+
+interface LaborKitLaborItem {
+  description: string;
+  estimatedHours: number;
+}
+
+interface LaborKitPartItem {
+  partNumber: string;
+  description: string;
+  quantity: number;
+  unitCost?: number;
+}
+
+interface LaborKitExternalServiceItem {
+  vendorName?: string;
+  description: string;
+  estimatedCost: number;
+}
+
+interface LaborKitForQuote {
+  _id: string;
+  name: string;
+  aircraftType?: string;
+  ataChapter?: string;
+  laborRate?: number;
+  laborItems: LaborKitLaborItem[];
+  requiredParts: LaborKitPartItem[];
+  externalServices?: LaborKitExternalServiceItem[];
+  isActive: boolean;
 }
 
 const LINE_TYPE_LABELS: Record<LineItemType, string> = {
@@ -51,6 +84,52 @@ function calcTotal(qty: string, unitPrice: string): number {
   return Math.round(q * p * 100) / 100;
 }
 
+function numberToInputString(value: number | undefined): string {
+  if (value === undefined || Number.isNaN(value)) return "0";
+  return String(Math.round(value * 100) / 100);
+}
+
+function buildLineItemsFromLaborKit(kit: LaborKitForQuote): DraftLineItem[] {
+  const lines: DraftLineItem[] = [];
+
+  for (const labor of kit.laborItems ?? []) {
+    if (!labor.description.trim() || labor.estimatedHours <= 0) continue;
+    lines.push({
+      id: crypto.randomUUID(),
+      type: "labor",
+      description: `${kit.name} · ${labor.description.trim()}`,
+      qty: numberToInputString(labor.estimatedHours),
+      unitPrice: numberToInputString(kit.laborRate),
+    });
+  }
+
+  for (const part of kit.requiredParts ?? []) {
+    if (!part.partNumber.trim() || part.quantity <= 0) continue;
+    const partDesc = part.description?.trim() || "Part";
+    lines.push({
+      id: crypto.randomUUID(),
+      type: "part",
+      description: `${kit.name} · ${part.partNumber.trim()} — ${partDesc}`,
+      qty: numberToInputString(part.quantity),
+      unitPrice: numberToInputString(part.unitCost),
+    });
+  }
+
+  for (const svc of kit.externalServices ?? []) {
+    if (!svc.description.trim()) continue;
+    const vendor = svc.vendorName?.trim();
+    lines.push({
+      id: crypto.randomUUID(),
+      type: "external_service",
+      description: `${kit.name} · ${svc.description.trim()}${vendor ? ` (${vendor})` : ""}`,
+      qty: "1",
+      unitPrice: numberToInputString(svc.estimatedCost),
+    });
+  }
+
+  return lines;
+}
+
 export default function NewQuotePage() {
   const router = useRouter();
   const { orgId, techId, isLoaded } = useCurrentOrg();
@@ -63,6 +142,10 @@ export default function NewQuotePage() {
     api.aircraft.list,
     orgId ? { organizationId: orgId } : "skip",
   );
+  const laborKits = useQuery(
+    api.laborKits.listLaborKits,
+    orgId ? { orgId } : "skip",
+  );
 
   const createQuote = useMutation(api.billing.createQuote);
   const addQuoteLineItem = useMutation(api.billing.addQuoteLineItem);
@@ -71,6 +154,7 @@ export default function NewQuotePage() {
   const [customerId, setCustomerId] = useState<string>("");
   const [pricingLoading, setPricingLoading] = useState<string | null>(null);
   const [aircraftId, setAircraftId] = useState<string>("");
+  const [kitSearch, setKitSearch] = useState("");
   const [notes, setNotes] = useState("");
   const [lineItems, setLineItems] = useState<DraftLineItem[]>([
     { id: crypto.randomUUID(), type: "labor", description: "", qty: "1", unitPrice: "0" },
@@ -78,7 +162,11 @@ export default function NewQuotePage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const isLoading = !isLoaded || customers === undefined || aircraft === undefined;
+  const isLoading =
+    !isLoaded ||
+    customers === undefined ||
+    aircraft === undefined ||
+    laborKits === undefined;
 
   const addLineItem = useCallback(() => {
     setLineItems((prev) => [
@@ -95,6 +183,16 @@ export default function NewQuotePage() {
     setLineItems((prev) =>
       prev.map((item) => item.id === id ? { ...item, [field]: value } : item),
     );
+  }, []);
+
+  const addLaborKitLines = useCallback((kit: LaborKitForQuote) => {
+    const generated = buildLineItemsFromLaborKit(kit);
+    if (generated.length === 0) {
+      setError(`"${kit.name}" has no valid labor/parts/service entries to add.`);
+      return;
+    }
+    setError(null);
+    setLineItems((prev) => [...prev, ...generated]);
   }, []);
 
   const lookupPrice = useCallback(async (itemId: string) => {
@@ -149,6 +247,38 @@ export default function NewQuotePage() {
   }, [orgId, customerId, lineItems, computePrice]);
 
   const subtotal = lineItems.reduce((sum, item) => sum + calcTotal(item.qty, item.unitPrice), 0);
+
+  const selectedAircraft = useMemo(
+    () => (aircraft ?? []).find((ac) => ac._id === aircraftId),
+    [aircraft, aircraftId],
+  );
+
+  const matchingLaborKits = useMemo(() => {
+    const kits = ((laborKits ?? []) as LaborKitForQuote[]).filter((kit) => kit.isActive);
+    const normalizedSearch = kitSearch.trim().toLowerCase();
+    const aircraftTerms = selectedAircraft
+      ? [selectedAircraft.make, selectedAircraft.model]
+          .map((v) => v?.toLowerCase().trim())
+          .filter((v): v is string => !!v)
+      : [];
+
+    return kits.filter((kit) => {
+      const matchesSearch =
+        normalizedSearch.length === 0 ||
+        kit.name.toLowerCase().includes(normalizedSearch) ||
+        (kit.ataChapter ?? "").toLowerCase().includes(normalizedSearch) ||
+        (kit.aircraftType ?? "").toLowerCase().includes(normalizedSearch);
+
+      if (!matchesSearch) return false;
+
+      const kitAircraft = (kit.aircraftType ?? "").toLowerCase().trim();
+      if (!kitAircraft || aircraftTerms.length === 0) return true;
+
+      return aircraftTerms.some(
+        (term) => kitAircraft.includes(term) || term.includes(kitAircraft),
+      );
+    });
+  }, [laborKits, kitSearch, selectedAircraft]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -284,6 +414,86 @@ export default function NewQuotePage() {
           </CardContent>
         </Card>
 
+        {/* Labor Kits */}
+        <Card className="border-border/60">
+          <CardHeader className="pb-3 flex-row items-center justify-between">
+            <div>
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <Package className="w-4 h-4 text-muted-foreground" />
+                Labor Kits
+              </CardTitle>
+              <p className="text-xs text-muted-foreground mt-1">
+                Reuse scheduler-style templates for labor, parts, and external services.
+              </p>
+            </div>
+            <Button type="button" variant="outline" size="sm" asChild className="h-7 text-xs">
+              <Link to="/billing/labor-kits">
+                <Wrench className="w-3.5 h-3.5" />
+                Manage Kits
+              </Link>
+            </Button>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <Input
+              value={kitSearch}
+              onChange={(e) => setKitSearch(e.target.value)}
+              placeholder="Search kits by name, ATA chapter, or aircraft type"
+              className="h-8 text-xs border-border/60"
+            />
+
+            {matchingLaborKits.length === 0 ? (
+              <div className="rounded-md border border-dashed border-border/60 p-4 text-xs text-muted-foreground">
+                No active labor kits match your filters.
+              </div>
+            ) : (
+              <div className="space-y-2 max-h-56 overflow-auto pr-1">
+                {matchingLaborKits.map((kit) => {
+                  const laborLines = kit.laborItems?.length ?? 0;
+                  const partLines = kit.requiredParts?.length ?? 0;
+                  const serviceLines = kit.externalServices?.length ?? 0;
+                  const totalTemplateLines = laborLines + partLines + serviceLines;
+                  return (
+                    <div
+                      key={kit._id}
+                      className="rounded-md border border-border/60 px-3 py-2 flex items-center justify-between gap-3"
+                    >
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="text-sm font-medium text-foreground truncate">{kit.name}</p>
+                          {kit.aircraftType && (
+                            <Badge variant="outline" className="text-[10px]">
+                              {kit.aircraftType}
+                            </Badge>
+                          )}
+                          {kit.ataChapter && (
+                            <Badge variant="outline" className="text-[10px]">
+                              ATA {kit.ataChapter}
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="text-[11px] text-muted-foreground mt-0.5">
+                          {totalTemplateLines} template line{totalTemplateLines === 1 ? "" : "s"} •{" "}
+                          {kit.laborItems.reduce((sum, item) => sum + (item.estimatedHours || 0), 0).toFixed(1)}h
+                        </p>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-7 text-xs"
+                        onClick={() => addLaborKitLines(kit)}
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        Add Kit Lines
+                      </Button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Line Items */}
         <Card className="border-border/60">
           <CardHeader className="pb-3 flex-row items-center justify-between">
@@ -311,16 +521,17 @@ export default function NewQuotePage() {
             ) : (
               <>
                 {/* Header */}
-                <div className="overflow-x-auto"><div className="min-w-[500px]"><div className="grid grid-cols-[1fr_120px_100px_100px_36px] gap-2 px-1">
+                <div className="overflow-x-auto"><div className="min-w-[600px]"><div className="grid grid-cols-[1fr_120px_90px_100px_72px_36px] gap-2 px-1">
                   <span className="text-[10px] font-medium text-muted-foreground uppercase">Description</span>
                   <span className="text-[10px] font-medium text-muted-foreground uppercase">Type</span>
                   <span className="text-[10px] font-medium text-muted-foreground uppercase text-right">Qty</span>
                   <span className="text-[10px] font-medium text-muted-foreground uppercase text-right">Unit $</span>
+                  <span className="text-[10px] font-medium text-muted-foreground uppercase text-center">Rule</span>
                   <span />
                 </div>
 
                 {lineItems.map((item) => (
-                  <div key={item.id} className="grid grid-cols-[1fr_120px_100px_100px_36px] gap-2 items-center">
+                  <div key={item.id} className="grid grid-cols-[1fr_120px_90px_100px_72px_36px] gap-2 items-center">
                     <Input
                       value={item.description}
                       onChange={(e) => updateLineItem(item.id, "description", e.target.value)}
@@ -356,6 +567,16 @@ export default function NewQuotePage() {
                       step="0.01"
                       className="h-8 text-xs border-border/60 text-right"
                     />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 text-[10px]"
+                      onClick={() => lookupPrice(item.id)}
+                      disabled={pricingLoading === item.id || pricingLoading === "all" || !orgId}
+                    >
+                      {pricingLoading === item.id ? "..." : "Rule"}
+                    </Button>
                     <Button
                       type="button"
                       variant="ghost"

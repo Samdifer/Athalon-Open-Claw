@@ -35,7 +35,6 @@ export default function NewWorkOrderPage() {
   // Form state
   const [aircraftId, setAircraftId] = useState<Id<"aircraft"> | "">("");
   const [customerId, setCustomerId] = useState<Id<"customers"> | "">("");
-  const [workOrderNumber, setWorkOrderNumber] = useState("");
   const [workOrderType, setWorkOrderType] = useState<string>("routine");
   const [description, setDescription] = useState("");
   const [squawks, setSquawks] = useState("");
@@ -67,7 +66,7 @@ export default function NewWorkOrderPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!orgId || !aircraftId || !workOrderNumber.trim()) return;
+    if (!orgId || !aircraftId) return;
 
     setIsSubmitting(true);
     setError(null);
@@ -76,7 +75,6 @@ export default function NewWorkOrderPage() {
       const woId = await createWorkOrder({
         organizationId: orgId,
         aircraftId: aircraftId as Id<"aircraft">,
-        workOrderNumber: workOrderNumber.trim(),
         workOrderType: workOrderType as WoType,
         description: description.trim(),
         squawks: squawks.trim() || undefined,
@@ -288,18 +286,16 @@ export default function NewWorkOrderPage() {
                   htmlFor="workOrderNumber"
                   className="text-xs font-medium mb-1.5 block"
                 >
-                  Work Order Number <span className="text-red-600 dark:text-red-400">*</span>
+                  Work Order Number
                 </Label>
-                <Input
+                <div
                   id="workOrderNumber"
-                  className="h-9 text-sm bg-muted/30 border-border/60 font-mono"
-                  placeholder="e.g. WO-2026-0001"
-                  value={workOrderNumber}
-                  onChange={(e) => setWorkOrderNumber(e.target.value)}
-                  required
-                />
+                  className="h-9 text-sm bg-muted/30 border border-border/60 rounded-md px-3 flex items-center font-mono text-muted-foreground"
+                >
+                  Auto-generated on create
+                </div>
                 <p className="text-[11px] text-muted-foreground mt-1">
-                  Must be unique within your organization.
+                  Format: {"WO-{BASE}-{SEQUENCE}"} (example: {"WO-DEN-1"}).
                 </p>
               </div>
 
@@ -520,7 +516,6 @@ export default function NewWorkOrderPage() {
               disabled={
                 isSubmitting ||
                 !aircraftId ||
-                !workOrderNumber.trim() ||
                 !description.trim()
               }
               className="gap-2"

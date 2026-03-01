@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "@/hooks/useRouter";
 import { useParams } from "react-router-dom";
-import { useQuery, useMutation } from "convex/react";
+import { useQuery, useMutation, useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -19,6 +19,9 @@ import {
   Trash2,
   FileEdit,
   Receipt,
+  Plus,
+  Package,
+  Wrench,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -46,6 +49,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { formatDate } from "@/lib/format";
 import { Download } from "lucide-react";
 import { toast } from "sonner";
+import { Link } from "react-router-dom";
 
 const STATUS_STYLES: Record<string, string> = {
   DRAFT: "bg-muted text-muted-foreground border-muted-foreground/30",
@@ -60,6 +64,86 @@ const LINE_TYPE_LABELS: Record<string, string> = {
   part: "Part",
   external_service: "External Service",
 };
+
+type LineItemType = "labor" | "part" | "external_service";
+
+interface DraftAddLineItem {
+  type: LineItemType;
+  description: string;
+  qty: string;
+  unitPrice: string;
+}
+
+interface LaborKitLaborItem {
+  description: string;
+  estimatedHours: number;
+}
+
+interface LaborKitPartItem {
+  partNumber: string;
+  description: string;
+  quantity: number;
+  unitCost?: number;
+}
+
+interface LaborKitExternalServiceItem {
+  vendorName?: string;
+  description: string;
+  estimatedCost: number;
+}
+
+interface LaborKitForQuote {
+  _id: string;
+  name: string;
+  aircraftType?: string;
+  ataChapter?: string;
+  laborRate?: number;
+  laborItems: LaborKitLaborItem[];
+  requiredParts: LaborKitPartItem[];
+  externalServices?: LaborKitExternalServiceItem[];
+  isActive: boolean;
+}
+
+function numberToInputString(value: number | undefined): string {
+  if (value === undefined || Number.isNaN(value)) return "0";
+  return String(Math.round(value * 100) / 100);
+}
+
+function buildLineItemsFromLaborKit(kit: LaborKitForQuote): DraftAddLineItem[] {
+  const lines: DraftAddLineItem[] = [];
+
+  for (const labor of kit.laborItems ?? []) {
+    if (!labor.description.trim() || labor.estimatedHours <= 0) continue;
+    lines.push({
+      type: "labor",
+      description: `${kit.name} · ${labor.description.trim()}`,
+      qty: numberToInputString(labor.estimatedHours),
+      unitPrice: numberToInputString(kit.laborRate),
+    });
+  }
+
+  for (const part of kit.requiredParts ?? []) {
+    if (!part.partNumber.trim() || part.quantity <= 0) continue;
+    lines.push({
+      type: "part",
+      description: `${kit.name} · ${part.partNumber.trim()} — ${part.description?.trim() || "Part"}`,
+      qty: numberToInputString(part.quantity),
+      unitPrice: numberToInputString(part.unitCost),
+    });
+  }
+
+  for (const svc of kit.externalServices ?? []) {
+    if (!svc.description.trim()) continue;
+    lines.push({
+      type: "external_service",
+      description: `${kit.name} · ${svc.description.trim()}${svc.vendorName ? ` (${svc.vendorName})` : ""}`,
+      qty: "1",
+      unitPrice: numberToInputString(svc.estimatedCost),
+    });
+  }
+
+  return lines;
+}
 
 /** Convert a Unix ms timestamp to a date input value (YYYY-MM-DD). */
 function toDateInputValue(ts: number): string {
@@ -83,11 +167,20 @@ export default function QuoteDetailPage() {
     api.billing.getQuote,
     orgId && quoteId ? { orgId, quoteId } : "skip",
   );
+  const aircraft = useQuery(
+    api.aircraft.list,
+    orgId ? { organizationId: orgId } : "skip",
+  );
+  const laborKits = useQuery(
+    api.laborKits.listLaborKits,
+    orgId ? { orgId } : "skip",
+  );
 
   const sendQuote = useMutation(api.billing.sendQuote);
   const approveQuote = useMutation(api.billing.approveQuote);
   const declineQuote = useMutation(api.billing.declineQuote);
   const convertQuote = useMutation(api.billing.convertQuoteToWorkOrder);
+  const addQuoteLineItem = useMutation(api.billing.addQuoteLineItem);
   // GAP-08: Create revision
   const createQuoteRevision = useMutation(api.billingV4.createQuoteRevision);
   // GAP-13: Create invoice from quote
@@ -95,6 +188,7 @@ export default function QuoteDetailPage() {
   // GAP-06: Edit/remove line items
   const updateQuoteLineItem = useMutation(api.billingV4.updateQuoteLineItem);
   const removeQuoteLineItem = useMutation(api.billingV4.removeQuoteLineItem);
+  const computePrice = useAction(api.pricing.computePrice);
 
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -105,7 +199,6 @@ export default function QuoteDetailPage() {
 
   // Convert to WO dialog
   const [convertDialog, setConvertDialog] = useState(false);
-  const [woNumber, setWoNumber] = useState("");
   const [woDescription, setWoDescription] = useState("");
   const [woType, setWoType] = useState<"routine" | "unscheduled">("routine");
   const [woPriority, setWoPriority] = useState<"routine" | "urgent" | "aog">("routine");
@@ -126,8 +219,20 @@ export default function QuoteDetailPage() {
   // GAP-06: Delete line item confirm
   const [deleteItemDialog, setDeleteItemDialog] = useState(false);
   const [deleteItemId, setDeleteItemId] = useState<Id<"quoteLineItems"> | null>(null);
+  const [kitSearch, setKitSearch] = useState("");
+  const [addLineItemDraft, setAddLineItemDraft] = useState<DraftAddLineItem>({
+    type: "labor",
+    description: "",
+    qty: "1",
+    unitPrice: "0",
+  });
+  const [pricingLoading, setPricingLoading] = useState(false);
 
-  const isLoading = !isLoaded || quote === undefined;
+  const isLoading =
+    !isLoaded ||
+    quote === undefined ||
+    aircraft === undefined ||
+    laborKits === undefined;
 
   // PDF Download
   const handleDownloadPDF = async () => {
@@ -208,13 +313,12 @@ export default function QuoteDetailPage() {
   };
 
   const handleConvert = async () => {
-    if (!orgId || !woNumber.trim()) return;
+    if (!orgId) return;
     setActionLoading("convert"); setError(null);
     try {
       const newWoId = await convertQuote({
         orgId,
         quoteId,
-        workOrderNumber: woNumber.trim(),
         workOrderType: woType,
         priority: woPriority,
         description: woDescription.trim() || `Work order from quote ${quote?.quoteNumber ?? ""}`,
@@ -335,6 +439,150 @@ export default function QuoteDetailPage() {
       setActionLoading(null);
     }
   };
+
+  const updateAddLineDraft = (field: keyof DraftAddLineItem, value: string) => {
+    setAddLineItemDraft((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleComputeDraftPrice = async () => {
+    if (!orgId) return;
+    const qty = parseFloat(addLineItemDraft.qty);
+    const baseCost = parseFloat(addLineItemDraft.unitPrice);
+    if (Number.isNaN(qty) || qty <= 0) {
+      setError("Draft line quantity must be greater than zero before pricing.");
+      return;
+    }
+    if (Number.isNaN(baseCost) || baseCost < 0) {
+      setError("Draft line base unit price must be zero or higher.");
+      return;
+    }
+
+    setPricingLoading(true);
+    setError(null);
+    try {
+      const priced = await computePrice({
+        orgId,
+        customerId: quote?.customerId as Id<"customers"> | undefined,
+        itemType: addLineItemDraft.type,
+        qty,
+        baseCost,
+      });
+      setAddLineItemDraft((prev) => ({
+        ...prev,
+        unitPrice: numberToInputString(priced.unitPrice),
+      }));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to compute pricing.");
+    } finally {
+      setPricingLoading(false);
+    }
+  };
+
+  const handleAddDraftLineItem = async () => {
+    if (!orgId || !quote) return;
+    if (quote.status !== "DRAFT") {
+      setError("Line items can only be added while quote status is DRAFT.");
+      return;
+    }
+
+    const qty = parseFloat(addLineItemDraft.qty);
+    const unitPrice = parseFloat(addLineItemDraft.unitPrice);
+    if (!addLineItemDraft.description.trim()) {
+      setError("Line item description is required.");
+      return;
+    }
+    if (Number.isNaN(qty) || qty <= 0) {
+      setError("Line item quantity must be greater than zero.");
+      return;
+    }
+    if (Number.isNaN(unitPrice) || unitPrice < 0) {
+      setError("Line item unit price must be zero or higher.");
+      return;
+    }
+
+    setActionLoading("addItem");
+    setError(null);
+    try {
+      await addQuoteLineItem({
+        orgId,
+        quoteId,
+        type: addLineItemDraft.type,
+        description: addLineItemDraft.description.trim(),
+        qty,
+        unitPrice,
+      });
+      setAddLineItemDraft({
+        type: addLineItemDraft.type,
+        description: "",
+        qty: "1",
+        unitPrice: "0",
+      });
+      toast.success("Line item added");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to add line item.");
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleAddLaborKitToDraftQuote = async (kit: LaborKitForQuote) => {
+    if (!orgId || !quote) return;
+    if (quote.status !== "DRAFT") {
+      setError("Labor kits can only be applied while quote status is DRAFT.");
+      return;
+    }
+
+    const generatedLines = buildLineItemsFromLaborKit(kit);
+    if (generatedLines.length === 0) {
+      setError(`"${kit.name}" has no valid labor/parts/service rows to apply.`);
+      return;
+    }
+
+    setActionLoading(`kit:${kit._id}`);
+    setError(null);
+    try {
+      for (const line of generatedLines) {
+        await addQuoteLineItem({
+          orgId,
+          quoteId,
+          type: line.type,
+          description: line.description,
+          qty: parseFloat(line.qty),
+          unitPrice: parseFloat(line.unitPrice),
+        });
+      }
+      toast.success(`Added ${generatedLines.length} line items from ${kit.name}`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to apply labor kit.");
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const matchingLaborKits = useMemo(() => {
+    const activeKits = ((laborKits ?? []) as LaborKitForQuote[]).filter((kit) => kit.isActive);
+    const query = kitSearch.trim().toLowerCase();
+    const selectedAircraft = (aircraft ?? []).find((ac) => ac._id === quote?.aircraftId);
+    const aircraftTokens = selectedAircraft
+      ? [selectedAircraft.make, selectedAircraft.model]
+          .map((v) => v?.toLowerCase().trim())
+          .filter((v): v is string => !!v)
+      : [];
+
+    return activeKits.filter((kit) => {
+      const kitAircraft = (kit.aircraftType ?? "").toLowerCase().trim();
+      const searchHit =
+        query.length === 0 ||
+        kit.name.toLowerCase().includes(query) ||
+        (kit.ataChapter ?? "").toLowerCase().includes(query) ||
+        kitAircraft.includes(query);
+      if (!searchHit) return false;
+      if (!kitAircraft || aircraftTokens.length === 0) return true;
+      return aircraftTokens.some(
+        (token) => token.includes(kitAircraft) || kitAircraft.includes(token),
+      );
+    });
+  }, [laborKits, kitSearch, aircraft, quote?.aircraftId]);
 
   if (isLoading) {
     return (
@@ -514,6 +762,200 @@ export default function QuoteDetailPage() {
         </CardContent>
       </Card>
 
+      {/* Draft Composer */}
+      {isDraft && (
+        <Card className="border-border/60" data-testid="quote-draft-composer">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium">Draft Composer</CardTitle>
+            <p className="text-xs text-muted-foreground">
+              Add manual quote lines or apply labor kit templates before sending.
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-4">
+              <div className="rounded-md border border-border/60 p-3 space-y-3">
+                <h3 className="text-xs uppercase tracking-wide text-muted-foreground font-medium">
+                  Add Line Item
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-[130px_1fr_90px_110px] gap-2">
+                  <div className="space-y-1">
+                    <Label className="text-[11px] text-muted-foreground">Type</Label>
+                    <select
+                      value={addLineItemDraft.type}
+                      onChange={(e) =>
+                        updateAddLineDraft(
+                          "type",
+                          e.target.value as DraftAddLineItem["type"],
+                        )
+                      }
+                      className="h-8 w-full rounded-md border border-border/60 bg-background px-2 text-xs"
+                    >
+                      {(Object.entries(LINE_TYPE_LABELS) as [LineItemType, string][]).map(
+                        ([key, label]) => (
+                          <option key={key} value={key}>
+                            {label}
+                          </option>
+                        ),
+                      )}
+                    </select>
+                  </div>
+
+                  <div className="space-y-1">
+                    <Label className="text-[11px] text-muted-foreground">Description</Label>
+                    <Input
+                      value={addLineItemDraft.description}
+                      onChange={(e) => updateAddLineDraft("description", e.target.value)}
+                      placeholder="Describe labor, parts, or external service..."
+                      className="h-8 text-xs border-border/60"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <Label className="text-[11px] text-muted-foreground text-right block">Qty</Label>
+                    <Input
+                      value={addLineItemDraft.qty}
+                      onChange={(e) => updateAddLineDraft("qty", e.target.value)}
+                      type="number"
+                      min="0.01"
+                      step="0.01"
+                      className="h-8 text-xs border-border/60 text-right"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <Label className="text-[11px] text-muted-foreground text-right block">
+                      Unit Price
+                    </Label>
+                    <Input
+                      value={addLineItemDraft.unitPrice}
+                      onChange={(e) => updateAddLineDraft("unitPrice", e.target.value)}
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      className="h-8 text-xs border-border/60 text-right"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-[11px] text-muted-foreground">
+                    Extended: $
+                    {(
+                      (parseFloat(addLineItemDraft.qty) || 0) *
+                      (parseFloat(addLineItemDraft.unitPrice) || 0)
+                    ).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="h-8 text-xs"
+                      onClick={handleComputeDraftPrice}
+                      disabled={pricingLoading || actionLoading === "addItem"}
+                    >
+                      {pricingLoading ? "Computing..." : "Apply Pricing Rule"}
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      className="h-8 text-xs gap-1.5"
+                      onClick={handleAddDraftLineItem}
+                      disabled={actionLoading === "addItem" || pricingLoading}
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      {actionLoading === "addItem" ? "Adding..." : "Add Line"}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              <div
+                className="rounded-md border border-border/60 p-3 space-y-3"
+                data-testid="draft-labor-kit-panel"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <h3 className="text-xs uppercase tracking-wide text-muted-foreground font-medium">
+                      Labor Kits
+                    </h3>
+                    <p className="text-[11px] text-muted-foreground mt-1">
+                      Apply scheduler templates into this quote.
+                    </p>
+                  </div>
+                  <Button type="button" variant="outline" size="sm" asChild className="h-7 text-xs">
+                    <Link to="/billing/labor-kits">
+                      <Wrench className="w-3.5 h-3.5" />
+                      Manage
+                    </Link>
+                  </Button>
+                </div>
+
+                <Input
+                  value={kitSearch}
+                  onChange={(e) => setKitSearch(e.target.value)}
+                  placeholder="Search kits..."
+                  className="h-8 text-xs border-border/60"
+                />
+
+                {matchingLaborKits.length === 0 ? (
+                  <div className="rounded border border-dashed border-border/60 p-3 text-[11px] text-muted-foreground">
+                    No active kits match this quote.
+                  </div>
+                ) : (
+                  <div className="space-y-2 max-h-64 overflow-auto pr-1">
+                    {matchingLaborKits.map((kit) => {
+                      const itemCount =
+                        (kit.laborItems?.length ?? 0) +
+                        (kit.requiredParts?.length ?? 0) +
+                        (kit.externalServices?.length ?? 0);
+
+                      return (
+                        <div
+                          key={kit._id}
+                          className="rounded-md border border-border/60 px-2.5 py-2 flex items-center justify-between gap-2"
+                        >
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <p className="text-sm font-medium truncate">{kit.name}</p>
+                              {kit.aircraftType && (
+                                <Badge variant="outline" className="text-[10px]">
+                                  {kit.aircraftType}
+                                </Badge>
+                              )}
+                              {kit.ataChapter && (
+                                <Badge variant="outline" className="text-[10px]">
+                                  ATA {kit.ataChapter}
+                                </Badge>
+                              )}
+                            </div>
+                            <p className="text-[10px] text-muted-foreground mt-0.5">
+                              {itemCount} template line{itemCount === 1 ? "" : "s"}
+                            </p>
+                          </div>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="h-7 text-xs"
+                            onClick={() => handleAddLaborKitToDraftQuote(kit)}
+                            disabled={actionLoading === `kit:${kit._id}` || actionLoading === "addItem"}
+                            data-testid={`apply-kit-${kit._id}`}
+                          >
+                            <Package className="w-3.5 h-3.5" />
+                            {actionLoading === `kit:${kit._id}` ? "Applying..." : "Apply"}
+                          </Button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Line Items — GAP-06: edit/delete on DRAFT */}
       <Card className="border-border/60">
         <CardHeader className="pb-3">
@@ -656,13 +1098,10 @@ export default function QuoteDetailPage() {
           </DialogHeader>
           <div className="space-y-3 py-2">
             <div className="space-y-1.5">
-              <Label className="text-xs">Work Order Number *</Label>
-              <Input
-                value={woNumber}
-                onChange={(e) => setWoNumber(e.target.value)}
-                placeholder="e.g. WO-2026-001"
-                className="h-9 text-sm"
-              />
+              <Label className="text-xs">Work Order Number</Label>
+              <div className="h-9 rounded-md border border-border/60 bg-muted/30 px-3 text-sm font-mono text-muted-foreground flex items-center">
+                Auto-generated on conversion
+              </div>
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs">Description</Label>
@@ -707,7 +1146,7 @@ export default function QuoteDetailPage() {
             <Button
               size="sm"
               onClick={handleConvert}
-              disabled={!woNumber.trim() || actionLoading === "convert"}
+              disabled={actionLoading === "convert"}
               className="bg-purple-600 hover:bg-purple-700"
             >
               {actionLoading === "convert" ? "Converting..." : "Create Work Order"}

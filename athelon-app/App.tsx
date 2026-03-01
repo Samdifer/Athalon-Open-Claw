@@ -91,6 +91,9 @@ const WarrantyPage = lazy(() => import("@/app/(app)/billing/warranty/page"));
 const SchedulingPage = lazy(() => import("@/app/(app)/scheduling/page"));
 const CapacityPage = lazy(() => import("@/app/(app)/scheduling/capacity/page"));
 const BaysPage = lazy(() => import("@/app/(app)/scheduling/bays/page"));
+const FinancialPlanningPage = lazy(
+  () => import("@/app/(app)/scheduling/financial-planning/page"),
+);
 
 // Reports
 const ReportsPage = lazy(() => import("@/app/(app)/reports/page"));
@@ -270,6 +273,10 @@ export default function App() {
                 <Route path="/scheduling" element={<SchedulingPage />} />
                 <Route path="/scheduling/bays" element={<BaysPage />} />
                 <Route path="/scheduling/capacity" element={<CapacityPage />} />
+                <Route
+                  path="/scheduling/financial-planning"
+                  element={<FinancialPlanningPage />}
+                />
 
                 {/* Reports */}
                 <Route path="/reports" element={<ReportsPage />} />

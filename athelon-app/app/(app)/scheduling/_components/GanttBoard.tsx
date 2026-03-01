@@ -1,18 +1,10 @@
 "use client";
 
-import { useState, useRef, useMemo, useEffect, useCallback } from "react";
+import { useState, useRef, useMemo, useEffect, useCallback, type RefObject } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
-import type { Id } from "@/convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import {
-  ChevronLeft,
-  ChevronRight,
-  ZoomIn,
-  ZoomOut,
   CalendarDays,
   Plus,
   AlertTriangle,
@@ -38,6 +30,10 @@ type WorkOrderWithRisk = {
   remainingHours: number;
   riskLevel: "overdue" | "at_risk" | "on_track" | "no_date";
   aircraft: { currentRegistration: string | undefined; make: string; model: string } | null;
+  sourceQuoteId?: string;
+  quoteNumber?: string | null;
+  quoteStatus?: string | null;
+  quoteTotal?: number | null;
 };
 
 type Bay = {
@@ -47,12 +43,47 @@ type Bay = {
   status: string;
 };
 
+type ScheduledPlannerProject = {
+  assignmentId: string;
+  workOrderId: string;
+  workOrderNumber: string;
+  workOrderStatus: string;
+  priority: "routine" | "urgent" | "aog";
+  description: string;
+  scheduledStartDate: number;
+  promisedDeliveryDate: number;
+  hangarBayId: string;
+  sourceQuoteId?: string;
+  quoteNumber?: string | null;
+  quoteStatus?: string | null;
+  quoteTotal?: number | null;
+  aircraft: { currentRegistration: string | undefined; make: string; model: string } | null;
+  archivedAt?: number;
+  isLocked: boolean;
+};
+
 interface GanttBoardProps {
   workOrders: WorkOrderWithRisk[];
+  scheduledProjects: ScheduledPlannerProject[];
   onOpenBacklog: () => void;
   unscheduledCount: number;
+  onScheduleChange: (args: {
+    workOrderId: string;
+    startDate: number;
+    endDate: number;
+    hangarBayId: string;
+    sourceQuoteId?: string;
+  }) => Promise<void>;
   bays?: Bay[];
   conflicts?: { type: string; severity: string; message: string; woIds: string[] }[];
+  scrollRef?: RefObject<HTMLDivElement | null>;
+  onTimelineScroll?: (scrollLeft: number) => void;
+  onTimelineConfigChange?: (args: {
+    timelineStartMs: number;
+    totalDays: number;
+    cellWidth: number;
+    todayIndex: number;
+  }) => void;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -101,14 +132,19 @@ function getStatusLabel(status: string): string {
 
 export function GanttBoard({
   workOrders,
+  scheduledProjects,
   onOpenBacklog,
   unscheduledCount,
+  onScheduleChange,
   bays,
   conflicts,
+  scrollRef,
+  onTimelineScroll,
+  onTimelineConfigChange,
 }: GanttBoardProps) {
   const navigate = useNavigate();
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const updateSchedule = useMutation(api.scheduling.updateWOSchedule);
+  const internalScrollRef = useRef<HTMLDivElement>(null);
+  const timelineScrollRef = scrollRef ?? internalScrollRef;
 
   const [viewMode, setViewMode] = useState<ViewMode>("day");
   const [showConflicts, setShowConflicts] = useState(true);
@@ -117,7 +153,9 @@ export function GanttBoard({
 
   // ── Drag state ─────────────────────────────────────────────────────────
   const [dragState, setDragState] = useState<{
-    woId: string;
+    workOrderId: string;
+    hangarBayId: string;
+    sourceQuoteId?: string;
     type: "move" | "resize";
     startX: number;
     origStartDate: number;
@@ -132,20 +170,14 @@ export function GanttBoard({
     return d;
   }, []);
 
-  // ── Only scheduled WOs ─────────────────────────────────────────────────
-  const scheduledWOs = useMemo(
-    () => workOrders.filter((wo) => wo.scheduledStartDate && wo.promisedDeliveryDate),
-    [workOrders],
-  );
-
   // ── Date range ─────────────────────────────────────────────────────────
   const days = useMemo(() => {
     let rangeStartMs = today.getTime() - 30 * DAY_MS;
     let rangeEndMs = today.getTime() + 60 * DAY_MS;
 
-    for (const wo of scheduledWOs) {
-      const startMs = wo.scheduledStartDate!;
-      const endMs = wo.promisedDeliveryDate!;
+    for (const project of scheduledProjects) {
+      const startMs = project.scheduledStartDate;
+      const endMs = project.promisedDeliveryDate;
       if (startMs < rangeStartMs) rangeStartMs = startMs;
       if (endMs > rangeEndMs) rangeEndMs = endMs;
     }
@@ -162,7 +194,7 @@ export function GanttBoard({
       cursor.setDate(cursor.getDate() + 1);
     }
     return result;
-  }, [today, scheduledWOs]);
+  }, [today, scheduledProjects]);
 
   const rangeStartDay = useMemo(() => msToDay(days[0]?.getTime() ?? 0), [days]);
 
@@ -175,32 +207,35 @@ export function GanttBoard({
     return set;
   }, [conflicts]);
 
-  // ── Bar positions ──────────────────────────────────────────────────────
-  // Use bays as row groups if available, otherwise use WO list
+  const workOrderMap = useMemo(
+    () => new Map(workOrders.map((wo) => [wo._id, wo])),
+    [workOrders],
+  );
+
+  // ── Row model ──────────────────────────────────────────────────────────
   const rows = useMemo(() => {
     if (bays && bays.length > 0) {
       return bays.map((bay) => ({
         id: bay._id,
         label: bay.name,
         sublabel: bay.type,
-        wos: scheduledWOs.filter(() => true), // all WOs shown; bay assignment TBD
+        wos: scheduledProjects.filter((wo) => wo.hangarBayId === bay._id),
       }));
     }
-    return scheduledWOs.map((wo) => ({
-      id: wo._id,
+    return scheduledProjects.map((wo) => ({
+      id: wo.workOrderId,
       label: wo.aircraft?.currentRegistration ?? wo.workOrderNumber,
       sublabel: wo.workOrderNumber,
       wos: [wo],
     }));
-  }, [bays, scheduledWOs]);
+  }, [bays, scheduledProjects]);
 
-  const woPositions = useMemo(() => {
-    return scheduledWOs.map((wo) => {
-      let startMs = wo.scheduledStartDate!;
-      let endMs = wo.promisedDeliveryDate!;
+  const getProjectPosition = useCallback(
+    (wo: ScheduledPlannerProject) => {
+      let startMs = wo.scheduledStartDate;
+      let endMs = wo.promisedDeliveryDate;
 
-      // Apply drag delta
-      if (dragState && dragState.woId === wo._id) {
+      if (dragState && dragState.workOrderId === wo.workOrderId) {
         const daysDelta = Math.round(dragDelta / cellWidth);
         if (dragState.type === "move") {
           startMs = dragState.origStartDate + daysDelta * DAY_MS;
@@ -218,13 +253,14 @@ export function GanttBoard({
       const maxDayIdx = days.length - 1;
 
       return {
-        wo,
+        startMs,
+        endMs,
         startDayIdx: Math.max(0, Math.min(startDayIdx, maxDayIdx)),
         endDayIdx: Math.max(0, Math.min(endDayIdx, maxDayIdx)),
-        isConflict: conflictWoIds.has(wo._id),
       };
-    });
-  }, [scheduledWOs, rangeStartDay, days.length, dragState, dragDelta, cellWidth, conflictWoIds]);
+    },
+    [dragState, dragDelta, cellWidth, rangeStartDay, days.length],
+  );
 
   // ── Today column ───────────────────────────────────────────────────────
   const todayIndex = useMemo(
@@ -234,22 +270,24 @@ export function GanttBoard({
 
   // ── Auto-scroll to today ──────────────────────────────────────────────
   useEffect(() => {
-    if (scrollRef.current && todayIndex >= 0) {
-      scrollRef.current.scrollLeft = Math.max(0, todayIndex * cellWidth - 200);
+    if (timelineScrollRef.current && todayIndex >= 0) {
+      timelineScrollRef.current.scrollLeft = Math.max(0, todayIndex * cellWidth - 200);
     }
-  }, [todayIndex, cellWidth]);
+  }, [todayIndex, cellWidth, timelineScrollRef]);
 
   // ── Drag handlers ─────────────────────────────────────────────────────
   const handleMouseDown = useCallback(
-    (e: React.MouseEvent, wo: WorkOrderWithRisk, type: "move" | "resize") => {
+    (e: React.MouseEvent, wo: ScheduledPlannerProject, type: "move" | "resize") => {
       e.preventDefault();
       e.stopPropagation();
       setDragState({
-        woId: wo._id,
+        workOrderId: wo.workOrderId,
+        hangarBayId: wo.hangarBayId,
+        sourceQuoteId: wo.sourceQuoteId,
         type,
         startX: e.clientX,
-        origStartDate: wo.scheduledStartDate!,
-        origEndDate: wo.promisedDeliveryDate!,
+        origStartDate: wo.scheduledStartDate,
+        origEndDate: wo.promisedDeliveryDate,
       });
       setDragDelta(0);
     },
@@ -283,10 +321,12 @@ export function GanttBoard({
         }
 
         try {
-          await updateSchedule({
-            woId: dragState!.woId as Id<"workOrders">,
+          await onScheduleChange({
+            workOrderId: dragState!.workOrderId,
             startDate: newStart,
             endDate: newEnd,
+            hangarBayId: dragState!.hangarBayId,
+            sourceQuoteId: dragState!.sourceQuoteId,
           });
           toast.success("Schedule updated");
         } catch (err) {
@@ -304,12 +344,12 @@ export function GanttBoard({
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseup", handleMouseUp);
     };
-  }, [dragState, cellWidth, updateSchedule]);
+  }, [dragState, cellWidth, onScheduleChange]);
 
   // ── Zoom / scroll helpers ──────────────────────────────────────────────
   function scrollToToday() {
-    if (scrollRef.current && todayIndex >= 0) {
-      scrollRef.current.scrollLeft = Math.max(0, todayIndex * cellWidth - 200);
+    if (timelineScrollRef.current && todayIndex >= 0) {
+      timelineScrollRef.current.scrollLeft = Math.max(0, todayIndex * cellWidth - 200);
     }
   }
 
@@ -321,6 +361,16 @@ export function GanttBoard({
   }, [days]);
 
   const timelineWidth = days.length * cellWidth;
+
+  useEffect(() => {
+    if (!onTimelineConfigChange || days.length === 0) return;
+    onTimelineConfigChange({
+      timelineStartMs: days[0].getTime(),
+      totalDays: days.length,
+      cellWidth,
+      todayIndex,
+    });
+  }, [onTimelineConfigChange, days, cellWidth, todayIndex]);
 
   // ── Month headers (for week/month views) ───────────────────────────────
   const monthHeaders = useMemo(() => {
@@ -471,11 +521,7 @@ export function GanttBoard({
               {bays && bays.length > 0 ? "Bay" : "Aircraft / WO"}
             </span>
           </div>
-          {(bays && bays.length > 0 ? rows : woPositions.map(({ wo }) => ({
-            id: wo._id,
-            label: wo.aircraft?.currentRegistration ?? "",
-            sublabel: wo.workOrderNumber,
-          }))).map((row) => (
+          {rows.map((row) => (
             <div
               key={row.id}
               className="flex flex-col justify-center px-3 border-b border-border/30 hover:bg-muted/20 transition-colors cursor-pointer"
@@ -488,14 +534,19 @@ export function GanttBoard({
                 {row.label}
               </span>
               <span className="text-[10px] font-mono text-muted-foreground truncate">
-                {row.sublabel}
+                {row.sublabel} {bays && row.wos.length > 0 ? `• ${row.wos.length} WO` : ""}
               </span>
             </div>
           ))}
         </div>
 
         {/* Right scrollable timeline */}
-        <div ref={scrollRef} className="flex-1 overflow-auto">
+        <div
+          ref={timelineScrollRef}
+          className="flex-1 overflow-auto"
+          onScroll={(e) => onTimelineScroll?.(e.currentTarget.scrollLeft)}
+          data-testid="gantt-timeline-scroll"
+        >
           <div className="relative" style={{ width: timelineWidth, minHeight: "100%" }}>
             {/* Today vertical line — red dashed */}
             {todayIndex >= 0 && (
@@ -552,74 +603,99 @@ export function GanttBoard({
             </div>
 
             {/* WO rows */}
-            {woPositions.map(({ wo, startDayIdx, endDayIdx, isConflict }) => {
-              const barLeft = startDayIdx * cellWidth;
-              const barWidth = Math.max(cellWidth, (endDayIdx - startDayIdx) * cellWidth);
-              const barTop = (ROW_HEIGHT - BAR_HEIGHT) / 2;
-              const colorClass = isConflict
-                ? "bg-red-500/70 border-2 border-red-400 text-white ring-2 ring-red-400/50"
-                : getBarColor(wo);
-              const isDragging = dragState?.woId === wo._id;
+            {rows.map((row) => (
+              <div
+                key={row.id}
+                className="relative border-b border-border/30"
+                style={{ height: ROW_HEIGHT, width: timelineWidth }}
+              >
+                {/* Weekend column shading (day view only) */}
+                {viewMode === "day" &&
+                  days.map((day, i) => {
+                    const isWeekend = day.getDay() === 0 || day.getDay() === 6;
+                    if (!isWeekend) return null;
+                    return (
+                      <div
+                        key={i}
+                        className="absolute top-0 bottom-0 bg-muted/10 pointer-events-none"
+                        style={{ left: i * cellWidth, width: cellWidth }}
+                      />
+                    );
+                  })}
 
-              return (
-                <div
-                  key={wo._id}
-                  className="relative border-b border-border/30"
-                  style={{ height: ROW_HEIGHT, width: timelineWidth }}
-                >
-                  {/* Weekend column shading (day view only) */}
-                  {viewMode === "day" &&
-                    days.map((day, i) => {
-                      const isWeekend = day.getDay() === 0 || day.getDay() === 6;
-                      if (!isWeekend) return null;
-                      return (
-                        <div
-                          key={i}
-                          className="absolute top-0 bottom-0 bg-muted/10 pointer-events-none"
-                          style={{ left: i * cellWidth, width: cellWidth }}
-                        />
+                {row.wos.map((wo) => {
+                  const { startDayIdx, endDayIdx } = getProjectPosition(wo);
+                  const barLeft = startDayIdx * cellWidth;
+                  const barWidth = Math.max(cellWidth, (endDayIdx - startDayIdx) * cellWidth);
+                  const barTop = (ROW_HEIGHT - BAR_HEIGHT) / 2;
+                  const isConflict = conflictWoIds.has(wo.workOrderId);
+                  const mapped = workOrderMap.get(wo.workOrderId);
+                  const colorClass = isConflict
+                    ? "bg-red-500/70 border-2 border-red-400 text-white ring-2 ring-red-400/50"
+                    : getBarColor(
+                        mapped ?? {
+                          _id: wo.workOrderId,
+                          workOrderNumber: wo.workOrderNumber,
+                          status: wo.workOrderStatus,
+                          priority: wo.priority,
+                          description: wo.description,
+                          openedAt: 0,
+                          promisedDeliveryDate: wo.promisedDeliveryDate,
+                          scheduledStartDate: wo.scheduledStartDate,
+                          taskCardEstimateTotal: 0,
+                          effectiveEstimatedHours: 0,
+                          completedHours: 0,
+                          remainingHours: 0,
+                          riskLevel: "on_track",
+                          aircraft: wo.aircraft,
+                        },
                       );
-                    })}
+                  const isDragging = dragState?.workOrderId === wo.workOrderId;
 
-                  {/* WO bar */}
-                  <div
-                    className={`absolute rounded-md flex items-center overflow-hidden text-[11px] font-medium transition-shadow ${colorClass} ${
-                      isDragging ? "opacity-80 shadow-lg z-30" : "hover:shadow-md cursor-grab"
-                    }`}
-                    style={{
-                      left: barLeft + (isDragging && dragState?.type === "move" ? dragDelta : 0),
-                      width:
-                        barWidth +
-                        (isDragging && dragState?.type === "resize" ? dragDelta : 0),
-                      top: barTop,
-                      height: BAR_HEIGHT,
-                    }}
-                    onMouseDown={(e) => handleMouseDown(e, wo, "move")}
-                    onDoubleClick={() => navigate(`/work-orders/${wo._id}`)}
-                    title={`${wo.workOrderNumber} — ${wo.aircraft?.currentRegistration ?? ""} — ${wo.description}`}
-                  >
-                    {/* Bar content */}
-                    <div className="flex items-center gap-1.5 px-2 min-w-0 flex-1">
-                      <span className="font-semibold truncate">{wo.workOrderNumber}</span>
-                      {wo.aircraft?.currentRegistration && barWidth > 120 && (
-                        <span className="text-[10px] opacity-80 truncate">
-                          {wo.aircraft.currentRegistration}
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Resize handle */}
+                  return (
                     <div
-                      className="absolute right-0 top-0 bottom-0 w-2 cursor-ew-resize hover:bg-white/20"
-                      onMouseDown={(e) => {
-                        e.stopPropagation();
-                        handleMouseDown(e, wo, "resize");
+                      key={`${row.id}-${wo.workOrderId}`}
+                      className={`absolute rounded-md flex items-center overflow-hidden text-[11px] font-medium transition-shadow ${colorClass} ${
+                        isDragging ? "opacity-80 shadow-lg z-30" : "hover:shadow-md cursor-grab"
+                      }`}
+                      style={{
+                        left: barLeft + (isDragging && dragState?.type === "move" ? dragDelta : 0),
+                        width:
+                          barWidth +
+                          (isDragging && dragState?.type === "resize" ? dragDelta : 0),
+                        top: barTop,
+                        height: BAR_HEIGHT,
                       }}
-                    />
-                  </div>
-                </div>
-              );
-            })}
+                      onMouseDown={(e) => handleMouseDown(e, wo, "move")}
+                      onDoubleClick={() => navigate(`/work-orders/${wo.workOrderId}`)}
+                      title={`${wo.workOrderNumber} — ${wo.aircraft?.currentRegistration ?? ""} — ${wo.description}${wo.quoteNumber ? ` — ${wo.quoteNumber}` : ""}`}
+                    >
+                      <div className="flex items-center gap-1.5 px-2 min-w-0 flex-1">
+                        <span className="font-semibold truncate">{wo.workOrderNumber}</span>
+                        {wo.aircraft?.currentRegistration && barWidth > 120 && (
+                          <span className="text-[10px] opacity-80 truncate">
+                            {wo.aircraft.currentRegistration}
+                          </span>
+                        )}
+                        {wo.quoteNumber && barWidth > 170 && (
+                          <span className="text-[10px] opacity-90 truncate">
+                            {wo.quoteNumber}
+                          </span>
+                        )}
+                      </div>
+
+                      <div
+                        className="absolute right-0 top-0 bottom-0 w-2 cursor-ew-resize hover:bg-white/20"
+                        onMouseDown={(e) => {
+                          e.stopPropagation();
+                          handleMouseDown(e, wo, "resize");
+                        }}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
           </div>
         </div>
       </div>
