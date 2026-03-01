@@ -5,7 +5,8 @@ import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import { usePagePrereqs } from "@/hooks/usePagePrereqs";
-import { FileBarChart, Download } from "lucide-react";
+import { FileBarChart, Download, DollarSign, TrendingUp, BarChart2, Navigation, AlertCircle } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -68,6 +69,7 @@ export default function ReportsPage() {
 
   const fromTs = new Date(dateFrom).getTime();
   const toTs = new Date(dateTo).getTime() + 86400000;
+  const dateRangeInvalid = dateFrom && dateTo && fromTs > toTs;
 
   // Revenue by month
   const revenueData = useMemo(() => {
@@ -149,6 +151,40 @@ export default function ReportsPage() {
         </div>
       </div>
 
+      {/* Financial Sub-Navigation */}
+      <div className="flex flex-wrap gap-2">
+        <Button variant="secondary" size="sm" className="h-8 text-xs gap-1.5" asChild>
+          <Link to="/reports">
+            <BarChart2 className="w-3.5 h-3.5" />
+            Overview
+          </Link>
+        </Button>
+        <Button variant="ghost" size="sm" className="h-8 text-xs gap-1.5 border border-border/40" asChild>
+          <Link to="/reports/financials">
+            <DollarSign className="w-3.5 h-3.5" />
+            Financial Dashboard
+          </Link>
+        </Button>
+        <Button variant="ghost" size="sm" className="h-8 text-xs gap-1.5 border border-border/40" asChild>
+          <Link to="/reports/financials/forecast">
+            <TrendingUp className="w-3.5 h-3.5" />
+            Forecast
+          </Link>
+        </Button>
+        <Button variant="ghost" size="sm" className="h-8 text-xs gap-1.5 border border-border/40" asChild>
+          <Link to="/reports/financials/profitability">
+            <BarChart2 className="w-3.5 h-3.5" />
+            Profitability
+          </Link>
+        </Button>
+        <Button variant="ghost" size="sm" className="h-8 text-xs gap-1.5 border border-border/40" asChild>
+          <Link to="/reports/financials/runway">
+            <Navigation className="w-3.5 h-3.5" />
+            Runway
+          </Link>
+        </Button>
+      </div>
+
       {/* Date Range Picker */}
       <Card className="border-border/60">
         <CardContent className="pt-4 pb-3">
@@ -174,6 +210,16 @@ export default function ReportsPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Date range validation error */}
+      {dateRangeInvalid && (
+        <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg border border-red-500/40 bg-red-500/10 text-red-400">
+          <AlertCircle className="w-4 h-4 flex-shrink-0" />
+          <p className="text-xs font-medium">
+            "From" date is after "To" date — no data will match this range. Swap the dates to see results.
+          </p>
+        </div>
+      )}
 
       {/* Revenue Summary */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

@@ -494,6 +494,15 @@ export default function PartsRequestsPage() {
                         </Button>
                       ) : isPendingInspection && !techId ? (
                         <span className="text-[10px] text-muted-foreground">No tech profile</span>
+                      ) : isRemovedPending && part.receivingWorkOrderId ? (
+                        <Link
+                          to={`/work-orders/${part.receivingWorkOrderId}`}
+                          className="inline-flex items-center gap-1 h-7 px-2.5 text-xs rounded-md border border-orange-500/40 text-orange-600 dark:text-orange-400 hover:bg-orange-500/10 transition-colors"
+                        >
+                          Disposition via WO →
+                        </Link>
+                      ) : isRemovedPending ? (
+                        <span className="text-[10px] text-muted-foreground italic">No WO linked</span>
                       ) : null}
                     </div>
                   </div>

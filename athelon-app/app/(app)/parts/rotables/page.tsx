@@ -7,7 +7,7 @@ import type { Id } from "@/convex/_generated/dataModel";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import { usePagePrereqs } from "@/hooks/usePagePrereqs";
 import {
-  Plus, Search, Cog, ChevronDown, ChevronRight, DollarSign,
+  Plus, Search, Cog, ChevronDown, ChevronRight, DollarSign, Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -181,6 +181,8 @@ export default function RotablesPage() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [condemnTarget, setCondemnTarget] = useState<{ id: Id<"rotables">; partNumber: string; serialNumber: string } | null>(null);
+  const [removeTarget, setRemoveTarget] = useState<{ id: Id<"rotables">; partNumber: string; serialNumber: string } | null>(null);
+  const [actioningId, setActioningId] = useState<string | null>(null);
   const { orgId, isLoaded } = useCurrentOrg();
 
   const rotables = useQuery(
@@ -262,11 +264,14 @@ export default function RotablesPage() {
       toast.error("Organization context is required");
       return;
     }
+    setActioningId(rotableId);
     try {
       await recordAction({ rotableId, organizationId: orgId, action });
       toast.success(`${ACTION_LABELS[action]} recorded`);
     } catch {
       toast.error("Failed to record action");
+    } finally {
+      setActioningId(null);
     }
   }
 
@@ -436,19 +441,27 @@ export default function RotablesPage() {
                     </div>
                     <div className="flex gap-1 flex-shrink-0 flex-wrap">
                       {rotable.status === "serviceable" && (
-                        <Button size="sm" variant="outline" className="h-7 text-xs" onClick={(e) => { e.stopPropagation(); handleAction(rotable._id, "installed"); }}>Install</Button>
+                        <Button size="sm" variant="outline" className="h-7 text-xs gap-1" disabled={actioningId === rotable._id} onClick={(e) => { e.stopPropagation(); void handleAction(rotable._id, "installed"); }}>
+                          {actioningId === rotable._id ? <Loader2 className="w-3 h-3 animate-spin" /> : null}Install
+                        </Button>
                       )}
                       {rotable.status === "installed" && (
-                        <Button size="sm" variant="outline" className="h-7 text-xs" onClick={(e) => { e.stopPropagation(); handleAction(rotable._id, "removed"); }}>Remove</Button>
+                        <Button size="sm" variant="outline" className="h-7 text-xs gap-1" disabled={actioningId === rotable._id} onClick={(e) => { e.stopPropagation(); setRemoveTarget({ id: rotable._id, partNumber: rotable.partNumber, serialNumber: rotable.serialNumber }); }}>
+                          {actioningId === rotable._id ? <Loader2 className="w-3 h-3 animate-spin" /> : null}Remove
+                        </Button>
                       )}
                       {(rotable.status === "serviceable" || rotable.status === "in_shop") && (
-                        <Button size="sm" variant="outline" className="h-7 text-xs" onClick={(e) => { e.stopPropagation(); handleAction(rotable._id, "sent_to_vendor"); }}>Send to Vendor</Button>
+                        <Button size="sm" variant="outline" className="h-7 text-xs gap-1" disabled={actioningId === rotable._id} onClick={(e) => { e.stopPropagation(); void handleAction(rotable._id, "sent_to_vendor"); }}>
+                          {actioningId === rotable._id ? <Loader2 className="w-3 h-3 animate-spin" /> : null}Send to Vendor
+                        </Button>
                       )}
                       {rotable.status === "at_vendor" && (
-                        <Button size="sm" variant="outline" className="h-7 text-xs" onClick={(e) => { e.stopPropagation(); handleAction(rotable._id, "received_from_vendor"); }}>Receive</Button>
+                        <Button size="sm" variant="outline" className="h-7 text-xs gap-1" disabled={actioningId === rotable._id} onClick={(e) => { e.stopPropagation(); void handleAction(rotable._id, "received_from_vendor"); }}>
+                          {actioningId === rotable._id ? <Loader2 className="w-3 h-3 animate-spin" /> : null}Receive
+                        </Button>
                       )}
                       {rotable.status !== "condemned" && (
-                        <Button size="sm" variant="ghost" className="h-7 text-xs text-red-500" onClick={(e) => { e.stopPropagation(); setCondemnTarget({ id: rotable._id, partNumber: rotable.partNumber, serialNumber: rotable.serialNumber }); }}>Condemn</Button>
+                        <Button size="sm" variant="ghost" className="h-7 text-xs text-red-500" disabled={actioningId === rotable._id} onClick={(e) => { e.stopPropagation(); setCondemnTarget({ id: rotable._id, partNumber: rotable.partNumber, serialNumber: rotable.serialNumber }); }}>Condemn</Button>
                       )}
                     </div>
                   </div>
@@ -461,6 +474,33 @@ export default function RotablesPage() {
           })}
         </div>
       )}
+
+      <AlertDialog open={removeTarget !== null} onOpenChange={(v) => !v && setRemoveTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove Component from Aircraft?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will record that{" "}
+              <strong className="font-mono">{removeTarget?.partNumber}</strong>
+              {removeTarget?.serialNumber ? ` S/N ${removeTarget.serialNumber}` : ""}{" "}
+              has been physically removed from the aircraft. A removal record will be added to the component history. Verify the component is actually being removed before confirming.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (removeTarget) {
+                  void handleAction(removeTarget.id, "removed");
+                  setRemoveTarget(null);
+                }
+              }}
+            >
+              Confirm Removal
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AlertDialog open={condemnTarget !== null} onOpenChange={(v) => !v && setCondemnTarget(null)}>
         <AlertDialogContent>

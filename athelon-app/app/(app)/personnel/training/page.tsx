@@ -16,6 +16,7 @@ import {
   ShieldCheck,
   ChevronRight,
   Filter,
+  Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -82,6 +83,8 @@ export default function TrainingPage() {
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showReqDialog, setShowReqDialog] = useState(false);
   const [activeTab, setActiveTab] = useState("records");
+  const [isAddingRecord, setIsAddingRecord] = useState(false);
+  const [isCreatingReq, setIsCreatingReq] = useState(false);
 
   // Queries
   const technicians = useQuery(
@@ -160,11 +163,22 @@ export default function TrainingPage() {
     [allTraining]
   );
 
+  const currentCount = useMemo(
+    () => (allTraining ?? []).filter((r) => r.status === "current").length,
+    [allTraining]
+  );
+
+  const expiringSoonCount = useMemo(
+    () => (expiringTraining ?? []).filter((r) => r.status === "expiring_soon").length,
+    [expiringTraining]
+  );
+
   async function handleAddRecord() {
     if (!orgId || !formTechId || !formCourseName || !formCompletedAt) {
       toast.error("Please fill required fields");
       return;
     }
+    setIsAddingRecord(true);
     try {
       await addRecord({
         organizationId: orgId,
@@ -182,6 +196,8 @@ export default function TrainingPage() {
       resetAddForm();
     } catch (e: any) {
       toast.error(e.message ?? "Failed to add record");
+    } finally {
+      setIsAddingRecord(false);
     }
   }
 
@@ -201,6 +217,7 @@ export default function TrainingPage() {
       toast.error("Name and courses are required");
       return;
     }
+    setIsCreatingReq(true);
     try {
       await createReq({
         organizationId: orgId,
@@ -219,6 +236,8 @@ export default function TrainingPage() {
       setReqRoles("");
     } catch (e: any) {
       toast.error(e.message ?? "Failed to create requirement");
+    } finally {
+      setIsCreatingReq(false);
     }
   }
 
@@ -231,71 +250,69 @@ export default function TrainingPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6 p-4 md:p-6 max-w-7xl mx-auto">
+    <div className="space-y-5">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-            <GraduationCap className="h-6 w-6" />
-            Training & Qualifications
-          </h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            Manage technician training records and compliance requirements
-          </p>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div className="flex items-start gap-2.5">
+          <GraduationCap className="w-5 h-5 text-muted-foreground mt-0.5 flex-shrink-0" />
+          <div>
+            <h1 className="text-lg sm:text-xl md:text-2xl font-semibold text-foreground">
+              Training &amp; Qualifications
+            </h1>
+            <p className="text-sm text-muted-foreground mt-0.5">
+              Manage technician training records and compliance requirements
+            </p>
+          </div>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setShowReqDialog(true)}>
-            <ShieldCheck className="h-4 w-4 mr-2" />
+        <div className="flex gap-2 flex-shrink-0">
+          <Button variant="outline" size="sm" className="h-9 gap-1.5" onClick={() => setShowReqDialog(true)}>
+            <ShieldCheck className="w-4 h-4" />
             Add Requirement
           </Button>
-          <Button onClick={() => setShowAddDialog(true)}>
-            <Plus className="h-4 w-4 mr-2" />
+          <Button size="sm" className="h-9 gap-1.5" onClick={() => setShowAddDialog(true)}>
+            <Plus className="w-4 h-4" />
             Add Training
           </Button>
         </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Card>
-          <CardContent className="pt-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <Card className="border-border/60">
+          <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="rounded-full bg-green-500/10 p-2">
-                <CheckCircle2 className="h-5 w-5 text-green-600" />
+              <div className="rounded-full bg-green-500/10 p-2 flex-shrink-0">
+                <CheckCircle2 className="w-4 h-4 text-green-600" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Current</p>
-                <p className="text-2xl font-bold">
-                  {(allTraining ?? []).filter((r) => r.status === "current").length}
-                </p>
+                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Current</p>
+                <p className="text-2xl font-bold text-foreground">{currentCount}</p>
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="pt-6">
+        <Card className="border-border/60">
+          <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="rounded-full bg-amber-500/10 p-2">
-                <AlertTriangle className="h-5 w-5 text-amber-600" />
+              <div className="rounded-full bg-amber-500/10 p-2 flex-shrink-0">
+                <AlertTriangle className="w-4 h-4 text-amber-600" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Expiring Soon</p>
-                <p className="text-2xl font-bold">
-                  {(expiringTraining ?? []).filter((r) => r.status === "expiring_soon").length}
-                </p>
+                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Expiring Soon</p>
+                <p className="text-2xl font-bold text-foreground">{expiringSoonCount}</p>
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="pt-6">
+        <Card className="border-border/60">
+          <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="rounded-full bg-red-500/10 p-2">
-                <XCircle className="h-5 w-5 text-red-600" />
+              <div className="rounded-full bg-red-500/10 p-2 flex-shrink-0">
+                <XCircle className="w-4 h-4 text-red-600" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Expired</p>
-                <p className="text-2xl font-bold">{expiredRecords.length}</p>
+                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Expired</p>
+                <p className="text-2xl font-bold text-foreground">{expiredRecords.length}</p>
               </div>
             </div>
           </CardContent>
@@ -308,7 +325,7 @@ export default function TrainingPage() {
           <TabsTrigger value="requirements">Qualification Requirements</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="records" className="space-y-4 mt-4">
+        <TabsContent value="records" className="space-y-3 mt-3">
           {/* Search */}
           <div className="relative max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -503,7 +520,7 @@ export default function TrainingPage() {
           )}
         </TabsContent>
 
-        <TabsContent value="requirements" className="space-y-4 mt-4">
+        <TabsContent value="requirements" className="space-y-3 mt-3">
           {!qualReqs ? (
             <Skeleton className="h-32 w-full" />
           ) : qualReqs.length === 0 ? (
@@ -642,10 +659,19 @@ export default function TrainingPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowAddDialog(false)}>
+            <Button variant="outline" onClick={() => setShowAddDialog(false)} disabled={isAddingRecord}>
               Cancel
             </Button>
-            <Button onClick={handleAddRecord}>Add Record</Button>
+            <Button onClick={handleAddRecord} disabled={isAddingRecord}>
+              {isAddingRecord ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Adding…
+                </>
+              ) : (
+                "Add Record"
+              )}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -701,10 +727,19 @@ export default function TrainingPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowReqDialog(false)}>
+            <Button variant="outline" onClick={() => setShowReqDialog(false)} disabled={isCreatingReq}>
               Cancel
             </Button>
-            <Button onClick={handleCreateReq}>Create</Button>
+            <Button onClick={handleCreateReq} disabled={isCreatingReq}>
+              {isCreatingReq ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Creating…
+                </>
+              ) : (
+                "Create"
+              )}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

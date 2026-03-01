@@ -24,8 +24,10 @@ import {
   WO_STATUS_LABEL,
   WO_STATUS_STYLES,
   WO_TYPE_LABEL,
+  WO_TYPES,
   type WoStatus,
   type WoType,
+  type WoPriority,
 } from "@/lib/mro-constants";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import { usePagePrereqs } from "@/hooks/usePagePrereqs";
@@ -38,6 +40,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Separator } from "@/components/ui/separator";
 import { QRCodeBadge } from "@/components/QRCodeBadge";
 import {
   Dialog,
@@ -125,6 +133,9 @@ export default function WorkOrdersPage() {
   const [activeTab, setActiveTab] = useState<FilterTab>("active");
   const [search, setSearch] = useState("");
   const [qrWoNumber, setQrWoNumber] = useState<string | null>(null);
+  const [filterPriority, setFilterPriority] = useState<WoPriority | "">("");
+  const [filterType, setFilterType] = useState<WoType | "">("");
+  const [filterOpen, setFilterOpen] = useState(false);
 
   const workOrders = useMemo<WorkOrderRow[]>(() => {
     const rows = raw ?? [];
@@ -154,6 +165,14 @@ export default function WorkOrdersPage() {
   const filtered = useMemo(
     () =>
       filterWorkOrders(workOrders, activeTab).filter((wo) => {
+        if (filterPriority && wo.priority !== filterPriority) return false;
+        if (filterType) {
+          // typeLabel is derived from WO_TYPE_LABEL[workOrderType], compare raw type via map
+          const rawType = Object.entries(WO_TYPE_LABEL).find(
+            ([, label]) => label === wo.typeLabel,
+          )?.[0];
+          if (rawType !== filterType) return false;
+        }
         if (!search.trim()) return true;
         const q = search.toLowerCase();
         return (
@@ -162,8 +181,10 @@ export default function WorkOrdersPage() {
           wo.description.toLowerCase().includes(q)
         );
       }),
-    [activeTab, search, workOrders],
+    [activeTab, search, workOrders, filterPriority, filterType],
   );
+
+  const activeFilterCount = (filterPriority ? 1 : 0) + (filterType ? 1 : 0);
 
   // Single-pass counter — O(n) instead of the previous O(6n) from 6 separate
   // filterWorkOrders() calls each iterating the full array.
@@ -316,10 +337,85 @@ export default function WorkOrdersPage() {
               className="h-8 pl-8 pr-3 text-xs w-full sm:w-64 bg-muted/30 border-border/60"
             />
           </div>
-          <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs border-border/60">
-            <Filter className="w-3.5 h-3.5" />
-            Filter
-          </Button>
+          <Popover open={filterOpen} onOpenChange={setFilterOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className={`h-8 gap-1.5 text-xs border-border/60 ${activeFilterCount > 0 ? "border-primary/50 text-primary" : ""}`}
+              >
+                <Filter className="w-3.5 h-3.5" />
+                Filter
+                {activeFilterCount > 0 && (
+                  <Badge className="h-4 w-4 p-0 flex items-center justify-center text-[9px] bg-primary text-primary-foreground ml-0.5">
+                    {activeFilterCount}
+                  </Badge>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-60 p-3 space-y-3">
+              <div>
+                <p className="text-xs font-medium text-foreground mb-1.5">Priority</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {(["", "routine", "urgent", "aog"] as const).map((p) => (
+                    <button
+                      key={p}
+                      onClick={() => setFilterPriority(p)}
+                      className={`text-[11px] px-2 py-0.5 rounded border transition-colors ${
+                        filterPriority === p
+                          ? "bg-primary text-primary-foreground border-primary"
+                          : "border-border/60 text-muted-foreground hover:border-primary/40"
+                      }`}
+                    >
+                      {p === "" ? "Any" : p === "aog" ? "AOG" : p.charAt(0).toUpperCase() + p.slice(1)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <Separator className="opacity-50" />
+              <div>
+                <p className="text-xs font-medium text-foreground mb-1.5">Type</p>
+                <div className="flex flex-col gap-1">
+                  <button
+                    onClick={() => setFilterType("")}
+                    className={`text-left text-[11px] px-2 py-0.5 rounded border transition-colors ${
+                      filterType === ""
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "border-border/60 text-muted-foreground hover:border-primary/40"
+                    }`}
+                  >
+                    Any type
+                  </button>
+                  {WO_TYPES.map((t) => (
+                    <button
+                      key={t.value}
+                      onClick={() => setFilterType(t.value)}
+                      className={`text-left text-[11px] px-2 py-0.5 rounded border transition-colors ${
+                        filterType === t.value
+                          ? "bg-primary text-primary-foreground border-primary"
+                          : "border-border/60 text-muted-foreground hover:border-primary/40"
+                      }`}
+                    >
+                      {t.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              {activeFilterCount > 0 && (
+                <>
+                  <Separator className="opacity-50" />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full h-7 text-xs"
+                    onClick={() => { setFilterPriority(""); setFilterType(""); setFilterOpen(false); }}
+                  >
+                    Clear All Filters
+                  </Button>
+                </>
+              )}
+            </PopoverContent>
+          </Popover>
         </div>
       </div>
 

@@ -292,6 +292,12 @@ export default function SchedulingPage() {
     [workOrders],
   );
 
+  // Map bay ID → human-readable bay name (used in Magic Scheduler results)
+  const bayNameMap = useMemo(
+    () => new Map((bays ?? []).map((b) => [String(b._id), b.name])),
+    [bays],
+  );
+
   const planningRates = useMemo(() => {
     return {
       defaultShopRate: planningFinancialSettings?.defaultShopRate ?? 125,
@@ -1006,22 +1012,20 @@ export default function SchedulingPage() {
                 {magicResults.map((row) => (
                   <li key={row.workOrderId} className="text-xs text-foreground">
                     <span className="font-mono">{row.workOrderNumber}</span>
-                    {" -> "}
+                    {" → "}
                     <span className="text-muted-foreground">
-                      Bay {row.bayId}
+                      {bayNameMap.get(row.bayId) ?? `Bay ${row.bayId.slice(0, 8)}…`}
                     </span>
-                    {" • End "}
+                    {" • ends "}
                     <span className="font-mono">
-                      {new Date(row.newEndDate).toLocaleDateString("en-US")}
+                      {new Date(row.newEndDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
                     </span>
                     {row.oldEndDate !== null && (
-                      <>
+                      <span className="text-muted-foreground/60">
                         {" (was "}
-                        <span className="font-mono">
-                          {new Date(row.oldEndDate).toLocaleDateString("en-US")}
-                        </span>
+                        {new Date(row.oldEndDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
                         {")"}
-                      </>
+                      </span>
                     )}
                   </li>
                 ))}

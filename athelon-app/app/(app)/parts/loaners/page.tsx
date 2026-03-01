@@ -364,7 +364,7 @@ export default function LoanersPage() {
             </div>
             <div className="flex justify-end gap-2">
               <Button type="button" variant="ghost" onClick={() => setLoanDialogId(null)}>Cancel</Button>
-              <Button type="submit">Loan Out</Button>
+              <Button type="submit" disabled={!loanForm.customerId}>Loan Out</Button>
             </div>
           </form>
         </DialogContent>

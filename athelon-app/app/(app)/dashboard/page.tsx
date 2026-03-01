@@ -379,75 +379,277 @@ function LiveActiveWorkOrders({ workOrders }: { workOrders: WorkOrdersWithRisk |
   );
 }
 
-// ─── Demo data (attention items still hardcoded) ──────────────────────────────
+// ─── Live Attention Items ─────────────────────────────────────────────────────
 
-const attentionItems = [
-  {
-    id: "attn-1",
-    type: "cert_expiring",
-    severity: "critical",
-    title: "IA Certificate Expiring",
-    description:
-      "Sandra Mercado — IA-2019-CO-00847 expires in 8 days (Mar 2, 2026)",
-    action: "Renew Now",
-    href: "/compliance/audit-trail",
-    icon: ShieldAlert,
-  },
-  {
-    id: "attn-2",
-    type: "squawk_blocking",
-    severity: "warning",
-    title: "Open Squawk Blocking WO Close",
-    description:
-      "SQ-2026-041-001 on WO-2026-0041 (N192AK) requires customer authorization",
-    action: "View Squawk",
-    href: "/squawks",
-    icon: AlertTriangle,
-  },
-  {
-    id: "attn-3",
-    type: "parts_on_hold",
-    severity: "info",
-    title: "AOG — Waiting on Parts",
-    description: "N76LS Bell 206B — Main rotor blade P/N 206-015-191-013. ETA 5 days",
-    action: "View WO",
-    href: "/work-orders",
-    icon: Package,
-  },
-];
+function LiveAttentionItems({ workOrders }: { workOrders: WorkOrdersWithRisk | undefined }) {
+  const { orgId } = useCurrentOrg();
 
-const fleetStatus = [
-  {
-    tail: "N192AK",
-    type: "Cessna 172S",
-    status: "in_maintenance",
-    statusLabel: "In Maintenance",
-    statusColor: "text-sky-400",
-    statusDot: "bg-sky-400",
-    openWos: 1,
-    href: "/fleet/N192AK",
-  },
-  {
-    tail: "N76LS",
-    type: "Bell 206B-III",
-    status: "in_maintenance",
-    statusLabel: "AOG / On Hold",
-    statusColor: "text-red-400",
-    statusDot: "bg-red-500",
-    openWos: 1,
-    href: "/fleet/N76LS",
-  },
-  {
-    tail: "N416AB",
-    type: "Cessna 208B",
-    status: "in_maintenance",
-    statusLabel: "In Maintenance",
-    statusColor: "text-sky-400",
-    statusDot: "bg-sky-400",
-    openWos: 2,
-    href: "/fleet/N416AB",
-  },
-];
+  const expiringCerts = useQuery(
+    api.technicians.listWithExpiringCerts,
+    orgId ? { organizationId: orgId, withinDays: 30 } : "skip",
+  );
+
+  const items = useMemo(() => {
+    if (workOrders === undefined || expiringCerts === undefined) return null;
+
+    type AttentionItem = {
+      id: string;
+      severity: "critical" | "warning" | "info";
+      title: string;
+      description: string;
+      action: string;
+      href: string;
+      icon: typeof AlertTriangle;
+    };
+
+    const result: AttentionItem[] = [];
+
+    // AOG aircraft — highest priority
+    const aogWOs = workOrders.filter(
+      (wo) => wo.priority === "aog" && !["closed", "voided", "cancelled"].includes(wo.status),
+    );
+    for (const wo of aogWOs.slice(0, 2)) {
+      const tail = wo.aircraft?.currentRegistration ?? "Unknown aircraft";
+      const type = wo.aircraft ? `${wo.aircraft.make} ${wo.aircraft.model}` : "";
+      result.push({
+        id: `aog-${wo._id}`,
+        severity: "critical",
+        title: "AOG Aircraft",
+        description: `${tail}${type ? ` ${type}` : ""} — ${wo.description} (${wo.workOrderNumber})`,
+        action: "View WO",
+        href: `/work-orders/${wo._id}`,
+        icon: AlertTriangle,
+      });
+    }
+
+    // WOs with open squawks (non-AOG, non-closed)
+    const squawkWOs = workOrders.filter(
+      (wo) =>
+        wo.priority !== "aog" &&
+        (wo.openDiscrepancyCount ?? 0) > 0 &&
+        !["closed", "voided", "cancelled"].includes(wo.status),
+    );
+    for (const wo of squawkWOs.slice(0, 2)) {
+      const tail = wo.aircraft?.currentRegistration ?? "Unknown";
+      const count = wo.openDiscrepancyCount ?? 0;
+      result.push({
+        id: `squawk-${wo._id}`,
+        severity: "warning",
+        title: "Open Squawk(s) Requiring Disposition",
+        description: `${count} open squawk${count !== 1 ? "s" : ""} on ${wo.workOrderNumber} (${tail})`,
+        action: "View",
+        href: "/squawks",
+        icon: AlertTriangle,
+      });
+    }
+
+    // Expiring or expired IA certs
+    for (const entry of (expiringCerts ?? []).slice(0, 3)) {
+      const tech = entry.technician as { legalName?: string } | null;
+      const name = tech?.legalName ?? "Unknown technician";
+      const expiry = (entry.cert as { iaExpiryDate?: number }).iaExpiryDate;
+      const daysLeft = expiry != null
+        ? Math.ceil((expiry - Date.now()) / (1000 * 60 * 60 * 24))
+        : null;
+      const isPast = daysLeft !== null && daysLeft <= 0;
+      result.push({
+        id: `cert-${(entry.cert as { _id: string })._id}`,
+        severity: isPast || (daysLeft !== null && daysLeft <= 7) ? "critical" : "warning",
+        title: isPast ? "IA Certificate EXPIRED" : "IA Certificate Expiring",
+        description: isPast
+          ? `${name} — IA cert has expired`
+          : `${name} — expires in ${daysLeft} day${daysLeft !== 1 ? "s" : ""}`,
+        action: "View",
+        href: "/compliance/audit-trail",
+        icon: ShieldAlert,
+      });
+    }
+
+    return result;
+  }, [workOrders, expiringCerts]);
+
+  if (items === null) {
+    return (
+      <div className="space-y-2">
+        {[1, 2, 3].map((i) => (
+          <Skeleton key={i} className="h-14 w-full rounded-lg" />
+        ))}
+      </div>
+    );
+  }
+
+  if (items.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
+        <CheckCircle2 className="w-6 h-6 mb-2 text-green-400" />
+        <p className="text-sm">All clear — no items require attention</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-2">
+      {items.map((item) => {
+        const styles = getSeverityStyles(item.severity);
+        return (
+          <div
+            key={item.id}
+            className={`flex items-start gap-3 p-3 rounded-lg border-l-2 ${styles.border} ${styles.bg} border border-border/40`}
+          >
+            <item.icon className={`w-4 h-4 mt-0.5 flex-shrink-0 ${styles.icon}`} />
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-medium text-foreground">{item.title}</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">
+                {item.description}
+              </p>
+            </div>
+            <Button asChild variant="ghost" size="sm" className="h-6 px-2 text-[11px] flex-shrink-0">
+              <Link to={item.href}>{item.action}</Link>
+            </Button>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ─── Live Fleet Status ────────────────────────────────────────────────────────
+
+function LiveFleetStatus({ workOrders }: { workOrders: WorkOrdersWithRisk | undefined }) {
+  const { orgId } = useCurrentOrg();
+
+  const fleet = useQuery(
+    api.aircraft.list,
+    orgId ? { organizationId: orgId } : "skip",
+  );
+
+  const fleetRows = useMemo(() => {
+    if (!fleet) return null;
+
+    // Build set of registrations that have an active AOG work order
+    const aogRegs = new Set<string>();
+    if (workOrders) {
+      for (const wo of workOrders) {
+        if (
+          wo.priority === "aog" &&
+          !["closed", "voided", "cancelled"].includes(wo.status) &&
+          wo.aircraft?.currentRegistration
+        ) {
+          aogRegs.add(wo.aircraft.currentRegistration);
+        }
+      }
+    }
+
+    // Sort: AOG first, then in-maintenance (open WOs), then others — so critical
+    // aircraft always appear in the capped dashboard widget.
+    const sorted = [...fleet].sort((a, b) => {
+      const aIsAog = a.currentRegistration ? aogRegs.has(a.currentRegistration) : false;
+      const bIsAog = b.currentRegistration ? aogRegs.has(b.currentRegistration) : false;
+      const aOpenWos = (a as typeof a & { openWorkOrderCount?: number }).openWorkOrderCount ?? 0;
+      const bOpenWos = (b as typeof b & { openWorkOrderCount?: number }).openWorkOrderCount ?? 0;
+      if (aIsAog && !bIsAog) return -1;
+      if (!aIsAog && bIsAog) return 1;
+      if (aOpenWos > 0 && bOpenWos === 0) return -1;
+      if (aOpenWos === 0 && bOpenWos > 0) return 1;
+      return 0;
+    });
+
+    return sorted.slice(0, 5).map((ac) => {
+      const reg = ac.currentRegistration ?? ac.serialNumber;
+      const isAog = ac.currentRegistration ? aogRegs.has(ac.currentRegistration) : false;
+      const openWos = (ac as typeof ac & { openWorkOrderCount?: number }).openWorkOrderCount ?? 0;
+
+      let statusLabel: string;
+      let statusColor: string;
+      let statusDot: string;
+
+      if (isAog) {
+        statusLabel = "AOG";
+        statusColor = "text-red-400";
+        statusDot = "bg-red-500";
+      } else if (openWos > 0) {
+        statusLabel = "In Maintenance";
+        statusColor = "text-sky-400";
+        statusDot = "bg-sky-400";
+      } else if (ac.status === "airworthy") {
+        statusLabel = "Airworthy";
+        statusColor = "text-green-400";
+        statusDot = "bg-green-400";
+      } else if (ac.status === "out_of_service") {
+        statusLabel = "Out of Service";
+        statusColor = "text-orange-400";
+        statusDot = "bg-orange-400";
+      } else {
+        statusLabel = ac.status.replace(/_/g, " ");
+        statusColor = "text-muted-foreground";
+        statusDot = "bg-muted-foreground/40";
+      }
+
+      return {
+        id: String(ac._id),
+        tail: reg ?? "—",
+        type: `${ac.make} ${ac.model}`.trim(),
+        openWos,
+        statusLabel,
+        statusColor,
+        statusDot,
+        href: `/fleet/${encodeURIComponent(reg ?? "")}`,
+      };
+    });
+  }, [fleet, workOrders]);
+
+  if (!fleetRows) {
+    return (
+      <div className="space-y-2">
+        {[1, 2, 3].map((i) => (
+          <Skeleton key={i} className="h-10 w-full rounded-lg" />
+        ))}
+      </div>
+    );
+  }
+
+  if (fleetRows.length === 0) {
+    return (
+      <div className="py-6 text-center text-sm text-muted-foreground">
+        No aircraft in fleet.{" "}
+        <Link to="/fleet" className="text-primary hover:underline text-sm">
+          Add aircraft →
+        </Link>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-1">
+      {fleetRows.map((aircraft, i) => (
+        <div key={aircraft.id}>
+          {i > 0 && <Separator className="my-1 opacity-40" />}
+          <Link to={aircraft.href}>
+            <div className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-muted/40 transition-colors cursor-pointer">
+              <div className={`w-2 h-2 rounded-full flex-shrink-0 ${aircraft.statusDot}`} />
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <span className="font-mono font-semibold text-sm text-foreground">
+                    {aircraft.tail}
+                  </span>
+                  {aircraft.openWos > 0 && (
+                    <Badge variant="secondary" className="text-[9px] h-4 px-1 bg-muted">
+                      {aircraft.openWos} WO
+                    </Badge>
+                  )}
+                </div>
+                <span className="text-[11px] text-muted-foreground">{aircraft.type}</span>
+              </div>
+              <span className={`text-[10px] font-medium flex-shrink-0 ${aircraft.statusColor}`}>
+                {aircraft.statusLabel}
+              </span>
+            </div>
+          </Link>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 // ─── Status helpers ───────────────────────────────────────────────────────────
 
@@ -559,45 +761,11 @@ export default function DashboardPage() {
                 <CardTitle className="text-sm font-semibold flex items-center gap-2">
                   <AlertTriangle className="w-4 h-4 text-amber-400" />
                   Attention Required
-                  <Badge
-                    variant="secondary"
-                    className="text-[10px] bg-amber-500/15 text-amber-400 border border-amber-500/30"
-                  >
-                    {attentionItems.length}
-                  </Badge>
                 </CardTitle>
               </div>
             </CardHeader>
-            <CardContent className="pt-0 space-y-2">
-              {attentionItems.map((item) => {
-                const styles = getSeverityStyles(item.severity);
-                return (
-                  <div
-                    key={item.id}
-                    className={`flex items-start gap-3 p-3 rounded-lg border-l-2 ${styles.border} ${styles.bg} border border-border/40`}
-                  >
-                    <item.icon
-                      className={`w-4 h-4 mt-0.5 flex-shrink-0 ${styles.icon}`}
-                    />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-medium text-foreground">
-                        {item.title}
-                      </p>
-                      <p className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">
-                        {item.description}
-                      </p>
-                    </div>
-                    <Button
-                      asChild
-                      variant="ghost"
-                      size="sm"
-                      className="h-6 px-2 text-[11px] flex-shrink-0"
-                    >
-                      <Link to={item.href}>{item.action}</Link>
-                    </Button>
-                  </div>
-                );
-              })}
+            <CardContent className="pt-0">
+              <LiveAttentionItems workOrders={workOrdersWithRisk} />
             </CardContent>
           </Card>
 
@@ -643,42 +811,8 @@ export default function DashboardPage() {
                 </Button>
               </div>
             </CardHeader>
-            <CardContent className="pt-0 space-y-1">
-              {fleetStatus.map((aircraft, i) => (
-                <div key={aircraft.tail}>
-                  {i > 0 && <Separator className="my-1 opacity-40" />}
-                  <Link to={aircraft.href}>
-                    <div className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-muted/40 transition-colors cursor-pointer">
-                      <div
-                        className={`w-2 h-2 rounded-full flex-shrink-0 ${aircraft.statusDot}`}
-                      />
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1.5">
-                          <span className="font-mono font-semibold text-sm text-foreground">
-                            {aircraft.tail}
-                          </span>
-                          {aircraft.openWos > 0 && (
-                            <Badge
-                              variant="secondary"
-                              className="text-[9px] h-4 px-1 bg-muted"
-                            >
-                              {aircraft.openWos} WO
-                            </Badge>
-                          )}
-                        </div>
-                        <span className="text-[11px] text-muted-foreground">
-                          {aircraft.type}
-                        </span>
-                      </div>
-                      <span
-                        className={`text-[10px] font-medium flex-shrink-0 ${aircraft.statusColor}`}
-                      >
-                        {aircraft.statusLabel}
-                      </span>
-                    </div>
-                  </Link>
-                </div>
-              ))}
+            <CardContent className="pt-0">
+              <LiveFleetStatus workOrders={workOrdersWithRisk} />
             </CardContent>
           </Card>
 

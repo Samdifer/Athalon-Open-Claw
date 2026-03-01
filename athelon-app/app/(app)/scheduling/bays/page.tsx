@@ -25,7 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Warehouse, PlaneTakeoff, Wrench } from "lucide-react";
+import { Plus, Warehouse, PlaneTakeoff, Wrench, X, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import { ActionableEmptyState } from "@/components/zero-state/ActionableEmptyState";
@@ -208,22 +208,27 @@ function BayDetailPanel({
   onEdit: () => void;
 }) {
   const releaseBay = useMutation(api.hangarBays.releaseBay);
+  const [isReleasing, setIsReleasing] = useState(false);
 
   async function handleRelease() {
+    setIsReleasing(true);
     try {
       await releaseBay({ bayId: bay._id });
       toast.success("Bay released");
+      onClose();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to release bay");
+    } finally {
+      setIsReleasing(false);
     }
   }
 
   return (
-    <div className="fixed top-12 right-0 bottom-0 w-full sm:w-[340px] z-50 bg-background border-l border-border/50 shadow-2xl flex flex-col">
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border/50">
-        <h3 className="text-sm font-semibold">{bay.name}</h3>
-        <Button variant="ghost" size="sm" onClick={onClose}>
-          ✕
+    <div className="fixed top-12 right-0 bottom-0 w-full sm:w-[340px] z-50 bg-background border-l border-border/60 shadow-2xl flex flex-col">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-border/60">
+        <h3 className="text-sm font-semibold text-foreground">{bay.name}</h3>
+        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onClose} aria-label="Close panel">
+          <X className="w-4 h-4" />
         </Button>
       </div>
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
@@ -253,8 +258,15 @@ function BayDetailPanel({
             Edit
           </Button>
           {bay.status === "occupied" && (
-            <Button variant="outline" size="sm" onClick={handleRelease}>
-              Release Bay
+            <Button variant="outline" size="sm" onClick={handleRelease} disabled={isReleasing}>
+              {isReleasing ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  Releasing…
+                </>
+              ) : (
+                "Release Bay"
+              )}
             </Button>
           )}
         </div>
@@ -285,11 +297,11 @@ export default function BaysPage() {
   if (prereq.state === "loading_context" || prereq.state === "loading_data") {
     return (
       <div className="p-6" data-testid="page-loading-state">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
           {Array.from({ length: 4 }).map((_, i) => (
             <div
               key={i}
-              className="h-36 rounded-xl border border-border/50 bg-muted/20 animate-pulse"
+              className="h-36 rounded-xl border border-border/60 bg-muted/20 animate-pulse"
             />
           ))}
         </div>
@@ -314,14 +326,19 @@ export default function BaysPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Hangar Bays</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Manage hangar bays, ramp spots, and paint bays
-          </p>
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-start gap-2.5">
+          <Warehouse className="w-5 h-5 text-muted-foreground mt-0.5 flex-shrink-0" />
+          <div>
+            <h1 className="text-lg sm:text-xl md:text-2xl font-semibold text-foreground">Hangar Bays</h1>
+            <p className="text-sm text-muted-foreground mt-0.5">
+              Manage hangar bays, ramp spots, and paint bays
+            </p>
+          </div>
         </div>
         <Button
+          size="sm"
+          className="h-9 gap-1.5 flex-shrink-0"
           onClick={() => {
             setEditBay(undefined);
             setDialogOpen(true);
@@ -345,11 +362,11 @@ export default function BaysPage() {
           }}
         />
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
           {(bays as Bay[]).map((bay) => (
             <button
               key={bay._id}
-              className="text-left rounded-xl border border-border/50 bg-card p-4 hover:border-primary/40 transition-colors space-y-3"
+              className="text-left rounded-xl border border-border/60 bg-card p-4 hover:border-primary/40 hover:shadow-sm transition-all space-y-3"
               onClick={() => setSelectedBay(bay)}
             >
               <div className="flex items-center justify-between">

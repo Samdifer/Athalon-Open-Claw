@@ -273,14 +273,6 @@ export default function App() {
                 <Route path="/billing/warranty" element={<WarrantyPage />} />
                 <Route path="/billing/labor-kits" element={<LaborKitsPage />} />
 
-<<<<<<< HEAD
-            {/* Reports */}
-            <Route path="/reports" element={<ReportsPage />} />
-            <Route path="/reports/financials" element={<FinancialDashboardPage />} />
-            <Route path="/reports/financials/forecast" element={<FinancialForecastPage />} />
-            <Route path="/reports/financials/profitability" element={<FinancialProfitabilityPage />} />
-            <Route path="/reports/financials/runway" element={<FinancialRunwayPage />} />
-=======
                 {/* Scheduling */}
                 <Route path="/scheduling" element={<SchedulingPage />} />
                 <Route path="/scheduling/bays" element={<BaysPage />} />
@@ -289,10 +281,13 @@ export default function App() {
                   path="/scheduling/financial-planning"
                   element={<FinancialPlanningPage />}
                 />
->>>>>>> a698b1f2a0c0799a67f877e7f7541a93ef719cd9
 
                 {/* Reports */}
                 <Route path="/reports" element={<ReportsPage />} />
+                <Route path="/reports/financials" element={<FinancialDashboardPage />} />
+                <Route path="/reports/financials/forecast" element={<FinancialForecastPage />} />
+                <Route path="/reports/financials/profitability" element={<FinancialProfitabilityPage />} />
+                <Route path="/reports/financials/runway" element={<FinancialRunwayPage />} />
 
                 {/* Settings */}
                 <Route path="/settings/shop" element={<ShopSettingsPage />} />

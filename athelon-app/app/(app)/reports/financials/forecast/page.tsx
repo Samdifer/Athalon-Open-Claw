@@ -4,11 +4,16 @@ import { useMemo, useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
+import { Link } from "react-router-dom";
 import {
   TrendingUp,
   TrendingDown,
   AlertTriangle,
   Calendar,
+  DollarSign,
+  BarChart2,
+  Navigation,
+  FileBarChart,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -178,6 +183,7 @@ export default function CashFlowForecastPage() {
         </div>
         <div className="flex gap-1">
           {([3, 6, 12] as Horizon[]).map((h) => (
+
             <Button
               key={h}
               size="sm"

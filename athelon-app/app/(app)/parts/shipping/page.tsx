@@ -7,7 +7,7 @@ import type { Id } from "@/convex/_generated/dataModel";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import { usePagePrereqs } from "@/hooks/usePagePrereqs";
 import {
-  Plus, Search, ChevronDown, ChevronRight, Truck, Package, AlertTriangle, Trash2,
+  Plus, Search, ChevronDown, ChevronRight, Truck, Package, AlertTriangle, Trash2, Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -67,6 +67,7 @@ export default function ShippingPage() {
   const [formDest, setFormDest] = useState("");
   const [formHazmat, setFormHazmat] = useState(false);
   const [formNotes, setFormNotes] = useState("");
+  const [isCreating, setIsCreating] = useState(false);
 
   const filtered = useMemo(() => {
     if (!shipments) return [];
@@ -89,6 +90,7 @@ export default function ShippingPage() {
       toast.error("Organization context is required");
       return;
     }
+    setIsCreating(true);
     try {
       await createShipment({
         organizationId: orgId,
@@ -105,6 +107,8 @@ export default function ShippingPage() {
       setFormCarrier(""); setFormTracking(""); setFormOrigin(""); setFormDest(""); setFormHazmat(false); setFormNotes("");
     } catch {
       toast.error("Failed to create shipment");
+    } finally {
+      setIsCreating(false);
     }
   };
 
@@ -155,12 +159,12 @@ export default function ShippingPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2"><Truck className="h-6 w-6" /> Shipping & Receiving</h1>
-          <p className="text-muted-foreground">Track inbound and outbound shipments</p>
+          <h1 className="text-lg sm:text-xl md:text-2xl font-semibold text-foreground flex items-center gap-2"><Truck className="w-5 h-5 text-muted-foreground" /> Shipping & Receiving</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">Track inbound and outbound shipments</p>
         </div>
-        <Dialog open={showCreate} onOpenChange={setShowCreate}>
+        <Dialog open={showCreate} onOpenChange={(v) => { if (!isCreating) setShowCreate(v); }}>
           <DialogTrigger asChild>
-            <Button><Plus className="h-4 w-4 mr-2" /> New Shipment</Button>
+            <Button size="sm" className="h-9 gap-1.5"><Plus className="w-4 h-4" /> New Shipment</Button>
           </DialogTrigger>
           <DialogContent className="max-w-lg">
             <DialogHeader><DialogTitle>Create Shipment</DialogTitle></DialogHeader>
@@ -188,7 +192,10 @@ export default function ShippingPage() {
                 <Label htmlFor="hazmat" className="flex items-center gap-1"><AlertTriangle className="h-4 w-4 text-yellow-500" /> Hazmat</Label>
               </div>
               <div><Label>Notes</Label><Input value={formNotes} onChange={(e) => setFormNotes(e.target.value)} placeholder="Special instructions..." /></div>
-              <Button onClick={handleCreate} className="w-full">Create Shipment</Button>
+              <Button onClick={handleCreate} className="w-full gap-1.5" disabled={isCreating}>
+                {isCreating ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                {isCreating ? "Creating…" : "Create Shipment"}
+              </Button>
             </div>
           </DialogContent>
         </Dialog>
