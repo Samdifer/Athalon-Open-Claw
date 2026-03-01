@@ -249,7 +249,15 @@ export default function AdSbCompliancePage() {
           <Filter className="w-3.5 h-3.5 text-muted-foreground" />
           <span className="text-xs text-muted-foreground font-medium">Filters:</span>
         </div>
-        <Select value={selectedAircraft} onValueChange={setSelectedAircraft}>
+        <Select
+          value={selectedAircraft}
+          onValueChange={(v) => {
+            setSelectedAircraft(v);
+            // Reset status filter when switching aircraft — avoids "no results" confusion
+            // when an overdue-filtered view from one aircraft carries over to another
+            setStatusFilter("all");
+          }}
+        >
           <SelectTrigger className="w-[200px] h-8 text-xs">
             <SelectValue placeholder="All Aircraft" />
           </SelectTrigger>

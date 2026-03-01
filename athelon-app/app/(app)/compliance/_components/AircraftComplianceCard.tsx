@@ -104,8 +104,13 @@ export function AircraftComplianceCard({
   const cfg = statusConfig[complianceStatus];
   const StatusIcon = cfg.icon;
 
+  // If registration is undefined, link to aircraft ID-based fallback — /fleet/— is a 404
+  const fleetHref = aircraft.currentRegistration
+    ? `/fleet/${encodeURIComponent(aircraft.currentRegistration)}`
+    : `/fleet/${aircraft._id}`;
+
   return (
-    <Link to={`/fleet/${tailNumber}`}>
+    <Link to={fleetHref}>
       <Card
         className={`border-border/60 hover:border-primary/30 hover:bg-card/80 transition-all cursor-pointer border-l-2 ${cfg.borderLeft}`}
       >

@@ -374,19 +374,25 @@ export default function QcmReviewPage() {
                           </span>
                           <StatusBadge status={step.status} />
                           <div className="flex justify-end">
-                            <Button
-                              asChild
-                              size="sm"
-                              variant="outline"
-                              className="h-7 text-xs gap-1 border-primary/40 text-primary hover:bg-primary/5"
-                            >
-                              <Link
-                                to={`/work-orders/${step.workOrderId}/tasks/${step.taskCardId}`}
+                            {step.workOrderId ? (
+                              <Button
+                                asChild
+                                size="sm"
+                                variant="outline"
+                                className="h-7 text-xs gap-1 border-primary/40 text-primary hover:bg-primary/5"
                               >
-                                IA Sign Off
-                                <ChevronRight className="w-3 h-3" />
-                              </Link>
-                            </Button>
+                                <Link
+                                  to={`/work-orders/${step.workOrderId}/tasks/${step.taskCardId}`}
+                                >
+                                  IA Sign Off
+                                  <ChevronRight className="w-3 h-3" />
+                                </Link>
+                              </Button>
+                            ) : (
+                              <span className="text-[10px] text-muted-foreground italic">
+                                No WO linked
+                              </span>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -403,10 +409,17 @@ export default function QcmReviewPage() {
       {orgId && (workOrders ?? []).length > 0 ? (
         <CloseReadinessPanel
           orgId={orgId}
-          workOrders={(workOrders ?? []).map((wo) => ({
-            _id: wo._id,
-            workOrderNumber: wo.workOrderNumber,
-          }))}
+          workOrders={(workOrders ?? [])
+            // Only show open/active WOs — closed, cancelled, and voided WOs clutter
+            // the dropdown and show misleading readiness results since they're already done
+            .filter(
+              (wo) =>
+                !["closed", "cancelled", "voided"].includes(wo.status ?? ""),
+            )
+            .map((wo) => ({
+              _id: wo._id,
+              workOrderNumber: wo.workOrderNumber,
+            }))}
         />
       ) : (
         <ActionableEmptyState
