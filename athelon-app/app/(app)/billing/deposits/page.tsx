@@ -58,9 +58,8 @@ const METHOD_LABELS: Record<string, string> = {
   other: "Other",
 };
 
-// ─── Placeholder tech ID ───────────────────────────────────────────────────────
-// Used as fallback when orgId is available but techId is not yet resolved.
-const PLACEHOLDER_TECH_ID = "k97abc000000000000000000" as Id<"technicians">;
+// NOTE: techId must be resolved before recording a deposit — no placeholder fallback.
+// The submit button is disabled when techId is undefined (see handleSubmit guard).
 
 // ─── Record Deposit Dialog ────────────────────────────────────────────────────
 
@@ -99,8 +98,7 @@ function RecordDepositDialog({ open, onClose, orgId, techId, customers }: Record
     if (!customerId) { setError("Please select a customer."); return; }
     const amtNum = parseFloat(amount);
     if (!amount || isNaN(amtNum) || amtNum <= 0) { setError("Amount must be a positive number."); return; }
-
-    const resolvedTechId = techId ?? PLACEHOLDER_TECH_ID;
+    if (!techId) { setError("Technician profile required to record a deposit. Go to Personnel → create your profile."); return; }
 
     setSaving(true);
     setError(null);
@@ -112,7 +110,7 @@ function RecordDepositDialog({ open, onClose, orgId, techId, customers }: Record
         method,
         referenceNumber: referenceNumber.trim() || undefined,
         notes: notes.trim() || undefined,
-        recordedByTechId: resolvedTechId,
+        recordedByTechId: techId,
       });
       resetForm();
       onClose();

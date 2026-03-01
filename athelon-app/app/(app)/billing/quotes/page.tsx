@@ -59,6 +59,18 @@ export default function QuotesPage() {
     orgId ? { orgId, status: activeTab === "all" ? undefined : activeTab } : "skip",
   );
 
+  const customers = useQuery(
+    api.customers.listCustomers,
+    orgId ? { orgId } : "skip",
+  );
+
+  const customerMap = useMemo(() => {
+    if (!customers) return new Map<string, string>();
+    const m = new Map<string, string>();
+    for (const c of customers) m.set(c._id as string, c.name);
+    return m;
+  }, [customers]);
+
   const isLoading = !isLoaded || quotes === undefined;
 
   const filtered = useMemo(() => {
@@ -67,9 +79,10 @@ export default function QuotesPage() {
     const q = search.toLowerCase();
     return quotes.filter(
       (quote) =>
-        quote.quoteNumber.toLowerCase().includes(q),
+        quote.quoteNumber.toLowerCase().includes(q) ||
+        (customerMap.get(quote.customerId as string) ?? "").toLowerCase().includes(q),
     );
-  }, [quotes, search]);
+  }, [quotes, search, customerMap]);
 
   const all = quotes ?? [];
   const counts: Record<QuoteStatus, number> = {
@@ -147,11 +160,11 @@ export default function QuotesPage() {
         <div className="relative ml-auto">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" aria-hidden="true" />
           <Input
-            placeholder="Search quote number..."
+            placeholder="Search by quote # or customer..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="h-8 pl-8 pr-3 text-xs w-56 bg-muted/30 border-border/60"
-            aria-label="Search quotes by number"
+            className="h-8 pl-8 pr-3 text-xs w-64 bg-muted/30 border-border/60"
+            aria-label="Search quotes by number or customer name"
           />
         </div>
       </div>
@@ -200,7 +213,12 @@ export default function QuotesPage() {
                           {quote.status}
                         </Badge>
                       </div>
-                      <div className="flex items-center gap-3 mt-1">
+                      {customerMap.size > 0 && (
+                        <p className="text-sm font-medium text-foreground truncate">
+                          {customerMap.get(quote.customerId as string) ?? "Unknown Customer"}
+                        </p>
+                      )}
+                      <div className="flex items-center gap-3 mt-0.5">
                         <span className="text-xs text-muted-foreground">
                           Created {formatDate(quote.createdAt)}
                         </span>

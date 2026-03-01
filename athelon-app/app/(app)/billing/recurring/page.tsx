@@ -428,6 +428,18 @@ export default function RecurringBillingPage() {
     orgId ? { orgId } : "skip",
   );
 
+  const customers = useQuery(
+    api.billingV4.listAllCustomers,
+    orgId ? { organizationId: orgId } : "skip",
+  );
+
+  const customerMap = useMemo(() => {
+    if (!customers) return new Map<string, string>();
+    const m = new Map<string, string>();
+    for (const c of customers) m.set(c._id as string, c.name);
+    return m;
+  }, [customers]);
+
   const toggleTemplate = useMutation(api.billingV4b.toggleRecurringTemplate);
   const generateNow = useMutation(api.billingV4b.generateInvoiceFromTemplate);
 
@@ -555,8 +567,10 @@ export default function RecurringBillingPage() {
               {templateRows.map((tpl) => (
                 <TableRow key={tpl._id} className="hover:bg-muted/20">
                   <TableCell className="text-sm font-medium">{tpl.name}</TableCell>
-                  <TableCell className="text-xs font-mono text-muted-foreground truncate max-w-[120px]">
-                    {tpl.customerId}
+                  <TableCell className="text-xs text-muted-foreground truncate max-w-[140px]">
+                    {customerMap.get(tpl.customerId as string) ?? (
+                      <span className="font-mono">{String(tpl.customerId).slice(-8)}</span>
+                    )}
                   </TableCell>
                   <TableCell>
                     <FrequencyBadge freq={tpl.frequency} />

@@ -40,6 +40,7 @@ import {
   ResponsiveContainer,
   Cell,
 } from "recharts";
+import { Link } from "react-router-dom";
 
 const STATUS_STYLES: Record<string, string> = {
   DRAFT: "bg-muted text-muted-foreground border-muted-foreground/30",
@@ -557,9 +558,9 @@ export default function AnalyticsPage() {
                   {recentConversions.map((q) => (
                     <TableRow key={q._id} className="border-border/40">
                       <TableCell>
-                        <a href={`/billing/quotes/${q._id}`} className="font-mono text-xs text-primary hover:underline">
+                        <Link to={`/billing/quotes/${q._id}`} className="font-mono text-xs text-primary hover:underline">
                           {q.quoteNumber}
-                        </a>
+                        </Link>
                       </TableCell>
                       <TableCell className="text-xs text-muted-foreground">{formatDate(q.updatedAt)}</TableCell>
                       <TableCell className="text-sm font-medium text-right tabular-nums">${q.total.toFixed(2)}</TableCell>
