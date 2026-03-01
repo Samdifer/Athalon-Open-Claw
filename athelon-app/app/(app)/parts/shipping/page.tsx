@@ -5,6 +5,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
+import { usePagePrereqs } from "@/hooks/usePagePrereqs";
 import {
   Plus, Search, ChevronDown, ChevronRight, Truck, Package, AlertTriangle, Trash2,
 } from "lucide-react";
@@ -31,6 +32,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
+import { ActionableEmptyState } from "@/components/zero-state/ActionableEmptyState";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const STATUS_COLORS: Record<string, string> = {
   pending: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
@@ -40,11 +43,15 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export default function ShippingPage() {
-  const { orgId: organizationId } = useCurrentOrg();
+  const { orgId: organizationId, isLoaded } = useCurrentOrg();
   const orgId = organizationId as Id<"organizations"> | undefined;
   const shipments = useQuery(api.shipping.list, orgId ? { organizationId: orgId } : "skip");
   const createShipment = useMutation(api.shipping.create);
   const updateStatus = useMutation(api.shipping.updateStatus);
+  const prereq = usePagePrereqs({
+    requiresOrg: true,
+    isDataLoading: !isLoaded || shipments === undefined,
+  });
 
   const [tab, setTab] = useState("all");
   const [search, setSearch] = useState("");
@@ -78,7 +85,10 @@ export default function ShippingPage() {
   }, [shipments, tab, search]);
 
   const handleCreate = async () => {
-    if (!orgId) return;
+    if (!orgId) {
+      toast.error("Organization context is required");
+      return;
+    }
     try {
       await createShipment({
         organizationId: orgId,
@@ -116,6 +126,30 @@ export default function ShippingPage() {
       delivered: shipments.filter((s) => s.status === "delivered").length,
     };
   }, [shipments]);
+
+  if (prereq.state === "loading_context" || prereq.state === "loading_data") {
+    return (
+      <div className="space-y-3" data-testid="page-loading-state">
+        {[...Array(4)].map((_, i) => (
+          <Skeleton key={i} className="h-20 w-full rounded-lg" />
+        ))}
+      </div>
+    );
+  }
+
+  if (prereq.state === "missing_context") {
+    return (
+      <ActionableEmptyState
+        title="Shipping requires organization setup"
+        missingInfo="Complete onboarding before creating inbound or outbound shipments."
+        primaryActionLabel="Complete Setup"
+        primaryActionType="link"
+        primaryActionTarget="/onboarding"
+      />
+    );
+  }
+
+  if (!orgId || !shipments) return null;
 
   return (
     <div className="space-y-6">
@@ -193,8 +227,15 @@ export default function ShippingPage() {
 
       {/* Shipment List */}
       <div className="space-y-2">
-        {!shipments && <p className="text-muted-foreground">Loading...</p>}
-        {filtered.length === 0 && shipments && <p className="text-muted-foreground">No shipments found.</p>}
+        {filtered.length === 0 && (
+          <ActionableEmptyState
+            title="No shipments found"
+            missingInfo="Create your first inbound or outbound shipment to begin tracking."
+            primaryActionLabel="New Shipment"
+            primaryActionType="button"
+            primaryActionTarget={() => setShowCreate(true)}
+          />
+        )}
         {filtered.map((s) => (
           <Card key={s._id} className="overflow-hidden">
             <div

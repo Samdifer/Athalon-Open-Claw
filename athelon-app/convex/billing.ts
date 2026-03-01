@@ -31,6 +31,7 @@ import { internal } from "./_generated/api";
 import { invoiceSentTemplate, quoteSentTemplate, paymentReceivedTemplate } from "./emailTemplates";
 import { requireAuth } from "./lib/authHelpers";
 import { getNextNumber } from "./lib/numberGenerator";
+import { reserveNextWorkOrderNumber } from "./lib/workOrderNumber";
 import {
   getQuoteLineItems,
   getInvoiceLineItems,
@@ -586,7 +587,7 @@ export const submitDepartmentSection = mutation({
 //
 // Converts an APPROVED quote into a new work order. Sets quote.status = CONVERTED
 // and quote.convertedToWorkOrderId. The new WO inherits aircraft, customer, and
-// description from the quote.
+// description from the quote. Work order numbers are generated server-side.
 //
 // Marcus: convertedToWorkOrderId is the audit link between written customer
 // authorization (the quote approval) and the maintenance activity. Required for
@@ -598,7 +599,6 @@ export const convertQuoteToWorkOrder = mutation({
   args: {
     orgId: v.id("organizations"),
     quoteId: v.id("quotes"),
-    workOrderNumber: v.string(),
     workOrderType: v.union(
       v.literal("routine"),
       v.literal("unscheduled"),
@@ -630,21 +630,28 @@ export const convertQuoteToWorkOrder = mutation({
       );
     }
 
-    if (!args.workOrderNumber.trim()) throw new Error("workOrderNumber must be non-empty.");
-
-    // Verify WO number uniqueness
-    const existingWO = await ctx.db
-      .query("workOrders")
-      .withIndex("by_number", (q) =>
-        q.eq("organizationId", args.orgId).eq("workOrderNumber", args.workOrderNumber.trim()),
-      )
-      .first();
-    if (existingWO !== null) {
-      throw new Error(`Work order number "${args.workOrderNumber.trim()}" already exists in this organization.`);
+    let workOrderNumber: string | null = null;
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+      const candidate = await reserveNextWorkOrderNumber(ctx, args.orgId);
+      const existingWO = await ctx.db
+        .query("workOrders")
+        .withIndex("by_number", (q) =>
+          q.eq("organizationId", args.orgId).eq("workOrderNumber", candidate),
+        )
+        .first();
+      if (existingWO === null) {
+        workOrderNumber = candidate;
+        break;
+      }
+    }
+    if (!workOrderNumber) {
+      throw new Error(
+        `Unable to generate a unique work order number for organization ${args.orgId}.`,
+      );
     }
 
     const workOrderId = await ctx.db.insert("workOrders", {
-      workOrderNumber: args.workOrderNumber.trim(),
+      workOrderNumber,
       organizationId: args.orgId,
       aircraftId: quote.aircraftId,
       status: "draft",
@@ -678,7 +685,7 @@ export const convertQuoteToWorkOrder = mutation({
       oldValue: JSON.stringify("APPROVED"),
       newValue: JSON.stringify("CONVERTED"),
       notes:
-        `Quote ${quote.quoteNumber} converted to work order ${args.workOrderNumber.trim()} (ID: ${workOrderId}). ` +
+        `Quote ${quote.quoteNumber} converted to work order ${workOrderNumber} (ID: ${workOrderId}). ` +
         `Customer authorization link established.`,
       timestamp: now,
     });
@@ -690,7 +697,7 @@ export const convertQuoteToWorkOrder = mutation({
       recordId: workOrderId,
       userId: callerUserId,
       ipAddress: args.callerIpAddress,
-      notes: `Work order ${args.workOrderNumber.trim()} created from quote ${quote.quoteNumber}.`,
+      notes: `Work order ${workOrderNumber} created from quote ${quote.quoteNumber}.`,
       timestamp: now,
     });
 

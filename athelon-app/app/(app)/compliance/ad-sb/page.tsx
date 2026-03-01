@@ -43,6 +43,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { usePagePrereqs } from "@/hooks/usePagePrereqs";
+import { ActionableEmptyState } from "@/components/zero-state/ActionableEmptyState";
 
 type StatusFilter = "all" | "compliant" | "due_soon" | "overdue" | "not_applicable" | "pending";
 
@@ -66,7 +68,7 @@ function statusBadge(status: string, isOverdue?: boolean, isDueSoon?: boolean) {
 }
 
 export default function AdSbCompliancePage() {
-  const { orgId } = useCurrentOrg();
+  const { orgId, isLoaded } = useCurrentOrg();
   const [selectedAircraft, setSelectedAircraft] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
 
@@ -92,7 +94,15 @@ export default function AdSbCompliancePage() {
 
   // Build a flat table of all records when viewing all aircraft
   // For "all" view, we show fleet summary; for specific aircraft, we show records
-  const isLoading = fleetSummary === undefined || aircraft === undefined;
+  const isLoading =
+    !isLoaded ||
+    fleetSummary === undefined ||
+    aircraft === undefined ||
+    (selectedAircraft !== "all" && aircraftRecords === undefined);
+  const prereq = usePagePrereqs({
+    requiresOrg: true,
+    isDataLoading: isLoading,
+  });
 
   const totals = fleetSummary?.fleetTotals;
 
@@ -134,15 +144,41 @@ export default function AdSbCompliancePage() {
     });
   }, [aircraftRecords, statusFilter]);
 
-  if (isLoading) {
+  if (prereq.state === "loading_context" || prereq.state === "loading_data") {
     return (
-      <div className="space-y-5">
+      <div className="space-y-5" data-testid="page-loading-state">
         <Skeleton className="h-7 w-48" />
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-24" />)}
         </div>
         <Skeleton className="h-64" />
       </div>
+    );
+  }
+
+  if (prereq.state === "missing_context") {
+    return (
+      <ActionableEmptyState
+        title="AD/SB tracking requires organization setup"
+        missingInfo="Complete onboarding before reviewing compliance records."
+        primaryActionLabel="Complete Setup"
+        primaryActionType="link"
+        primaryActionTarget="/onboarding"
+      />
+    );
+  }
+
+  if (!orgId || !fleetSummary || !aircraft) return null;
+
+  if (aircraft.length === 0) {
+    return (
+      <ActionableEmptyState
+        title="No aircraft available for AD/SB tracking"
+        missingInfo="Add at least one aircraft to begin compliance tracking and due-date monitoring."
+        primaryActionLabel="Add Aircraft"
+        primaryActionType="link"
+        primaryActionTarget="/fleet"
+      />
     );
   }
 
@@ -248,27 +284,29 @@ export default function AdSbCompliancePage() {
             <CardTitle className="text-sm">Fleet AD Compliance by Aircraft</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="text-xs">Aircraft</TableHead>
-                  <TableHead className="text-xs text-center">Tracked</TableHead>
-                  <TableHead className="text-xs text-center">Compliant</TableHead>
-                  <TableHead className="text-xs text-center">Due Soon</TableHead>
-                  <TableHead className="text-xs text-center">Overdue</TableHead>
-                  <TableHead className="text-xs text-center">Pending</TableHead>
-                  <TableHead className="text-xs text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {(fleetSummary?.aircraftSummaries ?? []).length === 0 ? (
+            {(fleetSummary.aircraftSummaries ?? []).length === 0 ? (
+              <ActionableEmptyState
+                title="No AD compliance records tracked yet"
+                missingInfo="Start with fleet records and compliance events to populate this dashboard."
+                primaryActionLabel="Open Fleet"
+                primaryActionType="link"
+                primaryActionTarget="/fleet"
+              />
+            ) : (
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center text-sm text-muted-foreground py-8">
-                      No AD compliance records tracked yet.
-                    </TableCell>
+                    <TableHead className="text-xs">Aircraft</TableHead>
+                    <TableHead className="text-xs text-center">Tracked</TableHead>
+                    <TableHead className="text-xs text-center">Compliant</TableHead>
+                    <TableHead className="text-xs text-center">Due Soon</TableHead>
+                    <TableHead className="text-xs text-center">Overdue</TableHead>
+                    <TableHead className="text-xs text-center">Pending</TableHead>
+                    <TableHead className="text-xs text-right">Actions</TableHead>
                   </TableRow>
-                ) : (
-                  (fleetSummary?.aircraftSummaries ?? []).map((s) => {
+                </TableHeader>
+                <TableBody>
+                  {fleetSummary.aircraftSummaries.map((s) => {
                     const ac = aircraftMap.get(s.aircraftId);
                     return (
                       <TableRow key={s.aircraftId}>
@@ -307,10 +345,10 @@ export default function AdSbCompliancePage() {
                         </TableCell>
                       </TableRow>
                     );
-                  })
-                )}
-              </TableBody>
-            </Table>
+                  })}
+                </TableBody>
+              </Table>
+            )}
           </CardContent>
         </Card>
       )}

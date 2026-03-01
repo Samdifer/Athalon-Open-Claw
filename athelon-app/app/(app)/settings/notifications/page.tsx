@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { MissingPrereqBanner } from "@/components/zero-state/MissingPrereqBanner";
 
 const NOTIFICATION_TYPES = [
   { key: "wo_status_change", label: "Work Order Status Changes", description: "When a work order changes status (opened, closed, etc.)" },
@@ -30,7 +31,10 @@ export default function NotificationPreferencesPage() {
   const disabledTypes = prefs?.disabledTypes ?? [];
 
   const handleToggle = async (type: string, enabled: boolean) => {
-    if (!orgId) return;
+    if (!orgId) {
+      toast.error("Complete setup before updating notification preferences.");
+      return;
+    }
     const newDisabled = enabled
       ? disabledTypes.filter((t) => t !== type)
       : [...disabledTypes, type];
@@ -52,6 +56,14 @@ export default function NotificationPreferencesPage() {
         </p>
       </div>
 
+      {!orgId && (
+        <MissingPrereqBanner
+          kind="needs_org_context"
+          actionLabel="Complete Setup"
+          actionTarget="/onboarding"
+        />
+      )}
+
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Notification Types</CardTitle>
@@ -72,6 +84,7 @@ export default function NotificationPreferencesPage() {
                   id={`notif-${nt.key}`}
                   checked={isEnabled}
                   onCheckedChange={(checked) => handleToggle(nt.key, checked)}
+                  disabled={!orgId}
                 />
               </div>
             );

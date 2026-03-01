@@ -750,6 +750,125 @@ export default defineSchema({
     .index("by_org", ["organizationId"]),
 
   // ═══════════════════════════════════════════════════════════════════════════
+  // SCHEDULE ASSIGNMENTS (Planner v2 foundation)
+  //
+  // Normalized schedule lane assignment for a work order. This extends the
+  // lightweight start/end fields on workOrders with bay-level planning data and
+  // optional per-day effort/non-work-day controls for advanced planner features.
+  // ═══════════════════════════════════════════════════════════════════════════
+  scheduleAssignments: defineTable({
+    organizationId: v.id("organizations"),
+    workOrderId: v.id("workOrders"),
+    sourceQuoteId: v.optional(v.id("quotes")),
+    hangarBayId: v.id("hangarBays"),
+    startDate: v.number(),
+    endDate: v.number(),
+
+    // Optional day-level distribution model
+    dailyEffort: v.optional(v.array(v.object({
+      dayOffset: v.number(),
+      effortHours: v.number(),
+    }))),
+    nonWorkDays: v.optional(v.array(v.number())), // day offsets from startDate
+    isLocked: v.optional(v.boolean()),
+
+    // Soft-archive support for planning lifecycle
+    archivedAt: v.optional(v.number()),
+    archivedByUserId: v.optional(v.string()),
+
+    createdAt: v.number(),
+    updatedAt: v.number(),
+    updatedByUserId: v.string(),
+  })
+    .index("by_org", ["organizationId"])
+    .index("by_org_wo", ["organizationId", "workOrderId"])
+    .index("by_org_quote", ["organizationId", "sourceQuoteId"])
+    .index("by_org_bay", ["organizationId", "hangarBayId"])
+    .index("by_org_start", ["organizationId", "startDate"])
+    .index("by_org_archived", ["organizationId", "archivedAt"]),
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // PLANNING FINANCIAL SETTINGS (Planner v2 foundation)
+  //
+  // Stores assumptions used by schedule-aware planning math (capacity-driven
+  // profitability and what-if analysis). Does not replace billing/invoice truth.
+  // ═══════════════════════════════════════════════════════════════════════════
+  planningFinancialSettings: defineTable({
+    organizationId: v.id("organizations"),
+    defaultShopRate: v.number(),
+    defaultLaborCostRate: v.number(),
+    monthlyFixedOverhead: v.number(),
+    monthlyVariableOverhead: v.number(),
+    annualCapexAssumption: v.number(),
+    partMarkupTiers: v.array(v.object({
+      maxLimit: v.number(),
+      markupPercent: v.number(),
+    })),
+    serviceMarkupTiers: v.array(v.object({
+      maxLimit: v.number(),
+      markupPercent: v.number(),
+    })),
+    updatedAt: v.number(),
+    updatedByUserId: v.string(),
+  })
+    .index("by_org", ["organizationId"]),
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // PLANNING SCENARIOS (Planner v2 foundation)
+  //
+  // User-defined timeline scenarios/cursors for what-if planning windows.
+  // ═══════════════════════════════════════════════════════════════════════════
+  planningScenarios: defineTable({
+    organizationId: v.id("organizations"),
+    name: v.string(),
+    isDefault: v.boolean(),
+    rangeStartDay: v.optional(v.number()),
+    rangeEndDay: v.optional(v.number()),
+    cursors: v.array(v.object({
+      label: v.string(),
+      dayOffset: v.number(),
+      color: v.string(),
+      enabled: v.boolean(),
+    })),
+    notes: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+    createdByUserId: v.string(),
+    updatedByUserId: v.string(),
+  })
+    .index("by_org", ["organizationId"])
+    .index("by_org_default", ["organizationId", "isDefault"]),
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // PLANNING ARCHIVE (Planner v2 foundation)
+  //
+  // Archive/restore lifecycle for planning entities without mutating regulatory
+  // source records.
+  // ═══════════════════════════════════════════════════════════════════════════
+  planningArchive: defineTable({
+    organizationId: v.id("organizations"),
+    entityType: v.union(
+      v.literal("work_order"),
+      v.literal("quote"),
+      v.literal("schedule_assignment"),
+    ),
+    workOrderId: v.optional(v.id("workOrders")),
+    quoteId: v.optional(v.id("quotes")),
+    scheduleAssignmentId: v.optional(v.id("scheduleAssignments")),
+    archivedPayloadJson: v.optional(v.string()),
+    archivedAt: v.number(),
+    archivedByUserId: v.string(),
+    restoredAt: v.optional(v.number()),
+    restoredByUserId: v.optional(v.string()),
+    permanentlyDeletedAt: v.optional(v.number()),
+    permanentlyDeletedByUserId: v.optional(v.string()),
+  })
+    .index("by_org", ["organizationId"])
+    .index("by_org_type", ["organizationId", "entityType"])
+    .index("by_org_work_order", ["organizationId", "workOrderId"])
+    .index("by_org_archived_at", ["organizationId", "archivedAt"]),
+
+  // ═══════════════════════════════════════════════════════════════════════════
   // CERTIFICATES
   //
   // Each technician may hold multiple certificates.
@@ -2648,7 +2767,8 @@ export default defineSchema({
     .index("by_org_status", ["orgId", "status"])
     .index("by_org_customer", ["orgId", "customerId"])
     .index("by_org_quote_number", ["orgId", "quoteNumber"])
-    .index("by_work_order", ["workOrderId"]),
+    .index("by_work_order", ["workOrderId"])
+    .index("by_converted_work_order", ["convertedToWorkOrderId"]),
 
   // ═══════════════════════════════════════════════════════════════════════════
   // QUOTE LINE ITEMS
@@ -3140,7 +3260,7 @@ export default defineSchema({
 
   orgCounters: defineTable({
     orgId: v.string(),
-    counterType: v.string(), // "invoice" | "quote" | "po" | "credit_memo"
+    counterType: v.string(), // "invoice" | "quote" | "po" | "credit_memo" | "work_order:{BASE}"
     lastValue: v.number(),
   }).index("by_org_type", ["orgId", "counterType"]),
 

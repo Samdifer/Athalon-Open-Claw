@@ -2,9 +2,8 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Plus, Search, PlaneTakeoff, ChevronRight, Download, Radar } from "lucide-react";
 import { useQuery } from "convex/react";
-import { useOrganization } from "@clerk/clerk-react";
 import { api } from "@/convex/_generated/api";
-import type { Id } from "@/convex/_generated/dataModel";
+import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { downloadCSV } from "@/lib/export";
 import { toast } from "sonner";
 import { FaaLookupButton } from "@/components/faa/FaaLookupButton";
+import { AddAircraftWizard } from "./_components/AddAircraftWizard";
 import {
   Dialog,
   DialogContent,
@@ -140,8 +140,7 @@ function FaaLookupDialog() {
 }
 
 export default function FleetPage() {
-  const { organization } = useOrganization();
-  const orgId = organization?.id as Id<"organizations"> | undefined;
+  const { orgId, isLoaded } = useCurrentOrg();
 
   const fleet = useQuery(
     api.aircraft.list,
@@ -154,6 +153,7 @@ export default function FleetPage() {
 
   const [searchTerm, setSearchTerm] = useState("");
   const [filterActiveWo, setFilterActiveWo] = useState(false);
+  const [addAircraftOpen, setAddAircraftOpen] = useState(false);
 
   // Build customer lookup map
   const customerMap = new Map<string, string>();
@@ -221,7 +221,7 @@ export default function FleetPage() {
             Export CSV
           </Button>
           <FaaLookupDialog />
-          <Button size="sm" className="flex-1 sm:flex-initial">
+          <Button size="sm" className="flex-1 sm:flex-initial" onClick={() => setAddAircraftOpen(true)}>
             <Plus className="w-3.5 h-3.5 mr-1.5" />
             Add Aircraft
           </Button>
@@ -260,8 +260,35 @@ export default function FleetPage() {
         </p>
       )}
 
-      {/* Loading state */}
-      {fleet === undefined && (
+      {/* Loading state — org context still resolving */}
+      {!isLoaded && (
+        <div className="grid gap-3">
+          <FleetCardSkeleton />
+          <FleetCardSkeleton />
+          <FleetCardSkeleton />
+        </div>
+      )}
+
+      {/* No org context — queries are skipped */}
+      {isLoaded && !orgId && (
+        <Card className="border-border/60">
+          <CardContent className="py-16 text-center" data-testid="empty-state">
+            <PlaneTakeoff className="w-8 h-8 text-muted-foreground/40 mx-auto mb-3" />
+            <p className="text-sm font-medium text-muted-foreground">
+              No organization context available
+            </p>
+            <p className="text-xs text-muted-foreground/60 mt-1">
+              Ask your administrator to link your account to a technician record.
+            </p>
+            <Button asChild size="sm" className="mt-4" data-testid="empty-state-primary-action">
+              <Link to="/onboarding">Complete Setup</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Loading state — queries active but still loading */}
+      {isLoaded && orgId && fleet === undefined && (
         <div className="grid gap-3">
           <FleetCardSkeleton />
           <FleetCardSkeleton />
@@ -272,7 +299,7 @@ export default function FleetPage() {
       {/* Empty state: no aircraft at all */}
       {fleet !== undefined && fleet.length === 0 && (
         <Card className="border-border/60">
-          <CardContent className="py-16 text-center">
+          <CardContent className="py-16 text-center" data-testid="empty-state">
             <PlaneTakeoff className="w-8 h-8 text-muted-foreground/40 mx-auto mb-3" />
             <p className="text-sm font-medium text-muted-foreground">
               No aircraft in your fleet
@@ -280,7 +307,12 @@ export default function FleetPage() {
             <p className="text-xs text-muted-foreground/60 mt-1">
               Add your first aircraft to get started.
             </p>
-            <Button size="sm" className="mt-4">
+            <Button
+              size="sm"
+              className="mt-4"
+              onClick={() => setAddAircraftOpen(true)}
+              data-testid="empty-state-primary-action"
+            >
               <Plus className="w-3.5 h-3.5 mr-1.5" />
               Add Aircraft
             </Button>
@@ -380,6 +412,8 @@ export default function FleetPage() {
           })}
         </div>
       )}
+
+      <AddAircraftWizard open={addAircraftOpen} onOpenChange={setAddAircraftOpen} />
     </div>
   );
 }

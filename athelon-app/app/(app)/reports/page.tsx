@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
+import { usePagePrereqs } from "@/hooks/usePagePrereqs";
 import { FileBarChart, Download } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -31,6 +32,7 @@ import {
 } from "recharts";
 import { downloadCSV } from "@/lib/export";
 import { toast } from "sonner";
+import { ActionableEmptyState } from "@/components/zero-state/ActionableEmptyState";
 
 const MONTH_NAMES = [
   "Jan", "Feb", "Mar", "Apr", "May", "Jun",
@@ -58,6 +60,11 @@ export default function ReportsPage() {
       ? { organizationId: orgId, status: "closed" as const, paginationOpts: { numItems: 500, cursor: null } }
       : "skip",
   );
+
+  const prereq = usePagePrereqs({
+    requiresOrg: true,
+    isDataLoading: !isLoaded || invoices === undefined || woResult === undefined,
+  });
 
   const fromTs = new Date(dateFrom).getTime();
   const toTs = new Date(dateTo).getTime() + 86400000;
@@ -111,12 +118,19 @@ export default function ReportsPage() {
     [throughputData],
   );
 
-  if (!isLoaded) return <Skeleton className="h-96 w-full" />;
-  if (!orgId) {
+  if (prereq.state === "loading_context" || prereq.state === "loading_data") {
+    return <Skeleton className="h-96 w-full" data-testid="page-loading-state" />;
+  }
+
+  if (prereq.state === "missing_context") {
     return (
-      <div className="flex items-center justify-center h-64 text-muted-foreground text-sm">
-        Select an organization to view reports.
-      </div>
+      <ActionableEmptyState
+        title="Reports require organization setup"
+        missingInfo="Complete onboarding before viewing revenue and work-order analytics."
+        primaryActionLabel="Complete Setup"
+        primaryActionType="link"
+        primaryActionTarget="/onboarding"
+      />
     );
   }
 

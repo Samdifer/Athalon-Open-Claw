@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
+import { usePagePrereqs } from "@/hooks/usePagePrereqs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -21,6 +22,7 @@ import {
 import { DiscrepancyDispositionDialog } from "@/components/DiscrepancyDispositionDialog";
 import { Link } from "react-router-dom";
 import type { Id } from "@/convex/_generated/dataModel";
+import { ActionableEmptyState } from "@/components/zero-state/ActionableEmptyState";
 
 const SEVERITY_STYLES: Record<string, { bg: string; text: string; border: string; label: string }> = {
   mandatory: { bg: "bg-red-500/15", text: "text-red-600 dark:text-red-400", border: "border-red-500/30", label: "Critical" },
@@ -39,7 +41,7 @@ const STATUS_TABS = [
 type StatusFilter = (typeof STATUS_TABS)[number]["value"];
 
 export default function SquawksPage() {
-  const { orgId } = useCurrentOrg();
+  const { orgId, isLoaded } = useCurrentOrg();
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [search, setSearch] = useState("");
   const [dispositionTarget, setDispositionTarget] = useState<{
@@ -52,6 +54,10 @@ export default function SquawksPage() {
     api.discrepancies.listDiscrepancies,
     orgId ? { organizationId: orgId } : "skip",
   );
+  const prereq = usePagePrereqs({
+    requiresOrg: true,
+    isDataLoading: !isLoaded || discrepancies === undefined,
+  });
 
   const filtered = useMemo(() => {
     if (!discrepancies) return [];
@@ -115,17 +121,21 @@ export default function SquawksPage() {
     [discrepancies],
   );
 
-  if (!orgId) {
+  if (prereq.state === "missing_context") {
     return (
-      <div className="flex items-center justify-center py-16">
-        <p className="text-muted-foreground">Loading organization…</p>
-      </div>
+      <ActionableEmptyState
+        title="Discrepancy tracking requires organization setup"
+        missingInfo="Complete onboarding before viewing and managing squawks."
+        primaryActionLabel="Complete Setup"
+        primaryActionType="link"
+        primaryActionTarget="/onboarding"
+      />
     );
   }
 
-  if (!discrepancies) {
+  if (prereq.state === "loading_context" || prereq.state === "loading_data") {
     return (
-      <div className="space-y-6">
+      <div className="space-y-6" data-testid="page-loading-state">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {[1, 2, 3].map((i) => (
             <Card key={i} className="border-border/60">
@@ -143,6 +153,8 @@ export default function SquawksPage() {
       </div>
     );
   }
+
+  if (!discrepancies) return null;
 
   function getSeverityBadge(type: string | undefined) {
     const style = SEVERITY_STYLES[type ?? ""] ?? {
@@ -265,12 +277,22 @@ export default function SquawksPage() {
 
       {/* Discrepancy List */}
       {filtered.length === 0 ? (
-        <Card className="border-border/60">
-          <CardContent className="py-12 text-center">
-            <Eye className="w-8 h-8 text-muted-foreground/30 mx-auto mb-3" />
-            <p className="text-muted-foreground">No discrepancies found.</p>
-          </CardContent>
-        </Card>
+        discrepancies.length === 0 ? (
+          <ActionableEmptyState
+            title="No discrepancies found"
+            missingInfo="Squawks are created from work orders during inspections and maintenance."
+            primaryActionLabel="Open Work Orders"
+            primaryActionType="link"
+            primaryActionTarget="/work-orders"
+          />
+        ) : (
+          <Card className="border-border/60">
+            <CardContent className="py-12 text-center" data-testid="empty-state">
+              <Eye className="w-8 h-8 text-muted-foreground/30 mx-auto mb-3" />
+              <p className="text-muted-foreground">No discrepancies match your filters.</p>
+            </CardContent>
+          </Card>
+        )
       ) : (
         <div className="space-y-3">
           {filtered.map((d) => (

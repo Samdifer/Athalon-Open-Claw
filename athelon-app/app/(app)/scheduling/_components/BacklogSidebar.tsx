@@ -26,6 +26,9 @@ type WorkOrderWithRisk = {
   remainingHours: number;
   riskLevel: "overdue" | "at_risk" | "on_track" | "no_date";
   aircraft: { currentRegistration: string | undefined; make: string; model: string } | null;
+  quoteNumber?: string | null;
+  quoteStatus?: string | null;
+  quoteTotal?: number | null;
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -148,6 +151,12 @@ export function BacklogSidebar({ workOrders, isOpen, onClose }: BacklogSidebarPr
                     <span className="text-[11px] text-muted-foreground truncate leading-snug">
                       {wo.description}
                     </span>
+                    {wo.quoteNumber && (
+                      <span className="text-[10px] text-muted-foreground/90 truncate font-mono">
+                        {wo.quoteNumber}
+                        {wo.quoteStatus ? ` • ${wo.quoteStatus}` : ""}
+                      </span>
+                    )}
                   </div>
                   <div className="flex-shrink-0">
                     <PriorityBadge priority={wo.priority} />

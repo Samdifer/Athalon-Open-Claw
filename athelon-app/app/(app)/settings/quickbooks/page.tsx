@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
+import { usePagePrereqs } from "@/hooks/usePagePrereqs";
 import {
   Link2,
   Link2Off,
@@ -29,6 +30,7 @@ import {
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDate } from "@/lib/format";
+import { ActionableEmptyState } from "@/components/zero-state/ActionableEmptyState";
 
 const SYNC_STATUS_STYLES: Record<string, string> = {
   pending: "bg-amber-500/15 text-amber-400 border-amber-500/30",
@@ -45,7 +47,7 @@ const SYNC_STATUS_ICONS: Record<string, React.ReactNode> = {
 };
 
 export default function QuickBooksPage() {
-  const { orgId } = useCurrentOrg();
+  const { orgId, isLoaded } = useCurrentOrg();
   const settings = useQuery(api.quickbooks.getSettings, orgId ? { organizationId: orgId } : "skip");
   const syncStatus = useQuery(api.quickbooks.getSyncStatus, orgId ? { organizationId: orgId } : "skip");
   const syncLog = useQuery(api.quickbooks.listSyncLog, orgId ? { organizationId: orgId } : "skip");
@@ -53,8 +55,39 @@ export default function QuickBooksPage() {
   const testConnection = useAction(api.quickbooks.testConnection);
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState<string | null>(null);
+  const prereq = usePagePrereqs({
+    requiresOrg: true,
+    isDataLoading:
+      !isLoaded ||
+      settings === undefined ||
+      syncStatus === undefined ||
+      syncLog === undefined,
+  });
 
-  if (!orgId) return <div className="p-6"><Skeleton className="h-8 w-48" /></div>;
+  if (prereq.state === "loading_context" || prereq.state === "loading_data") {
+    return (
+      <div className="p-6 space-y-3" data-testid="page-loading-state">
+        <Skeleton className="h-8 w-56" />
+        {Array.from({ length: 5 }).map((_, i) => (
+          <Skeleton key={i} className="h-8 w-full" />
+        ))}
+      </div>
+    );
+  }
+
+  if (prereq.state === "missing_context") {
+    return (
+      <ActionableEmptyState
+        title="QuickBooks integration requires organization setup"
+        missingInfo="Complete onboarding before connecting accounting sync."
+        primaryActionLabel="Complete Setup"
+        primaryActionType="link"
+        primaryActionTarget="/onboarding"
+      />
+    );
+  }
+
+  if (!orgId) return null;
 
   const handleTestConnection = async () => {
     setTesting(true);
@@ -179,7 +212,13 @@ export default function QuickBooksPage() {
           {!syncLog ? (
             <div className="space-y-2">{Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-8 w-full" />)}</div>
           ) : syncLog.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">No sync activity yet.</div>
+            <ActionableEmptyState
+              title="No sync activity yet"
+              missingInfo="Run a connection test or enable auto-sync to start logging QuickBooks events."
+              primaryActionLabel={testing ? "Testing..." : "Test Connection"}
+              primaryActionType="button"
+              primaryActionTarget={handleTestConnection}
+            />
           ) : (
             <Table>
               <TableHeader>

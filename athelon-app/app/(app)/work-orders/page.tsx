@@ -28,6 +28,7 @@ import {
   type WoType,
 } from "@/lib/mro-constants";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
+import { usePagePrereqs } from "@/hooks/usePagePrereqs";
 import { downloadCSV } from "@/lib/export";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -41,10 +42,12 @@ import { QRCodeBadge } from "@/components/QRCodeBadge";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { QrCode } from "lucide-react";
+import { ActionableEmptyState } from "@/components/zero-state/ActionableEmptyState";
 
 type FilterTab =
   | "active"
@@ -114,6 +117,10 @@ export default function WorkOrdersPage() {
     api.workOrders.getWorkOrdersWithScheduleRisk,
     orgId ? { organizationId: orgId } : "skip",
   );
+  const prereq = usePagePrereqs({
+    requiresOrg: true,
+    isDataLoading: !isLoaded || raw === undefined,
+  });
 
   const [activeTab, setActiveTab] = useState<FilterTab>("active");
   const [search, setSearch] = useState("");
@@ -179,9 +186,9 @@ export default function WorkOrdersPage() {
     return c;
   }, [workOrders]);
 
-  if (!isLoaded || raw === undefined) {
+  if (prereq.state === "loading_context" || prereq.state === "loading_data") {
     return (
-      <div className="space-y-4">
+      <div className="space-y-4" data-testid="page-loading-state">
         <Skeleton className="h-12 w-full" />
         {Array.from({ length: 6 }).map((_, i) => (
           <Skeleton key={i} className="h-24 w-full" />
@@ -190,13 +197,17 @@ export default function WorkOrdersPage() {
     );
   }
 
-  if (!orgId) {
+  if (prereq.state === "missing_context" || !orgId) {
     return (
-      <Card className="border-border/60">
-        <CardContent className="py-10 text-center text-sm text-muted-foreground">
-          Unable to resolve organization context.
-        </CardContent>
-      </Card>
+      <ActionableEmptyState
+        title="Work orders are unavailable until setup is complete"
+        missingInfo="Your account is missing organization context. Complete onboarding to create and manage work orders."
+        primaryActionLabel="Complete Setup"
+        primaryActionType="link"
+        primaryActionTarget="/onboarding"
+        secondaryActionLabel="Go to Dashboard"
+        secondaryActionTarget="/dashboard"
+      />
     );
   }
 
@@ -313,25 +324,35 @@ export default function WorkOrdersPage() {
       </div>
 
       {filtered.length === 0 ? (
-        <Card className="border-border/60">
-          <CardContent className="py-16 text-center">
-            <ClipboardList className="w-8 h-8 text-muted-foreground/40 mx-auto mb-3" />
-            <p className="text-sm font-medium text-muted-foreground">No work orders found</p>
-            <p className="text-xs text-muted-foreground/60 mt-1">
-              {activeTab === "active"
-                ? "No active work orders. Create one to get started."
-                : "No work orders match the current filter."}
-            </p>
-            {activeTab === "active" && (
-              <Button asChild size="sm" className="mt-4">
-                <Link to="/work-orders/new">
-                  <Plus className="w-3.5 h-3.5 mr-1.5" />
-                  Create Work Order
-                </Link>
-              </Button>
-            )}
-          </CardContent>
-        </Card>
+        workOrders.length === 0 ? (
+          <ActionableEmptyState
+            title="No work orders yet"
+            missingInfo="Create your first work order to start tracking aircraft maintenance, inspections, and repair tasks."
+            primaryActionLabel="New Work Order"
+            primaryActionType="link"
+            primaryActionTarget="/work-orders/new"
+          />
+        ) : (
+          <Card className="border-border/60">
+            <CardContent className="py-16 text-center">
+              <ClipboardList className="w-8 h-8 text-muted-foreground/40 mx-auto mb-3" />
+              <p className="text-sm font-medium text-muted-foreground">No work orders match this filter</p>
+              <p className="text-xs text-muted-foreground/60 mt-1">
+                Try a different tab or clear your search to see all {workOrders.length} work order{workOrders.length !== 1 ? "s" : ""}.
+              </p>
+              {search.trim() && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mt-4"
+                  onClick={() => setSearch("")}
+                >
+                  Clear Search
+                </Button>
+              )}
+            </CardContent>
+          </Card>
+        )
       ) : (
         <div className="space-y-2">
           {filtered.map((wo) => (
@@ -465,6 +486,9 @@ export default function WorkOrdersPage() {
         <DialogContent className="sm:max-w-xs">
           <DialogHeader>
             <DialogTitle className="text-sm">Work Order QR Code</DialogTitle>
+            <DialogDescription className="text-xs">
+              Scan this code to quickly look up the work order.
+            </DialogDescription>
           </DialogHeader>
           {qrWoNumber && (
             <div className="flex justify-center py-4">

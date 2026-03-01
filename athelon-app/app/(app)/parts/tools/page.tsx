@@ -5,6 +5,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
+import { usePagePrereqs } from "@/hooks/usePagePrereqs";
 import {
   Wrench,
   Plus,
@@ -41,6 +42,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ActionableEmptyState } from "@/components/zero-state/ActionableEmptyState";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -84,7 +86,7 @@ function categoryLabel(cat: string) {
 // ─── Page ────────────────────────────────────────────────────────────────────
 
 export default function ToolCribPage() {
-  const { orgId } = useCurrentOrg();
+  const { orgId, isLoaded } = useCurrentOrg();
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [filterCategory, setFilterCategory] = useState<string>("all");
@@ -112,6 +114,15 @@ export default function ToolCribPage() {
     api.workOrders.listActive,
     orgId ? { organizationId: orgId, limit: 200 } : "skip"
   );
+  const prereq = usePagePrereqs({
+    requiresOrg: true,
+    isDataLoading:
+      !isLoaded ||
+      allTools === undefined ||
+      calibrationDue === undefined ||
+      technicians === undefined ||
+      activeWorkOrders === undefined,
+  });
 
   // Mutations
   const createTool = useMutation(api.toolCrib.createTool);
@@ -184,7 +195,11 @@ export default function ToolCribPage() {
   );
 
   async function handleAddTool() {
-    if (!orgId || !fToolNumber || !fDescription) {
+    if (!orgId) {
+      toast.error("Organization context is required");
+      return;
+    }
+    if (!fToolNumber || !fDescription) {
       toast.error("Tool number and description are required");
       return;
     }
@@ -279,13 +294,29 @@ export default function ToolCribPage() {
     }
   }
 
-  if (!orgId) {
+  if (prereq.state === "loading_context" || prereq.state === "loading_data") {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Skeleton className="h-8 w-48" />
+      <div className="space-y-3" data-testid="page-loading-state">
+        {[...Array(4)].map((_, i) => (
+          <Skeleton key={i} className="h-16 w-full rounded-lg" />
+        ))}
       </div>
     );
   }
+
+  if (prereq.state === "missing_context") {
+    return (
+      <ActionableEmptyState
+        title="Tool crib requires organization setup"
+        missingInfo="Complete onboarding before creating and checking out tools."
+        primaryActionLabel="Complete Setup"
+        primaryActionType="link"
+        primaryActionTarget="/onboarding"
+      />
+    );
+  }
+
+  if (!orgId || !allTools || !calibrationDue || !technicians || !activeWorkOrders) return null;
 
   return (
     <div className="flex flex-col gap-5 p-4 md:p-6 max-w-7xl mx-auto">
@@ -416,18 +447,14 @@ export default function ToolCribPage() {
           </div>
 
           {/* Tool List */}
-          {!allTools ? (
-            <div className="space-y-3">
-              {[...Array(4)].map((_, i) => (
-                <Skeleton key={i} className="h-16 w-full rounded-lg" />
-              ))}
-            </div>
-          ) : filteredTools.length === 0 ? (
-            <Card>
-              <CardContent className="py-8 text-center text-muted-foreground">
-                No tools found.
-              </CardContent>
-            </Card>
+          {filteredTools.length === 0 ? (
+            <ActionableEmptyState
+              title="No tools found"
+              missingInfo="Add your first tool to start check-out and calibration tracking."
+              primaryActionLabel="Add Tool"
+              primaryActionType="button"
+              primaryActionTarget={() => setShowAddDialog(true)}
+            />
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -538,14 +565,14 @@ export default function ToolCribPage() {
         </TabsContent>
 
         <TabsContent value="calibration" className="space-y-4 mt-4">
-          {!calibrationDue ? (
-            <Skeleton className="h-32 w-full" />
-          ) : calibrationDue.length === 0 ? (
-            <Card>
-              <CardContent className="py-8 text-center text-muted-foreground">
-                No tools need calibration within 30 days.
-              </CardContent>
-            </Card>
+          {calibrationDue.length === 0 ? (
+            <ActionableEmptyState
+              title="No upcoming calibration tasks"
+              missingInfo="Tools with calibration requirements due in the next 30 days will appear here."
+              primaryActionLabel="Add Tool"
+              primaryActionType="button"
+              primaryActionTarget={() => setShowAddDialog(true)}
+            />
           ) : (
             <div className="space-y-2">
               {calibrationDue

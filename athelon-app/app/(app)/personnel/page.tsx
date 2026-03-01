@@ -18,9 +18,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useQuery, useMutation } from "convex/react";
-import { useOrganization } from "@clerk/clerk-react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
+import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -319,8 +319,7 @@ function PersonnelSkeleton() {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function PersonnelPage() {
-  const { organization } = useOrganization();
-  const orgId = organization?.id as Id<"organizations"> | undefined;
+  const { orgId } = useCurrentOrg();
 
   const [editingTechId, setEditingTechId] = useState<string | null>(null);
 
@@ -376,7 +375,7 @@ export default function PersonnelPage() {
           <Users className="w-5 h-5 text-muted-foreground" />
           Personnel
         </h1>
-        <p className="text-sm text-muted-foreground mt-0.5">
+        <span className="block text-sm text-muted-foreground mt-0.5">
           {isLoading ? (
             <Skeleton className="h-3 w-48 inline-block" />
           ) : (
@@ -392,7 +391,7 @@ export default function PersonnelPage() {
               )}
             </>
           )}
-        </p>
+        </span>
       </div>
 
       {/* ── FEAT-018: IA Currency Expiry Banner ──────────────────────────────── */}

@@ -95,6 +95,36 @@ export const create = mutation({
     year: v.optional(v.number()),
     totalTimeAirframeHours: v.number(),
     customerId: v.optional(v.id("customers")),
+    experimental: v.optional(v.boolean()),
+    aircraftCategory: v.optional(
+      v.union(
+        v.literal("normal"),
+        v.literal("utility"),
+        v.literal("acrobatic"),
+        v.literal("limited"),
+        v.literal("lsa"),
+        v.literal("experimental"),
+        v.literal("restricted"),
+        v.literal("provisional"),
+      ),
+    ),
+    engineCount: v.optional(v.number()),
+    maxGrossWeightLbs: v.optional(v.number()),
+    baseLocation: v.optional(v.string()),
+    operatingRegulation: v.optional(
+      v.union(
+        v.literal("part_91"),
+        v.literal("part_135"),
+        v.literal("part_121"),
+        v.literal("part_137"),
+        v.literal("part_91_135_mixed"),
+        v.literal("pending_determination"),
+      ),
+    ),
+    ownerName: v.optional(v.string()),
+    hobbsReading: v.optional(v.number()),
+    totalLandingCycles: v.optional(v.number()),
+    typeCertificateNumber: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
@@ -111,9 +141,18 @@ export const create = mutation({
       yearOfManufacture: args.year,
       totalTimeAirframeHours: args.totalTimeAirframeHours,
       totalTimeAirframeAsOfDate: now,
-      experimental: false,
-      aircraftCategory: "normal",
-      engineCount: 1,
+      experimental: args.experimental ?? false,
+      aircraftCategory: args.aircraftCategory ?? "normal",
+      engineCount: args.engineCount ?? 1,
+      maxGrossWeightLbs: args.maxGrossWeightLbs,
+      baseLocation: args.baseLocation,
+      operatingRegulation: args.operatingRegulation,
+      ownerName: args.ownerName,
+      hobbsReading: args.hobbsReading,
+      hobbsAsOfDate: args.hobbsReading ? now : undefined,
+      totalLandingCycles: args.totalLandingCycles,
+      totalLandingCyclesAsOfDate: args.totalLandingCycles ? now : undefined,
+      typeCertificateNumber: args.typeCertificateNumber,
       status: "airworthy",
       customerId: args.customerId,
       createdAt: now,
@@ -193,5 +232,60 @@ export const addPropeller = mutation({
       createdAt: now,
       updatedAt: now,
     });
+  },
+});
+
+export const createEngine = mutation({
+  args: {
+    aircraftId: v.id("aircraft"),
+    organizationId: v.id("organizations"),
+    make: v.string(),
+    model: v.string(),
+    serialNumber: v.string(),
+    position: v.optional(v.string()),
+    totalTimeHours: v.number(),
+    timeSinceNewHours: v.optional(v.number()),
+    timeSinceOverhaulHours: v.optional(v.number()),
+    timeBetweenOverhaulLimit: v.optional(v.number()),
+    totalCycles: v.optional(v.number()),
+    cyclesSinceOverhaul: v.optional(v.number()),
+    cycleBetweenOverhaulLimit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const userId = await requireAuth(ctx);
+    const now = Date.now();
+
+    const engineId = await ctx.db.insert("engines", {
+      make: args.make,
+      model: args.model,
+      serialNumber: args.serialNumber,
+      currentAircraftId: args.aircraftId,
+      position: args.position,
+      totalTimeHours: args.totalTimeHours,
+      totalTimeAsOfDate: now,
+      timeSinceNewHours: args.timeSinceNewHours ?? args.totalTimeHours,
+      timeSinceOverhaulHours: args.timeSinceOverhaulHours,
+      timeBetweenOverhaulLimit: args.timeBetweenOverhaulLimit,
+      totalCycles: args.totalCycles,
+      totalCyclesAsOfDate: args.totalCycles ? now : undefined,
+      cyclesSinceOverhaul: args.cyclesSinceOverhaul,
+      cycleBetweenOverhaulLimit: args.cycleBetweenOverhaulLimit,
+      status: "installed",
+      organizationId: args.organizationId,
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    await ctx.db.insert("auditLog", {
+      organizationId: args.organizationId,
+      eventType: "record_created",
+      tableName: "engines",
+      recordId: engineId,
+      userId,
+      timestamp: now,
+      notes: `Engine ${args.make} ${args.model} S/N ${args.serialNumber} installed on aircraft`,
+    });
+
+    return engineId;
   },
 });

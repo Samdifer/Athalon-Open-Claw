@@ -639,3 +639,490 @@ export const seedDemo = mutation({
     };
   },
 });
+
+// Seed a deterministic scheduler/quote story dataset for seeded E2E scenarios.
+// Idempotent by org + fixed work order / quote numbers.
+export const seedSchedulerStories = mutation({
+  args: {
+    clerkUserId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const now = Date.now();
+    const day = 24 * 60 * 60 * 1000;
+
+    let technician = await ctx.db
+      .query("technicians")
+      .withIndex("by_user", (q) => q.eq("userId", args.clerkUserId))
+      .first();
+
+    let orgId: any;
+    let techId: any;
+
+    if (!technician) {
+      orgId = await ctx.db.insert("organizations", {
+        name: "E2E Story Hangar",
+        part145Ratings: ["Class A Airframe", "Class A Powerplant"],
+        address: "1200 Storyline Ave",
+        city: "Denver",
+        state: "CO",
+        zip: "80201",
+        country: "USA",
+        email: "e2e-story@athelon.test",
+        subscriptionTier: "starter",
+        active: true,
+        createdAt: now,
+        updatedAt: now,
+      });
+
+      techId = await ctx.db.insert("technicians", {
+        organizationId: orgId,
+        userId: args.clerkUserId,
+        legalName: "E2E Story Admin",
+        email: "e2e-story@athelon.test",
+        status: "active",
+        role: "admin",
+        createdAt: now,
+        updatedAt: now,
+      });
+
+      await ctx.db.insert("shopLocations", {
+        organizationId: orgId,
+        name: "Main Shop",
+        code: "MAIN",
+        city: "Denver",
+        state: "CO",
+        country: "US",
+        isPrimary: true,
+        isActive: true,
+        createdAt: now,
+        updatedAt: now,
+      });
+    } else {
+      orgId = technician.organizationId;
+      techId = technician._id;
+    }
+
+    const customerName = "E2E Story Aviation";
+    let customer = await ctx.db
+      .query("customers")
+      .withIndex("by_organization", (q) => q.eq("organizationId", orgId))
+      .filter((q) => q.eq(q.field("name"), customerName))
+      .first();
+
+    if (!customer) {
+      const customerId = await ctx.db.insert("customers", {
+        organizationId: orgId,
+        name: customerName,
+        customerType: "charter_operator",
+        email: "mx@e2e-story-aviation.test",
+        phone: "+1 (303) 555-2121",
+        active: true,
+        createdAt: now,
+        updatedAt: now,
+      });
+      customer = await ctx.db.get(customerId);
+    }
+
+    if (!customer) {
+      throw new Error("Unable to create or resolve story customer");
+    }
+    const customerId = customer._id;
+
+    async function ensureAircraft(params: {
+      registration: string;
+      make: string;
+      model: string;
+      serialNumber: string;
+      ttHours: number;
+    }) {
+      const existing = await ctx.db
+        .query("aircraft")
+        .withIndex("by_registration", (q) =>
+          q.eq("currentRegistration", params.registration),
+        )
+        .first();
+
+      if (existing && existing.operatingOrganizationId === orgId) {
+        return existing._id;
+      }
+
+      return await ctx.db.insert("aircraft", {
+        operatingOrganizationId: orgId,
+        currentRegistration: params.registration,
+        make: params.make,
+        model: params.model,
+        serialNumber: params.serialNumber,
+        aircraftCategory: "normal",
+        engineCount: 1,
+        experimental: false,
+        totalTimeAirframeHours: params.ttHours,
+        totalTimeAirframeAsOfDate: now,
+        customerId,
+        status: "in_maintenance",
+        createdAt: now,
+        updatedAt: now,
+      });
+    }
+
+    const directAircraftId = await ensureAircraft({
+      registration: "N818ST",
+      make: "Cessna",
+      model: "208B",
+      serialNumber: "E2E-STORY-208B-001",
+      ttHours: 9321.3,
+    });
+    const convertedAircraftId = await ensureAircraft({
+      registration: "N477QA",
+      make: "Beechcraft",
+      model: "King Air 200",
+      serialNumber: "E2E-STORY-KA200-001",
+      ttHours: 12411.8,
+    });
+    const unscheduledAircraftId = await ensureAircraft({
+      registration: "N330UX",
+      make: "Pilatus",
+      model: "PC-12/47E",
+      serialNumber: "E2E-STORY-PC12-001",
+      ttHours: 5877.2,
+    });
+
+    const desiredBays = [
+      { name: "E2E Bay Alpha", type: "hangar" as const },
+      { name: "E2E Bay Bravo", type: "hangar" as const },
+      { name: "E2E Bay Paint", type: "paint" as const },
+    ];
+    const existingBays = await ctx.db
+      .query("hangarBays")
+      .withIndex("by_org", (q) => q.eq("organizationId", orgId))
+      .collect();
+
+    for (const desired of desiredBays) {
+      const already = existingBays.find((bay) => bay.name === desired.name);
+      if (already) continue;
+      await ctx.db.insert("hangarBays", {
+        organizationId: orgId,
+        name: desired.name,
+        description: "Seeded for scheduler story E2E coverage",
+        type: desired.type,
+        capacity: 1,
+        status: "available",
+        createdAt: now,
+        updatedAt: now,
+      });
+    }
+
+    const DIRECT_WO_NUMBER = "E2E-WO-DIRECT-001";
+    const CONVERTED_WO_NUMBER = "E2E-WO-CONV-001";
+    const UNSCHEDULED_WO_NUMBER = "E2E-WO-UNSCHED-001";
+
+    const directStart = now + 2 * day;
+    const directEnd = now + 8 * day;
+    const convertedStart = now + 9 * day;
+    const convertedEnd = now + 16 * day;
+
+    async function ensureWorkOrder(params: {
+      workOrderNumber: string;
+      aircraftId: any;
+      description: string;
+      status: "draft" | "open" | "in_progress";
+      priority: "routine" | "urgent" | "aog";
+      scheduledStartDate?: number;
+      promisedDeliveryDate?: number;
+    }) {
+      const existing = await ctx.db
+        .query("workOrders")
+        .withIndex("by_number", (q) =>
+          q.eq("organizationId", orgId).eq("workOrderNumber", params.workOrderNumber),
+        )
+        .first();
+
+      if (existing) {
+        await ctx.db.patch(existing._id, {
+          aircraftId: params.aircraftId,
+          customerId,
+          status: params.status,
+          priority: params.priority,
+          description: params.description,
+          scheduledStartDate: params.scheduledStartDate,
+          promisedDeliveryDate: params.promisedDeliveryDate,
+          updatedAt: now,
+        });
+        return existing._id;
+      }
+
+      return await ctx.db.insert("workOrders", {
+        organizationId: orgId,
+        workOrderNumber: params.workOrderNumber,
+        aircraftId: params.aircraftId,
+        workOrderType: "routine",
+        status: params.status,
+        priority: params.priority,
+        description: params.description,
+        openedAt: now - day,
+        openedByUserId: args.clerkUserId,
+        aircraftTotalTimeAtOpen: 0,
+        customerId,
+        scheduledStartDate: params.scheduledStartDate,
+        promisedDeliveryDate: params.promisedDeliveryDate,
+        createdAt: now - day,
+        updatedAt: now,
+      });
+    }
+
+    const directWoId = await ensureWorkOrder({
+      workOrderNumber: DIRECT_WO_NUMBER,
+      aircraftId: directAircraftId,
+      description:
+        "Legacy scheduled WO (dates-only) for backfill verification and quote continuity.",
+      status: "in_progress",
+      priority: "routine",
+      scheduledStartDate: directStart,
+      promisedDeliveryDate: directEnd,
+    });
+
+    const convertedWoId = await ensureWorkOrder({
+      workOrderNumber: CONVERTED_WO_NUMBER,
+      aircraftId: convertedAircraftId,
+      description: "WO converted from approved quote; must retain quote linkage in planner.",
+      status: "open",
+      priority: "urgent",
+      scheduledStartDate: convertedStart,
+      promisedDeliveryDate: convertedEnd,
+    });
+
+    const unscheduledWoId = await ensureWorkOrder({
+      workOrderNumber: UNSCHEDULED_WO_NUMBER,
+      aircraftId: unscheduledAircraftId,
+      description: "Unscheduled WO candidate for magic scheduler user story.",
+      status: "draft",
+      priority: "routine",
+      scheduledStartDate: undefined,
+      promisedDeliveryDate: undefined,
+    });
+
+    const DIRECT_QUOTE_NUMBER = "E2E-Q-DIRECT-001";
+    const CONVERTED_QUOTE_NUMBER = "E2E-Q-CONV-001";
+    const DRAFT_QUOTE_NUMBER = "E2E-Q-DRAFT-001";
+    const E2E_LABOR_KIT_NAME = "E2E-KIT-QUOTE-001";
+
+    async function upsertQuote(
+      quoteNumber: string,
+      patch: {
+        workOrderId?: any;
+        convertedToWorkOrderId?: any;
+        aircraftId: any;
+        status: "DRAFT" | "SENT" | "APPROVED" | "CONVERTED" | "DECLINED";
+      },
+    ) {
+      const existing = await ctx.db
+        .query("quotes")
+        .withIndex("by_org_quote_number", (q) =>
+          q.eq("orgId", orgId).eq("quoteNumber", quoteNumber),
+        )
+        .first();
+
+      if (existing) {
+        await ctx.db.patch(existing._id, {
+          customerId,
+          aircraftId: patch.aircraftId,
+          workOrderId: patch.workOrderId,
+          convertedToWorkOrderId: patch.convertedToWorkOrderId,
+          status: patch.status,
+          laborTotal: 22500,
+          partsTotal: 11800,
+          subtotal: 34300,
+          tax: 0,
+          total: 34300,
+          updatedAt: now,
+        });
+        return existing._id;
+      }
+
+      return await ctx.db.insert("quotes", {
+        orgId,
+        customerId,
+        aircraftId: patch.aircraftId,
+        workOrderId: patch.workOrderId,
+        status: patch.status,
+        quoteNumber,
+        createdByTechId: techId,
+        convertedToWorkOrderId: patch.convertedToWorkOrderId,
+        sentAt: patch.status !== "DRAFT" ? now - 2 * day : undefined,
+        respondedAt:
+          patch.status === "APPROVED" || patch.status === "CONVERTED"
+            ? now - day
+            : undefined,
+        expiresAt: now + 14 * day,
+        laborTotal: 22500,
+        partsTotal: 11800,
+        subtotal: 34300,
+        tax: 0,
+        total: 34300,
+        currency: "USD",
+        createdAt: now - 3 * day,
+        updatedAt: now,
+      });
+    }
+
+    const directQuoteId = await upsertQuote(DIRECT_QUOTE_NUMBER, {
+      aircraftId: directAircraftId,
+      workOrderId: directWoId,
+      convertedToWorkOrderId: undefined,
+      status: "APPROVED",
+    });
+
+    const convertedQuoteId = await upsertQuote(CONVERTED_QUOTE_NUMBER, {
+      aircraftId: convertedAircraftId,
+      workOrderId: undefined,
+      convertedToWorkOrderId: convertedWoId,
+      status: "CONVERTED",
+    });
+
+    const draftQuoteId = await upsertQuote(DRAFT_QUOTE_NUMBER, {
+      aircraftId: unscheduledAircraftId,
+      workOrderId: unscheduledWoId,
+      convertedToWorkOrderId: undefined,
+      status: "DRAFT",
+    });
+
+    async function ensureLaborKit() {
+      const existing = await ctx.db
+        .query("laborKits")
+        .withIndex("by_org", (q) => q.eq("organizationId", orgId))
+        .filter((q) => q.eq(q.field("name"), E2E_LABOR_KIT_NAME))
+        .first();
+
+      if (existing) {
+        await ctx.db.patch(existing._id, {
+          description: "Seeded labor kit for quote builder user-story coverage.",
+          ataChapter: "05",
+          aircraftType: "Pilatus PC-12/47E",
+          estimatedHours: 5.5,
+          laborRate: 165,
+          laborItems: [
+            {
+              description: "E2E borescope inspection",
+              estimatedHours: 2.5,
+            },
+            {
+              description: "E2E oil system servicing",
+              estimatedHours: 3,
+            },
+          ],
+          requiredParts: [
+            {
+              partNumber: "E2E-FLTR-001",
+              description: "Filter element",
+              quantity: 2,
+              unitCost: 145,
+            },
+          ],
+          externalServices: [
+            {
+              vendorName: "E2E NDT Vendor",
+              description: "NDT review",
+              estimatedCost: 420,
+            },
+          ],
+          isActive: true,
+        });
+        return existing._id;
+      }
+
+      return await ctx.db.insert("laborKits", {
+        organizationId: orgId,
+        name: E2E_LABOR_KIT_NAME,
+        description: "Seeded labor kit for quote builder user-story coverage.",
+        ataChapter: "05",
+        aircraftType: "Pilatus PC-12/47E",
+        estimatedHours: 5.5,
+        laborRate: 165,
+        laborItems: [
+          {
+            description: "E2E borescope inspection",
+            estimatedHours: 2.5,
+          },
+          {
+            description: "E2E oil system servicing",
+            estimatedHours: 3,
+          },
+        ],
+        requiredParts: [
+          {
+            partNumber: "E2E-FLTR-001",
+            description: "Filter element",
+            quantity: 2,
+            unitCost: 145,
+          },
+        ],
+        externalServices: [
+          {
+            vendorName: "E2E NDT Vendor",
+            description: "NDT review",
+            estimatedCost: 420,
+          },
+        ],
+        isActive: true,
+        createdAt: now,
+      });
+    }
+
+    const laborKitId = await ensureLaborKit();
+
+    // Keep seeded DRAFT quote deterministic by resetting line items each run.
+    const existingDraftLines = await ctx.db
+      .query("quoteLineItems")
+      .withIndex("by_org_quote", (q) => q.eq("orgId", orgId).eq("quoteId", draftQuoteId))
+      .collect();
+    for (const line of existingDraftLines) {
+      await ctx.db.delete(line._id);
+    }
+    await ctx.db.insert("quoteLineItems", {
+      orgId,
+      quoteId: draftQuoteId,
+      type: "labor",
+      description: "E2E baseline inspection labor",
+      qty: 2,
+      unitPrice: 175,
+      total: 350,
+      createdAt: now,
+      updatedAt: now,
+    });
+    await ctx.db.patch(draftQuoteId, {
+      laborTotal: 350,
+      partsTotal: 0,
+      subtotal: 350,
+      tax: 0,
+      total: 350,
+      updatedAt: now,
+    });
+
+    const storyWoIds = [directWoId, convertedWoId, unscheduledWoId];
+    for (const woId of storyWoIds) {
+      const assignment = await ctx.db
+        .query("scheduleAssignments")
+        .withIndex("by_org_wo", (q) => q.eq("organizationId", orgId).eq("workOrderId", woId))
+        .first();
+      if (assignment) {
+        await ctx.db.delete(assignment._id);
+      }
+    }
+
+    return {
+      message: "Scheduler story seed prepared",
+      organizationId: orgId,
+      technicianId: techId,
+      workOrders: {
+        DIRECT_WO_NUMBER: directWoId,
+        CONVERTED_WO_NUMBER: convertedWoId,
+        UNSCHEDULED_WO_NUMBER: unscheduledWoId,
+      },
+      quotes: {
+        DIRECT_QUOTE_NUMBER: directQuoteId,
+        CONVERTED_QUOTE_NUMBER: convertedQuoteId,
+        DRAFT_QUOTE_NUMBER: draftQuoteId,
+      },
+      laborKitId,
+    };
+  },
+});

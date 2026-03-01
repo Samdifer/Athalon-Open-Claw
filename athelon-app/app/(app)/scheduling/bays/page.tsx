@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
+import { usePagePrereqs } from "@/hooks/usePagePrereqs";
 import type { Id } from "@/convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -27,6 +28,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Plus, Warehouse, PlaneTakeoff, Wrench } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
+import { ActionableEmptyState } from "@/components/zero-state/ActionableEmptyState";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPES
@@ -271,14 +273,43 @@ export default function BaysPage() {
     api.hangarBays.listBays,
     orgId ? { organizationId: orgId } : "skip",
   );
+  const prereq = usePagePrereqs({
+    requiresOrg: true,
+    isDataLoading: !isLoaded || bays === undefined,
+  });
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editBay, setEditBay] = useState<Bay | undefined>();
   const [selectedBay, setSelectedBay] = useState<Bay | undefined>();
 
-  if (!isLoaded || !orgId) {
-    return <div className="p-6 text-sm text-muted-foreground">Loading...</div>;
+  if (prereq.state === "loading_context" || prereq.state === "loading_data") {
+    return (
+      <div className="p-6" data-testid="page-loading-state">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div
+              key={i}
+              className="h-36 rounded-xl border border-border/50 bg-muted/20 animate-pulse"
+            />
+          ))}
+        </div>
+      </div>
+    );
   }
+
+  if (prereq.state === "missing_context") {
+    return (
+      <ActionableEmptyState
+        title="Bay management requires organization setup"
+        missingInfo="Complete onboarding before configuring hangar and ramp bays."
+        primaryActionLabel="Complete Setup"
+        primaryActionType="link"
+        primaryActionTarget="/onboarding"
+      />
+    );
+  }
+
+  if (!orgId || !bays) return null;
 
   return (
     <div className="space-y-6">
@@ -302,30 +333,17 @@ export default function BaysPage() {
       </div>
 
       {/* Bay Grid */}
-      {bays === undefined ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div
-              key={i}
-              className="h-36 rounded-xl border border-border/50 bg-muted/20 animate-pulse"
-            />
-          ))}
-        </div>
-      ) : bays.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 gap-3">
-          <Warehouse className="w-12 h-12 text-muted-foreground/40" />
-          <p className="text-sm text-muted-foreground">No bays configured yet</p>
-          <Button
-            variant="outline"
-            onClick={() => {
-              setEditBay(undefined);
-              setDialogOpen(true);
-            }}
-          >
-            <Plus className="w-4 h-4" />
-            Add First Bay
-          </Button>
-        </div>
+      {bays.length === 0 ? (
+        <ActionableEmptyState
+          title="No bays configured yet"
+          missingInfo="Add your first bay to start assigning work orders and tracking occupancy."
+          primaryActionLabel="Add First Bay"
+          primaryActionType="button"
+          primaryActionTarget={() => {
+            setEditBay(undefined);
+            setDialogOpen(true);
+          }}
+        />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {(bays as Bay[]).map((bay) => (

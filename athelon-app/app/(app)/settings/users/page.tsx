@@ -3,6 +3,7 @@
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
+import { usePagePrereqs } from "@/hooks/usePagePrereqs";
 import { RoleGuard } from "@/components/RoleGuard";
 import { MRO_ROLES, type MRORole } from "@/lib/roles";
 import {
@@ -34,6 +35,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { Users, UserPlus, ShieldCheck } from "lucide-react";
 import type { Id } from "@/convex/_generated/dataModel";
+import { ActionableEmptyState } from "@/components/zero-state/ActionableEmptyState";
 
 const roleOptions = Object.entries(MRO_ROLES).map(([key, val]) => ({
   value: key as MRORole,
@@ -55,6 +57,11 @@ function UsersSettingsContent() {
     api.roles.listRoles,
     orgId ? { organizationId: orgId } : "skip",
   );
+  const prereq = usePagePrereqs({
+    requiresOrg: true,
+    isDataLoading: technicians === undefined,
+  });
+  const technicianRows = technicians ?? [];
   const assignRole = useMutation(api.roles.assignRole);
   const removeRole = useMutation(api.roles.removeRole);
   const toggleStatus = useMutation(api.roles.toggleStatus);
@@ -88,6 +95,18 @@ function UsersSettingsContent() {
       toast.error("Failed to update status");
     }
   };
+
+  if (prereq.state === "missing_context") {
+    return (
+      <ActionableEmptyState
+        title="User management requires organization setup"
+        missingInfo="Complete onboarding before managing users and role permissions."
+        primaryActionLabel="Complete Setup"
+        primaryActionType="link"
+        primaryActionTarget="/onboarding"
+      />
+    );
+  }
 
   return (
     <div className="max-w-4xl space-y-5">
@@ -142,11 +161,21 @@ function UsersSettingsContent() {
       {/* Users Table */}
       <Card className="border-border/60">
         <CardContent className="p-0">
-          {!technicians ? (
-            <div className="p-6 space-y-3">
+          {prereq.state === "loading_context" || prereq.state === "loading_data" ? (
+            <div className="p-6 space-y-3" data-testid="page-loading-state">
               {[...Array(5)].map((_, i) => (
                 <Skeleton key={i} className="h-12 w-full" />
               ))}
+            </div>
+          ) : technicianRows.length === 0 ? (
+            <div className="p-6">
+              <ActionableEmptyState
+                title="No team members found"
+                missingInfo="Add your first technician profile to assign roles and permissions."
+                primaryActionLabel="Open Personnel"
+                primaryActionType="link"
+                primaryActionTarget="/personnel"
+              />
             </div>
           ) : (
             <Table>
@@ -160,7 +189,7 @@ function UsersSettingsContent() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {technicians.map((tech) => (
+                {technicianRows.map((tech) => (
                   <TableRow key={tech._id}>
                     <TableCell className="font-medium">
                       {tech.legalName}
@@ -219,13 +248,6 @@ function UsersSettingsContent() {
                     </TableCell>
                   </TableRow>
                 ))}
-                {technicians.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                      No team members found
-                    </TableCell>
-                  </TableRow>
-                )}
               </TableBody>
             </Table>
           )}

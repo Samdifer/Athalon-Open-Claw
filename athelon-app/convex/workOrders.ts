@@ -29,6 +29,7 @@ import { v } from "convex/values";
 import { paginationOptsValidator } from "convex/server";
 import type { Id } from "./_generated/dataModel";
 import { createNotificationHelper } from "./notifications";
+import { reserveNextWorkOrderNumber } from "./lib/workOrderNumber";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // INTERNAL HELPER TYPES
@@ -110,6 +111,7 @@ async function requireAuth(ctx: { auth: { getUserIdentity: () => Promise<{ subje
 //
 // Creates a work order in "draft" status. Does not open it, does not capture
 // aircraft time, does not assign technicians. Draft is administrative intake.
+// Work order numbers are generated server-side and are immutable.
 //
 // A work order number that was previously used on a voided WO may NOT be reused —
 // voided records still occupy their number (chain of custody requirement).
@@ -120,7 +122,6 @@ export const createWorkOrder = mutation({
     organizationId: v.id("organizations"),
     aircraftId: v.id("aircraft"),
 
-    workOrderNumber: v.string(),
     workOrderType: workOrderTypeValidator,
     description: v.string(),
     squawks: v.optional(v.string()),
@@ -144,32 +145,8 @@ export const createWorkOrder = mutation({
 
     // ── Input validation ────────────────────────────────────────────────────
 
-    if (!args.workOrderNumber.trim()) {
-      throw new Error("workOrderNumber must be a non-empty, non-whitespace string.");
-    }
     if (!args.description.trim()) {
       throw new Error("description must be a non-empty string.");
-    }
-
-    // ── INV-14: workOrderNumber must be unique within organization ──────────
-    // We query ALL statuses — including "voided". A voided WO retains its number
-    // permanently. An FAA inspector querying by WO number must get exactly one result.
-    const existingWO = await ctx.db
-      .query("workOrders")
-      .withIndex("by_number", (q) =>
-        q
-          .eq("organizationId", args.organizationId)
-          .eq("workOrderNumber", args.workOrderNumber.trim()),
-      )
-      .first();
-
-    if (existingWO !== null) {
-      throw new Error(
-        `INV-14: Work order number "${args.workOrderNumber.trim()}" already exists ` +
-        `within organization ${args.organizationId} (existing status: "${existingWO.status}"). ` +
-        `Work order numbers must be unique per organization, including across voided records. ` +
-        `Choose a different work order number.`,
-      );
     }
 
     // ── Organization validation ─────────────────────────────────────────────
@@ -211,9 +188,36 @@ export const createWorkOrder = mutation({
       }
     }
 
+    // ── INV-14: Generate an immutable org-unique work order number ──────────
+    // Format: WO-{BASE}-{N}. BASE comes from primary/active shop location code
+    // (2-3 letters); N is an unpadded integer sequence starting at 1.
+    let workOrderNumber: string | null = null;
+
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+      const candidate = await reserveNextWorkOrderNumber(ctx, args.organizationId);
+      const existingWO = await ctx.db
+        .query("workOrders")
+        .withIndex("by_number", (q) =>
+          q.eq("organizationId", args.organizationId).eq("workOrderNumber", candidate),
+        )
+        .first();
+
+      if (existingWO === null) {
+        workOrderNumber = candidate;
+        break;
+      }
+    }
+
+    if (!workOrderNumber) {
+      throw new Error(
+        `INV-14: Unable to generate a unique work order number for organization ` +
+        `${args.organizationId}. Please retry.`,
+      );
+    }
+
     // ── Insert work order ───────────────────────────────────────────────────
     const workOrderId = await ctx.db.insert("workOrders", {
-      workOrderNumber: args.workOrderNumber.trim(),
+      workOrderNumber,
       organizationId: args.organizationId,
       aircraftId: args.aircraftId,
       status: "draft",
@@ -250,7 +254,7 @@ export const createWorkOrder = mutation({
       userId: callerUserId,
       ipAddress: args.callerIpAddress,
       notes:
-        `Work order ${args.workOrderNumber.trim()} created in draft status. ` +
+        `Work order ${workOrderNumber} created in draft status. ` +
         `Aircraft: ${aircraft.make} ${aircraft.model} S/N ${aircraft.serialNumber}. ` +
         `Type: ${args.workOrderType}. Priority: ${args.priority}.`,
       timestamp: now,
@@ -1718,10 +1722,21 @@ export const getWorkOrdersWithScheduleRisk = query({
 
     const enriched = await Promise.all(
       rows.map(async (wo) => {
-        const [aircraft, customer] = await Promise.all([
+        const [aircraft, customer, directQuote, convertedQuote] = await Promise.all([
           ctx.db.get(wo.aircraftId),
           wo.customerId ? ctx.db.get(wo.customerId) : Promise.resolve(null),
+          ctx.db
+            .query("quotes")
+            .withIndex("by_work_order", (q) => q.eq("workOrderId", wo._id))
+            .first(),
+          ctx.db
+            .query("quotes")
+            .withIndex("by_converted_work_order", (q) =>
+              q.eq("convertedToWorkOrderId", wo._id),
+            )
+            .first(),
         ]);
+        const linkedQuote = directQuote ?? convertedQuote;
 
         // Effective estimated hours
         let effectiveHours = wo.estimatedLaborHoursOverride;
@@ -1781,6 +1796,10 @@ export const getWorkOrdersWithScheduleRisk = query({
           openDiscrepancyCount: openDiscrepancies.length,
           pendingPartCount: pendingPartCountByWoId.get(String(wo._id)) ?? 0,
           riskLevel,
+          sourceQuoteId: linkedQuote?._id,
+          quoteNumber: linkedQuote?.quoteNumber ?? null,
+          quoteStatus: linkedQuote?.status ?? null,
+          quoteTotal: linkedQuote?.total ?? null,
           aircraft: aircraft
             ? {
                 currentRegistration: aircraft.currentRegistration,

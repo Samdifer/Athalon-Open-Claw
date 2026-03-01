@@ -3,6 +3,8 @@
 
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import { useCurrentOrg } from "@/hooks/useCurrentOrg";
+import { usePagePrereqs } from "@/hooks/usePagePrereqs";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -14,9 +16,42 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Mail, CheckCircle, XCircle, AlertTriangle } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ActionableEmptyState } from "@/components/zero-state/ActionableEmptyState";
 
 export default function EmailLogPage() {
-  const emails = useQuery(api.emailLog.listEmails, { limit: 100 });
+  const { orgId, isLoaded } = useCurrentOrg();
+  const emails = useQuery(
+    api.emailLog.listEmails,
+    orgId ? { orgId: String(orgId), limit: 100 } : "skip",
+  );
+  const prereq = usePagePrereqs({
+    requiresOrg: true,
+    isDataLoading: !isLoaded || emails === undefined,
+  });
+
+  if (prereq.state === "loading_context" || prereq.state === "loading_data") {
+    return (
+      <div className="space-y-4" data-testid="page-loading-state">
+        <Skeleton className="h-8 w-56" />
+        <Skeleton className="h-52 w-full" />
+      </div>
+    );
+  }
+
+  if (prereq.state === "missing_context") {
+    return (
+      <ActionableEmptyState
+        title="Email log requires organization setup"
+        missingInfo="Complete onboarding before using outbound email tracking."
+        primaryActionLabel="Complete Setup"
+        primaryActionType="link"
+        primaryActionTarget="/onboarding"
+      />
+    );
+  }
+
+  if (!emails) return null;
 
   return (
     <div className="space-y-6">
@@ -34,16 +69,14 @@ export default function EmailLogPage() {
           <CardDescription>Showing the last 100 emails sent.</CardDescription>
         </CardHeader>
         <CardContent>
-          {!emails ? (
-            <div className="flex items-center justify-center py-8 text-muted-foreground">
-              Loading...
-            </div>
-          ) : emails.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-              <Mail className="h-12 w-12 mb-4 opacity-50" />
-              <p className="text-lg font-medium">No emails sent yet</p>
-              <p className="text-sm">Emails will appear here when invoices, quotes, or payment confirmations are sent.</p>
-            </div>
+          {emails.length === 0 ? (
+            <ActionableEmptyState
+              title="No emails sent yet"
+              missingInfo="Emails will appear here when invoices, quotes, or payment confirmations are sent."
+              primaryActionLabel="Open Invoices"
+              primaryActionType="link"
+              primaryActionTarget="/billing/invoices"
+            />
           ) : (
             <div className="overflow-x-auto">
               <Table>

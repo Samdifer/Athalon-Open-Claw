@@ -32,6 +32,8 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
+import { usePagePrereqs } from "@/hooks/usePagePrereqs";
+import { ActionableEmptyState } from "@/components/zero-state/ActionableEmptyState";
 
 // ─── IA Steps Table ───────────────────────────────────────────────────────────
 
@@ -227,16 +229,52 @@ export default function QcmReviewPage() {
     orgId ? { organizationId: orgId } : "skip",
   );
 
-  const { results: workOrders } = usePaginatedQuery(
+  const { results: workOrders, status: workOrdersStatus } = usePaginatedQuery(
     api.workOrders.listWorkOrders,
     orgId ? { organizationId: orgId } : "skip",
     { initialNumItems: 200 },
   );
 
-  const isLoading = !isLoaded || iaSteps === undefined;
+  const prereq = usePagePrereqs({
+    requiresOrg: true,
+    isDataLoading:
+      !isLoaded ||
+      iaSteps === undefined ||
+      workOrdersStatus === "LoadingFirstPage",
+  });
+  const isLoading =
+    prereq.state === "loading_context" || prereq.state === "loading_data";
 
   const grouped = iaSteps ? groupByWorkOrder(iaSteps as IAStep[]) : {};
   const woEntries = Object.entries(grouped);
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6" data-testid="page-loading-state">
+        <Card className="border-border/60">
+          <CardContent className="p-6 space-y-3">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Skeleton key={i} className="h-10 w-full" />
+            ))}
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (prereq.state === "missing_context") {
+    return (
+      <ActionableEmptyState
+        title="QCM review requires organization setup"
+        missingInfo="Complete onboarding before accessing IA sign-off and close-readiness tools."
+        primaryActionLabel="Complete Setup"
+        primaryActionType="link"
+        primaryActionTarget="/onboarding"
+      />
+    );
+  }
+
+  if (!orgId || !iaSteps || workOrdersStatus === "LoadingFirstPage") return null;
 
   return (
     <div className="space-y-6">
@@ -273,28 +311,14 @@ export default function QcmReviewPage() {
           )}
         </div>
 
-        {isLoading && (
-          <Card className="border-border/60">
-            <CardContent className="p-6 space-y-3">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <Skeleton key={i} className="h-10 w-full" />
-              ))}
-            </CardContent>
-          </Card>
-        )}
-
         {!isLoading && (iaSteps?.length ?? 0) === 0 && (
-          <Card className="border-border/60">
-            <CardContent className="py-12 text-center">
-              <CheckCircle2 className="w-8 h-8 text-green-400/50 mx-auto mb-3" />
-              <p className="text-sm font-medium text-muted-foreground">
-                No steps pending IA review
-              </p>
-              <p className="text-xs text-muted-foreground/60 mt-1">
-                All IA-required steps have been signed off.
-              </p>
-            </CardContent>
-          </Card>
+          <ActionableEmptyState
+            title="No steps pending IA review"
+            missingInfo="Create and advance work orders to generate IA sign-off queue items."
+            primaryActionLabel="Create Work Order"
+            primaryActionType="link"
+            primaryActionTarget="/work-orders/new"
+          />
         )}
 
         {!isLoading && woEntries.length > 0 && (
@@ -376,13 +400,21 @@ export default function QcmReviewPage() {
       </div>
 
       {/* ── Work Order Close Readiness ─────────────────────────────────────── */}
-      {orgId && (
+      {orgId && (workOrders ?? []).length > 0 ? (
         <CloseReadinessPanel
           orgId={orgId}
           workOrders={(workOrders ?? []).map((wo) => ({
             _id: wo._id,
             workOrderNumber: wo.workOrderNumber,
           }))}
+        />
+      ) : (
+        <ActionableEmptyState
+          title="No work orders available for close-readiness review"
+          missingInfo="Create a work order first, then return here to review close blockers and advisories."
+          primaryActionLabel="Create Work Order"
+          primaryActionType="link"
+          primaryActionTarget="/work-orders/new"
         />
       )}
     </div>

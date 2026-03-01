@@ -4,6 +4,7 @@ import { useState, useMemo } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
+import { usePagePrereqs } from "@/hooks/usePagePrereqs";
 import { toast } from "sonner";
 import {
   Card,
@@ -34,6 +35,8 @@ import {
   Plane,
 } from "lucide-react";
 import type { Id } from "@/convex/_generated/dataModel";
+import { ActionableEmptyState } from "@/components/zero-state/ActionableEmptyState";
+import { MissingPrereqBanner } from "@/components/zero-state/MissingPrereqBanner";
 
 type Severity = "critical" | "high" | "medium" | "low";
 
@@ -76,7 +79,7 @@ function formatDate(ts: number) {
 }
 
 export default function PredictionsPage() {
-  const { orgId, techId } = useCurrentOrg();
+  const { orgId, techId, isLoaded } = useCurrentOrg();
   const [severityTab, setSeverityTab] = useState("all");
   const [aircraftFilter, setAircraftFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
@@ -93,6 +96,10 @@ export default function PredictionsPage() {
   const acknowledgePrediction = useMutation(api.predictions.acknowledge);
   const resolvePrediction = useMutation(api.predictions.resolve);
   const dismissPrediction = useMutation(api.predictions.dismiss);
+  const prereq = usePagePrereqs({
+    requiresOrg: true,
+    isDataLoading: !isLoaded || predictions === undefined || aircraftList === undefined,
+  });
 
   // Build aircraft lookup
   const aircraftMap = useMemo(() => {
@@ -133,7 +140,10 @@ export default function PredictionsPage() {
   }, [predictions]);
 
   async function handleGenerate() {
-    if (!orgId) return;
+    if (!orgId) {
+      toast.error("Complete setup before generating predictions.");
+      return;
+    }
     try {
       const result = await generatePredictions({ organizationId: orgId });
       toast.success(`Generated ${result.created} new prediction(s).`);
@@ -143,8 +153,12 @@ export default function PredictionsPage() {
   }
 
   async function handleAcknowledge(id: Id<"maintenancePredictions">) {
+    if (!techId) {
+      toast.error("Technician profile required to acknowledge predictions.");
+      return;
+    }
     try {
-      await acknowledgePrediction({ id, acknowledgedBy: techId ?? "unknown" });
+      await acknowledgePrediction({ id, acknowledgedBy: techId });
       toast.success("Prediction acknowledged.");
     } catch (err) {
       toast.error("Failed to acknowledge.");
@@ -169,9 +183,10 @@ export default function PredictionsPage() {
     }
   }
 
-  if (!orgId || !predictions || !aircraftList) {
+  // Still loading org context
+  if (prereq.state === "loading_context" || prereq.state === "loading_data") {
     return (
-      <div className="space-y-4">
+      <div className="space-y-4" data-testid="page-loading-state">
         <Skeleton className="h-10 w-full" />
         <div className="grid grid-cols-5 gap-4">
           {Array.from({ length: 5 }).map((_, i) => (
@@ -182,6 +197,21 @@ export default function PredictionsPage() {
       </div>
     );
   }
+
+  if (prereq.state === "missing_context") {
+    return (
+      <ActionableEmptyState
+        title="Predictive maintenance setup required"
+        missingInfo="Your account is missing organization context. Complete onboarding to generate predictions."
+        primaryActionLabel="Complete Setup"
+        primaryActionType="link"
+        primaryActionTarget="/onboarding"
+        secondaryActionLabel="Go to Personnel"
+        secondaryActionTarget="/personnel"
+      />
+    );
+  }
+  if (!orgId || !predictions || !aircraftList) return null;
 
   const uniqueAircraft = [...new Set(predictions.map((p) => p.aircraftId))];
 
@@ -200,6 +230,14 @@ export default function PredictionsPage() {
           Generate Predictions
         </Button>
       </div>
+
+      {!techId && (
+        <MissingPrereqBanner
+          kind="needs_technician_profile"
+          actionLabel="Go to Personnel"
+          actionTarget="/personnel"
+        />
+      )}
 
       {/* Summary cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
@@ -286,12 +324,22 @@ export default function PredictionsPage() {
 
         <TabsContent value={severityTab} className="mt-4">
           {filtered.length === 0 ? (
-            <Card>
-              <CardContent className="py-12 text-center">
-                <p className="text-sm font-medium text-muted-foreground">No predictions match current filters</p>
-                <p className="text-xs text-muted-foreground/60 mt-1">Try adjusting the severity tab or filters above.</p>
-              </CardContent>
-            </Card>
+            predictions.length === 0 ? (
+              <ActionableEmptyState
+                title="No predictions yet"
+                missingInfo="Generate predictions to identify upcoming maintenance risks."
+                primaryActionLabel="Generate Predictions"
+                primaryActionType="button"
+                primaryActionTarget={handleGenerate}
+              />
+            ) : (
+              <Card>
+                <CardContent className="py-12 text-center" data-testid="empty-state">
+                  <p className="text-sm font-medium text-muted-foreground">No predictions match current filters</p>
+                  <p className="text-xs text-muted-foreground/60 mt-1">Try adjusting the severity tab or filters above.</p>
+                </CardContent>
+              </Card>
+            )
           ) : (
             <div className="grid gap-4">
               {filtered.map((pred) => {
@@ -353,6 +401,7 @@ export default function PredictionsPage() {
                                 size="sm"
                                 variant="outline"
                                 className="text-xs"
+                                disabled={!techId}
                                 onClick={() =>
                                   handleAcknowledge(
                                     pred._id as Id<"maintenancePredictions">,
