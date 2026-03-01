@@ -92,9 +92,34 @@ export default function MyWorkPage() {
     return <MyWorkSkeleton />;
   }
 
-  const cards = taskCards;
+  // Sort cards by urgency: overdue → at_risk → no_date,
+  // then by active status: in_progress → pending → complete/voided.
+  // A lead tech must see AOG and overdue cards at the top without hunting.
+  const SCHEDULE_RISK_ORDER: Record<string, number> = {
+    overdue: 0,
+    at_risk: 1,
+    no_date: 2,
+  };
+  const STATUS_ORDER: Record<string, number> = {
+    in_progress: 0,
+    pending: 1,
+    complete: 2,
+    voided: 3,
+  };
+  const cards = [...taskCards].sort((a, b) => {
+    const riskA = SCHEDULE_RISK_ORDER[a.scheduleRisk ?? "no_date"] ?? 2;
+    const riskB = SCHEDULE_RISK_ORDER[b.scheduleRisk ?? "no_date"] ?? 2;
+    if (riskA !== riskB) return riskA - riskB;
+    const statusA = STATUS_ORDER[a.status] ?? 99;
+    const statusB = STATUS_ORDER[b.status] ?? 99;
+    return statusA - statusB;
+  });
+
   const inProgressCount = cards.filter((c) => c.status === "in_progress").length;
-  const totalPendingSteps = cards.reduce((sum, c) => sum + c.pendingSteps, 0);
+  // Only count pending steps on active cards (exclude voided/complete)
+  const totalPendingSteps = cards
+    .filter((c) => c.status !== "voided" && c.status !== "complete")
+    .reduce((sum, c) => sum + c.pendingSteps, 0);
 
   return (
     <div className="space-y-5">

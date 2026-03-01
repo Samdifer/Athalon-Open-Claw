@@ -253,6 +253,18 @@ export default function TaskCardPage() {
       : "skip",
   );
 
+  // Fetch work order (with aircraft join) so we can pass real aircraft hours to
+  // RaiseFindingDialog. Every finding must record aircraft hours at time of
+  // discovery per 14 CFR 43 — hardcoding 0 is a data integrity violation.
+  const workOrderResult = useQuery(
+    api.workOrders.getWorkOrder,
+    orgId && workOrderId
+      ? { workOrderId: workOrderId as Id<"workOrders">, organizationId: orgId }
+      : "skip",
+  );
+  const currentAircraftHours =
+    workOrderResult?.aircraft?.totalTimeAirframeHours ?? 0;
+
   const isLoading = !orgLoaded || taskCards === undefined;
 
   if (isLoading) return <TaskCardSkeleton />;
@@ -1256,7 +1268,7 @@ export default function TaskCardPage() {
           workOrderId={workOrderId as Id<"workOrders">}
           orgId={orgId}
           techId={techId}
-          aircraftHours={0}
+          aircraftHours={currentAircraftHours}
           taskCardTitle={taskCard.title}
         />
       )}

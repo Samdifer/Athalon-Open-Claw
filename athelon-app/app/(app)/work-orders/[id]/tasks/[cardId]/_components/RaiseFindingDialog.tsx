@@ -512,7 +512,7 @@ export function RaiseFindingDialog({
           </Button>
           <Button
             onClick={handleSubmit}
-            disabled={isSubmitting || !description.trim()}
+            disabled={isSubmitting || !description.trim() || !discrepancyType || !systemType}
             className="gap-2"
             size="sm"
             variant="destructive"

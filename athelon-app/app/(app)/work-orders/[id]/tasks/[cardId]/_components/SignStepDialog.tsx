@@ -90,7 +90,6 @@ export function SignStepDialog({
     { partNumber: string; serialNumber: string; description: string; quantity: number }[]
   >([]);
   const [photoStorageIds, setPhotoStorageIds] = useState<string[]>([]);
-  const [showPartsForm, setShowPartsForm] = useState(false);
   const [partScannerOpen, setPartScannerOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -307,7 +306,6 @@ export function SignStepDialog({
                   size="sm"
                   className="h-6 text-[10px] px-2"
                   onClick={() => {
-                    setShowPartsForm(true);
                     setPartsInstalled((prev) => [
                       ...prev,
                       { partNumber: "", serialNumber: "", description: "", quantity: 1 },
@@ -488,7 +486,6 @@ export function SignStepDialog({
         onClose={() => setPartScannerOpen(false)}
         onScan={(value) => {
           setPartScannerOpen(false);
-          setShowPartsForm(true);
           setPartsInstalled((prev) => [
             ...prev,
             { partNumber: value, serialNumber: "", description: "", quantity: 1 },
