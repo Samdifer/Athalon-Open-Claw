@@ -1282,6 +1282,58 @@ export default function SchedulingPage() {
         </Button>
 
         <Button
+          variant={scheduleEditMode ? "secondary" : "outline"}
+          size="sm"
+          className="text-xs h-7"
+          onClick={toggleScheduleEditMode}
+          data-testid="toggle-schedule-edit-mode"
+        >
+          <Edit className="w-3.5 h-3.5" />
+          Edit Mode
+        </Button>
+
+        {scheduleEditMode && (
+          <>
+            <Button
+              variant={scheduleEditTool === "distribute" ? "secondary" : "outline"}
+              size="sm"
+              className="text-xs h-7"
+              onClick={() => activateScheduleEditTool("distribute")}
+              data-testid="schedule-edit-tool-distribute"
+            >
+              <SlidersHorizontal className="w-3.5 h-3.5" />
+              Distribute
+            </Button>
+            <Button
+              variant={scheduleEditTool === "block" ? "secondary" : "outline"}
+              size="sm"
+              className="text-xs h-7"
+              onClick={() => activateScheduleEditTool("block")}
+              data-testid="schedule-edit-tool-block"
+            >
+              <Ban className="w-3.5 h-3.5" />
+              Block Days
+            </Button>
+          </>
+        )}
+
+        <Button
+          variant={magicSelectionMode ? "secondary" : "outline"}
+          size="sm"
+          className="text-xs h-7"
+          onClick={toggleMagicSelectionMode}
+          data-testid="toggle-magic-selection-mode"
+        >
+          <ListChecks className="w-3.5 h-3.5" />
+          Board Select
+          {magicSelectedIds.length > 0 && (
+            <Badge variant="secondary" className="h-4 px-1 text-[10px]">
+              {magicSelectedIds.length}
+            </Badge>
+          )}
+        </Button>
+
+        <Button
           variant={graveyardOpen ? "secondary" : "outline"}
           size="sm"
           className="text-xs h-7"
@@ -1601,7 +1653,10 @@ export default function SchedulingPage() {
           <DialogHeader>
             <DialogTitle>Magic Scheduler</DialogTitle>
             <DialogDescription>
-              Select work orders, reorder priority, and apply optimized bay assignments.
+              Select work orders, reorder priority, and apply optimized bay assignments.{" "}
+              <span className="font-medium text-foreground" data-testid="magic-selected-count">
+                {magicSelectedIds.length} selected.
+              </span>
             </DialogDescription>
           </DialogHeader>
 
