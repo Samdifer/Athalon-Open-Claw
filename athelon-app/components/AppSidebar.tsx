@@ -143,11 +143,13 @@ const mainNav: NavEntry[] = [
   },
   {
     title: "Compliance",
-    href: "/compliance/audit-trail",
+    href: "/compliance",
     icon: ShieldCheck,
     section: "compliance",
     children: [
       { title: "AD/SB Tracking", href: "/compliance/ad-sb" },
+      { title: "Audit Trail", href: "/compliance/audit-trail" },
+      { title: "QCM Review", href: "/compliance/qcm-review" },
     ],
   },
   {

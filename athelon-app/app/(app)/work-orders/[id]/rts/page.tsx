@@ -145,6 +145,55 @@ export default function RtsPage() {
     );
   }
 
+  // ── Already Signed ─────────────────────────────────────────────────────────
+  // If RTS was already authorized, show a clear "already done" state instead of
+  // an empty form with all 9 preconditions pending — confusing for the IA.
+  if (report.isAlreadySigned) {
+    return (
+      <div className="space-y-5">
+        <Button
+          asChild
+          variant="ghost"
+          size="sm"
+          className="h-7 -ml-2 text-xs text-muted-foreground"
+        >
+          <Link to={`/work-orders/${workOrderId}`}>
+            <ArrowLeft className="w-3.5 h-3.5 mr-1.5" />
+            {report.workOrderNumber}
+          </Link>
+        </Button>
+        <Card className="border-green-500/30 bg-green-500/5">
+          <CardContent className="p-6 text-center">
+            <ShieldCheck className="w-10 h-10 text-green-600 dark:text-green-400 mx-auto mb-3" />
+            <h2 className="text-lg font-semibold text-foreground mb-1">
+              Return-to-Service Already Authorized
+            </h2>
+            <p className="text-sm text-muted-foreground mb-1">
+              <span className="font-mono font-semibold">{report.aircraftRegistration}</span> was returned to
+              service under work order <span className="font-mono">{report.workOrderNumber}</span>.
+            </p>
+            <p className="text-xs text-muted-foreground mb-4">
+              This work order is closed. To review or re-print the RTS record, use the work order detail page.
+            </p>
+            {report.existingRtsId && (
+              <p className="font-mono text-xs text-muted-foreground bg-muted/50 px-3 py-2 rounded inline-block mb-4">
+                RTS Record ID: {report.existingRtsId}
+              </p>
+            )}
+            <div className="flex items-center justify-center gap-3">
+              <Button asChild variant="outline" size="sm">
+                <Link to={`/work-orders/${workOrderId}`}>View Work Order</Link>
+              </Button>
+              <Button asChild variant="ghost" size="sm">
+                <Link to="/work-orders">All Work Orders</Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   // Derive all 9 preconditions
   const preconditions = derivePreconditions(
     report,

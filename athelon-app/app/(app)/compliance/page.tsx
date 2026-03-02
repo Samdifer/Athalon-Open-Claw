@@ -7,9 +7,11 @@ import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import type { Id } from "@/convex/_generated/dataModel";
 import {
   ShieldAlert,
+  ShieldCheck,
   AlertTriangle,
   FileSearch,
   PlaneTakeoff,
+  ClipboardList,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -190,6 +192,38 @@ export default function CompliancePage() {
                     <p className="text-xs font-medium">Audit Trail</p>
                     <p className="text-[11px] text-muted-foreground mt-0.5">
                       Review all signed maintenance events
+                    </p>
+                  </div>
+                </Link>
+              </Button>
+
+              <Button
+                asChild
+                variant="outline"
+                className="justify-start h-auto py-3 px-4 border-border/60"
+              >
+                <Link to="/compliance/ad-sb" className="flex items-start gap-3">
+                  <ShieldAlert className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-0.5" />
+                  <div className="text-left">
+                    <p className="text-xs font-medium">AD/SB Tracking</p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                      Detailed AD/SB compliance records and filters
+                    </p>
+                  </div>
+                </Link>
+              </Button>
+
+              <Button
+                asChild
+                variant="outline"
+                className="justify-start h-auto py-3 px-4 border-border/60"
+              >
+                <Link to="/compliance/qcm-review" className="flex items-start gap-3">
+                  <ClipboardList className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-0.5" />
+                  <div className="text-left">
+                    <p className="text-xs font-medium">QCM Review</p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                      IA sign-off queue and WO close readiness
                     </p>
                   </div>
                 </Link>

@@ -119,6 +119,20 @@ export default function AdSbCompliancePage() {
     return m;
   }, [aircraft]);
 
+  // Filter aircraft summaries for fleet view — status filter applies to both views
+  const filteredFleetSummaries = useMemo(() => {
+    const summaries = fleetSummary?.aircraftSummaries ?? [];
+    if (statusFilter === "all") return summaries;
+    return summaries.filter((s) => {
+      if (statusFilter === "overdue") return s.overdueCount > 0;
+      if (statusFilter === "due_soon") return s.dueSoonCount > 0 && s.overdueCount === 0;
+      if (statusFilter === "compliant") return s.overdueCount === 0 && s.dueSoonCount === 0 && s.pendingCount === 0 && s.total > 0;
+      if (statusFilter === "pending") return s.pendingCount > 0;
+      if (statusFilter === "not_applicable") return false; // N/A is a record-level concept, not aircraft-level
+      return true;
+    });
+  }, [fleetSummary, statusFilter]);
+
   // Filter records for per-aircraft view
   const filteredRecords = useMemo(() => {
     if (!aircraftRecords) return [];
@@ -289,7 +303,14 @@ export default function AdSbCompliancePage() {
       {selectedAircraft === "all" && (
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm">Fleet AD Compliance by Aircraft</CardTitle>
+            <CardTitle className="text-sm flex items-center justify-between">
+              <span>Fleet AD Compliance by Aircraft</span>
+              {statusFilter !== "all" && (
+                <span className="text-xs font-normal text-muted-foreground">
+                  {filteredFleetSummaries.length} of {(fleetSummary.aircraftSummaries ?? []).length} aircraft
+                </span>
+              )}
+            </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             {(fleetSummary.aircraftSummaries ?? []).length === 0 ? (
@@ -314,7 +335,14 @@ export default function AdSbCompliancePage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {fleetSummary.aircraftSummaries.map((s) => {
+                  {filteredFleetSummaries.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center text-sm text-muted-foreground py-8">
+                        No aircraft match the "{statusFilter}" filter.
+                      </TableCell>
+                    </TableRow>
+                  ) : null}
+                  {filteredFleetSummaries.map((s) => {
                     const ac = aircraftMap.get(s.aircraftId);
                     return (
                       <TableRow key={s.aircraftId}>
