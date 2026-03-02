@@ -245,8 +245,21 @@ export default function QcmReviewPage() {
   const isLoading =
     prereq.state === "loading_context" || prereq.state === "loading_data";
 
-  const grouped = iaSteps ? groupByWorkOrder(iaSteps as IAStep[]) : {};
-  const woEntries = Object.entries(grouped);
+  // BH-006: Sort steps within each WO group by stepNumber so IA signs off in
+  // sequence (1, 2, 3…) rather than in query insertion order (5, 2, 8, 1).
+  // Also sort WO groups by work order number so the queue is deterministic —
+  // Object.entries() would otherwise return groups in V8 key-insertion order.
+  const grouped = iaSteps
+    ? Object.fromEntries(
+        Object.entries(groupByWorkOrder(iaSteps as IAStep[])).map(([key, steps]) => [
+          key,
+          [...steps].sort((a, b) => a.stepNumber - b.stepNumber),
+        ]),
+      )
+    : {};
+  const woEntries = Object.entries(grouped).sort(([a], [b]) =>
+    a.localeCompare(b),
+  );
 
   if (isLoading) {
     return (

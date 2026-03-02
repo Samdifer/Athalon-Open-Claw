@@ -237,10 +237,12 @@ export default function AircraftDetailPage() {
     () => workOrders?.filter((wo: { status: string }) => wo.status === "draft") ?? [],
     [workOrders],
   );
-  const pastWOs = useMemo(
-    () => workOrders?.filter((wo: { status: string }) => wo.status === "closed").slice(0, 20) ?? [],
+  const allPastWOs = useMemo(
+    () => workOrders?.filter((wo: { status: string }) => wo.status === "closed") ?? [],
     [workOrders],
   );
+  const pastWOs = useMemo(() => allPastWOs.slice(0, 20), [allPastWOs]);
+  const pastWOsTruncated = allPastWOs.length > 20;
 
   // Derive open WO count from already-loaded workOrders — eliminates the full-fleet api.aircraft.list subscription
   const openWoCount = useMemo(() => activeWOs.length, [activeWOs]);
@@ -692,7 +694,13 @@ export default function AircraftDetailPage() {
                 {/* Planned */}
                 <WoSection title="Planned" count={plannedWOs.length} wos={plannedWOs} />
                 {/* Past */}
-                <WoSection title="Past" count={pastWOs.length} wos={pastWOs} emptyMessage="No closed work orders" />
+                <WoSection
+                  title="Past"
+                  count={allPastWOs.length}
+                  wos={pastWOs}
+                  emptyMessage="No closed work orders"
+                  truncated={pastWOsTruncated}
+                />
               </>
             )}
           </TabsContent>
@@ -912,11 +920,13 @@ function WoSection({
   count,
   wos,
   emptyMessage,
+  truncated,
 }: {
   title: string;
   count: number;
   wos: WoRow[];
   emptyMessage?: string;
+  truncated?: boolean;
 }) {
   return (
     <div>
@@ -971,6 +981,11 @@ function WoSection({
               </Link>
             );
           })}
+          {truncated && (
+            <p className="text-xs text-muted-foreground text-center py-2 border border-border/40 rounded-md bg-muted/20">
+              Showing most recent 20 of {count} closed work orders
+            </p>
+          )}
         </div>
       )}
     </div>

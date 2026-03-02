@@ -129,6 +129,16 @@ export default function FleetCalendarPage() {
           <Button variant="outline" size="icon" className="h-8 w-8" onClick={goNext}>
             <ChevronRight className="w-4 h-4" />
           </Button>
+          {(month !== now.getMonth() || year !== now.getFullYear()) && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 text-xs ml-1"
+              onClick={() => { setMonth(now.getMonth()); setYear(now.getFullYear()); }}
+            >
+              Today
+            </Button>
+          )}
         </div>
       </div>
 
@@ -193,8 +203,12 @@ export default function FleetCalendarPage() {
                                 key={j}
                                 to={ev.woId ? `/work-orders/${ev.woId}` : `/fleet/${ev.tail}`}
                                 className={`block text-[10px] leading-tight px-1 py-0.5 rounded border truncate hover:opacity-80 ${color}`}
+                                title={ev.woNumber ? `${ev.tail} — ${ev.woNumber}` : ev.tail}
                               >
-                                {ev.tail}
+                                <span className="font-semibold">{ev.tail}</span>
+                                {ev.woNumber && (
+                                  <span className="opacity-70 ml-0.5">·{ev.woNumber}</span>
+                                )}
                               </Link>
                             );
                           })}

@@ -117,7 +117,7 @@ export default function RtsPage() {
             {/* Navigate to the specific WO — the QCM inspector's next steps
                 (Release, Certificate generation, Work Order review) are all on
                 the WO detail page, not the full list. */}
-            <div className="mt-4 flex items-center justify-center gap-3">
+            <div className="mt-4 flex items-center justify-center gap-3 flex-wrap">
               <Button asChild size="sm">
                 <Link to={`/work-orders/${workOrderId}`}>View Work Order</Link>
               </Button>
@@ -126,6 +126,46 @@ export default function RtsPage() {
                   Proceed to Release
                 </Link>
               </Button>
+              {/* BH-004: Download the complete RTS certificate now that all form
+                  values are available. This is the correct moment to generate the
+                  PDF — it contains the actual RTS statement, aircraft hours,
+                  limitations, and authorization date. The pre-auth "Download" button
+                  generated a blank/incomplete document. */}
+              {report && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5 text-xs"
+                  onClick={async () => {
+                    try {
+                      const { RtsPDF } = await import("@/lib/pdf/RtsPDF");
+                      const { downloadPDF } = await import("@/lib/pdf/download");
+                      const el = RtsPDF({
+                        orgName: "Athelon Aviation",
+                        workOrderNumber: report.workOrderNumber,
+                        aircraftRegistration: report.aircraftRegistration,
+                        aircraftType: `${report.aircraftMake} ${report.aircraftModel}`,
+                        totalTime: aircraftHoursAtRts ? `${aircraftHoursAtRts} hr` : undefined,
+                        taskCards: (report.taskCards ?? []).map((tc) => ({
+                          cardNumber: tc.taskCardNumber ?? "—",
+                          title: tc.title ?? "—",
+                          ataChapter: undefined,
+                          status: tc.status ?? "—",
+                        })),
+                        rtsStatement: rtsStatement.trim() || undefined,
+                        rtsDate: Date.now(),
+                      });
+                      await downloadPDF(el, `RTS-${report.workOrderNumber}.pdf`);
+                      toast.success("RTS certificate downloaded");
+                    } catch (err) {
+                      toast.error(err instanceof Error ? err.message : "Failed to generate PDF");
+                    }
+                  }}
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  Download RTS Certificate
+                </Button>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -249,37 +289,9 @@ export default function RtsPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-8 gap-1.5 text-xs"
-            onClick={async () => {
-              try {
-                const { RtsPDF } = await import("@/lib/pdf/RtsPDF");
-                const { downloadPDF } = await import("@/lib/pdf/download");
-                const el = RtsPDF({
-                  orgName: "Athelon Aviation",
-                  workOrderNumber: report.workOrderNumber,
-                  aircraftRegistration: report.aircraftRegistration,
-                  aircraftType: `${report.aircraftMake} ${report.aircraftModel}`,
-                  taskCards: (report.taskCards ?? []).map((tc) => ({
-                    cardNumber: tc.taskCardNumber ?? "—",
-                    title: tc.title ?? "—",
-                    ataChapter: undefined,
-                    status: tc.status ?? "—",
-                  })),
-                  rtsDate: Date.now(),
-                });
-                await downloadPDF(el, `RTS-${report.workOrderNumber}.pdf`);
-                toast.success("RTS document downloaded");
-              } catch (err) {
-                toast.error(err instanceof Error ? err.message : "Failed to generate PDF");
-              }
-            }}
-          >
-            <Download className="w-3.5 h-3.5" />
-            Download RTS PDF
-          </Button>
+          {/* BH-004: Download button moved to success state — pre-auth doc is
+              incomplete (no RTS statement, no hours, no auth verification).
+              Generating the PDF before authorization was misleading for the IA. */}
           <Badge
             variant="outline"
             className={`text-[11px] font-medium border ${

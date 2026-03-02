@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Plus, Search, PlaneTakeoff, ChevronRight, Download, Radar } from "lucide-react";
 import { useQuery } from "convex/react";
@@ -155,31 +155,44 @@ export default function FleetPage() {
   const [filterActiveWo, setFilterActiveWo] = useState(false);
   const [addAircraftOpen, setAddAircraftOpen] = useState(false);
 
-  // Build customer lookup map
-  const customerMap = new Map<string, string>();
-  if (customers) {
-    for (const c of customers) {
-      customerMap.set(c._id, c.name);
-    }
-  }
-
-  // Client-side filtering
-  const isFiltering = searchTerm !== "" || filterActiveWo;
-  const filtered = fleet?.filter((ac) => {
-    if (filterActiveWo && ac.openWorkOrderCount <= 0) return false;
-    if (searchTerm) {
-      const term = searchTerm.toLowerCase();
-      const reg = (ac.currentRegistration ?? "").toLowerCase();
-      const sn = ac.serialNumber.toLowerCase();
-      const custName = (
-        ac.customerId ? customerMap.get(ac.customerId) ?? "" : ""
-      ).toLowerCase();
-      if (!reg.includes(term) && !sn.includes(term) && !custName.includes(term)) {
-        return false;
+  // Build customer lookup map — memoized so it doesn't rebuild on every keystroke
+  const customerMap = useMemo(() => {
+    const map = new Map<string, string>();
+    if (customers) {
+      for (const c of customers) {
+        map.set(c._id, c.name);
       }
     }
-    return true;
-  });
+    return map;
+  }, [customers]);
+
+  // Client-side filtering + alphabetical sort
+  const isFiltering = searchTerm !== "" || filterActiveWo;
+  const filtered = useMemo(() => {
+    if (!fleet) return undefined;
+    const result = fleet.filter((ac) => {
+      if (filterActiveWo && ac.openWorkOrderCount <= 0) return false;
+      if (searchTerm) {
+        const term = searchTerm.toLowerCase();
+        const reg = (ac.currentRegistration ?? "").toLowerCase();
+        const sn = ac.serialNumber.toLowerCase();
+        const custName = (
+          ac.customerId ? customerMap.get(ac.customerId) ?? "" : ""
+        ).toLowerCase();
+        if (!reg.includes(term) && !sn.includes(term) && !custName.includes(term)) {
+          return false;
+        }
+      }
+      return true;
+    });
+    // Sort alphabetically by registration (then serial number as fallback)
+    result.sort((a, b) => {
+      const aKey = (a.currentRegistration ?? a.serialNumber).toUpperCase();
+      const bKey = (b.currentRegistration ?? b.serialNumber).toUpperCase();
+      return aKey.localeCompare(bKey);
+    });
+    return result;
+  }, [fleet, filterActiveWo, searchTerm, customerMap]);
 
   const totalCount = fleet?.length ?? 0;
   const filteredCount = filtered?.length ?? 0;

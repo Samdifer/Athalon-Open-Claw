@@ -43,8 +43,12 @@ export default function CompliancePage() {
   // Show all aircraft — sorted alphabetically by registration.
   // Per-aircraft compliance status (non-compliant / due-soon / compliant) is computed
   // inside each AircraftComplianceCard via api.adCompliance.checkAdDueForAircraft.
-  // Grouping by openWorkOrderCount is orthogonal to AD compliance and was misleading.
-  const allAircraft = (fleet ?? []) as AircraftRow[];
+  // We sort alphabetically here; the audit-trail page provides compliance-tier sort.
+  // BH-005: Previously the comment said "sorted alphabetically" but no .sort() was
+  // applied — fleet returned in database insertion order (undefined order).
+  const allAircraft = [...(fleet ?? [])].sort((a, b) =>
+    (a.currentRegistration ?? "").localeCompare(b.currentRegistration ?? ""),
+  ) as AircraftRow[];
 
   if (prereq.state === "loading_context" || prereq.state === "loading_data") {
     return (
@@ -190,8 +194,12 @@ export default function CompliancePage() {
                   <FileSearch className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-0.5" />
                   <div className="text-left">
                     <p className="text-xs font-medium">Audit Trail</p>
+                    {/* BH-007: Previous description "Review all signed maintenance
+                        events" was misleading — the audit-trail page shows per-aircraft
+                        AD compliance detail with overdue/due-soon drill-down, not a
+                        chronological maintenance event log. */}
                     <p className="text-[11px] text-muted-foreground mt-0.5">
-                      Review all signed maintenance events
+                      Per-aircraft AD compliance detail and due-date drill-down
                     </p>
                   </div>
                 </Link>
