@@ -83,10 +83,12 @@ export default function CertificatesPage() {
         organizationId: orgId,
         workOrderId,
         formType,
-        partDescription,
-        partNumber,
-        serialNumber: serialNumber || undefined,
-        batchNumber: batchNumber || undefined,
+        // BH-QCM-003: Trim whitespace before sending to backend — prevents
+        // regulatory documents with leading/trailing spaces in key fields.
+        partDescription: partDescription.trim(),
+        partNumber: partNumber.trim(),
+        serialNumber: serialNumber.trim() || undefined,
+        batchNumber: batchNumber.trim() || undefined,
         // Guard against negative quantities — parseInt("-5") is truthy so `|| 1`
         // wouldn't catch it. An FAA 8130-3 / EASA Form 1 with negative quantity
         // is an invalid regulatory document.
@@ -165,7 +167,16 @@ export default function CertificatesPage() {
     }
   };
 
-  if (!certificates) {
+  // BUG-QCM-CERT-002: Gate loading state on BOTH `certificates` and `workOrder`.
+  // Previously only `!certificates` triggered the skeleton. If the certificates
+  // query resolved before `workOrder` (both start simultaneously), the page would
+  // render the certificate list with active "PDF" download buttons while `workOrder`
+  // was still undefined. Clicking "PDF" at that moment calls handleDownload which
+  // passes `workOrder?.workOrder?.workOrderNumber` (= undefined) into the React-PDF
+  // component — producing a release certificate with a blank Work Order Number field.
+  // FAA 8130-3 / EASA Form 1 are legally binding regulatory documents; a blank WO
+  // number makes the document invalid and non-traceable. Guard on workOrder too.
+  if (!certificates || workOrder === undefined) {
     return (
       <div className="space-y-5">
         <Skeleton className="h-8 w-64" />
@@ -311,7 +322,7 @@ export default function CertificatesPage() {
               </Select>
             </div>
             <div>
-              <Label>Condition</Label>
+              <Label>Condition *</Label>
               <Select value={condition} onValueChange={setCondition}>
                 <SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger>
                 <SelectContent>
@@ -338,7 +349,20 @@ export default function CertificatesPage() {
             </Button>
             <Button
               onClick={handleCreate}
-              disabled={saving || !partDescription || !partNumber || !workPerformed || !approvalNumber}
+              // BH-QCM-003: Use .trim() on all required text fields. Without trim,
+              // a field containing only spaces (" ") passes the falsy check and the
+              // button enables — allowing a blank FAA 8130-3 / EASA Form 1 to be
+              // submitted. These are legally binding regulatory release documents;
+              // whitespace-only part descriptions or approval numbers are invalid.
+              //
+              // BUG-QCM-CERT-001: Add `!condition` to the disabled guard. The FAA
+              // 8130-3 (Block 12) and EASA Form 1 (Block 12) both require a condition
+              // statement ("Serviceable", "Overhauled", etc.). Previously the button
+              // was enabled even when Condition was not selected — producing an invalid
+              // regulatory document. The Condition Select shows a "Select..." placeholder
+              // when empty; its value is "" (empty string), which is falsy and blocks
+              // submit. This ensures no certificate can be created without a Condition.
+              disabled={saving || !partDescription.trim() || !partNumber.trim() || !workPerformed || !condition || !approvalNumber.trim()}
               className="gap-1.5"
             >
               {saving ? (

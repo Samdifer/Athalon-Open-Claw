@@ -350,7 +350,15 @@ export default function RtsPage() {
         </div>
         <Button
           onClick={handleAuthorize}
-          disabled={!allPass || isSubmitting}
+          // BUG-QCM-F3: PRE-3 ("Aircraft Total Time Consistent") shows PASS whenever
+          // aircraftCurrentHours is on file — it does NOT check whether the user has
+          // actually typed anything into the aircraft hours input field. Result: all 9
+          // preconditions could appear green while the hours field was still empty.
+          // The user saw "all clear", clicked Authorize, and got a text error below
+          // instead of the button being grayed out. Added explicit `!aircraftHoursAtRts.trim()`
+          // guard — Authorize is disabled until the hours field has a value, even when
+          // all 9 precondition cards show PASS.
+          disabled={!allPass || isSubmitting || !aircraftHoursAtRts.trim()}
           className="gap-2"
         >
           {isSubmitting ? (

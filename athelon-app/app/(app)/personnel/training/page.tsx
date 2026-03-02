@@ -129,6 +129,15 @@ export default function TrainingPage() {
   const [reqRecurrency, setReqRecurrency] = useState("");
   const [reqRoles, setReqRoles] = useState("");
 
+  // Technician name lookup map
+  const techMap = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const t of (technicians ?? [])) {
+      m.set(t._id, t.legalName);
+    }
+    return m;
+  }, [technicians]);
+
   // Compliance map: tech -> { current, expiringSoon, expired }
   const complianceMap = useMemo(() => {
     if (!allTraining || !technicians) return new Map<string, { current: number; expiringSoon: number; expired: number }>();
@@ -348,11 +357,14 @@ export default function TrainingPage() {
             <div className="space-y-2">
               {filteredTechs.map((tech) => {
                 const c = complianceMap.get(tech._id);
+                const totalRecords = c ? c.current + c.expiringSoon + c.expired : 0;
                 const color =
                   c && c.expired > 0
                     ? "border-red-500/40"
                     : c && c.expiringSoon > 0
                     ? "border-amber-500/40"
+                    : totalRecords === 0
+                    ? "border-slate-500/40"
                     : "border-green-500/40";
                 return (
                   <Card
@@ -391,9 +403,14 @@ export default function TrainingPage() {
                             {c.expiringSoon} expiring
                           </Badge>
                         )}
-                        {c && c.expired === 0 && c.expiringSoon === 0 && (
+                        {c && c.expired === 0 && c.expiringSoon === 0 && totalRecords > 0 && (
                           <Badge className="bg-green-500/15 text-green-600 border-green-500/30 text-xs">
                             Compliant
+                          </Badge>
+                        )}
+                        {totalRecords === 0 && (
+                          <Badge variant="outline" className="text-xs text-muted-foreground">
+                            No Records
                           </Badge>
                         )}
                         <ChevronRight className="h-4 w-4 text-muted-foreground" />
@@ -475,8 +492,13 @@ export default function TrainingPage() {
                         key={rec._id}
                         className="flex items-center justify-between text-sm py-1"
                       >
-                        <span className="font-medium">{rec.courseName}</span>
-                        <span className="text-muted-foreground">
+                        <div>
+                          <span className="font-medium">{rec.courseName}</span>
+                          <span className="text-xs text-muted-foreground ml-2">
+                            — {techMap.get(rec.technicianId) ?? "Unknown"}
+                          </span>
+                        </div>
+                        <span className="text-muted-foreground text-xs">
                           Expires{" "}
                           {rec.expiresAt
                             ? new Date(rec.expiresAt).toLocaleDateString()
@@ -505,8 +527,13 @@ export default function TrainingPage() {
                       key={rec._id}
                       className="flex items-center justify-between text-sm py-1"
                     >
-                      <span className="font-medium">{rec.courseName}</span>
-                      <span className="text-muted-foreground">
+                      <div>
+                        <span className="font-medium">{rec.courseName}</span>
+                        <span className="text-xs text-muted-foreground ml-2">
+                          — {techMap.get(rec.technicianId) ?? "Unknown"}
+                        </span>
+                      </div>
+                      <span className="text-muted-foreground text-xs">
                         Expired{" "}
                         {rec.expiresAt
                           ? new Date(rec.expiresAt).toLocaleDateString()
@@ -570,7 +597,7 @@ export default function TrainingPage() {
       </Tabs>
 
       {/* Add Training Dialog */}
-      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+      <Dialog open={showAddDialog} onOpenChange={(v) => { if (!isAddingRecord) setShowAddDialog(v); }}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>Add Training Record</DialogTitle>
@@ -677,7 +704,7 @@ export default function TrainingPage() {
       </Dialog>
 
       {/* Add Requirement Dialog */}
-      <Dialog open={showReqDialog} onOpenChange={setShowReqDialog}>
+      <Dialog open={showReqDialog} onOpenChange={(v) => { if (!isCreatingReq) setShowReqDialog(v); }}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>Add Qualification Requirement</DialogTitle>

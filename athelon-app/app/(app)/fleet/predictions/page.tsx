@@ -37,6 +37,16 @@ import {
 import type { Id } from "@/convex/_generated/dataModel";
 import { ActionableEmptyState } from "@/components/zero-state/ActionableEmptyState";
 import { MissingPrereqBanner } from "@/components/zero-state/MissingPrereqBanner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 type Severity = "critical" | "high" | "medium" | "low";
 
@@ -83,6 +93,7 @@ export default function PredictionsPage() {
   const [severityTab, setSeverityTab] = useState("all");
   const [aircraftFilter, setAircraftFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
+  const [dismissTarget, setDismissTarget] = useState<{ id: Id<"maintenancePredictions">; severity: string; description: string } | null>(null);
 
   const predictions = useQuery(
     api.predictions.list,
@@ -312,6 +323,45 @@ export default function PredictionsPage() {
         </Select>
       </div>
 
+      {/* Dismiss confirmation for Critical / High predictions */}
+      <AlertDialog open={!!dismissTarget} onOpenChange={(v) => { if (!v) setDismissTarget(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className={`h-5 w-5 ${dismissTarget?.severity === "critical" ? "text-red-500" : "text-orange-500"}`} />
+              Dismiss {dismissTarget?.severity === "critical" ? "Critical" : "High"} Prediction?
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2">
+                <p className="text-sm text-muted-foreground italic">
+                  &ldquo;{dismissTarget?.description}&rdquo;
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  This prediction will be removed from your active list. Dismissing a{" "}
+                  <span className={`font-semibold ${dismissTarget?.severity === "critical" ? "text-red-500" : "text-orange-500"}`}>
+                    {dismissTarget?.severity}
+                  </span>{" "}
+                  prediction should only be done when you have verified the underlying condition
+                  does not require maintenance action.
+                </p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                if (dismissTarget) handleDismiss(dismissTarget.id);
+                setDismissTarget(null);
+              }}
+            >
+              Dismiss Anyway
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {/* Severity tabs + cards */}
       <Tabs value={severityTab} onValueChange={setSeverityTab}>
         <TabsList>
@@ -424,11 +474,17 @@ export default function PredictionsPage() {
                                 size="sm"
                                 variant="outline"
                                 className="text-xs"
-                                onClick={() =>
-                                  handleDismiss(
-                                    pred._id as Id<"maintenancePredictions">,
-                                  )
-                                }
+                                onClick={() => {
+                                  if (pred.severity === "critical" || pred.severity === "high") {
+                                    setDismissTarget({
+                                      id: pred._id as Id<"maintenancePredictions">,
+                                      severity: pred.severity,
+                                      description: pred.description,
+                                    });
+                                  } else {
+                                    handleDismiss(pred._id as Id<"maintenancePredictions">);
+                                  }
+                                }}
                               >
                                 <XCircle className="h-3 w-3 mr-1" />
                                 Dismiss

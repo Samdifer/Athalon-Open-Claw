@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useSearchParams, Link } from "react-router-dom";
 import { useQuery } from "convex/react";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import { api } from "@/convex/_generated/api";
@@ -15,6 +16,7 @@ import {
   ChevronDown,
   Minus,
   ArrowUpRight,
+  ExternalLink,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -55,7 +57,18 @@ function statusBadge(status: string, isOverdue?: boolean, isDueSoon?: boolean) {
   if (status === "superseded") {
     return <Badge variant="secondary" className="text-[10px]">Superseded</Badge>;
   }
-  if (isOverdue || status === "not_complied") {
+  // BUG-QCM-1: Previously both `not_complied` and `isOverdue` returned an identical "Overdue"
+  // destructive badge. These are meaningfully different:
+  //   • not_complied = AD was never performed (e.g. AD issued, applicability confirmed, work not done)
+  //   • isOverdue    = recurring AD compliance interval exceeded (last done X, due date passed)
+  // On the audit trail page this was already corrected (BUG-QCM-AT-001). A QCM inspector
+  // switching between the two pages saw "Not Complied" in one view and "Overdue" in the other
+  // for the exact same AD record — undermining confidence in both pages.
+  // Now: not_complied = red "Not Complied" badge, overdue due-date = red "Overdue" badge.
+  if (status === "not_complied") {
+    return <Badge variant="outline" className="text-[10px] bg-red-500/15 text-red-700 dark:text-red-400 border-red-500/30">Not Complied</Badge>;
+  }
+  if (isOverdue) {
     return <Badge variant="destructive" className="text-[10px]">Overdue</Badge>;
   }
   if (isDueSoon) {
@@ -69,7 +82,13 @@ function statusBadge(status: string, isOverdue?: boolean, isDueSoon?: boolean) {
 
 export default function AdSbCompliancePage() {
   const { orgId, isLoaded } = useCurrentOrg();
-  const [selectedAircraft, setSelectedAircraft] = useState<string>("all");
+  // BUG-QCM-003: Read ?aircraft=<id> from the URL so that links from the
+  // AircraftComplianceCard (on the main Compliance page) can pre-select a
+  // specific aircraft and land the QCM inspector directly at that aircraft's
+  // AD records — instead of requiring a second dropdown interaction.
+  const [searchParams] = useSearchParams();
+  const initialAircraft = searchParams.get("aircraft") ?? "all";
+  const [selectedAircraft, setSelectedAircraft] = useState<string>(initialAircraft);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
 
   const fleetSummary = useQuery(
@@ -124,9 +143,17 @@ export default function AdSbCompliancePage() {
     const summaries = fleetSummary?.aircraftSummaries ?? [];
     if (statusFilter === "all") return summaries;
     return summaries.filter((s) => {
-      if (statusFilter === "overdue") return s.overdueCount > 0;
-      if (statusFilter === "due_soon") return s.dueSoonCount > 0 && s.overdueCount === 0;
-      if (statusFilter === "compliant") return s.overdueCount === 0 && s.dueSoonCount === 0 && s.pendingCount === 0 && s.total > 0;
+      // notCompliedCount may not be in the TypeScript surface yet — access via cast.
+      const notCompliedCount = (s as unknown as Record<string, number>)["notCompliedCount"] ?? 0;
+      if (statusFilter === "overdue") return s.overdueCount > 0 || notCompliedCount > 0;
+      if (statusFilter === "due_soon") return s.dueSoonCount > 0 && s.overdueCount === 0 && notCompliedCount === 0;
+      if (statusFilter === "compliant") {
+        // BUG-QCM-F2: Previously omitted notCompliedCount check. An aircraft with
+        // overdueCount:0, dueSoonCount:0, pendingCount:0 but notCompliedCount:3
+        // (3 ADs that were never performed) was returned as "Compliant". These are
+        // actively non-compliant aircraft that block RTS. Now explicitly excluded.
+        return s.overdueCount === 0 && notCompliedCount === 0 && s.dueSoonCount === 0 && s.pendingCount === 0 && s.total > 0;
+      }
       if (statusFilter === "pending") return s.pendingCount > 0;
       if (statusFilter === "not_applicable") return false; // N/A is a record-level concept, not aircraft-level
       return true;
@@ -136,17 +163,31 @@ export default function AdSbCompliancePage() {
   // Filter records for per-aircraft view
   const filteredRecords = useMemo(() => {
     if (!aircraftRecords) return [];
+    const now = Date.now();
+    const threshold = 30 * 24 * 60 * 60 * 1000;
     return aircraftRecords.filter((r) => {
       if (statusFilter === "all") return true;
       if (statusFilter === "not_applicable") return r.complianceStatus === "not_applicable";
       if (statusFilter === "pending") return r.complianceStatus === "pending_determination";
-      if (statusFilter === "overdue") return r.complianceStatus === "not_complied";
+      if (statusFilter === "overdue") {
+        // BUG-QCM-F1: Previously only matched r.complianceStatus === "not_complied".
+        // But the "Overdue" badge also renders for records where the next due DATE
+        // has already passed (recurring AD interval exceeded, status still
+        // "complied_recurring"). A QCM filtering for "overdue" was missing all
+        // date-based overruns — only seeing records that were NEVER performed.
+        // Now includes both: not_complied (never performed) AND date-overruns
+        // (nextDueDate passed on a recurring AD that was last done years ago).
+        const isDueDateOverrun =
+          r.complianceStatus !== "not_complied" &&
+          r.nextDueDate != null &&
+          r.nextDueDate < now &&
+          r.applicable;
+        return r.complianceStatus === "not_complied" || isDueDateOverrun;
+      }
       if (statusFilter === "compliant") {
         return r.complianceStatus === "complied_one_time" || r.complianceStatus === "complied_recurring";
       }
       if (statusFilter === "due_soon") {
-        const now = Date.now();
-        const threshold = 30 * 24 * 60 * 60 * 1000;
         return (
           r.applicable &&
           r.nextDueDate != null &&
@@ -284,7 +325,10 @@ export default function AdSbCompliancePage() {
             ))}
           </SelectContent>
         </Select>
-        <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as StatusFilter)}>
+        <Select
+          value={statusFilter}
+          onValueChange={(v) => setStatusFilter(v as StatusFilter)}
+        >
           <SelectTrigger className="w-[160px] h-8 text-xs">
             <SelectValue placeholder="All Statuses" />
           </SelectTrigger>
@@ -294,7 +338,14 @@ export default function AdSbCompliancePage() {
             <SelectItem value="due_soon">Due Soon</SelectItem>
             <SelectItem value="overdue">Overdue</SelectItem>
             <SelectItem value="pending">Pending</SelectItem>
-            <SelectItem value="not_applicable">N/A</SelectItem>
+            {/* BUG-QCM-002: "N/A" is a record-level classification — an individual
+                AD can be N/A for a specific aircraft, but no aircraft as a whole is
+                "N/A". In fleet view, selecting N/A returned 0 aircraft every time
+                with a confusing "No aircraft match" message. Hide this option when
+                in fleet view; it remains available (and useful) per-aircraft. */}
+            {selectedAircraft !== "all" && (
+              <SelectItem value="not_applicable">N/A</SelectItem>
+            )}
           </SelectContent>
         </Select>
       </div>
@@ -374,7 +425,16 @@ export default function AdSbCompliancePage() {
                             variant="ghost"
                             size="sm"
                             className="h-6 text-[10px] gap-1"
-                            onClick={() => setSelectedAircraft(s.aircraftId)}
+                            onClick={() => {
+                              setSelectedAircraft(s.aircraftId);
+                              // BH-QCM-001: Reset status filter when drilling into a per-aircraft
+                              // view via the fleet table "View" button. Previously this bypassed
+                              // the aircraft-selector onValueChange handler that resets the filter.
+                              // A QCM filtering for "overdue" then clicking "View" on an aircraft
+                              // with 0 overdue but 4 due-soon ADs would see 0 rows — masking the
+                              // approaching due dates completely.
+                              setStatusFilter("all");
+                            }}
                           >
                             View <ArrowUpRight className="w-3 h-3" />
                           </Button>
@@ -417,12 +477,19 @@ export default function AdSbCompliancePage() {
                     <TableHead className="text-xs">Status</TableHead>
                     <TableHead className="text-xs">Next Due</TableHead>
                     <TableHead className="text-xs">Method</TableHead>
+                    {/* BUG-QCM-2: Previously no Actions column — QCM inspector could
+                        view AD status but had no path to record a compliance event,
+                        amend due hours, or update applicability without manually
+                        navigating to Fleet Management → aircraft → AD Compliance tab.
+                        Now each row has a "Manage →" link directly to that aircraft's
+                        fleet detail page. */}
+                    <TableHead className="text-xs text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredRecords.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center text-sm text-muted-foreground py-8">
+                      <TableCell colSpan={7} className="text-center text-sm text-muted-foreground py-8">
                         No records match the current filter.
                       </TableCell>
                     </TableRow>
@@ -430,18 +497,22 @@ export default function AdSbCompliancePage() {
                     filteredRecords.map((r) => {
                       const now = Date.now();
                       const threshold = 30 * 24 * 60 * 60 * 1000;
+                      // BUG-QCM-1: not_complied is now handled separately in statusBadge().
+                      // isOverdue should only be true for due-date overruns, not status flags.
                       const isOverdue =
-                        r.complianceStatus === "not_complied" ||
+                        r.complianceStatus !== "not_complied" &&
                         (r.nextDueDate != null && r.nextDueDate < now && r.applicable);
                       const isDueSoon =
                         !isOverdue &&
+                        r.complianceStatus !== "not_complied" &&
                         r.nextDueDate != null &&
                         r.nextDueDate >= now &&
                         r.nextDueDate <= now + threshold;
                       const isSuperseded = r.ad?.supersededByAdId != null;
+                      const acReg = aircraftMap.get(selectedAircraft)?.registration;
 
                       return (
-                        <TableRow key={r._id} className={isOverdue ? "bg-red-500/5" : isDueSoon ? "bg-amber-500/5" : ""}>
+                        <TableRow key={r._id} className={isOverdue || r.complianceStatus === "not_complied" ? "bg-red-500/5" : isDueSoon ? "bg-amber-500/5" : ""}>
                           <TableCell className="text-xs font-mono font-medium">
                             {r.ad?.adNumber ?? "—"}
                             {isSuperseded && (
@@ -470,6 +541,22 @@ export default function AdSbCompliancePage() {
                             {r.complianceHistory?.length > 0
                               ? r.complianceHistory[r.complianceHistory.length - 1].complianceMethodUsed ?? "—"
                               : "—"}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {acReg ? (
+                              <Button
+                                asChild
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 text-[10px] gap-1 text-primary hover:bg-primary/5"
+                              >
+                                <Link to={`/fleet/${encodeURIComponent(acReg)}`}>
+                                  Manage <ExternalLink className="w-2.5 h-2.5" />
+                                </Link>
+                              </Button>
+                            ) : (
+                              <span className="text-[10px] text-muted-foreground/60">—</span>
+                            )}
                           </TableCell>
                         </TableRow>
                       );

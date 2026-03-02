@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useQuery, usePaginatedQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -13,6 +13,8 @@ import {
   AlertTriangle,
   ClipboardList,
   ChevronRight,
+  FileSearch,
+  ShieldAlert,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -180,9 +182,22 @@ function CloseReadinessPanel({
             {/* Blockers */}
             {(readiness.blockers?.length ?? 0) > 0 && (
               <div className="space-y-1.5">
-                <p className="text-xs font-semibold text-red-600 dark:text-red-400 uppercase tracking-wide">
-                  Blockers
-                </p>
+                <div className="flex items-center justify-between">
+                  <p className="text-xs font-semibold text-red-600 dark:text-red-400 uppercase tracking-wide">
+                    Blockers
+                  </p>
+                  {/* BH-QCM-002: Add "View Work Order" link when there are blockers.
+                      Previously the QCM saw blockers listed (e.g. "task cards incomplete",
+                      "RTS not signed") with no way to navigate to the WO to fix them.
+                      They had to manually navigate to /work-orders and search for the WO. */}
+                  {selectedWoId && (
+                    <Button asChild variant="ghost" size="sm" className="h-6 text-[10px] gap-1 text-primary">
+                      <Link to={`/work-orders/${selectedWoId}`}>
+                        View Work Order →
+                      </Link>
+                    </Button>
+                  )}
+                </div>
                 {readiness.blockers!.map((b: string, i: number) => (
                   <div
                     key={i}
@@ -245,13 +260,28 @@ export default function QcmReviewPage() {
   const isLoading =
     prereq.state === "loading_context" || prereq.state === "loading_data";
 
+  // BUG-QCM-001: Filter to only steps that actually need IA action.
+  // listStepsRequiringIAReview returns ALL IA-flagged steps including already-completed
+  // ones. The badge count was showing "12" but only 4 actually needed sign-off.
+  // A QCM inspector treating "12" as a real workload queue would be misled.
+  // - pendingIaSteps: steps that still need IA attention (shown in queue table)
+  // - completedIaStepsCount: steps already signed (shown as a secondary "N done" label)
+  // Cast to IAStep[] (status: string) so the literal-union check doesn't false-alarm.
+  const allIaSteps = (iaSteps ?? []) as IAStep[];
+  const pendingIaSteps = useMemo(
+    () => allIaSteps.filter((s) => s.status !== "complete"),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [iaSteps],
+  );
+  const completedIaStepsCount = allIaSteps.length - pendingIaSteps.length;
+
   // BH-006: Sort steps within each WO group by stepNumber so IA signs off in
   // sequence (1, 2, 3…) rather than in query insertion order (5, 2, 8, 1).
   // Also sort WO groups by work order number so the queue is deterministic —
   // Object.entries() would otherwise return groups in V8 key-insertion order.
-  const grouped = iaSteps
+  const grouped = pendingIaSteps.length > 0
     ? Object.fromEntries(
-        Object.entries(groupByWorkOrder(iaSteps as IAStep[])).map(([key, steps]) => [
+        Object.entries(groupByWorkOrder(pendingIaSteps)).map(([key, steps]) => [
           key,
           [...steps].sort((a, b) => a.stepNumber - b.stepNumber),
         ]),
@@ -259,6 +289,21 @@ export default function QcmReviewPage() {
     : {};
   const woEntries = Object.entries(grouped).sort(([a], [b]) =>
     a.localeCompare(b),
+  );
+
+  // BUG-QCM-004: Memoize the open-WO filter — previously computed inline as an
+  // IIFE in the JSX, re-running on every render trigger (dialog open/close,
+  // selectedWoId change, Convex query updates). With 200 WOs this was O(200)
+  // per render. Now recomputes only when workOrders changes.
+  const openWos = useMemo(
+    () =>
+      (workOrders ?? [])
+        .filter(
+          (wo) =>
+            !["closed", "cancelled", "voided"].includes(wo.status ?? ""),
+        )
+        .map((wo) => ({ _id: wo._id, workOrderNumber: wo.workOrderNumber })),
+    [workOrders],
   );
 
   if (isLoading) {
@@ -292,6 +337,12 @@ export default function QcmReviewPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
+      {/* BUG-QCM-3: Previously the QCM Review page was a dead-end — no quick-access
+          links to the AD/SB tracking page or Audit Trail. A QCM inspector doing a
+          close-readiness review often needs to cross-reference AD compliance and the
+          full audit trail. They had to navigate back to /compliance first. Added two
+          shortcut buttons in the page header so the QCM can jump directly to either
+          compliance tool without losing their place in the review queue. */}
       <div className="flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between">
         <div>
           <h1 className="text-lg sm:text-xl md:text-2xl font-semibold text-foreground flex items-center gap-2">
@@ -302,6 +353,30 @@ export default function QcmReviewPage() {
             IA sign-off queue and work order close readiness
           </p>
         </div>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <Button
+            asChild
+            variant="outline"
+            size="sm"
+            className="h-8 gap-1.5 text-xs border-border/60"
+          >
+            <Link to="/compliance/ad-sb">
+              <ShieldAlert className="w-3.5 h-3.5" />
+              AD/SB Tracking
+            </Link>
+          </Button>
+          <Button
+            asChild
+            variant="outline"
+            size="sm"
+            className="h-8 gap-1.5 text-xs border-border/60"
+          >
+            <Link to="/compliance/audit-trail">
+              <FileSearch className="w-3.5 h-3.5" />
+              Audit Trail
+            </Link>
+          </Button>
+        </div>
       </div>
 
       {/* ── IA Sign-Off Queue ─────────────────────────────────────────────── */}
@@ -310,24 +385,39 @@ export default function QcmReviewPage() {
           <h2 className="text-sm font-semibold text-foreground">
             IA Sign-Off Queue
           </h2>
+          {/* BUG-QCM-001: Badge now shows only PENDING steps that need action,
+              not the total including already-completed ones. A count of "12"
+              when only 4 needed sign-off was confusing and inflated the perceived
+              queue workload. Show a secondary "N done" note when applicable. */}
           {!isLoading && (
-            <Badge
-              variant="secondary"
-              className={`text-[10px] ${
-                (iaSteps?.length ?? 0) > 0
-                  ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20"
-                  : "bg-muted"
-              }`}
-            >
-              {iaSteps?.length ?? 0}
-            </Badge>
+            <>
+              <Badge
+                variant="secondary"
+                className={`text-[10px] ${
+                  pendingIaSteps.length > 0
+                    ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20"
+                    : "bg-muted"
+                }`}
+              >
+                {pendingIaSteps.length} pending
+              </Badge>
+              {completedIaStepsCount > 0 && (
+                <span className="text-[10px] text-muted-foreground/60">
+                  · {completedIaStepsCount} done
+                </span>
+              )}
+            </>
           )}
         </div>
 
-        {!isLoading && (iaSteps?.length ?? 0) === 0 && (
+        {!isLoading && pendingIaSteps.length === 0 && (
           <ActionableEmptyState
             title="No steps pending IA review"
-            missingInfo="Create and advance work orders to generate IA sign-off queue items."
+            missingInfo={
+              completedIaStepsCount > 0
+                ? `All ${completedIaStepsCount} IA-required step${completedIaStepsCount !== 1 ? "s" : ""} have been signed off.`
+                : "Create and advance work orders to generate IA sign-off queue items."
+            }
             primaryActionLabel="Create Work Order"
             primaryActionType="link"
             primaryActionTarget="/work-orders/new"
@@ -419,29 +509,20 @@ export default function QcmReviewPage() {
       </div>
 
       {/* ── Work Order Close Readiness ─────────────────────────────────────── */}
-      {orgId && (workOrders ?? []).length > 0 ? (
-        <CloseReadinessPanel
-          orgId={orgId}
-          workOrders={(workOrders ?? [])
-            // Only show open/active WOs — closed, cancelled, and voided WOs clutter
-            // the dropdown and show misleading readiness results since they're already done
-            .filter(
-              (wo) =>
-                !["closed", "cancelled", "voided"].includes(wo.status ?? ""),
-            )
-            .map((wo) => ({
-              _id: wo._id,
-              workOrderNumber: wo.workOrderNumber,
-            }))}
-        />
-      ) : (
+      {/* BUG-QCM-004: `openWos` is now memoized at the top of the component
+          (recomputes only when workOrders changes). Previously it was computed
+          inside an IIFE here in JSX, re-running on every render trigger including
+          WO selector changes, dialog state, and Convex query updates. */}
+      {!orgId || openWos.length === 0 ? (
         <ActionableEmptyState
-          title="No work orders available for close-readiness review"
-          missingInfo="Create a work order first, then return here to review close blockers and advisories."
+          title="No open work orders available for close-readiness review"
+          missingInfo="All current work orders are closed, cancelled, or voided. Create a new work order to use this panel."
           primaryActionLabel="Create Work Order"
           primaryActionType="link"
           primaryActionTarget="/work-orders/new"
         />
+      ) : (
+        <CloseReadinessPanel orgId={orgId} workOrders={openWos} />
       )}
     </div>
   );

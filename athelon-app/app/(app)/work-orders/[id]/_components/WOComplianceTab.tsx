@@ -225,7 +225,8 @@ function TaskComplianceSection({
             </p>
           </div>
         ) : (
-          <div className="space-y-0">
+          <div className="overflow-x-auto">
+          <div className="space-y-0 min-w-[480px]">{/* BUG-QCM-TC-001: overflow-x-auto + min-w guards fixed grid cols from clipping on narrow viewports */}
             {/* Header row */}
             <div className="grid grid-cols-[60px_1fr_100px_120px_90px] gap-3 px-3 py-2 text-[10px] font-medium text-muted-foreground uppercase tracking-wide border-b border-border/40">
               <span>Task #</span>
@@ -277,6 +278,7 @@ function TaskComplianceSection({
                 </div>
               </div>
             ))}
+          </div>
           </div>
         )}
       </CardContent>

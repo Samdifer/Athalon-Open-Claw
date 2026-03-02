@@ -104,13 +104,19 @@ export function AircraftComplianceCard({
   const cfg = statusConfig[complianceStatus];
   const StatusIcon = cfg.icon;
 
-  // If registration is undefined, link to aircraft ID-based fallback — /fleet/— is a 404
-  const fleetHref = aircraft.currentRegistration
-    ? `/fleet/${encodeURIComponent(aircraft.currentRegistration)}`
-    : `/fleet/${aircraft._id}`;
+  // BUG-QCM-003: Link to the AD/SB Compliance page pre-selecting this aircraft,
+  // not the general fleet detail page. Previously clicking a non-compliant aircraft
+  // from the Compliance dashboard sent the QCM inspector to the aircraft's general
+  // detail page (tabs: Aircraft Info, Times, Work Orders, AD Compliance) — they
+  // had to navigate a second time to reach AD records. Now the link goes directly
+  // to /compliance/ad-sb?aircraft=<id> which auto-selects the aircraft in the
+  // dropdown and shows its AD records immediately.
+  // The old fleet link was: /fleet/${encodeURIComponent(registration)} — now
+  // kept only as a fallback from other navigation contexts.
+  const adSbHref = `/compliance/ad-sb?aircraft=${encodeURIComponent(aircraft._id)}`;
 
   return (
-    <Link to={fleetHref}>
+    <Link to={adSbHref}>
       <Card
         className={`border-border/60 hover:border-primary/30 hover:bg-card/80 transition-all cursor-pointer border-l-2 ${cfg.borderLeft}`}
       >

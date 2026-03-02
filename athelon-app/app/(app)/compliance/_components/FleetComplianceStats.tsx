@@ -144,11 +144,22 @@ export function FleetComplianceStats({ fleet, orgId }: FleetComplianceStatsProps
       </Card>
 
       {/* AD Issues (Phase F) */}
+      {/* BUG-QCM-4: Previously `adIssueCount = overdueAds + pendingAds` was shown
+          as a single number with "N aircraft affected" subtitle. This combined
+          actively non-compliant ADs (overdue) with pending-applicability ADs
+          (pending_determination) into one opaque count. A QCM inspector seeing
+          "5 AD Issues, 3 aircraft affected" couldn't tell if 3 aircraft were
+          airworthiness-blocked (overdue) or just had unreviewed pending ADs.
+          Now the subtitle breaks the count down: "X overdue · Y pending" so the
+          severity is immediately clear. Card border only goes red for overdue ADs;
+          pending ADs get an amber border to reflect their lower urgency. */}
       <Card
         className={`border-border/60 ${
-          adIssueCount > 0
+          overdueAds > 0
             ? "border-red-500/30 bg-red-500/5"
-            : ""
+            : pendingAds > 0
+              ? "border-amber-500/30 bg-amber-500/5"
+              : ""
         }`}
       >
         <CardContent className="p-4">
@@ -162,7 +173,11 @@ export function FleetComplianceStats({ fleet, orgId }: FleetComplianceStatsProps
               ) : (
                 <p
                   className={`text-2xl font-bold mt-1 ${
-                    adIssueCount > 0 ? "text-red-400" : "text-foreground"
+                    overdueAds > 0
+                      ? "text-red-400"
+                      : pendingAds > 0
+                        ? "text-amber-400"
+                        : "text-foreground"
                   }`}
                 >
                   {adIssueCount}
@@ -171,19 +186,31 @@ export function FleetComplianceStats({ fleet, orgId }: FleetComplianceStatsProps
               <p className="text-[11px] text-muted-foreground mt-0.5">
                 {adSummaryLoading
                   ? "loading…"
-                  : adIssueCount > 0
-                    ? `${aircraftWithIssues} aircraft affected`
-                    : "all compliant"}
+                  : adIssueCount === 0
+                    ? "all compliant"
+                    : overdueAds > 0 && pendingAds > 0
+                      ? `${overdueAds} overdue · ${pendingAds} pending`
+                      : overdueAds > 0
+                        ? `${overdueAds} overdue AD${overdueAds !== 1 ? "s" : ""}`
+                        : `${pendingAds} pending review`}
               </p>
             </div>
             <div
               className={`p-2 rounded-lg ${
-                adIssueCount > 0 ? "bg-red-500/10" : "bg-muted/40"
+                overdueAds > 0
+                  ? "bg-red-500/10"
+                  : pendingAds > 0
+                    ? "bg-amber-500/10"
+                    : "bg-muted/40"
               }`}
             >
               <ShieldAlert
                 className={`w-4 h-4 ${
-                  adIssueCount > 0 ? "text-red-400" : "text-muted-foreground"
+                  overdueAds > 0
+                    ? "text-red-400"
+                    : pendingAds > 0
+                      ? "text-amber-400"
+                      : "text-muted-foreground"
                 }`}
               />
             </div>

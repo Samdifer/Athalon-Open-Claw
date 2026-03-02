@@ -13,8 +13,13 @@ import {
   Plane,
   ChevronRight,
   List,
+  ClipboardList,
+  ShieldAlert,
+  ArrowLeft,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -36,7 +41,24 @@ function AdStatusBadge({
   isDueSoon: boolean;
   complianceStatus: string;
 }) {
-  if (complianceStatus === "not_complied" || complianceStatus === "pending_determination") {
+  // BUG-QCM-AT-001: Previously `pending_determination` was combined with
+  // `not_complied` and shown as a red "Not Complied" badge. These are different
+  // states: `not_complied` = actively non-compliant (blocks RTS), while
+  // `pending_determination` = applicability not yet established (needs review,
+  // but does not necessarily mean the aircraft is out of compliance). Showing
+  // pending ADs as "Not Complied" inflated the apparent non-compliance count
+  // on the Audit Trail, alarmed QCM inspectors unnecessarily, and broke trust
+  // in the dashboard. Now `pending_determination` gets its own amber badge,
+  // consistent with how ad-sb/page.tsx's `statusBadge` function handles it.
+  if (complianceStatus === "pending_determination") {
+    return (
+      <Badge variant="outline" className="bg-amber-500/15 text-amber-400 border-amber-500/30 text-[10px]">
+        <Clock className="w-2.5 h-2.5 mr-1" />
+        Pending
+      </Badge>
+    );
+  }
+  if (complianceStatus === "not_complied") {
     return (
       <Badge variant="outline" className="bg-red-500/15 text-red-400 border-red-500/30 text-[10px]">
         <AlertTriangle className="w-2.5 h-2.5 mr-1" />
@@ -273,30 +295,50 @@ function AdCompliancePanel({
 
 // ─── Aircraft Fleet Summary Row ───────────────────────────────────────────────
 
+// Preloaded summary shape accepted from fleet-level queries
+interface PreloadedAdSummary {
+  total: number;
+  overdueCount: number;
+  dueSoonCount: number;
+  notCompliedCount: number;
+}
+
 function AircraftComplianceSummaryRow({
   ac,
   organizationId,
   isSelected,
   onSelect,
+  preloadedSummary,
 }: {
   ac: { _id: Id<"aircraft">; currentRegistration?: string; make?: string; model?: string };
   organizationId: Id<"organizations">;
   isSelected: boolean;
   onSelect: (id: string) => void;
+  /** When provided from fleetAdSummary, skip the per-aircraft Convex query.
+   *  BH-QCM-004: Eliminates N redundant checkAdDueForAircraft subscriptions
+   *  in the fleet overview — one subscription per aircraft was being fired even
+   *  though the fleet summary already contained all needed count fields.
+   *  With 10+ aircraft this was 10+ concurrent Convex subscriptions on page load. */
+  preloadedSummary?: PreloadedAdSummary;
 }) {
-  const result = useQuery(api.adCompliance.checkAdDueForAircraft, {
-    aircraftId: ac._id,
-    organizationId,
-  });
+  // Skip the per-aircraft query when summary is already available from the fleet overview.
+  const result = useQuery(
+    api.adCompliance.checkAdDueForAircraft,
+    preloadedSummary
+      ? "skip"
+      : { aircraftId: ac._id, organizationId },
+  );
 
-  const loading = result === undefined;
+  const loading = !preloadedSummary && result === undefined;
 
-  const { total, overdueCount, dueSoonCount, notCompliedCount } = result?.summary ?? {
-    total: 0,
-    overdueCount: 0,
-    dueSoonCount: 0,
-    notCompliedCount: 0,
-  };
+  const { total, overdueCount, dueSoonCount, notCompliedCount } =
+    preloadedSummary ??
+    result?.summary ?? {
+      total: 0,
+      overdueCount: 0,
+      dueSoonCount: 0,
+      notCompliedCount: 0,
+    };
 
   const hasBlockers = (overdueCount ?? 0) > 0 || (notCompliedCount ?? 0) > 0;
   const hasDueSoon = !hasBlockers && (dueSoonCount ?? 0) > 0;
@@ -380,11 +422,15 @@ function FleetOverviewPanel({
   organizationId,
   selectedAircraftId,
   onSelect,
+  summaryByAircraftId,
 }: {
   aircraft: { _id: Id<"aircraft">; currentRegistration?: string; make?: string; model?: string }[];
   organizationId: Id<"organizations">;
   selectedAircraftId: string | null;
   onSelect: (id: string) => void;
+  /** Pre-built map of aircraft ID → compliance counts from fleet summary.
+   *  When provided, each row skips its own per-aircraft Convex query. */
+  summaryByAircraftId?: Map<string, PreloadedAdSummary>;
 }) {
   if (aircraft.length === 0) {
     return (
@@ -416,6 +462,7 @@ function FleetOverviewPanel({
             organizationId={organizationId}
             isSelected={selectedAircraftId === ac._id}
             onSelect={onSelect}
+            preloadedSummary={summaryByAircraftId?.get(ac._id)}
           />
         ))}
       </CardContent>
@@ -442,6 +489,27 @@ export default function AuditTrailPage() {
     api.adCompliance.getFleetAdSummary,
     orgId ? { organizationId: orgId } : "skip",
   );
+
+  // BH-QCM-004: Pre-build a summary map from fleetAdSummary so each
+  // AircraftComplianceSummaryRow can skip its own per-aircraft query.
+  // The fleet summary already contains overdueCount, dueSoonCount, etc.
+  // Without this map, N per-aircraft Convex subscriptions fire on every
+  // audit trail page load — one per aircraft in the fleet.
+  const summaryByAircraftId = useMemo<Map<string, PreloadedAdSummary>>(() => {
+    const m = new Map<string, PreloadedAdSummary>();
+    if (!fleetAdSummary) return m;
+    for (const s of fleetAdSummary.aircraftSummaries ?? []) {
+      m.set(s.aircraftId, {
+        total: s.total,
+        overdueCount: s.overdueCount,
+        dueSoonCount: s.dueSoonCount,
+        // Access notCompliedCount via type cast — the field exists in the
+        // backend response but isn't in the TypeScript interface yet.
+        notCompliedCount: (s as unknown as Record<string, number>)["notCompliedCount"] ?? 0,
+      });
+    }
+    return m;
+  }, [fleetAdSummary]);
 
   // Build a compliance-tier map: 0 = overdue/not-complied (worst), 1 = pending,
   // 2 = due-soon, 3 = compliant, 4 = no records on file
@@ -471,6 +539,14 @@ export default function AuditTrailPage() {
   return (
     <div className="space-y-5">
       {/* Header */}
+      {/* BUG-QCM-F4: Previously the Audit Trail page had no sub-navigation — a QCM
+          inspector landing here from the Compliance dashboard had no way to reach
+          the main Compliance overview, AD/SB tracking, or QCM Review without using
+          the browser back button or the sidebar. Added: (1) a "← Back to Compliance"
+          ghost button for quick return, (2) "AD/SB Tracking" and "QCM Review"
+          shortcut buttons matching the pattern already used on qcm-review/page.tsx.
+          All four compliance pages are now cross-linked so the QCM can cycle through
+          the full workflow without losing navigation context. */}
       <div className="flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between">
         <div>
           <h1 className="text-lg sm:text-xl md:text-2xl font-semibold text-foreground flex items-center gap-2">
@@ -480,6 +556,41 @@ export default function AuditTrailPage() {
           <p className="text-sm text-muted-foreground mt-0.5">
             Live airworthiness directive status · All overdue checks use current aircraft hours
           </p>
+        </div>
+        <div className="flex items-center gap-2 flex-shrink-0 flex-wrap">
+          <Button
+            asChild
+            variant="ghost"
+            size="sm"
+            className="h-8 gap-1.5 text-xs text-muted-foreground"
+          >
+            <Link to="/compliance">
+              <ArrowLeft className="w-3.5 h-3.5" />
+              Compliance
+            </Link>
+          </Button>
+          <Button
+            asChild
+            variant="outline"
+            size="sm"
+            className="h-8 gap-1.5 text-xs border-border/60"
+          >
+            <Link to="/compliance/ad-sb">
+              <ShieldAlert className="w-3.5 h-3.5" />
+              AD/SB Tracking
+            </Link>
+          </Button>
+          <Button
+            asChild
+            variant="outline"
+            size="sm"
+            className="h-8 gap-1.5 text-xs border-border/60"
+          >
+            <Link to="/compliance/qcm-review">
+              <ClipboardList className="w-3.5 h-3.5" />
+              QCM Review
+            </Link>
+          </Button>
         </div>
       </div>
 
@@ -496,6 +607,7 @@ export default function AuditTrailPage() {
           organizationId={orgId}
           selectedAircraftId={selectedAircraftId}
           onSelect={setSelectedAircraftId}
+          summaryByAircraftId={summaryByAircraftId}
         />
       ) : null}
 
