@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { useRouter } from "@/hooks/useRouter";
 import { useQuery, useMutation, useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -29,7 +29,7 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 
 type LineItemType = "labor" | "part" | "external_service";
 
@@ -133,6 +133,11 @@ function buildLineItemsFromLaborKit(kit: LaborKitForQuote): DraftLineItem[] {
 export default function NewQuotePage() {
   const router = useRouter();
   const { orgId, techId, isLoaded } = useCurrentOrg();
+  const [searchParams] = useSearchParams();
+  const prefillWorkOrderIdParam = searchParams.get("workOrderId");
+  const prefillWorkOrderId = prefillWorkOrderIdParam
+    ? (prefillWorkOrderIdParam as Id<"workOrders">)
+    : undefined;
 
   const customers = useQuery(
     api.customers.listCustomers,
@@ -145,6 +150,15 @@ export default function NewQuotePage() {
   const laborKits = useQuery(
     api.laborKits.listLaborKits,
     orgId ? { orgId } : "skip",
+  );
+  const prefillWorkOrder = useQuery(
+    api.workOrders.getWorkOrder,
+    orgId && prefillWorkOrderId
+      ? {
+          workOrderId: prefillWorkOrderId,
+          organizationId: orgId,
+        }
+      : "skip",
   );
 
   const createQuote = useMutation(api.billing.createQuote);
@@ -166,7 +180,8 @@ export default function NewQuotePage() {
     !isLoaded ||
     customers === undefined ||
     aircraft === undefined ||
-    laborKits === undefined;
+    laborKits === undefined ||
+    (prefillWorkOrderId ? prefillWorkOrder === undefined : false);
 
   const addLineItem = useCallback(() => {
     setLineItems((prev) => [
@@ -253,6 +268,27 @@ export default function NewQuotePage() {
     [aircraft, aircraftId],
   );
 
+  useEffect(() => {
+    if (!prefillWorkOrderId || !prefillWorkOrder?.workOrder) return;
+    const wo = prefillWorkOrder.workOrder;
+    if (!customerId && wo.customerId) {
+      setCustomerId(String(wo.customerId));
+    }
+    if (!aircraftId && wo.aircraftId) {
+      setAircraftId(String(wo.aircraftId));
+    }
+    if (!notes.trim()) {
+      setNotes(`Quote started from scheduling for ${wo.workOrderNumber}.`);
+    }
+  }, [prefillWorkOrderId, prefillWorkOrder, customerId, aircraftId, notes]);
+
+  useEffect(() => {
+    if (!prefillWorkOrderId) return;
+    if (prefillWorkOrder === null) {
+      setError("Referenced work order was not found. Continue by selecting customer and aircraft.");
+    }
+  }, [prefillWorkOrderId, prefillWorkOrder]);
+
   const matchingLaborKits = useMemo(() => {
     const kits = ((laborKits ?? []) as LaborKitForQuote[]).filter((kit) => kit.isActive);
     const normalizedSearch = kitSearch.trim().toLowerCase();
@@ -305,6 +341,7 @@ export default function NewQuotePage() {
         orgId,
         customerId: customerId as Id<"customers">,
         aircraftId: aircraftId as Id<"aircraft">,
+        workOrderId: prefillWorkOrderId,
         createdByTechId: techId as Id<"technicians">,
         notes: notes.trim() || undefined,
       });
@@ -350,7 +387,11 @@ export default function NewQuotePage() {
         </Button>
         <div>
           <h1 className="text-lg sm:text-xl font-semibold text-foreground">New Quote</h1>
-          <p className="text-xs text-muted-foreground mt-0.5">Create a quote in DRAFT status</p>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            {prefillWorkOrder?.workOrder
+              ? `Create a DRAFT quote for ${prefillWorkOrder.workOrder.workOrderNumber}`
+              : "Create a quote in DRAFT status"}
+          </p>
         </div>
       </div>
 

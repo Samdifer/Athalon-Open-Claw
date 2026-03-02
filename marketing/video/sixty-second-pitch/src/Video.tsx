@@ -10,11 +10,18 @@ import { Scene6_Product } from "./scenes/Scene6_Product";
 import { Scene7_Value } from "./scenes/Scene7_Value";
 import { Scene8_CTA } from "./scenes/Scene8_CTA";
 import { SceneTransition } from "./components/SceneTransition";
+import { BackgroundAudio } from "./components/BackgroundAudio";
+import { SoundEffects } from "./components/SoundEffects";
+import { ProgressBar } from "./components/ProgressBar";
 
 export const Video: React.FC = () => {
   return (
     <AbsoluteFill style={{ backgroundColor: "#000" }}>
-      {/* Scene 1 — THE HOOK */}
+      {/* ═══ Audio Layer ═══ */}
+      <BackgroundAudio />
+      <SoundEffects />
+
+      {/* ═══ Scene 1 — THE HOOK ═══ */}
       <Sequence
         from={SCENES.intro.from}
         durationInFrames={SCENES.intro.duration}
@@ -28,7 +35,7 @@ export const Video: React.FC = () => {
         <SceneTransition type="flash" />
       </Sequence>
 
-      {/* Scene 2 — CREDIBILITY */}
+      {/* ═══ Scene 2 — CREDIBILITY ═══ */}
       <Sequence
         from={SCENES.background.from}
         durationInFrames={SCENES.background.duration}
@@ -42,7 +49,7 @@ export const Video: React.FC = () => {
         <SceneTransition type="glitch" />
       </Sequence>
 
-      {/* Scene 3 — THE PROBLEM */}
+      {/* ═══ Scene 3 — THE PROBLEM ═══ */}
       <Sequence
         from={SCENES.problem.from}
         durationInFrames={SCENES.problem.duration}
@@ -53,7 +60,7 @@ export const Video: React.FC = () => {
 
       {/* Transition: color wipe (built into Scene 4's background) */}
 
-      {/* Scene 4 — THE PIVOT */}
+      {/* ═══ Scene 4 — THE PIVOT ═══ */}
       <Sequence
         from={SCENES.pivot.from}
         durationInFrames={SCENES.pivot.duration}
@@ -64,7 +71,7 @@ export const Video: React.FC = () => {
 
       {/* Transition: clean fade (built into Scene 5's opacity) */}
 
-      {/* Scene 5 — THE VISION */}
+      {/* ═══ Scene 5 — THE VISION ═══ */}
       <Sequence
         from={SCENES.vision.from}
         durationInFrames={SCENES.vision.duration}
@@ -75,7 +82,7 @@ export const Video: React.FC = () => {
 
       {/* Hard cut — no transition needed */}
 
-      {/* Scene 6 — THE PRODUCT */}
+      {/* ═══ Scene 6 — THE PRODUCT ═══ */}
       <Sequence
         from={SCENES.product.from}
         durationInFrames={SCENES.product.duration}
@@ -89,7 +96,7 @@ export const Video: React.FC = () => {
         <SceneTransition type="flash" />
       </Sequence>
 
-      {/* Scene 7 — THE VALUE */}
+      {/* ═══ Scene 7 — THE VALUE ═══ */}
       <Sequence
         from={SCENES.value.from}
         durationInFrames={SCENES.value.duration}
@@ -100,7 +107,7 @@ export const Video: React.FC = () => {
 
       {/* Hard cut — maintains urgency */}
 
-      {/* Scene 8 — THE CTA */}
+      {/* ═══ Scene 8 — THE CTA ═══ */}
       <Sequence
         from={SCENES.cta.from}
         durationInFrames={SCENES.cta.duration}
@@ -108,6 +115,9 @@ export const Video: React.FC = () => {
       >
         <Scene8_CTA />
       </Sequence>
+
+      {/* ═══ Global Overlays ═══ */}
+      <ProgressBar color="#3b82f6" height={3} position="bottom" opacity={0.5} />
     </AbsoluteFill>
   );
 };

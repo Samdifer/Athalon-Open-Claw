@@ -719,6 +719,7 @@ export const seedKingAirTbmRepairStation = mutation({
   handler: async (ctx, args) => {
     const now = Date.now();
     const scenarioKey = args.scenarioKey?.trim() || DEFAULT_SCENARIO_KEY;
+    const targetOrgMode = args.targetOrgMode ?? "dedicated";
 
     const existingOrg = await ctx.db
       .query("organizations")
@@ -831,6 +832,74 @@ export const seedKingAirTbmRepairStation = mutation({
     const propellerByAircraftPosition = new Map<string, any>(
       propellerRows.map((propeller) => [`${String(propeller.aircraftId)}::${propeller.position}`, propeller]),
     );
+
+    if (targetOrgMode === "dedicated") {
+      const expectedAircraftTails = new Set<string>(
+        AIRCRAFT_SEED.map((aircraft) => aircraft.tail),
+      );
+      for (const aircraftRow of existingAircraft) {
+        const tailNumber = String(aircraftRow.currentRegistration ?? "");
+        if (expectedAircraftTails.has(tailNumber)) continue;
+
+        const linkedWorkOrders = existingWorkOrders.filter(
+          (workOrder) => workOrder.aircraftId === aircraftRow._id,
+        );
+        for (const linkedWorkOrder of linkedWorkOrders) {
+          const [linkedAssignments, linkedTaskCards, linkedQuotes] = await Promise.all([
+            ctx.db
+              .query("scheduleAssignments")
+              .withIndex("by_work_order", (q) => q.eq("workOrderId", linkedWorkOrder._id))
+              .collect(),
+            ctx.db
+              .query("taskCards")
+              .withIndex("by_work_order", (q) => q.eq("workOrderId", linkedWorkOrder._id))
+              .collect(),
+            ctx.db
+              .query("quotes")
+              .withIndex("by_work_order", (q) => q.eq("workOrderId", linkedWorkOrder._id))
+              .collect(),
+          ]);
+
+          for (const assignment of linkedAssignments) {
+            await ctx.db.delete(assignment._id);
+          }
+          for (const taskCard of linkedTaskCards) {
+            await ctx.db.delete(taskCard._id);
+          }
+
+          for (const quote of linkedQuotes) {
+            const quoteLineItems = await ctx.db
+              .query("quoteLineItems")
+              .withIndex("by_quote", (q) => q.eq("quoteId", quote._id))
+              .collect();
+            for (const lineItem of quoteLineItems) {
+              await ctx.db.delete(lineItem._id);
+            }
+            await ctx.db.delete(quote._id);
+          }
+
+          await ctx.db.delete(linkedWorkOrder._id);
+          workOrderByNumber.delete(linkedWorkOrder.workOrderNumber);
+        }
+
+        for (const engine of engineRows) {
+          if (engine.currentAircraftId !== aircraftRow._id) continue;
+          await ctx.db.delete(engine._id);
+          engineBySerial.delete(engine.serialNumber);
+        }
+
+        for (const propeller of propellerRows) {
+          if (propeller.aircraftId !== aircraftRow._id) continue;
+          await ctx.db.delete(propeller._id);
+          propellerByAircraftPosition.delete(
+            `${String(propeller.aircraftId)}::${propeller.position}`,
+          );
+        }
+
+        await ctx.db.delete(aircraftRow._id);
+        aircraftByTail.delete(tailNumber);
+      }
+    }
 
     const quoteRows = await ctx.db
       .query("quotes")
@@ -1631,6 +1700,53 @@ export const seedKingAirTbmRepairStation = mutation({
       }
     }
 
+    if (targetOrgMode === "dedicated") {
+      const expectedAircraftTails = new Set<string>(
+        AIRCRAFT_SEED.map((aircraft) => aircraft.tail),
+      );
+      const [aircraftRowsPostSeed, workOrdersPostSeed, enginesPostSeed, propellersPostSeed] =
+        await Promise.all([
+          ctx.db
+            .query("aircraft")
+            .withIndex("by_organization", (q) => q.eq("operatingOrganizationId", orgId))
+            .collect(),
+          ctx.db
+            .query("workOrders")
+            .withIndex("by_organization", (q) => q.eq("organizationId", orgId))
+            .collect(),
+          ctx.db
+            .query("engines")
+            .withIndex("by_organization", (q) => q.eq("organizationId", orgId))
+            .collect(),
+          ctx.db
+            .query("propellers")
+            .withIndex("by_organization", (q) => q.eq("organizationId", orgId))
+            .collect(),
+        ]);
+
+      for (const aircraftRow of aircraftRowsPostSeed) {
+        const tailNumber = String(aircraftRow.currentRegistration ?? "");
+        if (expectedAircraftTails.has(tailNumber)) continue;
+
+        const hasLinkedWorkOrders = workOrdersPostSeed.some(
+          (workOrder) => workOrder.aircraftId === aircraftRow._id,
+        );
+        if (hasLinkedWorkOrders) continue;
+
+        for (const engine of enginesPostSeed) {
+          if (engine.currentAircraftId !== aircraftRow._id) continue;
+          await ctx.db.delete(engine._id);
+        }
+
+        for (const propeller of propellersPostSeed) {
+          if (propeller.aircraftId !== aircraftRow._id) continue;
+          await ctx.db.delete(propeller._id);
+        }
+
+        await ctx.db.delete(aircraftRow._id);
+      }
+    }
+
     const [
       locations,
       bays,
@@ -1726,7 +1842,7 @@ export const seedKingAirTbmRepairStation = mutation({
 
     return {
       scenarioKey,
-      targetOrgMode: args.targetOrgMode ?? "dedicated",
+      targetOrgMode,
       organizationId: orgId,
       locationIds: locationIdByCode,
       seededCounts: actualCounts,

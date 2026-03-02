@@ -24,6 +24,8 @@ import CapacityForecaster, { type CapacityPoint } from "./_components/CapacityFo
 import SchedulingAnalyticsPanel from "./_components/SchedulingAnalyticsPanel";
 import SchedulingRosterPanel from "./_components/SchedulingRosterPanel";
 import { SchedulingCommandCenterDialog } from "./_components/SchedulingCommandCenterDialog";
+import { SchedulingOnboardingPanel } from "./_components/SchedulingOnboardingPanel";
+import { SchedulingQuoteWorkspaceDialog } from "./_components/SchedulingQuoteWorkspaceDialog";
 import DraggableWindow from "./_components/DraggableWindow";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -46,6 +48,7 @@ import {
   BarChart3,
   Command,
   Edit,
+  FileText,
   ListChecks,
   Maximize2,
   Minimize2,
@@ -122,6 +125,15 @@ function GanttSkeleton() {
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const DEFAULT_TIMELINE_DAYS = 120;
+const SCHEDULING_ONBOARDING_STORAGE_VERSION = 1;
+
+type SchedulingOnboardingRecord = {
+  version: number;
+  seenAt: number;
+  skippedAt?: number;
+  completedAt?: number;
+  defaultsAppliedAt?: number;
+};
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PAGE COMPONENT
@@ -129,7 +141,7 @@ const DEFAULT_TIMELINE_DAYS = 120;
 
 export default function SchedulingPage() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const { orgId, isLoaded } = useCurrentOrg();
+  const { orgId, techId, isLoaded } = useCurrentOrg();
   const { selectedLocationId } = useSelectedLocation(orgId);
   const selectedShopLocationFilter = useMemo(
     () =>
@@ -145,6 +157,11 @@ export default function SchedulingPage() {
   const [backlogOpen, setBacklogOpen] = useState(false);
   const [graveyardOpen, setGraveyardOpen] = useState(false);
   const [commandCenterOpen, setCommandCenterOpen] = useState(false);
+  const [quoteWorkspaceOpen, setQuoteWorkspaceOpen] = useState(false);
+  const [onboardingSetupOpen, setOnboardingSetupOpen] = useState(false);
+  const [onboardingRecord, setOnboardingRecord] = useState<SchedulingOnboardingRecord | null>(
+    null,
+  );
   const [autoScheduling, setAutoScheduling] = useState(false);
   const [magicOpen, setMagicOpen] = useState(false);
   const [magicRunning, setMagicRunning] = useState(false);
@@ -302,6 +319,84 @@ export default function SchedulingPage() {
     [workOrders],
   );
 
+  const quoteWorkspaceWorkOrders = useMemo(
+    () =>
+      workOrders
+        .filter((wo) => !["closed", "cancelled", "voided"].includes(wo.status))
+        .sort((a, b) => {
+          const priorityWeight = (priority: "routine" | "urgent" | "aog") => {
+            if (priority === "aog") return 0;
+            if (priority === "urgent") return 1;
+            return 2;
+          };
+          return (
+            priorityWeight(a.priority) - priorityWeight(b.priority) ||
+            a.workOrderNumber.localeCompare(b.workOrderNumber)
+          );
+        })
+        .map((wo) => ({
+          _id: String(wo._id),
+          workOrderNumber: wo.workOrderNumber,
+          description: wo.description,
+          priority: wo.priority,
+          aircraft: wo.aircraft,
+          sourceQuoteId: wo.sourceQuoteId,
+          quoteNumber: wo.quoteNumber,
+          quoteStatus: wo.quoteStatus,
+        })),
+    [workOrders],
+  );
+
+  const initialQuoteWorkspaceWorkOrderId = useMemo(
+    () => magicSelectedIds[0] ?? quoteWorkspaceWorkOrders[0]?._id,
+    [magicSelectedIds, quoteWorkspaceWorkOrders],
+  );
+
+  const onboardingStorageKey = useMemo(() => {
+    if (!orgId || !techId) return null;
+    return `athelon:scheduling:onboarding:v${SCHEDULING_ONBOARDING_STORAGE_VERSION}:${orgId}:${techId}`;
+  }, [orgId, techId]);
+
+  const persistOnboardingRecord = useCallback(
+    (patch: Partial<SchedulingOnboardingRecord>) => {
+      if (!onboardingStorageKey || typeof window === "undefined") return;
+      setOnboardingRecord((prev) => {
+        const base: SchedulingOnboardingRecord = prev ?? {
+          version: SCHEDULING_ONBOARDING_STORAGE_VERSION,
+          seenAt: Date.now(),
+        };
+        const next: SchedulingOnboardingRecord = {
+          ...base,
+          ...patch,
+          version: SCHEDULING_ONBOARDING_STORAGE_VERSION,
+        };
+        window.localStorage.setItem(onboardingStorageKey, JSON.stringify(next));
+        return next;
+      });
+    },
+    [onboardingStorageKey],
+  );
+
+  const markOnboardingSkipped = useCallback(() => {
+    const now = Date.now();
+    persistOnboardingRecord({
+      skippedAt: now,
+      completedAt: undefined,
+    });
+    setOnboardingSetupOpen(false);
+    toast.info("Scheduling onboarding skipped for now");
+  }, [persistOnboardingRecord]);
+
+  const markOnboardingCompleted = useCallback(() => {
+    const now = Date.now();
+    persistOnboardingRecord({
+      completedAt: now,
+      skippedAt: undefined,
+    });
+    setOnboardingSetupOpen(false);
+    toast.success("Scheduling onboarding complete");
+  }, [persistOnboardingRecord]);
+
   useEffect(() => {
     const candidateIds = new Set(magicCandidates.map((wo) => String(wo._id)));
     setMagicSelectedIds((prev) => {
@@ -319,6 +414,49 @@ export default function SchedulingPage() {
       return filtered;
     });
   }, [magicCandidates]);
+
+  useEffect(() => {
+    if (!onboardingStorageKey || typeof window === "undefined") {
+      setOnboardingRecord(null);
+      return;
+    }
+
+    const raw = window.localStorage.getItem(onboardingStorageKey);
+    const now = Date.now();
+    let next: SchedulingOnboardingRecord | null = null;
+
+    if (raw) {
+      try {
+        const parsed = JSON.parse(raw) as SchedulingOnboardingRecord;
+        if (
+          typeof parsed === "object" &&
+          parsed !== null &&
+          typeof parsed.seenAt === "number" &&
+          parsed.version === SCHEDULING_ONBOARDING_STORAGE_VERSION
+        ) {
+          next = parsed;
+        }
+      } catch {
+        next = null;
+      }
+    }
+
+    if (!next) {
+      next = {
+        version: SCHEDULING_ONBOARDING_STORAGE_VERSION,
+        seenAt: now,
+      };
+      window.localStorage.setItem(onboardingStorageKey, JSON.stringify(next));
+    }
+
+    setOnboardingRecord(next);
+  }, [onboardingStorageKey]);
+
+  useEffect(() => {
+    if (onboardingRecord?.completedAt || onboardingRecord?.skippedAt) {
+      setOnboardingSetupOpen(false);
+    }
+  }, [onboardingRecord]);
 
   // ── Conflict detection ────────────────────────────────────────────────
   const conflicts = useMemo(() => {
@@ -766,6 +904,17 @@ export default function SchedulingPage() {
     [schedulingSettings],
   );
 
+  const onboardingDefaults = useMemo(
+    () => ({
+      capacityBufferPercent: schedulingSettings?.capacityBufferPercent ?? 15,
+      defaultStartHour: schedulingSettings?.defaultStartHour ?? 7,
+      defaultEndHour: schedulingSettings?.defaultEndHour ?? 17,
+      defaultEfficiencyMultiplier: schedulingSettings?.defaultEfficiencyMultiplier ?? 1,
+      defaultShopRate: planningRates.defaultShopRate,
+    }),
+    [schedulingSettings, planningRates.defaultShopRate],
+  );
+
   // ── Auto-schedule handler ─────────────────────────────────────────────
   async function handleAutoSchedule() {
     if (!orgId) return;
@@ -993,6 +1142,8 @@ export default function SchedulingPage() {
       if (beforeSignature === afterSignature) {
         if (args.mode === "block") {
           toast.info("At least one active work day is required");
+        } else {
+          toast.info("No distributable effort available for this assignment");
         }
         return;
       }
@@ -1050,6 +1201,50 @@ export default function SchedulingPage() {
       });
     },
     [orgId, upsertSchedulingSettings],
+  );
+
+  const handleApplyOnboardingDefaults = useCallback(
+    async (next: {
+      capacityBufferPercent: number;
+      defaultStartHour: number;
+      defaultEndHour: number;
+      defaultEfficiencyMultiplier: number;
+      defaultShopRate: number;
+    }) => {
+      if (!orgId) throw new Error("Missing organization context");
+
+      await Promise.all([
+        upsertSchedulingSettings({
+          organizationId: orgId,
+          capacityBufferPercent: next.capacityBufferPercent,
+          defaultStartHour: next.defaultStartHour,
+          defaultEndHour: next.defaultEndHour,
+          defaultEfficiencyMultiplier: next.defaultEfficiencyMultiplier,
+        }),
+        upsertPlanningFinancialSettings({
+          organizationId: orgId,
+          defaultShopRate: next.defaultShopRate,
+          defaultLaborCostRate: planningRates.defaultLaborCostRate,
+          monthlyFixedOverhead: planningRates.monthlyFixedOverhead,
+          monthlyVariableOverhead: planningRates.monthlyVariableOverhead,
+          annualCapexAssumption: planningRates.annualCapexAssumption,
+        }),
+      ]);
+
+      persistOnboardingRecord({
+        defaultsAppliedAt: Date.now(),
+      });
+    },
+    [
+      orgId,
+      planningRates.defaultLaborCostRate,
+      planningRates.monthlyFixedOverhead,
+      planningRates.monthlyVariableOverhead,
+      planningRates.annualCapexAssumption,
+      persistOnboardingRecord,
+      upsertPlanningFinancialSettings,
+      upsertSchedulingSettings,
+    ],
   );
 
   function openMagicScheduler() {
@@ -1230,6 +1425,12 @@ export default function SchedulingPage() {
     );
   }
 
+  const onboardingVisible =
+    !isFullscreen &&
+    !!onboardingRecord &&
+    !onboardingRecord.completedAt &&
+    !onboardingRecord.skippedAt;
+
   return (
     <div
       className={
@@ -1279,6 +1480,18 @@ export default function SchedulingPage() {
         >
           <Command className="w-3.5 h-3.5" />
           Command Center
+        </Button>
+
+        <Button
+          variant={quoteWorkspaceOpen ? "secondary" : "outline"}
+          size="sm"
+          className="text-xs h-7"
+          onClick={() => setQuoteWorkspaceOpen(true)}
+          disabled={quoteWorkspaceWorkOrders.length === 0}
+          data-testid="toggle-quote-workspace"
+        >
+          <FileText className="w-3.5 h-3.5" />
+          Quote Workspace
         </Button>
 
         <Button
@@ -1395,6 +1608,17 @@ export default function SchedulingPage() {
         </Button>
         </div>
       )}
+
+      <SchedulingOnboardingPanel
+        visible={onboardingVisible}
+        setupOpen={onboardingSetupOpen}
+        onSetupOpenChange={setOnboardingSetupOpen}
+        defaults={onboardingDefaults}
+        defaultsAppliedAt={onboardingRecord?.defaultsAppliedAt}
+        onApplyDefaults={handleApplyOnboardingDefaults}
+        onSkip={markOnboardingSkipped}
+        onComplete={markOnboardingCompleted}
+      />
 
       {isFullscreen && (
         <div className="absolute top-3 right-3 z-50">
@@ -1635,6 +1859,13 @@ export default function SchedulingPage() {
         isOpen={graveyardOpen}
         onClose={() => setGraveyardOpen(false)}
         onRestore={handleRestoreAssignment}
+      />
+
+      <SchedulingQuoteWorkspaceDialog
+        open={quoteWorkspaceOpen}
+        onOpenChange={setQuoteWorkspaceOpen}
+        workOrders={quoteWorkspaceWorkOrders}
+        initialWorkOrderId={initialQuoteWorkspaceWorkOrderId}
       />
 
       <SchedulingCommandCenterDialog

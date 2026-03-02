@@ -1,27 +1,87 @@
 import { test, expect } from "@playwright/test";
 import path from "path";
+import { execSync } from "child_process";
 
 const SEEDED_AUTH_FILE = path.join(
   __dirname,
   "../playwright/.auth/seeded-admin.json",
 );
+const APP_ROOT = path.resolve(__dirname, "..");
 
 test.use({ storageState: SEEDED_AUTH_FILE });
 
+async function openScheduling(
+  page: import("@playwright/test").Page,
+  options?: { resetOnboarding?: boolean; dismissOnboarding?: boolean },
+) {
+  await page.goto("/scheduling", {
+    waitUntil: "domcontentloaded",
+    timeout: 45_000,
+  });
+
+  await page.evaluate(({ resetOnboarding = false }) => {
+    const keys = Object.keys(window.localStorage);
+    for (const key of keys) {
+      if (key.startsWith("athelon:selected-location:")) {
+        window.localStorage.setItem(key, "all");
+      }
+      if (resetOnboarding && key.startsWith("athelon:scheduling:onboarding:")) {
+        window.localStorage.removeItem(key);
+      }
+    }
+  }, { resetOnboarding: options?.resetOnboarding ?? false });
+
+  await page.reload({ waitUntil: "domcontentloaded" });
+
+  if (options?.dismissOnboarding) {
+    const skipOnboarding = page.getByTestId("onboarding-skip-banner");
+    try {
+      await expect(skipOnboarding).toBeVisible({ timeout: 4_000 });
+      await skipOnboarding.click();
+    } catch {
+      // Banner may not exist if onboarding is already completed/skipped.
+    }
+  }
+}
+
+async function waitForSchedulerHydration(page: import("@playwright/test").Page) {
+  await expect(page.getByTestId("gantt-timeline-scroll")).toBeVisible({ timeout: 20_000 });
+  await page.waitForTimeout(1_250);
+}
+
+async function getScheduledBarCount(page: import("@playwright/test").Page) {
+  const bars = page.locator('[data-testid^="gantt-bar-"]');
+  await waitForSchedulerHydration(page);
+  try {
+    await expect(bars.first()).toBeVisible({ timeout: 12_000 });
+  } catch {
+    // Allow caller to decide whether to skip/fail if no bars are present.
+  }
+  return bars.count();
+}
+
 test.describe("Wave 8: Seeded scheduler user stories", () => {
+  test.beforeAll(() => {
+    execSync("npm run seed:e2e:scheduler-stories", {
+      cwd: APP_ROOT,
+      stdio: "pipe",
+      env: process.env,
+    });
+  });
+
   test("backlog work orders can be dropped onto a bay lane to create assignments", async ({
     page,
   }) => {
-    await page.goto("/scheduling", {
-      waitUntil: "domcontentloaded",
-      timeout: 45_000,
-    });
+    await openScheduling(page, { dismissOnboarding: true });
+    await waitForSchedulerHydration(page);
 
     const unscheduledButton = page
       .locator("button")
       .filter({ hasText: /unscheduled/i })
       .first();
-    if ((await unscheduledButton.count()) === 0) {
+    try {
+      await expect(unscheduledButton).toBeVisible({ timeout: 8_000 });
+    } catch {
       test.skip(true, "Seeded org has no unscheduled work orders.");
     }
 
@@ -56,10 +116,7 @@ test.describe("Wave 8: Seeded scheduler user stories", () => {
   });
 
   test("bay row reorder controls update persisted board ordering", async ({ page }) => {
-    await page.goto("/scheduling", {
-      waitUntil: "domcontentloaded",
-      timeout: 45_000,
-    });
+    await openScheduling(page, { dismissOnboarding: true });
 
     const rowLabels = page.locator('[data-testid^="gantt-row-label-"]');
     if ((await rowLabels.count()) < 2) {
@@ -79,6 +136,7 @@ test.describe("Wave 8: Seeded scheduler user stories", () => {
         waitUntil: "domcontentloaded",
         timeout: 45_000,
       });
+      await openScheduling(page, { dismissOnboarding: true });
     }
 
     await expect(rowLabels.nth(1)).toBeVisible({ timeout: 20_000 });
@@ -96,15 +154,14 @@ test.describe("Wave 8: Seeded scheduler user stories", () => {
   });
 
   test("scheduler graveyard supports archive and restore flows", async ({ page }) => {
-    await page.goto("/scheduling", {
-      waitUntil: "domcontentloaded",
-      timeout: 45_000,
-    });
-
-    const archiveButton = page.locator('[data-testid^="archive-assignment-"]').first();
-    if ((await archiveButton.count()) === 0) {
+    await openScheduling(page, { dismissOnboarding: true });
+    const scheduledBarCount = await getScheduledBarCount(page);
+    if (scheduledBarCount === 0) {
       test.skip(true, "No scheduled bars are currently visible to archive.");
     }
+
+    const archiveButton = page.locator('[data-testid^="archive-assignment-"]').first();
+    await expect(archiveButton).toBeVisible({ timeout: 12_000 });
 
     const archiveLabel = (await archiveButton.getAttribute("aria-label")) ?? "";
     const archivedWoNumber = archiveLabel.replace(/^Archive\s+/, "").trim();
@@ -127,10 +184,7 @@ test.describe("Wave 8: Seeded scheduler user stories", () => {
   });
 
   test("scheduler supports fullscreen route mode and exit", async ({ page }) => {
-    await page.goto("/scheduling", {
-      waitUntil: "domcontentloaded",
-      timeout: 45_000,
-    });
+    await openScheduling(page, { dismissOnboarding: true });
 
     await page.getByTestId("scheduling-enter-fullscreen").click();
     await expect(page.getByTestId("scheduling-exit-fullscreen")).toBeVisible({
@@ -148,10 +202,7 @@ test.describe("Wave 8: Seeded scheduler user stories", () => {
   test("scheduler toggles analytics and roster panels and supports popout", async ({
     page,
   }) => {
-    await page.goto("/scheduling", {
-      waitUntil: "domcontentloaded",
-      timeout: 45_000,
-    });
+    await openScheduling(page, { dismissOnboarding: true });
 
     await page.getByTestId("toggle-analytics-panel").click();
     await expect(page.getByTestId("analytics-panel")).toBeVisible({ timeout: 15_000 });
@@ -173,10 +224,7 @@ test.describe("Wave 8: Seeded scheduler user stories", () => {
   test("scheduler command center supports quick configuration and financial saves", async ({
     page,
   }) => {
-    await page.goto("/scheduling", {
-      waitUntil: "domcontentloaded",
-      timeout: 45_000,
-    });
+    await openScheduling(page, { dismissOnboarding: true });
 
     await page.getByTestId("toggle-command-center").click();
     await expect(
@@ -203,13 +251,143 @@ test.describe("Wave 8: Seeded scheduler user stories", () => {
     ).toBeHidden({ timeout: 15_000 });
   });
 
+  test("scheduler first-run onboarding supports setup defaults and completion", async ({
+    page,
+  }) => {
+    await openScheduling(page, { resetOnboarding: true });
+    await waitForSchedulerHydration(page);
+
+    const onboardingBanner = page.getByTestId("scheduling-onboarding-banner");
+    await expect(onboardingBanner).toBeVisible({ timeout: 15_000 });
+
+    await page.getByTestId("onboarding-run-setup").click();
+    await expect(page.getByTestId("scheduling-onboarding-dialog")).toBeVisible({
+      timeout: 15_000,
+    });
+
+    await page.getByLabel("Capacity Buffer %").fill("19");
+    await page.getByLabel("Default Shop Rate").fill("185");
+    await page.getByTestId("onboarding-apply-defaults").click();
+    await expect(page.getByText("Scheduling onboarding defaults applied")).toBeVisible({
+      timeout: 15_000,
+    });
+
+    await page.getByTestId("onboarding-complete").click();
+    await expect(onboardingBanner).toBeHidden({ timeout: 15_000 });
+
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await expect(page.getByTestId("scheduling-onboarding-banner")).toBeHidden({
+      timeout: 15_000,
+    });
+  });
+
+  test("scheduler quote workspace opens embedded quote flow from board selection", async ({
+    page,
+  }) => {
+    await openScheduling(page, { dismissOnboarding: true });
+    const scheduledBarCount = await getScheduledBarCount(page);
+    if (scheduledBarCount === 0) {
+      test.skip(true, "No scheduled bars are currently visible for quote workspace.");
+    }
+
+    const firstBar = page.locator('[data-testid^="gantt-bar-"]').first();
+    await expect(firstBar).toBeVisible({ timeout: 12_000 });
+
+    const barTitle = (await firstBar.getAttribute("title")) ?? "";
+    const woNumber = barTitle.split("—")[0]?.trim() ?? "";
+
+    await page.getByTestId("toggle-magic-selection-mode").click();
+    await firstBar.click();
+
+    await page.getByTestId("toggle-quote-workspace").click();
+    await expect(page.getByTestId("quote-workspace-dialog")).toBeVisible({
+      timeout: 20_000,
+    });
+    const quoteIframe = page.getByTestId("quote-workspace-iframe");
+    await expect(quoteIframe).toBeVisible({ timeout: 20_000 });
+    const iframeSrc = (await quoteIframe.getAttribute("src")) ?? "";
+    expect(iframeSrc).toContain("/billing/quotes/");
+
+    if (woNumber.length > 0) {
+      await expect(page.getByText(woNumber).first()).toBeVisible({ timeout: 15_000 });
+    }
+  });
+
+  test("scheduler edit mode supports distribute and block day controls", async ({
+    page,
+  }) => {
+    await openScheduling(page, { dismissOnboarding: true });
+    const scheduledBarCount = await getScheduledBarCount(page);
+    if (scheduledBarCount === 0) {
+      test.skip(true, "No scheduled bars are currently visible to edit.");
+    }
+
+    const bars = page.locator('[data-testid^="gantt-bar-"]');
+    await expect(bars.first()).toBeVisible({ timeout: 12_000 });
+
+    await page.getByTestId("toggle-schedule-edit-mode").click();
+    await expect(page.getByTestId("gantt-edit-mode-banner")).toBeVisible({ timeout: 15_000 });
+
+    await page.getByTestId("schedule-edit-tool-distribute").click();
+    const firstDaySegment = page.locator('[data-testid^="gantt-day-segment-"]').first();
+    await expect(firstDaySegment).toBeVisible({ timeout: 15_000 });
+    await firstDaySegment.click();
+    await expect(
+      page.getByText(
+        /Day model updated \(effort redistributed\)|No distributable effort available for this assignment/i,
+      ),
+    ).toBeVisible({ timeout: 15_000 });
+
+    await page.getByTestId("schedule-edit-tool-block").click();
+    await firstDaySegment.click();
+    await expect(
+      page.getByText(
+        /Day model updated \(block toggle\)|At least one active work day is required/i,
+      ),
+    ).toBeVisible({ timeout: 15_000 });
+
+    await page.keyboard.press("Escape");
+    await expect(page.getByTestId("gantt-edit-mode-banner")).toBeHidden({
+      timeout: 15_000,
+    });
+  });
+
+  test("scheduler board-native magic selection carries into magic scheduler dialog", async ({
+    page,
+  }) => {
+    await openScheduling(page, { dismissOnboarding: true });
+    const scheduledBarCount = await getScheduledBarCount(page);
+    if (scheduledBarCount === 0) {
+      test.skip(true, "No scheduled bars are currently visible for board selection.");
+    }
+
+    const firstBar = page.locator('[data-testid^="gantt-bar-"]').first();
+    await expect(firstBar).toBeVisible({ timeout: 12_000 });
+
+    const barTitle = (await firstBar.getAttribute("title")) ?? "";
+    const woNumber = barTitle.split("—")[0]?.trim() ?? "";
+
+    await page.getByTestId("toggle-magic-selection-mode").click();
+    await firstBar.click();
+    await expect(firstBar).toHaveAttribute("data-magic-selected", "true");
+
+    await page.getByRole("button", { name: "Magic Scheduler" }).click();
+    await expect(page.getByRole("heading", { name: "Magic Scheduler" })).toBeVisible({
+      timeout: 15_000,
+    });
+    await expect(page.getByTestId("magic-selected-count")).toContainText("1 selected.");
+
+    if (woNumber.length > 0) {
+      await expect(page.getByLabel(`Select ${woNumber}`).first()).toBeChecked({
+        timeout: 15_000,
+      });
+    }
+  });
+
   test("planner sees converted quote continuity in Magic Scheduler", async ({
     page,
   }) => {
-    await page.goto("/scheduling", {
-      waitUntil: "domcontentloaded",
-      timeout: 45_000,
-    });
+    await openScheduling(page, { dismissOnboarding: true });
 
     await expect(
       page.getByRole("button", { name: "Magic Scheduler" }),
@@ -234,10 +412,7 @@ test.describe("Wave 8: Seeded scheduler user stories", () => {
   test("legacy scheduled work orders are backfilled into planner lanes with quote links", async ({
     page,
   }) => {
-    await page.goto("/scheduling", {
-      waitUntil: "domcontentloaded",
-      timeout: 45_000,
-    });
+    await openScheduling(page, { dismissOnboarding: true });
 
     const directBar = page.locator('[title*="E2E-WO-DIRECT-001"]').first();
     await directBar.scrollIntoViewIfNeeded();
@@ -259,10 +434,7 @@ test.describe("Wave 8: Seeded scheduler user stories", () => {
   test("scheduler shows docked daily P&L + capacity visuals and supports panel popout", async ({
     page,
   }) => {
-    await page.goto("/scheduling", {
-      waitUntil: "domcontentloaded",
-      timeout: 45_000,
-    });
+    await openScheduling(page, { dismissOnboarding: true });
 
     await expect(page.getByTestId("daily-pnl-panel")).toBeVisible({ timeout: 20_000 });
     await expect(page.getByTestId("capacity-forecaster-panel")).toBeVisible({
@@ -287,10 +459,7 @@ test.describe("Wave 8: Seeded scheduler user stories", () => {
   test("timeline scrolling stays synchronized between gantt, daily P&L, and capacity panels", async ({
     page,
   }) => {
-    await page.goto("/scheduling", {
-      waitUntil: "domcontentloaded",
-      timeout: 45_000,
-    });
+    await openScheduling(page, { dismissOnboarding: true });
 
     const ganttScroll = page.getByTestId("gantt-timeline-scroll");
     const pnlScroll = page.getByTestId("daily-pnl-timeline-scroll");

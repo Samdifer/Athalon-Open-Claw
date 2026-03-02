@@ -44,7 +44,24 @@ function parseWorkOrderSequenceForBase(
 async function resolveBaseIdentifier(
   ctx: MutationCtx,
   organizationId: Id<"organizations">,
+  shopLocationId?: Id<"shopLocations">,
 ): Promise<string> {
+  if (shopLocationId) {
+    const explicitLocation = await ctx.db.get(shopLocationId);
+    if (!explicitLocation || explicitLocation.organizationId !== organizationId) {
+      throw new Error(
+        `Shop location ${shopLocationId} not found or does not belong to organization ${organizationId}.`,
+      );
+    }
+
+    const explicitIdentifier =
+      normalizeBaseIdentifier(explicitLocation.code) ??
+      normalizeBaseIdentifier(explicitLocation.name ?? "");
+    if (explicitIdentifier) {
+      return explicitIdentifier;
+    }
+  }
+
   const locations = await ctx.db
     .query("shopLocations")
     .withIndex("by_organization", (q) =>
@@ -104,8 +121,13 @@ async function seedCounterFromExistingWorkOrders(
 export async function reserveNextWorkOrderNumber(
   ctx: MutationCtx,
   organizationId: Id<"organizations">,
+  shopLocationId?: Id<"shopLocations">,
 ): Promise<string> {
-  const baseIdentifier = await resolveBaseIdentifier(ctx, organizationId);
+  const baseIdentifier = await resolveBaseIdentifier(
+    ctx,
+    organizationId,
+    shopLocationId,
+  );
   const counterType = `${COUNTER_TYPE_PREFIX}:${baseIdentifier}`;
 
   let counter = await ctx.db

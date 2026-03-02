@@ -685,9 +685,25 @@ export const convertQuoteToWorkOrder = mutation({
       now,
     );
 
+    let locationScopedNumberingId: Id<"shopLocations"> | undefined;
+    if (quote.workOrderId) {
+      const sourceWorkOrder = await ctx.db.get(quote.workOrderId);
+      if (
+        sourceWorkOrder &&
+        sourceWorkOrder.organizationId === args.orgId &&
+        sourceWorkOrder.shopLocationId
+      ) {
+        locationScopedNumberingId = sourceWorkOrder.shopLocationId;
+      }
+    }
+
     let workOrderNumber: string | null = null;
     for (let attempt = 0; attempt < 5; attempt += 1) {
-      const candidate = await reserveNextWorkOrderNumber(ctx, args.orgId);
+      const candidate = await reserveNextWorkOrderNumber(
+        ctx,
+        args.orgId,
+        locationScopedNumberingId,
+      );
       const existingWO = await ctx.db
         .query("workOrders")
         .withIndex("by_number", (q) =>

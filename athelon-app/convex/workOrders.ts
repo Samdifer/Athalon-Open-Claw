@@ -260,12 +260,17 @@ export const createWorkOrder = mutation({
     }
 
     // ── INV-14: Generate an immutable org-unique work order number ──────────
-    // Format: WO-{BASE}-{N}. BASE comes from primary/active shop location code
-    // (2-3 letters); N is an unpadded integer sequence starting at 1.
+    // Format: WO-{BASE}-{N}. BASE comes from the explicit work-order location
+    // when provided; otherwise we fall back to org primary/active location code.
+    // N is an unpadded integer sequence starting at 1.
     let workOrderNumber: string | null = null;
 
     for (let attempt = 0; attempt < 5; attempt += 1) {
-      const candidate = await reserveNextWorkOrderNumber(ctx, args.organizationId);
+      const candidate = await reserveNextWorkOrderNumber(
+        ctx,
+        args.organizationId,
+        args.shopLocationId,
+      );
       const existingWO = await ctx.db
         .query("workOrders")
         .withIndex("by_number", (q) =>
