@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
@@ -40,6 +41,9 @@ interface BacklogSidebarProps {
   workOrders: WorkOrderWithRisk[];
   isOpen: boolean;
   onClose: () => void;
+  selectionMode?: boolean;
+  selectedWorkOrderIds?: string[];
+  onToggleSelection?: (workOrderId: string) => void;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -78,7 +82,14 @@ function PriorityBadge({ priority }: { priority: WorkOrderWithRisk["priority"] }
 // COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
 
-export function BacklogSidebar({ workOrders, isOpen, onClose }: BacklogSidebarProps) {
+export function BacklogSidebar({
+  workOrders,
+  isOpen,
+  onClose,
+  selectionMode = false,
+  selectedWorkOrderIds = [],
+  onToggleSelection,
+}: BacklogSidebarProps) {
   // Filter to unscheduled WOs
   const unscheduled = workOrders.filter(
     (wo) => !wo.promisedDeliveryDate || !wo.scheduledStartDate,
@@ -88,6 +99,7 @@ export function BacklogSidebar({ workOrders, isOpen, onClose }: BacklogSidebarPr
   const sorted = [...unscheduled].sort(
     (a, b) => PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority],
   );
+  const selectedSet = useMemo(() => new Set(selectedWorkOrderIds), [selectedWorkOrderIds]);
 
   if (!isOpen) return null;
 
@@ -134,22 +146,36 @@ export function BacklogSidebar({ workOrders, isOpen, onClose }: BacklogSidebarPr
           </div>
         ) : (
           <ul className="divide-y divide-border/40">
-            {sorted.map((wo) => (
-              <li
-                key={wo._id}
-                className="px-3 py-3 hover:bg-muted/30 transition-colors cursor-grab active:cursor-grabbing"
-                draggable
-                onDragStart={(event) => {
-                  const payload = JSON.stringify({
-                    workOrderId: String(wo._id),
-                    sourceQuoteId: wo.sourceQuoteId,
-                  });
-                  event.dataTransfer.effectAllowed = "move";
-                  event.dataTransfer.setData("application/x-athelon-work-order", payload);
-                  event.dataTransfer.setData("text/plain", payload);
-                }}
-                data-testid={`backlog-card-${wo._id}`}
-              >
+            {sorted.map((wo) => {
+              const isSelected = selectedSet.has(String(wo._id));
+              return (
+                <li
+                  key={wo._id}
+                  className={`px-3 py-3 transition-colors ${
+                    selectionMode
+                      ? isSelected
+                        ? "bg-violet-500/10 border-l-2 border-violet-400 cursor-pointer"
+                        : "hover:bg-muted/30 cursor-pointer"
+                      : "hover:bg-muted/30 cursor-grab active:cursor-grabbing"
+                  }`}
+                  draggable={!selectionMode}
+                  onClick={() => {
+                    if (!selectionMode) return;
+                    onToggleSelection?.(String(wo._id));
+                  }}
+                  onDragStart={(event) => {
+                    if (selectionMode) return;
+                    const payload = JSON.stringify({
+                      workOrderId: String(wo._id),
+                      sourceQuoteId: wo.sourceQuoteId,
+                    });
+                    event.dataTransfer.effectAllowed = "move";
+                    event.dataTransfer.setData("application/x-athelon-work-order", payload);
+                    event.dataTransfer.setData("text/plain", payload);
+                  }}
+                  data-testid={`backlog-card-${wo._id}`}
+                  data-magic-selected={isSelected ? "true" : "false"}
+                >
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex flex-col gap-0.5 min-w-0">
                     {/* Aircraft registration */}
@@ -178,16 +204,26 @@ export function BacklogSidebar({ workOrders, isOpen, onClose }: BacklogSidebarPr
                   </div>
                 </div>
                 {/* Set Dates link */}
-                <div className="mt-2">
+                <div className="mt-2 flex items-center justify-between gap-2">
                   <Link
                     to={`/work-orders/${wo._id}`}
                     className="text-[11px] font-medium text-primary hover:underline"
+                    onClick={(event) => event.stopPropagation()}
                   >
                     Set Dates &rarr;
                   </Link>
+                  {selectionMode && (
+                    <Badge
+                      variant={isSelected ? "default" : "outline"}
+                      className="text-[10px] h-5 px-1.5"
+                    >
+                      {isSelected ? "Selected" : "Click to select"}
+                    </Badge>
+                  )}
                 </div>
               </li>
-            ))}
+              );
+            })}
           </ul>
         )}
       </div>

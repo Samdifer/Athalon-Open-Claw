@@ -42,10 +42,14 @@ import {
   ArrowDown,
   ArrowUp,
   Archive,
+  Ban,
   BarChart3,
   Command,
+  Edit,
+  ListChecks,
   Maximize2,
   Minimize2,
+  SlidersHorizontal,
   Sparkles,
   Users,
   Warehouse,
@@ -55,6 +59,12 @@ import { autoSchedule } from "@/lib/scheduling/autoSchedule";
 import { magicSchedule } from "@/lib/scheduling/magicSchedule";
 import { detectConflicts } from "@/lib/scheduling/conflicts";
 import type { ScheduledWO } from "@/lib/scheduling/conflicts";
+import {
+  applyDistributeStep,
+  buildNormalizedDayModel,
+  toDailyEffortRows,
+  toggleBlockedDay,
+} from "@/lib/scheduling/dayModel";
 import { usePagePrereqs } from "@/hooks/usePagePrereqs";
 import { ActionableEmptyState } from "@/components/zero-state/ActionableEmptyState";
 
@@ -138,6 +148,11 @@ export default function SchedulingPage() {
   const [autoScheduling, setAutoScheduling] = useState(false);
   const [magicOpen, setMagicOpen] = useState(false);
   const [magicRunning, setMagicRunning] = useState(false);
+  const [scheduleEditMode, setScheduleEditMode] = useState(false);
+  const [scheduleEditTool, setScheduleEditTool] = useState<"distribute" | "block">(
+    "distribute",
+  );
+  const [magicSelectionMode, setMagicSelectionMode] = useState(false);
   const [magicSelectedIds, setMagicSelectedIds] = useState<string[]>([]);
   const [magicPriorityOrder, setMagicPriorityOrder] = useState<string[]>([]);
   const [magicResults, setMagicResults] = useState<
@@ -235,6 +250,7 @@ export default function SchedulingPage() {
   const restoreScheduleAssignment = useMutation(
     api.schedulerPlanning.restoreScheduleAssignment,
   );
+  const setScheduleDayModel = useMutation(api.schedulerPlanning.setScheduleDayModel);
   const upsertPlanningFinancialSettings = useMutation(
     api.schedulerPlanning.upsertPlanningFinancialSettings,
   );
@@ -285,6 +301,24 @@ export default function SchedulingPage() {
       ),
     [workOrders],
   );
+
+  useEffect(() => {
+    const candidateIds = new Set(magicCandidates.map((wo) => String(wo._id)));
+    setMagicSelectedIds((prev) => {
+      const filtered = prev.filter((id) => candidateIds.has(id));
+      if (filtered.length === prev.length && filtered.every((id, idx) => id === prev[idx])) {
+        return prev;
+      }
+      return filtered;
+    });
+    setMagicPriorityOrder((prev) => {
+      const filtered = prev.filter((id) => candidateIds.has(id));
+      if (filtered.length === prev.length && filtered.every((id, idx) => id === prev[idx])) {
+        return prev;
+      }
+      return filtered;
+    });
+  }, [magicCandidates]);
 
   // ── Conflict detection ────────────────────────────────────────────────
   const conflicts = useMemo(() => {
@@ -815,6 +849,50 @@ export default function SchedulingPage() {
     });
   }
 
+  const toggleScheduleEditMode = useCallback(() => {
+    setScheduleEditMode((prev) => {
+      const next = !prev;
+      if (next) {
+        setMagicSelectionMode(false);
+      }
+      return next;
+    });
+  }, []);
+
+  const activateScheduleEditTool = useCallback((tool: "distribute" | "block") => {
+    setScheduleEditTool(tool);
+    setScheduleEditMode(true);
+    setMagicSelectionMode(false);
+  }, []);
+
+  const toggleMagicSelectionMode = useCallback(() => {
+    setMagicSelectionMode((prev) => {
+      const next = !prev;
+      if (next) {
+        setScheduleEditMode(false);
+        if (unscheduledCount > 0) {
+          setBacklogOpen(true);
+          setGraveyardOpen(false);
+        }
+      }
+      return next;
+    });
+  }, [unscheduledCount]);
+
+  useEffect(() => {
+    function handleEscape(event: KeyboardEvent) {
+      if (event.key !== "Escape") return;
+      if (scheduleEditMode) {
+        setScheduleEditMode(false);
+      }
+      if (magicSelectionMode) {
+        setMagicSelectionMode(false);
+      }
+    }
+    window.addEventListener("keydown", handleEscape);
+    return () => window.removeEventListener("keydown", handleEscape);
+  }, [scheduleEditMode, magicSelectionMode]);
+
   const setFullscreen = useCallback(
     (enabled: boolean) => {
       const next = new URLSearchParams(searchParams);
@@ -859,6 +937,81 @@ export default function SchedulingPage() {
     [restoreScheduleAssignment],
   );
 
+  const handleApplyDayModelEdit = useCallback(
+    async (args: {
+      assignmentId: string;
+      workOrderId: string;
+      dayOffset: number;
+      mode: "distribute" | "block";
+      adjustment: 1 | -1;
+    }) => {
+      const project = scheduledProjects.find(
+        (row) => String(row.assignmentId) === args.assignmentId,
+      );
+      if (!project) {
+        toast.error("Assignment not found for day-model update");
+        return;
+      }
+
+      const workOrder = workOrderMap.get(args.workOrderId);
+      const totalHours = Math.max(
+        0,
+        workOrder?.remainingHours ?? workOrder?.effectiveEstimatedHours ?? 0,
+      );
+      const durationDays = Math.max(
+        1,
+        Math.ceil((project.promisedDeliveryDate - project.scheduledStartDate) / DAY_MS),
+      );
+
+      const modelInput = {
+        durationDays,
+        totalHours,
+        dailyEffort: project.dailyEffort,
+        nonWorkDays: project.nonWorkDays,
+      };
+
+      const beforeModel = buildNormalizedDayModel(modelInput);
+      const nextModel =
+        args.mode === "block"
+          ? toggleBlockedDay({
+              ...modelInput,
+              dayOffset: args.dayOffset,
+            })
+          : applyDistributeStep({
+              ...modelInput,
+              dayOffset: args.dayOffset,
+              deltaHours: args.adjustment,
+            });
+
+      const beforeSignature = `${beforeModel.nonWorkDays.join(",")}|${beforeModel.dailyEffortHours
+        .map((hours) => hours.toFixed(2))
+        .join(",")}`;
+      const afterSignature = `${nextModel.nonWorkDays.join(",")}|${nextModel.dailyEffortHours
+        .map((hours) => hours.toFixed(2))
+        .join(",")}`;
+
+      if (beforeSignature === afterSignature) {
+        if (args.mode === "block") {
+          toast.info("At least one active work day is required");
+        }
+        return;
+      }
+
+      await setScheduleDayModel({
+        assignmentId: args.assignmentId as Id<"scheduleAssignments">,
+        dailyEffort: toDailyEffortRows(nextModel),
+        nonWorkDays: nextModel.nonWorkDays,
+      });
+
+      toast.success(
+        args.mode === "block"
+          ? "Day model updated (block toggle)"
+          : "Day model updated (effort redistributed)",
+      );
+    },
+    [scheduledProjects, workOrderMap, setScheduleDayModel],
+  );
+
   const handleSaveCommandCenterFinancial = useCallback(
     async (next: {
       defaultShopRate: number;
@@ -900,9 +1053,18 @@ export default function SchedulingPage() {
   );
 
   function openMagicScheduler() {
-    const ids = magicCandidates.map((wo) => wo._id as string);
+    const candidateIds = magicCandidates.map((wo) => String(wo._id));
+    const candidateSet = new Set(candidateIds);
+    const selectedFromBoard = magicSelectedIds.filter((id) => candidateSet.has(id));
+    const ids = selectedFromBoard.length > 0 ? selectedFromBoard : candidateIds;
+    const nextPriority = [
+      ...magicPriorityOrder.filter((id) => ids.includes(id)),
+      ...ids.filter((id) => !magicPriorityOrder.includes(id)),
+    ];
+
+    setMagicSelectionMode(false);
     setMagicSelectedIds(ids);
-    setMagicPriorityOrder(ids);
+    setMagicPriorityOrder(nextPriority.length > 0 ? nextPriority : ids);
     setMagicResults([]);
     setMagicOpen(true);
   }
@@ -911,6 +1073,12 @@ export default function SchedulingPage() {
     setMagicSelectedIds((prev) => {
       if (prev.includes(workOrderId)) {
         return prev.filter((id) => id !== workOrderId);
+      }
+      return [...prev, workOrderId];
+    });
+    setMagicPriorityOrder((prev) => {
+      if (prev.includes(workOrderId)) {
+        return prev;
       }
       return [...prev, workOrderId];
     });
@@ -1203,6 +1371,11 @@ export default function SchedulingPage() {
               }}
               unscheduledCount={unscheduledCount}
               onScheduleChange={handleScheduleChange}
+              interactionMode={scheduleEditMode ? scheduleEditTool : "normal"}
+              magicSelectionMode={magicSelectionMode}
+              selectedMagicWorkOrderIds={magicSelectedIds}
+              onToggleMagicWorkOrder={toggleMagicSelection}
+              onApplyDayModelEdit={handleApplyDayModelEdit}
               onReorderBays={handleReorderBays}
               onArchiveAssignment={handleArchiveAssignment}
               bays={bays as { _id: string; name: string; type: string; status: string }[] | undefined}
@@ -1400,6 +1573,9 @@ export default function SchedulingPage() {
         workOrders={unscheduledWorkOrders}
         isOpen={backlogOpen}
         onClose={() => setBacklogOpen(false)}
+        selectionMode={magicSelectionMode}
+        selectedWorkOrderIds={magicSelectedIds}
+        onToggleSelection={toggleMagicSelection}
       />
 
       <GraveyardSidebar
