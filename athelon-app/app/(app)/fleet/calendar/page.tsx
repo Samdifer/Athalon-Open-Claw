@@ -1,5 +1,3 @@
-"use client";
-
 import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "convex/react";
@@ -151,18 +149,14 @@ export default function FleetCalendarPage() {
 
       {!workOrders ? (
         <Skeleton className="h-96 w-full" />
-      ) : workOrders.length === 0 ? (
-        <Card className="border-border/60">
-          <CardContent className="py-16 text-center">
-            <CalendarDays className="w-8 h-8 text-muted-foreground/30 mx-auto mb-3" />
-            <p className="text-sm font-medium text-muted-foreground">No scheduled work orders this month</p>
-            <p className="text-xs text-muted-foreground/60 mt-1">
-              Work orders with a scheduled start or promised delivery date will appear here.
-            </p>
-          </CardContent>
-        </Card>
       ) : (
         <Card className="border-border/60">
+          {workOrders.length === 0 && (
+            <div className="px-4 pt-3 pb-1 text-xs text-muted-foreground flex items-center gap-2">
+              <CalendarDays className="w-3.5 h-3.5 flex-shrink-0" />
+              No scheduled work orders in {MONTHS[month]} {year} — work orders with a scheduled start or promised delivery date will appear here.
+            </div>
+          )}
           <CardContent className="p-0">
             {/* Header row */}
             <div className="grid grid-cols-7 border-b">

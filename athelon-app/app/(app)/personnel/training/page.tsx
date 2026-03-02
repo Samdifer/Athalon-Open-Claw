@@ -1,5 +1,3 @@
-"use client";
-
 import { useState, useMemo } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -251,8 +249,10 @@ export default function TrainingPage() {
 
   if (!orgId) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Skeleton className="h-8 w-48" />
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3">
+        <GraduationCap className="w-8 h-8 text-muted-foreground/30" />
+        <p className="text-sm font-medium text-muted-foreground">No organization context available</p>
+        <p className="text-xs text-muted-foreground/60">Ask your administrator to link your account to a technician record.</p>
       </div>
     );
   }

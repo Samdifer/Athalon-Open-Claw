@@ -104,7 +104,7 @@ export default function ReportsPage() {
     if (!woResult?.page) return [];
     const monthly: Record<string, number> = {};
     for (const wo of woResult.page as any[]) {
-      const ts = wo.completedAt ?? wo._creationTime;
+      const ts = wo.closedAt ?? wo._creationTime;
       if (ts < fromTs || ts > toTs) continue;
       const d = new Date(ts);
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
@@ -367,7 +367,10 @@ export default function ReportsPage() {
                   const woCount = throughputData.find((t) => t.key === row.key)?.completed ?? 0;
                   return (
                     <TableRow key={row.key} className="border-border/40">
-                      <TableCell className="text-xs">{row.month} {row.key.split("-")[0]}</TableCell>
+                      <TableCell className="text-xs">
+                        {MONTH_NAMES[parseInt(row.key.split("-")[1]!, 10) - 1]}{" "}
+                        {row.key.split("-")[0]}
+                      </TableCell>
                       <TableCell className="text-xs text-right tabular-nums font-medium">
                         ${row.revenue.toLocaleString()}
                       </TableCell>

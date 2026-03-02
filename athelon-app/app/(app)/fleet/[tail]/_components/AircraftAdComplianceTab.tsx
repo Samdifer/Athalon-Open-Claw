@@ -1,5 +1,3 @@
-"use client";
-
 /**
  * AircraftAdComplianceTab.tsx
  * Phase F: Compliance Layer

@@ -94,8 +94,10 @@ function LiveKPICards({
   const kpis = useMemo(() => {
     if (!workOrders) return null;
 
-    const active = workOrders.filter(
-      (wo) => !["closed", "voided", "cancelled", "draft"].includes(wo.status),
+    // "Active" matches the WO list page's Active tab definition so the KPI
+    // count is consistent with what the user sees when they click through.
+    const active = workOrders.filter((wo) =>
+      ["open", "in_progress", "open_discrepancies"].includes(wo.status),
     );
     const aog = active.filter((wo) => wo.priority === "aog");
     const openDisc = workOrders.reduce(
