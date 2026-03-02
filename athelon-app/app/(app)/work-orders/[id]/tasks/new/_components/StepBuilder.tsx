@@ -7,6 +7,11 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+// BUG-LT-003: Import shadcn Checkbox — raw <input type="checkbox"> is invisible
+// in dark mode (white checkbox on white/near-white background). "IA sign-off
+// required" in particular: a supervisor accidentally creates an IA step without
+// realising the checkbox was already checked because they couldn't see it.
+import { Checkbox } from "@/components/ui/checkbox";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -67,13 +72,11 @@ function StepRow({ step, index, totalSteps, onChange, onRemove }: StepRowProps) 
             <div className="flex flex-wrap gap-4">
               {/* Special tool */}
               <div className="flex items-center gap-2">
-                <input
+                <Checkbox
                   id={`tool-${step.id}`}
-                  type="checkbox"
-                  className="rounded border-border"
                   checked={step.requiresSpecialTool}
-                  onChange={(e) =>
-                    onChange(step.id, "requiresSpecialTool", e.target.checked)
+                  onCheckedChange={(checked) =>
+                    onChange(step.id, "requiresSpecialTool", checked === true)
                   }
                 />
                 <Label
@@ -86,13 +89,11 @@ function StepRow({ step, index, totalSteps, onChange, onRemove }: StepRowProps) 
 
               {/* Sign-off required */}
               <div className="flex items-center gap-2">
-                <input
+                <Checkbox
                   id={`sign-${step.id}`}
-                  type="checkbox"
-                  className="rounded border-border"
                   checked={step.signOffRequired}
-                  onChange={(e) =>
-                    onChange(step.id, "signOffRequired", e.target.checked)
+                  onCheckedChange={(checked) =>
+                    onChange(step.id, "signOffRequired", checked === true)
                   }
                 />
                 <Label
@@ -105,13 +106,11 @@ function StepRow({ step, index, totalSteps, onChange, onRemove }: StepRowProps) 
 
               {/* IA required */}
               <div className="flex items-center gap-2">
-                <input
+                <Checkbox
                   id={`ia-${step.id}`}
-                  type="checkbox"
-                  className="rounded border-border"
                   checked={step.signOffRequiresIa}
-                  onChange={(e) =>
-                    onChange(step.id, "signOffRequiresIa", e.target.checked)
+                  onCheckedChange={(checked) =>
+                    onChange(step.id, "signOffRequiresIa", checked === true)
                   }
                 />
                 <Label

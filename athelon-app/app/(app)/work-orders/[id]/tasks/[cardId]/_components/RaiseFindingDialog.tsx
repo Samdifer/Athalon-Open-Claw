@@ -167,6 +167,13 @@ export function RaiseFindingDialog({
       setError("System type is required.");
       return;
     }
+    // BUG-LT2-003: Validate mhEstimate before calling backend.
+    // parseFloat("abc") = NaN which was silently passed to the DB.
+    const mhEstimateParsed = mhEstimate.trim() ? parseFloat(mhEstimate) : undefined;
+    if (mhEstimate.trim() && (isNaN(mhEstimateParsed!) || mhEstimateParsed! < 0)) {
+      setError("Estimated man-hours must be a valid positive number (e.g. 2.5).");
+      return;
+    }
     setIsSubmitting(true);
     setError(null);
     try {
@@ -188,7 +195,7 @@ export function RaiseFindingDialog({
         riiRequired: riiRequired || undefined,
         stcRelated: stcRelated || undefined,
         stcNumber: stcRelated && stcNumber.trim() ? stcNumber.trim() : undefined,
-        mhEstimate: mhEstimate ? parseFloat(mhEstimate) : undefined,
+        mhEstimate: mhEstimateParsed,
         writtenByTechnicianId: techId,
       });
 
@@ -203,7 +210,13 @@ export function RaiseFindingDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
+    // BUG-LT-001: Guard against mid-submit dismissal. Without this, pressing
+    // Escape or clicking outside while handleSubmit is in-flight closes the
+    // dialog. The finding may or may not have been created in Convex — the
+    // tech assumes it was saved (they clicked "Raise Finding"), but if the
+    // mutation was still awaiting auth, the finding is silently dropped.
+    // Same pattern as SignStepDialog (BUG-LT2-007) and SignCardDialog.
+    <Dialog open={open} onOpenChange={(v) => { if (!v && !isSubmitting) onClose(); }}>
       <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-base">

@@ -197,7 +197,13 @@ export function SignStepDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
+    // BUG-LT2-007: Guard against mid-submit dismissal. Previously the dialog
+    // closed on outside-click or Escape even while isSubmitting=true. If the
+    // Convex mutation was in-flight, onSuccess() never fired, the page never
+    // cleared signStepTarget, and the step appeared still-pending in the UI
+    // despite having been signed in the backend. Re-opening would then fail with
+    // a "step already completed" error — with no explanation of why.
+    <Dialog open={open} onOpenChange={(v) => { if (!v && !isSubmitting) onClose(); }}>
       <DialogContent className="max-w-[95vw] sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-base">

@@ -4,8 +4,9 @@ import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
-import { Plus, Search, ShoppingCart, ChevronRight } from "lucide-react";
+import { Plus, Search, ShoppingCart, ChevronRight, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -60,14 +61,30 @@ export default function PurchaseOrdersPage() {
     orgId ? { orgId, status: activeTab === "all" ? undefined : activeTab } : "skip",
   );
 
+  const vendors = useQuery(
+    api.vendors.listVendors,
+    orgId ? { orgId } : "skip",
+  );
+
+  // Build vendor lookup map for fast access by ID
+  const vendorMap = useMemo<Record<string, string>>(() => {
+    if (!vendors) return {};
+    return Object.fromEntries(vendors.map((v) => [v._id, v.name]));
+  }, [vendors]);
+
   const isLoading = !isLoaded || pos === undefined;
 
   const filtered = useMemo(() => {
     if (!pos) return [];
     if (!search.trim()) return pos;
     const q = search.toLowerCase();
-    return pos.filter((p) => p.poNumber.toLowerCase().includes(q));
-  }, [pos, search]);
+    return pos.filter((p) => {
+      if (p.poNumber.toLowerCase().includes(q)) return true;
+      const vendorName = vendorMap[(p as unknown as { vendorId: string }).vendorId] ?? "";
+      if (vendorName.toLowerCase().includes(q)) return true;
+      return false;
+    });
+  }, [pos, search, vendorMap]);
 
   const all = pos ?? [];
 
@@ -121,11 +138,11 @@ export default function PurchaseOrdersPage() {
         <div className="relative ml-auto">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" aria-hidden="true" />
           <Input
-            placeholder="Search PO number..."
+            placeholder="Search PO # or vendor..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="h-8 pl-8 pr-3 text-xs w-56 bg-muted/30 border-border/60"
-            aria-label="Search purchase orders by number"
+            aria-label="Search purchase orders by number or vendor"
           />
         </div>
       </div>
@@ -152,29 +169,41 @@ export default function PurchaseOrdersPage() {
         </Card>
       ) : (
         <div className="space-y-2" aria-live="polite" aria-label={`Purchase orders list, ${filtered.length} result${filtered.length !== 1 ? "s" : ""}`}>
-          {filtered.map((po) => (
-            <Link key={po._id} to={`/billing/purchase-orders/${po._id}`} aria-label={`Purchase order ${po.poNumber} — ${po.status} — $${po.total.toFixed(2)}`}>
-              <Card className="border-border/60 hover:border-primary/30 hover:bg-card/80 transition-all cursor-pointer">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-4">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="font-mono text-xs text-muted-foreground font-medium">{po.poNumber}</span>
-                        <Badge variant="outline" className={`text-[10px] font-medium border ${STATUS_STYLES[po.status] ?? ""}`}>
-                          {po.status}
-                        </Badge>
+          {filtered.map((po) => {
+            const poWithVendor = po as unknown as { vendorId: Id<"vendors"> };
+            const vendorName = vendorMap[poWithVendor.vendorId] ?? null;
+            return (
+              <Link key={po._id} to={`/billing/purchase-orders/${po._id}`} aria-label={`Purchase order ${po.poNumber} — ${po.status} — $${po.total.toFixed(2)}`}>
+                <Card className="border-border/60 hover:border-primary/30 hover:bg-card/80 transition-all cursor-pointer">
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-4">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1 flex-wrap">
+                          <span className="font-mono text-xs text-muted-foreground font-medium">{po.poNumber}</span>
+                          <Badge variant="outline" className={`text-[10px] font-medium border ${STATUS_STYLES[po.status] ?? ""}`}>
+                            {po.status}
+                          </Badge>
+                        </div>
+                        <div className="flex items-center gap-3 flex-wrap">
+                          {vendorName && (
+                            <span className="flex items-center gap-1 text-xs text-foreground font-medium">
+                              <Building2 className="w-3 h-3 text-muted-foreground flex-shrink-0" />
+                              {vendorName}
+                            </span>
+                          )}
+                          <span className="text-xs text-muted-foreground">Created {formatDate(po.createdAt)}</span>
+                        </div>
                       </div>
-                      <span className="text-xs text-muted-foreground">Created {formatDate(po.createdAt)}</span>
+                      <div className="flex items-center gap-3 flex-shrink-0">
+                        <span className="text-sm font-semibold">${po.total.toFixed(2)}</span>
+                        <ChevronRight className="w-4 h-4 text-muted-foreground/50" />
+                      </div>
                     </div>
-                    <div className="flex items-center gap-3 flex-shrink-0">
-                      <span className="text-sm font-semibold">${po.total.toFixed(2)}</span>
-                      <ChevronRight className="w-4 h-4 text-muted-foreground/50" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
+                  </CardContent>
+                </Card>
+              </Link>
+            );
+          })}
         </div>
       )}
     </div>

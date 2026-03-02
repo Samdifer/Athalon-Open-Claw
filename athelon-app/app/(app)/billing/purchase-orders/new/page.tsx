@@ -225,7 +225,9 @@ export default function NewPOPage() {
                     <Button
                       type="button" variant="ghost" size="icon"
                       onClick={() => removeLineItem(item.id)}
-                      className="h-8 w-8 text-muted-foreground hover:text-red-400"
+                      disabled={lineItems.length === 1}
+                      title={lineItems.length === 1 ? "Cannot remove the only line item" : "Remove item"}
+                      className="h-8 w-8 text-muted-foreground hover:text-red-400 disabled:opacity-30 disabled:cursor-not-allowed"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </Button>

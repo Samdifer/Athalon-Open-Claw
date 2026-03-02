@@ -12,6 +12,7 @@ import {
   Calendar,
   TrendingUp,
   Filter,
+  Lock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -106,11 +107,17 @@ export default function MyWorkPage() {
     at_risk: 1,
     no_date: 2,
   };
+  // BUG-LT2-004: STATUS_ORDER previously used "pending" (not a valid TaskStatus).
+  // Valid TaskStatus values are: not_started | in_progress | incomplete_na_steps | complete | voided.
+  // "not_started" and "incomplete_na_steps" were falling through to order 99 (default) and
+  // sorting AFTER completed and voided cards — brand-new unstarted assignments appeared at the
+  // bottom of a tech's My Work list, below already-completed jobs.
   const STATUS_ORDER: Record<string, number> = {
     in_progress: 0,
-    pending: 1,
-    complete: 2,
-    voided: 3,
+    not_started: 1,
+    incomplete_na_steps: 2,
+    complete: 3,
+    voided: 4,
   };
   const cards = [...taskCards].sort((a, b) => {
     const riskA = SCHEDULE_RISK_ORDER[a.scheduleRisk ?? "no_date"] ?? 2;
@@ -244,6 +251,18 @@ export default function MyWorkPage() {
                 ? Math.round((completedSteps / card.totalSteps) * 100)
                 : 0;
 
+            // BUG-LT2-005: Detect "Awaiting Sign-Off" state — all steps done
+            // but card not yet certified. The WO detail page (TaskCardList.tsx)
+            // shows an amber "Awaiting Sign-Off" badge for this via AI-076, but
+            // My Work uses its own card rendering and was never updated. Without
+            // this, a tech who finished all their steps just sees "In Progress"
+            // and has no visual cue that they need to open the card and sign it.
+            const awaitingSignOff =
+              card.totalSteps > 0 &&
+              card.pendingSteps === 0 &&
+              card.status !== "complete" &&
+              card.status !== "voided";
+
             const statusLabel =
               TASK_STATUS_LABEL[card.status as TaskStatus] ?? card.status;
             const statusStyle =
@@ -280,7 +299,7 @@ export default function MyWorkPage() {
             return (
               <Card
                 key={card._id}
-                className={`border-border/60 hover:border-primary/30 transition-all ${riskBorderClass}`}
+                className={`border-border/60 hover:border-primary/30 transition-all ${riskBorderClass}${awaitingSignOff ? " border-amber-500/30 bg-amber-500/5" : ""}`}
               >
                 <CardContent className="p-4 space-y-3">
                   {/* Row 1: Card number + title + status + continue button */}
@@ -290,12 +309,22 @@ export default function MyWorkPage() {
                         <span className="font-mono text-xs text-muted-foreground font-medium">
                           {card.taskCardNumber}
                         </span>
+                        {awaitingSignOff ? (
+                          <Badge
+                            variant="outline"
+                            className="text-[10px] font-medium border bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30"
+                          >
+                            <Lock className="w-2.5 h-2.5 mr-1" />
+                            Awaiting Sign-Off
+                          </Badge>
+                        ) : (
                         <Badge
                           variant="outline"
                           className={`text-[10px] font-medium border ${statusStyle}`}
                         >
                           {statusLabel}
                         </Badge>
+                        )}
                       </div>
                       <p className="text-sm font-semibold text-foreground mt-0.5 truncate">
                         {card.title}

@@ -108,7 +108,12 @@ export function SignCardDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
+    // BUG-LT2-007 (sister): Same mid-submit guard for card-level sign-off.
+    // Closing the dialog while signTaskCard is in-flight would leave a signed
+    // card in the backend but the UI still showing it as unsigned, with no way
+    // to re-sign (backend would reject a second signTaskCard call on an already
+    // complete card). The IA then has no way to tell if the card was certified.
+    <Dialog open={open} onOpenChange={(v) => { if (!v && !isSubmitting) onClose(); }}>
       <DialogContent className="max-w-[95vw] sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-base">
@@ -172,8 +177,11 @@ export function SignCardDialog({
               aria-required="true"
               aria-describedby="sign-card-statement-hint"
             />
+            {/* BUG-LT2-002: Use trimmed length to match the disabled check
+                (statement.trim().length < 50). Showing raw length let a tech
+                type 50 spaces, see "50/50", and wonder why Sign is still grey. */}
             <p id="sign-card-statement-hint" className="text-[10px] text-muted-foreground mt-1">
-              {statement.length}/50 chars minimum
+              {statement.trim().length}/50 chars minimum
             </p>
           </div>
 

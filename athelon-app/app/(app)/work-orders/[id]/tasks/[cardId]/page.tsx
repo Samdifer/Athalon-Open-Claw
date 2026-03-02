@@ -46,6 +46,7 @@ import {
 import { SignStepDialog } from "./_components/SignStepDialog";
 import { SignCardDialog } from "./_components/SignCardDialog";
 import { RaiseFindingDialog } from "./_components/RaiseFindingDialog";
+import { MarkNaDialog } from "./_components/MarkNaDialog";
 import { TaskStepRow } from "./_components/TaskStepRow";
 import {
   VendorServicePickerModal,
@@ -197,6 +198,11 @@ export default function TaskCardPage() {
     description: string;
     requiresIa: boolean;
   } | null>(null);
+  const [naTarget, setNaTarget] = useState<{
+    stepId: Id<"taskCardSteps">;
+    stepNumber: number;
+    description: string;
+  } | null>(null);
   const [signCardOpen, setSignCardOpen] = useState(false);
   const [findingOpen, setFindingOpen] = useState(false);
   const [handoffNote, setHandoffNote] = useState("");
@@ -265,7 +271,10 @@ export default function TaskCardPage() {
   const currentAircraftHours =
     workOrderResult?.aircraft?.totalTimeAirframeHours ?? 0;
 
-  const isLoading = !orgLoaded || taskCards === undefined;
+  // Wait for both taskCards AND workOrderResult so aircraft hours are
+  // always accurate when the page first renders — prevents findings from
+  // being raised with 0 hours if workOrderResult resolves after taskCards.
+  const isLoading = !orgLoaded || taskCards === undefined || workOrderResult === undefined;
 
   if (isLoading) return <TaskCardSkeleton />;
 
@@ -293,7 +302,15 @@ export default function TaskCardPage() {
     );
   }
 
-  const pendingSteps = taskCard.steps.filter((s) => s.status === "pending");
+  // BUG-LT2-006: Include "in_progress" steps in the "remaining steps" count.
+  // Previously only counted "pending" steps — if Step 3 is in_progress and
+  // Steps 4–5 are pending, the sign-off card would say "Complete all 2 remaining
+  // steps" but the tech actually needs to sign 3 steps (Step 3 is started but
+  // not yet signed). This gives a wrong count of remaining work and can make the
+  // tech think they're closer to sign-off than they actually are.
+  const pendingSteps = taskCard.steps.filter(
+    (s) => s.status === "pending" || s.status === "in_progress",
+  );
   const completedCount = taskCard.steps.filter(
     (s) => s.status === "completed" || s.status === "na",
   ).length;
@@ -459,6 +476,7 @@ export default function TaskCardPage() {
                 onSignClick={setSignStepTarget}
                 onStartClick={handleStartStep}
                 isStarting={startingStepId === step._id}
+                onNaClick={setNaTarget}
               />
             ))}
         </CardContent>
@@ -1282,6 +1300,23 @@ export default function TaskCardPage() {
           techId={techId}
           aircraftHours={currentAircraftHours}
           taskCardTitle={taskCard.title}
+        />
+      )}
+
+      {/* BUG-LT2-001: Mark step N/A dialog — previously had no UI to call
+          completeStep({ action: "mark_na" }), leaving techs stuck on steps
+          that don't apply to their aircraft or work scope. */}
+      {naTarget && orgId && techId && (
+        <MarkNaDialog
+          open={!!naTarget}
+          onClose={() => setNaTarget(null)}
+          stepNumber={naTarget.stepNumber}
+          stepDescription={naTarget.description}
+          orgId={orgId}
+          techId={techId}
+          taskCardId={taskCard._id as Id<"taskCards">}
+          stepId={naTarget.stepId}
+          onSuccess={() => setNaTarget(null)}
         />
       )}
     </div>

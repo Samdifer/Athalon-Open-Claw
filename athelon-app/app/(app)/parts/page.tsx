@@ -16,7 +16,6 @@ import {
   Clock,
   ShieldAlert,
   ChevronRight,
-  Filter,
   Lock,
   Unlock,
   ClipboardCheck,
@@ -975,14 +974,6 @@ export default function PartsPage() {
           >
             <ScanLine className="w-3.5 h-3.5" />
             Scan
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-8 gap-1.5 text-xs border-border/60"
-          >
-            <Filter className="w-3.5 h-3.5" />
-            Filter
           </Button>
         </div>
       </div>

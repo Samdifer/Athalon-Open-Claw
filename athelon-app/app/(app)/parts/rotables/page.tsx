@@ -399,7 +399,7 @@ export default function RotablesPage() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as RotableFilter)} className="w-full sm:w-auto">
           <TabsList className="h-8 bg-muted/40 p-0.5">
-            {([["all", "All"], ["installed", "Installed"], ["serviceable", "Serviceable"], ["in_shop", "In Shop"], ["at_vendor", "At Vendor"], ["condemned", "Condemned"]] as const).map(([value, label]) => (
+            {([["all", "All"], ["installed", "Installed"], ["serviceable", "Serviceable"], ["in_shop", "In Shop"], ["at_vendor", "At Vendor"], ["loaned_out", "Loaned Out"], ["condemned", "Condemned"]] as const).map(([value, label]) => (
               <TabsTrigger key={value} value={value} className="h-7 px-2 text-xs data-[state=active]:bg-background">
                 {label}
                 {!isLoading && (statusCounts[value] ?? 0) > 0 && (

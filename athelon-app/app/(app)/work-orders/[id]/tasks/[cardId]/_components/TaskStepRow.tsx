@@ -14,6 +14,7 @@ import {
   PenLine,
   Play,
   Loader2,
+  SlashSquare,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -53,6 +54,12 @@ export interface TaskStepRowProps {
   }) => void;
   onStartClick?: (stepId: Id<"taskCardSteps">) => void;
   isStarting?: boolean;
+  /** Called when the tech clicks "N/A" on a pending step. */
+  onNaClick?: (step: {
+    stepId: Id<"taskCardSteps">;
+    stepNumber: number;
+    description: string;
+  }) => void;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -67,6 +74,7 @@ export function TaskStepRow({
   onSignClick,
   onStartClick,
   isStarting,
+  onNaClick,
 }: TaskStepRowProps) {
   const isInProgress = step.status === "in_progress";
   const isPending = step.status === "pending";
@@ -179,6 +187,38 @@ export function TaskStepRow({
                   <Play className="w-3 h-3" />
                 )}
                 Start
+              </Button>
+            )}
+
+          {/* N/A button — for pending or in_progress steps.
+              BUG-LT-004: Previously only showed for pending steps. A tech who
+              accidentally clicked "Start" on the wrong step had NO path to mark
+              it N/A — they were stuck. The step remained in_progress forever
+              unless signed (which creates a false maintenance record) or the
+              entire card was voided. Extending N/A to in_progress steps lets
+              the tech recover gracefully: "I started this step then realized
+              the aircraft doesn't have this system." */}
+          {(isPending || isInProgress) &&
+            !cardIsVoided &&
+            !cardIsComplete &&
+            orgId &&
+            techId &&
+            onNaClick && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 text-xs flex-shrink-0 gap-1 text-muted-foreground hover:text-foreground border border-dashed border-border/40 hover:border-border/70"
+                onClick={() =>
+                  onNaClick({
+                    stepId: step._id as Id<"taskCardSteps">,
+                    stepNumber: step.stepNumber,
+                    description: step.description,
+                  })
+                }
+                aria-label={`Mark step ${step.stepNumber} as not applicable`}
+              >
+                <SlashSquare className="w-3 h-3" />
+                N/A
               </Button>
             )}
 
