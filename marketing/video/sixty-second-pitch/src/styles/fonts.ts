@@ -1,13 +1,11 @@
-/**
- * Font configuration for the pitch video.
- *
- * Uses system/web-safe fonts by default. To use custom fonts:
- * 1. Place .woff2 files in public/fonts/
- * 2. Use staticFile() to reference them
- * 3. Load via @font-face in a component's useEffect
- *
- * For now we use Inter (Google Fonts loaded via CSS) and system monospace.
- */
+import { loadFont as loadInter } from "@remotion/google-fonts/Inter";
+import { loadFont as loadJetBrainsMono } from "@remotion/google-fonts/JetBrainsMono";
+
+export const loadFonts = () => {
+  const inter = loadInter();
+  const jetbrains = loadJetBrainsMono();
+  return { inter, jetbrains };
+};
 
 export const FONTS = {
   heading: "Inter, system-ui, -apple-system, sans-serif",

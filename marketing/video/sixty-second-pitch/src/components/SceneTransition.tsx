@@ -1,16 +1,8 @@
 import React from "react";
-import {
-  useCurrentFrame,
-  interpolate,
-  AbsoluteFill,
-  random,
-} from "remotion";
-import { COLORS } from "../styles/colors";
-
-type TransitionType = "flash" | "glitch";
+import { useCurrentFrame, useVideoConfig, interpolate, AbsoluteFill } from "remotion";
 
 interface SceneTransitionProps {
-  type: TransitionType;
+  type: "flash" | "fade";
   durationFrames?: number;
 }
 
@@ -19,42 +11,39 @@ export const SceneTransition: React.FC<SceneTransitionProps> = ({
   durationFrames = 3,
 }) => {
   const frame = useCurrentFrame();
+  const { durationInFrames } = useVideoConfig();
+  const dur = Math.min(durationFrames, durationInFrames);
 
   if (type === "flash") {
-    const opacity = interpolate(frame, [0, durationFrames], [1, 0], {
+    const opacity = interpolate(frame, [0, dur], [0.9, 0], {
+      extrapolateLeft: "clamp",
       extrapolateRight: "clamp",
     });
-
     return (
       <AbsoluteFill
         style={{
-          backgroundColor: COLORS.flashWhite,
+          backgroundColor: "#ffffff",
           opacity,
           zIndex: 100,
+          pointerEvents: "none",
         }}
       />
     );
   }
 
-  if (type === "glitch") {
-    const isActive = frame < durationFrames;
-    if (!isActive) return null;
-
-    const offsetX = random(`glitch-x-${frame}`) * 20 - 10;
-    const offsetY = random(`glitch-y-${frame}`) * 10 - 5;
-    const skew = random(`glitch-skew-${frame}`) * 4 - 2;
-
-    return (
-      <AbsoluteFill
-        style={{
-          backgroundColor: COLORS.black,
-          opacity: 0.8,
-          transform: `translateX(${offsetX}px) translateY(${offsetY}px) skewX(${skew}deg)`,
-          zIndex: 100,
-        }}
-      />
-    );
-  }
-
-  return null;
+  // fade
+  const opacity = interpolate(frame, [0, dur], [1, 0], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
+  return (
+    <AbsoluteFill
+      style={{
+        backgroundColor: "#09090b",
+        opacity,
+        zIndex: 100,
+        pointerEvents: "none",
+      }}
+    />
+  );
 };

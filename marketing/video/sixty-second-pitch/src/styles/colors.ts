@@ -1,58 +1,44 @@
 /**
- * AVLY.IO / Athelon brand color palette — V2 Enhanced
- * Richer palette with glow colors, gradient stops, and scene-specific accents.
+ * AVLY.IO / Athelon brand color palette — V3 Professional
  */
-
 export const COLORS = {
-  // Core brand
+  // Base
   black: "#000000",
+  nearBlack: "#09090b",
+  darkSlate: "#0f172a",
   white: "#ffffff",
-  slate900: "#0f172a",
-  slate800: "#1e293b",
-  slate700: "#334155",
+  offWhite: "#f8fafc",
+  muted: "#94a3b8",
 
-  // Hook scene (deep black with blue undertone)
-  hookBg: "#030712",
-  hookAccent: "#60a5fa",
-  hookGlow: "#1e3a5f",
+  // Primary: Indigo/Blue
+  primary: "#6366f1",
+  primaryGlow: "#818cf8",
+  primaryDark: "#4338ca",
+  blue: "#3b82f6",
+  blueGlow: "#60a5fa",
+  cyan: "#06b6d4",
 
-  // Credibility scene (dark gradient)
-  credBg: "#0a0a0a",
-  credAccent: "#94a3b8",
+  // Accent: Amber/Gold (CTA moments)
+  amber: "#f59e0b",
+  amberGlow: "#fbbf24",
+  gold: "#d4a017",
 
-  // Problem scene (red tints — more intense)
-  problemBg: "#1a0000",
-  problemAccent: "#ef4444",
-  problemText: "#fca5a5",
-  problemGlow: "#7f1d1d",
+  // Danger/Problem
+  red: "#ef4444",
+  redMuted: "#dc2626",
+  redBg: "#1a0a0a",
 
-  // Pivot / bright palette
-  brightBg: "#f0f4ff",
-  brightText: "#111827",
-  brightAccent: "#2563eb",
+  // Success/Decision
+  green: "#22c55e",
+  greenGlow: "#4ade80",
 
-  // Vision / clean
-  visionBg: "#ffffff",
-  visionSubtle: "#f8fafc",
-  visionAccent: "#3b82f6",
+  // Glassmorphic
+  glass: "rgba(255,255,255,0.05)",
+  glassBorder: "rgba(255,255,255,0.1)",
+  glassHover: "rgba(255,255,255,0.08)",
 
-  // Product scene
-  productBg: "#0f172a",
-  productAccent: "#3b82f6",
-  productGlow: "#818cf8",
-  productSecondary: "#06b6d4",
-
-  // CTA
-  ctaBg: "#0f172a",
-  ctaGlow: "#60a5fa",
-  ctaUrgent: "#f59e0b",
-  ctaUrgentGlow: "#fbbf24",
-
-  // Transitions
-  flashWhite: "#ffffff",
-
-  // Gradients (CSS strings)
-  darkGradient: "linear-gradient(180deg, #0a0a0a 0%, #1a1a2e 100%)",
-  aiGradient: "linear-gradient(90deg, #3b82f6, #8b5cf6)",
-  heroGradient: "linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%)",
+  // Gradients (as CSS strings)
+  auroraGradient: "radial-gradient(ellipse at 30% 50%, rgba(99,102,241,0.15) 0%, transparent 70%)",
+  meshGradient: "radial-gradient(ellipse at 70% 30%, rgba(59,130,246,0.12) 0%, transparent 60%)",
+  heroGradient: "linear-gradient(135deg, #09090b 0%, #1e1b4b 50%, #09090b 100%)",
 } as const;
