@@ -46,6 +46,14 @@ export default function CertificatesPage() {
   const createCert = useMutation(api.releaseCertificates.createReleaseCertificate);
 
   const [dialogOpen, setDialogOpen] = useState(false);
+  // Guard: prevent closing the dialog while a certificate is being created.
+  // Without this, clicking outside the dialog or pressing Escape during the Convex
+  // mutation silently dismisses the form — the mutation still fires but the success
+  // toast and form reset never happen because the dialog is gone.
+  const handleDialogOpenChange = (open: boolean) => {
+    if (saving) return; // block close during active mutation
+    setDialogOpen(open);
+  };
   const [formType, setFormType] = useState<"faa_8130" | "easa_form1">("faa_8130");
   const [partDescription, setPartDescription] = useState("");
   const [partNumber, setPartNumber] = useState("");
@@ -79,7 +87,10 @@ export default function CertificatesPage() {
         partNumber,
         serialNumber: serialNumber || undefined,
         batchNumber: batchNumber || undefined,
-        quantity: parseInt(quantity) || 1,
+        // Guard against negative quantities — parseInt("-5") is truthy so `|| 1`
+        // wouldn't catch it. An FAA 8130-3 / EASA Form 1 with negative quantity
+        // is an invalid regulatory document.
+        quantity: Math.max(1, parseInt(quantity) || 1),
         workPerformed,
         condition,
         remarks,
@@ -253,7 +264,7 @@ export default function CertificatesPage() {
       )}
 
       {/* Create Certificate Dialog */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      <Dialog open={dialogOpen} onOpenChange={handleDialogOpenChange}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>

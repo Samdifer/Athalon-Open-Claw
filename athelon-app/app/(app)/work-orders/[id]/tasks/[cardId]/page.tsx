@@ -672,7 +672,12 @@ export default function TaskCardPage() {
               <Button
                 size="sm"
                 className="h-7 text-xs"
-                disabled={!addReference.trim()}
+                // BUG-HUNTER-003: Guard against silent save failure.
+                // The onClick already early-returns if aircraftId is missing,
+                // but the button remained visually enabled — user clicks and
+                // nothing happens with no feedback. Include the same guards in
+                // disabled so the button correctly reflects save-ability.
+                disabled={!addReference.trim() || !orgId || !taskCard.workOrderId || !taskCard.aircraftId}
                 onClick={async () => {
                   if (!orgId || !taskCard.workOrderId || !taskCard.aircraftId) return;
                   try {

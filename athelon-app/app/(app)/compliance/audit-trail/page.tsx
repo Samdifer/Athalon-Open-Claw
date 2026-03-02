@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery } from "convex/react";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import { api } from "@/convex/_generated/api";
@@ -435,6 +435,39 @@ export default function AuditTrailPage() {
     orgId ? { organizationId: orgId } : "skip",
   );
 
+  // Fleet AD summary — used to sort aircraft in the FleetOverviewPanel so that
+  // "Non-compliant first" in the panel subtitle is actually true.
+  // Without this sort the claim was false: aircraft rendered in insertion order.
+  const fleetAdSummary = useQuery(
+    api.adCompliance.getFleetAdSummary,
+    orgId ? { organizationId: orgId } : "skip",
+  );
+
+  // Build a compliance-tier map: 0 = overdue/not-complied (worst), 1 = pending,
+  // 2 = due-soon, 3 = compliant, 4 = no records on file
+  const sortedAircraft = useMemo(() => {
+    if (!aircraft) return [];
+    if (!fleetAdSummary) return aircraft; // fall back to insertion order while loading
+
+    const tierMap = new Map<string, number>();
+    for (const s of fleetAdSummary.aircraftSummaries ?? []) {
+      let tier = 3; // compliant default
+      if (s.overdueCount > 0 || (s as unknown as Record<string,number>)["notCompliedCount"] > 0) tier = 0;
+      else if (s.pendingCount > 0) tier = 1;
+      else if (s.dueSoonCount > 0) tier = 2;
+      else if (s.total === 0) tier = 4;
+      tierMap.set(s.aircraftId, tier);
+    }
+
+    return [...aircraft].sort((a, b) => {
+      const ta = tierMap.get(a._id) ?? 4;
+      const tb = tierMap.get(b._id) ?? 4;
+      if (ta !== tb) return ta - tb; // lower tier = worse = first
+      // Secondary: alphabetical by registration
+      return (a.currentRegistration ?? "").localeCompare(b.currentRegistration ?? "");
+    });
+  }, [aircraft, fleetAdSummary]);
+
   return (
     <div className="space-y-5">
       {/* Header */}
@@ -459,7 +492,7 @@ export default function AuditTrailPage() {
         </Card>
       ) : orgId ? (
         <FleetOverviewPanel
-          aircraft={aircraft}
+          aircraft={sortedAircraft}
           organizationId={orgId}
           selectedAircraftId={selectedAircraftId}
           onSelect={setSelectedAircraftId}
@@ -486,12 +519,12 @@ export default function AuditTrailPage() {
                     <SelectValue placeholder="Choose an aircraft…" />
                   </SelectTrigger>
                   <SelectContent>
-                    {aircraft.length === 0 ? (
+                    {sortedAircraft.length === 0 ? (
                       <SelectItem value="__none" disabled>
                         No aircraft in fleet
                       </SelectItem>
                     ) : (
-                      aircraft.map((ac) => (
+                      sortedAircraft.map((ac) => (
                         <SelectItem key={ac._id} value={ac._id} className="text-xs">
                           <span className="font-mono font-semibold mr-2">{ac.currentRegistration}</span>
                           <span className="text-muted-foreground">{ac.make} {ac.model}</span>

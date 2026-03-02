@@ -60,8 +60,13 @@ export function RtsSignoffForm({
           />
           <p className="text-[11px] text-muted-foreground">
             Obtain a 5-minute auth event from{" "}
+            {/* BUG-HUNTER-001: Include returnTo + intendedTable so the
+                signature page can redirect back here automatically and the
+                authEventId gets appended to the URL query string. Without
+                these params the "Continue to Sign-Off" button never appears
+                on the signature page and the user is stuck. */}
             <Link
-              to={`/work-orders/${workOrderId}/signature`}
+              to={`/work-orders/${workOrderId}/signature?returnTo=/work-orders/${workOrderId}/rts&intendedTable=returnToService`}
               className="text-primary hover:underline"
             >
               the signature page

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import { useQuery, useMutation } from "convex/react";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import { api } from "@/convex/_generated/api";
@@ -29,12 +29,18 @@ export default function RtsPage() {
   const params = useParams<{ id: string }>();
   const workOrderId = params.id as Id<"workOrders">;
   const { orgId } = useCurrentOrg();
+  const [searchParams] = useSearchParams();
+
+  // BUG-HUNTER-002: Pre-populate the auth event ID from the URL when the
+  // signature page redirects back with ?authEventId=<id>. Without this the
+  // user has to manually type a Convex ID — practically impossible.
+  const authEventIdFromUrl = searchParams.get("authEventId") ?? "";
 
   // Form state
   const [rtsStatement, setRtsStatement] = useState("");
   const [aircraftHoursAtRts, setAircraftHoursAtRts] = useState("");
   const [limitations, setLimitations] = useState("");
-  const [signatureAuthEventId, setSignatureAuthEventId] = useState("");
+  const [signatureAuthEventId, setSignatureAuthEventId] = useState(authEventIdFromUrl);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [successRtsId, setSuccessRtsId] = useState<string | null>(null);
@@ -108,9 +114,17 @@ export default function RtsPage() {
             <p className="font-mono text-xs text-muted-foreground bg-muted/50 px-3 py-2 rounded inline-block">
               RTS Record ID: {successRtsId}
             </p>
-            <div className="mt-4">
+            {/* Navigate to the specific WO — the QCM inspector's next steps
+                (Release, Certificate generation, Work Order review) are all on
+                the WO detail page, not the full list. */}
+            <div className="mt-4 flex items-center justify-center gap-3">
+              <Button asChild size="sm">
+                <Link to={`/work-orders/${workOrderId}`}>View Work Order</Link>
+              </Button>
               <Button asChild variant="outline" size="sm">
-                <Link to="/work-orders">Back to Work Orders</Link>
+                <Link to={`/work-orders/${workOrderId}/release`}>
+                  Proceed to Release
+                </Link>
               </Button>
             </div>
           </CardContent>
