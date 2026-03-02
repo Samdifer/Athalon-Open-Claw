@@ -133,13 +133,23 @@ export default function FinancialDashboardPage() {
   const kpis = useMemo(() => {
     if (!invoices || !purchaseOrders) return null;
 
-    const validInvoices = invoices.filter((i) => i.status !== "VOID");
-    const revenueAll = validInvoices.reduce((s, i) => s + i.total, 0);
-    const revenueMTD = validInvoices.filter((i) => i.createdAt >= startOfMonth).reduce((s, i) => s + i.total, 0);
-    const revenueQTD = validInvoices.filter((i) => i.createdAt >= startOfQuarter).reduce((s, i) => s + i.total, 0);
-    const revenueYTD = validInvoices.filter((i) => i.createdAt >= startOfYear).reduce((s, i) => s + i.total, 0);
+    // Revenue = only collected invoices (PAID or PARTIAL). DRAFT/SENT are receivables,
+    // not revenue. Period attribution uses paidAt (cash received), not createdAt.
+    const collectedInvoices = invoices.filter(
+      (i) => i.status === "PAID" || i.status === "PARTIAL",
+    );
+    const revenueAll = collectedInvoices.reduce((s, i) => s + i.total, 0);
+    const revenueMTD = collectedInvoices
+      .filter((i) => (i.paidAt ?? i.createdAt) >= startOfMonth)
+      .reduce((s, i) => s + i.total, 0);
+    const revenueQTD = collectedInvoices
+      .filter((i) => (i.paidAt ?? i.createdAt) >= startOfQuarter)
+      .reduce((s, i) => s + i.total, 0);
+    const revenueYTD = collectedInvoices
+      .filter((i) => (i.paidAt ?? i.createdAt) >= startOfYear)
+      .reduce((s, i) => s + i.total, 0);
 
-    const laborCost = validInvoices.reduce((s, i) => s + i.laborTotal, 0);
+    const laborCost = collectedInvoices.reduce((s, i) => s + i.laborTotal, 0);
     const partsCost = purchaseOrders.filter((po) => po.status !== "DRAFT").reduce((s, po) => s + po.total, 0);
     const totalCOGS = laborCost + partsCost;
     const grossMargin = revenueAll > 0 ? ((revenueAll - totalCOGS) / revenueAll) * 100 : 0;
@@ -161,8 +171,9 @@ export default function FinancialDashboardPage() {
     const byMonth: Record<string, number> = {};
     for (const k of keys) byMonth[k] = 0;
     for (const inv of invoices) {
-      if (inv.status === "VOID") continue;
-      const key = getMonthKey(inv.createdAt);
+      // Only count collected revenue; use payment date for period attribution
+      if (inv.status !== "PAID" && inv.status !== "PARTIAL") continue;
+      const key = getMonthKey(inv.paidAt ?? inv.createdAt);
       if (byMonth[key] !== undefined) byMonth[key] += inv.total;
     }
     return keys.map((key) => ({ month: getMonthLabel(key), revenue: byMonth[key] }));
@@ -182,8 +193,8 @@ export default function FinancialDashboardPage() {
     const costByMonth: Record<string, number> = {};
     for (const k of keys) { revByMonth[k] = 0; costByMonth[k] = 0; }
     for (const inv of invoices) {
-      if (inv.status === "VOID") continue;
-      const key = getMonthKey(inv.createdAt);
+      if (inv.status !== "PAID" && inv.status !== "PARTIAL") continue;
+      const key = getMonthKey(inv.paidAt ?? inv.createdAt);
       if (revByMonth[key] !== undefined) {
         revByMonth[key] += inv.total;
         costByMonth[key] += inv.laborTotal;
@@ -208,7 +219,7 @@ export default function FinancialDashboardPage() {
     if (!invoices || !customers) return [];
     const byCustomer = new Map<string, { name: string; total: number; count: number }>();
     for (const inv of invoices) {
-      if (inv.status === "VOID") continue;
+      if (inv.status !== "PAID" && inv.status !== "PARTIAL") continue;
       const cid = inv.customerId as string;
       if (!byCustomer.has(cid)) {
         const c = customers.find((x) => x._id === cid);

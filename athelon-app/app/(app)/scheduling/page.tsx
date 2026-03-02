@@ -1442,7 +1442,7 @@ export default function SchedulingPage() {
       {/* Sub-nav toolbar */}
       {!isFullscreen && (
         <div className="flex items-center gap-2 px-2 sm:px-4 py-2 border-b border-border/30 bg-muted/20 flex-shrink-0">
-        <Button variant="ghost" size="sm" className="text-xs h-7" asChild>
+        <Button variant="secondary" size="sm" className="text-xs h-7" asChild>
           <Link to="/scheduling">Gantt Board</Link>
         </Button>
         <Button variant="ghost" size="sm" className="text-xs h-7" asChild>

@@ -130,6 +130,27 @@ export default function FinancialPlanningPage() {
 
   async function handleSave() {
     if (!orgId) return;
+
+    // Validate all inputs are real, non-negative numbers before hitting backend.
+    // Number("100k") = NaN, Number("-5") = -5 — both would corrupt planning calculations.
+    const fields: [string, number][] = [
+      ["Default Shop Rate", parsed.defaultShopRate],
+      ["Labor Cost Rate", parsed.defaultLaborCostRate],
+      ["Monthly Fixed Overhead", parsed.monthlyFixedOverhead],
+      ["Monthly Variable Overhead", parsed.monthlyVariableOverhead],
+      ["Annual CAPEX Assumption", parsed.annualCapexAssumption],
+    ];
+    for (const [label, value] of fields) {
+      if (Number.isNaN(value)) {
+        toast.error(`${label}: enter a valid number (e.g. 125, not "125/hr")`);
+        return;
+      }
+      if (value < 0) {
+        toast.error(`${label} cannot be negative`);
+        return;
+      }
+    }
+
     setSaving(true);
     try {
       await saveSettings({

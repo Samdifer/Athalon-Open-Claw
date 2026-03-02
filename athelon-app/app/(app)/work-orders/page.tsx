@@ -74,6 +74,7 @@ type WorkOrderRow = {
   status: string;
   statusLabel: string;
   typeLabel: string;
+  rawType: string;
   priority: string;
   description: string;
   customer: string;
@@ -146,6 +147,7 @@ export default function WorkOrdersPage() {
       status: wo.status,
       statusLabel: WO_STATUS_LABEL[wo.status as WoStatus] ?? wo.status,
       typeLabel: WO_TYPE_LABEL[wo.workOrderType as WoType] ?? wo.workOrderType,
+      rawType: wo.workOrderType,
       priority: wo.priority,
       description: wo.description,
       customer: wo.customerName ?? "No customer",
@@ -166,13 +168,7 @@ export default function WorkOrdersPage() {
     () =>
       filterWorkOrders(workOrders, activeTab).filter((wo) => {
         if (filterPriority && wo.priority !== filterPriority) return false;
-        if (filterType) {
-          // typeLabel is derived from WO_TYPE_LABEL[workOrderType], compare raw type via map
-          const rawType = Object.entries(WO_TYPE_LABEL).find(
-            ([, label]) => label === wo.typeLabel,
-          )?.[0];
-          if (rawType !== filterType) return false;
-        }
+        if (filterType && wo.rawType !== filterType) return false;
         if (!search.trim()) return true;
         const q = search.toLowerCase();
         return (

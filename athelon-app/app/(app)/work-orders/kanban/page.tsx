@@ -387,7 +387,7 @@ export default function KanbanPage() {
               List View
             </Link>
           </Button>
-          <h1 className="text-xl font-bold">Work Orders — Kanban</h1>
+          <h1 className="text-lg sm:text-xl md:text-2xl font-semibold text-foreground">Work Orders — Kanban</h1>
         </div>
       </div>
 
