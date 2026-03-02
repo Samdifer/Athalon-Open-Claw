@@ -7,6 +7,7 @@ import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import type { Id } from "@/convex/_generated/dataModel";
 import { Plus, Tag, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
@@ -319,15 +320,16 @@ export default function PricingPage() {
                 <Input type="date" value={profileEffective} onChange={(e) => setProfileEffective(e.target.value)} className="h-9 text-sm" />
               </div>
               <div className="flex items-end pb-1">
-                <label className="flex items-center gap-2 text-xs cursor-pointer select-none">
-                  <input
-                    type="checkbox"
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id="pricing-is-default"
                     checked={profileIsDefault}
-                    onChange={(e) => setProfileIsDefault(e.target.checked)}
-                    className="rounded"
+                    onCheckedChange={(v) => setProfileIsDefault(v === true)}
                   />
-                  Set as Default Profile
-                </label>
+                  <Label htmlFor="pricing-is-default" className="text-xs cursor-pointer">
+                    Set as Default Profile
+                  </Label>
+                </div>
               </div>
             </div>
           </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useRouter } from "@/hooks/useRouter";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -83,7 +83,8 @@ export default function CustomersPage() {
 
   const isLoading = !isLoaded || customers === undefined;
 
-  const filtered = (() => {
+  // Memoized so search keystrokes don't trigger a full filter on unrelated re-renders.
+  const filtered = useMemo(() => {
     if (!customers) return [];
     if (!search.trim()) return customers;
     const q = search.toLowerCase();
@@ -93,7 +94,7 @@ export default function CustomersPage() {
         (c.companyName?.toLowerCase().includes(q) ?? false) ||
         (c.email?.toLowerCase().includes(q) ?? false),
     );
-  })();
+  }, [customers, search]);
 
   return (
     <div className="space-y-5">

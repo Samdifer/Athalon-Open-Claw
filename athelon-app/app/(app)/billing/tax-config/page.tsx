@@ -5,6 +5,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import { Percent, Plus } from "lucide-react";
+import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -70,6 +71,7 @@ function AddTaxRateDialog({ open, onClose, orgId }: AddTaxRateDialogProps) {
         appliesTo,
         isDefault,
       });
+      toast.success("Tax rate added");
       setName("");
       setRate("");
       setAppliesTo("all");
@@ -199,11 +201,17 @@ export default function TaxConfigPage() {
       </div>
 
       <Card className="border-border/60">
-        <CardHeader className="pb-3">
+        <CardHeader className="pb-3 flex flex-row items-center justify-between">
           <CardTitle className="text-sm font-medium flex items-center gap-2">
             <Percent className="w-4 h-4 text-muted-foreground" />
             Tax Rates
           </CardTitle>
+          {taxRates.length > 0 && (
+            <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => setAddOpen(true)}>
+              <Plus className="w-3 h-3" />
+              Add Rate
+            </Button>
+          )}
         </CardHeader>
         <CardContent className="p-0">
           {taxRates.length === 0 ? (

@@ -324,7 +324,9 @@ export default function InvoiceDetailPage() {
   }
 
   const canSend = invoice.status === "DRAFT";
-  const canPayment = invoice.status === "SENT" || invoice.status === "PARTIAL" || invoice.status === "PAID";
+  // PAID invoices have balance=0 — showing "Record Payment" on them is confusing and serves no purpose.
+  // The overpayment guard (AI-039) would block entry anyway, but the button should not be visible.
+  const canPayment = invoice.status === "SENT" || invoice.status === "PARTIAL";
   const canVoid = invoice.status === "DRAFT" || invoice.status === "SENT" || invoice.status === "PARTIAL";
   const isDraft = invoice.status === "DRAFT";
 
