@@ -128,12 +128,15 @@ export default function AnalyticsPage() {
   // ── Top-level invoice metrics ──────────────────────────────────────────────
   const invoiceMetrics = useMemo(() => {
     if (!invoices) return null;
-    const totalInvoiced = invoices.reduce((sum, i) => sum + i.total, 0);
-    const totalCollected = invoices.reduce((sum, i) => sum + i.amountPaid, 0);
-    const outstandingAR = invoices
-      .filter((i) => i.status !== "PAID" && i.status !== "VOID")
+    // Exclude VOID invoices from all revenue/count metrics — voided invoices
+    // were cancelled and should never inflate reported figures.
+    const nonVoid = invoices.filter((i) => i.status !== "VOID");
+    const totalInvoiced = nonVoid.reduce((sum, i) => sum + i.total, 0);
+    const totalCollected = nonVoid.reduce((sum, i) => sum + i.amountPaid, 0);
+    const outstandingAR = nonVoid
+      .filter((i) => i.status !== "PAID")
       .reduce((sum, i) => sum + i.balance, 0);
-    const count = invoices.length;
+    const count = nonVoid.length;
     const avgInvoiceValue = count > 0 ? totalInvoiced / count : 0;
     return { totalInvoiced, totalCollected, outstandingAR, count, avgInvoiceValue };
   }, [invoices]);
@@ -185,12 +188,29 @@ export default function AnalyticsPage() {
     for (const k of keys) byMonth[k] = { invoiced: 0, collected: 0, outstanding: 0 };
 
     for (const inv of invoices) {
-      const key = getMonthKey(inv.createdAt);
-      if (!byMonth[key]) continue;
-      byMonth[key].invoiced += inv.total;
-      byMonth[key].collected += inv.amountPaid;
-      if (inv.status !== "PAID" && inv.status !== "VOID") {
-        byMonth[key].outstanding += inv.balance;
+      if (inv.status === "VOID") continue; // voided invoices don't count as revenue
+
+      // "Invoiced" is attributed to the month the invoice was CREATED.
+      const invoicedKey = getMonthKey(inv.createdAt);
+      if (byMonth[invoicedKey]) {
+        byMonth[invoicedKey].invoiced += inv.total;
+      }
+
+      // "Collected" is attributed to the month cash was RECEIVED (paidAt),
+      // NOT when the invoice was created. An invoice created in November
+      // but paid in January belongs in January's collected column.
+      if (inv.amountPaid > 0) {
+        const paidKey = getMonthKey((inv as { paidAt?: number }).paidAt ?? inv.createdAt);
+        if (byMonth[paidKey]) {
+          byMonth[paidKey].collected += inv.amountPaid;
+        }
+      }
+
+      if (inv.status !== "PAID") {
+        // Outstanding uses invoice creation date (the obligation was incurred then)
+        if (byMonth[invoicedKey]) {
+          byMonth[invoicedKey].outstanding += inv.balance;
+        }
       }
     }
 
@@ -252,12 +272,15 @@ export default function AnalyticsPage() {
     if (!invoices || !customers) return [];
     const byCustomer = new Map<string, { name: string; total: number }>();
     for (const inv of invoices) {
-      if (inv.status === "VOID") continue;
+      // Only count cash that was actually received. DRAFT/SENT/PARTIAL-unpaid
+      // invoices are accounts receivable, not revenue. Using amountPaid ensures
+      // the chart reflects what was collected, not what was billed.
+      if (inv.amountPaid <= 0) continue;
       const custId = inv.customerId as string;
       if (!byCustomer.has(custId)) {
         byCustomer.set(custId, { name: customerMap.get(custId) ?? "Unknown", total: 0 });
       }
-      byCustomer.get(custId)!.total += inv.total;
+      byCustomer.get(custId)!.total += inv.amountPaid; // accumulated cash received, not billed
     }
     return Array.from(byCustomer.values())
       .sort((a, b) => b.total - a.total)
@@ -422,7 +445,7 @@ export default function AnalyticsPage() {
         {/* Top Customers */}
         <Card className="border-border/60">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Top Customers by Revenue</CardTitle>
+            <CardTitle className="text-sm font-medium">Top Customers by Collected Revenue</CardTitle>
           </CardHeader>
           <CardContent>
             {topCustomersByRevenue.length === 0 ? (

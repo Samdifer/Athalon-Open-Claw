@@ -14,6 +14,7 @@ import {
   PauseCircle,
   PlayCircle,
   Trash2,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -46,6 +47,16 @@ import {
 } from "@/components/ui/select";
 import { ActionableEmptyState } from "@/components/zero-state/ActionableEmptyState";
 import { MissingPrereqBanner } from "@/components/zero-state/MissingPrereqBanner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -422,6 +433,10 @@ function CreateRecurringTemplateDialog({ open, onClose, orgId, techId }: CreateT
 export default function RecurringBillingPage() {
   const { orgId, techId, isLoaded } = useCurrentOrg();
   const [createOpen, setCreateOpen] = useState(false);
+  // generateConfirm: the template to confirm before firing the mutation
+  const [generateConfirm, setGenerateConfirm] = useState<{ id: Id<"recurringBillingTemplates">; name: string } | null>(null);
+  // generatingId: tracks the in-flight generate mutation to prevent double-click
+  const [generatingId, setGeneratingId] = useState<string | null>(null);
 
   const templates = useQuery(
     api.billingV4b.listRecurringTemplates,
@@ -463,11 +478,15 @@ export default function RecurringBillingPage() {
 
   async function handleGenerateNow(templateId: Id<"recurringBillingTemplates">) {
     if (!orgId) return;
+    setGeneratingId(templateId);
     try {
       const invoiceId = await generateNow({ orgId, templateId });
       toast.success(`Invoice generated (ID: ${String(invoiceId).slice(-6)}).`);
     } catch (e: unknown) {
       toast.error((e as Error).message ?? "Failed to generate invoice.");
+    } finally {
+      setGeneratingId(null);
+      setGenerateConfirm(null);
     }
   }
 
@@ -612,11 +631,15 @@ export default function RecurringBillingPage() {
                         size="sm"
                         variant="ghost"
                         className="h-7 px-2 text-xs text-primary hover:text-primary hover:bg-primary/10"
-                        onClick={() => handleGenerateNow(tpl._id)}
-                        disabled={!tpl.active}
+                        onClick={() => setGenerateConfirm({ id: tpl._id, name: tpl.name })}
+                        disabled={!tpl.active || generatingId === tpl._id}
                         aria-label="Generate invoice now"
                       >
-                        <Play className="w-3.5 h-3.5 mr-1" />
+                        {generatingId === tpl._id ? (
+                          <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />
+                        ) : (
+                          <Play className="w-3.5 h-3.5 mr-1" />
+                        )}
                         Generate Now
                       </Button>
                     </div>
@@ -638,6 +661,42 @@ export default function RecurringBillingPage() {
           techId={techId}
         />
       )}
+
+      {/* Generate Now Confirmation */}
+      <AlertDialog
+        open={generateConfirm !== null}
+        onOpenChange={(v) => { if (!v && !generatingId) setGenerateConfirm(null); }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Generate Invoice Now?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will immediately create a new invoice from the template{" "}
+              <strong>{generateConfirm?.name}</strong>. The invoice will be
+              created as a DRAFT and sent to the customer's billing queue.
+              Generating an invoice outside the scheduled cycle will not reset
+              the next scheduled generation date.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={!!generatingId}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={!!generatingId}
+              onClick={() => {
+                if (generateConfirm) {
+                  void handleGenerateNow(generateConfirm.id);
+                }
+              }}
+            >
+              {generatingId ? (
+                <><Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />Generating…</>
+              ) : (
+                "Generate Invoice"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
