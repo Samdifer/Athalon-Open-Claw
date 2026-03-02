@@ -151,6 +151,16 @@ export default function FleetCalendarPage() {
 
       {!workOrders ? (
         <Skeleton className="h-96 w-full" />
+      ) : workOrders.length === 0 ? (
+        <Card className="border-border/60">
+          <CardContent className="py-16 text-center">
+            <CalendarDays className="w-8 h-8 text-muted-foreground/30 mx-auto mb-3" />
+            <p className="text-sm font-medium text-muted-foreground">No scheduled work orders this month</p>
+            <p className="text-xs text-muted-foreground/60 mt-1">
+              Work orders with a scheduled start or promised delivery date will appear here.
+            </p>
+          </CardContent>
+        </Card>
       ) : (
         <Card className="border-border/60">
           <CardContent className="p-0">

@@ -183,6 +183,13 @@ export function FleetComplianceStats({ fleet, orgId }: FleetComplianceStatsProps
                   {adIssueCount}
                 </p>
               )}
+              {/* BUG-QCM-C2: `aircraftWithIssues` was computed but never rendered.
+                  QCM saw "8 AD Issues" with no way to know if that's 8 problems
+                  spread across 8 aircraft or 8 problems on 1 aircraft still in the
+                  hangar. The affected aircraft count is the clinically relevant
+                  number — an overdue AD on a dispatched aircraft is urgent; on one
+                  still in maintenance it's already being handled. Now shown below
+                  the overdue/pending breakdown as "N aircraft affected." */}
               <p className="text-[11px] text-muted-foreground mt-0.5">
                 {adSummaryLoading
                   ? "loading…"
@@ -194,6 +201,11 @@ export function FleetComplianceStats({ fleet, orgId }: FleetComplianceStatsProps
                         ? `${overdueAds} overdue AD${overdueAds !== 1 ? "s" : ""}`
                         : `${pendingAds} pending review`}
               </p>
+              {!adSummaryLoading && aircraftWithIssues > 0 && (
+                <p className="text-[10px] text-muted-foreground/60 mt-0.5">
+                  {aircraftWithIssues} aircraft affected
+                </p>
+              )}
             </div>
             <div
               className={`p-2 rounded-lg ${

@@ -150,12 +150,12 @@ export default function PredictionsPage() {
     return counts;
   }, [predictions]);
 
-  // Tab label counts — must match what the tab actually shows (all statuses, by severity)
+  // Tab label counts — active predictions only, so badge reflects actionable items
   const tabCounts = useMemo(() => {
     if (!predictions) return { critical: 0, high: 0, medium: 0, low: 0 };
     const c = { critical: 0, high: 0, medium: 0, low: 0 };
     for (const p of predictions) {
-      if (p.severity in c) c[p.severity as Severity]++;
+      if (p.status === "active" && p.severity in c) c[p.severity as Severity]++;
     }
     return c;
   }, [predictions]);

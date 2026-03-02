@@ -94,7 +94,7 @@ function CloseReadinessPanel({
   workOrders,
 }: {
   orgId: Id<"organizations">;
-  workOrders: Array<{ _id: Id<"workOrders">; workOrderNumber: string }>;
+  workOrders: Array<{ _id: Id<"workOrders">; workOrderNumber: string; status?: string }>;
 }) {
   const [selectedWoId, setSelectedWoId] =
     useState<Id<"workOrders"> | null>(null);
@@ -127,9 +127,22 @@ function CloseReadinessPanel({
             <SelectValue placeholder="Select work order…" />
           </SelectTrigger>
           <SelectContent>
+            {/* BUG-QCM-PS-001: WOs were in insertion order (arbitrary). A QCM
+                with 100 open WOs had no way to quickly find a specific WO.
+                Now sorted: pending_signoff first (these are the only ones the
+                QCM can actually authorize RTS for), then alphabetically within
+                each group. The "(ready)" label helps the QCM identify sign-off
+                candidates immediately without checking each one. */}
             {workOrders.map((wo) => (
               <SelectItem key={wo._id} value={wo._id}>
-                <span className="font-mono text-xs">{wo.workOrderNumber}</span>
+                <span className="flex items-center gap-2">
+                  <span className="font-mono text-xs">{wo.workOrderNumber}</span>
+                  {wo.status === "pending_signoff" && (
+                    <span className="text-[10px] text-green-600 dark:text-green-400 font-medium">
+                      ready
+                    </span>
+                  )}
+                </span>
               </SelectItem>
             ))}
           </SelectContent>
@@ -295,16 +308,29 @@ export default function QcmReviewPage() {
   // IIFE in the JSX, re-running on every render trigger (dialog open/close,
   // selectedWoId change, Convex query updates). With 200 WOs this was O(200)
   // per render. Now recomputes only when workOrders changes.
-  const openWos = useMemo(
-    () =>
-      (workOrders ?? [])
-        .filter(
-          (wo) =>
-            !["closed", "cancelled", "voided"].includes(wo.status ?? ""),
-        )
-        .map((wo) => ({ _id: wo._id, workOrderNumber: wo.workOrderNumber })),
-    [workOrders],
-  );
+  const openWos = useMemo(() => {
+    // BUG-QCM-PS-002: Previously openWos was unsorted (insertion/database order)
+    // and stripped the status field, so CloseReadinessPanel couldn't distinguish
+    // pending_signoff WOs from in-progress ones. A QCM with 100 open WOs had to
+    // check each one to find which were actually ready for RTS authorization.
+    // Now: include status, sort pending_signoff WOs to the top (they're the only
+    // ones a QCM can authorize RTS for), then sort remaining alphabetically by WO#.
+    return (workOrders ?? [])
+      .filter(
+        (wo) => !["closed", "cancelled", "voided"].includes(wo.status ?? ""),
+      )
+      .map((wo) => ({
+        _id: wo._id,
+        workOrderNumber: wo.workOrderNumber,
+        status: wo.status,
+      }))
+      .sort((a, b) => {
+        const aPending = a.status === "pending_signoff" ? 0 : 1;
+        const bPending = b.status === "pending_signoff" ? 0 : 1;
+        if (aPending !== bPending) return aPending - bPending;
+        return (a.workOrderNumber ?? "").localeCompare(b.workOrderNumber ?? "");
+      });
+  }, [workOrders]);
 
   if (isLoading) {
     return (

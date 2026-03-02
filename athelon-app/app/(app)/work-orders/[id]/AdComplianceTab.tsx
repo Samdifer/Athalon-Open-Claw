@@ -44,7 +44,22 @@ function AdStatusBadge({
   isDueSoon: boolean;
   complianceStatus: string;
 }) {
-  if (complianceStatus === "not_complied" || complianceStatus === "pending_determination") {
+  // BUG-QCM-C1: Previously `pending_determination` was grouped with `not_complied`
+  // and shown as a red "Not Complied" badge. These are different states:
+  // `not_complied` = actively non-compliant (blocks RTS); `pending_determination` =
+  // applicability not yet established. Showing pending ADs as "Not Complied" inflated
+  // apparent non-compliance on the WO's AD Compliance tab and contradicted the amber
+  // "Pending" badge shown for the same records on the Compliance dashboard and Audit
+  // Trail pages (fixed in BUG-QCM-AT-001 for those pages; this file was missed).
+  if (complianceStatus === "pending_determination") {
+    return (
+      <Badge variant="outline" className="bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30 text-[10px]">
+        <Clock className="w-2.5 h-2.5 mr-1" />
+        Pending
+      </Badge>
+    );
+  }
+  if (complianceStatus === "not_complied") {
     return (
       <Badge variant="outline" className="bg-red-500/15 text-red-600 dark:text-red-400 border-red-500/30 text-[10px]">
         <AlertTriangle className="w-2.5 h-2.5 mr-1" />
@@ -204,47 +219,99 @@ function AdCompliancePanelInner({
 
   return (
     <div className="space-y-4">
-      {/* Summary Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <Card className="border-border/60">
-          <CardContent className="p-3">
-            <p className="text-[11px] text-muted-foreground mb-1">Total ADs</p>
-            <span className="text-lg font-bold text-foreground">{summary.total}</span>
-          </CardContent>
-        </Card>
-        <Card className={`border-border/60 ${summary.overdueCount > 0 ? "border-red-500/40 bg-red-500/5" : ""}`}>
-          <CardContent className="p-3">
-            <p className="text-[11px] text-muted-foreground mb-1">Overdue</p>
-            <span className={`text-lg font-bold ${summary.overdueCount > 0 ? "text-red-600 dark:text-red-400" : "text-foreground"}`}>
-              {summary.overdueCount}
-            </span>
-          </CardContent>
-        </Card>
-        <Card className={`border-border/60 ${summary.dueSoonCount > 0 ? "border-amber-500/40 bg-amber-500/5" : ""}`}>
-          <CardContent className="p-3">
-            <p className="text-[11px] text-muted-foreground mb-1">Due Soon</p>
-            <span className={`text-lg font-bold ${summary.dueSoonCount > 0 ? "text-amber-600 dark:text-amber-400" : "text-foreground"}`}>
-              {summary.dueSoonCount}
-            </span>
-          </CardContent>
-        </Card>
-        <Card className="border-border/60">
-          <CardContent className="p-3">
-            <p className="text-[11px] text-muted-foreground mb-1">Aircraft TT</p>
-            <span className="text-lg font-bold font-mono text-foreground">
-              {currentHours.toFixed(1)} hr
-            </span>
-          </CardContent>
-        </Card>
-      </div>
+      {/* Summary Cards
+          BUG-QCM-C2: Previously the grid only had 4 cards: Total / Overdue /
+          Due Soon / Aircraft TT. The "Overdue" card only counted *date-overrun*
+          ADs (overdueCount). An aircraft with 3 ADs that were never performed
+          (notCompliedCount: 3) but no *date*-overruns showed "Overdue: 0" in
+          neutral color, yet the blocking banner below was red. Contradictory
+          signals — the summary said green, the banner said red.
+          Added a 5th card: "Not Complied" that shows notCompliedCount with the
+          same red highlight so the summary cards match the blocking banner.
+          notCompliedCount is cast via (summary as unknown as Record<string, number>)
+          since it may not yet be surfaced in the TypeScript type. */}
+      {(() => {
+        const notCompliedCount =
+          (summary as unknown as Record<string, number>)["notCompliedCount"] ?? 0;
+        return (
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+            <Card className="border-border/60">
+              <CardContent className="p-3">
+                <p className="text-[11px] text-muted-foreground mb-1">Total ADs</p>
+                <span className="text-lg font-bold text-foreground">{summary.total}</span>
+              </CardContent>
+            </Card>
+            <Card className={`border-border/60 ${summary.overdueCount > 0 ? "border-red-500/40 bg-red-500/5" : ""}`}>
+              <CardContent className="p-3">
+                <p className="text-[11px] text-muted-foreground mb-1">Overdue</p>
+                <span className={`text-lg font-bold ${summary.overdueCount > 0 ? "text-red-600 dark:text-red-400" : "text-foreground"}`}>
+                  {summary.overdueCount}
+                </span>
+              </CardContent>
+            </Card>
+            <Card className={`border-border/60 ${notCompliedCount > 0 ? "border-red-500/40 bg-red-500/5" : ""}`}>
+              <CardContent className="p-3">
+                <p className="text-[11px] text-muted-foreground mb-1">Not Complied</p>
+                <span className={`text-lg font-bold ${notCompliedCount > 0 ? "text-red-600 dark:text-red-400" : "text-foreground"}`}>
+                  {notCompliedCount}
+                </span>
+              </CardContent>
+            </Card>
+            <Card className={`border-border/60 ${summary.dueSoonCount > 0 ? "border-amber-500/40 bg-amber-500/5" : ""}`}>
+              <CardContent className="p-3">
+                <p className="text-[11px] text-muted-foreground mb-1">Due Soon</p>
+                <span className={`text-lg font-bold ${summary.dueSoonCount > 0 ? "text-amber-600 dark:text-amber-400" : "text-foreground"}`}>
+                  {summary.dueSoonCount}
+                </span>
+              </CardContent>
+            </Card>
+            <Card className="border-border/60">
+              <CardContent className="p-3">
+                <p className="text-[11px] text-muted-foreground mb-1">Aircraft TT</p>
+                <span className="text-lg font-bold font-mono text-foreground">
+                  {currentHours.toFixed(1)} hr
+                </span>
+              </CardContent>
+            </Card>
+          </div>
+        );
+      })()}
 
-      {/* Blocking Banner */}
+      {/* Blocking Banner
+          BUG-QCM-C4: Previously the banner just said "has blocking AD items.
+          Aircraft may not return to service until resolved." — giving the QCM
+          no information about *what kind* of blocking items exist. If `hasBlockingItems`
+          included pending_determination ADs (applicability not yet confirmed),
+          the "may not return to service" message was too strong: pending ADs haven't
+          been confirmed as applicable yet and may not actually block RTS.
+          Now the banner lists the exact breakdown (overdue / not-complied /
+          pending-determination) so the QCM knows the severity at a glance —
+          the same pattern used in the Audit Trail page (BUG-QCM-AT-002). */}
       {summary.hasBlockingItems && (
         <Card className="border-red-500/30 bg-red-500/5">
           <CardContent className="p-3 flex items-center gap-2.5">
             <AlertTriangle className="w-4 h-4 text-red-600 dark:text-red-400 flex-shrink-0" />
             <p className="text-xs text-red-600 dark:text-red-400 font-medium">
-              {aircraftRegistration} has blocking AD items. Aircraft may not return to service until resolved.
+              {aircraftRegistration} has{" "}
+              {(() => {
+                const notCompliedCount =
+                  (summary as unknown as Record<string, number>)["notCompliedCount"] ?? 0;
+                const pendingDetCount =
+                  (summary as unknown as Record<string, number>)["pendingDeterminationCount"] ?? 0;
+                const parts: string[] = [];
+                if (summary.overdueCount > 0)
+                  parts.push(`${summary.overdueCount} overdue`);
+                if (notCompliedCount > 0)
+                  parts.push(`${notCompliedCount} not-complied`);
+                if (pendingDetCount > 0)
+                  parts.push(`${pendingDetCount} pending-determination`);
+                if (parts.length === 0) return "blocking";
+                return parts.length === 1
+                  ? parts[0]
+                  : parts.slice(0, -1).join(", ") + " and " + parts[parts.length - 1];
+              })()}{" "}
+              AD{summary.overdueCount + ((summary as unknown as Record<string, number>)["notCompliedCount"] ?? 0) + ((summary as unknown as Record<string, number>)["pendingDeterminationCount"] ?? 0) !== 1 ? "s" : ""}.{" "}
+              Aircraft may not return to service until these are resolved.
             </p>
           </CardContent>
         </Card>

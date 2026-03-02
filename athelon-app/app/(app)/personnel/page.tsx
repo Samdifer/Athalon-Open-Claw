@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { Users, ShieldAlert, AlertTriangle, ExternalLink, Pencil, X, Check } from "lucide-react";
+import { Users, ShieldAlert, AlertTriangle, ExternalLink, Pencil, X, Check, GraduationCap } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -602,6 +602,17 @@ export default function PersonnelPage() {
                             {workload.estimatedRemainingHours.toFixed(1)}h remaining
                           </span>
                         </div>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-6 text-[11px] px-2 text-muted-foreground hover:text-foreground"
+                          asChild
+                        >
+                          <Link to="/personnel/training">
+                            <GraduationCap className="w-3 h-3 mr-1" />
+                            Training
+                          </Link>
+                        </Button>
                         <Button
                           size="sm"
                           variant="ghost"

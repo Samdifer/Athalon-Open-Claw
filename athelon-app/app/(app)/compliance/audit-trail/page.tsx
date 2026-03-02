@@ -217,39 +217,60 @@ function AdCompliancePanel({
 
   return (
     <div className="space-y-4">
-      {/* Summary Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-        <Card className="border-border/60">
-          <CardContent className="p-3">
-            <p className="text-[11px] text-muted-foreground mb-1">Total ADs</p>
-            <span className="text-lg font-bold text-foreground">{summary.total}</span>
-          </CardContent>
-        </Card>
-        <Card className={`border-border/60 ${summary.overdueCount > 0 ? "border-red-500/40 bg-red-500/5" : ""}`}>
-          <CardContent className="p-3">
-            <p className="text-[11px] text-muted-foreground mb-1">Overdue</p>
-            <span className={`text-lg font-bold ${summary.overdueCount > 0 ? "text-red-400" : "text-foreground"}`}>
-              {summary.overdueCount}
-            </span>
-          </CardContent>
-        </Card>
-        <Card className={`border-border/60 ${summary.dueSoonCount > 0 ? "border-amber-500/40 bg-amber-500/5" : ""}`}>
-          <CardContent className="p-3">
-            <p className="text-[11px] text-muted-foreground mb-1">Due Soon</p>
-            <span className={`text-lg font-bold ${summary.dueSoonCount > 0 ? "text-amber-400" : "text-foreground"}`}>
-              {summary.dueSoonCount}
-            </span>
-          </CardContent>
-        </Card>
-        <Card className="border-border/60">
-          <CardContent className="p-3">
-            <p className="text-[11px] text-muted-foreground mb-1">Aircraft TT</p>
-            <span className="text-lg font-bold font-mono text-foreground">
-              {currentHours.toFixed(1)} hr
-            </span>
-          </CardContent>
-        </Card>
-      </div>
+      {/* Summary Row
+          BUG-QCM-C3: Same issue as AdComplianceTab BUG-QCM-C2 — the 4-card
+          summary only tracked overdueCount (date-overrun ADs). An aircraft with
+          0 overdue but 3 never-performed ADs showed "Overdue: 0" neutral/grey
+          while the blocking banner below was red. Added a 5th "Not Complied"
+          card that lights up red when notCompliedCount > 0, matching the blocking
+          banner and giving the QCM inspector consistent severity signals across
+          the page. */}
+      {(() => {
+        const notCompliedCount =
+          (summary as unknown as Record<string, number>)["notCompliedCount"] ?? 0;
+        return (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+            <Card className="border-border/60">
+              <CardContent className="p-3">
+                <p className="text-[11px] text-muted-foreground mb-1">Total ADs</p>
+                <span className="text-lg font-bold text-foreground">{summary.total}</span>
+              </CardContent>
+            </Card>
+            <Card className={`border-border/60 ${summary.overdueCount > 0 ? "border-red-500/40 bg-red-500/5" : ""}`}>
+              <CardContent className="p-3">
+                <p className="text-[11px] text-muted-foreground mb-1">Overdue</p>
+                <span className={`text-lg font-bold ${summary.overdueCount > 0 ? "text-red-400" : "text-foreground"}`}>
+                  {summary.overdueCount}
+                </span>
+              </CardContent>
+            </Card>
+            <Card className={`border-border/60 ${notCompliedCount > 0 ? "border-red-500/40 bg-red-500/5" : ""}`}>
+              <CardContent className="p-3">
+                <p className="text-[11px] text-muted-foreground mb-1">Not Complied</p>
+                <span className={`text-lg font-bold ${notCompliedCount > 0 ? "text-red-400" : "text-foreground"}`}>
+                  {notCompliedCount}
+                </span>
+              </CardContent>
+            </Card>
+            <Card className={`border-border/60 ${summary.dueSoonCount > 0 ? "border-amber-500/40 bg-amber-500/5" : ""}`}>
+              <CardContent className="p-3">
+                <p className="text-[11px] text-muted-foreground mb-1">Due Soon</p>
+                <span className={`text-lg font-bold ${summary.dueSoonCount > 0 ? "text-amber-400" : "text-foreground"}`}>
+                  {summary.dueSoonCount}
+                </span>
+              </CardContent>
+            </Card>
+            <Card className="border-border/60">
+              <CardContent className="p-3">
+                <p className="text-[11px] text-muted-foreground mb-1">Aircraft TT</p>
+                <span className="text-lg font-bold font-mono text-foreground">
+                  {currentHours.toFixed(1)} hr
+                </span>
+              </CardContent>
+            </Card>
+          </div>
+        );
+      })()}
 
       {/* Blocking Banner */}
       {summary.hasBlockingItems && (
@@ -257,11 +278,23 @@ function AdCompliancePanel({
           <CardContent className="p-3 flex items-center gap-2.5">
             <AlertTriangle className="w-4 h-4 text-red-400 flex-shrink-0" />
             <p className="text-xs text-red-400 font-medium">
-              {aircraftRegistration} has {summary.overdueCount > 0 ? `${summary.overdueCount} overdue` : ""}
-              {summary.overdueCount > 0 && (summary.notCompliedCount > 0 || summary.pendingDeterminationCount > 0) ? " and " : ""}
-              {summary.notCompliedCount > 0 ? `${summary.notCompliedCount} not-complied` : ""}
-              {summary.pendingDeterminationCount > 0 ? `${summary.pendingDeterminationCount} pending-determination` : ""} ADs.
-              Aircraft may not return to service until these are resolved.
+              {/* BUG-QCM-AT-002: Previous inline JSX text-node concatenation produced
+                  garbled output when overdueCount=0 but both notComplied and
+                  pendingDetermination were >0 (e.g. "N776AB has 1 not-complied1
+                  pending-determination ADs."). The " and " separator only rendered
+                  when overdueCount>0, so two non-overdue issue types ran together
+                  with no space or comma between them. Replaced with a helper that
+                  builds the list as a JS array joined with " and " / ", " — same
+                  pattern used throughout the billing analytics page. */}
+              {aircraftRegistration} has{" "}
+              {(() => {
+                const parts: string[] = [];
+                if (summary.overdueCount > 0) parts.push(`${summary.overdueCount} overdue`);
+                if (summary.notCompliedCount > 0) parts.push(`${summary.notCompliedCount} not-complied`);
+                if (summary.pendingDeterminationCount > 0) parts.push(`${summary.pendingDeterminationCount} pending-determination`);
+                return parts.length === 1 ? parts[0] : parts.slice(0, -1).join(", ") + " and " + parts[parts.length - 1];
+              })()}{" "}
+              ADs. Aircraft may not return to service until these are resolved.
             </p>
           </CardContent>
         </Card>

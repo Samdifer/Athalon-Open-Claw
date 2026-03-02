@@ -313,10 +313,27 @@ function AdStatusBadge({
   isDueSoon: boolean;
   complianceStatus: string;
 }) {
-  if (
-    complianceStatus === "not_complied" ||
-    complianceStatus === "pending_determination"
-  ) {
+  // BUG-QCM-C1: Previously `pending_determination` was shown as a red "Not Complied"
+  // badge — same as `not_complied`. These are meaningfully different states:
+  //   • not_complied = AD was never performed (actively non-compliant, blocks RTS)
+  //   • pending_determination = applicability not yet established (needs review,
+  //     not necessarily a compliance failure)
+  // audit-trail/page.tsx already fixed this (BUG-QCM-AT-001). A QCM inspector
+  // viewing the WO Compliance tab saw "Not Complied" for a pending AD, then visited
+  // the Audit Trail and saw "Pending" for the same record. Inconsistency destroyed
+  // trust in both pages. Now both use the same convention: amber "Pending" badge.
+  if (complianceStatus === "pending_determination") {
+    return (
+      <Badge
+        variant="outline"
+        className="bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30 text-[10px]"
+      >
+        <Clock className="w-2.5 h-2.5 mr-1" />
+        Pending
+      </Badge>
+    );
+  }
+  if (complianceStatus === "not_complied") {
     return (
       <Badge
         variant="outline"
@@ -745,9 +762,21 @@ function ReturnToServiceSection({
     },
     {
       id: "maintenance_records",
+      // BUG-QCM-C3: Previously required `totalMaintenanceRecords > 0` as part
+      // of the "complete" guard. For WOs with no formal maintenance records
+      // (e.g. an inspection-only WO, or a new WO before any records are created),
+      // this check evaluated to `false`, disabling the "Proceed to RTS
+      // Authorization" button even when all backend blockers were resolved.
+      // The QCM inspector saw a grayed-out button with no explanation — the
+      // checklist item showed "Maintenance records signed (0/0)" as the only
+      // incomplete item, but 0 unsigned records is not a failure condition.
+      // The actual enforcement gate is PRE-8 on the RTS page, which shows
+      // PENDING (not FAIL) when there are 0 records on certain WO types.
+      // Now 0 records = vacuously complete in this checklist (consistent with
+      // how PRE-8 is evaluated). The RTS page still enforces the real gate.
       label: `Maintenance records signed (${summary.signedMaintenanceRecords}/${summary.totalMaintenanceRecords})`,
       complete:
-        summary.totalMaintenanceRecords > 0 &&
+        summary.totalMaintenanceRecords === 0 ||
         summary.signedMaintenanceRecords === summary.totalMaintenanceRecords,
     },
     {
