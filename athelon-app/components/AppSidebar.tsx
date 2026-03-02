@@ -213,9 +213,9 @@ function NavStandaloneItem({
           isActive && "bg-primary/10 text-primary hover:bg-primary/15",
         )}
       >
-        <Link to={item.href}>
+        <Link to={item.href} className="flex w-full min-w-0 items-center gap-2.5">
           <item.icon className="w-4 h-4 flex-shrink-0" />
-          <span className="flex-1">{item.title}</span>
+          <span className="flex-1 min-w-0 truncate">{item.title}</span>
         </Link>
       </SidebarMenuButton>
     </SidebarMenuItem>
@@ -251,9 +251,12 @@ function NavGroupItem({
                 "bg-primary/10 text-primary hover:bg-primary/15",
             )}
           >
-            <Link to={group.href}>
+            <Link
+              to={group.href}
+              className="flex w-full min-w-0 items-center gap-2.5"
+            >
               <group.icon className="w-4 h-4 flex-shrink-0" />
-              <span className="flex-1">{group.title}</span>
+              <span className="flex-1 min-w-0 truncate">{group.title}</span>
               <ChevronRight className="ml-auto w-4 h-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
             </Link>
           </SidebarMenuButton>
@@ -273,8 +276,11 @@ function NavGroupItem({
                         "bg-primary/10 text-primary hover:bg-primary/15",
                     )}
                   >
-                    <Link to={child.href}>
-                      <span>{child.title}</span>
+                    <Link
+                      to={child.href}
+                      className="flex w-full min-w-0 items-center"
+                    >
+                      <span className="min-w-0 truncate">{child.title}</span>
                     </Link>
                   </SidebarMenuSubButton>
                 </SidebarMenuSubItem>

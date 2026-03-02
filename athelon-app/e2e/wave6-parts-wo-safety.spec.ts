@@ -60,7 +60,7 @@ test.describe("Rotables Page — Condemn AlertDialog (AI-031)", () => {
     // Look for any "Condemn" button (only appears on non-condemned rotables)
     const condemnBtn = page
       .locator("button")
-      .filter({ hasText: /Condemn/i })
+      .filter({ hasText: /^Condemn$/i })
       .first();
 
     const hasCondemnBtn = await condemnBtn.isVisible({ timeout: 5_000 }).catch(() => false);
@@ -89,7 +89,7 @@ test.describe("Rotables Page — Condemn AlertDialog (AI-031)", () => {
     expect(browserDialogTriggered).toBe(false);
 
     // Assert: The shadcn AlertDialog appeared
-    const alertDialog = page.locator("[role='alertdialog']");
+    const alertDialog = page.locator("[role='alertdialog'], [role='dialog'][data-state='open']");
     await expect(alertDialog).toBeVisible({ timeout: 5_000 });
   });
 
@@ -103,7 +103,7 @@ test.describe("Rotables Page — Condemn AlertDialog (AI-031)", () => {
 
     const condemnBtn = page
       .locator("button")
-      .filter({ hasText: /Condemn/i })
+      .filter({ hasText: /^Condemn$/i })
       .first();
 
     const hasCondemnBtn = await condemnBtn.isVisible({ timeout: 5_000 }).catch(() => false);
@@ -115,7 +115,7 @@ test.describe("Rotables Page — Condemn AlertDialog (AI-031)", () => {
     await condemnBtn.click();
     await page.waitForTimeout(500);
 
-    const alertDialog = page.locator("[role='alertdialog']");
+    const alertDialog = page.locator("[role='alertdialog'], [role='dialog'][data-state='open']");
     const visible = await alertDialog.isVisible({ timeout: 5_000 }).catch(() => false);
     if (!visible) {
       test.skip(true, "AlertDialog did not open — implementation check needed");
@@ -142,7 +142,7 @@ test.describe("Rotables Page — Condemn AlertDialog (AI-031)", () => {
 
     const condemnBtn = page
       .locator("button")
-      .filter({ hasText: /Condemn/i })
+      .filter({ hasText: /^Condemn$/i })
       .first();
 
     const hasCondemnBtn = await condemnBtn.isVisible({ timeout: 5_000 }).catch(() => false);
@@ -154,7 +154,7 @@ test.describe("Rotables Page — Condemn AlertDialog (AI-031)", () => {
     await condemnBtn.click();
     await page.waitForTimeout(500);
 
-    const alertDialog = page.locator("[role='alertdialog']");
+    const alertDialog = page.locator("[role='alertdialog'], [role='dialog'][data-state='open']");
     const visible = await alertDialog.isVisible({ timeout: 5_000 }).catch(() => false);
     if (!visible) {
       test.skip(true, "AlertDialog did not open");
@@ -223,7 +223,10 @@ test.describe("Parts Inventory — Detail Sheet (AI-033)", () => {
     await partCard.click();
 
     // After click, a sheet/panel should open — look for Sheet or Dialog overlay
-    const sheet = page.locator("[role='dialog'], [data-state='open']").first();
+    const sheet = page
+      .locator("[role='dialog']")
+      .filter({ hasText: /Part Detail/i })
+      .first();
     await expect(sheet).toBeVisible({ timeout: 5_000 });
   });
 
@@ -245,7 +248,10 @@ test.describe("Parts Inventory — Detail Sheet (AI-033)", () => {
 
     await partCard.click();
 
-    const sheet = page.locator("[role='dialog'], [data-state='open']").first();
+    const sheet = page
+      .locator("[role='dialog']")
+      .filter({ hasText: /Part Detail/i })
+      .first();
     const sheetVisible = await sheet.isVisible({ timeout: 5_000 }).catch(() => false);
 
     if (!sheetVisible) {
@@ -283,7 +289,7 @@ test.describe("New Work Order — Submit Button Guard (AI-038)", () => {
 
     // Find the WO Number input — look by id or label text
     const woInput = page
-      .locator("#workOrderNumber, input[name='workOrderNumber'], input[placeholder*='WO-'], input[placeholder*='Work Order Number']")
+      .locator("input#workOrderNumber, input[name='workOrderNumber'], input[placeholder*='WO-'], input[placeholder*='Work Order Number']")
       .first();
 
     const visible = await woInput.isVisible({ timeout: 8_000 }).catch(() => false);
@@ -347,7 +353,7 @@ test.describe("New Work Order — Submit Button Guard (AI-038)", () => {
 
     // Fill the WO number field
     const woInput = page
-      .locator("#workOrderNumber, input[name='workOrderNumber']")
+      .locator("input#workOrderNumber, input[name='workOrderNumber']")
       .first();
 
     const inputVisible = await woInput.isVisible({ timeout: 5_000 }).catch(() => false);
