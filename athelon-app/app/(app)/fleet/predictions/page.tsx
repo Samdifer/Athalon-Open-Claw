@@ -125,7 +125,7 @@ export default function PredictionsPage() {
     });
   }, [predictions, severityTab, aircraftFilter, typeFilter]);
 
-  // Summary counts (active only)
+  // Summary counts (active only) — used in the stat cards
   const summary = useMemo(() => {
     if (!predictions) return { critical: 0, high: 0, medium: 0, low: 0, nextDate: null as number | null };
     const active = predictions.filter((p) => p.status === "active");
@@ -137,6 +137,16 @@ export default function PredictionsPage() {
       }
     }
     return counts;
+  }, [predictions]);
+
+  // Tab label counts — must match what the tab actually shows (all statuses, by severity)
+  const tabCounts = useMemo(() => {
+    if (!predictions) return { critical: 0, high: 0, medium: 0, low: 0 };
+    const c = { critical: 0, high: 0, medium: 0, low: 0 };
+    for (const p of predictions) {
+      if (p.severity in c) c[p.severity as Severity]++;
+    }
+    return c;
   }, [predictions]);
 
   async function handleGenerate() {
@@ -309,16 +319,16 @@ export default function PredictionsPage() {
             All ({predictions.length})
           </TabsTrigger>
           <TabsTrigger value="critical" className="text-red-500">
-            Critical ({summary.critical})
+            Critical ({tabCounts.critical})
           </TabsTrigger>
           <TabsTrigger value="high" className="text-orange-500">
-            High ({summary.high})
+            High ({tabCounts.high})
           </TabsTrigger>
           <TabsTrigger value="medium" className="text-yellow-500">
-            Medium ({summary.medium})
+            Medium ({tabCounts.medium})
           </TabsTrigger>
           <TabsTrigger value="low" className="text-blue-500">
-            Low ({summary.low})
+            Low ({tabCounts.low})
           </TabsTrigger>
         </TabsList>
 

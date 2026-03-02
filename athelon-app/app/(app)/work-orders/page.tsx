@@ -178,7 +178,8 @@ export default function WorkOrdersPage() {
         return (
           wo.number.toLowerCase().includes(q) ||
           wo.aircraft.toLowerCase().includes(q) ||
-          wo.description.toLowerCase().includes(q)
+          wo.description.toLowerCase().includes(q) ||
+          wo.customer.toLowerCase().includes(q)
         );
       }),
     [activeTab, search, workOrders, filterPriority, filterType],
@@ -263,11 +264,18 @@ export default function WorkOrdersPage() {
                 downloadCSV(
                   filtered.map((wo) => ({
                     "WO Number": wo.number,
-                    Status: wo.status,
+                    Status: wo.statusLabel,
                     Type: wo.typeLabel,
-                    Aircraft: wo.aircraft ?? "",
                     Priority: wo.priority,
+                    Customer: wo.customer,
+                    Aircraft: wo.aircraft ?? "",
+                    Description: wo.description,
                     Created: new Date(wo.openedAt).toLocaleDateString(),
+                    "Promise Date": wo.promisedDeliveryDate
+                      ? new Date(wo.promisedDeliveryDate).toLocaleDateString()
+                      : "",
+                    "Tasks Done": `${wo.tasksComplete}/${wo.tasksTotal}`,
+                    "Open Squawks": wo.openSquawks,
                   })),
                   "work-orders.csv",
                 );
@@ -331,7 +339,7 @@ export default function WorkOrdersPage() {
           <div className="relative">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
             <Input
-              placeholder="Search WO#, aircraft, description..."
+              placeholder="Search WO#, aircraft, customer, description..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="h-8 pl-8 pr-3 text-xs w-full sm:w-64 bg-muted/30 border-border/60"

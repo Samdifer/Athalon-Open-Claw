@@ -4,11 +4,16 @@ import { useMemo, useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
+import { Link } from "react-router-dom";
 import {
   TrendingUp,
   TrendingDown,
   Target,
   BarChart3,
+  DollarSign,
+  BarChart2,
+  Navigation,
+  FileBarChart,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -204,6 +209,25 @@ export default function WOProfitabilityPage() {
 
   return (
     <div className="space-y-5">
+      {/* Reports Sub-Navigation */}
+      <div className="flex flex-wrap gap-2">
+        <Button variant="ghost" size="sm" className="h-8 text-xs gap-1.5 border border-border/40" asChild>
+          <Link to="/reports"><FileBarChart className="w-3.5 h-3.5" />Overview</Link>
+        </Button>
+        <Button variant="ghost" size="sm" className="h-8 text-xs gap-1.5 border border-border/40" asChild>
+          <Link to="/reports/financials"><DollarSign className="w-3.5 h-3.5" />Financial Dashboard</Link>
+        </Button>
+        <Button variant="ghost" size="sm" className="h-8 text-xs gap-1.5 border border-border/40" asChild>
+          <Link to="/reports/financials/forecast"><TrendingUp className="w-3.5 h-3.5" />Forecast</Link>
+        </Button>
+        <Button variant="secondary" size="sm" className="h-8 text-xs gap-1.5" asChild>
+          <Link to="/reports/financials/profitability"><BarChart2 className="w-3.5 h-3.5" />Profitability</Link>
+        </Button>
+        <Button variant="ghost" size="sm" className="h-8 text-xs gap-1.5 border border-border/40" asChild>
+          <Link to="/reports/financials/runway"><Navigation className="w-3.5 h-3.5" />Runway</Link>
+        </Button>
+      </div>
+
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-lg sm:text-xl font-semibold text-foreground">WO Profitability</h1>

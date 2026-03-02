@@ -191,7 +191,7 @@ export default function FleetCalendarPage() {
                             return (
                               <Link
                                 key={j}
-                                to={ev.woId ? `/work-orders/${ev.woNumber ?? ev.woId}` : `/fleet/${ev.tail}`}
+                                to={ev.woId ? `/work-orders/${ev.woId}` : `/fleet/${ev.tail}`}
                                 className={`block text-[10px] leading-tight px-1 py-0.5 rounded border truncate hover:opacity-80 ${color}`}
                               >
                                 {ev.tail}

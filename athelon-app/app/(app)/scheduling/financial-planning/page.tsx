@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Calculator, ArrowLeft, Save, TrendingUp, TrendingDown } from "lucide-react";
+import { Calculator, Save, TrendingUp, TrendingDown } from "lucide-react";
 import { toast } from "sonner";
 
 function money(n: number): string {
@@ -172,14 +172,24 @@ export default function FinancialPlanningPage() {
 
   return (
     <div className="space-y-5 max-w-5xl">
+      {/* ── Scheduling Sub-Nav ─────────────────────────────────────────── */}
+      <div className="flex items-center gap-1 flex-wrap border-b border-border/30 pb-2">
+        <Button variant="ghost" size="sm" className="text-xs h-7" asChild>
+          <Link to="/scheduling">Gantt Board</Link>
+        </Button>
+        <Button variant="ghost" size="sm" className="text-xs h-7" asChild>
+          <Link to="/scheduling/bays">Bays</Link>
+        </Button>
+        <Button variant="ghost" size="sm" className="text-xs h-7" asChild>
+          <Link to="/scheduling/capacity">Capacity</Link>
+        </Button>
+        <Button variant="secondary" size="sm" className="text-xs h-7" asChild>
+          <Link to="/scheduling/financial-planning">Financial Planning</Link>
+        </Button>
+      </div>
+
       <div className="flex items-center justify-between">
         <div>
-          <Button asChild variant="ghost" size="sm" className="h-7 -ml-2 mb-2 text-xs">
-            <Link to="/scheduling">
-              <ArrowLeft className="w-3.5 h-3.5 mr-1.5" />
-              Scheduling
-            </Link>
-          </Button>
           <h1 className="text-lg sm:text-xl md:text-2xl font-semibold text-foreground flex items-center gap-2">
             <Calculator className="w-5 h-5 text-muted-foreground" />
             Planning Financials

@@ -346,7 +346,7 @@ export default function ReportsPage() {
                   const woCount = throughputData.find((t) => t.key === row.key)?.completed ?? 0;
                   return (
                     <TableRow key={row.key} className="border-border/40">
-                      <TableCell className="text-xs">{row.key}</TableCell>
+                      <TableCell className="text-xs">{row.month} {row.key.split("-")[0]}</TableCell>
                       <TableCell className="text-xs text-right tabular-nums font-medium">
                         ${row.revenue.toLocaleString()}
                       </TableCell>

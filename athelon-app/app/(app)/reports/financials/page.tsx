@@ -33,16 +33,11 @@ import {
   Area,
   LineChart,
   Line,
-  BarChart,
-  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Cell,
-  PieChart,
-  Pie,
 } from "recharts";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -66,14 +61,6 @@ function getMonthLabel(key: string) {
   const [, month] = key.split("-");
   return MONTH_NAMES[parseInt(month, 10) - 1];
 }
-
-const CHART_COLORS = [
-  "hsl(var(--chart-1))",
-  "hsl(var(--chart-2))",
-  "hsl(var(--chart-3))",
-  "hsl(var(--chart-4))",
-  "hsl(var(--chart-5))",
-];
 
 const TOOLTIP_STYLE = {
   background: "hsl(var(--popover))",
@@ -118,9 +105,7 @@ export default function FinancialDashboardPage() {
   const { orgId, isLoaded } = useCurrentOrg();
 
   const invoices = useQuery(api.billing.listInvoices, orgId ? { orgId } : "skip");
-  const quotes = useQuery(api.billing.listQuotes, orgId ? { orgId } : "skip");
   const purchaseOrders = useQuery(api.billing.listPurchaseOrders, orgId ? { orgId } : "skip");
-  const timeEntries = useQuery(api.timeClock.listTimeEntries, orgId ? { orgId } : "skip");
   const customers = useQuery(api.customers.listCustomers, orgId ? { orgId } : "skip");
 
   const isLoading = !isLoaded || invoices === undefined || purchaseOrders === undefined;
@@ -236,41 +221,10 @@ export default function FinancialDashboardPage() {
     return Array.from(byCustomer.values()).sort((a, b) => b.total - a.total).slice(0, 5);
   }, [invoices, customers]);
 
-  // ── Top 5 most profitable WO types (from invoices linked to WOs) ──────────
-
-  const woTypeRevenue = useMemo(() => {
-    if (!invoices) return [];
-    // Since invoices have laborTotal and partsTotal, approximate profitability
-    // Group by presence of workOrderId — we show revenue by invoice type distribution
-    const byType = new Map<string, { revenue: number; cost: number; count: number }>();
-    // Use invoice data — we don't have WO type on invoices, so show as "Work Order Revenue"
-    // For a proper breakdown we'd need to join WOs, but with client-side data we approximate
-    const types = ["Routine Maintenance", "Inspections", "Unscheduled Repairs", "AD Compliance", "Major Repairs"];
-    // Generate realistic distribution from actual invoice data
-    const totalRev = invoices.filter((i) => i.status !== "VOID").reduce((s, i) => s + i.total, 0);
-    const distribution = [0.35, 0.25, 0.20, 0.12, 0.08];
-    return types.map((type, i) => ({
-      type,
-      revenue: Math.round(totalRev * distribution[i]),
-      margin: [32, 28, 18, 35, 22][i],
-    }));
-  }, [invoices]);
-
-  // ── Revenue by aircraft type ───────────────────────────────────────────────
-
-  const aircraftTypeRevenue = useMemo(() => {
-    if (!invoices) return [];
-    const totalRev = invoices.filter((i) => i.status !== "VOID").reduce((s, i) => s + i.total, 0);
-    // Approximate distribution — connect live data for actual aircraft breakdown
-    const types = [
-      { name: "Cessna", pct: 0.30 },
-      { name: "Piper", pct: 0.22 },
-      { name: "Beechcraft", pct: 0.18 },
-      { name: "Cirrus", pct: 0.15 },
-      { name: "Other", pct: 0.15 },
-    ];
-    return types.map((t) => ({ name: t.name, value: Math.round(totalRev * t.pct) }));
-  }, [invoices]);
+  // ── Revenue by customer ───────────────────────────────────────────────────
+  // NOTE: WO-type and aircraft-type revenue breakdowns require server-side joins
+  // (invoice → work order → type/aircraft). These are tracked as BACKEND-NEEDED
+  // in MASTER-BUILD-LIST.md. Real data shown in topCustomers above.
 
   // ── Render ─────────────────────────────────────────────────────────────────
 
@@ -404,23 +358,15 @@ export default function FinancialDashboardPage() {
           <CardHeader className="pb-2">
             <div className="flex items-center gap-2">
               <CardTitle className="text-sm font-medium">Revenue by Aircraft Type</CardTitle>
-              <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-amber-500/40 text-amber-400">Connect live data</Badge>
             </div>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={aircraftTypeRevenue}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="name" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
-                <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
-                <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v) => [fmtUSD(Number(v ?? 0)), "Revenue"]} />
-                <Bar dataKey="value" radius={[4, 4, 0, 0]}>
-                  {aircraftTypeRevenue.map((_, i) => (
-                    <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+            <div className="h-[220px] flex flex-col items-center justify-center gap-2 rounded-md border border-dashed border-border/60 bg-muted/10 text-center px-4">
+              <p className="text-sm font-medium text-muted-foreground">Aircraft type breakdown unavailable</p>
+              <p className="text-xs text-muted-foreground/70 max-w-xs">
+                Revenue by aircraft type requires joining invoices to work orders and aircraft records — a server-side query not yet implemented. See MASTER-BUILD-LIST.md.
+              </p>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -462,31 +408,16 @@ export default function FinancialDashboardPage() {
         <Card className="border-border/60">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <Wrench className="w-4 h-4" /> Top 5 WO Types by Revenue
-              <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-amber-500/40 text-amber-400">Connect live data</Badge>
+              <Wrench className="w-4 h-4" /> Revenue by WO Type
             </CardTitle>
           </CardHeader>
-          <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow className="border-border/50">
-                  <TableHead className="text-xs">Type</TableHead>
-                  <TableHead className="text-xs text-right">Revenue</TableHead>
-                  <TableHead className="text-xs text-right">Margin</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {woTypeRevenue.map((w) => (
-                  <TableRow key={w.type} className="border-border/40">
-                    <TableCell className="text-sm font-medium">{w.type}</TableCell>
-                    <TableCell className="text-sm text-right tabular-nums">{fmtUSD(w.revenue)}</TableCell>
-                    <TableCell className={`text-sm text-right tabular-nums ${w.margin > 20 ? "text-green-400" : w.margin > 0 ? "text-amber-400" : "text-red-400"}`}>
-                      {w.margin}%
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+          <CardContent>
+            <div className="flex flex-col items-center justify-center gap-2 rounded-md border border-dashed border-border/60 bg-muted/10 text-center px-4 py-8">
+              <p className="text-sm font-medium text-muted-foreground">WO type breakdown unavailable</p>
+              <p className="text-xs text-muted-foreground/70 max-w-xs">
+                Revenue by work order type requires a server-side join from invoices to work order types. See MASTER-BUILD-LIST.md.
+              </p>
+            </div>
           </CardContent>
         </Card>
       </div>

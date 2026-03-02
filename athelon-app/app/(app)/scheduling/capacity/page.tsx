@@ -163,6 +163,22 @@ export default function CapacityPage() {
 
   return (
     <div className="space-y-5">
+      {/* ── Scheduling Sub-Nav ─────────────────────────────────────────── */}
+      <div className="flex items-center gap-1 flex-wrap border-b border-border/30 pb-2 -mb-1">
+        <Button variant="ghost" size="sm" className="text-xs h-7" asChild>
+          <Link to="/scheduling">Gantt Board</Link>
+        </Button>
+        <Button variant="ghost" size="sm" className="text-xs h-7" asChild>
+          <Link to="/scheduling/bays">Bays</Link>
+        </Button>
+        <Button variant="secondary" size="sm" className="text-xs h-7" asChild>
+          <Link to="/scheduling/capacity">Capacity</Link>
+        </Button>
+        <Button variant="ghost" size="sm" className="text-xs h-7" asChild>
+          <Link to="/scheduling/financial-planning">Financial Planning</Link>
+        </Button>
+      </div>
+
       {/* ── Header ─────────────────────────────────────────────────────── */}
       <div className="flex flex-col sm:flex-row gap-2 sm:items-start sm:justify-between">
         <div>

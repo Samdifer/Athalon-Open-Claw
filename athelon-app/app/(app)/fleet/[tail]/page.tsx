@@ -36,6 +36,7 @@ import {
   ChevronRight,
   Plus,
   ShieldAlert,
+  ExternalLink,
 } from "lucide-react";
 import { AircraftAdComplianceTab } from "./_components/AircraftAdComplianceTab";
 
@@ -202,6 +203,16 @@ export default function AircraftDetailPage() {
       : "skip",
   );
 
+  // Load customers so we can display customer name instead of raw Convex ID
+  const customers = useQuery(
+    api.billingV4.listAllCustomers,
+    orgId ? { organizationId: orgId } : "skip",
+  );
+  const customerMap = useMemo(() => {
+    if (!customers) return new Map<string, string>();
+    return new Map(customers.map((c) => [c._id, c.name]));
+  }, [customers]);
+
   const isLoading = aircraft === undefined;
 
   if (!isLoading && aircraft === null) {
@@ -299,6 +310,10 @@ export default function AircraftDetailPage() {
               <ShieldAlert className="w-3.5 h-3.5 mr-1.5" />
               AD Compliance
             </TabsTrigger>
+            <TabsTrigger value="logbook">
+              <BookOpen className="w-3.5 h-3.5 mr-1.5" />
+              Logbook
+            </TabsTrigger>
           </TabsList>
 
           {/* ═══════════════════════════════════════════════════════════════ */}
@@ -360,8 +375,15 @@ export default function AircraftDetailPage() {
                   <CardTitle className="text-sm font-semibold">Customer</CardTitle>
                 </CardHeader>
                 <CardContent className="pt-0">
-                  <p className="text-xs text-muted-foreground mb-1">Customer ID</p>
-                  <p className="font-mono text-sm text-foreground mb-3">{aircraft!.customerId}</p>
+                  {customers === undefined ? (
+                    <Skeleton className="h-5 w-40 mb-3" />
+                  ) : (
+                    <p className="text-sm font-medium text-foreground mb-3">
+                      {customerMap.get(aircraft!.customerId) ?? (
+                        <span className="font-mono text-muted-foreground text-xs">{aircraft!.customerId}</span>
+                      )}
+                    </p>
+                  )}
                   <Button asChild variant="outline" size="sm">
                     <Link to={`/billing/customers/${aircraft!.customerId}`}>
                       View Customer <ChevronRight className="w-3.5 h-3.5 ml-1" />
@@ -692,6 +714,50 @@ export default function AircraftDetailPage() {
                 <Skeleton className="h-16 w-full" />
               </div>
             )}
+          </TabsContent>
+
+          {/* ═══════════════════════════════════════════════════════════════ */}
+          {/* TAB: Logbook                                                  */}
+          {/* ═══════════════════════════════════════════════════════════════ */}
+          <TabsContent value="logbook" className="space-y-4">
+            <Card className="border-border/60">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                  <BookOpen className="w-4 h-4 text-muted-foreground" />
+                  Maintenance Logbook
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0 space-y-4">
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  The maintenance logbook contains all 14 CFR 43.9 maintenance entries,
+                  14 CFR 43.11 inspection entries, and correction records for{" "}
+                  <span className="font-mono font-semibold text-foreground">
+                    {aircraft!.currentRegistration}
+                  </span>
+                  . Each entry includes work performed, approved data reference,
+                  certifying technician, and return-to-service statements.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <Button asChild size="sm" className="gap-1.5">
+                    <Link to={`/fleet/${encodeURIComponent(tailNumber)}/logbook`}>
+                      <BookOpen className="w-4 h-4" />
+                      Open Full Logbook
+                      <ExternalLink className="w-3 h-3 ml-1 opacity-60" />
+                    </Link>
+                  </Button>
+                </div>
+                <div className="rounded-md border border-border/50 bg-muted/20 p-3 text-xs text-muted-foreground space-y-1">
+                  <p className="font-medium text-foreground">What&rsquo;s in the logbook?</p>
+                  <ul className="space-y-0.5 ml-3 list-disc list-inside">
+                    <li>Maintenance records (14 CFR 43.9) — all signed work entries</li>
+                    <li>Inspection records (14 CFR 43.11) — annual, 100-hour, and progressive inspections</li>
+                    <li>Correction entries — amendments to prior logbook entries per AC 43-9C</li>
+                    <li>Parts replaced/installed per entry with part numbers and actions</li>
+                    <li>Certifying technician name, cert number, and cert type per entry</li>
+                  </ul>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       )}

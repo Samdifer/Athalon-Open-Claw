@@ -9,7 +9,6 @@ import {
   TrendingUp,
   TrendingDown,
   AlertTriangle,
-  Calendar,
   DollarSign,
   BarChart2,
   Navigation,
@@ -76,7 +75,6 @@ export default function CashFlowForecastPage() {
   const invoices = useQuery(api.billing.listInvoices, orgId ? { orgId } : "skip");
   const quotes = useQuery(api.billing.listQuotes, orgId ? { orgId } : "skip");
   const purchaseOrders = useQuery(api.billing.listPurchaseOrders, orgId ? { orgId } : "skip");
-  const timeEntries = useQuery(api.timeClock.listTimeEntries, orgId ? { orgId } : "skip");
 
   const isLoading = !isLoaded || invoices === undefined || quotes === undefined || purchaseOrders === undefined;
 
@@ -176,6 +174,25 @@ export default function CashFlowForecastPage() {
 
   return (
     <div className="space-y-5">
+      {/* Reports Sub-Navigation */}
+      <div className="flex flex-wrap gap-2">
+        <Button variant="ghost" size="sm" className="h-8 text-xs gap-1.5 border border-border/40" asChild>
+          <Link to="/reports"><FileBarChart className="w-3.5 h-3.5" />Overview</Link>
+        </Button>
+        <Button variant="ghost" size="sm" className="h-8 text-xs gap-1.5 border border-border/40" asChild>
+          <Link to="/reports/financials"><DollarSign className="w-3.5 h-3.5" />Financial Dashboard</Link>
+        </Button>
+        <Button variant="secondary" size="sm" className="h-8 text-xs gap-1.5" asChild>
+          <Link to="/reports/financials/forecast"><TrendingUp className="w-3.5 h-3.5" />Forecast</Link>
+        </Button>
+        <Button variant="ghost" size="sm" className="h-8 text-xs gap-1.5 border border-border/40" asChild>
+          <Link to="/reports/financials/profitability"><BarChart2 className="w-3.5 h-3.5" />Profitability</Link>
+        </Button>
+        <Button variant="ghost" size="sm" className="h-8 text-xs gap-1.5 border border-border/40" asChild>
+          <Link to="/reports/financials/runway"><Navigation className="w-3.5 h-3.5" />Runway</Link>
+        </Button>
+      </div>
+
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-lg sm:text-xl font-semibold text-foreground">Cash Flow Forecast</h1>

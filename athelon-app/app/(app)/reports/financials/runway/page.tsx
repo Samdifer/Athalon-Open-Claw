@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
+import { Link } from "react-router-dom";
 import {
   Fuel,
   TrendingUp,
@@ -11,9 +12,14 @@ import {
   Target,
   AlertTriangle,
   CheckCircle,
+  DollarSign,
+  BarChart2,
+  Navigation,
+  FileBarChart,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   AreaChart,
@@ -155,6 +161,25 @@ export default function BusinessRunwayPage() {
 
   return (
     <div className="space-y-5">
+      {/* Reports Sub-Navigation */}
+      <div className="flex flex-wrap gap-2">
+        <Button variant="ghost" size="sm" className="h-8 text-xs gap-1.5 border border-border/40" asChild>
+          <Link to="/reports"><FileBarChart className="w-3.5 h-3.5" />Overview</Link>
+        </Button>
+        <Button variant="ghost" size="sm" className="h-8 text-xs gap-1.5 border border-border/40" asChild>
+          <Link to="/reports/financials"><DollarSign className="w-3.5 h-3.5" />Financial Dashboard</Link>
+        </Button>
+        <Button variant="ghost" size="sm" className="h-8 text-xs gap-1.5 border border-border/40" asChild>
+          <Link to="/reports/financials/forecast"><TrendingUp className="w-3.5 h-3.5" />Forecast</Link>
+        </Button>
+        <Button variant="ghost" size="sm" className="h-8 text-xs gap-1.5 border border-border/40" asChild>
+          <Link to="/reports/financials/profitability"><BarChart2 className="w-3.5 h-3.5" />Profitability</Link>
+        </Button>
+        <Button variant="secondary" size="sm" className="h-8 text-xs gap-1.5" asChild>
+          <Link to="/reports/financials/runway"><Navigation className="w-3.5 h-3.5" />Runway</Link>
+        </Button>
+      </div>
+
       <div>
         <h1 className="text-lg sm:text-xl font-semibold text-foreground">Business Runway</h1>
         <p className="text-sm text-muted-foreground mt-0.5">Burn rate, cash position, and sustainability analysis</p>
