@@ -1,5 +1,3 @@
-"use client";
-
 import { useState, useMemo } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -93,6 +91,7 @@ export default function PredictionsPage() {
   const [severityTab, setSeverityTab] = useState("all");
   const [aircraftFilter, setAircraftFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("active");
   const [dismissTarget, setDismissTarget] = useState<{ id: Id<"maintenancePredictions">; severity: string; description: string } | null>(null);
 
   const predictions = useQuery(
@@ -132,9 +131,10 @@ export default function PredictionsPage() {
       if (severityTab !== "all" && p.severity !== severityTab) return false;
       if (aircraftFilter !== "all" && p.aircraftId !== aircraftFilter) return false;
       if (typeFilter !== "all" && p.predictionType !== typeFilter) return false;
+      if (statusFilter !== "all" && p.status !== statusFilter) return false;
       return true;
     });
-  }, [predictions, severityTab, aircraftFilter, typeFilter]);
+  }, [predictions, severityTab, aircraftFilter, typeFilter, statusFilter]);
 
   // Summary counts (active only) — used in the stat cards
   const summary = useMemo(() => {
@@ -319,6 +319,18 @@ export default function PredictionsPage() {
             <SelectItem value="usage_based">Usage Based</SelectItem>
             <SelectItem value="trend_based">Trend Based</SelectItem>
             <SelectItem value="condition_based">Condition Based</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-[160px]">
+            <SelectValue placeholder="Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Statuses</SelectItem>
+            <SelectItem value="active">Active</SelectItem>
+            <SelectItem value="acknowledged">Acknowledged</SelectItem>
+            <SelectItem value="resolved">Resolved</SelectItem>
+            <SelectItem value="dismissed">Dismissed</SelectItem>
           </SelectContent>
         </Select>
       </div>

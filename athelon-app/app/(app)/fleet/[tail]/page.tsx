@@ -402,7 +402,11 @@ export default function AircraftDetailPage() {
                   <Zap className="w-4 h-4 text-muted-foreground" />
                   Engines ({engines?.length ?? 0})
                 </CardTitle>
-                <Button variant="outline" size="sm" disabled>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => toast.info("Engine management coming soon. Contact support to add or update engine records.")}
+                >
                   <Plus className="w-3.5 h-3.5 mr-1" />
                   Add Engine
                 </Button>
@@ -454,7 +458,11 @@ export default function AircraftDetailPage() {
                     <RotateCcw className="w-4 h-4 text-muted-foreground" />
                     Propellers
                   </CardTitle>
-                  <Button variant="outline" size="sm" disabled>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => toast.info("Propeller management coming soon. Contact support to add or update propeller records.")}
+                  >
                     <Plus className="w-3.5 h-3.5 mr-1" />
                     Add Propeller
                   </Button>

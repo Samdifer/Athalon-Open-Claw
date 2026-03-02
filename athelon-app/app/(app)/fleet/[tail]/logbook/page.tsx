@@ -1,5 +1,3 @@
-"use client";
-
 /**
  * app/(app)/fleet/[tail]/logbook/page.tsx
  * Athelon — Per-aircraft Maintenance Logbook Timeline
@@ -332,7 +330,8 @@ export default function AircraftLogbookPage() {
   // Cast to our display interface (Convex returns a superset of these fields)
   const records = rawRecords as MaintenanceRecord[] | undefined;
 
-  const isLoading = !orgLoaded || aircraft === undefined;
+  // Include records in loading check — prevents flash of empty state while records fetch
+  const isLoading = !orgLoaded || aircraft === undefined || (aircraft !== null && rawRecords === undefined);
 
   // ── Filter logic ─────────────────────────────────────────────────────────────
   const fromMs = dateFrom ? new Date(dateFrom).getTime() : null;
