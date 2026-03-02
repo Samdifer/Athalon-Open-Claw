@@ -112,7 +112,13 @@ function filterWorkOrders(rows: WorkOrderRow[], tab: FilterTab) {
     case "pending":
       return rows.filter((w) => ["pending_inspection", "pending_signoff"].includes(w.status));
     case "awaiting_parts":
-      return rows.filter((w) => w.partsOnOrder > 0);
+      // Only include non-terminal WOs — closed/cancelled/voided WOs may still
+      // have historic pending-part records but they don't need shop attention.
+      return rows.filter(
+        (w) =>
+          w.partsOnOrder > 0 &&
+          !["closed", "cancelled", "voided"].includes(w.status),
+      );
     case "complete":
       return rows.filter((w) => ["closed", "cancelled", "voided"].includes(w.status));
     default:
@@ -198,7 +204,8 @@ export default function WorkOrdersPage() {
       if (["open", "in_progress", "open_discrepancies"].includes(wo.status)) c.active++;
       if (wo.status === "on_hold") c.on_hold++;
       if (["pending_inspection", "pending_signoff"].includes(wo.status)) c.pending++;
-      if (wo.partsOnOrder > 0) c.awaiting_parts++;
+      if (wo.partsOnOrder > 0 && !["closed", "cancelled", "voided"].includes(wo.status))
+        c.awaiting_parts++;
       if (["closed", "cancelled", "voided"].includes(wo.status)) c.complete++;
     }
     return c;

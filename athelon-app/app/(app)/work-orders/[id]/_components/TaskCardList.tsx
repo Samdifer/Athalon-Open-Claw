@@ -84,10 +84,15 @@ export function TaskCardList({ taskCards, workOrderId }: TaskCardListProps) {
             (s) => s.status === "completed" || s.status === "na",
           ).length;
           const totalSteps = tc.steps.length;
-          // Detect "all steps done, awaiting card-level sign-off" state
+          // Detect "all steps done, awaiting card-level sign-off" state.
+          // BUG-LT3-003: Must mirror the same fix applied to task card page
+          // (BUG-LT3-002): a 0-step card is always "all steps done" — it's
+          // just a card with no itemized steps. Without the fix, 0-step cards
+          // never show the amber "Awaiting Sign-Off" highlight here on the WO
+          // detail, so the shop manager or QCM can't tell which cards need
+          // cert action vs which have no work required.
           const awaitingSignOff =
-            totalSteps > 0 &&
-            completedSteps === totalSteps &&
+            (totalSteps === 0 || completedSteps === totalSteps) &&
             tc.status !== "complete" &&
             tc.status !== "voided";
 

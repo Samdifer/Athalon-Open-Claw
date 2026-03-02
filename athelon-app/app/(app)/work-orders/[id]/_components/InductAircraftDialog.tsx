@@ -96,6 +96,12 @@ export function InductAircraftDialog({
   }
 
   function handleClose() {
+    // BUG-LT-26-002: Guard against mid-flight dismissal via Escape/outside-click.
+    // Previously onOpenChange(false) fired unconditionally, which could close
+    // the dialog while the induction mutation was in-flight. The aircraft total
+    // time update and status change might succeed on the backend but the UI
+    // would show the dialog as closed — and the parent wouldn't re-query.
+    if (submitting) return;
     onOpenChange(false);
     setTimeout(() => {
       setTotalTimeAtInduction("");

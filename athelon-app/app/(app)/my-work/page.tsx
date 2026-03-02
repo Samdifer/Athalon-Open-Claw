@@ -372,9 +372,18 @@ export default function MyWorkPage() {
                   </div>
 
                   {/* Row 3: Step progress bar */}
+                  {/* BUG-LT-26-003: Label was "Steps completed" but the count
+                      (totalSteps - pendingSteps) includes in_progress steps —
+                      steps the tech has started but NOT yet signed. Calling
+                      in_progress steps "completed" is incorrect and causes a
+                      tech to think sign-offs are done when they aren't.
+                      Changed label to "Steps started/done" to reflect the
+                      actual meaning: steps that are no longer in "pending"
+                      state. Backend BACKEND-NEEDED: expose inProgressSteps
+                      count to split "started" from "signed" accurately. */}
                   <div className="space-y-1">
                     <div className="flex items-center justify-between text-xs text-muted-foreground">
-                      <span>Steps completed</span>
+                      <span>Steps started/done</span>
                       <span>
                         {completedSteps} / {card.totalSteps}
                       </span>

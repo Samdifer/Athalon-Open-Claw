@@ -217,7 +217,7 @@ function LiveSecondaryKPIs() {
       value: certsCount,
       sub: "IA/AMT certificates",
       icon: ShieldAlert,
-      href: "/compliance/audit-trail",
+      href: "/personnel",
       color: "text-orange-400",
       bgColor: "bg-orange-500/10",
       alert: (certsCount ?? 0) > 0,

@@ -66,6 +66,36 @@ const SYSTEM_TYPE_LABEL: Record<string, string> = {
   appliance: "Appliance",
 };
 
+// BUG-LT-26-001: Raw database status values ("under_evaluation", "dispositioned")
+// were displayed directly in the status badge. A tech reviewing squawks on a WO
+// would see "under_evaluation" or "dispositioned" as badge text — not readable.
+const DISCREPANCY_STATUS_LABEL: Record<string, string> = {
+  open: "Open",
+  under_evaluation: "Under Evaluation",
+  dispositioned: "Dispositioned",
+};
+
+const DISCREPANCY_STATUS_STYLE: Record<string, string> = {
+  open: "bg-red-500/15 text-red-400 border-red-500/30",
+  under_evaluation: "bg-amber-500/15 text-amber-400 border-amber-500/30",
+  dispositioned: "bg-green-500/15 text-green-400 border-green-500/30",
+};
+
+// BUG-LT-26-001: Raw disposition values ("deferred_mel", "no_defect") were shown
+// directly in the disposition badge. A tech can't parse "deferred_mel" or
+// "repaired_and_approved" while reviewing squawks.
+const DISPOSITION_LABEL: Record<string, string> = {
+  deferred_mel: "MEL Deferred",
+  deferred_grounded: "Grounded/Deferred",
+  repaired: "Repaired",
+  replaced: "Replaced",
+  adjusted: "Adjusted",
+  inspected: "Inspected",
+  no_defect: "No Defect Found",
+  placard_applied: "Placard Applied",
+  returned_to_service: "Returned to Service",
+};
+
 const DISCOVERED_WHEN_LABEL: Record<string, string> = {
   customer_report: "Customer Report",
   planning: "Planning",
@@ -143,13 +173,9 @@ export function DiscrepancyList({
                       </span>
                       {/* Status badge */}
                       <Badge
-                        className={`border text-[10px] ${
-                          sq.status === "open"
-                            ? "bg-red-500/15 text-red-400 border-red-500/30"
-                            : "bg-amber-500/15 text-amber-400 border-amber-500/30"
-                        }`}
+                        className={`border text-[10px] ${DISCREPANCY_STATUS_STYLE[sq.status] ?? "bg-muted text-muted-foreground border-border/60"}`}
                       >
-                        {sq.status === "open" ? "Open" : sq.status}
+                        {DISCREPANCY_STATUS_LABEL[sq.status] ?? sq.status}
                       </Badge>
                       {/* Disposition badge */}
                       {sq.disposition && (
@@ -157,7 +183,7 @@ export function DiscrepancyList({
                           variant="outline"
                           className="text-[10px] text-amber-400 border-amber-500/30"
                         >
-                          {sq.disposition}
+                          {DISPOSITION_LABEL[sq.disposition] ?? sq.disposition.replace(/_/g, " ")}
                         </Badge>
                       )}
                       {/* Discrepancy type badge */}

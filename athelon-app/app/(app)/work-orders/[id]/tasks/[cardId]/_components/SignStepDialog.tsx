@@ -6,7 +6,7 @@
  * The sign-off dialog for a single task card step.
  */
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -89,6 +89,18 @@ export function SignStepDialog({
   const [partsInstalled, setPartsInstalled] = useState<
     { partNumber: string; serialNumber: string; description: string; quantity: number }[]
   >([]);
+
+  // BUG-LT3-001: Reset rating when a different step is opened.
+  // useState initial value only runs once at mount — if the tech closes the
+  // dialog for a non-IA step, then opens it for an IA-required step, the
+  // rating stays on "airframe" instead of switching to "ia". The tech could
+  // sign an IA step with the wrong rating (no IA exercised), creating a
+  // regulatory record error under 14 CFR 65.85/65.87.
+  useEffect(() => {
+    if (open) {
+      setRating(requiresIa ? "ia" : "airframe");
+    }
+  }, [open, requiresIa]);
   const [photoStorageIds, setPhotoStorageIds] = useState<string[]>([]);
   const [partScannerOpen, setPartScannerOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -182,8 +194,16 @@ export function SignStepDialog({
         }
       }
 
+      // BUG-LT3-001: Reset ALL form state on success — not just pin/notes/photos.
+      // partsInstalled and approvedDataRef were never cleared, so signing Step 1
+      // with a part list would carry those parts into the sign dialog for Step 2.
+      // Under 14 CFR 43.9(a)(4), parts records are permanently linked to the step
+      // they were submitted with — wrong parts on a step cannot be corrected after sign.
       setPin("");
+      setRating(requiresIa ? "ia" : "airframe");
       setNotes("");
+      setApprovedDataRef("");
+      setPartsInstalled([]);
       setPhotoStorageIds([]);
       onSuccess();
       onClose();

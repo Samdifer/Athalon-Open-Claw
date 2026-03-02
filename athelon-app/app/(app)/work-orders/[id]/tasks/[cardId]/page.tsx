@@ -320,8 +320,16 @@ export default function TaskCardPage() {
   // in_progress steps to be ignored — a tech could sign the card while
   // a step was started but not yet signed. Under 14 CFR 43.9 every step
   // must be signed off before card-level certification.
+  //
+  // BUG-LT3-002: Also allow sign-off when totalSteps === 0.
+  // A task card with no itemized steps is valid — e.g. "Perform ops check per
+  // POH section 4-4" where the card IS the record. Previously allStepsDone
+  // was false for empty cards (due to totalSteps > 0 guard), making the Sign
+  // button permanently disabled and showing "Complete all 0 remaining steps"
+  // — a nonsensical message with no way to proceed. An empty steps list
+  // means there are no steps left to complete, so sign-off should be allowed.
   const allStepsDone =
-    totalSteps > 0 &&
+    totalSteps === 0 ||
     taskCard.steps.every((s) => s.status === "completed" || s.status === "na");
   const cardIsComplete = taskCard.status === "complete";
   const cardIsVoided = taskCard.status === "voided";
@@ -1241,7 +1249,9 @@ export default function TaskCardPage() {
                     : complianceBlocksSignOff && allStepsDone
                     ? `${blockingComplianceItems.length} compliance item${blockingComplianceItems.length !== 1 ? "s" : ""} require resolution before this card can be signed. Resolve all non-compliant and pending items above.`
                     : allStepsDone
-                    ? "All steps complete — ready for card-level sign-off."
+                    ? totalSteps === 0
+                      ? "No steps required — ready for card-level sign-off."
+                      : "All steps complete — ready for card-level sign-off."
                     : `Complete all ${pendingSteps.length} remaining step${
                         pendingSteps.length !== 1 ? "s" : ""
                       } before signing the card.`}

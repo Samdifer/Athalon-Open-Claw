@@ -82,12 +82,20 @@ export default function ReportsPage() {
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
       monthly[key] = (monthly[key] || 0) + (inv.total ?? 0);
     }
-    return Object.entries(monthly)
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([key, total]) => {
-        const [, m] = key.split("-");
-        return { month: MONTH_NAMES[parseInt(m!, 10) - 1], revenue: Math.round(total * 100) / 100, key };
-      });
+    const entries = Object.entries(monthly).sort(([a], [b]) => a.localeCompare(b));
+    // If data spans multiple calendar years, include 2-digit year in label to
+    // prevent duplicate "Jan" labels on the chart X-axis (e.g. Jan 2025 vs Jan 2026).
+    const years = new Set(entries.map(([k]) => k.split("-")[0]));
+    const multiYear = years.size > 1;
+    return entries.map(([key, total]) => {
+      const [yr, m] = key.split("-");
+      const monthName = MONTH_NAMES[parseInt(m!, 10) - 1];
+      return {
+        month: multiYear ? `${monthName} '${yr!.slice(2)}` : monthName,
+        revenue: Math.round(total * 100) / 100,
+        key,
+      };
+    });
   }, [invoices, fromTs, toTs]);
 
   // WO throughput by month
@@ -101,12 +109,18 @@ export default function ReportsPage() {
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
       monthly[key] = (monthly[key] || 0) + 1;
     }
-    return Object.entries(monthly)
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([key, count]) => {
-        const [, m] = key.split("-");
-        return { month: MONTH_NAMES[parseInt(m!, 10) - 1], completed: count, key };
-      });
+    const entries = Object.entries(monthly).sort(([a], [b]) => a.localeCompare(b));
+    const years = new Set(entries.map(([k]) => k.split("-")[0]));
+    const multiYear = years.size > 1;
+    return entries.map(([key, count]) => {
+      const [yr, m] = key.split("-");
+      const monthName = MONTH_NAMES[parseInt(m!, 10) - 1];
+      return {
+        month: multiYear ? `${monthName} '${yr!.slice(2)}` : monthName,
+        completed: count,
+        key,
+      };
+    });
   }, [woResult, fromTs, toTs]);
 
   // useMemo so these aggregations don't re-run on every keystroke in the date inputs
@@ -230,14 +244,13 @@ export default function ReportsPage() {
               variant="ghost"
               size="sm"
               className="h-7 text-xs"
+              disabled={revenueData.length === 0}
               onClick={() => {
-                if (revenueData.length) {
-                  downloadCSV(
-                    revenueData.map((d) => ({ Month: d.key, Revenue: d.revenue })),
-                    "revenue-report.csv",
-                  );
-                  toast.success("Revenue report exported");
-                }
+                downloadCSV(
+                  revenueData.map((d) => ({ Month: d.key, Revenue: d.revenue })),
+                  "revenue-report.csv",
+                );
+                toast.success("Revenue report exported");
               }}
             >
               <Download className="w-3.5 h-3.5 mr-1" />
@@ -280,14 +293,13 @@ export default function ReportsPage() {
               variant="ghost"
               size="sm"
               className="h-7 text-xs"
+              disabled={throughputData.length === 0}
               onClick={() => {
-                if (throughputData.length) {
-                  downloadCSV(
-                    throughputData.map((d) => ({ Month: d.key, Completed: d.completed })),
-                    "wo-throughput-report.csv",
-                  );
-                  toast.success("WO throughput report exported");
-                }
+                downloadCSV(
+                  throughputData.map((d) => ({ Month: d.key, Completed: d.completed })),
+                  "wo-throughput-report.csv",
+                );
+                toast.success("WO throughput report exported");
               }}
             >
               <Download className="w-3.5 h-3.5 mr-1" />
