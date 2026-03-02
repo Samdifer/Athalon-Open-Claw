@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { useQuery } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import {
   ArrowLeft,
   AlertTriangle,
@@ -11,6 +11,8 @@ import {
   ShieldCheck,
   XCircle,
   Clock,
+  Play,
+  Square,
   User,
   Calendar,
   TrendingUp,
@@ -132,6 +134,7 @@ function ScheduleRiskChip({ riskLevel }: { riskLevel: RiskLevel }) {
 export default function WorkOrderDetailPage() {
   const { id: routeRef = "" } = useParams<{ id: string }>();
   const { orgId, techId, isLoaded } = useCurrentOrg();
+  const [timerActionLoading, setTimerActionLoading] = useState<"start" | "stop" | null>(null);
 
   const legacyResolution = useQuery(
     api.workOrders.resolveWorkOrderRef,
@@ -161,6 +164,13 @@ export default function WorkOrderDetailPage() {
     api.parts.listParts,
     orgId ? { organizationId: orgId } : "skip",
   );
+
+  const activeTimer = useQuery(
+    api.timeClock.getActiveTimerForTechnician,
+    orgId && techId ? { orgId, technicianId: techId } : "skip",
+  );
+  const startTimer = useMutation(api.timeClock.startTimer);
+  const stopTimer = useMutation(api.timeClock.stopTimer);
 
   const isLegacyRefResolving =
     isWorkOrderNumberRef(routeRef) && orgId && legacyResolution === undefined;
@@ -280,6 +290,47 @@ export default function WorkOrderDetailPage() {
   const readinessBlockers = closeReadiness?.blockers ?? [];
   const canClose = closeReadiness?.canClose ?? false;
 
+  const activeTimerEntry = activeTimer?.entry;
+  const activeTimerOnThisWorkOrder =
+    activeTimerEntry &&
+    (activeTimerEntry.entryType ?? "work_order") === "work_order" &&
+    activeTimerEntry.workOrderId === workOrderId;
+
+  const handleStartWorkOrderTimer = async () => {
+    if (!orgId || !techId || !workOrderId) return;
+    setTimerActionLoading("start");
+    try {
+      await startTimer({
+        orgId,
+        technicianId: techId,
+        entryType: "work_order",
+        workOrderId,
+        source: "work_order_page",
+      });
+      toast.success("Work order timer started.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to start work order timer.");
+    } finally {
+      setTimerActionLoading(null);
+    }
+  };
+
+  const handleStopActiveTimer = async () => {
+    if (!orgId || !activeTimerEntry) return;
+    setTimerActionLoading("stop");
+    try {
+      await stopTimer({
+        orgId,
+        timeEntryId: activeTimerEntry._id,
+      });
+      toast.success("Active timer stopped.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to stop timer.");
+    } finally {
+      setTimerActionLoading(null);
+    }
+  };
+
   // AI-003: Compute live compliance indicator for the Compliance tab badge.
   // red   → has active blockers preventing close
   // green → fully ready to close (all clear)
@@ -340,6 +391,42 @@ export default function WorkOrderDetailPage() {
           </div>
 
           <div className="w-full sm:w-auto flex-shrink-0 flex flex-col gap-2">
+            {activeTimerEntry ? (
+              <div className="flex items-center gap-2">
+                <Badge
+                  variant="outline"
+                  className={`text-[10px] border ${
+                    activeTimerOnThisWorkOrder
+                      ? "bg-green-500/15 text-green-400 border-green-500/30"
+                      : "bg-amber-500/15 text-amber-500 border-amber-500/30"
+                  }`}
+                >
+                  {activeTimerOnThisWorkOrder ? "Clocked to this WO" : `Active ${activeTimerEntry.entryType ?? "timer"}`}
+                </Badge>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5 text-xs border-red-500/40 text-red-400 hover:bg-red-500/10"
+                  onClick={handleStopActiveTimer}
+                  disabled={timerActionLoading === "stop"}
+                >
+                  <Square className="w-3.5 h-3.5" />
+                  {timerActionLoading === "stop" ? "Stopping..." : "Stop Timer"}
+                </Button>
+              </div>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5 text-xs border-green-500/40 text-green-400 hover:bg-green-500/10"
+                onClick={handleStartWorkOrderTimer}
+                disabled={timerActionLoading === "start"}
+              >
+                <Play className="w-3.5 h-3.5" />
+                {timerActionLoading === "start" ? "Clocking..." : "Clock to WO"}
+              </Button>
+            )}
+
             <Button
               variant="outline"
               size="sm"

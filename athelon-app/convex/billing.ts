@@ -929,27 +929,53 @@ export const createInvoiceFromWorkOrder = mutation({
       }
     }
 
-    // Auto-populate labor line items from time entries
-    const timeEntries = await ctx.db
+    // Auto-populate labor line items from APPROVED + UNBILLED time entries only.
+    const allTimeEntries = await ctx.db
       .query("timeEntries")
       .withIndex("by_org_wo", (q) =>
         q.eq("orgId", args.orgId).eq("workOrderId", args.workOrderId),
       )
       .collect();
 
+    const eligibleTimeEntries = allTimeEntries.filter((entry) => {
+      if (entry.clockOutAt === undefined) return false; // must be closed
+
+      const approvalStatus =
+        entry.approvalStatus ??
+        (entry.approved === true
+          ? "approved"
+          : entry.approved === false
+            ? "rejected"
+            : "pending");
+      if (approvalStatus !== "approved") return false;
+
+      const alreadyBilled =
+        entry.billingLock === true ||
+        entry.billedInvoiceId !== undefined ||
+        entry.billedAt !== undefined;
+
+      return !alreadyBilled;
+    });
+
     // Aggregate time by technician
-    const byTech = new Map<string, { techId: Id<"technicians">; totalMinutes: number }>();
-    for (const entry of timeEntries) {
+    const byTech = new Map<string, {
+      techId: Id<"technicians">;
+      totalMinutes: number;
+      entries: Array<{ _id: Id<"timeEntries"> }>;
+    }>();
+    for (const entry of eligibleTimeEntries) {
       const key = entry.technicianId as string;
       if (!byTech.has(key)) {
-        byTech.set(key, { techId: entry.technicianId, totalMinutes: 0 });
+        byTech.set(key, { techId: entry.technicianId, totalMinutes: 0, entries: [] });
       }
       const minutes = entry.durationMinutes ?? 0;
       byTech.get(key)!.totalMinutes += minutes;
+      byTech.get(key)!.entries.push({ _id: entry._id });
     }
 
     let laborTotal = 0;
-    for (const [, { techId, totalMinutes }] of byTech) {
+    let billedEntryCount = 0;
+    for (const [, { techId, totalMinutes, entries }] of byTech) {
       if (totalMinutes <= 0) continue;
       const tech = await ctx.db.get(techId);
       const hours = Math.round((totalMinutes / 60) * 100) / 100;
@@ -957,7 +983,7 @@ export const createInvoiceFromWorkOrder = mutation({
       const lineTotal = Math.round(hours * unitPrice * 100) / 100;
       laborTotal += lineTotal;
       const rateNote = laborRate === 0 ? " [WARNING: No pricing profile found — rate defaults to $0]" : "";
-      await ctx.db.insert("invoiceLineItems", {
+      const laborLineItemId = await ctx.db.insert("invoiceLineItems", {
         orgId: args.orgId,
         invoiceId,
         type: "labor",
@@ -969,6 +995,18 @@ export const createInvoiceFromWorkOrder = mutation({
         createdAt: now,
         updatedAt: now,
       });
+
+      // Lock consumed entries to prevent double billing.
+      for (const sourceEntry of entries) {
+        await ctx.db.patch(sourceEntry._id, {
+          billedInvoiceId: invoiceId,
+          billedLineItemId: laborLineItemId,
+          billedAt: now,
+          billingLock: true,
+          updatedAt: now,
+        });
+        billedEntryCount += 1;
+      }
     }
 
     // ── Recalculate invoice totals with tax ─────────────────────────────────
@@ -992,7 +1030,8 @@ export const createInvoiceFromWorkOrder = mutation({
       userId: callerUserId,
       notes:
         `Invoice ${invoiceNumber} created from work order ${wo.workOrderNumber}. ` +
-        `${byTech.size} labor line items auto-populated from time entries.`,
+        `${byTech.size} labor line items auto-populated from approved/unbilled time entries. ` +
+        `${billedEntryCount} time entries locked as billed.`,
       timestamp: now,
     });
 

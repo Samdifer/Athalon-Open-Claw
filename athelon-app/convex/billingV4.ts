@@ -839,10 +839,17 @@ export const approveTimeEntry = mutation({
     const entry = await ctx.db.get(args.timeEntryId);
     if (!entry) throw new Error("Time entry not found.");
     if (entry.orgId !== args.orgId) throw new Error("ORG_MISMATCH.");
+    if (entry.billingLock || entry.billedInvoiceId || entry.billedAt) {
+      throw new Error("Cannot approve a billed/locked time entry.");
+    }
     await ctx.db.patch(args.timeEntryId, {
+      approvalStatus: "approved",
       approved: true,
       approvedByTechId: args.approvedByTechId,
       approvedAt: Date.now(),
+      rejectionReason: undefined,
+      rejectedByTechId: undefined,
+      rejectedAt: undefined,
     });
     return { success: true };
   },
@@ -860,13 +867,52 @@ export const rejectTimeEntry = mutation({
     const entry = await ctx.db.get(args.timeEntryId);
     if (!entry) throw new Error("Time entry not found.");
     if (entry.orgId !== args.orgId) throw new Error("ORG_MISMATCH.");
+    if (entry.billingLock || entry.billedInvoiceId || entry.billedAt) {
+      throw new Error("Cannot reject a billed/locked time entry.");
+    }
     await ctx.db.patch(args.timeEntryId, {
+      approvalStatus: "rejected",
       approved: false,
+      approvedByTechId: undefined,
+      approvedAt: undefined,
       rejectionReason: args.reason.trim(),
       rejectedByTechId: args.rejectedByTechId,
       rejectedAt: Date.now(),
     });
     return { success: true };
+  },
+});
+
+export const bulkApproveTimeEntries = mutation({
+  args: {
+    orgId: v.id("organizations"),
+    timeEntryIds: v.array(v.id("timeEntries")),
+    approvedByTechId: v.id("technicians"),
+  },
+  handler: async (ctx, args) => {
+    await requireAuth(ctx);
+    const now = Date.now();
+
+    let approvedCount = 0;
+    for (const timeEntryId of args.timeEntryIds) {
+      const entry = await ctx.db.get(timeEntryId);
+      if (!entry) continue;
+      if (entry.orgId !== args.orgId) continue;
+      if (entry.billingLock || entry.billedInvoiceId || entry.billedAt) continue;
+
+      await ctx.db.patch(timeEntryId, {
+        approvalStatus: "approved",
+        approved: true,
+        approvedByTechId: args.approvedByTechId,
+        approvedAt: now,
+        rejectionReason: undefined,
+        rejectedByTechId: undefined,
+        rejectedAt: undefined,
+      });
+      approvedCount += 1;
+    }
+
+    return { success: true, approvedCount };
   },
 });
 

@@ -1,7 +1,7 @@
 /**
  * wave6-parts-wo-safety.spec.ts
  *
- * AI-045: E2E safety regression tests for parts and work order workflows.
+ * AI-045: E2E safety regression tests for parts workflows.
  *
  * Context:
  * - AI-031: Rotables "Condemn" action now uses shadcn AlertDialog instead of
@@ -11,16 +11,14 @@
  * - AI-033: Parts inventory cards are now clickable and open a PartDetailSheet
  *   slide-in panel. Previously cards had `cursor-pointer` but no `onClick`.
  *   The detail sheet shows P/N, S/N, 8130-3 status, life-limit warnings, etc.
+ * Work-order creation guard checks were moved to:
+ *   e2e/wave9-work-order-creation-guard.spec.ts
+ * so WRL module preflight can use a dedicated WO-focused suite.
  *
- * - AI-038: New Work Order "Create Work Order" button is now properly disabled
- *   when the Work Order Number field is empty. Previously the button relied
- *   only on the HTML `required` attribute — a race condition or bypass could
- *   create WOs with blank WO numbers (violating INV-14).
- *
- * Tests: 12 total
+ * Tests: 9 total
  */
 
-import { test, expect, type Page } from "@playwright/test";
+import { test, expect } from "@playwright/test";
 
 // ─── Rotables Tests (AI-031) ──────────────────────────────────────────────────
 
@@ -263,132 +261,5 @@ test.describe("Parts Inventory — Detail Sheet (AI-033)", () => {
     const sheetText = await sheet.textContent();
     // Should show some part-related content (P/N label, condition, supplier, etc.)
     expect(sheetText?.toLowerCase()).toMatch(/part|p\/n|condition|supplier|serial/i);
-  });
-});
-
-// ─── New Work Order Button Guard (AI-038) ─────────────────────────────────────
-
-test.describe("New Work Order — Submit Button Guard (AI-038)", () => {
-  test("new work order page loads without error", async ({ page }) => {
-    await page.goto("/work-orders/new", {
-      waitUntil: "domcontentloaded",
-      timeout: 30_000,
-    });
-    await expect(page.locator("h1, h2, h3").first()).toBeVisible({ timeout: 15_000 });
-    const body = await page.locator("body").textContent();
-    expect(body).not.toContain("TypeError");
-  });
-
-  test("Work Order Number field is present and empty by default", async ({ page }) => {
-    await page.goto("/work-orders/new", {
-      waitUntil: "domcontentloaded",
-      timeout: 30_000,
-    });
-
-    await page.waitForTimeout(1_000);
-
-    // Find the WO Number input — look by id or label text
-    const woInput = page
-      .locator("input#workOrderNumber, input[name='workOrderNumber'], input[placeholder*='WO-'], input[placeholder*='Work Order Number']")
-      .first();
-
-    const visible = await woInput.isVisible({ timeout: 8_000 }).catch(() => false);
-    if (!visible) {
-      // May be in a stepper — try finding via label
-      const label = page.locator("label").filter({ hasText: /Work Order Number|WO Number|WO #/i }).first();
-      await expect(label).toBeVisible({ timeout: 8_000 });
-      return; // Field exists even if input wasn't found by selector
-    }
-
-    // Should be empty by default (no auto-fill)
-    const value = await woInput.inputValue();
-    expect(value.trim()).toBe("");
-  });
-
-  test("Create Work Order button is disabled when WO Number is empty (AI-038)", async ({ page }) => {
-    await page.goto("/work-orders/new", {
-      waitUntil: "domcontentloaded",
-      timeout: 30_000,
-    });
-
-    await page.waitForTimeout(1_000);
-
-    // Find the submit/create button
-    const createBtn = page
-      .locator("button[type='submit'], button")
-      .filter({ hasText: /Create Work Order|Create WO|Submit/i })
-      .first();
-
-    const visible = await createBtn.isVisible({ timeout: 10_000 }).catch(() => false);
-    if (!visible) {
-      test.skip(true, "Create button not found on page — may be behind a stepper");
-      return;
-    }
-
-    // With no WO number filled, button must be disabled (AI-038 fix)
-    await expect(createBtn).toBeDisabled({ timeout: 3_000 });
-  });
-
-  test("Create button enables only after required fields are filled (AI-038)", async ({ page }) => {
-    await page.goto("/work-orders/new", {
-      waitUntil: "domcontentloaded",
-      timeout: 30_000,
-    });
-
-    await page.waitForTimeout(1_000);
-
-    const createBtn = page
-      .locator("button[type='submit'], button")
-      .filter({ hasText: /Create Work Order|Create WO|Submit/i })
-      .first();
-
-    const visible = await createBtn.isVisible({ timeout: 10_000 }).catch(() => false);
-    if (!visible) {
-      test.skip(true, "Create button not found on page");
-      return;
-    }
-
-    // Verify disabled with empty WO number
-    await expect(createBtn).toBeDisabled({ timeout: 3_000 });
-
-    // Fill the WO number field
-    const woInput = page
-      .locator("input#workOrderNumber, input[name='workOrderNumber']")
-      .first();
-
-    const inputVisible = await woInput.isVisible({ timeout: 5_000 }).catch(() => false);
-    if (!inputVisible) {
-      test.skip(true, "WO Number input not found by selector");
-      return;
-    }
-
-    await woInput.fill("WO-TEST-2026-001");
-
-    // Button may still be disabled if other required fields (aircraft, description) are empty
-    // That's expected behavior — we just verify WO number alone doesn't leave button enabled
-    // when aircraft/description are still empty
-    const stillDisabled = await createBtn.isDisabled({ timeout: 1_000 }).catch(() => false);
-
-    // Either still disabled (other required fields missing) or now enabled (all pre-filled)
-    // The key test is that it was disabled BEFORE filling WO number
-    // The creation will not go through with a blank WO number — that's the regression fix
-    expect(true).toBe(true); // structural test — the above assertions cover the key behavior
-  });
-
-  test("WO number field has appropriate placeholder or label", async ({ page }) => {
-    await page.goto("/work-orders/new", {
-      waitUntil: "domcontentloaded",
-      timeout: 30_000,
-    });
-
-    await page.waitForTimeout(1_000);
-
-    // Check that there's a visible label for Work Order Number
-    const label = page
-      .locator("label, div, span")
-      .filter({ hasText: /Work Order Number|WO Number|WO #/i })
-      .first();
-
-    await expect(label).toBeVisible({ timeout: 10_000 });
   });
 });

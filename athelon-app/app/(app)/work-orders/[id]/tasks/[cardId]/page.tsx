@@ -21,6 +21,8 @@ import {
   ChevronDown,
   History,
   Clock,
+  Play,
+  Square,
   Building2,
   Loader2,
   X,
@@ -203,8 +205,16 @@ export default function TaskCardPage() {
   const [handoffSubmitting, setHandoffSubmitting] = useState(false);
   // GAP-18: Start step tracking
   const [startingStepId, setStartingStepId] = useState<string | null>(null);
+  const [timerActionLoading, setTimerActionLoading] = useState<"task-start" | "step-toggle" | "stop" | null>(null);
   const addHandoffNote = useMutation(api.taskCards.addHandoffNote);
   const startStepMutation = useMutation(api.gapFixes.startStep);
+  const startTimerMutation = useMutation(api.timeClock.startTimer);
+  const stopTimerMutation = useMutation(api.timeClock.stopTimer);
+
+  const activeTimer = useQuery(
+    api.timeClock.getActiveTimerForTechnician,
+    orgId && techId ? { orgId, technicianId: techId } : "skip",
+  );
 
   // ── Compliance — Convex queries/mutations (AI-004) ────────────────────────
   const complianceItemsRaw = useQuery(
@@ -308,6 +318,15 @@ export default function TaskCardPage() {
     taskCard.steps.every((s) => s.status === "completed" || s.status === "na");
   const cardIsComplete = taskCard.status === "complete";
   const cardIsVoided = taskCard.status === "voided";
+  const activeTimerEntry = activeTimer?.entry;
+  const activeTaskTimerForThisCard =
+    activeTimerEntry &&
+    (activeTimerEntry.entryType ?? "work_order") === "task" &&
+    activeTimerEntry.taskCardId === cardId;
+  const activeStepTimerForThisCard =
+    activeTimerEntry &&
+    (activeTimerEntry.entryType ?? "work_order") === "step" &&
+    activeTimerEntry.taskCardId === cardId;
 
   // ── Map Convex compliance items to local shape ────────────────────────────
   const complianceItems: TaskComplianceItem[] = (complianceItemsRaw ?? []).map((item) => ({
@@ -344,6 +363,95 @@ export default function TaskCardPage() {
     } finally {
       setStartingStepId(null);
     }
+  }
+
+  async function handleStartTaskTimer() {
+    if (!orgId || !techId) return;
+    if (activeTimerEntry) {
+      toast.error("Stop your active timer before starting a task timer.");
+      return;
+    }
+
+    setTimerActionLoading("task-start");
+    try {
+      await startTimerMutation({
+        orgId,
+        technicianId: techId,
+        entryType: "task",
+        workOrderId: workOrderId as Id<"workOrders">,
+        taskCardId: cardId as Id<"taskCards">,
+        source: "task_card_page",
+      });
+      toast.success("Task timer started.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to start task timer.");
+    } finally {
+      setTimerActionLoading(null);
+    }
+  }
+
+  async function handleStopActiveTimer() {
+    if (!orgId || !activeTimerEntry) return;
+
+    setTimerActionLoading("stop");
+    try {
+      await stopTimerMutation({ orgId, timeEntryId: activeTimerEntry._id });
+      toast.success("Active timer stopped.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to stop active timer.");
+    } finally {
+      setTimerActionLoading(null);
+    }
+  }
+
+  async function handleStepTimerClick(stepId: Id<"taskCardSteps">) {
+    if (!orgId || !techId) return;
+
+    const activeStepForThisStep =
+      activeTimerEntry &&
+      (activeTimerEntry.entryType ?? "work_order") === "step" &&
+      activeTimerEntry.taskStepId === stepId;
+
+    if (activeStepForThisStep) {
+      await handleStopActiveTimer();
+      return;
+    }
+
+    if (activeTimerEntry) {
+      toast.error("Stop your active timer before starting a step timer.");
+      return;
+    }
+
+    setTimerActionLoading("step-toggle");
+    try {
+      await startTimerMutation({
+        orgId,
+        technicianId: techId,
+        entryType: "step",
+        workOrderId: workOrderId as Id<"workOrders">,
+        taskCardId: cardId as Id<"taskCards">,
+        taskStepId: stepId,
+        source: "task_card_page",
+      });
+      toast.success("Step timer started.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to start step timer.");
+    } finally {
+      setTimerActionLoading(null);
+    }
+  }
+
+  function handleSignStepIntent(target: {
+    stepId: Id<"taskCardSteps">;
+    stepNumber: number;
+    description: string;
+    requiresIa: boolean;
+  }) {
+    if (activeTimerEntry && (activeTimerEntry.entryType ?? "work_order") === "step") {
+      toast.error("Stop the active step timer before signing a step.");
+      return;
+    }
+    setSignStepTarget(target);
   }
 
   // ── Map Convex vendor services to local shape ─────────────────────────────
@@ -420,6 +528,40 @@ export default function TaskCardPage() {
             </span>
           </div>
           <p className="text-[11px] text-muted-foreground">steps done</p>
+          {!cardIsVoided && !cardIsComplete && orgId && techId && (
+            <div className="mt-2 flex items-center justify-end gap-1.5">
+              {activeTaskTimerForThisCard ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 text-xs gap-1 border-red-500/40 text-red-400 hover:bg-red-500/10"
+                  onClick={handleStopActiveTimer}
+                  disabled={timerActionLoading === "stop"}
+                >
+                  <Square className="w-3 h-3" />
+                  {timerActionLoading === "stop" ? "Stopping..." : "Stop Task Clock"}
+                </Button>
+              ) : activeTimerEntry ? (
+                <Badge
+                  variant="outline"
+                  className="text-[10px] border border-amber-500/30 text-amber-500 bg-amber-500/10"
+                >
+                  Active {activeTimerEntry.entryType ?? "timer"}
+                </Badge>
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 text-xs gap-1 border-green-500/40 text-green-400 hover:bg-green-500/10"
+                  onClick={handleStartTaskTimer}
+                  disabled={timerActionLoading === "task-start"}
+                >
+                  <Play className="w-3 h-3" />
+                  {timerActionLoading === "task-start" ? "Clocking..." : "Clock Task"}
+                </Button>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
@@ -456,9 +598,19 @@ export default function TaskCardPage() {
                 cardIsComplete={cardIsComplete}
                 orgId={orgId}
                 techId={techId}
-                onSignClick={setSignStepTarget}
+                onSignClick={handleSignStepIntent}
                 onStartClick={handleStartStep}
                 isStarting={startingStepId === step._id}
+                onStepTimerClick={handleStepTimerClick}
+                isStepTimerActive={
+                  !!activeTimerEntry &&
+                  (activeTimerEntry.entryType ?? "work_order") === "step" &&
+                  activeTimerEntry.taskStepId === step._id
+                }
+                isStepTimerBusy={
+                  timerActionLoading === "step-toggle" ||
+                  timerActionLoading === "stop"
+                }
               />
             ))}
         </CardContent>

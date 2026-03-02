@@ -14,6 +14,8 @@ import {
   PenLine,
   Play,
   Loader2,
+  Clock,
+  Square,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -53,6 +55,9 @@ export interface TaskStepRowProps {
   }) => void;
   onStartClick?: (stepId: Id<"taskCardSteps">) => void;
   isStarting?: boolean;
+  onStepTimerClick?: (stepId: Id<"taskCardSteps">) => void;
+  isStepTimerActive?: boolean;
+  isStepTimerBusy?: boolean;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -67,6 +72,9 @@ export function TaskStepRow({
   onSignClick,
   onStartClick,
   isStarting,
+  onStepTimerClick,
+  isStepTimerActive,
+  isStepTimerBusy,
 }: TaskStepRowProps) {
   const isInProgress = step.status === "in_progress";
   const isPending = step.status === "pending";
@@ -158,6 +166,35 @@ export function TaskStepRow({
 
         {/* Action buttons */}
         <div className="flex items-center gap-1.5 flex-shrink-0 flex-wrap">
+          {(isPending || isInProgress) &&
+            !cardIsVoided &&
+            !cardIsComplete &&
+            orgId &&
+            techId &&
+            onStepTimerClick && (
+              <Button
+                variant="outline"
+                size="sm"
+                className={`h-7 text-xs gap-1 border ${
+                  isStepTimerActive
+                    ? "border-red-500/40 text-red-400 hover:bg-red-500/10"
+                    : "border-green-500/40 text-green-400 hover:bg-green-500/10"
+                }`}
+                disabled={isStepTimerBusy}
+                onClick={() => onStepTimerClick(step._id as Id<"taskCardSteps">)}
+                aria-label={`${isStepTimerActive ? "Stop" : "Start"} step timer ${step.stepNumber}`}
+              >
+                {isStepTimerBusy ? (
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                ) : isStepTimerActive ? (
+                  <Square className="w-3 h-3" />
+                ) : (
+                  <Clock className="w-3 h-3" />
+                )}
+                {isStepTimerActive ? "Stop Clock" : "Clock Step"}
+              </Button>
+            )}
+
           {/* Start button — for pending steps (GAP-18) */}
           {isPending &&
             !cardIsVoided &&
