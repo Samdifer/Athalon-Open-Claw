@@ -56,7 +56,7 @@ export default function QuotesPage() {
 
   const quotes = useQuery(
     api.billing.listQuotes,
-    orgId ? { orgId, status: activeTab === "all" ? undefined : activeTab } : "skip",
+    orgId ? { orgId } : "skip",
   );
 
   const customers = useQuery(
@@ -75,14 +75,15 @@ export default function QuotesPage() {
 
   const filtered = useMemo(() => {
     if (!quotes) return [];
-    if (!search.trim()) return quotes;
-    const q = search.toLowerCase();
-    return quotes.filter(
+    const byStatus = activeTab === "all" ? quotes : quotes.filter((q) => q.status === activeTab);
+    if (!search.trim()) return byStatus;
+    const sq = search.toLowerCase();
+    return byStatus.filter(
       (quote) =>
-        quote.quoteNumber.toLowerCase().includes(q) ||
-        (customerMap.get(quote.customerId as string) ?? "").toLowerCase().includes(q),
+        quote.quoteNumber.toLowerCase().includes(sq) ||
+        (customerMap.get(quote.customerId as string) ?? "").toLowerCase().includes(sq),
     );
-  }, [quotes, search, customerMap]);
+  }, [quotes, search, activeTab, customerMap]);
 
   const all = quotes ?? [];
   const counts: Record<QuoteStatus, number> = {

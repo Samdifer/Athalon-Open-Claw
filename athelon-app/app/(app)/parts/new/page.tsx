@@ -317,9 +317,9 @@ export default function NewPartPage() {
       {/* Header */}
       <div className="flex items-center gap-3">
         <Button asChild variant="ghost" size="sm">
-          <Link to="/parts/requests">
+          <Link to="/parts">
             <ArrowLeft className="w-4 h-4 mr-1.5" />
-            Parts Queue
+            Parts Inventory
           </Link>
         </Button>
       </div>
@@ -876,7 +876,7 @@ export default function NewPartPage() {
             {isSubmitting ? "Receiving..." : "Receive Part"}
           </Button>
           <Button asChild variant="ghost" size="sm">
-            <Link to="/parts/requests">Cancel</Link>
+            <Link to="/parts">Cancel</Link>
           </Button>
           {hasCertData() && (
             <Badge variant="secondary" className="ml-auto text-[10px]">

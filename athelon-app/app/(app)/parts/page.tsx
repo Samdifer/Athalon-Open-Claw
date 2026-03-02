@@ -916,10 +916,14 @@ export default function PartsPage() {
                 downloadCSV(
                   filtered.map((p: any) => ({
                     "Part Number": p.partNumber ?? "",
+                    "Part Name": p.partName ?? "",
                     Description: p.description ?? "",
-                    Status: p.status ?? "",
+                    Condition: CONDITION_LABEL[p.condition] ?? p.condition ?? "",
+                    Location: LOCATION_LABEL[p.location] ?? p.location ?? "",
+                    "Serial Number": p.serialNumber ?? "",
                     Quantity: p.quantityOnHand ?? p.quantity ?? "",
-                    Location: p.location ?? "",
+                    Supplier: p.supplier ?? "",
+                    "PO Number": p.purchaseOrderNumber ?? "",
                   })),
                   "parts-inventory.csv",
                 );

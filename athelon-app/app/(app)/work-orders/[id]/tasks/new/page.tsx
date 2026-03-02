@@ -420,8 +420,17 @@ export default function NewTaskCardPage() {
                 placeholder="e.g. 4"
                 className="h-9 text-sm border-border/60"
               />
-              <p className="text-[10px] text-muted-foreground/60 mt-1">
-                For planning purposes only.
+              {/* BUG-LT4-003: Make it explicit that estimated hours is not
+                  persisted — previously the field just said "For planning
+                  purposes only" but gave no indication the value would be lost
+                  after creating the card. A lead tech filling in "8.0" would
+                  submit the form, land on the new card page, and find the
+                  field gone. Now the label clarifies: the field is local only
+                  and will not be saved (backend mutation does not include it).
+                  Logged as BACKEND-NEEDED so the field can be wired up when
+                  the schema is extended. */}
+              <p className="text-[10px] text-amber-400/80 mt-1">
+                ⚠ Not saved — for local planning only. Hours won't appear on the task card.
               </p>
             </div>
           </CardContent>

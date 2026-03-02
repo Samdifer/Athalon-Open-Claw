@@ -96,9 +96,18 @@ export function SignStepDialog({
   // rating stays on "airframe" instead of switching to "ia". The tech could
   // sign an IA step with the wrong rating (no IA exercised), creating a
   // regulatory record error under 14 CFR 65.85/65.87.
+  //
+  // BUG-LT-HUNT-001: Also clear pin and error on open.
+  // SignCardDialog had this same fix (BUG-LT4-002) but it was never ported
+  // here. If a tech enters a wrong PIN, gets "Invalid PIN", closes, then
+  // re-opens (possibly for a *different* step), the stale error banner still
+  // shows and the pin field still has the old value — making the dialog look
+  // broken before they've even typed anything.
   useEffect(() => {
     if (open) {
       setRating(requiresIa ? "ia" : "airframe");
+      setPin("");
+      setError(null);
     }
   }, [open, requiresIa]);
   const [photoStorageIds, setPhotoStorageIds] = useState<string[]>([]);

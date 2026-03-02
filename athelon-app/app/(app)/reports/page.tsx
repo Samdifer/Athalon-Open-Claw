@@ -67,9 +67,10 @@ export default function ReportsPage() {
     isDataLoading: !isLoaded || invoices === undefined || woResult === undefined,
   });
 
-  const fromTs = new Date(dateFrom).getTime();
-  const toTs = new Date(dateTo).getTime() + 86400000;
-  const dateRangeInvalid = dateFrom && dateTo && fromTs > toTs;
+  const fromTs = dateFrom ? new Date(dateFrom).getTime() : NaN;
+  const toTs = dateTo ? new Date(dateTo).getTime() + 86400000 : NaN;
+  const dateInputMissing = !dateFrom || !dateTo;
+  const dateRangeInvalid = !dateInputMissing && fromTs > toTs;
 
   // Revenue by month
   const revenueData = useMemo(() => {
@@ -225,7 +226,15 @@ export default function ReportsPage() {
         </CardContent>
       </Card>
 
-      {/* Date range validation error */}
+      {/* Date range validation errors */}
+      {dateInputMissing && (
+        <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg border border-amber-500/40 bg-amber-500/10 text-amber-400">
+          <AlertCircle className="w-4 h-4 flex-shrink-0" />
+          <p className="text-xs font-medium">
+            Both a "From" and "To" date are required to display report data.
+          </p>
+        </div>
+      )}
       {dateRangeInvalid && (
         <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg border border-red-500/40 bg-red-500/10 text-red-400">
           <AlertCircle className="w-4 h-4 flex-shrink-0" />

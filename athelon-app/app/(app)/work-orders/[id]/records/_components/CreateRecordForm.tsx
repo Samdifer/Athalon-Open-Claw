@@ -149,6 +149,20 @@ export function CreateRecordForm({
       setError("Approved data reference revision is required.");
       return;
     }
+    // BUG-LT4-001: Validate completionDate before submitting.
+    // new Date("").getTime() === NaN — silently sent to backend if the tech
+    // clears the date field. The backend receives NaN as the timestamp and
+    // either rejects with a cryptic schema error or stores an invalid date.
+    // Per AC 43-9C every maintenance record must have a valid completion date.
+    if (!form.completionDate) {
+      setError("Completion date is required.");
+      return;
+    }
+    const completionTs = new Date(form.completionDate).getTime();
+    if (isNaN(completionTs)) {
+      setError("Completion date is invalid. Please enter a valid date.");
+      return;
+    }
     // BH-LT3-004: Validate RTS statement when "returned to service" is checked.
     // Previously the submit handler had no validation for this field — a tech
     // could check RTS, type 5 chars in the statement, and submit. The backend
@@ -181,7 +195,7 @@ export function CreateRecordForm({
           revision: form.approvedDataRevision,
           section: form.approvedDataSection || undefined,
         },
-        completionDate: new Date(form.completionDate).getTime(),
+        completionDate: completionTs,
         returnedToService: form.returnedToService,
         returnToServiceStatement: form.returnedToService
           ? form.returnToServiceStatement

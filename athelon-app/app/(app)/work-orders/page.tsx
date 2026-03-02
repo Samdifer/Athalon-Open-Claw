@@ -243,7 +243,7 @@ export default function WorkOrdersPage() {
           <h1 className="text-lg sm:text-xl md:text-2xl font-semibold text-foreground">Work Orders</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
             {workOrders.length} total ·{" "}
-            {workOrders.filter((w) => ["in_progress", "open_discrepancies"].includes(w.status)).length} in progress
+            {workOrders.filter((w) => ["open", "in_progress", "open_discrepancies"].includes(w.status)).length} active
           </p>
         </div>
         <div className="flex gap-2 w-full sm:w-auto">

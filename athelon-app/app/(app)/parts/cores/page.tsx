@@ -55,6 +55,7 @@ type CoreStatus = "awaiting_return" | "received" | "inspected" | "credit_issued"
 
 const STATUS_TABS: Array<{ label: string; value: CoreStatus | "all" }> = [
   { label: "All", value: "all" },
+  { label: "Overdue", value: "overdue" },
   { label: "Awaiting Return", value: "awaiting_return" },
   { label: "Received", value: "received" },
   { label: "Inspected", value: "inspected" },

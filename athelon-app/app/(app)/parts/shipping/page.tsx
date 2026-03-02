@@ -381,10 +381,20 @@ function ShipmentDetails({ shipmentId, orgId }: { shipmentId: Id<"shipments">; o
     }
   };
 
+  if (items === undefined) {
+    return (
+      <div className="border-t p-4 bg-muted/30 space-y-2">
+        <Skeleton className="h-4 w-32" />
+        <Skeleton className="h-10 w-full rounded-md" />
+        <Skeleton className="h-10 w-full rounded-md" />
+      </div>
+    );
+  }
+
   return (
     <div className="border-t p-4 bg-muted/30 space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="font-medium text-sm">Items ({items?.length ?? 0})</h4>
+        <h4 className="font-medium text-sm">Items ({items.length})</h4>
         <Button size="sm" variant="outline" onClick={() => setShowAdd(!showAdd)}><Plus className="h-3 w-3 mr-1" /> Add Item</Button>
       </div>
       {showAdd && (
@@ -398,7 +408,7 @@ function ShipmentDetails({ shipmentId, orgId }: { shipmentId: Id<"shipments">; o
           </div>
         </div>
       )}
-      {items && items.length > 0 ? (
+      {items.length > 0 ? (
         <div className="space-y-1">
           {items.map((item) => (
             <div key={item._id} className="flex items-center justify-between text-sm p-2 rounded bg-background">

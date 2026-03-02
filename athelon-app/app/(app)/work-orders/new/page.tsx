@@ -85,7 +85,7 @@ export default function NewWorkOrderPage() {
           ? new Date(promisedDeliveryDate).getTime()
           : undefined,
         estimatedLaborHoursOverride: estimatedLaborHours
-          ? parseFloat(estimatedLaborHours)
+          ? Math.max(0, parseFloat(estimatedLaborHours) || 0) || undefined
           : undefined,
       });
 

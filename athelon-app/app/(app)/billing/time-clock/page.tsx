@@ -328,7 +328,7 @@ export default function TimeClockPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Work Orders</SelectItem>
-                {(workOrders ?? []).slice(0, 20).map((w) => (
+                {(workOrders ?? []).slice(0, 100).map((w) => (
                   <SelectItem key={w._id} value={w._id}>{w.workOrderNumber}</SelectItem>
                 ))}
               </SelectContent>

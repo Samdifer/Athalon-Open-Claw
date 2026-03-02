@@ -91,7 +91,7 @@ export default function ArDashboardPage() {
     orgId ? { organizationId: orgId } : "skip",
   );
 
-  const isLoading = !isLoaded || aging === undefined || overdueInvoices === undefined;
+  const isLoading = !isLoaded || aging === undefined || overdueInvoices === undefined || customers === undefined;
 
   const customerMap = useMemo(() => {
     if (!customers) return new Map<string, string>();

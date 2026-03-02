@@ -422,17 +422,18 @@ export default function InvoicesPage() {
 
   const invoices = useQuery(
     api.billing.listInvoices,
-    orgId ? { orgId, status: activeTab === "all" ? undefined : activeTab } : "skip",
+    orgId ? { orgId } : "skip",
   );
 
   const isLoading = !isLoaded || invoices === undefined;
 
   const filtered = useMemo(() => {
     if (!invoices) return [];
-    if (!search.trim()) return invoices;
+    const byStatus = activeTab === "all" ? invoices : invoices.filter((inv) => inv.status === activeTab);
+    if (!search.trim()) return byStatus;
     const q = search.toLowerCase();
-    return invoices.filter((inv) => inv.invoiceNumber.toLowerCase().includes(q));
-  }, [invoices, search]);
+    return byStatus.filter((inv) => inv.invoiceNumber.toLowerCase().includes(q));
+  }, [invoices, search, activeTab]);
 
   const all = invoices ?? [];
 

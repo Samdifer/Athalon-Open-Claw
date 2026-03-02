@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { Link } from "react-router-dom";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -306,6 +307,14 @@ export default function LoanersPage() {
                       <p className="text-xs text-muted-foreground mt-0.5">{item.description}</p>
                       <div className="flex items-center gap-3 text-xs text-muted-foreground mt-0.5">
                         {item.dailyRate != null && <span>{formatCurrency(item.dailyRate)}/day</span>}
+                        {item.status === "loaned_out" && item.loanedToCustomerId && (() => {
+                          const customer = (customers ?? []).find((c) => c._id === item.loanedToCustomerId);
+                          return customer ? (
+                            <span className="text-blue-600 dark:text-blue-400 font-medium">
+                              → {customer.companyName ?? customer.name}
+                            </span>
+                          ) : null;
+                        })()}
                         {item.loanedDate && <span>Loaned: {formatDate(item.loanedDate)}</span>}
                         {item.expectedReturnDate && <span>Due: {formatDate(item.expectedReturnDate)}</span>}
                       </div>
@@ -334,7 +343,7 @@ export default function LoanersPage() {
       )}
 
       {/* Loan Out Dialog */}
-      <Dialog open={loanDialogId !== null} onOpenChange={(open) => { if (!open && !isLoaning) setLoanDialogId(null); }}>
+      <Dialog open={loanDialogId !== null} onOpenChange={(open) => { if (!open && !isLoaning) { setLoanDialogId(null); setLoanForm({ customerId: "", expectedReturnDate: "", conditionOut: "", notes: "" }); } }}>
         <DialogContent>
           <DialogHeader><DialogTitle>Loan Out Item</DialogTitle></DialogHeader>
           {loanDialogId && (() => {
@@ -358,7 +367,13 @@ export default function LoanersPage() {
               {customers === undefined ? (
                 <div className="h-9 bg-muted/30 rounded-md border border-border/60 animate-pulse" />
               ) : customers.length === 0 ? (
-                <p className="text-xs text-muted-foreground py-2">No active customers found.</p>
+                <p className="text-xs text-muted-foreground py-2">
+                  No customers found.{" "}
+                  <Link to="/billing/customers" className="text-primary underline underline-offset-2">
+                    Add a customer
+                  </Link>{" "}
+                  before loaning out an item.
+                </p>
               ) : (
                 <Select
                   value={loanForm.customerId}
@@ -382,7 +397,7 @@ export default function LoanersPage() {
             </div>
             <div className="space-y-2">
               <Label>Expected Return Date</Label>
-              <Input type="date" value={loanForm.expectedReturnDate} onChange={(e) => setLoanForm({ ...loanForm, expectedReturnDate: e.target.value })} />
+              <Input type="date" min={new Date().toISOString().slice(0, 10)} value={loanForm.expectedReturnDate} onChange={(e) => setLoanForm({ ...loanForm, expectedReturnDate: e.target.value })} />
             </div>
             <div className="space-y-2">
               <Label>Condition Notes</Label>
@@ -404,7 +419,7 @@ export default function LoanersPage() {
       </Dialog>
 
       {/* Return Dialog */}
-      <Dialog open={returnDialogId !== null} onOpenChange={(open) => { if (!open && !isReturning) setReturnDialogId(null); }}>
+      <Dialog open={returnDialogId !== null} onOpenChange={(open) => { if (!open && !isReturning) { setReturnDialogId(null); setReturnForm({ conditionIn: "", notes: "" }); } }}>
         <DialogContent>
           <DialogHeader><DialogTitle>Return Item</DialogTitle></DialogHeader>
           {returnDialogId && (() => {
@@ -432,7 +447,7 @@ export default function LoanersPage() {
               <Textarea value={returnForm.notes} onChange={(e) => setReturnForm({ ...returnForm, notes: e.target.value })} rows={2} />
             </div>
             <div className="flex justify-end gap-2">
-              <Button type="button" variant="ghost" onClick={() => setReturnDialogId(null)} disabled={isReturning}>Cancel</Button>
+              <Button type="button" variant="ghost" onClick={() => { setReturnDialogId(null); setReturnForm({ conditionIn: "", notes: "" }); }} disabled={isReturning}>Cancel</Button>
               <Button type="submit" disabled={isReturning} className="min-w-[80px] gap-1.5">
                 {isReturning ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
                 {isReturning ? "Saving…" : "Return"}

@@ -184,6 +184,8 @@ export default function RotablesPage() {
   const [condemnTarget, setCondemnTarget] = useState<{ id: Id<"rotables">; partNumber: string; serialNumber: string } | null>(null);
   const [removeTarget, setRemoveTarget] = useState<{ id: Id<"rotables">; partNumber: string; serialNumber: string } | null>(null);
   const [installTarget, setInstallTarget] = useState<{ id: Id<"rotables">; partNumber: string; serialNumber: string } | null>(null);
+  const [sendVendorTarget, setSendVendorTarget] = useState<{ id: Id<"rotables">; partNumber: string; serialNumber: string } | null>(null);
+  const [receiveVendorTarget, setReceiveVendorTarget] = useState<{ id: Id<"rotables">; partNumber: string; serialNumber: string } | null>(null);
   const [actioningId, setActioningId] = useState<string | null>(null);
   const { orgId, isLoaded } = useCurrentOrg();
   const { selectedLocationId } = useSelectedLocation(orgId);
@@ -466,12 +468,12 @@ export default function RotablesPage() {
                         </Button>
                       )}
                       {(rotable.status === "serviceable" || rotable.status === "in_shop") && (
-                        <Button size="sm" variant="outline" className="h-7 text-xs gap-1" disabled={actioningId === rotable._id} onClick={(e) => { e.stopPropagation(); void handleAction(rotable._id, "sent_to_vendor"); }}>
+                        <Button size="sm" variant="outline" className="h-7 text-xs gap-1" disabled={actioningId === rotable._id} onClick={(e) => { e.stopPropagation(); setSendVendorTarget({ id: rotable._id, partNumber: rotable.partNumber, serialNumber: rotable.serialNumber }); }}>
                           {actioningId === rotable._id ? <Loader2 className="w-3 h-3 animate-spin" /> : null}Send to Vendor
                         </Button>
                       )}
                       {rotable.status === "at_vendor" && (
-                        <Button size="sm" variant="outline" className="h-7 text-xs gap-1" disabled={actioningId === rotable._id} onClick={(e) => { e.stopPropagation(); void handleAction(rotable._id, "received_from_vendor"); }}>
+                        <Button size="sm" variant="outline" className="h-7 text-xs gap-1" disabled={actioningId === rotable._id} onClick={(e) => { e.stopPropagation(); setReceiveVendorTarget({ id: rotable._id, partNumber: rotable.partNumber, serialNumber: rotable.serialNumber }); }}>
                           {actioningId === rotable._id ? <Loader2 className="w-3 h-3 animate-spin" /> : null}Receive
                         </Button>
                       )}
@@ -539,6 +541,60 @@ export default function RotablesPage() {
               }}
             >
               Confirm Removal
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={sendVendorTarget !== null} onOpenChange={(v) => !v && setSendVendorTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Send Component to Vendor?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will record that{" "}
+              <strong className="font-mono">{sendVendorTarget?.partNumber}</strong>
+              {sendVendorTarget?.serialNumber ? ` S/N ${sendVendorTarget.serialNumber}` : ""}{" "}
+              has been shipped to a vendor for repair, overhaul, or inspection. Ensure the component is properly tagged, packaged, and accompanied by the appropriate paperwork before confirming.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (sendVendorTarget) {
+                  void handleAction(sendVendorTarget.id, "sent_to_vendor");
+                  setSendVendorTarget(null);
+                }
+              }}
+            >
+              Confirm — Send to Vendor
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={receiveVendorTarget !== null} onOpenChange={(v) => !v && setReceiveVendorTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Receive Component from Vendor?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will record that{" "}
+              <strong className="font-mono">{receiveVendorTarget?.partNumber}</strong>
+              {receiveVendorTarget?.serialNumber ? ` S/N ${receiveVendorTarget.serialNumber}` : ""}{" "}
+              has been received back from the vendor. Confirm the component is physically in hand, accompanied by the appropriate 8130-3 or work order documentation, and has passed receiving inspection before confirming.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (receiveVendorTarget) {
+                  void handleAction(receiveVendorTarget.id, "received_from_vendor");
+                  setReceiveVendorTarget(null);
+                }
+              }}
+            >
+              Confirm Receipt
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

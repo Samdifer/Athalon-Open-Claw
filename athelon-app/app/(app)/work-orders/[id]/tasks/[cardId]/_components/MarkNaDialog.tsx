@@ -9,7 +9,7 @@
  * No signature auth event is required for N/A marking.
  */
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -57,6 +57,22 @@ export function MarkNaDialog({
   const [error, setError] = useState<string | null>(null);
 
   const completeStep = useMutation(api.taskCards.completeStep);
+
+  // BUG-LT-HUNT-002: Reset reason and error when the dialog (re-)opens.
+  // Without this, if a tech opens the N/A dialog for Step 3, types a reason,
+  // then closes WITHOUT submitting, then opens the dialog again for Step 5,
+  // Step 5's dialog pre-fills with Step 3's reason text — and any stale error
+  // from a previous failed attempt is still visible. This is particularly bad
+  // for maintenance records: a tech may not notice the pre-filled text and
+  // accidentally submit Step 5 with Step 3's reason. Under 14 CFR 43.9(a)(2)
+  // the N/A reason is a permanent maintenance record and cannot be corrected
+  // after sign-off.
+  useEffect(() => {
+    if (open) {
+      setReason("");
+      setError(null);
+    }
+  }, [open]);
 
   async function handleMarkNa() {
     const trimmedReason = reason.trim();

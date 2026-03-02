@@ -530,14 +530,27 @@ export default function TaskCardPage() {
           {/* Add note form */}
           {!cardIsVoided && !cardIsComplete && orgId && techId && (
             <div className="flex gap-2">
-              <Textarea
-                value={handoffNote}
-                onChange={(e) => setHandoffNote(e.target.value)}
-                placeholder="Add a shift handoff note..."
-                rows={2}
-                className="text-xs bg-muted/30 border-border/60 resize-none flex-1"
-                aria-label="Shift handoff note"
-              />
+              {/* BUG-LT4-004: Add maxLength cap to the handoff note textarea.
+                  Previously unbounded — a tech typing a long note would hit a
+                  backend size limit and get a cryptic schema error with no
+                  indication of how to fix it. 500 chars is generous for a
+                  shift note (shift-handoff notes should be brief, actionable
+                  summaries, not essays). Character counter added below the
+                  textarea so the tech can see how close they are. */}
+              <div className="flex-1 space-y-1">
+                <Textarea
+                  value={handoffNote}
+                  onChange={(e) => setHandoffNote(e.target.value.slice(0, 500))}
+                  placeholder="Add a shift handoff note..."
+                  rows={2}
+                  maxLength={500}
+                  className="text-xs bg-muted/30 border-border/60 resize-none w-full"
+                  aria-label="Shift handoff note"
+                />
+                <p className={`text-[10px] text-right ${handoffNote.length >= 480 ? "text-amber-400" : "text-muted-foreground/50"}`}>
+                  {handoffNote.length}/500
+                </p>
+              </div>
               <Button
                 variant="outline"
                 size="sm"

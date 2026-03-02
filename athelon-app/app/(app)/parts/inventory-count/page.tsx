@@ -127,6 +127,10 @@ export default function InventoryCountPage() {
 
   const handleStart = async () => {
     if (!selectedCountId || actionLoading === "start") return;
+    if (!techId) {
+      toast.error("A Personnel technician record is required to start a count. Create your technician profile in Personnel first.");
+      return;
+    }
     setActionLoading("start");
     try {
       await startCount({ countId: selectedCountId, countedBy: techId });

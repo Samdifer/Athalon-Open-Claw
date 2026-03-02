@@ -6,7 +6,7 @@
  * The card-level sign-off dialog (14 CFR 43.9 certification).
  */
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -70,6 +70,19 @@ export function SignCardDialog({
   const [statement, setStatement] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // BUG-LT4-002: Reset error (and PIN) when the dialog re-opens after a failed
+  // attempt. Without this, a tech who enters the wrong PIN, sees "Invalid PIN"
+  // in red, clicks Cancel, then re-opens the dialog to try again still sees
+  // the old error banner immediately — before typing anything. Looks like the
+  // dialog is broken or that the same PIN is already rejected. Clearing on
+  // open ensures a clean slate each time.
+  useEffect(() => {
+    if (open) {
+      setPin("");
+      setError(null);
+    }
+  }, [open]);
 
   const createAuthEvent = useMutation(api.workOrders.createSignatureAuthEvent);
   const signTaskCard = useMutation(api.taskCards.signTaskCard);

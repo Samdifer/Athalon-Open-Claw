@@ -491,7 +491,7 @@ export default function WorkOrderDetailPage() {
         <TabsList className="h-9 bg-muted/40 p-0.5 mb-4 overflow-x-auto max-w-full flex-wrap">
           {(
             [
-              { value: "squawks", label: "Squawks", Icon: AlertTriangle, count: workItems.length, indicator: null as "red" | "amber" | "green" | null },
+              { value: "squawks", label: "Tasks & Findings", Icon: AlertTriangle, count: workItems.length, indicator: null as "red" | "amber" | "green" | null },
               { value: "compliance", label: "Compliance", Icon: ShieldCheck, count: null, indicator: complianceIndicator },
               { value: "parts", label: "Parts", Icon: Package, count: partsForThisWorkOrder.length, indicator: null as "red" | "amber" | "green" | null },
               { value: "documents", label: "Documents", Icon: Paperclip, count: null, indicator: null as "red" | "amber" | "green" | null },
