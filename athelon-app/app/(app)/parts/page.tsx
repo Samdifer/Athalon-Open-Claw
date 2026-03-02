@@ -1004,6 +1004,16 @@ export default function PartsPage() {
             <ScanLine className="w-3.5 h-3.5" />
             Scan
           </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 gap-1.5 text-xs border-border/60"
+            title="Scan a part's QR code to search for it"
+            onClick={() => setQrScannerOpen(true)}
+          >
+            <QrCode className="w-3.5 h-3.5" />
+            QR
+          </Button>
         </div>
       </div>
 

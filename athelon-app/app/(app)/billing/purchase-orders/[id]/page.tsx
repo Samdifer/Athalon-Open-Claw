@@ -183,7 +183,14 @@ export default function PODetailPage() {
             <Button
               size="sm"
               onClick={() => {
-                setReceiveQtys({});
+                // Pre-fill each pending line item with its full remaining quantity so
+                // the clerk only needs to adjust items that were short-shipped.
+                const defaults: Record<string, string> = {};
+                for (const item of po.lineItems.filter((i) => i.status !== "RECEIVED")) {
+                  const remaining = item.qty - item.receivedQty;
+                  if (remaining > 0) defaults[item._id] = String(remaining);
+                }
+                setReceiveQtys(defaults);
                 setReceiveDialog(true);
               }}
               className="h-8 gap-1.5 text-xs bg-green-600 hover:bg-green-700"

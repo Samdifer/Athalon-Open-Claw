@@ -160,6 +160,10 @@ export default function LoanersPage() {
   async function handleLoanOut(e: React.FormEvent) {
     e.preventDefault();
     if (!orgId || !loanDialogId) return;
+    if (!loanForm.customerId) {
+      toast.error("Please select a customer before loaning out this item.");
+      return;
+    }
     setIsLoaning(true);
     try {
       await loanOut({
