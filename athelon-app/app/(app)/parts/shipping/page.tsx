@@ -21,6 +21,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -58,6 +59,7 @@ export default function ShippingPage() {
   const [expanded, setExpanded] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
   const [cancelConfirm, setCancelConfirm] = useState<{ id: Id<"shipments">; shipmentNumber: string; type: string } | null>(null);
+  const [deliverConfirm, setDeliverConfirm] = useState<{ id: Id<"shipments">; shipmentNumber: string; carrier?: string } | null>(null);
 
   // Create form state
   const [formType, setFormType] = useState<"inbound" | "outbound">("outbound");
@@ -188,8 +190,14 @@ export default function ShippingPage() {
                 <div><Label>Destination</Label><Input value={formDest} onChange={(e) => setFormDest(e.target.value)} placeholder="Destination name" /></div>
               </div>
               <div className="flex items-center gap-2">
-                <input type="checkbox" id="hazmat" checked={formHazmat} onChange={(e) => setFormHazmat(e.target.checked)} />
-                <Label htmlFor="hazmat" className="flex items-center gap-1"><AlertTriangle className="h-4 w-4 text-yellow-500" /> Hazmat</Label>
+                <Checkbox
+                  id="hazmat"
+                  checked={formHazmat}
+                  onCheckedChange={(checked) => setFormHazmat(checked === true)}
+                />
+                <Label htmlFor="hazmat" className="flex items-center gap-1 cursor-pointer">
+                  <AlertTriangle className="h-4 w-4 text-yellow-500" /> Hazmat
+                </Label>
               </div>
               <div><Label>Notes</Label><Input value={formNotes} onChange={(e) => setFormNotes(e.target.value)} placeholder="Special instructions..." /></div>
               <Button onClick={handleCreate} className="w-full gap-1.5" disabled={isCreating}>
@@ -272,7 +280,7 @@ export default function ShippingPage() {
                   </Button>
                 )}
                 {s.status === "in_transit" && (
-                  <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); handleStatusUpdate(s._id, "delivered"); }}>
+                  <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); setDeliverConfirm({ id: s._id, shipmentNumber: s.shipmentNumber, carrier: s.carrier ?? undefined }); }}>
                     Mark Delivered
                   </Button>
                 )}
@@ -310,6 +318,33 @@ export default function ShippingPage() {
               }}
             >
               Cancel Shipment
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={!!deliverConfirm} onOpenChange={(v) => !v && setDeliverConfirm(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Delivery?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Mark shipment <strong>{deliverConfirm?.shipmentNumber}</strong>
+              {deliverConfirm?.carrier ? ` (${deliverConfirm.carrier})` : ""} as{" "}
+              <strong>Delivered</strong>? This confirms physical receipt of all items. Verify parts have been physically received and checked before confirming — this action cannot be reversed.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Not Yet</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-green-600 hover:bg-green-700 text-white"
+              onClick={() => {
+                if (deliverConfirm) {
+                  handleStatusUpdate(deliverConfirm.id, "delivered");
+                  setDeliverConfirm(null);
+                }
+              }}
+            >
+              Confirm Delivery
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

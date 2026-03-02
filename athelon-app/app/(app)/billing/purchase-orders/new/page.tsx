@@ -253,7 +253,7 @@ export default function NewPOPage() {
           </div>
           <div className="flex gap-2">
             <Button type="button" variant="outline" size="sm" onClick={() => router.back()}>Cancel</Button>
-            <Button type="submit" size="sm" disabled={submitting}>
+            <Button type="submit" size="sm" disabled={submitting || (vendors ?? []).length === 0}>
               {submitting ? "Creating..." : "Create PO"}
             </Button>
           </div>

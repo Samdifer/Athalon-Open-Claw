@@ -7,7 +7,7 @@ import type { Id } from "@/convex/_generated/dataModel";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import {
   Plus, Search, Package, ChevronDown, ChevronRight, AlertCircle,
-  ArrowLeftRight,
+  ArrowLeftRight, Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -87,6 +87,9 @@ export default function LoanersPage() {
   const [search, setSearch] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
+  const [isCreatingItem, setIsCreatingItem] = useState(false);
+  const [isLoaning, setIsLoaning] = useState(false);
+  const [isReturning, setIsReturning] = useState(false);
   const [loanDialogId, setLoanDialogId] = useState<Id<"loanerItems"> | null>(null);
   const [returnDialogId, setReturnDialogId] = useState<Id<"loanerItems"> | null>(null);
   const { orgId, isLoaded } = useCurrentOrg();
@@ -133,6 +136,7 @@ export default function LoanersPage() {
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
     if (!orgId) return;
+    setIsCreatingItem(true);
     try {
       await createLoaner({
         organizationId: orgId,
@@ -145,14 +149,17 @@ export default function LoanersPage() {
       setCreateOpen(false);
       setCreateForm({ partNumber: "", serialNumber: "", description: "", dailyRate: "", notes: "" });
       toast.success("Loaner item created");
-    } catch {
-      toast.error("Failed to create loaner item");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to create loaner item");
+    } finally {
+      setIsCreatingItem(false);
     }
   }
 
   async function handleLoanOut(e: React.FormEvent) {
     e.preventDefault();
     if (!orgId || !loanDialogId) return;
+    setIsLoaning(true);
     try {
       await loanOut({
         id: loanDialogId,
@@ -165,14 +172,17 @@ export default function LoanersPage() {
       setLoanDialogId(null);
       setLoanForm({ customerId: "", expectedReturnDate: "", conditionOut: "", notes: "" });
       toast.success("Item loaned out");
-    } catch {
-      toast.error("Failed to loan out item");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to loan out item");
+    } finally {
+      setIsLoaning(false);
     }
   }
 
   async function handleReturn(e: React.FormEvent) {
     e.preventDefault();
     if (!orgId || !returnDialogId) return;
+    setIsReturning(true);
     try {
       await returnItem({
         id: returnDialogId,
@@ -183,8 +193,10 @@ export default function LoanersPage() {
       setReturnDialogId(null);
       setReturnForm({ conditionIn: "", notes: "" });
       toast.success("Item returned");
-    } catch {
-      toast.error("Failed to return item");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to return item");
+    } finally {
+      setIsReturning(false);
     }
   }
 
@@ -202,7 +214,7 @@ export default function LoanersPage() {
             </p>
           )}
         </div>
-        <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+        <Dialog open={createOpen} onOpenChange={(v) => { if (!isCreatingItem) setCreateOpen(v); }}>
           <DialogTrigger asChild>
             <Button size="sm"><Plus className="w-3.5 h-3.5 mr-1.5" />New Loaner Item</Button>
           </DialogTrigger>
@@ -217,8 +229,11 @@ export default function LoanersPage() {
               <div className="space-y-2"><Label>Daily Rate ($)</Label><Input type="number" step="0.01" value={createForm.dailyRate} onChange={(e) => setCreateForm({ ...createForm, dailyRate: e.target.value })} /></div>
               <div className="space-y-2"><Label>Notes</Label><Textarea value={createForm.notes} onChange={(e) => setCreateForm({ ...createForm, notes: e.target.value })} rows={2} /></div>
               <div className="flex justify-end gap-2">
-                <Button type="button" variant="ghost" onClick={() => setCreateOpen(false)}>Cancel</Button>
-                <Button type="submit">Create</Button>
+                <Button type="button" variant="ghost" onClick={() => setCreateOpen(false)} disabled={isCreatingItem}>Cancel</Button>
+                <Button type="submit" disabled={isCreatingItem} className="min-w-[80px] gap-1.5">
+                  {isCreatingItem ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
+                  {isCreatingItem ? "Creating…" : "Create"}
+                </Button>
               </div>
             </form>
           </DialogContent>
@@ -319,7 +334,7 @@ export default function LoanersPage() {
       )}
 
       {/* Loan Out Dialog */}
-      <Dialog open={loanDialogId !== null} onOpenChange={(open) => { if (!open) setLoanDialogId(null); }}>
+      <Dialog open={loanDialogId !== null} onOpenChange={(open) => { if (!open && !isLoaning) setLoanDialogId(null); }}>
         <DialogContent>
           <DialogHeader><DialogTitle>Loan Out Item</DialogTitle></DialogHeader>
           <form onSubmit={handleLoanOut} className="space-y-4">
@@ -363,15 +378,18 @@ export default function LoanersPage() {
               <Textarea value={loanForm.notes} onChange={(e) => setLoanForm({ ...loanForm, notes: e.target.value })} rows={2} />
             </div>
             <div className="flex justify-end gap-2">
-              <Button type="button" variant="ghost" onClick={() => setLoanDialogId(null)}>Cancel</Button>
-              <Button type="submit" disabled={!loanForm.customerId}>Loan Out</Button>
+              <Button type="button" variant="ghost" onClick={() => setLoanDialogId(null)} disabled={isLoaning}>Cancel</Button>
+              <Button type="submit" disabled={!loanForm.customerId || isLoaning} className="min-w-[90px] gap-1.5">
+                {isLoaning ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
+                {isLoaning ? "Saving…" : "Loan Out"}
+              </Button>
             </div>
           </form>
         </DialogContent>
       </Dialog>
 
       {/* Return Dialog */}
-      <Dialog open={returnDialogId !== null} onOpenChange={(open) => { if (!open) setReturnDialogId(null); }}>
+      <Dialog open={returnDialogId !== null} onOpenChange={(open) => { if (!open && !isReturning) setReturnDialogId(null); }}>
         <DialogContent>
           <DialogHeader><DialogTitle>Return Item</DialogTitle></DialogHeader>
           <form onSubmit={handleReturn} className="space-y-4">
@@ -384,8 +402,11 @@ export default function LoanersPage() {
               <Textarea value={returnForm.notes} onChange={(e) => setReturnForm({ ...returnForm, notes: e.target.value })} rows={2} />
             </div>
             <div className="flex justify-end gap-2">
-              <Button type="button" variant="ghost" onClick={() => setReturnDialogId(null)}>Cancel</Button>
-              <Button type="submit">Return</Button>
+              <Button type="button" variant="ghost" onClick={() => setReturnDialogId(null)} disabled={isReturning}>Cancel</Button>
+              <Button type="submit" disabled={isReturning} className="min-w-[80px] gap-1.5">
+                {isReturning ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
+                {isReturning ? "Saving…" : "Return"}
+              </Button>
             </div>
           </form>
         </DialogContent>
