@@ -36,7 +36,13 @@ function timeAgo(ts: number): string {
   return `${days}d ago`;
 }
 
-function initials(name: string): string {
+// BUG-LT-HUNT-004: Guard against null/undefined name. If the technician record
+// that posted a handoff note is later deleted, the backend may return a null
+// technicianName. Calling .split() on null/undefined throws a TypeError and
+// crashes the entire HandoffNotesPanel — the WO detail page becomes unusable
+// for every task card that has at least one note from the deleted tech.
+function initials(name: string | null | undefined): string {
+  if (!name) return "??";
   return name
     .split(/\s+/)
     .map((w) => w[0])
@@ -101,7 +107,7 @@ export function HandoffNotesPanel({ taskCardId, notes }: HandoffNotesPanelProps)
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-medium text-foreground">
-                      {n.technicianName}
+                      {n.technicianName ?? "Unknown Technician"}
                     </span>
                     <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
                       <Clock className="h-2.5 w-2.5" />
@@ -120,27 +126,38 @@ export function HandoffNotesPanel({ taskCardId, notes }: HandoffNotesPanelProps)
         {notes.length > 0 && <Separator />}
 
         {/* Add note input */}
-        <div className="flex gap-2">
-          <Textarea
-            placeholder="Add a handoff note for the next shift..."
-            value={noteText}
-            onChange={(e) => setNoteText(e.target.value)}
-            className="min-h-[60px] text-xs resize-none"
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
-                e.preventDefault();
-                handleSubmit();
-              }
-            }}
-          />
-          <Button
-            size="sm"
-            onClick={handleSubmit}
-            disabled={!noteText.trim() || sending || !techId}
-            className="self-end h-8 w-8 p-0"
-          >
-            <Send className="h-3.5 w-3.5" />
-          </Button>
+        {/* BUG-LT-HUNT-005: Add maxLength cap (500 chars) matching the inline
+            handoff note textarea on the task card detail page. Without this,
+            a tech typing a long note hits the backend Convex schema size limit
+            and gets a cryptic validation error with no indication of how many
+            characters are allowed. 500 chars is generous for a shift note. */}
+        <div className="space-y-1 flex-1">
+          <div className="flex gap-2">
+            <Textarea
+              placeholder="Add a handoff note for the next shift..."
+              value={noteText}
+              onChange={(e) => setNoteText(e.target.value.slice(0, 500))}
+              maxLength={500}
+              className="min-h-[60px] text-xs resize-none flex-1"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+                  e.preventDefault();
+                  handleSubmit();
+                }
+              }}
+            />
+            <Button
+              size="sm"
+              onClick={handleSubmit}
+              disabled={!noteText.trim() || sending || !techId}
+              className="self-end h-8 w-8 p-0"
+            >
+              <Send className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+          <p className={`text-[10px] text-right ${noteText.length >= 480 ? "text-amber-400" : "text-muted-foreground/50"}`}>
+            {noteText.length}/500
+          </p>
         </div>
       </CardContent>
     </Card>

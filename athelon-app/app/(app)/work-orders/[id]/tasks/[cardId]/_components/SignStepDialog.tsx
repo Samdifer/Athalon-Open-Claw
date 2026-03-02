@@ -108,6 +108,18 @@ export function SignStepDialog({
       setRating(requiresIa ? "ia" : "airframe");
       setPin("");
       setError(null);
+      // BUG-LT-HUNT-003: Also clear photos, parts, notes, and approvedDataRef
+      // on re-open. These were only cleared on successful submit (BUG-LT3-001),
+      // not on Cancel. A tech who adds photos/parts for Step 2, clicks Cancel,
+      // then opens SignStepDialog for Step 3 would see Step 2's photos and
+      // parts pre-loaded — creating a risk of attaching the wrong maintenance
+      // data to Step 3. Under 14 CFR 43.9 every entry must be accurate; a
+      // photo of a completely different component appearing on Step 3's sign-off
+      // is a maintenance records violation.
+      setPhotoStorageIds([]);
+      setPartsInstalled([]);
+      setNotes("");
+      setApprovedDataRef("");
     }
   }, [open, requiresIa]);
   const [photoStorageIds, setPhotoStorageIds] = useState<string[]>([]);
