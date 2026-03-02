@@ -2,7 +2,7 @@
 
 Module: `Work Order Creation`  
 Pack: `PACK-WO-CREATE-v1`  
-Status: Active
+Status: Complete (all findings closed)
 
 | Finding ID | Date | Run ID | Type | Severity | Role | Route | Summary | Ticket | Status |
 |---|---|---|---|---|---|---|---|---|---|

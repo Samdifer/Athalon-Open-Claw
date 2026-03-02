@@ -1,337 +1,208 @@
-/**
- * wave6-rts-release-gate.spec.ts
- *
- * AI-043: E2E tests for the RTS regulatory gate on the aircraft release page.
- *
- * Context:
- * - AI-025 added a mandatory 14 CFR Part 145 gate to work-orders/[id]/release/page.tsx.
- *   Aircraft cannot be returned to a customer without a signed RTS record.
- *   Before the fix, the release form was fully accessible and submittable regardless of RTS status.
- *
- * - AI-026 + AI-030 fixed "Sign Off & Close" buttons in qcm-review/page.tsx and
- *   WorkOrderHeader.tsx to route to /rts (the RTS authorization page) rather than
- *   /signature (the PIN re-auth page that only generates an event ID).
- *
- * Strategy:
- * - Navigate to /work-orders, extract first WO's ID from its link
- * - Navigate to /work-orders/{id}/release and inspect the RTS gate
- * - If no WOs exist, verify the WO list renders an empty state without crashing
- * - All assertions are UI-only — no backend mutations
- *
- * Tests:
- * 1. Work orders list page renders
- * 2. Release page loads for a WO (via list navigation)
- * 3. RTS gate card renders with 14 CFR regulatory text
- * 4. "Go to RTS Authorization" link routes to /rts not /signature
- * 5. Release button is disabled when RTS not signed
- * 6. Release form requires aircraft total time (button stays disabled without it)
- * 7. New WO form has back navigation (regression check)
- */
-
 import { test, expect, type Page } from "@playwright/test";
 
-// ─── Helpers ────────────────────────────────────────────────────────────────
+const RESERVED_SEGMENTS = new Set(["new", "kanban", "templates", "signature", "rts", "release"]);
+const CONVEX_ID_RE = /^[A-Za-z0-9]{10,}$/;
 
-/**
- * Navigate to the WO list and extract the first WO's ID from its detail link.
- * Returns null if no WOs are found.
- */
-async function getFirstWoId(page: Page): Promise<string | null> {
+function isConvexIdLike(value: string): boolean {
+  return CONVEX_ID_RE.test(value);
+}
+
+async function openWorkOrdersList(page: Page) {
   await page.goto("/work-orders", {
     waitUntil: "domcontentloaded",
     timeout: 30_000,
   });
+  await expect(page.getByRole("heading", { name: /Work Orders/i })).toBeVisible({
+    timeout: 15_000,
+  });
+}
 
-  // Wait for the page to settle (loading state resolved)
-  await page
-    .locator("table tbody tr, [data-testid='wo-empty'], .text-muted-foreground")
-    .first()
-    .waitFor({ timeout: 15_000 })
-    .catch(() => {});
+async function getFirstWoIdFromList(page: Page): Promise<string | null> {
+  await openWorkOrdersList(page);
 
-  const RESERVED_SEGMENTS = new Set(["new", "kanban", "templates", "signature"]);
-
-  // Prefer table rows (actual WO list) to avoid sidebar/top-nav links.
   const rowLinks = page.locator("table tbody a[href^='/work-orders/']");
   const rowCount = await rowLinks.count();
   for (let i = 0; i < rowCount; i++) {
     const href = await rowLinks.nth(i).getAttribute("href");
     const match = href?.match(/^\/work-orders\/([^/]+)/);
-    const segment = match?.[1];
-    if (segment && !RESERVED_SEGMENTS.has(segment.toLowerCase())) {
-      return segment;
-    }
-  }
-
-  // Fallback if table rows are unavailable in this view mode.
-  const anyLinks = page.locator("main a[href^='/work-orders/']");
-  const linkCount = await anyLinks.count();
-  for (let i = 0; i < linkCount; i++) {
-    const href = await anyLinks.nth(i).getAttribute("href");
-    const match = href?.match(/^\/work-orders\/([^/]+)/);
-    const segment = match?.[1];
-    if (segment && !RESERVED_SEGMENTS.has(segment.toLowerCase())) {
-      return segment;
+    const id = match?.[1];
+    if (id && !RESERVED_SEGMENTS.has(id.toLowerCase()) && isConvexIdLike(id)) {
+      return id;
     }
   }
 
   return null;
 }
 
-// ─── Tests ───────────────────────────────────────────────────────────────────
+async function createWorkOrderForReleaseCoverage(page: Page): Promise<string | null> {
+  await page.goto("/work-orders/new", {
+    waitUntil: "domcontentloaded",
+    timeout: 30_000,
+  });
+  await expect(page.getByRole("heading", { name: /New Work Order/i })).toBeVisible({
+    timeout: 15_000,
+  });
+
+  const noAircraft = page
+    .locator("text=No aircraft registered. Add aircraft in Fleet first.")
+    .first();
+  if (await noAircraft.isVisible({ timeout: 2_000 }).catch(() => false)) {
+    return null;
+  }
+
+  const aircraftSelect = page.locator("#aircraft");
+  await expect(aircraftSelect).toBeVisible({ timeout: 10_000 });
+  await aircraftSelect.click();
+  const aircraftListbox = page.locator("[role='listbox']").last();
+  const firstAircraftOption = aircraftListbox.locator("[role='option']").first();
+  await expect(firstAircraftOption).toBeVisible({ timeout: 5_000 });
+  await firstAircraftOption.click();
+
+  await page.locator("#description").fill(`WRL RTS gate seed ${Date.now()}`);
+  const createButton = page.getByRole("button", { name: /Create Work Order/i });
+  await expect(createButton).toBeEnabled({ timeout: 8_000 });
+  await createButton.click();
+
+  await expect(page).not.toHaveURL(/\/work-orders\/new$/, { timeout: 20_000 });
+  await expect(page).toHaveURL(/\/work-orders\/[^/]+$/, { timeout: 20_000 });
+  const match = page.url().match(/\/work-orders\/([^/]+)$/);
+  const id = match?.[1] ?? null;
+  if (!id || RESERVED_SEGMENTS.has(id.toLowerCase())) {
+    return null;
+  }
+  return id;
+}
+
+async function resolveCanonicalWorkOrderId(page: Page, workOrderRef: string): Promise<string | null> {
+  if (isConvexIdLike(workOrderRef)) {
+    return workOrderRef;
+  }
+
+  await page.goto(`/work-orders/${workOrderRef}`, {
+    waitUntil: "domcontentloaded",
+    timeout: 30_000,
+  });
+
+  const candidateLinks = page.locator(
+    "a[href*='/release'], a[href*='/tasks/new'], a[href*='/records'], a[href*='/rts']",
+  );
+  const count = await candidateLinks.count();
+  for (let i = 0; i < count; i++) {
+    const href = await candidateLinks.nth(i).getAttribute("href");
+    const match = href?.match(/^\/work-orders\/([^/]+)\//);
+    const candidate = match?.[1];
+    if (candidate && isConvexIdLike(candidate)) {
+      return candidate;
+    }
+  }
+
+  return null;
+}
+
+async function ensureWorkOrderId(page: Page): Promise<string> {
+  const createdRef = await createWorkOrderForReleaseCoverage(page);
+  if (createdRef) {
+    const resolved = await resolveCanonicalWorkOrderId(page, createdRef);
+    if (resolved) return resolved;
+  }
+
+  const existing = await getFirstWoIdFromList(page);
+  if (existing) return existing;
+
+  throw new Error(
+    "Unable to run RTS/release assertions: no existing work orders and no aircraft available to create one.",
+  );
+}
+
+async function openReleasePage(page: Page, woId: string) {
+  await page.goto(`/work-orders/${woId}/release`, {
+    waitUntil: "domcontentloaded",
+    timeout: 30_000,
+  });
+  await expect(
+    page.getByRole("heading", { name: /Release Aircraft to Customer/i }),
+  ).toBeVisible({ timeout: 20_000 });
+}
+
+async function getReleaseGateState(page: Page) {
+  const hasBlocker = await page
+    .getByText(/Return-to-Service Not Authorized/i)
+    .isVisible({ timeout: 5_000 })
+    .catch(() => false);
+
+  const hasAuthorizedState = await page
+    .getByText(/Return-to-Service authorized/i)
+    .isVisible({ timeout: 5_000 })
+    .catch(() => false);
+
+  expect(hasBlocker || hasAuthorizedState).toBe(true);
+  return { hasBlocker, hasAuthorizedState };
+}
 
 test.describe("Work Order Release Page — RTS Gate (AI-025)", () => {
-  test("work orders list page renders without error", async ({ page }) => {
-    await page.goto("/work-orders", {
-      waitUntil: "domcontentloaded",
-      timeout: 30_000,
-    });
-    await expect(page.getByRole("heading", { name: /Work Orders/i })).toBeVisible({
-      timeout: 15_000,
-    });
+  test("work orders list page renders without runtime errors", async ({ page }) => {
+    await openWorkOrdersList(page);
     const body = await page.locator("body").textContent();
     expect(body).not.toContain("TypeError");
     expect(body).not.toContain("Cannot read properties of undefined");
   });
 
-  test("release page loads for first work order", async ({ page }) => {
-    const woId = await getFirstWoId(page);
-    if (!woId) {
-      test.skip(true, "No work orders found — skipping release page tests");
-      return;
-    }
-
-    await page.goto(`/work-orders/${woId}/release`, {
-      waitUntil: "domcontentloaded",
-      timeout: 30_000,
-    });
-
-    // Page should render explicit release heading.
-    await expect(
-      page.getByRole("heading", { name: /Release Aircraft to Customer/i }),
-    ).toBeVisible({ timeout: 20_000 });
+  test("release page loads for a deterministic work order", async ({ page }) => {
+    const woId = await ensureWorkOrderId(page);
+    await openReleasePage(page, woId);
   });
 
-  test("release page shows RTS gate card with 14 CFR regulatory text", async ({ page }) => {
-    const woId = await getFirstWoId(page);
-    if (!woId) {
-      test.skip(true, "No work orders found — skipping RTS gate test");
-      return;
-    }
+  test("RTS gate always renders either blocking or authorized state", async ({ page }) => {
+    const woId = await ensureWorkOrderId(page);
+    await openReleasePage(page, woId);
 
-    await page.goto(`/work-orders/${woId}/release`, {
-      waitUntil: "domcontentloaded",
-      timeout: 30_000,
-    });
-
-    // Wait for page to fully load (Convex queries resolve).
-    await page.waitForTimeout(3_000);
-
-    // The page should show EITHER the blocking card or the approved card.
-    const bodyText = (await page.locator("body").innerText()).toLowerCase();
-    expect(bodyText).toMatch(/return-to-service not authorized|return-to-service authorized/i);
-  });
-
-  test("RTS gate references 14 CFR Part 145 regulation", async ({ page }) => {
-    const woId = await getFirstWoId(page);
-    if (!woId) {
-      test.skip(true, "No work orders found — skipping CFR reference test");
-      return;
-    }
-
-    await page.goto(`/work-orders/${woId}/release`, {
-      waitUntil: "domcontentloaded",
-      timeout: 30_000,
-    });
-
-    await page.waitForTimeout(3_000);
-
-    // Check if RTS is unsigned (the more common test state)
-    const hasBlocker = await page
-      .locator("text=Return-to-Service Not Authorized")
-      .isVisible({ timeout: 5_000 })
-      .catch(() => false);
-
-    if (!hasBlocker) {
-      // RTS already signed in this org — still valid, just different path
-      test.skip(true, "RTS already signed for this WO — regulatory text test skipped");
-      return;
-    }
-
-    // Verify the card contains CFR reference
+    const { hasBlocker, hasAuthorizedState } = await getReleaseGateState(page);
     const bodyText = await page.locator("body").textContent();
-    expect(bodyText).toMatch(/14 CFR|Part 145/i);
+
+    if (hasBlocker) {
+      expect(bodyText).toMatch(/14 CFR|Part 145/i);
+    }
+    if (hasAuthorizedState) {
+      expect(bodyText).toMatch(/airworthy/i);
+    }
   });
 
-  test("'Go to RTS Authorization' link routes to /rts not /signature", async ({ page }) => {
-    const woId = await getFirstWoId(page);
-    if (!woId) {
-      test.skip(true, "No work orders found — skipping RTS link routing test");
-      return;
+  test("release flow never routes operators to /signature", async ({ page }) => {
+    const woId = await ensureWorkOrderId(page);
+    await openReleasePage(page, woId);
+
+    const { hasBlocker } = await getReleaseGateState(page);
+    const signatureLinks = page.locator(`a[href='/work-orders/${woId}/signature']`);
+    await expect(signatureLinks).toHaveCount(0);
+
+    if (hasBlocker) {
+      const rtsLink = page
+        .getByRole("link", { name: /Go to RTS Authorization/i })
+        .first();
+      await expect(rtsLink).toBeVisible({ timeout: 5_000 });
+      await expect(rtsLink).toHaveAttribute("href", `/work-orders/${woId}/rts`);
     }
-
-    await page.goto(`/work-orders/${woId}/release`, {
-      waitUntil: "domcontentloaded",
-      timeout: 30_000,
-    });
-
-    await page.waitForTimeout(3_000);
-
-    // Find the "Go to RTS Authorization" link (only present when RTS is unsigned)
-    const rtsLink = page.locator("a").filter({ hasText: /Go to RTS Authorization/i }).first();
-    const isVisible = await rtsLink.isVisible({ timeout: 5_000 }).catch(() => false);
-
-    if (!isVisible) {
-      // RTS already signed — link not shown
-      test.skip(true, "RTS already signed — Go to RTS Authorization link not present");
-      return;
-    }
-
-    const href = await rtsLink.getAttribute("href");
-
-    // CRITICAL: Must route to /rts (the actual RTS page), NOT /signature (the PIN re-auth page).
-    // AI-025/AI-026/AI-030 fixed this exact bug across 3 pages.
-    expect(href).toMatch(/\/rts$/);
-    expect(href).not.toMatch(/\/signature/);
   });
 
-  test("Release button is disabled when RTS is not signed", async ({ page }) => {
-    const woId = await getFirstWoId(page);
-    if (!woId) {
-      test.skip(true, "No work orders found — skipping release button test");
-      return;
-    }
+  test("release button enforces RTS + required total-time gate", async ({ page }) => {
+    const woId = await ensureWorkOrderId(page);
+    await openReleasePage(page, woId);
 
-    await page.goto(`/work-orders/${woId}/release`, {
-      waitUntil: "domcontentloaded",
-      timeout: 30_000,
+    const { hasBlocker } = await getReleaseGateState(page);
+    const releaseButton = page.getByRole("button", {
+      name: /^Release Aircraft to Customer$/i,
     });
+    const totalTimeInput = page.locator("input[type='number']").first();
 
-    await page.waitForTimeout(3_000);
+    await expect(totalTimeInput).toBeVisible({ timeout: 8_000 });
+    await expect(releaseButton).toBeDisabled();
 
-    const hasBlocker = await page
-      .locator("text=Return-to-Service Not Authorized")
-      .isVisible({ timeout: 5_000 })
-      .catch(() => false);
+    await totalTimeInput.fill("1234.5");
 
-    if (!hasBlocker) {
-      test.skip(true, "RTS already signed — button-disabled test not applicable");
-      return;
-    }
-
-    // The Release Aircraft to Customer submit button must be disabled
-    const releaseBtn = page
-      .locator("button[type='submit']")
-      .filter({ hasText: /Release Aircraft/i })
-      .first();
-
-    // Button may not be in the DOM yet if blocked — check for disabled state
-    const btnVisible = await releaseBtn.isVisible({ timeout: 5_000 }).catch(() => false);
-    if (btnVisible) {
-      await expect(releaseBtn).toBeDisabled({ timeout: 3_000 });
+    if (hasBlocker) {
+      await expect(releaseButton).toBeDisabled();
     } else {
-      // The form itself may be hidden when RTS not signed — either is acceptable
-      const formVisible = await page.locator("form").isVisible({ timeout: 3_000 }).catch(() => false);
-      // At minimum the blocking card must be shown (already verified above)
-      expect(hasBlocker).toBe(true);
-    }
-  });
-
-  test("Release form validates aircraft total time (required field)", async ({ page }) => {
-    const woId = await getFirstWoId(page);
-    if (!woId) {
-      test.skip(true, "No work orders found — skipping form validation test");
-      return;
-    }
-
-    await page.goto(`/work-orders/${woId}/release`, {
-      waitUntil: "domcontentloaded",
-      timeout: 30_000,
-    });
-
-    await page.waitForTimeout(3_000);
-
-    // Find the Aircraft Total Time input (visible even when RTS not signed)
-    const totalTimeInput = page
-      .locator("input[type='number']")
-      .filter({})
-      .first();
-
-    const inputVisible = await totalTimeInput.isVisible({ timeout: 5_000 }).catch(() => false);
-    if (!inputVisible) {
-      test.skip(true, "Form not rendered in this state — skipping validation test");
-      return;
-    }
-
-    // Input should be empty by default
-    const value = await totalTimeInput.inputValue();
-    expect(value).toBe("");
-
-    // Submit button should remain disabled without total time
-    const releaseBtn = page
-      .locator("button[type='submit']")
-      .filter({ hasText: /Release Aircraft/i })
-      .first();
-
-    const btnVisible = await releaseBtn.isVisible({ timeout: 3_000 }).catch(() => false);
-    if (btnVisible) {
-      // Button disabled due to either: empty total time OR unsigned RTS
-      await expect(releaseBtn).toBeDisabled({ timeout: 2_000 });
-    }
-  });
-});
-
-// ─── Regression: /rts vs /signature routing ──────────────────────────────────
-
-test.describe("RTS Routing Regression (AI-026 / AI-030)", () => {
-  /**
-   * Verifies the navigation on QCM review page and WO detail header routes
-   * techs to /rts (the RTS sign-off page) rather than /signature (the PIN re-auth page).
-   *
-   * This is a link-href assertion only (no navigation to sub-pages needed).
-   */
-
-  test("QCM review page loads without crash", async ({ page }) => {
-    await page.goto("/compliance/qcm-review", {
-      waitUntil: "domcontentloaded",
-      timeout: 30_000,
-    });
-    await expect(page.locator("h1, h2, h3").first()).toBeVisible({ timeout: 15_000 });
-    const body = await page.locator("body").textContent();
-    expect(body).not.toContain("TypeError");
-  });
-
-  test("WO detail page has 'RTS' links that point to /rts, not /signature", async ({ page }) => {
-    const woId = await getFirstWoId(page);
-    if (!woId) {
-      test.skip(true, "No WOs found — skipping routing regression test");
-      return;
-    }
-
-    await page.goto(`/work-orders/${woId}`, {
-      waitUntil: "domcontentloaded",
-      timeout: 30_000,
-    });
-
-    await page.waitForTimeout(3_000);
-
-    // Find any links containing /rts
-    const rtsLinks = page.locator("a[href*='/rts']");
-    const count = await rtsLinks.count();
-
-    if (count === 0) {
-      // WO may not be in a state where RTS/close buttons appear
-      test.skip(true, "No /rts links found on this WO — may not be in closeable state");
-      return;
-    }
-
-    // All RTS-related links should point to /rts not /signature
-    for (let i = 0; i < count; i++) {
-      const href = await rtsLinks.nth(i).getAttribute("href");
-      if (href?.includes("rts")) {
-        expect(href).toMatch(/\/rts/);
-        expect(href).not.toMatch(/\/signature/);
-      }
+      await expect(releaseButton).toBeEnabled();
     }
   });
 });

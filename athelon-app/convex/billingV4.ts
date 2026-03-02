@@ -26,6 +26,53 @@ async function requireAuth(ctx: {
   return identity.subject;
 }
 
+function normalizeOptional(value?: string | null): string | null {
+  const normalized = value?.trim().toLowerCase();
+  return normalized && normalized.length > 0 ? normalized : null;
+}
+
+function validateTermsDays(value: number | undefined): void {
+  if (value === undefined) return;
+  if (!Number.isInteger(value) || value < 0 || value > 365) {
+    throw new Error("defaultPaymentTermsDays must be an integer between 0 and 365.");
+  }
+}
+
+async function requireOrgMembership(
+  ctx: { db: any },
+  userId: string,
+  organizationId: Id<"organizations">,
+) {
+  const membership = await ctx.db
+    .query("technicians")
+    .withIndex("by_organization", (q: any) => q.eq("organizationId", organizationId))
+    .filter((q: any) => q.eq(q.field("userId"), userId))
+    .first();
+
+  if (!membership) {
+    throw new Error(
+      `FORBIDDEN_ORG_ACCESS: user ${userId} is not a member of organization ${organizationId}.`,
+    );
+  }
+
+  if (membership.status === "terminated") {
+    throw new Error(`FORBIDDEN_ORG_ACCESS: technician membership is terminated.`);
+  }
+
+  return membership;
+}
+
+async function getCustomerInOrg(
+  ctx: { db: any },
+  customerId: Id<"customers">,
+  organizationId: Id<"organizations">,
+) {
+  const customer = await ctx.db.get(customerId);
+  if (!customer) throw new Error("Customer not found.");
+  if (customer.organizationId !== organizationId) throw new Error("ORG_MISMATCH.");
+  return customer;
+}
+
 // ─── Number generator ─────────────────────────────────────────────────────────
 async function getNextNumber(
   ctx: { db: any },
@@ -71,12 +118,54 @@ export const createCustomer = mutation({
     defaultPaymentTermsDays: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    await requireAuth(ctx);
-    if (!args.name.trim()) throw new Error("Customer name is required.");
+    const callerUserId = await requireAuth(ctx);
+    await requireOrgMembership(ctx, callerUserId, args.organizationId);
+
+    const trimmedName = args.name.trim();
+    if (!trimmedName) throw new Error("Customer name is required.");
+    validateTermsDays(args.defaultPaymentTermsDays);
+
+    const normalizedName = normalizeOptional(trimmedName);
+    const normalizedCompany = normalizeOptional(args.companyName);
+    const normalizedEmail = normalizeOptional(args.email);
+
+    const existingCustomers = await ctx.db
+      .query("customers")
+      .withIndex("by_organization", (q: any) => q.eq("organizationId", args.organizationId))
+      .collect();
+
+    const duplicate = existingCustomers.find((customer: any) => {
+      const sameName = normalizeOptional(customer.name) === normalizedName;
+      if (!sameName) return false;
+
+      const sameCompany =
+        normalizedCompany !== null &&
+        normalizeOptional(customer.companyName) === normalizedCompany;
+      const sameEmail =
+        normalizedEmail !== null && normalizeOptional(customer.email) === normalizedEmail;
+
+      // If neither side has company/email, same-name record is treated as duplicate.
+      if (normalizedCompany === null && normalizedEmail === null) {
+        return (
+          normalizeOptional(customer.companyName) === null &&
+          normalizeOptional(customer.email) === null
+        );
+      }
+
+      return sameCompany || sameEmail;
+    });
+
+    if (duplicate) {
+      const duplicateStatus = duplicate.active === false ? "inactive" : "active";
+      throw new Error(
+        `DUPLICATE_CUSTOMER: matching ${duplicateStatus} customer already exists (${duplicate._id}).`,
+      );
+    }
+
     const now = Date.now();
-    return ctx.db.insert("customers", {
+    const customerId = await ctx.db.insert("customers", {
       organizationId: args.organizationId,
-      name: args.name.trim(),
+      name: trimmedName,
       companyName: args.companyName?.trim() || undefined,
       customerType: args.customerType,
       address: args.address?.trim() || undefined,
@@ -84,12 +173,24 @@ export const createCustomer = mutation({
       email: args.email?.trim() || undefined,
       notes: args.notes?.trim() || undefined,
       taxExempt: args.taxExempt,
-      defaultPaymentTerms: args.defaultPaymentTerms,
+      defaultPaymentTerms: args.defaultPaymentTerms?.trim() || undefined,
       defaultPaymentTermsDays: args.defaultPaymentTermsDays,
       active: true,
       createdAt: now,
       updatedAt: now,
     });
+
+    await ctx.db.insert("auditLog", {
+      organizationId: args.organizationId,
+      eventType: "record_created",
+      tableName: "customers",
+      recordId: customerId,
+      userId: callerUserId,
+      notes: `Customer profile created for ${trimmedName}.`,
+      timestamp: now,
+    });
+
+    return customerId;
   },
 });
 
@@ -116,25 +217,91 @@ export const updateCustomer = mutation({
     defaultPaymentTermsDays: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    await requireAuth(ctx);
-    const customer = await ctx.db.get(args.customerId);
-    if (!customer) throw new Error("Customer not found.");
-    if (customer.organizationId !== args.organizationId) throw new Error("ORG_MISMATCH.");
+    const callerUserId = await requireAuth(ctx);
+    await requireOrgMembership(ctx, callerUserId, args.organizationId);
+    const customer = await getCustomerInOrg(
+      ctx,
+      args.customerId,
+      args.organizationId,
+    );
+
+    validateTermsDays(args.defaultPaymentTermsDays);
 
     const updates: Record<string, unknown> = { updatedAt: Date.now() };
-    if (args.name !== undefined) updates.name = args.name.trim();
+    const changedFields: string[] = [];
+
+    if (args.name !== undefined) {
+      const trimmedName = args.name.trim();
+      if (!trimmedName) throw new Error("Customer name is required.");
+      updates.name = trimmedName;
+      changedFields.push("name");
+    }
     if (args.companyName !== undefined) updates.companyName = args.companyName.trim() || undefined;
-    if (args.customerType !== undefined) updates.customerType = args.customerType;
-    if (args.address !== undefined) updates.address = args.address.trim() || undefined;
-    if (args.phone !== undefined) updates.phone = args.phone.trim() || undefined;
-    if (args.email !== undefined) updates.email = args.email.trim() || undefined;
-    if (args.notes !== undefined) updates.notes = args.notes.trim() || undefined;
-    if (args.active !== undefined) updates.active = args.active;
-    if (args.taxExempt !== undefined) updates.taxExempt = args.taxExempt;
-    if (args.defaultPaymentTerms !== undefined) updates.defaultPaymentTerms = args.defaultPaymentTerms;
-    if (args.defaultPaymentTermsDays !== undefined) updates.defaultPaymentTermsDays = args.defaultPaymentTermsDays;
+    if (args.companyName !== undefined) changedFields.push("companyName");
+    if (args.customerType !== undefined) {
+      updates.customerType = args.customerType;
+      changedFields.push("customerType");
+    }
+    if (args.address !== undefined) {
+      updates.address = args.address.trim() || undefined;
+      changedFields.push("address");
+    }
+    if (args.phone !== undefined) {
+      updates.phone = args.phone.trim() || undefined;
+      changedFields.push("phone");
+    }
+    if (args.email !== undefined) {
+      updates.email = args.email.trim() || undefined;
+      changedFields.push("email");
+    }
+    if (args.notes !== undefined) {
+      updates.notes = args.notes.trim() || undefined;
+      changedFields.push("notes");
+    }
+    if (args.active !== undefined) {
+      updates.active = args.active;
+      changedFields.push("active");
+    }
+    if (args.taxExempt !== undefined) {
+      updates.taxExempt = args.taxExempt;
+      changedFields.push("taxExempt");
+    }
+    if (args.defaultPaymentTerms !== undefined) {
+      updates.defaultPaymentTerms = args.defaultPaymentTerms.trim() || undefined;
+      changedFields.push("defaultPaymentTerms");
+    }
+    if (args.defaultPaymentTermsDays !== undefined) {
+      updates.defaultPaymentTermsDays = args.defaultPaymentTermsDays;
+      changedFields.push("defaultPaymentTermsDays");
+    }
 
     await ctx.db.patch(args.customerId, updates);
+
+    await ctx.db.insert("auditLog", {
+      organizationId: args.organizationId,
+      eventType: "record_updated",
+      tableName: "customers",
+      recordId: args.customerId,
+      userId: callerUserId,
+      fieldName: changedFields.join(","),
+      oldValue: JSON.stringify({
+        name: customer.name,
+        companyName: customer.companyName,
+        customerType: customer.customerType,
+        address: customer.address,
+        phone: customer.phone,
+        email: customer.email,
+        notes: customer.notes,
+        active: customer.active,
+        taxExempt: customer.taxExempt,
+        defaultPaymentTerms: customer.defaultPaymentTerms,
+        defaultPaymentTermsDays: customer.defaultPaymentTermsDays,
+      }),
+      newValue: JSON.stringify(updates),
+      notes: `Customer profile updated for ${customer.name}.`,
+      timestamp: Date.now(),
+    });
+
     return { success: true };
   },
 });
@@ -142,6 +309,9 @@ export const updateCustomer = mutation({
 export const listAllCustomers = query({
   args: { organizationId: v.id("organizations"), includeInactive: v.optional(v.boolean()) },
   handler: async (ctx, args) => {
+    const callerUserId = await requireAuth(ctx);
+    await requireOrgMembership(ctx, callerUserId, args.organizationId);
+
     const all = await ctx.db
       .query("customers")
       .withIndex("by_organization", (q) => q.eq("organizationId", args.organizationId))
@@ -257,6 +427,10 @@ export const listPaymentsForInvoice = query({
 export const listPaymentsForCustomer = query({
   args: { orgId: v.id("organizations"), customerId: v.id("customers") },
   handler: async (ctx, args) => {
+    const callerUserId = await requireAuth(ctx);
+    await requireOrgMembership(ctx, callerUserId, args.orgId);
+    await getCustomerInOrg(ctx, args.customerId, args.orgId);
+
     // Get all invoices for this customer
     const invoices = await ctx.db
       .query("invoices")
@@ -927,7 +1101,10 @@ export const listAircraftForCustomer = query({
     organizationId: v.id("organizations"),
   },
   handler: async (ctx, args) => {
-    await requireAuth(ctx);
+    const callerUserId = await requireAuth(ctx);
+    await requireOrgMembership(ctx, callerUserId, args.organizationId);
+    await getCustomerInOrg(ctx, args.customerId, args.organizationId);
+
     return await ctx.db
       .query("aircraft")
       .withIndex("by_customer", (q) => q.eq("customerId", args.customerId))
@@ -943,10 +1120,14 @@ export const listWorkOrdersForCustomer = query({
     organizationId: v.id("organizations"),
   },
   handler: async (ctx, args) => {
-    await requireAuth(ctx);
+    const callerUserId = await requireAuth(ctx);
+    await requireOrgMembership(ctx, callerUserId, args.organizationId);
+    await getCustomerInOrg(ctx, args.customerId, args.organizationId);
+
     const aircraft = await ctx.db
       .query("aircraft")
       .withIndex("by_customer", (q) => q.eq("customerId", args.customerId))
+      .filter((q) => q.eq(q.field("operatingOrganizationId"), args.organizationId))
       .collect();
     const woArrays = await Promise.all(
       aircraft.map((ac) =>
@@ -967,7 +1148,10 @@ export const listQuotesForCustomer = query({
     organizationId: v.id("organizations"),
   },
   handler: async (ctx, args) => {
-    await requireAuth(ctx);
+    const callerUserId = await requireAuth(ctx);
+    await requireOrgMembership(ctx, callerUserId, args.organizationId);
+    await getCustomerInOrg(ctx, args.customerId, args.organizationId);
+
     return await ctx.db
       .query("quotes")
       .withIndex("by_org_customer", (q) =>
@@ -984,7 +1168,10 @@ export const listInvoicesForCustomer = query({
     organizationId: v.id("organizations"),
   },
   handler: async (ctx, args) => {
-    await requireAuth(ctx);
+    const callerUserId = await requireAuth(ctx);
+    await requireOrgMembership(ctx, callerUserId, args.organizationId);
+    await getCustomerInOrg(ctx, args.customerId, args.organizationId);
+
     return await ctx.db
       .query("invoices")
       .withIndex("by_org_customer", (q) =>
@@ -1001,12 +1188,18 @@ export const listCustomerNotes = query({
     organizationId: v.id("organizations"),
   },
   handler: async (ctx, args) => {
-    await requireAuth(ctx);
-    return await ctx.db
+    const callerUserId = await requireAuth(ctx);
+    await requireOrgMembership(ctx, callerUserId, args.organizationId);
+    await getCustomerInOrg(ctx, args.customerId, args.organizationId);
+
+    const notes = await ctx.db
       .query("customerNotes")
       .withIndex("by_customer", (q) => q.eq("customerId", args.customerId))
-      .order("desc")
       .collect();
+
+    return notes
+      .filter((note) => note.organizationId === args.organizationId)
+      .sort((a, b) => b.createdAt - a.createdAt);
   },
 });
 
@@ -1020,10 +1213,37 @@ export const addCustomerNote = mutation({
     createdByName: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    await requireAuth(ctx);
-    return await ctx.db.insert("customerNotes", {
-      ...args,
-      createdAt: Date.now(),
+    const callerUserId = await requireAuth(ctx);
+    await requireOrgMembership(ctx, callerUserId, args.organizationId);
+    const customer = await getCustomerInOrg(
+      ctx,
+      args.customerId,
+      args.organizationId,
+    );
+
+    const content = args.content.trim();
+    if (!content) throw new Error("Customer note content is required.");
+
+    const now = Date.now();
+    const noteId = await ctx.db.insert("customerNotes", {
+      customerId: args.customerId,
+      organizationId: args.organizationId,
+      content,
+      createdByUserId: callerUserId,
+      createdByName: args.createdByName?.trim() || undefined,
+      createdAt: now,
     });
+
+    await ctx.db.insert("auditLog", {
+      organizationId: args.organizationId,
+      eventType: "record_created",
+      tableName: "customerNotes",
+      recordId: noteId,
+      userId: callerUserId,
+      notes: `Customer note added for ${customer.name}.`,
+      timestamp: now,
+    });
+
+    return noteId;
   },
 });

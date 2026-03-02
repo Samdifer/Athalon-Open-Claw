@@ -463,7 +463,7 @@ export default function WorkOrderDetailPage() {
             </Button>
             {canClose ? (
               <Button asChild className="gap-2">
-                <Link to={`/work-orders/${workOrderId}/signature`}>
+                <Link to={`/work-orders/${workOrderId}/rts`}>
                   <ShieldCheck className="w-4 h-4" />
                   Sign Off & Close
                 </Link>
