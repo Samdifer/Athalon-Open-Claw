@@ -14,6 +14,7 @@ import {
   FileText,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -460,26 +461,24 @@ export default function NewPartPage() {
 
             {/* Serialized toggle */}
             <div className="flex items-center gap-3">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="is-serialized"
                   checked={isSerialized}
-                  onChange={(e) => setIsSerialized(e.target.checked)}
+                  onCheckedChange={(checked) => setIsSerialized(!!checked)}
                   disabled={isSubmitting}
-                  className="w-3.5 h-3.5 rounded border-border/60 accent-primary"
                 />
-                <span className="text-xs font-medium">Serialized Part</span>
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
+                <Label htmlFor="is-serialized" className="text-xs font-medium cursor-pointer">Serialized Part</Label>
+              </div>
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="is-owner-supplied"
                   checked={isOwnerSupplied}
-                  onChange={(e) => setIsOwnerSupplied(e.target.checked)}
+                  onCheckedChange={(checked) => setIsOwnerSupplied(!!checked)}
                   disabled={isSubmitting}
-                  className="w-3.5 h-3.5 rounded border-border/60 accent-primary"
                 />
-                <span className="text-xs font-medium">Owner-Supplied Part (OSP)</span>
-              </label>
+                <Label htmlFor="is-owner-supplied" className="text-xs font-medium cursor-pointer">Owner-Supplied Part (OSP)</Label>
+              </div>
             </div>
 
             {isSerialized && (
@@ -542,18 +541,17 @@ export default function NewPartPage() {
             />
             {showLifeLimited && (
               <div className="mt-3 space-y-4 pl-5">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id="is-life-limited"
                     checked={isLifeLimited}
-                    onChange={(e) => setIsLifeLimited(e.target.checked)}
+                    onCheckedChange={(checked) => setIsLifeLimited(!!checked)}
                     disabled={isSubmitting}
-                    className="w-3.5 h-3.5 rounded border-border/60 accent-primary"
                   />
-                  <span className="text-xs font-medium">
+                  <Label htmlFor="is-life-limited" className="text-xs font-medium cursor-pointer">
                     This is a life-limited part (LLP) per manufacturer data / CMM
-                  </span>
-                </label>
+                  </Label>
+                </div>
 
                 {isLifeLimited && (
                   <>
@@ -633,16 +631,15 @@ export default function NewPartPage() {
             />
             {showShelfLife && (
               <div className="mt-3 space-y-3 pl-5">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id="has-shelf-life"
                     checked={hasShelfLifeLimit}
-                    onChange={(e) => setHasShelfLifeLimit(e.target.checked)}
+                    onCheckedChange={(checked) => setHasShelfLifeLimit(!!checked)}
                     disabled={isSubmitting}
-                    className="w-3.5 h-3.5 rounded border-border/60 accent-primary"
                   />
-                  <span className="text-xs font-medium">This part has a shelf-life expiry date</span>
-                </label>
+                  <Label htmlFor="has-shelf-life" className="text-xs font-medium cursor-pointer">This part has a shelf-life expiry date</Label>
+                </div>
                 {hasShelfLifeLimit && (
                   <div className="space-y-1.5 max-w-xs">
                     <Label htmlFor="shelfLifeExpiry" className="text-xs font-medium">

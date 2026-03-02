@@ -117,7 +117,7 @@ function InspectDialog({ open, onClose, part, techId }: InspectDialogProps) {
   }
 
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && handleClose()}>
+    <Dialog open={open} onOpenChange={(v) => { if (!v && !submitting) handleClose(); }}>
       <DialogContent className="max-w-[95vw] sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-base">

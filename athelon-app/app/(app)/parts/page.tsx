@@ -106,6 +106,8 @@ interface PartDoc {
   notes?: string;
   minStockLevel?: number;
   reorderPoint?: number;
+  quantityOnHand?: number;
+  quantity?: number;
   installPosition?: string;
   eightOneThirtyId?: Id<"eightOneThirtyRecords">;
 }
@@ -217,7 +219,7 @@ function ReceivingInspectionDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && handleClose()}>
+    <Dialog open={open} onOpenChange={(v) => { if (!v && !isSubmitting) handleClose(); }}>
       <DialogContent className="max-w-[95vw] sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-base">
@@ -390,7 +392,7 @@ function ReservePartDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && handleClose()}>
+    <Dialog open={open} onOpenChange={(v) => { if (!v && !isSubmitting) handleClose(); }}>
       <DialogContent className="max-w-[95vw] sm:max-w-sm">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-base">
@@ -794,7 +796,10 @@ export default function PartsPage() {
     // Location filter (skip for pending_inspection — already filtered)
     if (activeTab === "low_stock") {
       result = result.filter(
-        (p) => p.reorderPoint != null && p.location === "inventory",
+        (p) =>
+          p.reorderPoint != null &&
+          p.location === "inventory" &&
+          (p.quantityOnHand ?? p.quantity ?? 0) <= p.reorderPoint,
       );
     } else if (activeTab !== "all" && activeTab !== "pending_inspection") {
       result = result.filter((p) => p.location === activeTab);
@@ -815,20 +820,37 @@ export default function PartsPage() {
     return result;
   }, [parts, pendingInspectionParts, activeTab, search, selectedShopLocationId]);
 
-  // Count per tab
-  const counts: Record<LocationFilter, number> = {
-    all: parts.length,
-    inventory: parts.filter((p) => p.location === "inventory").length,
-    pending_inspection: parts.filter((p) => p.location === "pending_inspection").length,
-    installed: parts.filter((p) => p.location === "installed").length,
-    quarantine: parts.filter((p) => p.location === "quarantine").length,
-    removed_pending_disposition: parts.filter(
-      (p) => p.location === "removed_pending_disposition",
-    ).length,
-    low_stock: parts.filter(
-      (p) => p.reorderPoint != null && p.location === "inventory",
-    ).length,
-  };
+  // Count per tab — memoized so badge counts don't recompute on dialog state changes or search keystrokes
+  const counts = useMemo<Record<LocationFilter, number>>(() => {
+    let inventory = 0, pending = 0, installed = 0, quarantine = 0, removed = 0, lowStock = 0;
+    for (const p of parts) {
+      if (p.location === "inventory") {
+        inventory++;
+        // Low stock: only flag when actual qty is at or below reorder point
+        if (p.reorderPoint != null) {
+          const qty = p.quantityOnHand ?? p.quantity ?? 0;
+          if (qty <= p.reorderPoint) lowStock++;
+        }
+      } else if (p.location === "pending_inspection") {
+        pending++;
+      } else if (p.location === "installed") {
+        installed++;
+      } else if (p.location === "quarantine") {
+        quarantine++;
+      } else if (p.location === "removed_pending_disposition") {
+        removed++;
+      }
+    }
+    return {
+      all: parts.length,
+      inventory,
+      pending_inspection: pending,
+      installed,
+      quarantine,
+      removed_pending_disposition: removed,
+      low_stock: lowStock,
+    };
+  }, [parts]);
 
   async function handleRelease(part: PartDoc) {
     try {
@@ -1146,7 +1168,7 @@ export default function PartsPage() {
                                 ⚠ Quarantine
                               </Badge>
                             )}
-                            {part.reorderPoint != null && isInventory && (
+                            {isInventory && part.reorderPoint != null && (part.quantityOnHand ?? part.quantity ?? 0) <= part.reorderPoint && (
                               <Badge className="text-[10px] bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
                                 ⚠ Low Stock
                               </Badge>
