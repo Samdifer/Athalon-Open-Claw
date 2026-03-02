@@ -2,7 +2,7 @@
 
 import { FormEvent, useMemo, useState } from "react";
 import { useMutation } from "convex/react";
-import { useUser } from "@clerk/clerk-react";
+import { useOrganization, useUser } from "@clerk/clerk-react";
 import { useNavigate } from "react-router-dom";
 import { api } from "@/convex/_generated/api";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,7 +15,11 @@ import { toast } from "sonner";
 export default function OnboardingPage() {
   const navigate = useNavigate();
   const { user } = useUser();
+  const { organization } = useOrganization();
   const bootstrap = useMutation(api.onboarding.bootstrapOrganizationAndAdmin);
+  const linkToSelectedOrganization = useMutation(
+    api.onboarding.linkUserToSelectedOrganization,
+  );
 
   const [organizationName, setOrganizationName] = useState("");
   const [legalName, setLegalName] = useState("");
@@ -23,6 +27,8 @@ export default function OnboardingPage() {
   const [state, setState] = useState("");
   const [country, setCountry] = useState("US");
   const [submitting, setSubmitting] = useState(false);
+  const [linkingSelectedOrganization, setLinkingSelectedOrganization] =
+    useState(false);
 
   const legalNameFallback = useMemo(
     () =>
@@ -57,6 +63,28 @@ export default function OnboardingPage() {
     }
   }
 
+  async function handleLinkSelectedOrganization() {
+    if (!organization) {
+      toast.error("Select an organization in Clerk first.");
+      return;
+    }
+
+    setLinkingSelectedOrganization(true);
+    try {
+      await linkToSelectedOrganization({
+        preferredClerkOrganizationId: organization.id,
+        preferredOrganizationName: organization.name,
+        legalName: (legalName.trim() || legalNameFallback).trim(),
+      });
+      toast.success(`Linked to ${organization.name}.`);
+      navigate("/dashboard", { replace: true });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to link account.");
+    } finally {
+      setLinkingSelectedOrganization(false);
+    }
+  }
+
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <Card className="w-full max-w-lg border-border/60">
@@ -71,6 +99,28 @@ export default function OnboardingPage() {
         </CardHeader>
 
         <CardContent>
+          {organization && (
+            <div className="mb-4 rounded-md border border-border/60 bg-muted/30 p-3 space-y-2">
+              <p className="text-sm font-medium text-foreground">
+                Join selected organization: {organization.name}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Use this if the organization already has seeded data.
+              </p>
+              <Button
+                type="button"
+                variant="secondary"
+                className="w-full"
+                disabled={submitting || linkingSelectedOrganization}
+                onClick={handleLinkSelectedOrganization}
+              >
+                {linkingSelectedOrganization
+                  ? "Linking account..."
+                  : "Join Selected Organization"}
+              </Button>
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
               <Label htmlFor="organizationName">Organization Name *</Label>

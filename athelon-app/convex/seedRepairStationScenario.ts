@@ -848,7 +848,9 @@ export const seedKingAirTbmRepairStation = mutation({
           const [linkedAssignments, linkedTaskCards, linkedQuotes] = await Promise.all([
             ctx.db
               .query("scheduleAssignments")
-              .withIndex("by_work_order", (q) => q.eq("workOrderId", linkedWorkOrder._id))
+              .withIndex("by_org_wo", (q) =>
+                q.eq("organizationId", orgId).eq("workOrderId", linkedWorkOrder._id),
+              )
               .collect(),
             ctx.db
               .query("taskCards")

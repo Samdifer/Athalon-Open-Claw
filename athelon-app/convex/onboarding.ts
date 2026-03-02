@@ -17,6 +17,42 @@ function pickLatestTechnician(technicians: any[]) {
   return sorted[0];
 }
 
+async function findOrganizationByName(
+  ctx: { db: any },
+  preferredOrganizationName?: string,
+) {
+  const preferred = normalizeOrganizationName(preferredOrganizationName);
+  if (!preferred) return null;
+
+  const organizations = await ctx.db.query("organizations").collect();
+  return (
+    organizations.find(
+      (org: any) => normalizeOrganizationName(org.name) === preferred,
+    ) ?? null
+  );
+}
+
+async function resolveSelectedOrganization(
+  ctx: { db: any },
+  preferredClerkOrganizationId?: string,
+  preferredOrganizationName?: string,
+) {
+  if (preferredClerkOrganizationId) {
+    const preferredOrg = await ctx.db
+      .query("organizations")
+      .withIndex("by_clerk_organization", (q: any) =>
+        q.eq("clerkOrganizationId", preferredClerkOrganizationId),
+      )
+      .first();
+
+    if (preferredOrg) {
+      return preferredOrg;
+    }
+  }
+
+  return findOrganizationByName(ctx, preferredOrganizationName);
+}
+
 async function resolvePreferredTechnician(
   ctx: { db: any },
   userId: string,
@@ -30,22 +66,21 @@ async function resolvePreferredTechnician(
   if (technicians.length === 0) return null;
 
   if (preferredClerkOrganizationId) {
-    const preferredOrg = await ctx.db
-      .query("organizations")
-      .withIndex("by_clerk_organization", (q: any) =>
-        q.eq("clerkOrganizationId", preferredClerkOrganizationId),
-      )
-      .first();
+    const selectedOrg = await resolveSelectedOrganization(
+      ctx,
+      preferredClerkOrganizationId,
+      preferredOrganizationName,
+    );
+    if (!selectedOrg) return null;
 
-    if (preferredOrg) {
-      const scoped = technicians.filter(
-        (tech: any) => tech.organizationId === preferredOrg._id,
-      );
-      const scopedTech = pickLatestTechnician(scoped);
-      if (scopedTech) {
-        return { tech: scopedTech, org: preferredOrg };
-      }
+    const scoped = technicians.filter(
+      (tech: any) => tech.organizationId === selectedOrg._id,
+    );
+    const scopedTech = pickLatestTechnician(scoped);
+    if (scopedTech) {
+      return { tech: scopedTech, org: selectedOrg };
     }
+    return null;
   }
 
   const enriched = (
@@ -117,6 +152,67 @@ export const getBootstrapStatus = query({
       status: "ready" as const,
       orgId: technician.organizationId,
       techId: technician._id,
+    };
+  },
+});
+
+export const linkUserToSelectedOrganization = mutation({
+  args: {
+    preferredClerkOrganizationId: v.optional(v.string()),
+    preferredOrganizationName: v.optional(v.string()),
+    legalName: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const identity = await requireAuth(ctx);
+
+    const selectedOrg = await resolveSelectedOrganization(
+      ctx,
+      args.preferredClerkOrganizationId,
+      args.preferredOrganizationName,
+    );
+    if (!selectedOrg) {
+      throw new Error(
+        "Selected organization is not mapped in Athelon. Ask an admin to set the Clerk organization mapping.",
+      );
+    }
+
+    const existingTechnicians = await ctx.db
+      .query("technicians")
+      .withIndex("by_user", (q) => q.eq("userId", identity.subject))
+      .collect();
+    const existingInSelected = existingTechnicians.find(
+      (tech) => tech.organizationId === selectedOrg._id,
+    );
+    if (existingInSelected) {
+      return {
+        organizationId: existingInSelected.organizationId,
+        technicianId: existingInSelected._id,
+        linked: false,
+      };
+    }
+
+    const legalName =
+      args.legalName?.trim() ||
+      identity.name?.trim() ||
+      identity.email?.split("@")[0] ||
+      "Administrator";
+    const now = Date.now();
+
+    const technicianId = await ctx.db.insert("technicians", {
+      organizationId: selectedOrg._id,
+      userId: identity.subject,
+      legalName,
+      email: identity.email ?? undefined,
+      status: "active",
+      role: "admin",
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    return {
+      organizationId: selectedOrg._id,
+      technicianId,
+      linked: true,
     };
   },
 });
