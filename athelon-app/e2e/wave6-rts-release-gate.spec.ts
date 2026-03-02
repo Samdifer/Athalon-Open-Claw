@@ -49,20 +49,33 @@ async function getFirstWoId(page: Page): Promise<string | null> {
     .waitFor({ timeout: 15_000 })
     .catch(() => {});
 
-  // Find any link pointing to /work-orders/{id} (not /work-orders/new etc.)
-  const woLink = page
-    .locator("a[href^='/work-orders/']")
-    .filter({
-      hasNOTText: /new|kanban|templates/i,
-    })
-    .first();
+  const RESERVED_SEGMENTS = new Set(["new", "kanban", "templates", "signature"]);
 
-  const href = await woLink.getAttribute("href").catch(() => null);
-  if (!href) return null;
+  // Prefer table rows (actual WO list) to avoid sidebar/top-nav links.
+  const rowLinks = page.locator("table tbody a[href^='/work-orders/']");
+  const rowCount = await rowLinks.count();
+  for (let i = 0; i < rowCount; i++) {
+    const href = await rowLinks.nth(i).getAttribute("href");
+    const match = href?.match(/^\/work-orders\/([^/]+)/);
+    const segment = match?.[1];
+    if (segment && !RESERVED_SEGMENTS.has(segment.toLowerCase())) {
+      return segment;
+    }
+  }
 
-  // Extract the ID segment: /work-orders/{id} or /work-orders/{id}/...
-  const match = href.match(/\/work-orders\/([^/]+)/);
-  return match ? match[1] : null;
+  // Fallback if table rows are unavailable in this view mode.
+  const anyLinks = page.locator("main a[href^='/work-orders/']");
+  const linkCount = await anyLinks.count();
+  for (let i = 0; i < linkCount; i++) {
+    const href = await anyLinks.nth(i).getAttribute("href");
+    const match = href?.match(/^\/work-orders\/([^/]+)/);
+    const segment = match?.[1];
+    if (segment && !RESERVED_SEGMENTS.has(segment.toLowerCase())) {
+      return segment;
+    }
+  }
+
+  return null;
 }
 
 // ─── Tests ───────────────────────────────────────────────────────────────────
@@ -73,7 +86,9 @@ test.describe("Work Order Release Page — RTS Gate (AI-025)", () => {
       waitUntil: "domcontentloaded",
       timeout: 30_000,
     });
-    await expect(page.locator("h1, h2, h3").first()).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByRole("heading", { name: /Work Orders/i })).toBeVisible({
+      timeout: 15_000,
+    });
     const body = await page.locator("body").textContent();
     expect(body).not.toContain("TypeError");
     expect(body).not.toContain("Cannot read properties of undefined");
@@ -91,10 +106,10 @@ test.describe("Work Order Release Page — RTS Gate (AI-025)", () => {
       timeout: 30_000,
     });
 
-    // Page should render heading
-    await expect(page.locator("h1, h2, h3").first()).toBeVisible({ timeout: 15_000 });
-    const heading = await page.locator("h1").first().textContent().catch(() => "");
-    expect(heading?.toLowerCase()).toMatch(/release|aircraft/i);
+    // Page should render explicit release heading.
+    await expect(
+      page.getByRole("heading", { name: /Release Aircraft to Customer/i }),
+    ).toBeVisible({ timeout: 20_000 });
   });
 
   test("release page shows RTS gate card with 14 CFR regulatory text", async ({ page }) => {
@@ -109,19 +124,12 @@ test.describe("Work Order Release Page — RTS Gate (AI-025)", () => {
       timeout: 30_000,
     });
 
-    // Wait for page to fully load (Convex queries resolve)
+    // Wait for page to fully load (Convex queries resolve).
     await page.waitForTimeout(3_000);
 
-    // The page should show EITHER the RTS blocking card (unsigned) or the green approval card (signed)
-    // In a test environment with no RTS signed, we expect the red blocking card
-    const rtsBlocker = page.locator("text=Return-to-Service Not Authorized");
-    const rtsApproved = page.locator("text=Return-to-Service authorized");
-
-    const hasBlocker = await rtsBlocker.isVisible({ timeout: 5_000 }).catch(() => false);
-    const hasApproved = await rtsApproved.isVisible({ timeout: 2_000 }).catch(() => false);
-
-    // Must show one or the other — the gate must always be present
-    expect(hasBlocker || hasApproved).toBe(true);
+    // The page should show EITHER the blocking card or the approved card.
+    const bodyText = (await page.locator("body").innerText()).toLowerCase();
+    expect(bodyText).toMatch(/return-to-service not authorized|return-to-service authorized/i);
   });
 
   test("RTS gate references 14 CFR Part 145 regulation", async ({ page }) => {

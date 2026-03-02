@@ -101,18 +101,10 @@ Coverage pass: **PASS**
 
 ## Gap Summary
 
-- Open gaps: **1**
-- Resolved gaps: **12**
+- Open gaps: **0**
+- Resolved gaps: **13**
 
 ## Gaps
-
-### gap-work-order-number-uses-primary-location (Open)
-
-- Severity: medium
-- Category: numbering
-- Impact: WO numbering can drift from the assigned station in multi-location operations.
-- Recommended fix: Update number reservation API to accept work-order location and derive prefix from that location.
-- Evidence: `{"codeRef":"convex/lib/workOrderNumber.ts","locationPrefixMatches":true,"note":"Generator still resolves base from org/primary location; creation flow should accept explicit location context."}`
 
 ### gap-schedule-assignments-not-location-scoped (Resolved)
 
@@ -193,6 +185,14 @@ Coverage pass: **PASS**
 - Impact: UI messaging can drift from actual assignment behavior after deactivation.
 - Recommended fix: Add mutation-level guards that block assignment to inactive locations and migrate affected records.
 - Evidence: `{"assignmentsAtInactiveLocations":0,"codeRefs":["app/(app)/settings/locations/page.tsx","convex/shopLocations.ts"],"inactiveLocationCount":0,"workOrdersAtInactiveLocations":0}`
+
+### gap-work-order-number-uses-primary-location (Resolved)
+
+- Severity: medium
+- Category: numbering
+- Impact: WO numbering can drift from the assigned station in multi-location operations.
+- Recommended fix: Update number reservation API to accept work-order location and derive prefix from that location.
+- Evidence: `{"codeRefs":["convex/lib/workOrderNumber.ts","convex/workOrders.ts","convex/billing.ts"],"locationPrefixMatches":true,"locationScopedNumberingPass":true,"note":"Work-order numbering should follow explicit shopLocationId context when present, then fallback to org primary location when absent."}`
 
 ### gap-life-limit-shelf-life-edge-coverage (Resolved)
 
