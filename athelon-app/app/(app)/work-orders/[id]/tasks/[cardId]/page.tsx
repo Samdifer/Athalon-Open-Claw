@@ -501,7 +501,9 @@ export default function TaskCardPage() {
                 >
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-[11px] font-medium text-foreground">
-                      {hn.technicianName}
+                      {/* BUG-LT-011: Guard against null/undefined technicianName if
+                          the technician record was deleted after the note was written. */}
+                      {hn.technicianName ?? "Unknown Technician"}
                     </span>
                     <span className="text-[10px] text-muted-foreground">
                       {new Date(hn.createdAt).toLocaleString()}

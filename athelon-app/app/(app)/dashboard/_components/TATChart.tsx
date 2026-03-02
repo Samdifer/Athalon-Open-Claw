@@ -38,7 +38,10 @@ export const TATChart = React.memo(function TATChart() {
           Math.round((wo.completedAt - wo._creationTime) / (1000 * 60 * 60 * 24)),
         );
         return {
-          wo: wo.number ?? wo._id.slice(-6),
+          // listWorkOrders returns `workOrderNumber` (not `number`).
+          // Using `wo.number` always fell back to wo._id.slice(-6) — showing
+          // cryptic IDs like "b3f2a9" instead of "WO-2026-042" on every bar.
+          wo: wo.workOrderNumber ?? wo._id.slice(-6),
           days,
         };
       })

@@ -117,6 +117,15 @@ export function RaiseFindingDialog({
   const [componentSerialNumber, setComponentSerialNumber] = useState("");
   const [notes, setNotes] = useState("");
 
+  // BUG-LT-010: Aircraft hours field — prefilled from prop but editable.
+  // When totalTimeAirframeHours is not set on the aircraft, the parent passes
+  // aircraftHours=0. Silently logging a finding at 0 hours creates a false
+  // maintenance record. Show the value to the tech so they can verify and
+  // correct it; warn visually if 0 so they don't miss it.
+  const [aircraftHoursEntry, setAircraftHoursEntry] = useState<string>(
+    aircraftHours > 0 ? String(aircraftHours) : "",
+  );
+
   // OP-1003 classification fields
   const [discrepancyType, setDiscrepancyType] = useState<DiscrepancyTypeValue | "">("");
   const [systemType, setSystemType] = useState<SystemTypeValue | "">("");
@@ -152,6 +161,7 @@ export function RaiseFindingDialog({
     setStcNumber("");
     setMhEstimate("");
     setPhotoStorageIds([]);
+    setAircraftHoursEntry(aircraftHours > 0 ? String(aircraftHours) : "");
   }
 
   async function handleSubmit() {
@@ -174,6 +184,14 @@ export function RaiseFindingDialog({
       setError("Estimated man-hours must be a valid positive number (e.g. 2.5).");
       return;
     }
+    // BUG-LT-010: Validate aircraft hours entry.
+    const aircraftHoursParsed = aircraftHoursEntry.trim()
+      ? parseFloat(aircraftHoursEntry)
+      : 0;
+    if (aircraftHoursEntry.trim() && (isNaN(aircraftHoursParsed) || aircraftHoursParsed < 0)) {
+      setError("Aircraft hours must be a valid non-negative number (e.g. 2450.3).");
+      return;
+    }
     setIsSubmitting(true);
     setError(null);
     try {
@@ -183,7 +201,7 @@ export function RaiseFindingDialog({
         description: description.trim(),
         foundDuring,
         foundByTechnicianId: techId,
-        foundAtAircraftHours: aircraftHours,
+        foundAtAircraftHours: aircraftHoursParsed,
         componentAffected: componentAffected.trim() || undefined,
         componentPartNumber: componentPartNumber.trim() || undefined,
         componentSerialNumber: componentSerialNumber.trim() || undefined,
@@ -253,6 +271,35 @@ export function RaiseFindingDialog({
               className="text-sm bg-muted/30 border-border/60 resize-none"
               aria-required="true"
             />
+          </div>
+
+          {/* BUG-LT-010: Aircraft Hours at Finding — visible & editable */}
+          <div>
+            <Label htmlFor="finding-aircraft-hours" className="text-xs font-medium mb-1.5 block">
+              Aircraft Hours at Finding{" "}
+              <span className="text-muted-foreground font-normal">(14 CFR 43.9(a))</span>
+            </Label>
+            <Input
+              id="finding-aircraft-hours"
+              type="number"
+              step="0.1"
+              min="0"
+              value={aircraftHoursEntry}
+              onChange={(e) => setAircraftHoursEntry(e.target.value)}
+              placeholder="e.g. 2450.3"
+              className="h-9 text-sm bg-muted/30 border-border/60 w-40"
+            />
+            {(aircraftHoursEntry === "" || parseFloat(aircraftHoursEntry) === 0 || isNaN(parseFloat(aircraftHoursEntry))) && (
+              <p className="text-[11px] text-amber-500 mt-1 flex items-center gap-1">
+                <AlertTriangle className="w-3 h-3 flex-shrink-0" />
+                Aircraft total time not on file — enter current hours manually for accurate records.
+              </p>
+            )}
+            {aircraftHoursEntry !== "" && parseFloat(aircraftHoursEntry) > 0 && !isNaN(parseFloat(aircraftHoursEntry)) && (
+              <p className="text-[10px] text-muted-foreground mt-1">
+                Prefilled from aircraft master record. Correct if needed.
+              </p>
+            )}
           </div>
 
           {/* ── Classification (OP-1003) ─────────────────────────────────── */}

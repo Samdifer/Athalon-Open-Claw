@@ -135,19 +135,24 @@ export default function FinancialDashboardPage() {
 
     // Revenue = only collected invoices (PAID or PARTIAL). DRAFT/SENT are receivables,
     // not revenue. Period attribution uses paidAt (cash received), not createdAt.
+    // For PARTIAL invoices use amountPaid (cash actually collected), not total
+    // (full billed amount). Counting i.total for partials overstates revenue.
     const collectedInvoices = invoices.filter(
       (i) => i.status === "PAID" || i.status === "PARTIAL",
     );
-    const revenueAll = collectedInvoices.reduce((s, i) => s + i.total, 0);
+    const collectedAmount = (i: typeof collectedInvoices[number]) =>
+      i.status === "PARTIAL" ? (i.amountPaid ?? i.total) : i.total;
+
+    const revenueAll = collectedInvoices.reduce((s, i) => s + collectedAmount(i), 0);
     const revenueMTD = collectedInvoices
       .filter((i) => (i.paidAt ?? i.createdAt) >= startOfMonth)
-      .reduce((s, i) => s + i.total, 0);
+      .reduce((s, i) => s + collectedAmount(i), 0);
     const revenueQTD = collectedInvoices
       .filter((i) => (i.paidAt ?? i.createdAt) >= startOfQuarter)
-      .reduce((s, i) => s + i.total, 0);
+      .reduce((s, i) => s + collectedAmount(i), 0);
     const revenueYTD = collectedInvoices
       .filter((i) => (i.paidAt ?? i.createdAt) >= startOfYear)
-      .reduce((s, i) => s + i.total, 0);
+      .reduce((s, i) => s + collectedAmount(i), 0);
 
     const laborCost = collectedInvoices.reduce((s, i) => s + i.laborTotal, 0);
     const partsCost = purchaseOrders.filter((po) => po.status !== "DRAFT").reduce((s, po) => s + po.total, 0);
@@ -171,10 +176,13 @@ export default function FinancialDashboardPage() {
     const byMonth: Record<string, number> = {};
     for (const k of keys) byMonth[k] = 0;
     for (const inv of invoices) {
-      // Only count collected revenue; use payment date for period attribution
+      // Only count collected revenue; use payment date for period attribution.
+      // PARTIAL invoices: use amountPaid (cash received), not total (full billed).
       if (inv.status !== "PAID" && inv.status !== "PARTIAL") continue;
       const key = getMonthKey(inv.paidAt ?? inv.createdAt);
-      if (byMonth[key] !== undefined) byMonth[key] += inv.total;
+      if (byMonth[key] !== undefined) {
+        byMonth[key] += inv.status === "PARTIAL" ? (inv.amountPaid ?? inv.total) : inv.total;
+      }
     }
     return keys.map((key) => ({ month: getMonthLabel(key), revenue: byMonth[key] }));
   }, [invoices]);
@@ -196,7 +204,8 @@ export default function FinancialDashboardPage() {
       if (inv.status !== "PAID" && inv.status !== "PARTIAL") continue;
       const key = getMonthKey(inv.paidAt ?? inv.createdAt);
       if (revByMonth[key] !== undefined) {
-        revByMonth[key] += inv.total;
+        // Use amountPaid for PARTIAL invoices to reflect cash actually collected.
+        revByMonth[key] += inv.status === "PARTIAL" ? (inv.amountPaid ?? inv.total) : inv.total;
         costByMonth[key] += inv.laborTotal;
       }
     }
@@ -226,7 +235,8 @@ export default function FinancialDashboardPage() {
         byCustomer.set(cid, { name: c?.name ?? "Unknown", total: 0, count: 0 });
       }
       const e = byCustomer.get(cid)!;
-      e.total += inv.total;
+      // Use amountPaid for PARTIAL invoices — only count cash actually received.
+      e.total += inv.status === "PARTIAL" ? (inv.amountPaid ?? inv.total) : inv.total;
       e.count++;
     }
     return Array.from(byCustomer.values()).sort((a, b) => b.total - a.total).slice(0, 5);

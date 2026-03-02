@@ -43,8 +43,11 @@ export const RevenueTrendChart = React.memo(function RevenueTrendChart() {
     }
 
     for (const inv of invoices) {
-      if (!inv.paidAt && !inv.updatedAt) continue;
-      const d = new Date(inv.paidAt ?? inv.updatedAt);
+      if (!inv.paidAt && !inv.createdAt) continue;
+      // Use paidAt for cash-basis attribution; fall back to createdAt (consistent
+      // with the Financial Dashboard). updatedAt is the last-edit timestamp and
+      // changes whenever a line item is corrected — it is NOT a payment date.
+      const d = new Date(inv.paidAt ?? inv.createdAt);
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
       if (key in monthlyTotals) {
         monthlyTotals[key] += inv.total ?? 0;

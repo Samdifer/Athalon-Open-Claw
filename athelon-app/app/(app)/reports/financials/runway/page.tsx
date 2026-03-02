@@ -79,7 +79,15 @@ export default function BusinessRunwayPage() {
     const now = new Date();
     const threeMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 3, 1).getTime();
 
-    const recentInvoices = invoices.filter((i) => i.status !== "VOID" && i.createdAt >= threeMonthsAgo);
+    // Only PAID/PARTIAL invoices count as revenue for burn rate / runway analysis.
+    // Including DRAFT or SENT invoices inflates avgRevenue, making the shop look
+    // more profitable than it is and overstating the runway figure — a false sense
+    // of security for the shop manager reviewing cash sustainability.
+    const recentInvoices = invoices.filter(
+      (i) =>
+        (i.status === "PAID" || i.status === "PARTIAL") &&
+        i.createdAt >= threeMonthsAgo,
+    );
     const recentPOs = purchaseOrders.filter((po) => po.status !== "DRAFT" && po.createdAt >= threeMonthsAgo);
 
     const totalRevenue = recentInvoices.reduce((s, i) => s + i.total, 0);

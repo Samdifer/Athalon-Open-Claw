@@ -703,7 +703,7 @@ function getSeverityStyles(severity: string) {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function DashboardPage() {
-  const { orgId } = useCurrentOrg();
+  const { orgId, org } = useCurrentOrg();
 
   // Shared queries — lifted here so both LiveKPICards and LiveActiveWorkOrders
   // receive the same data without duplicate subscriptions.
@@ -734,7 +734,7 @@ export default function DashboardPage() {
         <div>
           <h1 className="text-lg sm:text-xl md:text-2xl font-semibold text-foreground">Dashboard</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
-            Rocky Mountain Turbine Service — {todayLabel}
+            {org?.name ?? "MRO Dashboard"} — {todayLabel}
           </p>
         </div>
         <Button asChild size="sm" className="w-full sm:w-auto">

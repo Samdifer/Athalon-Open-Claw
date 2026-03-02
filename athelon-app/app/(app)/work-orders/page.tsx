@@ -236,7 +236,7 @@ export default function WorkOrdersPage() {
           <h1 className="text-lg sm:text-xl md:text-2xl font-semibold text-foreground">Work Orders</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
             {workOrders.length} total ·{" "}
-            {workOrders.filter((w) => w.status === "in_progress").length} in progress
+            {workOrders.filter((w) => ["in_progress", "open_discrepancies"].includes(w.status)).length} in progress
           </p>
         </div>
         <div className="flex gap-2 w-full sm:w-auto">
@@ -256,27 +256,35 @@ export default function WorkOrdersPage() {
             size="sm"
             className="gap-1.5 text-xs"
             onClick={() => {
-              if (filtered.length) {
-                downloadCSV(
-                  filtered.map((wo) => ({
-                    "WO Number": wo.number,
-                    Status: wo.statusLabel,
-                    Type: wo.typeLabel,
-                    Priority: wo.priority,
-                    Customer: wo.customer,
-                    Aircraft: wo.aircraft ?? "",
-                    Description: wo.description,
-                    Created: new Date(wo.openedAt).toLocaleDateString(),
-                    "Promise Date": wo.promisedDeliveryDate
-                      ? new Date(wo.promisedDeliveryDate).toLocaleDateString()
-                      : "",
-                    "Tasks Done": `${wo.tasksComplete}/${wo.tasksTotal}`,
-                    "Open Squawks": wo.openSquawks,
-                  })),
-                  "work-orders.csv",
+              if (!filtered.length) {
+                // Silent failure is confusing — the button appeared clickable
+                // so the user expected something to happen.
+                toast.error(
+                  workOrders.length === 0
+                    ? "No work orders to export"
+                    : "No work orders match the current filter — clear filters or switch tabs to export",
                 );
-                toast.success("Work orders exported");
+                return;
               }
+              downloadCSV(
+                filtered.map((wo) => ({
+                  "WO Number": wo.number,
+                  Status: wo.statusLabel,
+                  Type: wo.typeLabel,
+                  Priority: wo.priority,
+                  Customer: wo.customer,
+                  Aircraft: wo.aircraft ?? "",
+                  Description: wo.description,
+                  Created: new Date(wo.openedAt).toLocaleDateString(),
+                  "Promise Date": wo.promisedDeliveryDate
+                    ? new Date(wo.promisedDeliveryDate).toLocaleDateString()
+                    : "",
+                  "Tasks Done": `${wo.tasksComplete}/${wo.tasksTotal}`,
+                  "Open Squawks": wo.openSquawks,
+                })),
+                "work-orders.csv",
+              );
+              toast.success(`Exported ${filtered.length} work order${filtered.length !== 1 ? "s" : ""}`);
             }}
           >
             <Download className="w-3.5 h-3.5" />

@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { useParams } from "react-router-dom";
+import { useState, useMemo, useEffect } from "react";
+import { useParams, useSearchParams } from "react-router-dom";
 import { useQuery } from "convex/react";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import { api } from "@/convex/_generated/api";
@@ -59,8 +59,24 @@ export default function MaintenanceRecordsPage() {
   const workOrderId = params.id as Id<"workOrders">;
   const { orgId } = useCurrentOrg();
 
+  const [searchParams] = useSearchParams();
+
   const [showForm, setShowForm] = useState(false);
   const [correctionTarget, setCorrectionTarget] = useState<string | null>(null);
+
+  // BH-LT3-003: When the signature page redirects back with ?authEventId=<id>,
+  // auto-open the create form and pre-fill the auth event ID field. Without
+  // this the tech lands on the records page with the ID in the URL but no way
+  // to get it into the form — they'd have to copy it manually from the address
+  // bar and paste it into the input. This mirrors the same fix applied to the
+  // RTS page (BH-002) and completes the full auth flow for maintenance records.
+  const authEventIdFromUrl = searchParams.get("authEventId") ?? "";
+  useEffect(() => {
+    if (authEventIdFromUrl) {
+      setCorrectionTarget(null);
+      setShowForm(true);
+    }
+  }, [authEventIdFromUrl]);
   const [viewMode, setViewMode] = useState<"table" | "timeline">("table");
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -272,8 +288,8 @@ export default function MaintenanceRecordsPage() {
               }}
               initialState={
                 correctionTarget
-                  ? { isCorrection: true, correctsRecordId: correctionTarget }
-                  : { isCorrection: false }
+                  ? { isCorrection: true, correctsRecordId: correctionTarget, signatureAuthEventId: authEventIdFromUrl }
+                  : { isCorrection: false, signatureAuthEventId: authEventIdFromUrl }
               }
             />
           </CardContent>

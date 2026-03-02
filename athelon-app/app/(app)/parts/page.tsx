@@ -841,16 +841,19 @@ export default function PartsPage() {
         removed++;
       }
     }
+    // Use server-indexed pending_inspection count when available (org-wide, not filtered by location)
+    // so the badge reflects total pending work regardless of shop location filter
+    const pendingCount = pendingInspectionParts !== undefined ? pendingInspectionParts.length : pending;
     return {
       all: parts.length,
       inventory,
-      pending_inspection: pending,
+      pending_inspection: pendingCount,
       installed,
       quarantine,
       removed_pending_disposition: removed,
       low_stock: lowStock,
     };
-  }, [parts]);
+  }, [parts, pendingInspectionParts]);
 
   async function handleRelease(part: PartDoc) {
     try {
@@ -894,7 +897,7 @@ export default function PartsPage() {
             size="sm"
             className="h-8 text-xs border-border/60 w-full sm:w-auto"
           >
-            <Link to="/parts/requests">
+            <Link to="/parts/receiving">
               <Clock className="w-3.5 h-3.5 mr-1.5" />
               Receiving Queue
               {counts.pending_inspection > 0 && (

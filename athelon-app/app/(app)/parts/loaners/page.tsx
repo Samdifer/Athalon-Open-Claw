@@ -337,6 +337,21 @@ export default function LoanersPage() {
       <Dialog open={loanDialogId !== null} onOpenChange={(open) => { if (!open && !isLoaning) setLoanDialogId(null); }}>
         <DialogContent>
           <DialogHeader><DialogTitle>Loan Out Item</DialogTitle></DialogHeader>
+          {loanDialogId && (() => {
+            const loanItem = all.find((i) => i._id === loanDialogId);
+            if (!loanItem) return null;
+            return (
+              <div className="px-1 pb-1 -mt-1">
+                <div className="rounded-md bg-muted/30 border border-border/40 px-3 py-2 space-y-0.5">
+                  <p className="font-mono text-sm font-semibold text-foreground">{loanItem.partNumber}</p>
+                  {loanItem.serialNumber && (
+                    <p className="text-xs text-muted-foreground">S/N: {loanItem.serialNumber}</p>
+                  )}
+                  <p className="text-xs text-muted-foreground">{loanItem.description}</p>
+                </div>
+              </div>
+            );
+          })()}
           <form onSubmit={handleLoanOut} className="space-y-4">
             <div className="space-y-2">
               <Label>Customer <span className="text-red-500">*</span></Label>

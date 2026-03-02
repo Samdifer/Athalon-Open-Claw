@@ -249,10 +249,13 @@ export default function RtsPage() {
   }
 
   // Derive all 9 preconditions
+  // BH-LT3-001: Pass aircraftHoursAtRts so PRE-3 shows PENDING (not PASS)
+  // while the hours input field is still empty.
   const preconditions = derivePreconditions(
     report,
     rtsStatement,
     signatureAuthEventId,
+    aircraftHoursAtRts,
   );
   const allPass = preconditions.every((p) => p.status === "PASS");
   const anyFail = preconditions.some((p) => p.status === "FAIL");

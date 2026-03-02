@@ -117,10 +117,12 @@ const mainNav: NavEntry[] = [
   },
   {
     title: "Parts",
-    href: "/parts/requests",
+    href: "/parts",
     icon: Package,
     section: "parts",
     children: [
+      { title: "Receiving Inspection", href: "/parts/receiving" },
+      { title: "Part Requests", href: "/parts/requests" },
       { title: "Tool Crib", href: "/parts/tools" },
       { title: "Inventory Count", href: "/parts/inventory-count" },
       { title: "Core Tracking", href: "/parts/cores" },

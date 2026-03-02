@@ -129,7 +129,14 @@ export default function WOProfitabilityPage() {
   const woRows = useMemo((): WORow[] => {
     if (!invoices || !purchaseOrders || !customers) return [];
 
-    const filtered = invoices.filter((i) => i.status !== "VOID" && i.createdAt >= cutoff);
+    // Only include PAID or PARTIAL invoices — DRAFT/SENT invoices have no collected
+    // revenue yet and inflate margin figures. Same fix applied to Financial Dashboard
+    // in BUG-SM-001; profitability page had the same flaw.
+    const filtered = invoices.filter(
+      (i) =>
+        (i.status === "PAID" || i.status === "PARTIAL") &&
+        i.createdAt >= cutoff,
+    );
 
     // Build PO cost by work order
     const poCostByWO = new Map<string, number>();

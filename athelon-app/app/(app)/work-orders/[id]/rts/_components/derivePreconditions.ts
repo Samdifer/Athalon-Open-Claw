@@ -5,6 +5,13 @@ export function derivePreconditions(
   report: CloseReadinessReport,
   rtsStatement: string,
   signatureAuthEventId: string,
+  // BH-LT3-001: aircraftHoursAtRts must be passed in so PRE-3 can show
+  // PENDING when the field is empty. Without this param, PRE-3 showed PASS
+  // as soon as aircraftCurrentHours was on file — regardless of whether the
+  // user had typed anything into the hours input. All 9 precondition cards
+  // would show green ✓ but the Authorize button stayed grayed out with no
+  // explanation. The user had no idea why they couldn't proceed.
+  aircraftHoursAtRts?: string,
 ): Precondition[] {
   const getBlocker = (code: string) =>
     report.blockers.find(
@@ -32,14 +39,22 @@ export function derivePreconditions(
       : "PENDING";
 
   // PRE-3: Aircraft total time consistent
+  // BH-LT3-001: Must check both that (a) hours are on file AND (b) the user
+  // has actually entered a value in the aircraft hours field. Previously only
+  // checked (a), so PRE-3 showed PASS immediately when the aircraft had hours
+  // on file, even with an empty field — but the Authorize button was still
+  // disabled. All 9 green, button grey, zero explanation.
   const pre3Blocker =
     getBlocker("RTS_AIRCRAFT_TIME_MISMATCH") ??
     getBlocker("RTS_AIRCRAFT_TIME_DECREASED");
+  const hoursEntered = aircraftHoursAtRts !== undefined && aircraftHoursAtRts.trim().length > 0;
   const pre3Status: PreconditionStatus = pre3Blocker
     ? "FAIL"
-    : report.aircraftCurrentHours != null
-      ? "PASS"
-      : "PENDING";
+    : !hoursEntered
+      ? "PENDING"
+      : report.aircraftCurrentHours != null
+        ? "PASS"
+        : "PENDING";
 
   // PRE-4: All task cards complete
   const pre4Blocker =
@@ -128,9 +143,9 @@ export function derivePreconditions(
     {
       id: "pre-3",
       label: "Aircraft Total Time Consistent",
-      description: `Aircraft hours on file: ${report.aircraftCurrentHours?.toFixed(1) ?? "Unknown"} hr. Hours at RTS must be ≥ recorded value.`,
+      description: `Aircraft hours on file: ${report.aircraftCurrentHours?.toFixed(1) ?? "Unknown"} hr. Enter RTS hours above (must be ≥ recorded value).`,
       status: pre3Status,
-      failureMessage: pre3Blocker?.description,
+      failureMessage: pre3Blocker?.description ?? (pre3Status === "PENDING" && !hoursEntered ? "Enter aircraft total time at RTS before authorizing." : undefined),
     },
     {
       id: "pre-4",

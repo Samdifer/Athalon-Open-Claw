@@ -11,6 +11,7 @@ import {
   Loader2,
   User,
 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -147,6 +148,24 @@ export function CreateRecordForm({
     if (!form.approvedDataRevision.trim()) {
       setError("Approved data reference revision is required.");
       return;
+    }
+    // BH-LT3-004: Validate RTS statement when "returned to service" is checked.
+    // Previously the submit handler had no validation for this field — a tech
+    // could check RTS, type 5 chars in the statement, and submit. The backend
+    // might accept it or fail with a cryptic schema error; either way the UI
+    // gave no proactive feedback. Per 14 CFR 43.9 the statement must be
+    // substantive. We enforce a minimum of 50 chars here (same as signCardDialog).
+    if (form.returnedToService) {
+      if (!form.returnToServiceStatement.trim()) {
+        setError("An RTS certification statement is required per 14 CFR 43.9 when returning the aircraft to service.");
+        return;
+      }
+      if (form.returnToServiceStatement.trim().length < 50) {
+        setError(
+          `RTS certification statement must be at least 50 characters (14 CFR 43.9). Current: ${form.returnToServiceStatement.trim().length} chars.`,
+        );
+        return;
+      }
     }
 
     setIsSubmitting(true);
@@ -473,22 +492,26 @@ export function CreateRecordForm({
         </div>
       </div>
 
-      {/* Return to Service Toggle */}
+      {/* Return to Service Toggle
+          BH-LT3-002: Was a raw HTML <input type="checkbox"> — invisible in
+          dark mode (white checkbox on white background). A lead tech marking
+          a record as returning the aircraft to service could not see or
+          interact with this checkbox in dark mode. Now uses shadcn Checkbox
+          with proper dark-mode theming and correct touch target size. */}
       <div className="flex items-start gap-3 p-3 border border-border/40 rounded-md">
-        <input
-          type="checkbox"
+        <Checkbox
           id="rts-toggle"
           checked={form.returnedToService}
-          onChange={(e) => setField("returnedToService", e.target.checked)}
-          className="mt-1"
+          onCheckedChange={(checked) => setField("returnedToService", checked === true)}
+          className="mt-0.5"
         />
         <div className="flex-1">
-          <label
+          <Label
             htmlFor="rts-toggle"
             className="text-xs font-medium cursor-pointer"
           >
             This record returns the aircraft to service
-          </label>
+          </Label>
           <p className="text-[11px] text-muted-foreground mt-0.5">
             If checked, an RTS certification statement is required per 14 CFR
             43.9.
@@ -571,10 +594,15 @@ export function CreateRecordForm({
           placeholder="5-minute single-use auth event ID from re-authentication…"
           className="font-mono text-xs h-9"
         />
+        {/* BH-LT3-003: Include returnTo + intendedTable params so the signature
+            page shows "Continue to Sign-Off" and redirects back here with
+            ?authEventId=<id> appended. Without these params the tech had to
+            manually type a 25+ char Convex ID — practically impossible in a
+            shop context. Same root cause as BH-001 (RTS page). */}
         <p className="text-[11px] text-muted-foreground">
           Obtain from{" "}
           <Link
-            to={`/work-orders/${workOrderId}/signature`}
+            to={`/work-orders/${workOrderId}/signature?returnTo=/work-orders/${workOrderId}/records&intendedTable=maintenanceRecords`}
             className="text-primary hover:underline"
           >
             the signature page
