@@ -117,8 +117,22 @@ export function SignStepDialog({
   const saveDocument = useMutation(api.documents.saveDocument);
 
   async function handleSign() {
-    setIsSubmitting(true);
     setError(null);
+
+    // BUG-030: Validate that all parts in the list have a part number.
+    // An empty P/N in a maintenance record is not valid per 14 CFR 43.9(a)(4).
+    // The backend may silently accept it, creating a permanently uncorrectable
+    // blank-P/N record in the maintenance history.
+    for (let i = 0; i < partsInstalled.length; i++) {
+      if (!partsInstalled[i].partNumber.trim()) {
+        setError(
+          `Part ${i + 1} is missing a part number. All installed parts must have a P/N per 14 CFR 43.9(a)(4). Remove the empty row or fill in the part number.`,
+        );
+        return;
+      }
+    }
+
+    setIsSubmitting(true);
     try {
       // Step 1: Create a 5-minute auth event (re-authentication)
       const { eventId } = await createAuthEvent({

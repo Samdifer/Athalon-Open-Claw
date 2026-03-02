@@ -298,7 +298,14 @@ export default function TaskCardPage() {
     (s) => s.status === "completed" || s.status === "na",
   ).length;
   const totalSteps = taskCard.steps.length;
-  const allStepsDone = pendingSteps.length === 0 && totalSteps > 0;
+  // BUG-028: allStepsDone must require EVERY step to be completed or na.
+  // Previously only checked pendingSteps.length === 0, which allowed
+  // in_progress steps to be ignored — a tech could sign the card while
+  // a step was started but not yet signed. Under 14 CFR 43.9 every step
+  // must be signed off before card-level certification.
+  const allStepsDone =
+    totalSteps > 0 &&
+    taskCard.steps.every((s) => s.status === "completed" || s.status === "na");
   const cardIsComplete = taskCard.status === "complete";
   const cardIsVoided = taskCard.status === "voided";
 

@@ -11,11 +11,13 @@ import {
   ArrowRight,
   Calendar,
   TrendingUp,
+  Filter,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useState } from "react";
 import {
   type TaskStatus,
   TASK_STATUS_LABEL,
@@ -50,6 +52,10 @@ function MyWorkSkeleton() {
 
 export default function MyWorkPage() {
   const { orgId, techId, isLoaded, tech } = useCurrentOrg();
+
+  // BUG-031: Active-only filter — techs with many historical cards need to
+  // quickly isolate open work without scrolling past completed cards.
+  const [activeOnly, setActiveOnly] = useState(false);
 
   const taskCards = useQuery(
     api.taskCards.listTaskCardsForTechnician,
@@ -121,16 +127,36 @@ export default function MyWorkPage() {
     .filter((c) => c.status !== "voided" && c.status !== "complete")
     .reduce((sum, c) => sum + c.pendingSteps, 0);
 
+  // BUG-031: Apply active-only filter before rendering.
+  // Card statuses: "not_started", "incomplete_na_steps" (active), "complete", "voided" (terminal).
+  const displayedCards = activeOnly
+    ? cards.filter((c) => c.status !== "complete" && c.status !== "voided")
+    : cards;
+  const hiddenCount = cards.length - displayedCards.length;
+
   return (
     <div className="space-y-5">
       {/* Header */}
-      <div>
-        <h1 className="text-lg sm:text-xl md:text-2xl font-semibold text-foreground">My Work</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">
-          {tech?.legalName
-            ? `Assigned to ${tech.legalName}`
-            : "Your assigned task cards"}
-        </p>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h1 className="text-lg sm:text-xl md:text-2xl font-semibold text-foreground">My Work</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            {tech?.legalName
+              ? `Assigned to ${tech.legalName}`
+              : "Your assigned task cards"}
+          </p>
+        </div>
+        {/* BUG-031: Active-only filter toggle */}
+        <Button
+          variant={activeOnly ? "secondary" : "outline"}
+          size="sm"
+          className="h-8 gap-1.5 text-xs flex-shrink-0"
+          onClick={() => setActiveOnly((prev) => !prev)}
+          aria-pressed={activeOnly}
+        >
+          <Filter className="w-3.5 h-3.5" />
+          {activeOnly ? "Active only" : "All cards"}
+        </Button>
       </div>
 
       {/* Summary stats */}
@@ -171,21 +197,47 @@ export default function MyWorkPage() {
       </div>
 
       {/* Task card list */}
-      {cards.length === 0 ? (
+      {displayedCards.length === 0 ? (
         <Card className="border-border/60">
           <CardContent className="py-16 text-center" data-testid="empty-state">
             <ClipboardCheck className="w-8 h-8 text-muted-foreground/40 mx-auto mb-3" />
             <p className="text-sm font-medium text-muted-foreground">
-              No task cards assigned to you
+              {activeOnly
+                ? "No active task cards"
+                : "No task cards assigned to you"}
             </p>
             <p className="text-xs text-muted-foreground/60 mt-1">
-              Task cards assigned to you by your supervisor will appear here.
+              {activeOnly
+                ? `All ${hiddenCount} card${hiddenCount !== 1 ? "s" : ""} are completed or voided. Toggle "All cards" to see history.`
+                : "Task cards assigned to you by your supervisor will appear here."}
             </p>
+            {activeOnly && hiddenCount > 0 && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="mt-3 text-xs h-7"
+                onClick={() => setActiveOnly(false)}
+              >
+                Show all {cards.length} cards
+              </Button>
+            )}
           </CardContent>
         </Card>
       ) : (
         <div className="space-y-3">
-          {cards.map((card) => {
+          {activeOnly && hiddenCount > 0 && (
+            <p className="text-xs text-muted-foreground/60">
+              Showing {displayedCards.length} active card{displayedCards.length !== 1 ? "s" : ""} ·{" "}
+              <button
+                type="button"
+                className="underline underline-offset-2 hover:text-foreground transition-colors"
+                onClick={() => setActiveOnly(false)}
+              >
+                show {hiddenCount} completed/voided
+              </button>
+            </p>
+          )}
+          {displayedCards.map((card) => {
             const completedSteps = card.totalSteps - card.pendingSteps;
             const progressPct =
               card.totalSteps > 0
@@ -202,6 +254,14 @@ export default function MyWorkPage() {
               card.handoffNotes && card.handoffNotes.length > 0
                 ? card.handoffNotes[card.handoffNotes.length - 1]
                 : null;
+
+            // BUG-029: "Continue" label is wrong for signed/voided cards.
+            // A complete card is locked — showing "Continue" implies there's
+            // more work to do. Use "View" for terminal states.
+            // Active card statuses: "not_started", "incomplete_na_steps".
+            // Terminal card statuses: "complete", "voided".
+            const isActionable =
+              card.status !== "complete" && card.status !== "voided";
 
             const scheduleRisk = card.scheduleRisk ?? "no_date";
             const riskBorderClass =
@@ -244,12 +304,13 @@ export default function MyWorkPage() {
                     <Button
                       asChild
                       size="sm"
+                      variant={isActionable ? "default" : "outline"}
                       className="flex-shrink-0 h-7 text-xs gap-1.5"
                     >
                       <Link
                         to={`/work-orders/${card.workOrderId}/tasks/${card._id}`}
                       >
-                        Continue
+                        {isActionable ? "Continue" : "View"}
                         <ArrowRight className="w-3 h-3" />
                       </Link>
                     </Button>
