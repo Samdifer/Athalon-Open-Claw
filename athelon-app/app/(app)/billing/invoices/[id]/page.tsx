@@ -233,15 +233,31 @@ export default function InvoiceDetailPage() {
 
   const handleEditItem = async () => {
     if (!orgId || !editItemId) return;
+    // Validate numeric fields before firing mutation
+    const parsedQty = editQty !== "" ? parseFloat(editQty) : undefined;
+    const parsedPrice = editUnitPrice !== "" ? parseFloat(editUnitPrice) : undefined;
+    const parsedDiscount = editDiscountPct !== "" ? parseFloat(editDiscountPct) : undefined;
+    if (parsedQty !== undefined && (isNaN(parsedQty) || parsedQty <= 0)) {
+      setError("Quantity must be a number greater than zero.");
+      return;
+    }
+    if (parsedPrice !== undefined && (isNaN(parsedPrice) || parsedPrice < 0)) {
+      setError("Unit price must be a valid non-negative number.");
+      return;
+    }
+    if (parsedDiscount !== undefined && (isNaN(parsedDiscount) || parsedDiscount < 0 || parsedDiscount > 100)) {
+      setError("Discount must be between 0 and 100.");
+      return;
+    }
     setActionLoading("editItem"); setError(null);
     try {
       await updateInvoiceLineItem({
         orgId,
         lineItemId: editItemId,
         description: editDesc.trim() || undefined,
-        qty: editQty !== "" ? parseFloat(editQty) : undefined,
-        unitPrice: editUnitPrice !== "" ? parseFloat(editUnitPrice) : undefined,
-        discountPercent: editDiscountPct !== "" ? parseFloat(editDiscountPct) : undefined,
+        qty: parsedQty,
+        unitPrice: parsedPrice,
+        discountPercent: parsedDiscount,
       });
       setEditItemDialog(false);
     } catch (err) {

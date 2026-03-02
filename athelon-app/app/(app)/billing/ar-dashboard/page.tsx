@@ -270,7 +270,7 @@ export default function ArDashboardPage() {
                 {sortedCustomerBalances.map((cb) => (
                   <TableRow key={cb.customerId} className="border-border/40">
                     <TableCell className="text-sm">
-                      {customerMap.get(cb.customerId) ?? cb.customerId}
+                      {customerMap.get(cb.customerId) ?? "Unknown Customer"}
                     </TableCell>
                     <TableCell className="text-sm font-semibold text-right text-amber-600 dark:text-amber-400">
                       {fmt(cb.balance)}

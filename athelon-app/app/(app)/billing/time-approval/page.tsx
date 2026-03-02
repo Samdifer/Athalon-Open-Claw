@@ -42,7 +42,10 @@ function fmtTs(ts: number | undefined | null): string {
 
 function fmtDuration(clockIn: number, clockOut: number | undefined | null): string {
   if (!clockOut) return "—";
-  return String(Math.round((clockOut - clockIn) / 60000));
+  const totalMin = Math.round((clockOut - clockIn) / 60000);
+  const h = Math.floor(totalMin / 60);
+  const m = totalMin % 60;
+  return h > 0 ? `${h}h ${m}m` : `${m}m`;
 }
 
 function TableSkeleton({ cols }: { cols: number }) {
@@ -229,7 +232,7 @@ export default function TimeApprovalPage() {
                     <TableHead className="text-xs">Work Order</TableHead>
                     <TableHead className="text-xs">Clock In</TableHead>
                     <TableHead className="text-xs">Clock Out</TableHead>
-                    <TableHead className="text-xs">Duration (min)</TableHead>
+                    <TableHead className="text-xs">Duration</TableHead>
                     <TableHead className="text-xs">Notes</TableHead>
                     <TableHead className="text-xs text-right">Actions</TableHead>
                   </TableRow>
@@ -309,7 +312,7 @@ export default function TimeApprovalPage() {
                     <TableHead className="text-xs">Work Order</TableHead>
                     <TableHead className="text-xs">Clock In</TableHead>
                     <TableHead className="text-xs">Clock Out</TableHead>
-                    <TableHead className="text-xs">Duration (min)</TableHead>
+                    <TableHead className="text-xs">Duration</TableHead>
                     <TableHead className="text-xs">Approved At</TableHead>
                     <TableHead className="text-xs">Approved By</TableHead>
                   </TableRow>
@@ -370,7 +373,7 @@ export default function TimeApprovalPage() {
                     <TableHead className="text-xs">Work Order</TableHead>
                     <TableHead className="text-xs">Clock In</TableHead>
                     <TableHead className="text-xs">Clock Out</TableHead>
-                    <TableHead className="text-xs">Duration (min)</TableHead>
+                    <TableHead className="text-xs">Duration</TableHead>
                     <TableHead className="text-xs">Rejection Reason</TableHead>
                     <TableHead className="text-xs">Rejected At</TableHead>
                   </TableRow>

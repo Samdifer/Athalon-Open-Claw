@@ -414,6 +414,7 @@ export default function InvoicesPage() {
   // Batch action dialogs
   const [voidDialogOpen, setVoidDialogOpen] = useState(false);
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
+  const [batchSending, setBatchSending] = useState(false);
 
   // Mutations
   const batchSendInvoices = useMutation(api.billingV4b.batchSendInvoices);
@@ -511,8 +512,16 @@ export default function InvoicesPage() {
   // Batch send
   const handleBatchSend = async () => {
     if (!orgId || selectedDraftIds.length === 0) return;
-    await batchSendInvoices({ orgId, invoiceIds: selectedDraftIds as Id<"invoices">[] });
-    setSelectedIds(new Set());
+    setBatchSending(true);
+    try {
+      await batchSendInvoices({ orgId, invoiceIds: selectedDraftIds as Id<"invoices">[] });
+      toast.success(`${selectedDraftIds.length} invoice${selectedDraftIds.length !== 1 ? "s" : ""} sent.`);
+      setSelectedIds(new Set());
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to send invoices.");
+    } finally {
+      setBatchSending(false);
+    }
   };
 
   // Batch void
@@ -775,9 +784,10 @@ export default function InvoicesPage() {
               variant="outline"
               className="h-7 text-xs gap-1.5"
               onClick={handleBatchSend}
+              disabled={batchSending}
             >
               <Send className="w-3 h-3" />
-              Send ({selectedDraftIds.length})
+              {batchSending ? "Sending…" : `Send (${selectedDraftIds.length})`}
             </Button>
           )}
 
