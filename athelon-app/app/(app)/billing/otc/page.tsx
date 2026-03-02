@@ -121,17 +121,30 @@ export default function OTCSalesPage() {
       },
     ]);
     setPartSearch("");
+    // Parts in inventory have no stored selling price — clerk must set the price
+    // before completing the sale. Prompt immediately so nothing ships at $0.
+    toast.warning(`"${part.partName}" added — set the unit price before completing sale.`);
   };
 
   const addManualItem = () => {
     if (!manualDesc || !manualPrice) return;
+    const parsedPrice = parseFloat(manualPrice);
+    if (isNaN(parsedPrice) || parsedPrice <= 0) {
+      toast.error("Unit price must be greater than $0.00.");
+      return;
+    }
+    const parsedQty = parseInt(manualQty);
+    if (isNaN(parsedQty) || parsedQty < 1) {
+      toast.error("Quantity must be at least 1.");
+      return;
+    }
     setCart((prev) => [
       ...prev,
       {
         description: manualDesc,
         partNumber: manualPN || undefined,
-        quantity: parseInt(manualQty) || 1,
-        unitPrice: parseFloat(manualPrice) || 0,
+        quantity: parsedQty,
+        unitPrice: parsedPrice,
       },
     ]);
     setManualDesc("");
@@ -152,6 +165,14 @@ export default function OTCSalesPage() {
 
   const handleCompleteSale = async () => {
     if (!orgId || cart.length === 0) return;
+    // Validate: block checkout if any line item has a $0 unit price.
+    // Parts from inventory are added with unitPrice=0 and require manual pricing.
+    const zeroPriceItems = cart.filter((item) => item.unitPrice <= 0);
+    if (zeroPriceItems.length > 0) {
+      const names = zeroPriceItems.map((i) => `"${i.description}"`).join(", ");
+      toast.error(`Cannot complete sale — ${zeroPriceItems.length === 1 ? "item" : "items"} ${names} ${zeroPriceItems.length === 1 ? "has" : "have"} a $0.00 unit price. Set prices before completing.`);
+      return;
+    }
     setProcessing(true);
     try {
       const saleId = await createSale({

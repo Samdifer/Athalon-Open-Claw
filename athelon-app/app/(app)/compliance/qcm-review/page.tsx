@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useQuery, usePaginatedQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -98,6 +98,22 @@ function CloseReadinessPanel({
 }) {
   const [selectedWoId, setSelectedWoId] =
     useState<Id<"workOrders"> | null>(null);
+
+  // BUG-030: Auto-select when exactly one pending_signoff WO exists.
+  // A QCM landing on this page with a single sign-off candidate still had to
+  // manually open the dropdown and click it — even though there was nothing
+  // else to choose. The readiness panel stayed blank, giving no visual cue
+  // that the WO was already ready. Now the panel populates automatically so
+  // the QCM can proceed without an extra click.
+  const pendingSignoffWos = useMemo(
+    () => workOrders.filter((wo) => wo.status === "pending_signoff"),
+    [workOrders],
+  );
+  useEffect(() => {
+    if (selectedWoId === null && pendingSignoffWos.length === 1) {
+      setSelectedWoId(pendingSignoffWos[0]._id);
+    }
+  }, [pendingSignoffWos, selectedWoId]);
 
   const readiness = useQuery(
     api.maintenanceRecords.getWorkOrderCloseReadinessV2,

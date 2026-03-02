@@ -100,17 +100,28 @@ export function derivePreconditions(
         : "PENDING";
 
   // PRE-8: Required signatures on maintenance records
+  // BUG-031: Previously `pre8Status` showed "PENDING" whenever
+  // `maintenanceRecords.length === 0` (no records on the WO at all) — even
+  // when NO backend blocker was active. The backend fires
+  // `RTS_NO_MAINTENANCE_RECORDS` when records are a hard requirement; if that
+  // blocker is absent it means the WO type doesn't require maintenance records
+  // for RTS. The PENDING state gave the inspector no signal: they couldn't tell
+  // whether they needed to add records or whether the condition simply didn't
+  // apply. They would often add a dummy maintenance record just to make the
+  // card go green. Now: if the blocker isn't active AND there are zero records,
+  // treat PRE-8 as PASS (backend would have blocked if records were required).
   const pre8Blocker =
     getBlocker("RTS_UNSIGNED_RECORD") ??
     getBlocker("RTS_NO_MAINTENANCE_RECORDS");
   const pre8Status: PreconditionStatus = pre8Blocker
     ? "FAIL"
-    : report.maintenanceRecords.length > 0 &&
-        report.maintenanceRecords.every(
-          (r: { isBlocking: boolean }) => !r.isBlocking,
-        )
-      ? "PASS"
-      : "PENDING";
+    : report.maintenanceRecords.length === 0
+      ? "PASS" // no records + no blocker → records not required for this WO type
+      : report.maintenanceRecords.every(
+            (r: { isBlocking: boolean }) => !r.isBlocking,
+          )
+        ? "PASS"
+        : "PENDING";
 
   // PRE-9: RTS statement provided (UI check)
   const pre9Status: PreconditionStatus =
@@ -182,7 +193,9 @@ export function derivePreconditions(
     {
       id: "pre-8",
       label: "Maintenance Records Signed",
-      description: `${report.maintenanceRecords.filter((r: { isBlocking: boolean }) => r.isBlocking).length} of ${report.maintenanceRecords.length} maintenance record(s) are not signed.`,
+      description: report.maintenanceRecords.length === 0
+        ? "No maintenance records on file — not required for this work order type."
+        : `${report.maintenanceRecords.filter((r: { isBlocking: boolean }) => r.isBlocking).length} of ${report.maintenanceRecords.length} maintenance record(s) are not signed.`,
       status: pre8Status,
       failureMessage: pre8Blocker?.description,
     },

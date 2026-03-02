@@ -52,8 +52,20 @@ export function FleetComplianceStats({ fleet, orgId }: FleetComplianceStatsProps
 
   const overdueAds = adSummary?.fleetTotals.overdueAds ?? 0;
   const pendingAds = adSummary?.fleetTotals.pendingAds ?? 0;
+  // BUG-032: `fleetTotals` does not yet expose `notCompliedAds` in its
+  // TypeScript surface (the backend aggregates notCompliedCount per aircraft
+  // but omits the fleet-level total — tracked as BACKEND-NEEDED in
+  // MASTER-BUILD-LIST.md). Cast to access it defensively; falls back to 0
+  // until the backend is updated. Previously `adIssueCount = overdueAds +
+  // pendingAds` silently missed all never-performed ADs (complianceStatus =
+  // "not_complied") — an aircraft with 4 ADs that were never done showed
+  // "AD Issues: 0" on the compliance dashboard.
+  const notCompliedAds =
+    (adSummary?.fleetTotals as unknown as Record<string, number> | undefined)?.[
+      "notCompliedAds"
+    ] ?? 0;
   const aircraftWithIssues = adSummary?.fleetTotals.aircraftWithIssues ?? 0;
-  const adIssueCount = overdueAds + pendingAds;
+  const adIssueCount = overdueAds + notCompliedAds + pendingAds;
 
   return (
     <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
@@ -155,7 +167,7 @@ export function FleetComplianceStats({ fleet, orgId }: FleetComplianceStatsProps
           pending ADs get an amber border to reflect their lower urgency. */}
       <Card
         className={`border-border/60 ${
-          overdueAds > 0
+          overdueAds > 0 || notCompliedAds > 0
             ? "border-red-500/30 bg-red-500/5"
             : pendingAds > 0
               ? "border-amber-500/30 bg-amber-500/5"
@@ -173,7 +185,7 @@ export function FleetComplianceStats({ fleet, orgId }: FleetComplianceStatsProps
               ) : (
                 <p
                   className={`text-2xl font-bold mt-1 ${
-                    overdueAds > 0
+                    overdueAds > 0 || notCompliedAds > 0
                       ? "text-red-400"
                       : pendingAds > 0
                         ? "text-amber-400"
@@ -183,23 +195,24 @@ export function FleetComplianceStats({ fleet, orgId }: FleetComplianceStatsProps
                   {adIssueCount}
                 </p>
               )}
-              {/* BUG-QCM-C2: `aircraftWithIssues` was computed but never rendered.
-                  QCM saw "8 AD Issues" with no way to know if that's 8 problems
-                  spread across 8 aircraft or 8 problems on 1 aircraft still in the
-                  hangar. The affected aircraft count is the clinically relevant
-                  number — an overdue AD on a dispatched aircraft is urgent; on one
-                  still in maintenance it's already being handled. Now shown below
-                  the overdue/pending breakdown as "N aircraft affected." */}
+              {/* BUG-032: subtitle now includes notComplied breakdown so the QCM
+                  can distinguish never-performed ADs from due-date overruns and
+                  from pending-applicability ADs at a glance. */}
               <p className="text-[11px] text-muted-foreground mt-0.5">
                 {adSummaryLoading
                   ? "loading…"
                   : adIssueCount === 0
                     ? "all compliant"
-                    : overdueAds > 0 && pendingAds > 0
-                      ? `${overdueAds} overdue · ${pendingAds} pending`
-                      : overdueAds > 0
-                        ? `${overdueAds} overdue AD${overdueAds !== 1 ? "s" : ""}`
-                        : `${pendingAds} pending review`}
+                    : (() => {
+                        const parts: string[] = [];
+                        if (overdueAds > 0)
+                          parts.push(`${overdueAds} overdue`);
+                        if (notCompliedAds > 0)
+                          parts.push(`${notCompliedAds} not complied`);
+                        if (pendingAds > 0)
+                          parts.push(`${pendingAds} pending`);
+                        return parts.join(" · ");
+                      })()}
               </p>
               {!adSummaryLoading && aircraftWithIssues > 0 && (
                 <p className="text-[10px] text-muted-foreground/60 mt-0.5">
@@ -209,7 +222,7 @@ export function FleetComplianceStats({ fleet, orgId }: FleetComplianceStatsProps
             </div>
             <div
               className={`p-2 rounded-lg ${
-                overdueAds > 0
+                overdueAds > 0 || notCompliedAds > 0
                   ? "bg-red-500/10"
                   : pendingAds > 0
                     ? "bg-amber-500/10"
@@ -218,7 +231,7 @@ export function FleetComplianceStats({ fleet, orgId }: FleetComplianceStatsProps
             >
               <ShieldAlert
                 className={`w-4 h-4 ${
-                  overdueAds > 0
+                  overdueAds > 0 || notCompliedAds > 0
                     ? "text-red-400"
                     : pendingAds > 0
                       ? "text-amber-400"

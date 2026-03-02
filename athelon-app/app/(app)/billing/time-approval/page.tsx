@@ -122,7 +122,11 @@ export default function TimeApprovalPage() {
   const isLoading = !isLoaded || pending === undefined;
 
   async function handleApprove(entryId: Id<"timeEntries">) {
-    if (!orgId || !techId) return;
+    if (!orgId) return;
+    if (!techId) {
+      toast.error("A technician record is required to approve time entries. Go to Personnel and create your profile first.");
+      return;
+    }
     try {
       await approveEntry({ orgId, timeEntryId: entryId, approvedByTechId: techId });
       toast.success("Time entry approved.");
@@ -137,7 +141,11 @@ export default function TimeApprovalPage() {
   }
 
   async function handleReject() {
-    if (!orgId || !techId || !rejectDialog.entryId) return;
+    if (!orgId || !rejectDialog.entryId) return;
+    if (!techId) {
+      toast.error("A technician record is required to reject time entries. Go to Personnel and create your profile first.");
+      return;
+    }
     if (!rejectReason.trim()) {
       toast.error("Please enter a rejection reason.");
       return;
