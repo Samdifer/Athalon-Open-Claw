@@ -380,7 +380,19 @@ export default function AdSbCompliancePage() {
                     <TableHead className="text-xs text-center">Tracked</TableHead>
                     <TableHead className="text-xs text-center">Compliant</TableHead>
                     <TableHead className="text-xs text-center">Due Soon</TableHead>
+                    {/* BUG-QCM-AT-003: Added "Not Complied" column. The fleet table previously
+                        showed Tracked | Compliant | Due Soon | Overdue | Pending but had no
+                        "Not Complied" column. An aircraft with notCompliedCount=3, overdueCount=0
+                        appeared to show all dashes across every severity column — those 3 ADs
+                        were completely invisible to the QCM at a glance. But "Not Complied" ADs
+                        block RTS just as hard as overdue ones. The filter logic already correctly
+                        bucketed these aircraft under the "overdue" filter, but the table display
+                        showed "—" in the Overdue cell, creating a contradiction: aircraft in the
+                        "Overdue" filtered list with no overdue count shown. Added a red "Not
+                        Complied" column between "Overdue" and "Pending" for visual consistency
+                        with the per-aircraft row badges and audit-trail panel. */}
                     <TableHead className="text-xs text-center">Overdue</TableHead>
+                    <TableHead className="text-xs text-center">Not Complied</TableHead>
                     <TableHead className="text-xs text-center">Pending</TableHead>
                     <TableHead className="text-xs text-right">Actions</TableHead>
                   </TableRow>
@@ -388,13 +400,14 @@ export default function AdSbCompliancePage() {
                 <TableBody>
                   {filteredFleetSummaries.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center text-sm text-muted-foreground py-8">
+                      <TableCell colSpan={8} className="text-center text-sm text-muted-foreground py-8">
                         No aircraft match the "{statusFilter}" filter.
                       </TableCell>
                     </TableRow>
                   ) : null}
                   {filteredFleetSummaries.map((s) => {
                     const ac = aircraftMap.get(s.aircraftId);
+                    const notCompliedCount = (s as unknown as Record<string, number>)["notCompliedCount"] ?? 0;
                     return (
                       <TableRow key={s.aircraftId}>
                         <TableCell className="text-xs font-mono font-medium">
@@ -415,6 +428,11 @@ export default function AdSbCompliancePage() {
                         <TableCell className="text-xs text-center">
                           {s.overdueCount > 0 ? (
                             <span className="text-red-600 dark:text-red-400 font-semibold">{s.overdueCount}</span>
+                          ) : "—"}
+                        </TableCell>
+                        <TableCell className="text-xs text-center">
+                          {notCompliedCount > 0 ? (
+                            <span className="text-red-600 dark:text-red-400 font-semibold">{notCompliedCount}</span>
                           ) : "—"}
                         </TableCell>
                         <TableCell className="text-xs text-center">
@@ -532,7 +550,12 @@ export default function AdSbCompliancePage() {
                           </TableCell>
                           <TableCell className="text-xs">
                             {r.nextDueDate
-                              ? new Date(r.nextDueDate).toLocaleDateString()
+                              // BUG-QCM-DATE-001: toLocaleDateString() without a timezone uses the
+                              // browser's local TZ. AD due dates are stored as UTC midnight. A user
+                              // in UTC-5 would see December 31 for a January 1 UTC date — a one-day
+                              // regression that makes "due today" look like "due yesterday" (overdue).
+                              // Consistent with audit-trail/page.tsx which always passes timeZone:"UTC".
+                              ? new Date(r.nextDueDate).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric", timeZone: "UTC" })
                               : r.nextDueHours != null
                                 ? `${r.nextDueHours}h`
                                 : "—"}

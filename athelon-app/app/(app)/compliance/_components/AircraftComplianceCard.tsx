@@ -166,6 +166,17 @@ export function AircraftComplianceCard({
                       {summary.overdueCount} overdue
                     </span>
                   )}
+                  {/* BUG-QCM-C4: Card was showing "Non-Compliant" status when
+                      notCompliedCount > 0 but the metrics row only displayed
+                      overdueCount. A QCM saw "Non-Compliant" with "0 overdue" and
+                      no explanation — they had to drill in to understand why the
+                      aircraft was flagged. Now explicitly shows "N not complied"
+                      in the metrics so the badge and the detail line agree. */}
+                  {summary.notCompliedCount > 0 && (
+                    <span className="text-[11px] text-red-600 dark:text-red-400 font-medium">
+                      {summary.notCompliedCount} not complied
+                    </span>
+                  )}
                   {summary.dueSoonCount > 0 && (
                     <span className="text-[11px] text-amber-600 dark:text-amber-400">
                       {summary.dueSoonCount} due soon
