@@ -34,12 +34,6 @@ const TYPE_LABELS: Record<string, string> = {
   other: "Other",
 };
 
-// Demo service counts — cycles through 0, 2, 1 for variety until real data is wired up
-function getDemoServiceCount(index: number): number {
-  const counts = [0, 2, 1];
-  return counts[index % counts.length];
-}
-
 const CERT_WARNING_DAYS = 30;
 
 function isCertExpiringSoon(certExpiry: number | undefined): boolean {
@@ -178,10 +172,9 @@ export default function VendorsPage() {
         </Card>
       ) : (
         <div className="space-y-2" aria-live="polite" aria-label={`Vendors list, ${filtered.length} result${filtered.length !== 1 ? "s" : ""}`}>
-          {filtered.map((vendor, vendorIndex) => {
+          {filtered.map((vendor) => {
             const certExpired = isCertExpired(vendor.certExpiry);
             const certExpiringSoon = !certExpired && isCertExpiringSoon(vendor.certExpiry);
-            const serviceCount = getDemoServiceCount(vendorIndex);
 
             return (
               <Link key={vendor._id} to={`/billing/vendors/${vendor._id}`} aria-label={`Vendor: ${vendor.name} — ${vendor.isApproved ? "Approved" : "Not Approved"}${certExpired ? " — Certificate Expired" : certExpiringSoon ? " — Certificate Expiring Soon" : ""}`}>
@@ -215,11 +208,6 @@ export default function VendorsPage() {
                             <Badge variant="outline" className="text-[10px] bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30 gap-0.5">
                               <AlertTriangle className="w-2.5 h-2.5" />
                               Cert Expiring
-                            </Badge>
-                          )}
-                          {serviceCount > 0 && (
-                            <Badge variant="outline" className="text-[10px] text-muted-foreground border-border/40">
-                              {serviceCount} {serviceCount === 1 ? "service" : "services"}
                             </Badge>
                           )}
                         </div>

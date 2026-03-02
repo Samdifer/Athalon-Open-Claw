@@ -421,10 +421,17 @@ export default function NewInvoicePage() {
                     No {useEnhanced ? "" : "closed "}work orders found.
                   </p>
                   {!useEnhanced && (
-                    <p className="text-xs text-muted-foreground/60 mt-1">
-                      A work order must be closed before a standard invoice can
-                      be generated.
-                    </p>
+                    <div className="mt-2 space-y-1">
+                      <p className="text-xs text-muted-foreground/70">
+                        Standard invoice generation requires a work order in{" "}
+                        <span className="font-semibold text-muted-foreground">Closed</span> status.
+                      </p>
+                      <p className="text-xs text-muted-foreground/60">
+                        If the WO is still open, enable{" "}
+                        <span className="font-medium text-primary/80">Enhanced Generation</span>{" "}
+                        above to invoice from any work order, or close the WO first under Work Orders → Detail → RTS &amp; Close.
+                      </p>
+                    </div>
                   )}
                 </div>
               ) : (

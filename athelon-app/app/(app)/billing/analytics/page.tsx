@@ -197,6 +197,15 @@ export default function AnalyticsPage() {
     return keys.map((key) => ({ key, label: getMonthLabel(key), ...byMonth[key] }));
   }, [invoices]);
 
+  // ── Customer map (shared by topCustomers + topCustomersByRevenue) ─────────
+  // Pre-build O(1) lookup to avoid O(n²) customers.find() inside loops.
+  const customerMap = useMemo(() => {
+    if (!customers) return new Map<string, string>();
+    const m = new Map<string, string>();
+    for (const c of customers) m.set(c._id as string, c.name);
+    return m;
+  }, [customers]);
+
   // ── Customer lookup ────────────────────────────────────────────────────────
   const topCustomers = useMemo(() => {
     if (!quotes || !customers) return [];
@@ -205,8 +214,7 @@ export default function AnalyticsPage() {
     for (const q of quotes) {
       const custId = q.customerId as string;
       if (!byCustomer.has(custId)) {
-        const customer = customers.find((c) => c._id === custId);
-        byCustomer.set(custId, { name: customer?.name ?? "Unknown", total: 0, count: 0 });
+        byCustomer.set(custId, { name: customerMap.get(custId) ?? "Unknown", total: 0, count: 0 });
       }
       const entry = byCustomer.get(custId)!;
       entry.total += q.total;
@@ -217,20 +225,24 @@ export default function AnalyticsPage() {
       .map(([id, data]) => ({ id, ...data }))
       .sort((a, b) => b.total - a.total)
       .slice(0, 5);
-  }, [quotes, customers]);
+  }, [quotes, customers, customerMap]);
 
   // ── AR Aging buckets ────────────────────────────────────────────────────
+  // Use dueDate (days past due) for aging — NOT createdAt.
+  // A Net-30 invoice created today is CURRENT, not "30 days old".
+  // Without dueDate, fall back to createdAt as reference.
   const arAging = useMemo(() => {
     if (!invoices) return [];
     const now = Date.now();
-    const buckets = { Current: 0, "30 Days": 0, "60 Days": 0, "90+ Days": 0 };
+    const buckets = { Current: 0, "1–30 Days": 0, "31–60 Days": 0, "60+ Days": 0 };
     for (const inv of invoices) {
       if (inv.status === "PAID" || inv.status === "VOID") continue;
-      const age = (now - inv.createdAt) / (1000 * 60 * 60 * 24);
-      if (age <= 30) buckets.Current += inv.balance;
-      else if (age <= 60) buckets["30 Days"] += inv.balance;
-      else if (age <= 90) buckets["60 Days"] += inv.balance;
-      else buckets["90+ Days"] += inv.balance;
+      const ref = (inv as { dueDate?: number }).dueDate ?? inv.createdAt;
+      const daysPastDue = (now - ref) / (1000 * 60 * 60 * 24);
+      if (daysPastDue <= 0) buckets.Current += inv.balance;          // not yet due
+      else if (daysPastDue <= 30) buckets["1–30 Days"] += inv.balance;
+      else if (daysPastDue <= 60) buckets["31–60 Days"] += inv.balance;
+      else buckets["60+ Days"] += inv.balance;
     }
     return Object.entries(buckets).map(([name, amount]) => ({ name, amount: Math.round(amount) }));
   }, [invoices]);
@@ -243,15 +255,14 @@ export default function AnalyticsPage() {
       if (inv.status === "VOID") continue;
       const custId = inv.customerId as string;
       if (!byCustomer.has(custId)) {
-        const customer = customers?.find((c) => c._id === custId);
-        byCustomer.set(custId, { name: customer?.name ?? "Unknown", total: 0 });
+        byCustomer.set(custId, { name: customerMap.get(custId) ?? "Unknown", total: 0 });
       }
       byCustomer.get(custId)!.total += inv.total;
     }
     return Array.from(byCustomer.values())
       .sort((a, b) => b.total - a.total)
       .slice(0, 8);
-  }, [invoices, customers]);
+  }, [invoices, customers, customerMap]);
 
   const recentConversions = useMemo(() => {
     if (!quotes) return [];
