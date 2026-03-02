@@ -183,6 +183,7 @@ export default function RotablesPage() {
   const [createOpen, setCreateOpen] = useState(false);
   const [condemnTarget, setCondemnTarget] = useState<{ id: Id<"rotables">; partNumber: string; serialNumber: string } | null>(null);
   const [removeTarget, setRemoveTarget] = useState<{ id: Id<"rotables">; partNumber: string; serialNumber: string } | null>(null);
+  const [installTarget, setInstallTarget] = useState<{ id: Id<"rotables">; partNumber: string; serialNumber: string } | null>(null);
   const [actioningId, setActioningId] = useState<string | null>(null);
   const { orgId, isLoaded } = useCurrentOrg();
   const { selectedLocationId } = useSelectedLocation(orgId);
@@ -455,7 +456,7 @@ export default function RotablesPage() {
                     </div>
                     <div className="flex gap-1 flex-shrink-0 flex-wrap">
                       {rotable.status === "serviceable" && (
-                        <Button size="sm" variant="outline" className="h-7 text-xs gap-1" disabled={actioningId === rotable._id} onClick={(e) => { e.stopPropagation(); void handleAction(rotable._id, "installed"); }}>
+                        <Button size="sm" variant="outline" className="h-7 text-xs gap-1" disabled={actioningId === rotable._id} onClick={(e) => { e.stopPropagation(); setInstallTarget({ id: rotable._id, partNumber: rotable.partNumber, serialNumber: rotable.serialNumber }); }}>
                           {actioningId === rotable._id ? <Loader2 className="w-3 h-3 animate-spin" /> : null}Install
                         </Button>
                       )}
@@ -488,6 +489,33 @@ export default function RotablesPage() {
           })}
         </div>
       )}
+
+      <AlertDialog open={installTarget !== null} onOpenChange={(v) => !v && setInstallTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Install Component on Aircraft?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will record that{" "}
+              <strong className="font-mono">{installTarget?.partNumber}</strong>
+              {installTarget?.serialNumber ? ` S/N ${installTarget.serialNumber}` : ""}{" "}
+              has been physically installed on an aircraft. An installation record will be added to the component history. Verify the component is serviceable and the installation is authorized before confirming.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (installTarget) {
+                  void handleAction(installTarget.id, "installed");
+                  setInstallTarget(null);
+                }
+              }}
+            >
+              Confirm Installation
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AlertDialog open={removeTarget !== null} onOpenChange={(v) => !v && setRemoveTarget(null)}>
         <AlertDialogContent>

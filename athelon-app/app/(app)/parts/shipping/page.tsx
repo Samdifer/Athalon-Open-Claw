@@ -365,9 +365,15 @@ function ShipmentDetails({ shipmentId, orgId }: { shipmentId: Id<"shipments">; o
   const [removeConfirmId, setRemoveConfirmId] = useState<Id<"shipmentItems"> | null>(null);
 
   const handleAdd = async () => {
-    if (!pn || !desc) return;
+    if (!pn.trim()) { toast.error("Part number is required."); return; }
+    if (!desc.trim()) { toast.error("Description is required."); return; }
+    const parsedQty = Number(qty);
+    if (!qty.trim() || isNaN(parsedQty) || parsedQty <= 0 || !Number.isInteger(parsedQty)) {
+      toast.error("Quantity must be a whole number greater than zero.");
+      return;
+    }
     try {
-      await addItem({ shipmentId, organizationId: orgId, partNumber: pn, description: desc, quantity: Number(qty) || 1, serialNumber: sn || undefined });
+      await addItem({ shipmentId, organizationId: orgId, partNumber: pn.trim(), description: desc.trim(), quantity: parsedQty, serialNumber: sn.trim() || undefined });
       toast.success("Item added");
       setPn(""); setDesc(""); setQty("1"); setSn(""); setShowAdd(false);
     } catch {

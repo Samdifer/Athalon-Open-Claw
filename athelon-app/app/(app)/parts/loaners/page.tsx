@@ -407,6 +407,21 @@ export default function LoanersPage() {
       <Dialog open={returnDialogId !== null} onOpenChange={(open) => { if (!open && !isReturning) setReturnDialogId(null); }}>
         <DialogContent>
           <DialogHeader><DialogTitle>Return Item</DialogTitle></DialogHeader>
+          {returnDialogId && (() => {
+            const returnItem = all.find((i) => i._id === returnDialogId);
+            if (!returnItem) return null;
+            return (
+              <div className="px-1 pb-1 -mt-1">
+                <div className="rounded-md bg-muted/30 border border-border/40 px-3 py-2 space-y-0.5">
+                  <p className="font-mono text-sm font-semibold text-foreground">{returnItem.partNumber}</p>
+                  {returnItem.serialNumber && (
+                    <p className="text-xs text-muted-foreground">S/N: {returnItem.serialNumber}</p>
+                  )}
+                  <p className="text-xs text-muted-foreground">{returnItem.description}</p>
+                </div>
+              </div>
+            );
+          })()}
           <form onSubmit={handleReturn} className="space-y-4">
             <div className="space-y-2">
               <Label>Condition Notes</Label>

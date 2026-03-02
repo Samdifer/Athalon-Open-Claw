@@ -137,6 +137,7 @@ const mainNav: NavEntry[] = [
     icon: ReceiptText,
     section: "billing",
     children: [
+      { title: "Purchase Orders", href: "/billing/purchase-orders" },
       { title: "Counter Sales", href: "/billing/otc" },
       { title: "Labor Kits", href: "/billing/labor-kits" },
       { title: "Warranty Claims", href: "/billing/warranty" },
