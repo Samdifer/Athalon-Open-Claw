@@ -559,8 +559,11 @@ export default function AircraftDetailPage() {
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">As of Date</p>
+                  {/* BUG-DOM-064: toLocaleDateString() without options showed the date
+                      one day early for shops in UTC-offset timezones (timestamps are UTC
+                      midnight). Pinning timeZone:"UTC" renders the canonical stored date. */}
                   <p className="text-sm text-foreground">
-                    {new Date(aircraft!.totalTimeAirframeAsOfDate).toLocaleDateString()}
+                    {new Date(aircraft!.totalTimeAirframeAsOfDate).toLocaleDateString("en-US", { timeZone: "UTC" })}
                   </p>
                 </div>
                 <p className="text-[11px] text-muted-foreground/60">
@@ -586,7 +589,7 @@ export default function AircraftDetailPage() {
                     </p>
                     {aircraft!.totalLandingCyclesAsOfDate && (
                       <p className="text-xs text-muted-foreground">
-                        As of {new Date(aircraft!.totalLandingCyclesAsOfDate).toLocaleDateString()}
+                        As of {new Date(aircraft!.totalLandingCyclesAsOfDate).toLocaleDateString("en-US", { timeZone: "UTC" })}
                       </p>
                     )}
                   </div>
@@ -615,7 +618,7 @@ export default function AircraftDetailPage() {
                     </p>
                     {aircraft!.hobbsAsOfDate && (
                       <p className="text-xs text-muted-foreground">
-                        As of {new Date(aircraft!.hobbsAsOfDate).toLocaleDateString()}
+                        As of {new Date(aircraft!.hobbsAsOfDate).toLocaleDateString("en-US", { timeZone: "UTC" })}
                       </p>
                     )}
                   </div>

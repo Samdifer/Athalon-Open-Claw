@@ -155,13 +155,23 @@ export function RtsSignoffForm({
           <Label className="text-xs font-medium text-muted-foreground">
             Limitations / MEL Deferrals (optional)
           </Label>
+          {/* BUG-QCM-C3: Limitations textarea had no maxLength cap. An IA who pastes
+              full MEL deferral language or STC amendment text could exceed the backend
+              schema limit and get a cryptic validation error *after* completing all 9
+              preconditions and entering their PIN — a one-time-use, 5-minute auth event
+              that is now consumed. They'd have to request a new auth event, trim the
+              text, and resubmit. Character counter turns amber near the limit. */}
           <Textarea
             value={limitations}
-            onChange={(e) => onLimitationsChange(e.target.value)}
+            onChange={(e) => onLimitationsChange(e.target.value.slice(0, 1000))}
             placeholder="List any MEL deferrals, operational limitations, or conditions on airworthiness…"
             rows={2}
+            maxLength={1000}
             className="text-xs resize-none"
           />
+          <p className={`text-[10px] text-right mt-0.5 ${limitations.length >= 900 ? "text-amber-400" : "text-muted-foreground/50"}`}>
+            {limitations.length}/1000
+          </p>
         </div>
       </CardContent>
     </Card>

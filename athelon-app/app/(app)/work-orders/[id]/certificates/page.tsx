@@ -305,7 +305,19 @@ export default function CertificatesPage() {
                   <div>
                     <p className="text-muted-foreground">Date</p>
                     <p className="font-medium">
-                      {new Date(cert.signatureDate).toLocaleDateString()}
+                      {/* BUG-QCM-C2: toLocaleDateString() shifts UTC midnight timestamps
+                          by the browser's timezone offset. A certificate created at
+                          00:10 UTC would display as the prior day in UTC-5 — factually
+                          wrong for a regulatory document. Use UTC accessors to reconstruct
+                          the calendar date as stored (matches the server-side Date.now()
+                          intent: the date the FAA/EASA certificate was actually signed). */}
+                      {(() => {
+                        const d = new Date(cert.signatureDate);
+                        const yyyy = d.getUTCFullYear();
+                        const mm = String(d.getUTCMonth() + 1).padStart(2, "0");
+                        const dd = String(d.getUTCDate()).padStart(2, "0");
+                        return `${yyyy}-${mm}-${dd}`;
+                      })()}
                     </p>
                   </div>
                 </div>
@@ -327,21 +339,25 @@ export default function CertificatesPage() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>Part Description *</Label>
-                <Input value={partDescription} onChange={(e) => setPartDescription(e.target.value)} placeholder="e.g. Fuel Control Unit" />
+                {/* BUG-QCM-C1: maxLength cap on free-text fields. Without caps
+                    a QCM who pastes in a long description gets a cryptic backend
+                    schema error after filling out the entire form — a regulatory
+                    document wasted with no indication of what went wrong. */}
+                <Input value={partDescription} onChange={(e) => setPartDescription(e.target.value.slice(0, 200))} placeholder="e.g. Fuel Control Unit" maxLength={200} />
               </div>
               <div>
                 <Label>Part Number *</Label>
-                <Input value={partNumber} onChange={(e) => setPartNumber(e.target.value)} placeholder="e.g. 2524409-1" />
+                <Input value={partNumber} onChange={(e) => setPartNumber(e.target.value.slice(0, 50))} placeholder="e.g. 2524409-1" maxLength={50} />
               </div>
             </div>
             <div className="grid grid-cols-3 gap-4">
               <div>
                 <Label>Serial Number</Label>
-                <Input value={serialNumber} onChange={(e) => setSerialNumber(e.target.value)} />
+                <Input value={serialNumber} onChange={(e) => setSerialNumber(e.target.value.slice(0, 50))} maxLength={50} />
               </div>
               <div>
                 <Label>Batch Number</Label>
-                <Input value={batchNumber} onChange={(e) => setBatchNumber(e.target.value)} />
+                <Input value={batchNumber} onChange={(e) => setBatchNumber(e.target.value.slice(0, 50))} maxLength={50} />
               </div>
               <div>
                 <Label>Quantity *</Label>
@@ -377,11 +393,24 @@ export default function CertificatesPage() {
             </div>
             <div>
               <Label>Remarks</Label>
-              <Textarea value={remarks} onChange={(e) => setRemarks(e.target.value)} placeholder="Work performed description, data references..." rows={3} />
+              {/* BUG-QCM-C1 (cont): Remarks is the most likely field to be over-filled —
+                  QCMs paste full AD compliance references, AMM procedures, or STC data.
+                  1000 chars is generous for an FAA 8130-3 Block 12 / EASA Form 1 Block 12.
+                  Character counter turns amber near limit so the user knows before hitting Submit. */}
+              <Textarea
+                value={remarks}
+                onChange={(e) => setRemarks(e.target.value.slice(0, 1000))}
+                placeholder="Work performed description, data references..."
+                rows={3}
+                maxLength={1000}
+              />
+              <p className={`text-[10px] text-right mt-0.5 ${remarks.length >= 900 ? "text-amber-400" : "text-muted-foreground/50"}`}>
+                {remarks.length}/1000
+              </p>
             </div>
             <div>
               <Label>Approval / Certificate Number *</Label>
-              <Input value={approvalNumber} onChange={(e) => setApprovalNumber(e.target.value)} placeholder="Part 145 cert number" />
+              <Input value={approvalNumber} onChange={(e) => setApprovalNumber(e.target.value.slice(0, 50))} placeholder="Part 145 cert number" maxLength={50} />
             </div>
           </div>
           <DialogFooter>

@@ -196,6 +196,13 @@ export default function TrainingPage() {
       toast.error("Please fill required fields");
       return;
     }
+    // BUG-DOM-065: no validation that expiry date is after completion date.
+    // Technicians could accidentally log expiry before completion and create
+    // records that immediately show as expired or have invalid timelines.
+    if (formExpiresAt && formExpiresAt <= formCompletedAt) {
+      toast.error("Expiry date must be after the completion date");
+      return;
+    }
     setIsAddingRecord(true);
     try {
       await addRecord({
@@ -735,7 +742,21 @@ export default function TrainingPage() {
       </Dialog>
 
       {/* Add Requirement Dialog */}
-      <Dialog open={showReqDialog} onOpenChange={(v) => { if (!isCreatingReq) setShowReqDialog(v); }}>
+      <Dialog open={showReqDialog} onOpenChange={(v) => {
+          if (!isCreatingReq) {
+            setShowReqDialog(v);
+            // BUG-DOM-063: Requirement dialog didn't reset fields when closed via
+            // X button or backdrop click — only the explicit Cancel button handled
+            // cleanup. Re-opening would show stale data from the previous attempt.
+            if (!v) {
+              setReqName("");
+              setReqDesc("");
+              setReqCourses("");
+              setReqRecurrency("");
+              setReqRoles("");
+            }
+          }
+        }}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>Add Qualification Requirement</DialogTitle>
@@ -785,7 +806,7 @@ export default function TrainingPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowReqDialog(false)} disabled={isCreatingReq}>
+            <Button variant="outline" onClick={() => { setShowReqDialog(false); setReqName(""); setReqDesc(""); setReqCourses(""); setReqRecurrency(""); setReqRoles(""); }} disabled={isCreatingReq}>
               Cancel
             </Button>
             <Button onClick={handleCreateReq} disabled={isCreatingReq}>
