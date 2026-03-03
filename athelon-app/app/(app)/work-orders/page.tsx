@@ -283,9 +283,14 @@ export default function WorkOrdersPage() {
                   Customer: wo.customer,
                   Aircraft: wo.aircraft ?? "",
                   Description: wo.description,
-                  Created: new Date(wo.openedAt).toLocaleDateString(),
+                  // BUG-QCM-TZ-004: toLocaleDateString() without timeZone option uses
+                  // the browser's local offset for the CSV export. A Billing Manager
+                  // exporting WOs at 11:30pm UTC-5 would see all WOs opened at midnight
+                  // UTC listed as the prior day — wrong dates in the billing spreadsheet.
+                  // Promise dates are also stored as UTC midnight and would similarly shift.
+                  Created: new Date(wo.openedAt).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric", timeZone: "UTC" }),
                   "Promise Date": wo.promisedDeliveryDate
-                    ? new Date(wo.promisedDeliveryDate).toLocaleDateString()
+                    ? new Date(wo.promisedDeliveryDate).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric", timeZone: "UTC" })
                     : "",
                   "Tasks Done": `${wo.tasksComplete}/${wo.tasksTotal}`,
                   "Open Squawks": wo.openSquawks,

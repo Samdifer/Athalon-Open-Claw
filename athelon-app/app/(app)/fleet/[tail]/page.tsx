@@ -1016,7 +1016,13 @@ function WoSection({
                     </div>
                     <div className="text-right flex-shrink-0">
                       <p className="text-[11px] text-muted-foreground">
-                        {new Date(wo.openedAt ?? wo.createdAt).toLocaleDateString()}
+                        {/* BUG-QCM-TZ-001: toLocaleDateString() without options uses the
+                            browser's local timezone. A WO opened at 00:30 UTC would
+                            display as the prior day to a user in UTC-5 — giving the DOM
+                            a wrong "opened" date on their aircraft's work order history.
+                            Consistent with all other date displays in this file which
+                            already pass timeZone:"UTC". */}
+                        {new Date(wo.openedAt ?? wo.createdAt).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric", timeZone: "UTC" })}
                       </p>
                     </div>
                     <ChevronRight className="w-4 h-4 text-muted-foreground/40 flex-shrink-0" />

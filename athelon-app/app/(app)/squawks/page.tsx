@@ -334,7 +334,12 @@ export default function SquawksPage() {
                       )}
                       {d.foundAt && (
                         <span>
-                          {new Date(d.foundAt).toLocaleDateString()}
+                          {/* BUG-QCM-TZ-002: toLocaleDateString() without timeZone shifts UTC
+                              midnight timestamps by the browser offset. A squawk logged at
+                              00:05 UTC would show the prior day's date in UTC-5 — misrepresenting
+                              when the discrepancy was actually found. Critical for Part 145 audit
+                              trails where squawk discovery dates are regulatory records. */}
+                          {new Date(d.foundAt).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric", timeZone: "UTC" })}
                         </span>
                       )}
                       {d.melCategory && (

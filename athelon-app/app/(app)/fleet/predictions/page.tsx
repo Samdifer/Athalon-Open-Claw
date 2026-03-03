@@ -153,13 +153,19 @@ export default function PredictionsPage() {
 
   // Tab label counts — reflects the currently applied status/aircraft/type filters
   // so the badge numbers match what you see in each tab's content
+  // BUG-DOM-066: "All" tab badge used predictions.length (total unfiltered) instead of
+  // the count after applying the aircraft/type/status filters. DOM sets "Active only" +
+  // a specific aircraft filter, then the "All" tab badge still shows the grand total —
+  // e.g. "All (24)" but only 3 cards visible. Confusing and erodes trust in the counts.
+  // Fix: compute an `all` total in tabCounts using the same filter logic as severity counts.
   const tabCounts = useMemo(() => {
-    if (!predictions) return { critical: 0, high: 0, medium: 0, low: 0 };
-    const c = { critical: 0, high: 0, medium: 0, low: 0 };
+    if (!predictions) return { all: 0, critical: 0, high: 0, medium: 0, low: 0 };
+    const c = { all: 0, critical: 0, high: 0, medium: 0, low: 0 };
     for (const p of predictions) {
       if (aircraftFilter !== "all" && p.aircraftId !== aircraftFilter) continue;
       if (typeFilter !== "all" && p.predictionType !== typeFilter) continue;
       if (statusFilter !== "all" && p.status !== statusFilter) continue;
+      c.all++;
       if (p.severity in c) c[p.severity as Severity]++;
     }
     return c;
@@ -421,7 +427,7 @@ export default function PredictionsPage() {
       <Tabs value={severityTab} onValueChange={setSeverityTab}>
         <TabsList>
           <TabsTrigger value="all">
-            All ({predictions.length})
+            All ({tabCounts.all})
           </TabsTrigger>
           <TabsTrigger value="critical" className="text-red-500">
             Critical ({tabCounts.critical})

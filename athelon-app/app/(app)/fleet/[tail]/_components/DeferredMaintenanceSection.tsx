@@ -110,7 +110,11 @@ export function DeferredMaintenanceSection({ aircraftId }: DeferredMaintenanceSe
                   </div>
                   <p className="text-sm text-foreground">{item.description}</p>
                   <p className="text-[11px] text-muted-foreground mt-1">
-                    Created {new Date(item.createdAt).toLocaleDateString()}
+                    {/* BUG-QCM-TZ-003: toLocaleDateString() without timeZone uses the
+                        browser's local offset. A deferred item logged at 00:15 UTC
+                        displays the prior day in UTC-5 — wrong MEL creation date for
+                        the technician reviewing what was deferred and when. */}
+                    Created {new Date(item.createdAt).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric", timeZone: "UTC" })}
                   </p>
                 </div>
                 <div className="flex items-center gap-1.5 flex-shrink-0">

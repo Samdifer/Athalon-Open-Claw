@@ -8,7 +8,7 @@
  * Backend query: api.maintenanceRecords.listByAircraft (added in convex/maintenanceRecords.ts).
  */
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -138,7 +138,18 @@ function LogbookSkeleton() {
 
 // ─── Timeline Entry ───────────────────────────────────────────────────────────
 
-function LogbookEntry({ record }: { record: MaintenanceRecord }) {
+// BUG-DOM-067: Correction entries showed "Amends prior entry" with no indication of
+// WHICH entry was corrected. In a paper logbook, corrections always reference the
+// original entry number — a DOM or QCM inspector auditing a logbook has no way to
+// trace the amendment back to the original record. Pass a sequenceMap so the badge
+// shows "Amends entry #XXX" matching the original record's sequence number.
+function LogbookEntry({
+  record,
+  sequenceMap,
+}: {
+  record: MaintenanceRecord;
+  sequenceMap: Map<string, number>;
+}) {
   const [expanded, setExpanded] = useState(false);
   const meta = getRecordTypeMeta(record.recordType);
   const TRUNCATE_LIMIT = 280;
@@ -174,13 +185,18 @@ function LogbookEntry({ record }: { record: MaintenanceRecord }) {
             {meta.cfr}
           </span>
 
-          {/* Correction indicator */}
+          {/* Correction indicator — show which sequence number is being amended */}
           {record.corrects && (
             <Badge
               variant="outline"
               className="text-[11px] border border-amber-500/30 text-amber-400/70 bg-amber-500/5"
             >
-              Amends prior entry
+              {(() => {
+                const origSeq = sequenceMap.get(record.corrects as string);
+                return origSeq != null
+                  ? `Amends entry ${formatSequence(origSeq)}`
+                  : "Amends prior entry";
+              })()}
             </Badge>
           )}
 
@@ -349,6 +365,17 @@ export default function AircraftLogbookPage() {
   // Sort newest first
   const sorted = [...filtered].sort((a, b) => b.sequenceNumber - a.sequenceNumber);
 
+  // Build id → sequenceNumber map across ALL records (not just filtered) so that
+  // correction entries can reference the original entry number even if the original
+  // record is outside the current filter range.
+  const sequenceMap = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const r of records ?? []) {
+      m.set(r._id as string, r.sequenceNumber);
+    }
+    return m;
+  }, [records]);
+
   return (
     <div className="space-y-6">
       {/* Back + Header */}
@@ -504,7 +531,7 @@ export default function AircraftLogbookPage() {
                     : "bg-amber-500"
                 }`}
               />
-              <LogbookEntry record={record} />
+              <LogbookEntry record={record} sequenceMap={sequenceMap} />
             </div>
           ))}
         </div>
