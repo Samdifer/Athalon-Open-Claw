@@ -85,6 +85,169 @@ async function requireAuth(ctx: {
   return identity;
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// SAMPLE DATA — Wave 1 onboarding helper
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const generateSampleData = mutation({
+  args: {
+    organizationId: v.id("organizations"),
+    shopLocationId: v.id("shopLocations"),
+  },
+  handler: async (ctx, args) => {
+    const identity = await requireAuth(ctx);
+    const now = Date.now();
+
+    // Idempotency: check if sample hangar bays already exist for this org+location
+    const existingBays = await ctx.db
+      .query("hangarBays")
+      .withIndex("by_org_location", (q) =>
+        q
+          .eq("organizationId", args.organizationId)
+          .eq("shopLocationId", args.shopLocationId),
+      )
+      .collect();
+
+    if (existingBays.length > 0) {
+      return { skipped: true, reason: "Sample data already exists for this org/location" };
+    }
+
+    // Verify org and location exist and match
+    const org = await ctx.db.get(args.organizationId);
+    if (!org) throw new Error("Organization not found");
+    const location = await ctx.db.get(args.shopLocationId);
+    if (!location || location.organizationId !== args.organizationId) {
+      throw new Error("Shop location does not belong to this organization");
+    }
+
+    // 1. Create 3 sample hangar bays
+    const bayDefs = [
+      { name: "Bay A", type: "hangar" as const, capacity: 2 },
+      { name: "Bay B", type: "hangar" as const, capacity: 1 },
+      { name: "Ramp C", type: "ramp" as const, capacity: 3 },
+    ];
+    const bayIds = await Promise.all(
+      bayDefs.map((def) =>
+        ctx.db.insert("hangarBays", {
+          organizationId: args.organizationId,
+          shopLocationId: args.shopLocationId,
+          name: def.name,
+          description: `Sample ${def.type} bay`,
+          type: def.type,
+          capacity: def.capacity,
+          status: "available",
+          createdAt: now,
+          updatedAt: now,
+        }),
+      ),
+    );
+
+    // 2. Create 2 sample aircraft
+    const aircraftDefs = [
+      {
+        make: "Beechcraft",
+        model: "King Air B200",
+        serialNumber: "BB-SAMPLE-001",
+        currentRegistration: "N200KA",
+        experimental: false,
+        aircraftCategory: "normal" as const,
+        engineCount: 2,
+        totalTimeAirframeHours: 4520,
+        totalTimeAirframeAsOfDate: now,
+        status: "in_maintenance" as const,
+        createdByOrganizationId: args.organizationId,
+        operatingOrganizationId: args.organizationId,
+        createdAt: now,
+        updatedAt: now,
+      },
+      {
+        make: "Cessna",
+        model: "208 Caravan",
+        serialNumber: "208-SAMPLE-001",
+        currentRegistration: "N208CV",
+        experimental: false,
+        aircraftCategory: "normal" as const,
+        engineCount: 1,
+        totalTimeAirframeHours: 7830,
+        totalTimeAirframeAsOfDate: now,
+        status: "in_maintenance" as const,
+        createdByOrganizationId: args.organizationId,
+        operatingOrganizationId: args.organizationId,
+        createdAt: now,
+        updatedAt: now,
+      },
+    ];
+    const aircraftIds = await Promise.all(
+      aircraftDefs.map((def) => ctx.db.insert("aircraft", def)),
+    );
+
+    // 3. Create 3 sample work orders
+    const woDefs = [
+      {
+        workOrderNumber: "WO-SAMPLE-001",
+        aircraftIdx: 0,
+        workOrderType: "unscheduled" as const,
+        priority: "aog" as const,
+        status: "in_progress" as const,
+        description: "AOG — left engine hot section inspection",
+        scheduledStartDate: now,
+        promisedDeliveryDate: now + 5 * 86400000,
+      },
+      {
+        workOrderNumber: "WO-SAMPLE-002",
+        aircraftIdx: 0,
+        workOrderType: "annual_inspection" as const,
+        priority: "routine" as const,
+        status: "open" as const,
+        description: "Annual inspection — King Air B200",
+        scheduledStartDate: now + 7 * 86400000,
+        promisedDeliveryDate: now + 21 * 86400000,
+      },
+      {
+        workOrderNumber: "WO-SAMPLE-003",
+        aircraftIdx: 1,
+        workOrderType: "routine" as const,
+        priority: "routine" as const,
+        status: "open" as const,
+        description: "500-hour inspection — Cessna 208 Caravan",
+        scheduledStartDate: now + 14 * 86400000,
+        promisedDeliveryDate: now + 28 * 86400000,
+      },
+    ];
+
+    const woIds = await Promise.all(
+      woDefs.map((def) =>
+        ctx.db.insert("workOrders", {
+          workOrderNumber: def.workOrderNumber,
+          organizationId: args.organizationId,
+          shopLocationId: args.shopLocationId,
+          aircraftId: aircraftIds[def.aircraftIdx],
+          status: def.status,
+          workOrderType: def.workOrderType,
+          description: def.description,
+          priority: def.priority,
+          openedAt: now,
+          openedByUserId: identity.subject,
+          aircraftTotalTimeAtOpen: aircraftDefs[def.aircraftIdx].totalTimeAirframeHours,
+          scheduledStartDate: def.scheduledStartDate,
+          promisedDeliveryDate: def.promisedDeliveryDate,
+          createdAt: now,
+          updatedAt: now,
+        }),
+      ),
+    );
+
+    return {
+      skipped: false,
+      created: {
+        hangarBays: bayIds.length,
+        aircraft: aircraftIds.length,
+        workOrders: woIds.length,
+      },
+    };
+  },
+});
+
 export const getBootstrapStatus = query({
   args: {
     preferredClerkOrganizationId: v.optional(v.string()),

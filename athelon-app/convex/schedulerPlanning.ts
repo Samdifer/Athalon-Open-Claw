@@ -489,6 +489,35 @@ export const upsertScheduleAssignment = mutation({
 
     if (!assignmentId) throw new Error("Failed to persist schedule assignment");
 
+    // Audit log — capture before/after state
+    await ctx.db.insert("auditLog", {
+      organizationId: args.organizationId,
+      eventType: "record_updated",
+      tableName: "scheduleAssignments",
+      recordId: String(assignmentId),
+      userId,
+      oldValue: existing
+        ? JSON.stringify({
+            hangarBayId: existing.hangarBayId,
+            startDate: existing.startDate,
+            endDate: existing.endDate,
+            isLocked: existing.isLocked,
+            shopLocationId: existing.shopLocationId,
+            sourceQuoteId: existing.sourceQuoteId,
+          })
+        : undefined,
+      newValue: JSON.stringify({
+        hangarBayId: args.hangarBayId,
+        startDate: args.startDate,
+        endDate: args.endDate,
+        isLocked: args.isLocked,
+        shopLocationId: resolvedShopLocationId,
+        sourceQuoteId: linkedQuoteId,
+      }),
+      notes: existing ? "Schedule assignment updated" : "Schedule assignment created",
+      timestamp: now,
+    });
+
     // Keep legacy WO scheduling fields synchronized for existing UI/routes.
     await ctx.db.patch(args.workOrderId, {
       scheduledStartDate: args.startDate,
@@ -695,6 +724,19 @@ export const archiveScheduleAssignment = mutation({
       updatedByUserId: userId,
     });
 
+    // Audit log — archive action
+    await ctx.db.insert("auditLog", {
+      organizationId: assignment.organizationId,
+      eventType: "record_updated",
+      tableName: "scheduleAssignments",
+      recordId: String(assignmentId),
+      userId,
+      oldValue: JSON.stringify({ archivedAt: undefined }),
+      newValue: JSON.stringify({ archivedAt: now }),
+      notes: "Schedule assignment archived",
+      timestamp: now,
+    });
+
     await ctx.db.insert("planningArchive", {
       organizationId: assignment.organizationId,
       entityType: "schedule_assignment",
@@ -734,6 +776,19 @@ export const restoreScheduleAssignment = mutation({
       archivedByUserId: undefined,
       updatedAt: now,
       updatedByUserId: userId,
+    });
+
+    // Audit log — restore action
+    await ctx.db.insert("auditLog", {
+      organizationId: assignment.organizationId,
+      eventType: "record_updated",
+      tableName: "scheduleAssignments",
+      recordId: String(assignmentId),
+      userId,
+      oldValue: JSON.stringify({ archivedAt: assignment.archivedAt }),
+      newValue: JSON.stringify({ archivedAt: undefined }),
+      notes: "Schedule assignment restored",
+      timestamp: now,
     });
 
     const archiveRow = await ctx.db
