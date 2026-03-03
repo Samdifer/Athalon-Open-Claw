@@ -10,6 +10,7 @@ import {
   Search,
   FileText,
   ChevronRight,
+  Download,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,6 +19,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDate } from "@/lib/format";
+import { downloadCSV } from "@/lib/export";
+import { toast } from "sonner";
 
 type QuoteStatus = "DRAFT" | "SENT" | "APPROVED" | "CONVERTED" | "DECLINED" | "all";
 
@@ -121,12 +124,37 @@ export default function QuotesPage() {
             </p>
           )}
         </div>
-        <Button asChild size="sm">
-          <Link to="/billing/quotes/new">
-            <Plus className="w-3.5 h-3.5 mr-1.5" />
-            New Quote
-          </Link>
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5 text-xs"
+            onClick={() => {
+              if (filtered.length) {
+                downloadCSV(
+                  filtered.map((q) => ({
+                    "Quote #": q.quoteNumber ?? "",
+                    Status: q.status,
+                    Total: q.total,
+                    "Valid Until": q.expiresAt ? new Date(q.expiresAt).toLocaleDateString() : "",
+                    Created: new Date(q._creationTime).toLocaleDateString(),
+                  })),
+                  "quotes.csv",
+                );
+                toast.success("Quotes exported");
+              }
+            }}
+          >
+            <Download className="w-3.5 h-3.5" />
+            Export CSV
+          </Button>
+          <Button asChild size="sm">
+            <Link to="/billing/quotes/new">
+              <Plus className="w-3.5 h-3.5 mr-1.5" />
+              New Quote
+            </Link>
+          </Button>
+        </div>
       </div>
 
       {/* Filter Tabs + Search */}

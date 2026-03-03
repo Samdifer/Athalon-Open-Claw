@@ -172,7 +172,11 @@ export default function TimeApprovalPage() {
   }
 
   async function handleBulkApprove() {
-    if (!orgId || !techId) return;
+    if (!orgId) return;
+    if (!techId) {
+      toast.error("A technician record is required to approve time entries. Go to Personnel and create your profile first.");
+      return;
+    }
     if (filteredPending.length === 0) return;
 
     setSubmitting(true);

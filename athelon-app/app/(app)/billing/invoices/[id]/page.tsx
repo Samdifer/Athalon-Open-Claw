@@ -151,7 +151,10 @@ export default function InvoiceDetailPage() {
   const handleSend = async () => {
     if (!orgId) return;
     setActionLoading("send"); setError(null);
-    try { await sendInvoice({ orgId, invoiceId }); }
+    try {
+      await sendInvoice({ orgId, invoiceId });
+      toast.success("Invoice sent successfully.");
+    }
     catch (err) { setError(err instanceof Error ? err.message : "Failed to send."); }
     finally { setActionLoading(null); }
   };

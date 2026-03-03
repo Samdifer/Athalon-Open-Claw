@@ -311,6 +311,7 @@ export default function QuoteDetailPage() {
     setActionLoading("approve"); setError(null);
     try {
       await approveQuote({ orgId, quoteId });
+      toast.success("Quote approved.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to approve quote.");
     } finally {
@@ -323,6 +324,7 @@ export default function QuoteDetailPage() {
     setActionLoading("decline"); setError(null);
     try {
       await declineQuote({ orgId, quoteId, declineReason: declineReason.trim() });
+      toast.success("Quote declined.");
       setDeclineDialog(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to decline quote.");
