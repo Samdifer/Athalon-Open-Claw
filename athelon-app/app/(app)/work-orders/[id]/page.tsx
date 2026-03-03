@@ -644,13 +644,23 @@ export default function WorkOrderDetailPage() {
 
         <TabsContent value="squawks" className="mt-0">
           {/* AI-053/054: Pass org/tech context for Log Squawk + FindingRow disposition */}
+          {/* BUG-QCM-C12: aircraftCurrentHours was set to wo.aircraftTotalTimeAtOpen —
+              the TTAF snapshot taken when the work order was created. On a long
+              inspection (multi-day annual, heavy-check), the aircraft may accumulate
+              hours from ground-run or ferry ops after the WO opened. Any squawk or
+              finding logged mid-job would record the wrong foundAtAircraftHours in the
+              permanent maintenance record. Under 14 CFR 43.9(a)(4) the total time in
+              service must be accurate at the time of the maintenance action.
+              Fix: prefer aircraft.totalTimeAirframeHours (the most recently recorded
+              TTAF from the aircraft record) with wo.aircraftTotalTimeAtOpen as fallback
+              when the aircraft record isn't available. */}
           <WorkItemsList
             items={workItems}
             workOrderId={String(workOrderId)}
             workOrderIdTyped={workOrderId}
             orgId={orgId}
             techId={techId ?? undefined}
-            aircraftCurrentHours={wo.aircraftTotalTimeAtOpen ?? null}
+            aircraftCurrentHours={aircraft?.totalTimeAirframeHours ?? wo.aircraftTotalTimeAtOpen ?? null}
             workOrderStatus={wo.status}
           />
           <div className="mt-4">
@@ -659,7 +669,7 @@ export default function WorkOrderDetailPage() {
               orgId={orgId}
               techId={techId}
               workOrderId={workOrderId}
-              aircraftCurrentHours={wo.aircraftTotalTimeAtOpen}
+              aircraftCurrentHours={aircraft?.totalTimeAirframeHours ?? wo.aircraftTotalTimeAtOpen}
             />
           </div>
         </TabsContent>

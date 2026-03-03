@@ -155,16 +155,37 @@ export function DiscrepancyList({
           const typeBadge = sq.discrepancyType ? DISCREPANCY_TYPE_BADGE[sq.discrepancyType] : null;
           const approvalBadge = sq.customerApprovalStatus ? APPROVAL_STATUS_BADGE[sq.customerApprovalStatus] : null;
 
+          // BUG-QCM-C10: Previously all non-denied squawks used border-l-red-500
+          // regardless of status. A QCM reviewing a WO with 5 dispositioned
+          // discrepancies saw all 5 with red left borders — same visual weight as
+          // open squawks that still need action. The inspector couldn't glance at
+          // the list and know the WO is clean. Now: open=red, under_evaluation=amber,
+          // dispositioned=green (subtle), denied=muted/dimmed.
+          const borderColor =
+            isDenied
+              ? "border-l-muted-foreground opacity-70"
+              : sq.status === "dispositioned"
+                ? "border-l-green-500/50"
+                : sq.status === "under_evaluation"
+                  ? "border-l-amber-500"
+                  : "border-l-red-500"; // open or unknown
+
+          // Match the icon color to the status as well.
+          const alertIconColor =
+            sq.status === "dispositioned"
+              ? "text-green-400/60"
+              : sq.status === "under_evaluation"
+                ? "text-amber-400"
+                : "text-red-400";
+
           return (
             <Card
               key={sq._id}
-              className={`border-l-4 border-border/60 ${
-                isDenied ? "border-l-muted-foreground opacity-70" : "border-l-red-500"
-              }`}
+              className={`border-l-4 border-border/60 ${borderColor}`}
             >
               <CardContent className="p-4">
                 <div className="flex items-start gap-3">
-                  <AlertTriangle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+                  <AlertTriangle className={`w-4 h-4 flex-shrink-0 mt-0.5 ${alertIconColor}`} />
                   <div className="flex-1 min-w-0">
                     {/* Row 1: Number + badges */}
                     <div className="flex items-center gap-2 mb-1 flex-wrap">

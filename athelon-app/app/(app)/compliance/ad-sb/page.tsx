@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { useQuery } from "convex/react";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
@@ -90,6 +90,21 @@ export default function AdSbCompliancePage() {
   const initialAircraft = searchParams.get("aircraft") ?? "all";
   const [selectedAircraft, setSelectedAircraft] = useState<string>(initialAircraft);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+
+  // BUG-QCM-C11: selectedAircraft was initialized from searchParams once at mount
+  // but never updated when searchParams changed. Deep links from AircraftComplianceCard
+  // (/compliance/ad-sb?aircraft=<id1>), the audit-trail page, and the fleet AD tab all
+  // use ?aircraft= params. If the component stayed mounted (same route, different params
+  // via pushState), the displayed aircraft would be stale. A QCM clicking "View in AD/SB"
+  // for a different aircraft from the fleet compliance overview would still see the
+  // previously selected aircraft's records — a silent wrong-data bug.
+  // Fix: sync selectedAircraft to searchParams whenever the param changes, and reset the
+  // status filter so filtered views don't carry over to the newly selected aircraft.
+  useEffect(() => {
+    const paramAircraft = searchParams.get("aircraft") ?? "all";
+    setSelectedAircraft(paramAircraft);
+    setStatusFilter("all");
+  }, [searchParams]);
 
   const fleetSummary = useQuery(
     api.adCompliance.getFleetAdSummary,
