@@ -57,7 +57,7 @@ function inspectionBadge(type?: string) {
 export default function MaintenanceRecordsPage() {
   const params = useParams<{ id: string }>();
   const workOrderId = params.id as Id<"workOrders">;
-  const { orgId } = useCurrentOrg();
+  const { orgId, techId } = useCurrentOrg();
 
   const [searchParams] = useSearchParams();
 
@@ -291,9 +291,18 @@ export default function MaintenanceRecordsPage() {
                 setCorrectionTarget(null);
               }}
               initialState={
+                // BUG-QCM-C18: callerTechnicianId was never pre-filled.
+                // A QCM or tech opening the Create Record form had to manually
+                // scroll a dropdown to find their own name — even though the
+                // system already knows who they are via useCurrentOrg().techId.
+                // In a busy shop with 20+ technicians this is error-prone: the
+                // wrong tech could be selected without noticing, creating a
+                // regulatory 14 CFR 43.9 violation (incorrect signatory). Now
+                // the form auto-selects the current user's linked tech record.
+                // The tech can still change it for correction records.
                 correctionTarget
-                  ? { isCorrection: true, correctsRecordId: correctionTarget, signatureAuthEventId: authEventIdFromUrl }
-                  : { isCorrection: false, signatureAuthEventId: authEventIdFromUrl }
+                  ? { isCorrection: true, correctsRecordId: correctionTarget, signatureAuthEventId: authEventIdFromUrl, callerTechnicianId: techId ?? "" }
+                  : { isCorrection: false, signatureAuthEventId: authEventIdFromUrl, callerTechnicianId: techId ?? "" }
               }
             />
           </CardContent>

@@ -270,6 +270,14 @@ export default function TaskCardPage() {
   const [updatingStatusId, setUpdatingStatusId] = useState<string | null>(null);
   const [updateStatus, setUpdateStatus] = useState<ComplianceStatus>("compliant");
   const [updateNotes, setUpdateNotes] = useState("");
+  // BUG-QCM-C19: No loading guard on compliance status Save button. A QCM who
+  // double-clicks "Save" fires two updateComplianceStatusMutation calls for the
+  // same item simultaneously — creating duplicate history entries on the
+  // compliance record. This pollutes the audit trail (14 CFR 43.9 requires an
+  // accurate record of who changed what and when). Track a separate
+  // isSavingComplianceUpdate flag to disable the button while the mutation is
+  // in-flight.
+  const [isSavingComplianceUpdate, setIsSavingComplianceUpdate] = useState(false);
 
   const taskCards = useQuery(
     api.taskCards.listTaskCardsForWorkOrder,
@@ -1163,8 +1171,10 @@ export default function TaskCardPage() {
                       <Button
                         size="sm"
                         className="h-7 text-xs"
+                        disabled={isSavingComplianceUpdate}
                         onClick={async () => {
-                          if (!techId) return;
+                          if (!techId || isSavingComplianceUpdate) return;
+                          setIsSavingComplianceUpdate(true);
                           try {
                             await updateComplianceStatusMutation({
                               itemId: item.id as Id<"taskComplianceItems">,
@@ -1178,10 +1188,16 @@ export default function TaskCardPage() {
                             setUpdateNotes("");
                           } catch {
                             toast.error("Failed to update compliance status");
+                          } finally {
+                            setIsSavingComplianceUpdate(false);
                           }
                         }}
                       >
-                        Save
+                        {isSavingComplianceUpdate ? (
+                          <><Loader2 className="w-3 h-3 mr-1 animate-spin" />Saving…</>
+                        ) : (
+                          "Save"
+                        )}
                       </Button>
                     </div>
                   </div>

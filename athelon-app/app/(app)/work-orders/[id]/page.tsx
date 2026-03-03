@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useNavigate } from "react-router-dom";
 import { useMutation, useQuery } from "convex/react";
 import {
   ArrowLeft,
@@ -176,6 +176,7 @@ function ScheduleRiskChip({ riskLevel }: { riskLevel: RiskLevel }) {
 export default function WorkOrderDetailPage() {
   const { id: routeRef = "" } = useParams<{ id: string }>();
   const { orgId, techId, isLoaded } = useCurrentOrg();
+  const navigate = useNavigate();
   const [timerActionLoading, setTimerActionLoading] = useState<"start" | "stop" | null>(null);
   const [deferredCaptureOpen, setDeferredCaptureOpen] = useState(false);
 
@@ -846,8 +847,11 @@ export default function WorkOrderDetailPage() {
         organizationId={orgId}
         onComplete={() => {
           setDeferredCaptureOpen(false);
-          // Navigate to RTS after capturing (or skipping) deferred items
-          window.location.href = `/work-orders/${workOrderId}/rts`;
+          // BUG-QCM-C17: was window.location.href which triggered a full page
+          // reload — Convex dropped all subscriptions, Clerk re-validated the
+          // session, and any unsaved state was lost. Use the SPA router instead
+          // so the navigation is instant and Convex subscriptions stay alive.
+          navigate(`/work-orders/${workOrderId}/rts`);
         }}
       />
     </div>

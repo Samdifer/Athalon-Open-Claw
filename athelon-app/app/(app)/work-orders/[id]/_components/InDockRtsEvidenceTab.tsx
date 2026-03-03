@@ -238,24 +238,42 @@ function EvidenceBucketCard({
 
   async function uploadFiles(fileList: FileList | null) {
     if (!fileList || fileList.length === 0) return;
-    const files = Array.from(fileList);
+    const allFiles = Array.from(fileList);
 
-    for (const file of files) {
+    // BUG-QCM-HUNT-001: Previously the validation loop used `return` on the first
+    // invalid file, which aborted the entire batch upload. A QCM uploading 5 RTS
+    // checklist PDFs where one is 60 MB (over the 50 MB limit) would see ONE error
+    // toast and then nothing — the other 4 valid PDFs were silently never uploaded.
+    // They'd close the dialog thinking all files failed, leaving the RTS evidence
+    // package incomplete. Fix: partition into valid and invalid sets, warn about each
+    // invalid file, and continue uploading the valid ones.
+    const invalid: { name: string; reason: string }[] = [];
+    const files = allFiles.filter((file) => {
       if (file.size > bucket.maxSizeBytes) {
-        toast.error(
-          `${file.name} exceeds max file size (${formatFileSize(bucket.maxSizeBytes)}).`,
-        );
-        return;
+        invalid.push({
+          name: file.name,
+          reason: `exceeds max file size (${formatFileSize(bucket.maxSizeBytes)})`,
+        });
+        return false;
       }
       if (bucket.isVideo && !file.type.startsWith("video/")) {
-        toast.error(`${file.name} is not a supported video file.`);
-        return;
+        invalid.push({ name: file.name, reason: "not a supported video file" });
+        return false;
       }
       if (!bucket.isVideo && file.type.startsWith("video/")) {
-        toast.error(`${file.name} is a video and must be uploaded in the video section.`);
-        return;
+        invalid.push({ name: file.name, reason: "is a video — upload it in the video section" });
+        return false;
       }
+      return true;
+    });
+
+    // Warn for each skipped file individually so the QCM knows exactly what failed.
+    for (const { name, reason } of invalid) {
+      toast.warning(`${name} skipped: ${reason}.`);
     }
+
+    // If ALL files failed validation, nothing left to do.
+    if (files.length === 0) return;
 
     setIsUploading(true);
     let uploaded = 0;

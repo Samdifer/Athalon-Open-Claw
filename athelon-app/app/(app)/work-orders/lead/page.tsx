@@ -42,8 +42,18 @@ import {
 
 const LEAD_ROLES = new Set(["lead_technician", "shop_manager", "admin"]);
 
+// BUG-QCM-HUNT-002: toISOString() returns a UTC date string. A lead tech in
+// UTC-5 working the evening shift (after 7pm local = midnight+ UTC) would see
+// tomorrow's UTC date pre-filled. The backend queries turnover reports by date
+// key — requesting tomorrow's date creates or loads the wrong day's draft,
+// potentially overwriting or orphaning today's report. Fix: use local date
+// components (same pattern as BUG-QCM-REC-001 in CreateRecordForm).
 function todayIso(): string {
-  return new Date().toISOString().slice(0, 10);
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
 }
 
 function minutesToHours(minutes: number): string {
