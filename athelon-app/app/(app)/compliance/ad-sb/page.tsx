@@ -250,53 +250,78 @@ export default function AdSbCompliancePage() {
         </p>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <Card className="border-emerald-500/20">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-              Compliant
-            </div>
-            <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
-              {totals?.compliantAds ?? 0}
-            </p>
-          </CardContent>
-        </Card>
-        <Card className="border-amber-500/20">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
-              <Clock className="w-3.5 h-3.5 text-amber-500" />
-              Due Soon
-            </div>
-            <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">
-              {totals?.dueSoonAds ?? 0}
-            </p>
-          </CardContent>
-        </Card>
-        <Card className="border-red-500/20">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
-              <AlertTriangle className="w-3.5 h-3.5 text-red-500" />
-              Overdue
-            </div>
-            <p className="text-2xl font-bold text-red-600 dark:text-red-400">
-              {totals?.overdueAds ?? 0}
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
-              <Minus className="w-3.5 h-3.5" />
-              Pending
-            </div>
-            <p className="text-2xl font-bold">
-              {totals?.pendingAds ?? 0}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+      {/* Summary Cards
+          BUG-QCM-052: Previous 4-card grid (Compliant, Due Soon, Overdue, Pending)
+          omitted "Not Complied". totals?.overdueAds only counts date-based overruns
+          (recurring ADs whose nextDueDate has passed). Never-performed ADs —
+          complianceStatus "not_complied" — are tracked separately as notCompliedAds
+          in the fleetTotals object. These ADs block RTS just as hard as overdue ones,
+          but the top-of-page hero numbers showed "Overdue: 0" to the QCM, who then
+          had to scroll down to the fleet table to find the "Not Complied" column
+          (added in BUG-QCM-AT-003). Added a 5th card using the same type-cast pattern
+          as FleetComplianceStats. Grid changed from 4-col to 5-col. */}
+      {(() => {
+        const notCompliedAds = (totals as unknown as Record<string, number> | undefined)?.["notCompliedAds"] ?? 0;
+        return (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+            <Card className="border-emerald-500/20">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                  Compliant
+                </div>
+                <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+                  {totals?.compliantAds ?? 0}
+                </p>
+              </CardContent>
+            </Card>
+            <Card className="border-amber-500/20">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
+                  <Clock className="w-3.5 h-3.5 text-amber-500" />
+                  Due Soon
+                </div>
+                <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">
+                  {totals?.dueSoonAds ?? 0}
+                </p>
+              </CardContent>
+            </Card>
+            <Card className={notCompliedAds > 0 ? "border-red-500/30 bg-red-500/5" : "border-red-500/20"}>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
+                  <AlertTriangle className="w-3.5 h-3.5 text-red-500" />
+                  Not Complied
+                </div>
+                <p className={`text-2xl font-bold ${notCompliedAds > 0 ? "text-red-600 dark:text-red-400" : "text-foreground"}`}>
+                  {notCompliedAds}
+                </p>
+              </CardContent>
+            </Card>
+            <Card className="border-red-500/20">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
+                  <AlertTriangle className="w-3.5 h-3.5 text-red-500" />
+                  Overdue
+                </div>
+                <p className="text-2xl font-bold text-red-600 dark:text-red-400">
+                  {totals?.overdueAds ?? 0}
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
+                  <Minus className="w-3.5 h-3.5" />
+                  Pending
+                </div>
+                <p className="text-2xl font-bold">
+                  {totals?.pendingAds ?? 0}
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        );
+      })()}
 
       {/* Filters */}
       <div className="flex flex-wrap gap-3 items-center">
