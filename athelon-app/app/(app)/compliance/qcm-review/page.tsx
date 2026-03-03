@@ -15,6 +15,7 @@ import {
   ChevronRight,
   FileSearch,
   ShieldAlert,
+  ArrowLeft,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -413,7 +414,24 @@ export default function QcmReviewPage() {
             IA sign-off queue and work order close readiness
           </p>
         </div>
-        <div className="flex items-center gap-2 flex-shrink-0">
+        {/* BUG-QCM-055: QCM Review page was missing a "← Back to Compliance" nav button.
+            The audit-trail page has this (BUG-QCM-F4), qcm-review did not. A QCM who
+            arrived from the main compliance dashboard had no quick way back — they had
+            to use the browser back button or the sidebar. All four compliance pages should
+            cross-link consistently so the QCM can navigate the full workflow without
+            losing context. Added ghost "← Compliance" button matching audit-trail pattern. */}
+        <div className="flex items-center gap-2 flex-shrink-0 flex-wrap">
+          <Button
+            asChild
+            variant="ghost"
+            size="sm"
+            className="h-8 gap-1.5 text-xs text-muted-foreground"
+          >
+            <Link to="/compliance">
+              <ArrowLeft className="w-3.5 h-3.5" />
+              Compliance
+            </Link>
+          </Button>
           <Button
             asChild
             variant="outline"

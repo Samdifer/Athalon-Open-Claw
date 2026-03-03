@@ -109,6 +109,13 @@ export function RtsSignoffForm({
 
         {/* RTS Statement */}
         <div className="space-y-1.5">
+          {/* BUG-QCM-054: RTS Statement textarea had no maxLength cap. BUG-LT-HUNT-054
+              fixed the SignCardDialog textarea (2000-char limit) but the RTS page form
+              was left unbounded. A QCM pasting a full AMM compliance reference excerpt
+              could exceed the backend schema limit, triggering a cryptic validation error
+              after committing their signature auth event — with no indication to trim.
+              Now: maxLength=2000 with a live dual counter ("X / 50 min" for progress to
+              minimum; amber "≥ 1900" warning when approaching the cap). */}
           <Label className="text-xs font-medium flex items-center justify-between">
             <span className="flex items-center gap-1.5">
               <FileText className="w-3.5 h-3.5 text-muted-foreground" />
@@ -117,17 +124,22 @@ export function RtsSignoffForm({
             </span>
             <span
               className={`text-[11px] ${
-                rtsStatement.trim().length < 50
+                rtsStatement.trim().length >= 1900
                   ? "text-amber-600 dark:text-amber-400"
-                  : "text-green-600 dark:text-green-400"
+                  : rtsStatement.trim().length < 50
+                    ? "text-amber-600 dark:text-amber-400"
+                    : "text-green-600 dark:text-green-400"
               }`}
             >
-              {rtsStatement.trim().length} / 50 min
+              {rtsStatement.trim().length < 50
+                ? `${rtsStatement.trim().length} / 50 min`
+                : `${rtsStatement.trim().length} / 2000`}
             </span>
           </Label>
           <Textarea
             value={rtsStatement}
-            onChange={(e) => onRtsStatementChange(e.target.value)}
+            onChange={(e) => onRtsStatementChange(e.target.value.slice(0, 2000))}
+            maxLength={2000}
             placeholder="I certify that this aircraft has been inspected and returned to airworthy condition in accordance with 14 CFR Part 43…"
             rows={4}
             className="text-xs resize-none"

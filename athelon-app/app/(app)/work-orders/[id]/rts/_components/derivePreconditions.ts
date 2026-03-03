@@ -124,12 +124,24 @@ export function derivePreconditions(
         : "PENDING";
 
   // PRE-9: RTS statement provided (UI check)
+  // BUG-QCM-056: Previously 1–49 chars immediately mapped to FAIL, which is
+  // jarring — FAIL implies a blocking condition that won't self-resolve. An IA
+  // typing their first word saw a red FAIL badge on PRE-9 before they'd even
+  // finished the sentence. FAIL is appropriate only when the statement is
+  // deliberately short (e.g. ≥ 10 chars but still < 50 — user has committed
+  // meaningful text but it's definitively too short). While the user is still
+  // getting started (1–9 chars), PENDING is the right signal.
+  // Threshold: 0 chars → PENDING, 1–9 chars → PENDING (still typing),
+  // 10–49 chars → FAIL (enough to flag as "too short"), ≥ 50 chars → PASS.
+  const trimmedLen = rtsStatement.trim().length;
   const pre9Status: PreconditionStatus =
-    rtsStatement.trim().length === 0
+    trimmedLen === 0
       ? "PENDING"
-      : rtsStatement.trim().length < 50
-        ? "FAIL"
-        : "PASS";
+      : trimmedLen < 10
+        ? "PENDING"
+        : trimmedLen < 50
+          ? "FAIL"
+          : "PASS";
 
   return [
     {
@@ -202,11 +214,11 @@ export function derivePreconditions(
     {
       id: "pre-9",
       label: "RTS Statement Provided (≥ 50 chars)",
-      description: `Return-to-service certification statement. Current length: ${rtsStatement.trim().length} characters.`,
+      description: `Return-to-service certification statement. Current length: ${trimmedLen} characters.`,
       status: pre9Status,
       failureMessage:
         pre9Status === "FAIL"
-          ? `Statement is ${rtsStatement.trim().length} characters. Minimum 50 required per 14 CFR 43.9.`
+          ? `Statement is ${trimmedLen} characters. Minimum 50 required per 14 CFR 43.9.`
           : undefined,
     },
   ];

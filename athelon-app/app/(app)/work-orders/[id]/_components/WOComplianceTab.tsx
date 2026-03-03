@@ -571,51 +571,76 @@ function AdCompliancePanelInner({
 
   return (
     <div className="space-y-4">
-      {/* Summary Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <Card className="border-border/60">
-          <CardContent className="p-3">
-            <p className="text-[11px] text-muted-foreground mb-1">Total ADs</p>
-            <span className="text-lg font-bold text-foreground">
-              {summary.total}
-            </span>
-          </CardContent>
-        </Card>
-        <Card
-          className={`border-border/60 ${summary.overdueCount > 0 ? "border-red-500/40 bg-red-500/5" : ""}`}
-        >
-          <CardContent className="p-3">
-            <p className="text-[11px] text-muted-foreground mb-1">Overdue</p>
-            <span
-              className={`text-lg font-bold ${summary.overdueCount > 0 ? "text-red-600 dark:text-red-400" : "text-foreground"}`}
+      {/* Summary Cards
+          BUG-QCM-053: Previous 4-card grid (Total ADs, Overdue, Due Soon, Aircraft TT)
+          omitted "Not Complied". The audit-trail page AdCompliancePanel and ad-sb/page.tsx
+          both show a 5th "Not Complied" card (BUG-QCM-C3, BUG-QCM-052) but the WO
+          Compliance tab's inner panel was left on the old 4-card layout. A QCM checking
+          the compliance tab on a WO with 0 overdue but 2 never-performed ADs would see
+          "Overdue: 0" with no red signal — those ADs block RTS just as hard as overdue
+          ones. Now: 5-card grid matching the audit trail's AdCompliancePanel. */}
+      {(() => {
+        const notCompliedCount =
+          (summary as unknown as Record<string, number>)["notCompliedCount"] ?? 0;
+        return (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+            <Card className="border-border/60">
+              <CardContent className="p-3">
+                <p className="text-[11px] text-muted-foreground mb-1">Total ADs</p>
+                <span className="text-lg font-bold text-foreground">
+                  {summary.total}
+                </span>
+              </CardContent>
+            </Card>
+            <Card
+              className={`border-border/60 ${summary.overdueCount > 0 ? "border-red-500/40 bg-red-500/5" : ""}`}
             >
-              {summary.overdueCount}
-            </span>
-          </CardContent>
-        </Card>
-        <Card
-          className={`border-border/60 ${summary.dueSoonCount > 0 ? "border-amber-500/40 bg-amber-500/5" : ""}`}
-        >
-          <CardContent className="p-3">
-            <p className="text-[11px] text-muted-foreground mb-1">Due Soon</p>
-            <span
-              className={`text-lg font-bold ${summary.dueSoonCount > 0 ? "text-amber-600 dark:text-amber-400" : "text-foreground"}`}
+              <CardContent className="p-3">
+                <p className="text-[11px] text-muted-foreground mb-1">Overdue</p>
+                <span
+                  className={`text-lg font-bold ${summary.overdueCount > 0 ? "text-red-600 dark:text-red-400" : "text-foreground"}`}
+                >
+                  {summary.overdueCount}
+                </span>
+              </CardContent>
+            </Card>
+            <Card
+              className={`border-border/60 ${notCompliedCount > 0 ? "border-red-500/40 bg-red-500/5" : ""}`}
             >
-              {summary.dueSoonCount}
-            </span>
-          </CardContent>
-        </Card>
-        <Card className="border-border/60">
-          <CardContent className="p-3">
-            <p className="text-[11px] text-muted-foreground mb-1">
-              Aircraft TT
-            </p>
-            <span className="text-lg font-bold font-mono text-foreground">
-              {currentHours.toFixed(1)} hr
-            </span>
-          </CardContent>
-        </Card>
-      </div>
+              <CardContent className="p-3">
+                <p className="text-[11px] text-muted-foreground mb-1">Not Complied</p>
+                <span
+                  className={`text-lg font-bold ${notCompliedCount > 0 ? "text-red-600 dark:text-red-400" : "text-foreground"}`}
+                >
+                  {notCompliedCount}
+                </span>
+              </CardContent>
+            </Card>
+            <Card
+              className={`border-border/60 ${summary.dueSoonCount > 0 ? "border-amber-500/40 bg-amber-500/5" : ""}`}
+            >
+              <CardContent className="p-3">
+                <p className="text-[11px] text-muted-foreground mb-1">Due Soon</p>
+                <span
+                  className={`text-lg font-bold ${summary.dueSoonCount > 0 ? "text-amber-600 dark:text-amber-400" : "text-foreground"}`}
+                >
+                  {summary.dueSoonCount}
+                </span>
+              </CardContent>
+            </Card>
+            <Card className="border-border/60">
+              <CardContent className="p-3">
+                <p className="text-[11px] text-muted-foreground mb-1">
+                  Aircraft TT
+                </p>
+                <span className="text-lg font-bold font-mono text-foreground">
+                  {currentHours.toFixed(1)} hr
+                </span>
+              </CardContent>
+            </Card>
+          </div>
+        );
+      })()}
 
       {/* Blocking Banner */}
       {summary.hasBlockingItems && (
