@@ -102,9 +102,18 @@ export default function NewPartPage() {
   const [supplier, setSupplier] = useState("");
   const [purchaseOrderNumber, setPurchaseOrderNumber] = useState("");
   const [isOwnerSupplied, setIsOwnerSupplied] = useState(false);
-  const [receivingDate, setReceivingDate] = useState<string>(
-    new Date().toISOString().slice(0, 10),
-  );
+  // BUG-PC-088: Use local calendar date (not UTC) for receivingDate default.
+  // new Date().toISOString().slice(0, 10) returns the UTC date — a parts clerk
+  // in UTC-5 working after 7pm local (= midnight+ UTC) would see tomorrow's
+  // UTC date pre-filled as the receiving date. A receiving record with the
+  // wrong date is a compliance issue against the 8130-3 and PO timestamps.
+  const [receivingDate, setReceivingDate] = useState<string>(() => {
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  });
   const [notes, setNotes] = useState("");
 
   // ── Life-limited section ──────────────────────────────────────────────────
@@ -132,9 +141,14 @@ export default function NewPartPage() {
   const [certSerialBatch, setCertSerialBatch] = useState("");
   const [certRemarks, setCertRemarks] = useState("");
   const [certSignatoryName, setCertSignatoryName] = useState("");
-  const [certSignatureDate, setCertSignatureDate] = useState<string>(
-    new Date().toISOString().slice(0, 10),
-  );
+  // BUG-PC-088 (same fix): 8130-3 signature date also uses local calendar date.
+  const [certSignatureDate, setCertSignatureDate] = useState<string>(() => {
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  });
   const [certCertifyingStatement, setCertCertifyingStatement] = useState(
     "The work identified herein was accomplished in accordance with the requirements of the applicable maintenance data and in respect to that work the items are considered ready for release to service.",
   );
@@ -282,7 +296,7 @@ export default function NewPartPage() {
       setSupplier("");
       setPurchaseOrderNumber("");
       setIsOwnerSupplied(false);
-      setReceivingDate(new Date().toISOString().slice(0, 10));
+      setReceivingDate((() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; })());
       setNotes("");
       setShowLifeLimited(false);
       setIsLifeLimited(false);
@@ -302,7 +316,7 @@ export default function NewPartPage() {
       setCertSerialBatch("");
       setCertRemarks("");
       setCertSignatoryName("");
-      setCertSignatureDate(new Date().toISOString().slice(0, 10));
+      setCertSignatureDate((() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; })());
     } catch (err) {
       const msg = err instanceof Error ? err.message : "An unexpected error occurred.";
       setSubmitError(msg);

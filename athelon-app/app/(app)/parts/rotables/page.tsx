@@ -213,6 +213,12 @@ export default function RotablesPage() {
     tsnHours: "", tsoHours: "", tboHours: "",
     purchasePrice: "", currentValue: "", coreValue: "", notes: "",
   });
+  // BUG-PC-087: Track rotable create submission state so the button is
+  // disabled while the mutation is in-flight. Without this a parts clerk
+  // who double-clicks "Create" (common on slow connections) would fire two
+  // concurrent createRotable mutations — potentially creating duplicate
+  // rotable records for the same serial number.
+  const [isCreatingRotable, setIsCreatingRotable] = useState(false);
 
   const isLoading = !isLoaded || rotables === undefined;
   const prereq = usePagePrereqs({
@@ -254,6 +260,7 @@ export default function RotablesPage() {
       toast.error("Organization context is required");
       return;
     }
+    setIsCreatingRotable(true);
     try {
       await createRotable({
         organizationId: orgId,
@@ -277,6 +284,8 @@ export default function RotablesPage() {
       toast.success("Rotable created");
     } catch {
       toast.error("Failed to create rotable");
+    } finally {
+      setIsCreatingRotable(false);
     }
   }
 
@@ -328,6 +337,7 @@ export default function RotablesPage() {
           )}
         </div>
         <Dialog open={createOpen} onOpenChange={(v) => {
+          if (isCreatingRotable) return; // BUG-PC-087: don't close mid-submit
           if (!v) {
             setForm({ partNumber: "", serialNumber: "", description: "", status: "serviceable", condition: "serviceable", tsnHours: "", tsoHours: "", tboHours: "", purchasePrice: "", currentValue: "", coreValue: "", notes: "" });
           }
@@ -380,7 +390,10 @@ export default function RotablesPage() {
                   setForm({ partNumber: "", serialNumber: "", description: "", status: "serviceable", condition: "serviceable", tsnHours: "", tsoHours: "", tboHours: "", purchasePrice: "", currentValue: "", coreValue: "", notes: "" });
                   setCreateOpen(false);
                 }}>Cancel</Button>
-                <Button type="submit">Create</Button>
+                <Button type="submit" disabled={isCreatingRotable} className="min-w-[80px] gap-1.5">
+                  {isCreatingRotable ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
+                  {isCreatingRotable ? "Creating…" : "Create"}
+                </Button>
               </div>
             </form>
           </DialogContent>

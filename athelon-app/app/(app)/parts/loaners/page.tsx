@@ -241,12 +241,16 @@ export default function LoanersPage() {
             <DialogHeader><DialogTitle>Add Loaner Item</DialogTitle></DialogHeader>
             <form onSubmit={handleCreate} className="space-y-4">
               <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2"><Label>Part Number *</Label><Input value={createForm.partNumber} onChange={(e) => setCreateForm({ ...createForm, partNumber: e.target.value })} required /></div>
-                <div className="space-y-2"><Label>Serial Number</Label><Input value={createForm.serialNumber} onChange={(e) => setCreateForm({ ...createForm, serialNumber: e.target.value })} /></div>
+                {/* BUG-PC-085: Add maxLength caps to all create form text fields.
+                    Previously uncapped — pasting a long part number, serial number,
+                    or description would exceed backend schema limits and silently fail
+                    on submit with a cryptic validation error. */}
+                <div className="space-y-2"><Label>Part Number *</Label><Input value={createForm.partNumber} onChange={(e) => setCreateForm({ ...createForm, partNumber: e.target.value.slice(0, 50) })} maxLength={50} required /></div>
+                <div className="space-y-2"><Label>Serial Number</Label><Input value={createForm.serialNumber} onChange={(e) => setCreateForm({ ...createForm, serialNumber: e.target.value.slice(0, 50) })} maxLength={50} /></div>
               </div>
-              <div className="space-y-2"><Label>Description *</Label><Input value={createForm.description} onChange={(e) => setCreateForm({ ...createForm, description: e.target.value })} required /></div>
+              <div className="space-y-2"><Label>Description *</Label><Input value={createForm.description} onChange={(e) => setCreateForm({ ...createForm, description: e.target.value.slice(0, 200) })} maxLength={200} required /></div>
               <div className="space-y-2"><Label>Daily Rate ($)</Label><Input type="number" step="0.01" value={createForm.dailyRate} onChange={(e) => setCreateForm({ ...createForm, dailyRate: e.target.value })} /></div>
-              <div className="space-y-2"><Label>Notes</Label><Textarea value={createForm.notes} onChange={(e) => setCreateForm({ ...createForm, notes: e.target.value })} rows={2} /></div>
+              <div className="space-y-2"><Label>Notes</Label><Textarea value={createForm.notes} onChange={(e) => setCreateForm({ ...createForm, notes: e.target.value.slice(0, 500) })} rows={2} maxLength={500} /></div>
               <div className="flex justify-end gap-2">
                 <Button type="button" variant="ghost" onClick={() => setCreateOpen(false)} disabled={isCreatingItem}>Cancel</Button>
                 <Button type="submit" disabled={isCreatingItem} className="min-w-[80px] gap-1.5">

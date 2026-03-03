@@ -133,12 +133,14 @@ export default function ShippingPage() {
   };
 
   const counts = useMemo(() => {
-    if (!shipments) return { all: 0, pending: 0, in_transit: 0, delivered: 0 };
+    if (!shipments) return { all: 0, pending: 0, in_transit: 0, delivered: 0, cancelled: 0 };
     return {
       all: shipments.length,
       pending: shipments.filter((s) => s.status === "pending").length,
       in_transit: shipments.filter((s) => s.status === "in_transit").length,
       delivered: shipments.filter((s) => s.status === "delivered").length,
+      // BUG-PC-086: Include cancelled count so the Cancelled tab badge is accurate.
+      cancelled: shipments.filter((s) => s.status === "cancelled").length,
     };
   }, [shipments]);
 
@@ -243,12 +245,18 @@ export default function ShippingPage() {
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-4">
+        {/* BUG-PC-086: Added Cancelled tab. Previously cancelled shipments were
+            only visible in the "All" tab with no way to filter to them. A parts
+            clerk reviewing which inbound shipments were cancelled (e.g. wrong
+            vendor sent, re-ordered via different carrier) had to scroll through
+            all shipments to find them. Now filterable in one click. */}
         <Tabs value={tab} onValueChange={setTab}>
           <TabsList>
             <TabsTrigger value="all">All</TabsTrigger>
             <TabsTrigger value="pending">Pending</TabsTrigger>
             <TabsTrigger value="in_transit">In Transit</TabsTrigger>
             <TabsTrigger value="delivered">Delivered</TabsTrigger>
+            <TabsTrigger value="cancelled">Cancelled</TabsTrigger>
           </TabsList>
         </Tabs>
         <div className="relative flex-1 max-w-xs">
