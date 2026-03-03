@@ -34,22 +34,37 @@ async function resolvePreferredContext(
   if (technicians.length === 0) return null;
 
   if (preferredClerkOrganizationId) {
-    const preferredOrg = await ctx.db
+    let selectedOrg = await ctx.db
       .query("organizations")
       .withIndex("by_clerk_organization", (q: any) =>
         q.eq("clerkOrganizationId", preferredClerkOrganizationId),
       )
       .first();
 
-    if (preferredOrg) {
-      const scoped = technicians.filter(
-        (tech: any) => tech.organizationId === preferredOrg._id,
-      );
-      const scopedTech = pickLatestTechnician(scoped);
-      if (scopedTech) {
-        return { tech: scopedTech, org: preferredOrg };
+    // Backward-compat fallback for orgs that predate Clerk-org mapping.
+    if (!selectedOrg) {
+      const preferred = normalizeOrganizationName(preferredOrganizationName);
+      if (preferred) {
+        const organizations = await ctx.db.query("organizations").collect();
+        selectedOrg =
+          organizations.find(
+            (org: any) => normalizeOrganizationName(org.name) === preferred,
+          ) ?? null;
       }
     }
+
+    // A selected Clerk org must resolve to exactly one org context.
+    if (!selectedOrg) return null;
+
+    const scoped = technicians.filter(
+      (tech: any) => tech.organizationId === selectedOrg._id,
+    );
+    const scopedTech = pickLatestTechnician(scoped);
+    if (scopedTech) {
+      return { tech: scopedTech, org: selectedOrg };
+    }
+    // Do not silently fall back to a different org's technician.
+    return null;
   }
 
   const enriched = (

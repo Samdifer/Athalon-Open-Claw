@@ -461,7 +461,19 @@ export const listPendingTimeEntries = query({
       .withIndex("by_org", (q) => q.eq("orgId", args.orgId))
       .collect();
     return all
-      .filter((e) => e.clockOutAt && e.approved === undefined)
+      .filter((entry) => {
+        if (!entry.clockOutAt) return false;
+        if (entry.billingLock || entry.billedInvoiceId || entry.billedAt) return false;
+
+        const approvalStatus =
+          entry.approvalStatus ??
+          (entry.approved === true
+            ? "approved"
+            : entry.approved === false
+              ? "rejected"
+              : "pending");
+        return approvalStatus === "pending";
+      })
       .sort((a, b) => b.createdAt - a.createdAt);
   },
 });
@@ -473,7 +485,18 @@ export const listApprovedTimeEntries = query({
       .query("timeEntries")
       .withIndex("by_org", (q) => q.eq("orgId", args.orgId))
       .collect();
-    return all.filter((e) => e.approved === true).sort((a, b) => b.approvedAt! - a.approvedAt!);
+    return all
+      .filter((entry) => {
+        const approvalStatus =
+          entry.approvalStatus ??
+          (entry.approved === true
+            ? "approved"
+            : entry.approved === false
+              ? "rejected"
+              : "pending");
+        return approvalStatus === "approved";
+      })
+      .sort((a, b) => (b.approvedAt ?? 0) - (a.approvedAt ?? 0));
   },
 });
 
@@ -484,7 +507,18 @@ export const listRejectedTimeEntries = query({
       .query("timeEntries")
       .withIndex("by_org", (q) => q.eq("orgId", args.orgId))
       .collect();
-    return all.filter((e) => e.approved === false).sort((a, b) => b.rejectedAt! - a.rejectedAt!);
+    return all
+      .filter((entry) => {
+        const approvalStatus =
+          entry.approvalStatus ??
+          (entry.approved === true
+            ? "approved"
+            : entry.approved === false
+              ? "rejected"
+              : "pending");
+        return approvalStatus === "rejected";
+      })
+      .sort((a, b) => (b.rejectedAt ?? 0) - (a.rejectedAt ?? 0));
   },
 });
 

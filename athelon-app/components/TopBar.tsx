@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Search, Bell, Sun, Moon, Check, CheckCheck, AlertTriangle, FileText, Wrench, Package, ClipboardCheck, Users, Info } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
 import { Button } from "@/components/ui/button";
+import { GlobalTimerWidget } from "@/components/GlobalTimerWidget";
 import {
   CommandDialog,
   CommandEmpty,
@@ -109,6 +110,8 @@ export function TopBar() {
         </Button>
 
         <div className="ml-auto flex items-center gap-1.5">
+          <GlobalTimerWidget />
+
           {/* Theme toggle */}
           <Button
             variant="ghost"

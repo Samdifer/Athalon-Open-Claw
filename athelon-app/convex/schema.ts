@@ -2693,24 +2693,55 @@ export default defineSchema({
   // ═══════════════════════════════════════════════════════════════════════════
   // TIME ENTRIES
   //
-  // Technician clock-in / clock-out records per work order (and optionally
-  // per task card). durationMinutes is computed at clock-out.
+  // Technician clock-in / clock-out records across shop/work-order/task/step
+  // contexts. durationMinutes is computed server-side on stop/clock-out.
   // Marcus: Time entry records provide the audit trail for labor charged to
   // a work order. Required for §145.213 cost allocation traceability.
   // ═══════════════════════════════════════════════════════════════════════════
   timeEntries: defineTable({
     orgId: v.id("organizations"),
     technicianId: v.id("technicians"),
-    workOrderId: v.id("workOrders"),
-    taskCardId: v.optional(v.id("taskCards")),  // Optional: tie to a specific task card
+    entryType: v.optional(v.union(
+      v.literal("shift"),
+      v.literal("shop"),
+      v.literal("work_order"),
+      v.literal("task"),
+      v.literal("step"),
+      v.literal("break"),
+      v.literal("admin"),
+    )),
+
+    // Optional context fields depending on entryType
+    workOrderId: v.optional(v.id("workOrders")),
+    taskCardId: v.optional(v.id("taskCards")),
+    taskStepId: v.optional(v.id("taskCardSteps")),
+    shopActivityCode: v.optional(v.string()),
+    source: v.optional(v.string()),
 
     clockInAt: v.number(),                 // Unix ms
     clockOutAt: v.optional(v.number()),    // Unix ms — null while clocked in
     durationMinutes: v.optional(v.number()), // Computed at clock-out
+    pausedAt: v.optional(v.number()),      // Unix ms when currently paused
+    totalPausedMinutes: v.optional(v.number()),
 
     notes: v.optional(v.string()),
 
+    // Billing / classification snapshots
+    billingClass: v.optional(v.union(
+      v.literal("billable"),
+      v.literal("non_billable"),
+      v.literal("warranty"),
+      v.literal("internal"),
+      v.literal("absorbed"),
+    )),
+    rateAtTime: v.optional(v.number()),
+
     // v4: Time approval workflow (GAP-16)
+    approvalStatus: v.optional(v.union(
+      v.literal("pending"),
+      v.literal("approved"),
+      v.literal("rejected"),
+    )),
     approved: v.optional(v.boolean()),
     approvedByTechId: v.optional(v.id("technicians")),
     approvedAt: v.optional(v.number()),
@@ -2718,14 +2749,51 @@ export default defineSchema({
     rejectedByTechId: v.optional(v.id("technicians")),
     rejectedAt: v.optional(v.number()),
 
+    // Billing lock/linkage (prevents double-billing once consumed)
+    billedInvoiceId: v.optional(v.id("invoices")),
+    billedLineItemId: v.optional(v.id("invoiceLineItems")),
+    billedAt: v.optional(v.number()),
+    billingLock: v.optional(v.boolean()),
+
     createdAt: v.number(),
     updatedAt: v.number(),
   })
     .index("by_org", ["orgId"])
+    .index("by_org_type", ["orgId", "entryType"])
+    .index("by_org_approval_status", ["orgId", "approvalStatus"])
+    .index("by_org_tech_clock_out", ["orgId", "technicianId", "clockOutAt"])
     .index("by_work_order", ["workOrderId"])
     .index("by_technician", ["technicianId"])
     .index("by_org_tech", ["orgId", "technicianId"])
     .index("by_org_wo", ["orgId", "workOrderId"]),
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TIME ENTRY SEGMENTS
+  //
+  // Segment ledger for pause/resume fidelity. A time entry can contain multiple
+  // active/pause segments. Duration reconstruction should be based on active
+  // segment totals to maintain auditable timer behavior across devices.
+  // ═══════════════════════════════════════════════════════════════════════════
+  timeEntrySegments: defineTable({
+    orgId: v.id("organizations"),
+    timeEntryId: v.id("timeEntries"),
+    technicianId: v.id("technicians"),
+
+    segmentStartAt: v.number(),
+    segmentEndAt: v.optional(v.number()),
+    segmentType: v.union(
+      v.literal("active"),
+      v.literal("pause"),
+      v.literal("break"),
+    ),
+    createdBySource: v.optional(v.string()),
+
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_org", ["orgId"])
+    .index("by_time_entry", ["timeEntryId"])
+    .index("by_org_tech", ["orgId", "technicianId"]),
 
   // ═══════════════════════════════════════════════════════════════════════════
   // QUOTES

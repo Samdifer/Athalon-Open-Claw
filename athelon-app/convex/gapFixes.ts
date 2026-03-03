@@ -939,12 +939,31 @@ export const createInvoiceFromWorkOrderEnhanced = mutation({
     else await ctx.db.insert("orgCounters", { orgId: args.orgId as string, counterType: "invoice", lastValue: next });
     const invNumber = `INV-${String(next).padStart(4, "0")}`;
 
-    // Get labor hours from time entries
-    const timeEntries = await ctx.db
+    // Get labor hours from APPROVED + UNBILLED time entries only.
+    const allTimeEntries = await ctx.db
       .query("timeEntries")
       .withIndex("by_org_wo", (q) => q.eq("orgId", args.orgId).eq("workOrderId", args.workOrderId))
       .collect();
-    const totalMinutes = timeEntries.reduce((sum, e) => sum + (e.durationMinutes ?? 0), 0);
+    const eligibleTimeEntries = allTimeEntries.filter((entry) => {
+      if (entry.clockOutAt === undefined) return false;
+
+      const approvalStatus =
+        entry.approvalStatus ??
+        (entry.approved === true
+          ? "approved"
+          : entry.approved === false
+            ? "rejected"
+            : "pending");
+      if (approvalStatus !== "approved") return false;
+
+      const alreadyBilled =
+        entry.billingLock === true ||
+        entry.billedInvoiceId !== undefined ||
+        entry.billedAt !== undefined;
+      return !alreadyBilled;
+    });
+
+    const totalMinutes = eligibleTimeEntries.reduce((sum, e) => sum + (e.durationMinutes ?? 0), 0);
     const totalHours = Math.round(totalMinutes / 60 * 100) / 100;
     const laborTotal = Math.round(totalHours * args.laborRatePerHour * 100) / 100;
 
@@ -1015,7 +1034,7 @@ export const createInvoiceFromWorkOrderEnhanced = mutation({
 
     // Create labor line item
     if (totalHours > 0) {
-      await ctx.db.insert("invoiceLineItems", {
+      const laborLineItemId = await ctx.db.insert("invoiceLineItems", {
         orgId: args.orgId,
         invoiceId,
         type: "labor",
@@ -1026,6 +1045,17 @@ export const createInvoiceFromWorkOrderEnhanced = mutation({
         createdAt: now,
         updatedAt: now,
       });
+
+      // Lock consumed entries as billed so they cannot be rebilled.
+      for (const entry of eligibleTimeEntries) {
+        await ctx.db.patch(entry._id, {
+          billedInvoiceId: invoiceId,
+          billedLineItemId: laborLineItemId,
+          billedAt: now,
+          billingLock: true,
+          updatedAt: now,
+        });
+      }
     }
 
     // Create parts line items

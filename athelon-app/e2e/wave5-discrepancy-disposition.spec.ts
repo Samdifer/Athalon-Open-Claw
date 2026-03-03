@@ -36,9 +36,9 @@ async function waitForSquawksPage(page: Page) {
 test.describe("Squawks — Page Structure", () => {
   test("squawks page renders with correct heading", async ({ page }) => {
     await waitForSquawksPage(page);
-    await expect(page.locator("h1, h2, h3").first()).toBeVisible({ timeout: 15_000 });
-    const heading = await page.locator("h1, h2, h3").first().textContent();
-    expect(heading?.toLowerCase()).toMatch(/squawk|discrepanc/i);
+    await expect(
+      page.getByRole("heading", { name: /Squawks\s*&\s*Discrepancies/i }),
+    ).toBeVisible({ timeout: 15_000 });
   });
 
   test("squawks page has status filter tabs", async ({ page }) => {
@@ -56,10 +56,10 @@ test.describe("Squawks — Page Structure", () => {
 
   test("KPI summary cards render (Open, Critical, Deferred)", async ({ page }) => {
     await waitForSquawksPage(page);
-    // The page renders 3 summary cards with count numbers
-    const cards = page.locator(".rounded-lg, [class*='Card']");
-    const cardCount = await cards.count();
-    expect(cardCount).toBeGreaterThan(0);
+    // Assert KPI labels directly instead of relying on style-class selectors.
+    await expect(page.getByText("Total Open").first()).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText("Critical").first()).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText("Deferred").first()).toBeVisible({ timeout: 10_000 });
   });
 });
 
@@ -271,6 +271,8 @@ test.describe("Squawks — Disposition Dialog (MEL Path)", () => {
     await expect(dialog).not.toBeVisible({ timeout: 3_000 });
 
     // Page should still be intact — no crash
-    await expect(page.locator("h1, h2, h3").first()).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: /Squawks\s*&\s*Discrepancies/i }),
+    ).toBeVisible({ timeout: 10_000 });
   });
 });
