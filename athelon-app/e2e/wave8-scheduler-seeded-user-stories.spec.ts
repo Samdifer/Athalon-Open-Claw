@@ -189,7 +189,7 @@ test.describe("Wave 8: Seeded scheduler user stories", () => {
 
     await page.getByRole("button", { name: /Graveyard/i }).click();
     await expect(
-      page.getByRole("dialog", { name: "Archived Assignments" }),
+      page.getByRole("dialog", { name: /Graveyard|Archived Assignments/i }),
     ).toBeVisible({ timeout: 15_000 });
 
     const archivedRow = archivedWoNumber
@@ -513,7 +513,7 @@ test.describe("Wave 8: Seeded scheduler user stories", () => {
     await openCapacity(page);
 
     await expect(
-      page.getByRole("heading", { name: "Capacity Command Center" }),
+      page.getByRole("heading", { name: "Capacity Planning" }),
     ).toBeVisible({ timeout: 20_000 });
     await expect(page.getByTestId("capacity-forecaster-panel")).toBeVisible({
       timeout: 20_000,

@@ -184,25 +184,25 @@ export default function CapacityForecaster({
 
   return (
     <div
-      className={`bg-slate-900 flex flex-col shrink-0 select-none relative z-20 w-full transition-all duration-300 ease-in-out overflow-hidden ${
-        isPoppedOut ? "h-full flex-1 border-none" : "border-t border-slate-700"
+      className={`bg-card flex flex-col shrink-0 select-none relative z-20 w-full transition-all duration-300 ease-in-out overflow-hidden ${
+        isPoppedOut ? "h-full flex-1 border-none" : "border-t border-border/60"
       }`}
       style={isPoppedOut ? undefined : { height: isOpen ? height : 32 }}
       data-testid="capacity-forecaster-panel"
     >
       <div
         onClick={!isPoppedOut ? onToggle : undefined}
-        className={`px-3 py-2 bg-slate-900/50 border-b border-slate-700/50 flex justify-between items-center shrink-0 z-30 transition-colors group h-8 ${
-          !isPoppedOut ? "cursor-pointer hover:bg-slate-800/50" : ""
+        className={`px-3 py-2 bg-muted/30 border-b border-border/40 flex justify-between items-center shrink-0 z-30 transition-colors group h-8 ${
+          !isPoppedOut ? "cursor-pointer hover:bg-muted/50" : ""
         }`}
       >
-        <h3 className="text-[10px] font-bold text-blue-400 font-tactical uppercase tracking-widest flex items-center gap-2">
+        <h3 className="text-[10px] font-bold text-primary font-tactical uppercase tracking-widest flex items-center gap-2">
           {isOpen ? <BatteryCharging size={12} /> : null}
           <span>{isOpen ? "Capacity Forecaster" : "Capacity & Load"}</span>
         </h3>
         <div className="flex items-center gap-2">
           {isOpen && (
-            <span className="text-[10px] text-slate-500 italic hidden sm:inline mr-2">
+            <span className="text-[10px] text-muted-foreground italic hidden sm:inline mr-2">
               {statusText}
             </span>
           )}
@@ -212,7 +212,7 @@ export default function CapacityForecaster({
                 e.stopPropagation();
                 onPopOut();
               }}
-              className="text-slate-500 hover:text-cyan-400"
+              className="text-muted-foreground hover:text-primary"
               aria-label="Pop out capacity forecaster"
             >
               <ExternalLink size={16} />
@@ -224,7 +224,7 @@ export default function CapacityForecaster({
                 e.stopPropagation();
                 onToggle();
               }}
-              className="text-slate-500 hover:text-cyan-400"
+              className="text-muted-foreground hover:text-primary"
               aria-label={isOpen ? "Collapse capacity forecaster" : "Expand capacity forecaster"}
             >
               {isOpen ? <ChevronsDown size={16} /> : <ChevronsUp size={16} />}
@@ -239,36 +239,36 @@ export default function CapacityForecaster({
         }`}
       >
         <div
-          className="bg-slate-900 border-r border-slate-700 shrink-0 flex flex-col px-2 py-3 justify-center gap-2 shadow-sm z-20"
+          className="bg-card border-r border-border/60 shrink-0 flex flex-col px-2 py-3 justify-center gap-2 shadow-sm z-20"
           style={{ width: STICKY_COL_WIDTH, minWidth: STICKY_COL_WIDTH }}
         >
           <div>
-            <div className="flex items-center gap-1 text-[9px] font-bold text-slate-500 uppercase mb-0.5">
+            <div className="flex items-center gap-1 text-[9px] font-bold text-muted-foreground uppercase mb-0.5">
               <Users size={10} /> Available Cap.
             </div>
-            <div className="text-base font-mono font-bold text-amber-500 leading-none">
-              {Math.round(currentStats.capacity)} <span className="text-[10px] text-slate-600">hrs</span>
+            <div className="text-base font-mono font-bold text-amber-600 dark:text-amber-500 leading-none">
+              {Math.round(currentStats.capacity)} <span className="text-[10px] text-muted-foreground/60">hrs</span>
             </div>
           </div>
           <div>
-            <div className="flex items-center gap-1 text-[9px] font-bold text-slate-500 uppercase mb-0.5">
+            <div className="flex items-center gap-1 text-[9px] font-bold text-muted-foreground uppercase mb-0.5">
               <Briefcase size={10} /> Planned Load
             </div>
             <div
               className={`text-base font-mono font-bold leading-none ${
-                isOverCapacity ? "text-rose-500" : "text-emerald-500"
+                isOverCapacity ? "text-rose-600 dark:text-rose-500" : "text-emerald-600 dark:text-emerald-500"
               }`}
             >
-              {Math.round(currentStats.load)} <span className="text-[10px] text-slate-600">hrs</span>
+              {Math.round(currentStats.load)} <span className="text-[10px] text-muted-foreground/60">hrs</span>
             </div>
           </div>
           <div
-            className={`mt-1 p-1.5 rounded border text-[9px] font-bold text-center leading-tight ${
+            className={`mt-1 p-1.5 rounded text-[9px] font-bold text-center leading-tight ${
               isOverCapacity
-                ? "bg-rose-900/20 border-rose-800 text-rose-400"
+                ? "status-critical"
                 : isUnderUtilized
-                  ? "bg-blue-900/20 border-blue-800 text-blue-400"
-                  : "bg-emerald-900/20 border-emerald-800 text-emerald-400"
+                  ? "status-active"
+                  : "status-signed"
             }`}
           >
             {isOverCapacity ? (
@@ -287,15 +287,15 @@ export default function CapacityForecaster({
           </div>
         </div>
 
-        <div className="flex-1 relative min-w-0 bg-slate-950">
+        <div className="flex-1 relative min-w-0 bg-background">
           <div
             className="absolute bottom-4 left-0 right-0 z-0 pointer-events-none"
             style={{ height: CHART_HEIGHT }}
           >
-            <div className="w-full h-px bg-slate-800 absolute top-0" />
-            <div className="w-full h-px bg-slate-800 absolute top-1/2" />
-            <div className="w-full h-px bg-slate-800 absolute bottom-0" />
-            <span className="absolute top-0 right-1 text-[9px] text-slate-600">{Math.round(maxVal)}h</span>
+            <div className="w-full h-px bg-border/60 absolute top-0" />
+            <div className="w-full h-px bg-border/60 absolute top-1/2" />
+            <div className="w-full h-px bg-border/60 absolute bottom-0" />
+            <span className="absolute top-0 right-1 text-[9px] text-muted-foreground/60">{Math.round(maxVal)}h</span>
           </div>
 
           <div
@@ -316,15 +316,15 @@ export default function CapacityForecaster({
                   const isHoliday = holidaySet.has(i);
                   const isWeekend = date.getDay() === 6 || date.getDay() === 0;
                   const bgClass = isHoliday
-                    ? "bg-rose-900/20 pattern-diagonal-lines"
+                    ? "bg-red-500/10 dark:bg-rose-900/20 pattern-diagonal-lines"
                     : isWeekend
-                      ? "bg-slate-800/20"
+                      ? "bg-muted/30"
                       : "";
                   return (
                     <div
                       key={i}
                       style={{ width: cellWidth }}
-                      className={`h-full border-r border-slate-800/10 ${bgClass}`}
+                      className={`h-full border-r border-border/10 ${bgClass}`}
                     />
                   );
                 })}
@@ -366,9 +366,9 @@ export default function CapacityForecaster({
                 className="absolute bottom-4 left-0 pointer-events-none"
                 style={{ width: totalDays * cellWidth, height: CHART_HEIGHT, overflow: "visible" }}
               >
-                <path d={capacityBarPath} fill="#f59e0b" opacity={0.2} />
-                <path d={safeLoadBarPath} fill="#22c55e" opacity={0.9} />
-                <path d={overloadBarPath} fill="#dc2626" opacity={1} />
+                <path d={capacityBarPath} fill="#f59e0b" opacity={0.25} />
+                <path d={safeLoadBarPath} fill="#22c55e" opacity={0.85} />
+                <path d={overloadBarPath} fill="#dc2626" opacity={0.9} />
                 <path
                   d={loadTrendPath}
                   fill="none"
@@ -376,36 +376,36 @@ export default function CapacityForecaster({
                   strokeWidth="1"
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  opacity={0.5}
+                  opacity={0.6}
                 />
               </svg>
 
               {hoverInfo && data[hoverInfo.day] && (
                 <div
-                  className="absolute z-50 bg-slate-900/95 border border-slate-600 rounded p-2 text-xs shadow-xl pointer-events-none whitespace-nowrap backdrop-blur-md"
+                  className="absolute z-50 bg-popover/95 border border-border text-popover-foreground rounded p-2 text-xs shadow-xl pointer-events-none whitespace-nowrap backdrop-blur-md"
                   style={{
                     left: hoverInfo.x + 10,
                     top: 10,
                     transform: hoverInfo.x > totalDays * cellWidth - 150 ? "translateX(-100%)" : "none",
                   }}
                 >
-                  <div className="font-bold text-slate-200 mb-1 border-b border-slate-700 pb-1">
+                  <div className="font-bold text-popover-foreground mb-1 border-b border-border/60 pb-1">
                     {(() => {
                       const date = new Date(timelineStartMs + hoverInfo.day * DAY_MS);
                       return `${MONTH_NAMES[date.getMonth()]} ${date.getDate()}`;
                     })()}
                   </div>
                   <div className="grid grid-cols-2 gap-x-4 gap-y-1 mt-1">
-                    <span className="text-slate-400">Available:</span>
-                    <span className="font-mono text-amber-500 font-bold text-right">
+                    <span className="text-muted-foreground">Available:</span>
+                    <span className="font-mono text-amber-600 dark:text-amber-500 font-bold text-right">
                       {Math.round(data[hoverInfo.day].capacity)}h
                     </span>
-                    <span className="text-slate-400">Planned:</span>
+                    <span className="text-muted-foreground">Planned:</span>
                     <span
                       className={`font-mono font-bold text-right ${
                         data[hoverInfo.day].load > data[hoverInfo.day].capacity
-                          ? "text-rose-500"
-                          : "text-emerald-500"
+                          ? "text-rose-600 dark:text-rose-500"
+                          : "text-emerald-600 dark:text-emerald-500"
                       }`}
                     >
                       {Math.round(data[hoverInfo.day].load)}h

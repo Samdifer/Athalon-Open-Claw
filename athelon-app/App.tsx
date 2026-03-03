@@ -116,6 +116,7 @@ const FinancialRunwayPage = lazy(() => import("@/app/(app)/reports/financials/ru
 const ShopSettingsPage = lazy(() => import("@/app/(app)/settings/shop/page"));
 const UsersSettingsPage = lazy(() => import("@/app/(app)/settings/users/page"));
 const NotificationPreferencesPage = lazy(() => import("@/app/(app)/settings/notifications/page"));
+const StationConfigPage = lazy(() => import("@/app/(app)/settings/station-config/page"));
 
 // Customer Portal
 import { CustomerLayout } from "@/app/(customer)/layout";
@@ -313,6 +314,7 @@ export default function App() {
                 <Route path="/settings/import" element={<ImportPage />} />
                 <Route path="/settings/email-log" element={<EmailLogPage />} />
                 <Route path="/settings/quickbooks" element={<QuickBooksPage />} />
+                <Route path="/settings/station-config" element={<StationConfigPage />} />
 
                 {/* 404 catch-all */}
                 <Route path="*" element={<AppNotFoundPage />} />

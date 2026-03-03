@@ -1,5 +1,7 @@
 # Technician MVP Build Plan
 
+> Canonical feature-spec pointer: this file is a contributing source. The authoritative feature specification registry is [`MASTER-BUILD-LIST.md`](MASTER-BUILD-LIST.md). Derived planning references are under [`docs/plans/`](docs/plans/).
+
 **Date:** 2026-02-25  
 **Status:** IN PROGRESS
 

@@ -225,3 +225,43 @@ export const reorderBays = mutation({
     }
   },
 });
+
+export const deleteBay = mutation({
+  args: {
+    organizationId: v.id("organizations"),
+    bayId: v.id("hangarBays"),
+  },
+  handler: async (ctx, args) => {
+    const bay = await ctx.db.get(args.bayId);
+    if (!bay || bay.organizationId !== args.organizationId) {
+      throw new Error("Bay not found");
+    }
+
+    const assignmentsAtBay = await ctx.db
+      .query("scheduleAssignments")
+      .withIndex("by_org_bay", (q) =>
+        q.eq("organizationId", args.organizationId).eq("hangarBayId", args.bayId),
+      )
+      .collect();
+    if (assignmentsAtBay.some((assignment) => assignment.archivedAt === undefined)) {
+      throw new Error("Cannot delete bay with active schedule assignments");
+    }
+
+    await ctx.db.delete(args.bayId);
+
+    const supportedRows = await ctx.db
+      .query("stationSupportedAircraft")
+      .withIndex("by_org", (q) => q.eq("organizationId", args.organizationId))
+      .collect();
+    const now = Date.now();
+    for (const row of supportedRows) {
+      if (!row.compatibleBayIds.some((id) => id === args.bayId)) continue;
+      await ctx.db.patch(row._id, {
+        compatibleBayIds: row.compatibleBayIds.filter((id) => id !== args.bayId),
+        updatedAt: now,
+      });
+    }
+
+    return { ok: true };
+  },
+});

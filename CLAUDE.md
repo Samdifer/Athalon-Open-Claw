@@ -44,6 +44,13 @@ npx convex dev       # Sync schema + functions to Convex cloud
 
 **Note:** The `eslint.config.mjs` still references `next/core-web-vitals` and `next/typescript` from the pre-Vite migration. There is no `npm run lint` script. TypeScript checking via `npm run typecheck` is the primary static analysis tool.
 
+## Convex Backend Rules (Required)
+
+- Canonical Convex implementation rules live in `athelon-app/convex/CONVEX_RULES.md`.
+- When editing any file in `athelon-app/convex/`, follow that document for function syntax, validators, API registration, function calling, indexing/query patterns, action runtime rules, scheduling, and storage.
+- Treat `CONVEX_RULES.md` as authoritative over generic templates/snippets.
+- The example app in `CONVEX_RULES.md` is reference material, not a required architecture.
+
 ## Application Structure
 
 ```

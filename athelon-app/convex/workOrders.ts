@@ -120,6 +120,63 @@ async function ensureShopLocationBelongsToOrg(
   }
 }
 
+function normalizeAircraftToken(value?: string): string {
+  return value?.trim().toLowerCase() ?? "";
+}
+
+async function enforceSupportedAircraftGuard(
+  ctx: any,
+  args: {
+    organizationId: Id<"organizations">;
+    shopLocationId?: Id<"shopLocations">;
+    aircraft: {
+      make: string;
+      model: string;
+      series?: string;
+      serialNumber?: string;
+      currentRegistration?: string;
+    };
+  },
+) {
+  const supportedRows = await ctx.db
+    .query("stationSupportedAircraft")
+    .withIndex("by_org_location", (q: any) =>
+      q.eq("organizationId", args.organizationId).eq("shopLocationId", args.shopLocationId),
+    )
+    .collect();
+
+  // Backwards compatibility mode: if station-config has no entries for location,
+  // allow all aircraft and defer strict enforcement until configuration exists.
+  if (supportedRows.length === 0) {
+    return;
+  }
+
+  const targetMake = normalizeAircraftToken(args.aircraft.make);
+  const targetModel = normalizeAircraftToken(args.aircraft.model);
+  const targetSeries = normalizeAircraftToken(args.aircraft.series);
+
+  const isAllowed = supportedRows.some((entry: any) => {
+    const sameMake = normalizeAircraftToken(entry.make) === targetMake;
+    const sameModel = normalizeAircraftToken(entry.model) === targetModel;
+    if (!sameMake || !sameModel) return false;
+
+    // Empty series in config acts as wildcard for all series of make/model.
+    const configuredSeries = normalizeAircraftToken(entry.series);
+    return !configuredSeries || configuredSeries === targetSeries;
+  });
+
+  if (isAllowed) return;
+
+  const regOrSn =
+    args.aircraft.currentRegistration ??
+    args.aircraft.serialNumber ??
+    "unknown registration";
+  throw new Error(
+    `Aircraft ${args.aircraft.make} ${args.aircraft.model} (${regOrSn}) ` +
+      `is not configured as supported for the selected location.`,
+  );
+}
+
 async function ensureAircraftLinkedToOrganization(
   ctx: {
     db: {
@@ -244,6 +301,12 @@ export const createWorkOrder = mutation({
         `Work orders may not be created for destroyed or sold aircraft.`,
       );
     }
+
+    await enforceSupportedAircraftGuard(ctx, {
+      organizationId: args.organizationId,
+      shopLocationId: args.shopLocationId,
+      aircraft,
+    });
 
     // ── Customer validation (if provided) ──────────────────────────────────
     if (args.customerId) {

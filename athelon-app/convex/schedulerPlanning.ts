@@ -77,6 +77,67 @@ async function ensureShopLocationBelongsToOrg(
   }
 }
 
+function normalizeAircraftToken(value?: string): string {
+  return value?.trim().toLowerCase() ?? "";
+}
+
+async function ensureAircraftBayCompatibility(
+  ctx: any,
+  args: {
+    organizationId: Id<"organizations">;
+    shopLocationId?: Id<"shopLocations">;
+    bayId: Id<"hangarBays">;
+    aircraft: {
+      make: string;
+      model: string;
+      series?: string;
+      currentRegistration?: string;
+      serialNumber?: string;
+    };
+  },
+) {
+  const supportedRows = await ctx.db
+    .query("stationSupportedAircraft")
+    .withIndex("by_org_location", (q: any) =>
+      q.eq("organizationId", args.organizationId).eq("shopLocationId", args.shopLocationId),
+    )
+    .collect();
+
+  // Backwards compatibility mode until a location has explicit config rows.
+  if (supportedRows.length === 0) return;
+
+  const targetMake = normalizeAircraftToken(args.aircraft.make);
+  const targetModel = normalizeAircraftToken(args.aircraft.model);
+  const targetSeries = normalizeAircraftToken(args.aircraft.series);
+
+  const matchingAircraftRows = supportedRows.filter((entry: any) => {
+    const sameMake = normalizeAircraftToken(entry.make) === targetMake;
+    const sameModel = normalizeAircraftToken(entry.model) === targetModel;
+    if (!sameMake || !sameModel) return false;
+    const configuredSeries = normalizeAircraftToken(entry.series);
+    return !configuredSeries || configuredSeries === targetSeries;
+  });
+
+  if (matchingAircraftRows.length === 0) {
+    throw new Error(
+      `Aircraft ${args.aircraft.make} ${args.aircraft.model} is not configured as supported for this location.`,
+    );
+  }
+
+  const isCompatibleWithBay = matchingAircraftRows.some((entry: any) => {
+    if (!entry.compatibleBayIds || entry.compatibleBayIds.length === 0) return true;
+    return entry.compatibleBayIds.some((id: Id<"hangarBays">) => id === args.bayId);
+  });
+
+  if (isCompatibleWithBay) return;
+
+  const regOrSn =
+    args.aircraft.currentRegistration ?? args.aircraft.serialNumber ?? "unknown registration";
+  throw new Error(
+    `Aircraft ${args.aircraft.make} ${args.aircraft.model} (${regOrSn}) is not compatible with the selected bay.`,
+  );
+}
+
 function chooseBackfillBayId(
   bays: Array<{ _id: Id<"hangarBays">; name: string }>,
   existingWindowsByBay: Map<string, AssignmentWindow[]>,
@@ -459,6 +520,16 @@ export const upsertScheduleAssignment = mutation({
       wo.shopLocationId !== resolvedShopLocationId
     ) {
       throw new Error("Work order location does not match the selected scheduling location");
+    }
+
+    const aircraft = await ctx.db.get(wo.aircraftId);
+    if (aircraft) {
+      await ensureAircraftBayCompatibility(ctx, {
+        organizationId: args.organizationId,
+        shopLocationId: resolvedShopLocationId,
+        bayId: args.hangarBayId,
+        aircraft,
+      });
     }
 
     const patch = {

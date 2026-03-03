@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(git rev-parse --show-toplevel 2>/dev/null || true)"
+if [[ -z "${ROOT}" ]]; then
+  exit 0
+fi
+cd "${ROOT}"
+
+if [[ ! -t 0 ]]; then
+  exit 0
+fi
+
+CORPUS_PREFIX="research/industry-context-field-artifacts/"
+INDEX_NAME="INDEX.md"
+
+mapfile -t NEW_DOCS < <(
+  git diff --cached --name-status \
+    | awk -F'\t' '
+      $1 ~ /^A/ || $1 ~ /^C/ { print $2; next }
+      $1 ~ /^R/ { print $3; next }
+    ' \
+    | grep "^${CORPUS_PREFIX}" || true
+)
+
+FILTERED_DOCS=()
+for p in "${NEW_DOCS[@]}"; do
+  [[ -z "${p}" ]] && continue
+  [[ "${p}" == *"/${INDEX_NAME}" ]] && continue
+  FILTERED_DOCS+=("${p}")
+done
+
+if [[ ${#FILTERED_DOCS[@]} -eq 0 ]]; then
+  exit 0
+fi
+
+echo "Detected new industry context docs:"
+for p in "${FILTERED_DOCS[@]}"; do
+  echo "  - ${p}"
+done
+
+read -r -p "New industry context docs detected. Generate contextual seeding draft? [y/N] " DRAFT_ANSWER < /dev/tty || exit 0
+case "${DRAFT_ANSWER}" in
+  y|Y|yes|YES) ;;
+  *) exit 0 ;;
+esac
+
+python3 scripts/seed_master_build_context.py --draft
+
+read -r -p "Apply seed updates to MASTER-BUILD-LIST + MASTER-FEATURE-REGISTRY now? [y/N] " APPLY_ANSWER < /dev/tty || exit 0
+case "${APPLY_ANSWER}" in
+  y|Y|yes|YES) ;;
+  *) exit 0 ;;
+esac
+
+python3 scripts/seed_master_build_context.py --apply
+git add \
+  athelon-app/MASTER-BUILD-LIST.md \
+  athelon-app/docs/plans/MASTER-FEATURE-REGISTRY.csv \
+  athelon-app/docs/plans/contextual-seeding/industry-context-seed-state.json
+
+exit 0

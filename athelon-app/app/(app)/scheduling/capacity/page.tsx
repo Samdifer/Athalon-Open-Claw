@@ -46,9 +46,20 @@ function round1(value: number): string {
 }
 
 function utilizationColor(pct: number): string {
-  if (pct > 100) return "text-rose-400";
-  if (pct > 85) return "text-amber-400";
-  return "text-emerald-400";
+  if (pct > 100) return "text-rose-600 dark:text-rose-400";
+  if (pct > 85) return "text-amber-600 dark:text-amber-400";
+  return "text-emerald-600 dark:text-emerald-400";
+}
+
+function utilizationBg(pct: number): string {
+  if (pct > 100) return "bg-red-500/10";
+  if (pct > 85) return "bg-amber-500/10";
+  return "bg-green-500/10";
+}
+
+function msFromDateKey(dateKey: string): number {
+  const [year, month, day] = dateKey.split("-").map((value) => Number(value));
+  return new Date(year, month - 1, day).getTime();
 }
 
 function CapacitySkeleton() {
@@ -72,7 +83,7 @@ function CapacitySkeleton() {
           <Card key={i} className="border-border/60">
             <CardContent className="p-4 space-y-2">
               <Skeleton className="h-3 w-24" />
-              <Skeleton className="h-8 w-20" />
+              <Skeleton className="h-7 w-20" />
             </CardContent>
           </Card>
         ))}
@@ -148,6 +159,21 @@ export default function CapacityPage() {
     api.capacity.getSchedulingSettings,
     orgId ? { organizationId: orgId } : "skip",
   );
+  const timelineHolidays = useQuery(
+    api.schedulerRoster.listSchedulingHolidaysForRange,
+    orgId
+      ? {
+          organizationId: orgId,
+          shopLocationId: selectedShopLocationFilter,
+          startDateMs: timelineStartMs,
+          endDateMs: timelineStartMs + rangeDays * DAY_MS,
+        }
+      : "skip",
+  );
+  const timelineCursorConfig = useQuery(
+    api.stationConfig.getTimelineCursorConfig,
+    orgId ? { organizationId: orgId } : "skip",
+  );
 
   const upsertSchedulingSettings = useMutation(api.capacity.upsertSchedulingSettings);
 
@@ -158,7 +184,9 @@ export default function CapacityPage() {
       workOrders === undefined ||
       plannerProjects === undefined ||
       technicianWorkload === undefined ||
-      schedulingSettings === undefined,
+      schedulingSettings === undefined ||
+      timelineHolidays === undefined ||
+      timelineCursorConfig === undefined,
   });
 
   useEffect(() => {
@@ -198,6 +226,25 @@ export default function CapacityPage() {
   const capacitySummary = useMemo(
     () => summarizeCapacityPoints(dailyCapacityData, currentTimelineDay, bufferPercent),
     [dailyCapacityData, currentTimelineDay, bufferPercent],
+  );
+
+  const holidayDayIndexes = useMemo(
+    () =>
+      (timelineHolidays ?? [])
+        .map((holiday) => Math.floor((msFromDateKey(holiday.dateKey) - timelineStartMs) / DAY_MS))
+        .filter((dayIndex) => dayIndex >= 0 && dayIndex < timelineTotalDays),
+    [timelineHolidays, timelineStartMs, timelineTotalDays],
+  );
+
+  const plannerCursors = useMemo(
+    () =>
+      (timelineCursorConfig?.cursors ?? []).map((cursor) => ({
+        id: cursor.id,
+        dayOffset: cursor.dayOffset,
+        colorClass: cursor.colorClass,
+        enabled: cursor.enabled,
+      })),
+    [timelineCursorConfig],
   );
 
   const isOverCapacity =
@@ -279,90 +326,116 @@ export default function CapacityPage() {
         </Button>
       </div>
 
-      <div className="rounded-xl border border-slate-700/70 bg-gradient-to-br from-slate-950 to-slate-900 p-4 shadow-[0_0_0_1px_rgba(15,23,42,0.4)]">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <h1 className="text-xl sm:text-2xl font-semibold text-slate-100 flex items-center gap-2">
-              <BatteryCharging className="w-5 h-5 text-blue-400" />
-              Capacity Command Center
-            </h1>
-            <p className="text-sm text-slate-400 mt-1">
-              Dedicated load-vs-capacity forecasting with live technician and assignment data.
+      <div className="flex flex-col sm:flex-row gap-2 sm:items-start sm:justify-between">
+        <div>
+          <h1 className="text-lg sm:text-xl md:text-2xl font-semibold text-foreground flex items-center gap-2">
+            <BatteryCharging className="w-5 h-5 text-primary" />
+            Capacity Planning
+          </h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            Load-vs-capacity forecasting with live technician and assignment data.
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Badge variant="secondary" className="text-[11px]">
+            {rangeDays} day horizon
+          </Badge>
+          <Button variant="outline" size="sm" asChild className="text-xs h-8 border-border/60">
+            <Link to="/personnel">Adjust Shifts</Link>
+          </Button>
+        </div>
+      </div>
+
+      {(isNearBuffer || isOverCapacity) && (
+        <div
+          className={`rounded-lg border p-3 flex items-start gap-2 ${
+            isOverCapacity
+              ? "border-l-2 border-l-red-500 bg-red-500/5 dark:bg-red-500/10 border-border/40"
+              : "border-l-2 border-l-amber-500 bg-amber-500/5 dark:bg-amber-500/10 border-border/40"
+          }`}
+          aria-live="polite"
+        >
+          <AlertTriangle
+            className={`w-4 h-4 mt-0.5 flex-shrink-0 ${isOverCapacity ? "text-red-600 dark:text-red-400" : "text-amber-600 dark:text-amber-400"}`}
+          />
+          <div className="space-y-0.5">
+            <p className={`text-sm font-semibold ${isOverCapacity ? "text-red-700 dark:text-red-300" : "text-amber-700 dark:text-amber-300"}`}>
+              {isOverCapacity ? "Over Capacity" : "Near Capacity"} in the selected window.
             </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Badge variant="secondary" className="bg-slate-800 text-slate-200 border-slate-700">
-              {rangeDays} day horizon
-            </Badge>
-            <Button variant="outline" size="sm" asChild className="text-xs h-8 border-slate-700 bg-slate-900 text-slate-200 hover:bg-slate-800">
-              <Link to="/personnel">Adjust Shifts</Link>
-            </Button>
+            <p className="text-xs text-muted-foreground">
+              Current view exceeds {isOverCapacity ? "available" : "buffer"} threshold. Rebalance assignments or update shift defaults.
+            </p>
           </div>
         </div>
-
-        {(isNearBuffer || isOverCapacity) && (
-          <div
-            className={`mt-3 rounded-lg border p-3 flex items-start gap-2 ${
-              isOverCapacity
-                ? "border-rose-500/40 bg-rose-500/10"
-                : "border-amber-500/40 bg-amber-500/10"
-            }`}
-            aria-live="polite"
-          >
-            <AlertTriangle
-              className={`w-4 h-4 mt-0.5 ${isOverCapacity ? "text-rose-400" : "text-amber-400"}`}
-            />
-            <div className="space-y-0.5">
-              <p className={`text-sm font-semibold ${isOverCapacity ? "text-rose-300" : "text-amber-300"}`}>
-                {isOverCapacity ? "Over Capacity" : "Near Capacity"} in the selected window.
-              </p>
-              <p className="text-xs text-slate-400">
-                Current view exceeds {isOverCapacity ? "available" : "buffer"} threshold. Rebalance assignments or update shift defaults.
-              </p>
-            </div>
-          </div>
-        )}
-      </div>
+      )}
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <Card className="border-slate-700 bg-slate-900/60">
+        <Card className="border-border/60">
           <CardContent className="p-4">
-            <p className="text-[11px] uppercase tracking-wide text-slate-500">Available</p>
-            <p className="text-2xl font-semibold font-mono text-slate-100 mt-1">
-              {round1(capacitySummary.totalAvailableHours)}h
-            </p>
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-xs text-muted-foreground font-medium">Available</p>
+                <p className="text-2xl font-bold font-mono text-foreground mt-1">
+                  {round1(capacitySummary.totalAvailableHours)}h
+                </p>
+              </div>
+              <div className="p-2 rounded-lg bg-sky-500/10">
+                <BatteryCharging className="w-4 h-4 text-sky-600 dark:text-sky-400" />
+              </div>
+            </div>
           </CardContent>
         </Card>
-        <Card className="border-slate-700 bg-slate-900/60">
+        <Card className="border-border/60">
           <CardContent className="p-4">
-            <p className="text-[11px] uppercase tracking-wide text-slate-500">Planned Load</p>
-            <p className="text-2xl font-semibold font-mono text-slate-100 mt-1">
-              {round1(capacitySummary.totalLoadHours)}h
-            </p>
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-xs text-muted-foreground font-medium">Planned Load</p>
+                <p className="text-2xl font-bold font-mono text-foreground mt-1">
+                  {round1(capacitySummary.totalLoadHours)}h
+                </p>
+              </div>
+              <div className="p-2 rounded-lg bg-amber-500/10">
+                <Gauge className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+              </div>
+            </div>
           </CardContent>
         </Card>
-        <Card className="border-slate-700 bg-slate-900/60">
+        <Card className="border-border/60">
           <CardContent className="p-4">
-            <p className="text-[11px] uppercase tracking-wide text-slate-500">Utilization</p>
-            <p className={`text-2xl font-semibold font-mono mt-1 ${utilizationColor(capacitySummary.utilizationPercent)}`}>
-              {capacitySummary.utilizationPercent}%
-            </p>
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-xs text-muted-foreground font-medium">Utilization</p>
+                <p className={`text-2xl font-bold font-mono mt-1 ${utilizationColor(capacitySummary.utilizationPercent)}`}>
+                  {capacitySummary.utilizationPercent}%
+                </p>
+              </div>
+              <div className={`p-2 rounded-lg ${utilizationBg(capacitySummary.utilizationPercent)}`}>
+                <Gauge className={`w-4 h-4 ${utilizationColor(capacitySummary.utilizationPercent)}`} />
+              </div>
+            </div>
           </CardContent>
         </Card>
-        <Card className="border-slate-700 bg-slate-900/60">
+        <Card className="border-border/60">
           <CardContent className="p-4">
-            <p className="text-[11px] uppercase tracking-wide text-slate-500">Peak Day</p>
-            <p className={`text-2xl font-semibold font-mono mt-1 ${utilizationColor(Math.round(capacitySummary.peakUtilization))}`}>
-              {Math.round(capacitySummary.peakUtilization)}%
-            </p>
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-xs text-muted-foreground font-medium">Peak Day</p>
+                <p className={`text-2xl font-bold font-mono mt-1 ${utilizationColor(Math.round(capacitySummary.peakUtilization))}`}>
+                  {Math.round(capacitySummary.peakUtilization)}%
+                </p>
+              </div>
+              <div className={`p-2 rounded-lg ${utilizationBg(Math.round(capacitySummary.peakUtilization))}`}>
+                <CalendarDays className={`w-4 h-4 ${utilizationColor(Math.round(capacitySummary.peakUtilization))}`} />
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
 
-      <Card className="border-slate-700 bg-slate-900/60">
+      <Card className="border-border/60">
         <CardContent className="p-3 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs uppercase tracking-wider text-slate-500">Range</span>
+            <span className="text-xs uppercase tracking-wider text-muted-foreground">Range</span>
             {RANGE_PRESETS.map((preset) => (
               <Button
                 key={preset}
@@ -377,7 +450,7 @@ export default function CapacityPage() {
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs uppercase tracking-wider text-slate-500">Zoom</span>
+            <span className="text-xs uppercase tracking-wider text-muted-foreground">Zoom</span>
             {(["day", "week", "month"] as const).map((mode) => (
               <Button
                 key={mode}
@@ -397,7 +470,7 @@ export default function CapacityPage() {
         </CardContent>
       </Card>
 
-      <div className="rounded-xl border border-slate-700 bg-slate-900/60 overflow-hidden" data-testid="capacity-forecaster-shell">
+      <div className="rounded-xl border border-border/60 bg-card overflow-hidden" data-testid="capacity-forecaster-shell">
         <CapacityForecaster
           data={dailyCapacityData}
           timelineStartMs={timelineStartMs}
@@ -410,16 +483,78 @@ export default function CapacityPage() {
           statusText="Standalone Timeline"
           scrollRef={capacityScrollRef}
           currentDayIndex={currentTimelineDay}
-          holidayDayIndexes={[]}
+          holidayDayIndexes={holidayDayIndexes}
+          cursors={plannerCursors}
           height={236}
         />
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-[minmax(320px,0.9fr)_minmax(0,1.1fr)] gap-4">
-        <Card className="border-slate-700 bg-slate-900/60">
+      <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.9fr)] gap-4">
+        <Card className="border-border/60">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold text-slate-100 flex items-center gap-2">
-              <Settings2 className="w-4 h-4 text-slate-400" />
+            <CardTitle className="text-sm font-semibold flex items-center gap-2">
+              <Users className="w-4 h-4 text-muted-foreground" />
+              Technician Utilization
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            {(technicianWorkload ?? []).length === 0 ? (
+              <ActionableEmptyState
+                title="No active technicians yet"
+                missingInfo="Add technicians and shifts to start tracking available capacity."
+                primaryActionLabel="Open Personnel"
+                primaryActionType="link"
+                primaryActionTarget="/personnel"
+              />
+            ) : (
+              <div className="divide-y divide-border/40">
+                {(technicianWorkload ?? []).map((tech) => {
+                  const availableHours =
+                    (tech.daysOfWeek?.length ?? 0) *
+                    Math.max(0, (tech.endHour ?? 0) - (tech.startHour ?? 0)) *
+                    (tech.efficiencyMultiplier ?? 1);
+                  const assignedHours = tech.estimatedRemainingHours ?? 0;
+                  const utilizationPercent =
+                    availableHours > 0 ? Math.round((assignedHours / availableHours) * 100) : 0;
+                  const utilizationWidth = Math.min(utilizationPercent, 100);
+
+                  return (
+                    <div key={String(tech.technicianId)} className="px-4 py-3 space-y-2 hover:bg-muted/30 transition-colors">
+                      <div className="flex items-center justify-between gap-3 flex-wrap">
+                        <div className="min-w-0">
+                          <div className="text-sm font-medium text-foreground truncate">{tech.name}</div>
+                          <div className="text-xs text-muted-foreground">
+                            {round1(assignedHours)}h / {round1(availableHours)}h
+                          </div>
+                        </div>
+                        <div className={`text-xs font-semibold font-mono ${utilizationColor(utilizationPercent)}`}>
+                          {utilizationPercent}%
+                        </div>
+                      </div>
+                      <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+                        <div
+                          className={`h-full rounded-full ${
+                            utilizationPercent > 100
+                              ? "bg-rose-500"
+                              : utilizationPercent > 85
+                                ? "bg-amber-500"
+                                : "bg-emerald-500"
+                          }`}
+                          style={{ width: `${utilizationWidth}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="border-border/60">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-semibold flex items-center gap-2">
+              <Settings2 className="w-4 h-4 text-muted-foreground" />
               Capacity Defaults
             </CardTitle>
           </CardHeader>
@@ -466,67 +601,6 @@ export default function CapacityPage() {
             >
               {savingSettings ? "Saving..." : "Save Capacity Defaults"}
             </Button>
-          </CardContent>
-        </Card>
-
-        <Card className="border-slate-700 bg-slate-900/60">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold text-slate-100 flex items-center gap-2">
-              <Users className="w-4 h-4 text-slate-400" />
-              Technician Utilization
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            {(technicianWorkload ?? []).length === 0 ? (
-              <ActionableEmptyState
-                title="No active technicians yet"
-                missingInfo="Add technicians and shifts to start tracking available capacity."
-                primaryActionLabel="Open Personnel"
-                primaryActionType="link"
-                primaryActionTarget="/personnel"
-              />
-            ) : (
-              <div className="divide-y divide-slate-800">
-                {(technicianWorkload ?? []).map((tech) => {
-                  const availableHours =
-                    (tech.daysOfWeek?.length ?? 0) *
-                    Math.max(0, (tech.endHour ?? 0) - (tech.startHour ?? 0)) *
-                    (tech.efficiencyMultiplier ?? 1);
-                  const assignedHours = tech.estimatedRemainingHours ?? 0;
-                  const utilizationPercent =
-                    availableHours > 0 ? Math.round((assignedHours / availableHours) * 100) : 0;
-                  const utilizationWidth = Math.min(utilizationPercent, 100);
-
-                  return (
-                    <div key={String(tech.technicianId)} className="px-4 py-3 space-y-2">
-                      <div className="flex items-center justify-between gap-3 flex-wrap">
-                        <div className="min-w-0">
-                          <div className="text-sm font-medium text-slate-100 truncate">{tech.name}</div>
-                          <div className="text-xs text-slate-500">
-                            {round1(assignedHours)}h / {round1(availableHours)}h
-                          </div>
-                        </div>
-                        <div className={`text-xs font-semibold font-mono ${utilizationColor(utilizationPercent)}`}>
-                          {utilizationPercent}%
-                        </div>
-                      </div>
-                      <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
-                        <div
-                          className={`h-full rounded-full ${
-                            utilizationPercent > 100
-                              ? "bg-rose-500"
-                              : utilizationPercent > 85
-                                ? "bg-amber-500"
-                                : "bg-emerald-500"
-                          }`}
-                          style={{ width: `${utilizationWidth}%` }}
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
           </CardContent>
         </Card>
       </div>

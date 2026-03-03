@@ -750,6 +750,18 @@ export default defineSchema({
     defaultStartHour: v.number(),
     defaultEndHour: v.number(),
     defaultEfficiencyMultiplier: v.number(),
+    // Station-config canonical scheduling preferences.
+    timezone: v.optional(v.string()),
+    operatingHours: v.optional(
+      v.array(
+        v.object({
+          dayOfWeek: v.number(), // 0=Mon..6=Sun
+          isOpen: v.boolean(),
+          openTime: v.string(), // HH:mm
+          closeTime: v.string(), // HH:mm
+        }),
+      ),
+    ),
     rosterWorkspaceEnabled: v.optional(v.boolean()),
     rosterWorkspaceBootstrappedAt: v.optional(v.number()),
     updatedAt: v.number(),
@@ -823,6 +835,90 @@ export default defineSchema({
     .index("by_org", ["organizationId"])
     .index("by_org_date", ["organizationId", "dateKey"])
     .index("by_org_location_date", ["organizationId", "shopLocationId", "dateKey"]),
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // STATION SUPPORTED AIRCRAFT (Station Config source of truth)
+  //
+  // Per-location aircraft support matrix with optional bay compatibility.
+  // If an organization has no rows for a location, the system falls back to
+  // allow-all behavior with warning telemetry at mutation-layer guards.
+  // ═══════════════════════════════════════════════════════════════════════════
+  stationSupportedAircraft: defineTable({
+    organizationId: v.id("organizations"),
+    shopLocationId: v.optional(v.id("shopLocations")),
+    make: v.string(),
+    model: v.string(),
+    series: v.optional(v.string()),
+    category: v.union(
+      v.literal("single-engine"),
+      v.literal("multi-engine"),
+      v.literal("turboprop"),
+      v.literal("light-jet"),
+      v.literal("midsize-jet"),
+      v.literal("large-jet"),
+      v.literal("helicopter"),
+    ),
+    compatibleBayIds: v.array(v.id("hangarBays")),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+    createdByUserId: v.string(),
+    updatedByUserId: v.string(),
+  })
+    .index("by_org", ["organizationId"])
+    .index("by_org_location", ["organizationId", "shopLocationId"])
+    .index("by_org_location_make_model", ["organizationId", "shopLocationId", "make", "model"]),
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // WORK ORDER STAGE CONFIGS (Station Config source of truth)
+  //
+  // Variable-count stage model with explicit mapping to workOrders.status enum.
+  // The execution engine remains enum-backed; this table drives presentation and
+  // status-to-stage routing.
+  // ═══════════════════════════════════════════════════════════════════════════
+  workOrderStageConfigs: defineTable({
+    organizationId: v.id("organizations"),
+    stages: v.array(
+      v.object({
+        id: v.string(),
+        label: v.string(),
+        description: v.optional(v.string()),
+        color: v.string(),
+        sortOrder: v.number(),
+        statusMappings: v.array(workOrderStatus),
+      }),
+    ),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+    createdByUserId: v.string(),
+    updatedByUserId: v.string(),
+  })
+    .index("by_org", ["organizationId"]),
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // STATION TIMELINE CURSOR CONFIG (Station Config authoritative)
+  //
+  // Canonical cursor definitions used by scheduling/capacity timeline overlays.
+  // planner planningScenarios.default row mirrors this config for compatibility.
+  // ═══════════════════════════════════════════════════════════════════════════
+  stationTimelineCursorConfig: defineTable({
+    organizationId: v.id("organizations"),
+    cursors: v.array(
+      v.object({
+        id: v.string(),
+        label: v.string(),
+        dayOffset: v.number(),
+        colorClass: v.string(),
+        enabled: v.boolean(),
+      }),
+    ),
+    rangeStartDay: v.optional(v.number()),
+    rangeEndDay: v.optional(v.number()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+    createdByUserId: v.string(),
+    updatedByUserId: v.string(),
+  })
+    .index("by_org", ["organizationId"]),
 
   // ═══════════════════════════════════════════════════════════════════════════
   // SCHEDULE ASSIGNMENTS (Planner v2 foundation)

@@ -1,5 +1,7 @@
 # Feature Intake Categorization + Wave Roadmap
 
+> Canonical feature-spec pointer: this file is a contributing source. The authoritative feature specification registry is [`../../MASTER-BUILD-LIST.md`](../../MASTER-BUILD-LIST.md). Derived planning references are under [`MASTER-BUILD-PLAN.md`](./MASTER-BUILD-PLAN.md).
+
 Date: 2026-03-03  
 Status: Draft for prioritization and sequencing  
 Scope: Work Orders, Parts, Fleet, Scheduling, Turnover, Roles/RBAC, media evidence, and telemetry integrations

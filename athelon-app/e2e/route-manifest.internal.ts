@@ -66,6 +66,7 @@ export const INTERNAL_ROUTE_MANIFEST: InternalRoute[] = [
   { label: "Reports", path: "/reports" },
 
   { label: "Settings Shop", path: "/settings/shop" },
+  { label: "Settings Station Config", path: "/settings/station-config" },
   { label: "Settings Users", path: "/settings/users" },
   { label: "Settings Notifications", path: "/settings/notifications" },
   { label: "Settings Locations", path: "/settings/locations" },

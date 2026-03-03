@@ -2,6 +2,7 @@ import { test, expect } from "@playwright/test";
 
 const SETTINGS_PAGES = [
   { path: "/settings/shop", label: "Shop Settings" },
+  { path: "/settings/station-config", label: "Station Config" },
   { path: "/settings/users", label: "User Management" },
   { path: "/settings/notifications", label: "Notifications" },
   { path: "/settings/locations", label: "Locations" },

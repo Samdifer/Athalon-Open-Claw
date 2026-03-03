@@ -199,17 +199,17 @@
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
-  background: #0f172a;
+  @apply bg-background;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #334155;
-  border: 2px solid #0f172a;
-  border-radius: 6px;
+  @apply bg-border rounded-[6px];
+  border: 2px solid;
+  @apply border-background;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #06b6d4;
+  @apply bg-primary;
 }
 
 /* Animations */

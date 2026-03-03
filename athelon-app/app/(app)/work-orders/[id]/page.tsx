@@ -68,21 +68,27 @@ type AuditEventForTimeline = {
 };
 
 type RiskLevel = "overdue" | "at_risk" | "on_track" | "no_date";
-type WorkOrderStageKey =
-  | "quoting"
-  | "in_dock"
-  | "inspection"
-  | "repair"
-  | "return_to_service"
-  | "review_and_improvement";
+type WorkOrderStageFlow = {
+  key: string;
+  label: string;
+  statusMappings: string[];
+};
 
-const WORK_ORDER_STAGE_FLOW: Array<{ key: WorkOrderStageKey; label: string }> = [
-  { key: "quoting", label: "Quoting" },
-  { key: "in_dock", label: "In-dock" },
-  { key: "inspection", label: "Inspection" },
-  { key: "repair", label: "Repair" },
-  { key: "return_to_service", label: "Return to Service" },
-  { key: "review_and_improvement", label: "Review & Improvement" },
+const DEFAULT_WORK_ORDER_STAGE_FLOW: WorkOrderStageFlow[] = [
+  { key: "quoting", label: "Quoting", statusMappings: ["draft"] },
+  { key: "in_dock", label: "In-dock", statusMappings: ["open"] },
+  { key: "inspection", label: "Inspection", statusMappings: ["pending_inspection"] },
+  {
+    key: "repair",
+    label: "Repair",
+    statusMappings: ["in_progress", "on_hold", "open_discrepancies"],
+  },
+  { key: "return_to_service", label: "Return to Service", statusMappings: ["pending_signoff"] },
+  {
+    key: "review_and_improvement",
+    label: "Review & Improvement",
+    statusMappings: ["closed", "cancelled", "voided"],
+  },
 ];
 
 function isWorkOrderNumberRef(value: string): boolean {
@@ -134,27 +140,9 @@ function partStatusStyle(location: string): string {
   return map[location] ?? "bg-slate-500/15 text-slate-400 border-slate-500/30";
 }
 
-function mapStatusToStageIndex(status: string): number {
-  switch (status) {
-    case "draft":
-      return 0;
-    case "open":
-      return 1;
-    case "pending_inspection":
-      return 2;
-    case "in_progress":
-    case "on_hold":
-    case "open_discrepancies":
-      return 3;
-    case "pending_signoff":
-      return 4;
-    case "closed":
-    case "cancelled":
-    case "voided":
-      return 5;
-    default:
-      return 0;
-  }
+function mapStatusToStageIndex(status: string, stageFlow: WorkOrderStageFlow[]): number {
+  const stageIndex = stageFlow.findIndex((stage) => stage.statusMappings.includes(status));
+  return stageIndex >= 0 ? stageIndex : 0;
 }
 
 function ScheduleRiskChip({ riskLevel }: { riskLevel: RiskLevel }) {
@@ -201,6 +189,10 @@ export default function WorkOrderDetailPage() {
   const closeReadiness = useQuery(
     api.workOrders.getCloseReadiness,
     orgId && workOrderId ? { workOrderId, organizationId: orgId } : "skip",
+  );
+  const configuredStageFlow = useQuery(
+    api.stationConfig.getWorkOrderStageConfig,
+    orgId ? { organizationId: orgId } : "skip",
   );
 
   const allParts = useQuery(
@@ -338,6 +330,27 @@ export default function WorkOrderDetailPage() {
     activeTimerEntry &&
     (activeTimerEntry.entryType ?? "work_order") === "work_order" &&
     activeTimerEntry.workOrderId === workOrderId;
+
+  const workOrderStageFlow = useMemo<WorkOrderStageFlow[]>(() => {
+    if (!configuredStageFlow || configuredStageFlow.length === 0) {
+      return DEFAULT_WORK_ORDER_STAGE_FLOW;
+    }
+    const mapped = configuredStageFlow
+      .map((stage, idx) => ({
+        key: stage.id || `stage-${idx + 1}`,
+        label: stage.label || `Stage ${idx + 1}`,
+        statusMappings: stage.statusMappings ?? [],
+        sortOrder: stage.sortOrder ?? idx,
+      }))
+      .sort((a, b) => a.sortOrder - b.sortOrder)
+      .map(({ key, label, statusMappings }) => ({ key, label, statusMappings }));
+    return mapped.length > 0 ? mapped : DEFAULT_WORK_ORDER_STAGE_FLOW;
+  }, [configuredStageFlow]);
+
+  const activeStageIndex = useMemo(
+    () => mapStatusToStageIndex(wo.status, workOrderStageFlow),
+    [wo.status, workOrderStageFlow],
+  );
 
   const handleStartWorkOrderTimer = async () => {
     if (!orgId || !techId || !workOrderId) return;
@@ -535,36 +548,45 @@ export default function WorkOrderDetailPage() {
       </div>
 
       <Card className="border-border/60">
-        <CardContent className="p-3 sm:p-4">
-          <p className="text-[11px] text-muted-foreground mb-3">Work Order Stage</p>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2.5">
-            {WORK_ORDER_STAGE_FLOW.map((stage, idx) => {
-              const activeStageIndex = mapStatusToStageIndex(wo.status);
+        <CardContent className="px-4 sm:px-8 py-5">
+          <div className="flex items-start w-full overflow-x-auto">
+            {workOrderStageFlow.map((stage, idx) => {
               const isComplete = idx < activeStageIndex;
               const isCurrent = idx === activeStageIndex;
+              const isLast = idx === workOrderStageFlow.length - 1;
               return (
-                <div key={stage.key} className="flex items-center gap-2 min-w-0">
-                  <span
-                    className={`w-3 h-3 rounded-full border flex-shrink-0 ${
-                      isCurrent
-                        ? "bg-primary border-primary"
-                        : isComplete
-                          ? "bg-green-500 border-green-500"
-                          : "bg-transparent border-border"
-                    }`}
-                    aria-hidden
-                  />
-                  <span
-                    className={`text-[11px] truncate ${
-                      isCurrent
-                        ? "text-foreground font-medium"
-                        : isComplete
-                          ? "text-green-600 dark:text-green-400"
-                          : "text-muted-foreground"
-                    }`}
-                  >
-                    {stage.label}
-                  </span>
+                <div key={stage.key} className={`flex items-start min-w-0 ${isLast ? "" : "flex-1"}`}>
+                  <div className="flex flex-col items-center shrink-0">
+                    <div
+                      className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${
+                        isComplete
+                          ? "bg-green-500 text-white"
+                          : isCurrent
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted text-muted-foreground"
+                      }`}
+                    >
+                      {isComplete ? "✓" : idx + 1}
+                    </div>
+                    <span
+                      className={`text-[10px] mt-1.5 text-center leading-tight whitespace-nowrap ${
+                        isCurrent
+                          ? "text-foreground font-medium"
+                          : isComplete
+                            ? "text-green-600 dark:text-green-400"
+                            : "text-muted-foreground"
+                      }`}
+                    >
+                      {stage.label}
+                    </span>
+                  </div>
+                  {!isLast && (
+                    <div
+                      className={`flex-1 h-0.5 mt-4 min-w-3 mx-1 ${
+                        isComplete ? "bg-green-400 dark:bg-green-500" : "bg-border"
+                      }`}
+                    />
+                  )}
                 </div>
               );
             })}

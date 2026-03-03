@@ -198,6 +198,7 @@ const bottomNav: NavEntry[] = [
     icon: Settings,
     section: "settings",
     children: [
+      { title: "Station Config", href: "/settings/station-config" },
       { title: "Import Data", href: "/settings/import" },
       { title: "QuickBooks", href: "/settings/quickbooks" },
       { title: "Locations", href: "/settings/locations" },

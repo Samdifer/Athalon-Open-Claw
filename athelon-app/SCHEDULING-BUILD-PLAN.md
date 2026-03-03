@@ -1,5 +1,7 @@
 # Athelon Scheduling, P&L & Capacity — Build Plan
 
+> Canonical feature-spec pointer: this file is a contributing source. The authoritative feature specification registry is [`MASTER-BUILD-LIST.md`](MASTER-BUILD-LIST.md). Derived planning references are under [`docs/plans/`](docs/plans/).
+
 ## Source Reference
 Adapting from the Freelance-Management-Active scheduler app:
 - **Gantt Engine**: `src/lib/gantt-engine/` (1,432 lines) — cascade-scheduler, critical-path, dependency-types, earned-value, resource-leveling, wbs

@@ -68,6 +68,7 @@ import type * as shopLocations from "../shopLocations.js";
 import type * as simHelper from "../simHelper.js";
 import type * as simPartsRunner from "../simPartsRunner.js";
 import type * as simRunner from "../simRunner.js";
+import type * as stationConfig from "../stationConfig.js";
 import type * as taskAssignments from "../taskAssignments.js";
 import type * as taskCardVendorServices from "../taskCardVendorServices.js";
 import type * as taskCards from "../taskCards.js";
@@ -148,6 +149,7 @@ declare const fullApi: ApiFromModules<{
   simHelper: typeof simHelper;
   simPartsRunner: typeof simPartsRunner;
   simRunner: typeof simRunner;
+  stationConfig: typeof stationConfig;
   taskAssignments: typeof taskAssignments;
   taskCardVendorServices: typeof taskCardVendorServices;
   taskCards: typeof taskCards;

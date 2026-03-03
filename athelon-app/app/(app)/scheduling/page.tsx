@@ -132,6 +132,11 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 const DEFAULT_TIMELINE_DAYS = 120;
 const SCHEDULING_ONBOARDING_STORAGE_VERSION = 1;
 
+function msFromDateKey(dateKey: string): number {
+  const [year, month, day] = dateKey.split("-").map((value) => Number(value));
+  return new Date(year, month - 1, day).getTime();
+}
+
 type SchedulingOnboardingRecord = {
   version: number;
   seenAt: number;
@@ -259,6 +264,23 @@ export default function SchedulingPage() {
     api.capacity.getSchedulingSettings,
     orgId ? { organizationId: orgId } : "skip",
   );
+  const timelineHolidays = useQuery(
+    api.schedulerRoster.listSchedulingHolidaysForRange,
+    orgId
+      ? {
+          organizationId: orgId,
+          shopLocationId: selectedShopLocationFilter,
+          startDateMs: timelineConfig.timelineStartMs,
+          endDateMs:
+            timelineConfig.timelineStartMs +
+            Math.max(1, timelineConfig.totalDays) * DAY_MS,
+        }
+      : "skip",
+  );
+  const timelineCursorConfig = useQuery(
+    api.stationConfig.getTimelineCursorConfig,
+    orgId ? { organizationId: orgId } : "skip",
+  );
 
   const upsertScheduleAssignment = useMutation(api.schedulerPlanning.upsertScheduleAssignment);
   const reorderBays = useMutation(api.hangarBays.reorderBays);
@@ -317,7 +339,9 @@ export default function SchedulingPage() {
       plannerProjects === undefined ||
       technicianWorkload === undefined ||
       planningFinancialSettings === undefined ||
-      schedulingSettings === undefined,
+      schedulingSettings === undefined ||
+      timelineHolidays === undefined ||
+      timelineCursorConfig === undefined,
   });
 
   const workOrders = data ?? [];
@@ -610,6 +634,23 @@ export default function SchedulingPage() {
   const timelineCellWidth = Math.max(4, timelineConfig.cellWidth);
   const currentTimelineDay = Math.max(0, Math.min(timelineConfig.todayIndex, timelineTotalDays - 1));
   const timelineFocusDateMs = timelineStartMs + currentTimelineDay * DAY_MS;
+  const holidayDayIndexes = useMemo(
+    () =>
+      (timelineHolidays ?? [])
+        .map((holiday) => Math.floor((msFromDateKey(holiday.dateKey) - timelineStartMs) / DAY_MS))
+        .filter((dayIndex) => dayIndex >= 0 && dayIndex < timelineTotalDays),
+    [timelineHolidays, timelineStartMs, timelineTotalDays],
+  );
+  const timelineCursors = useMemo(
+    () =>
+      (timelineCursorConfig?.cursors ?? []).map((cursor) => ({
+        id: cursor.id,
+        dayOffset: cursor.dayOffset,
+        colorClass: cursor.colorClass,
+        enabled: cursor.enabled,
+      })),
+    [timelineCursorConfig],
+  );
 
   const workOrderMap = useMemo(
     () => new Map(workOrders.map((wo) => [String(wo._id), wo])),
@@ -1747,7 +1788,8 @@ export default function SchedulingPage() {
                     onScroll={handlePanelTimelineScroll}
                     height={panelHeights.pnl}
                     currentDayIndex={currentTimelineDay}
-                    holidayDayIndexes={[]}
+                    holidayDayIndexes={holidayDayIndexes}
+                    cursors={timelineCursors}
                   />
                 </div>
               )}
@@ -1825,7 +1867,8 @@ export default function SchedulingPage() {
             isPoppedOut
             onPopOut={() => {}}
             currentDayIndex={currentTimelineDay}
-            holidayDayIndexes={[]}
+            holidayDayIndexes={holidayDayIndexes}
+            cursors={timelineCursors}
           />
         </DraggableWindow>
       )}

@@ -1,5 +1,7 @@
 # Athelon MRO — Waterfall Build Plan
 
+> Canonical plan pointer: this file is a contributing source. The authoritative consolidated build plan is [`athelon-app/docs/plans/MASTER-BUILD-PLAN.md`](athelon-app/docs/plans/MASTER-BUILD-PLAN.md).
+
 **Created**: 2026-02-27
 **Method**: Automated waterfall — each phase builds → tests → gates before next phase starts
 **Gate Criteria**: `npx tsc --noEmit` = 0 errors, `npx convex dev --once` = success, functional verification

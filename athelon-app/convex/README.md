@@ -1,90 +1,28 @@
-# Welcome to your Convex functions directory!
+# Convex Backend Guide
 
-Write your Convex functions here.
-See https://docs.convex.dev/functions for more.
+This project uses strict Convex backend conventions.
 
-A query function that takes two arguments looks like:
+## Required Rules
 
-```ts
-// convex/myFunctions.ts
-import { query } from "./_generated/server";
-import { v } from "convex/values";
+- Read and follow [`CONVEX_RULES.md`](./CONVEX_RULES.md) before changing any file in this folder.
+- The rules document is the canonical source for:
+  - function/action/query/mutation registration syntax
+  - validators and schema patterns
+  - function references (`api`/`internal`) and `ctx.run*` usage
+  - query/indexing rules
+  - actions, cron scheduling, and storage usage
 
-export const myQueryFunction = query({
-  // Validators for arguments.
-  args: {
-    first: v.number(),
-    second: v.string(),
-  },
+## Local Convex Commands
 
-  // Function implementation.
-  handler: async (ctx, args) => {
-    // Read the database as many times as you need here.
-    // See https://docs.convex.dev/database/reading-data.
-    const documents = await ctx.db.query("tablename").collect();
+Run from `athelon-app/`:
 
-    // Arguments passed from the client are properties of the args object.
-    console.log(args.first, args.second);
-
-    // Write arbitrary JavaScript here: filter, aggregate, build derived data,
-    // remove non-public properties, or create new objects.
-    return documents;
-  },
-});
+```bash
+npx convex dev       # Sync schema/functions + typecheck Convex code
+npx convex codegen   # Regenerate _generated API types
+npx convex deploy    # Deploy to Convex cloud
 ```
 
-Using this query function in a React component looks like:
+## Notes
 
-```ts
-const data = useQuery(api.myFunctions.myQueryFunction, {
-  first: 10,
-  second: "hello",
-});
-```
-
-A mutation function looks like:
-
-```ts
-// convex/myFunctions.ts
-import { mutation } from "./_generated/server";
-import { v } from "convex/values";
-
-export const myMutationFunction = mutation({
-  // Validators for arguments.
-  args: {
-    first: v.string(),
-    second: v.string(),
-  },
-
-  // Function implementation.
-  handler: async (ctx, args) => {
-    // Insert or modify documents in the database here.
-    // Mutations can also read from the database like queries.
-    // See https://docs.convex.dev/database/writing-data.
-    const message = { body: args.first, author: args.second };
-    const id = await ctx.db.insert("messages", message);
-
-    // Optionally, return a value from your mutation.
-    return await ctx.db.get("messages", id);
-  },
-});
-```
-
-Using this mutation function in a React component looks like:
-
-```ts
-const mutation = useMutation(api.myFunctions.myMutationFunction);
-function handleButtonPress() {
-  // fire and forget, the most common way to use mutations
-  mutation({ first: "Hello!", second: "me" });
-  // OR
-  // use the result once the mutation has completed
-  mutation({ first: "Hello!", second: "me" }).then((result) =>
-    console.log(result),
-  );
-}
-```
-
-Use the Convex CLI to push your functions to a deployment. See everything
-the Convex CLI can do by running `npx convex -h` in your project root
-directory. To learn more, launch the docs with `npx convex docs`.
+- `convex/_generated/` is auto-generated; do not edit it manually.
+- Keep schema updates in `convex/schema.ts` and align index names/query order with the rules doc.
