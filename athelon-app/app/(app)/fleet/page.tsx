@@ -202,6 +202,20 @@ export default function FleetPage() {
   const totalCount = fleet?.length ?? 0;
   const filteredCount = filtered?.length ?? 0;
 
+  // BUG-DOM-101: Fleet page had no status summary banner. A DOM opening Fleet
+  // wants to know immediately "how many aircraft are AOG / in maintenance / airworthy"
+  // without scrolling through the full list. AOG and grounded aircraft are the most
+  // critical — they represent revenue loss and need immediate action. Without a
+  // summary, the DOM has to visually scan every card and mentally count red badges.
+  const statusSummary = useMemo(() => {
+    if (!fleet) return null;
+    const outOfService = fleet.filter((ac) => ac.status === "out_of_service").length;
+    const inMx = fleet.filter((ac) => ac.status === "in_maintenance").length;
+    const airworthy = fleet.filter((ac) => ac.status === "airworthy").length;
+    const unknown = fleet.filter((ac) => ac.status === "unknown").length;
+    return { outOfService, inMx, airworthy, unknown };
+  }, [fleet]);
+
   return (
     <div className="space-y-5">
       {/* Header */}
@@ -247,6 +261,58 @@ export default function FleetPage() {
           </Button>
         </div>
       </div>
+
+      {/* Fleet Status Summary — quick overview for DOM */}
+      {fleet && fleet.length > 0 && statusSummary && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <div className="rounded-lg border border-green-500/30 bg-green-500/5 px-3 py-2.5 flex items-center gap-2.5">
+            <span className="w-2 h-2 rounded-full flex-shrink-0 bg-green-400" />
+            <div>
+              <p className="text-lg font-bold leading-none text-green-400">{statusSummary.airworthy}</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">Airworthy</p>
+            </div>
+          </div>
+          <div className="rounded-lg border border-sky-500/30 bg-sky-500/5 px-3 py-2.5 flex items-center gap-2.5">
+            <span className="w-2 h-2 rounded-full flex-shrink-0 bg-sky-400" />
+            <div>
+              <p className="text-lg font-bold leading-none text-sky-400">{statusSummary.inMx}</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">In Maintenance</p>
+            </div>
+          </div>
+          <div
+            className={`rounded-lg border px-3 py-2.5 flex items-center gap-2.5 ${
+              statusSummary.outOfService > 0
+                ? "border-amber-500/40 bg-amber-500/10"
+                : "border-border/50 bg-muted/20"
+            }`}
+          >
+            <span
+              className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                statusSummary.outOfService > 0 ? "bg-amber-400" : "bg-muted-foreground/30"
+              }`}
+            />
+            <div>
+              <p className={`text-lg font-bold leading-none ${statusSummary.outOfService > 0 ? "text-amber-400" : "text-foreground"}`}>
+                {statusSummary.outOfService}
+              </p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">Out of Service</p>
+            </div>
+          </div>
+          <div
+            className={`rounded-lg border px-3 py-2.5 flex items-center gap-2.5 ${
+              statusSummary.unknown > 0
+                ? "border-slate-500/30 bg-slate-500/5"
+                : "border-border/50 bg-muted/20"
+            }`}
+          >
+            <span className="w-2 h-2 rounded-full flex-shrink-0 bg-slate-400" />
+            <div>
+              <p className="text-lg font-bold leading-none text-slate-400">{statusSummary.unknown}</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">Unknown</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Search + filter bar */}
       <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 sm:items-center">

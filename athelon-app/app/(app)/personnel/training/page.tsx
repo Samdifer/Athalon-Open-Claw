@@ -894,6 +894,15 @@ function SchedulingConstraintsTab({
       toast.error("Select or enter a training type");
       return;
     }
+    // BUG-DOM-100: Scheduling Constraints handleAdd() was missing expiry-after-completion
+    // validation. The main Training Records form had this guard (BUG-DOM-065) but the
+    // Scheduling Constraints tab didn't. A DOM or training coordinator could accidentally
+    // log an expiry date before the completion date — the record would immediately show
+    // as "expired" in the red-border lane and block valid technician task assignments.
+    if (expiresAt && expiresAt <= completedAt) {
+      toast.error("Expiry date must be after the completion date");
+      return;
+    }
     setIsAdding(true);
     try {
       await addTraining({

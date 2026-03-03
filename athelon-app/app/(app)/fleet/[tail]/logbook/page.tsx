@@ -24,6 +24,7 @@ import {
   Wrench,
   ClipboardCheck,
   AlertCircle,
+  Search,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -330,6 +331,11 @@ export default function AircraftLogbookPage() {
   const [filterType, setFilterType] = useState<FilterType>("all");
   const [dateFrom, setDateFrom] = useState<string>("");
   const [dateTo, setDateTo] = useState<string>("");
+  // BUG-DOM-099: Logbook had no keyword search. A DOM or QCM inspector with 200+
+  // logbook entries has no way to find "all propeller entries" or "every entry that
+  // mentions the Lycoming SB". Only type/date filters existed. A real paper logbook
+  // is scanned for keywords constantly — the digital version must support the same.
+  const [searchText, setSearchText] = useState<string>("");
 
   // Get aircraft record so we have the aircraftId
   const aircraft = useQuery(
@@ -355,10 +361,23 @@ export default function AircraftLogbookPage() {
   const fromMs = dateFrom ? new Date(dateFrom + "T00:00:00.000Z").getTime() : null;
   const toMs = dateTo ? new Date(dateTo + "T23:59:59.999Z").getTime() : null;
 
+  const searchLower = searchText.trim().toLowerCase();
   const filtered = (records ?? []).filter((r) => {
     if (filterType !== "all" && r.recordType !== filterType) return false;
     if (fromMs && r.completionDate < fromMs) return false;
     if (toMs && r.completionDate > toMs) return false;
+    if (searchLower) {
+      const inWork = r.workPerformed.toLowerCase().includes(searchLower);
+      const inData = r.approvedDataReference.toLowerCase().includes(searchLower);
+      const inTech = r.signingTechnicianLegalName.toLowerCase().includes(searchLower);
+      const inCert = (r.signingTechnicianCertNumber ?? "").toLowerCase().includes(searchLower);
+      const inParts = (r.partsReplaced ?? []).some(
+        (p) =>
+          p.partNumber.toLowerCase().includes(searchLower) ||
+          p.partName.toLowerCase().includes(searchLower),
+      );
+      if (!inWork && !inData && !inTech && !inCert && !inParts) return false;
+    }
     return true;
   });
 
@@ -474,6 +493,17 @@ export default function AircraftLogbookPage() {
               )}
             </div>
 
+            {/* Keyword search */}
+            <div className="relative">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground pointer-events-none" />
+              <Input
+                placeholder="Search logbook…"
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                className="h-7 w-40 pl-7 text-xs bg-muted/30 border-border/60"
+              />
+            </div>
+
             {/* Record count */}
             {records !== undefined && (
               <span className="ml-auto text-xs text-muted-foreground">
@@ -507,9 +537,9 @@ export default function AircraftLogbookPage() {
             <p className="text-sm font-medium text-muted-foreground">
               No maintenance records for this aircraft
             </p>
-            {(filterType !== "all" || dateFrom || dateTo) && (
+            {(filterType !== "all" || dateFrom || dateTo || searchText) && (
               <p className="text-xs text-muted-foreground/60 mt-1">
-                Try adjusting your filters
+                Try adjusting your filters or search
               </p>
             )}
           </CardContent>
