@@ -121,9 +121,22 @@ export function DiscrepancyList({
 }: DiscrepancyListProps) {
   const [logSquawkOpen, setLogSquawkOpen] = useState(false);
 
-  // Sum of mhEstimate across non-dispositioned discrepancies
+  // Sum of mhEstimate across actionable discrepancies only.
+  // BUG-LT-HUNT-090: Previous filter only excluded "dispositioned" status —
+  // customer-denied squawks (customerApprovalStatus === "denied") were still
+  // included in the labor estimate. A denied squawk is one the customer
+  // explicitly declined to have repaired; including its MH estimate in the
+  // "Open discrepancies est" total inflated the labor forecast with hours that
+  // will never be performed. A shop manager scheduling techs would see, say,
+  // "4.0h" when the actual authorized work is only "2.5h" — causing over-
+  // scheduling against a non-existent work scope. Fix: also exclude denied
+  // squawks from the labor estimate total.
   const totalMhEstimate = discrepancies
-    .filter((d) => d.status !== "dispositioned")
+    .filter(
+      (d) =>
+        d.status !== "dispositioned" &&
+        d.customerApprovalStatus !== "denied",
+    )
     .reduce((sum, d) => sum + (d.mhEstimate ?? 0), 0);
 
   const canLogSquawk = Boolean(orgId && techId && workOrderId);

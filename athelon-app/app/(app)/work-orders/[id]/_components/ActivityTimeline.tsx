@@ -81,7 +81,22 @@ export function ActivityTimeline({ events }: { events: AuditEvent[] }) {
                 <div className="flex items-center gap-1.5 mt-0.5">
                   <User className="w-3 h-3 text-muted-foreground/60" />
                   <span className="text-[11px] text-muted-foreground">
-                    {ev.userId ?? "System"}
+                    {/* BUG-LT-HUNT-091: Raw Clerk user IDs (e.g. "user_2bY8Qzw...")
+                        were displayed verbatim in the activity timeline. A shop manager
+                        or QCM auditing the maintenance record would see meaningless
+                        database keys instead of technician names. The backend returns
+                        the Clerk userId and separately provides technicianId (not joined
+                        here). Sanitize: Clerk IDs start with "user_" — show a short
+                        reference instead of the full key. BACKEND-NEEDED: join
+                        technicianName in the auditEvents query so the real name renders.
+                        Until then, show "Staff Member" to indicate a human action without
+                        leaking internal IDs. "System" is reserved for null userId (server-
+                        side writes with no caller identity, e.g. scheduled jobs). */}
+                    {ev.userId
+                      ? ev.userId.startsWith("user_")
+                        ? "Staff Member"
+                        : ev.userId
+                      : "System"}
                   </span>
                   <span className="text-muted-foreground/40">·</span>
                   <time className="font-mono text-[10px] text-muted-foreground/70">

@@ -296,7 +296,7 @@ export default function ReportsPage() {
             ) : (
               <>
                 <p className="text-xs text-muted-foreground mb-2">
-                  Total: <span className="font-semibold text-foreground">${totalRevenue.toLocaleString()}</span>
+                  Total: <span className="font-semibold text-foreground">${totalRevenue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                 </p>
                 <ResponsiveContainer width="100%" height={220}>
                   <LineChart data={revenueData}>
@@ -400,7 +400,7 @@ export default function ReportsPage() {
                         {row.key.split("-")[0]}
                       </TableCell>
                       <TableCell className="text-xs text-right tabular-nums font-medium">
-                        ${row.revenue.toLocaleString()}
+                        ${row.revenue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </TableCell>
                       <TableCell className="text-xs text-right tabular-nums">{woCount}</TableCell>
                     </TableRow>
@@ -408,7 +408,7 @@ export default function ReportsPage() {
                 })}
                 <TableRow className="border-border/40 font-semibold">
                   <TableCell className="text-xs">Total</TableCell>
-                  <TableCell className="text-xs text-right tabular-nums">${totalRevenue.toLocaleString()}</TableCell>
+                  <TableCell className="text-xs text-right tabular-nums">${totalRevenue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
                   <TableCell className="text-xs text-right tabular-nums">{totalWOs}</TableCell>
                 </TableRow>
               </TableBody>

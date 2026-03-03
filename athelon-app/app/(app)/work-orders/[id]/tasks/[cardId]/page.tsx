@@ -854,7 +854,24 @@ export default function TaskCardPage() {
               variant="outline"
               size="sm"
               className="h-7 text-xs gap-1"
-              onClick={() => setShowAddForm((prev) => !prev)}
+              onClick={() => {
+                // BUG-LT-HUNT-089: "Add Item" toggle button didn't reset the
+                // compliance add-form fields when closing the form via the
+                // toggle (vs the explicit Cancel button). A QCM who fills in
+                // AD 2023-15-01, then clicks "Add Item" again to collapse the
+                // form without saving, then later re-opens it would see the
+                // previous AD reference pre-filled. Without noticing, they
+                // could submit the old reference on the wrong task card. Fix:
+                // reset all form fields whenever the toggle closes the form.
+                setShowAddForm((prev) => {
+                  if (prev) {
+                    setAddRefType("ad");
+                    setAddReference("");
+                    setAddDescription("");
+                  }
+                  return !prev;
+                });
+              }}
             >
               <Plus className="w-3 h-3" />
               Add Item

@@ -490,20 +490,19 @@ export default function WorkOrdersPage() {
                         <span className="font-mono text-xs text-muted-foreground font-medium">
                           {wo.number}
                         </span>
-                        {wo.priority === "aog" ? (
+                        {wo.priority === "aog" && (
                           <Badge className="bg-red-500/15 text-red-400 border border-red-500/30 text-[10px] font-semibold">
                             AOG
                           </Badge>
-                        ) : (
-                          <Badge
-                            variant="outline"
-                            className={`text-[10px] font-medium border ${
-                              WO_STATUS_STYLES[wo.status as WoStatus] ?? "bg-muted text-muted-foreground"
-                            }`}
-                          >
-                            {wo.statusLabel}
-                          </Badge>
                         )}
+                        <Badge
+                          variant="outline"
+                          className={`text-[10px] font-medium border ${
+                            WO_STATUS_STYLES[wo.status as WoStatus] ?? "bg-muted text-muted-foreground"
+                          }`}
+                        >
+                          {wo.statusLabel}
+                        </Badge>
                         <Badge
                           variant="outline"
                           className="text-[10px] text-muted-foreground border-border/40"

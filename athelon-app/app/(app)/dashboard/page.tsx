@@ -211,7 +211,7 @@ function LiveSecondaryKPIs() {
       value: partsCount,
       sub: "pending receiving inspection",
       icon: Package,
-      href: "/parts/requests",
+      href: "/parts/receiving",
       color: "text-amber-400",
       bgColor: "bg-amber-500/10",
       alert: (partsCount ?? 0) > 0,

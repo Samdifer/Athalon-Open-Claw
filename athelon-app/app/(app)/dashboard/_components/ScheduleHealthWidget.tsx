@@ -145,9 +145,12 @@ export const ScheduleHealthWidget = React.memo(function ScheduleHealthWidget() {
               </Link>
             ))}
             {atRiskItems.length > 4 && (
-              <p className="text-[11px] text-muted-foreground text-center pt-1">
-                +{atRiskItems.length - 4} more
-              </p>
+              <Link
+                to="/work-orders"
+                className="block text-[11px] text-primary hover:underline text-center pt-1"
+              >
+                +{atRiskItems.length - 4} more — View all in Work Orders →
+              </Link>
             )}
           </div>
         ) : (

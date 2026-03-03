@@ -621,7 +621,16 @@ export default function WorkOrderDetailPage() {
               // are no parts before the query resolves. Use null (no badge) while loading.
               { value: "parts", label: "Parts", Icon: Package, count: allParts !== undefined ? partsForThisWorkOrder.length : null, indicator: null as "red" | "amber" | "green" | null },
               { value: "documents", label: "Documents", Icon: Paperclip, count: null, indicator: null as "red" | "amber" | "green" | null },
-              { value: "notes", label: "Notes & Activity", Icon: FileText, count: auditEvents.length, indicator: null as "red" | "amber" | "green" | null },
+              // BUG-LT-HUNT-092: "Notes & Activity" tab badge showed a raw count
+              // from the backend query which is capped at .take(20). When there
+              // are 20+ events, the badge shows "20" — making the shop manager
+              // think there are exactly 20 entries when there could be hundreds.
+              // This is misleading when reviewing a complex WO audit trail. Fix:
+              // show null (no badge) when the list is at the 20-event cap, since
+              // we can't reliably report the true count. When < 20 results come
+              // back, the count is accurate and can be shown. BACKEND-NEEDED:
+              // return a totalCount from the query so we can show "47+" accurately.
+              { value: "notes", label: "Notes & Activity", Icon: FileText, count: auditEvents.length < 20 ? auditEvents.length : null, indicator: null as "red" | "amber" | "green" | null },
             ]
           ).map(({ value, label, Icon, count, indicator }) => (
             <TabsTrigger
