@@ -60,6 +60,8 @@ const STATUS_TABS: Array<{ label: string; value: ClaimStatus | "all" }> = [
   { label: "Under Review", value: "under_review" },
   { label: "Approved", value: "approved" },
   { label: "Denied", value: "denied" },
+  { label: "Paid", value: "paid" },
+  { label: "Closed", value: "closed" },
 ];
 
 const STATUS_STYLES: Record<string, string> = {

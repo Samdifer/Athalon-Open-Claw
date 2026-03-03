@@ -219,7 +219,7 @@ export default function QuoteDetailPage() {
   // Convert to WO dialog
   const [convertDialog, setConvertDialog] = useState(false);
   const [woDescription, setWoDescription] = useState("");
-  const [woType, setWoType] = useState<"routine" | "unscheduled">("routine");
+  const [woType, setWoType] = useState<"routine" | "unscheduled" | "annual_inspection" | "100hr_inspection" | "major_repair">("routine");
   const [woPriority, setWoPriority] = useState<"routine" | "urgent" | "aog">("routine");
 
   // GAP-13: Create invoice dialog
