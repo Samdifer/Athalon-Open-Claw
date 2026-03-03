@@ -489,14 +489,26 @@ export function SignStepDialog({
                 (optional)
               </span>
             </Label>
+            {/* BUG-LT-059: SignStepDialog notes had no maxLength cap. A tech
+                pasting AMM procedure text could exceed the backend schema
+                limit and get a cryptic validation error *after* already
+                entering their PIN (a one-time-use, 5-minute auth event). The
+                SignCardDialog was fixed in BUG-LT-HUNT-054 with maxLength=2000
+                but SignStepDialog was missed. 500 chars is generous for a
+                per-step note (step notes should be brief and actionable).
+                Character counter turns amber near the limit. */}
             <Textarea
               id="sign-step-notes"
               value={notes}
-              onChange={(e) => setNotes(e.target.value)}
+              onChange={(e) => setNotes(e.target.value.slice(0, 500))}
               placeholder="Any notes for this step..."
               rows={2}
+              maxLength={500}
               className="text-sm bg-muted/30 border-border/60 resize-none"
             />
+            <p className={`text-[10px] text-right mt-0.5 ${notes.length >= 450 ? "text-amber-400" : "text-muted-foreground/50"}`}>
+              {notes.length}/500
+            </p>
           </div>
 
           <Separator className="opacity-40" />

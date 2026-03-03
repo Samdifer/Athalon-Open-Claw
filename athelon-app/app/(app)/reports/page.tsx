@@ -115,6 +115,10 @@ export default function ReportsPage() {
     });
   }, [invoices, fromTs, toTs]);
 
+  // Whether the WO result was capped at the 500-item query limit — if so, throughput
+  // data is silently incomplete and we must show a warning to the user.
+  const throughputCapped = woResult !== undefined && woResult.isDone === false;
+
   // WO throughput by month
   const throughputData = useMemo(() => {
     if (!woResult?.page) return [];
@@ -332,6 +336,14 @@ export default function ReportsPage() {
             </Button>
           </CardHeader>
           <CardContent>
+            {throughputCapped && (
+              <div className="flex items-center gap-2 px-3 py-2 mb-3 rounded-lg border border-amber-500/40 bg-amber-500/10 text-amber-400">
+                <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+                <p className="text-xs font-medium">
+                  Results limited to 500 closed work orders — throughput data may be incomplete for large date ranges. Narrow the date range for accurate counts.
+                </p>
+              </div>
+            )}
             {!woResult ? (
               <Skeleton className="h-[250px] w-full" />
             ) : throughputData.length === 0 ? (

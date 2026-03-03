@@ -298,15 +298,26 @@ export function RaiseFindingDialog({
             <Label htmlFor="finding-description" className="text-xs font-medium mb-1.5 block">
               Description <span className="text-red-400" aria-hidden="true">*</span>
             </Label>
+            {/* BUG-LT-062: RaiseFindingDialog description textarea had no
+                maxLength cap. A tech or QCM pasting a verbose description
+                (e.g., full AD text or STC amendment notes) could exceed the
+                backend schema limit and get a cryptic validation error.
+                Discrepancy descriptions should be concise (mandatory per
+                14 CFR 43.9(a)(2)); 1000 chars is generous. Character counter
+                turns amber when ≥900 chars. */}
             <Textarea
               id="finding-description"
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={(e) => setDescription(e.target.value.slice(0, 1000))}
               placeholder="Describe the discrepancy found..."
               rows={3}
+              maxLength={1000}
               className="text-sm bg-muted/30 border-border/60 resize-none"
               aria-required="true"
             />
+            <p className={`text-[10px] text-right mt-0.5 ${description.length >= 900 ? "text-amber-400" : "text-muted-foreground/50"}`}>
+              {description.length}/1000
+            </p>
           </div>
 
           {/* BUG-LT-010: Aircraft Hours at Finding — visible & editable */}
@@ -582,11 +593,15 @@ export function RaiseFindingDialog({
             <Textarea
               id="finding-notes"
               value={notes}
-              onChange={(e) => setNotes(e.target.value)}
+              onChange={(e) => setNotes(e.target.value.slice(0, 500))}
               placeholder="Additional context, references..."
               rows={2}
+              maxLength={500}
               className="text-sm bg-muted/30 border-border/60 resize-none"
             />
+            <p className={`text-[10px] text-right mt-0.5 ${notes.length >= 450 ? "text-amber-400" : "text-muted-foreground/50"}`}>
+              {notes.length}/500
+            </p>
           </div>
 
           {error && (

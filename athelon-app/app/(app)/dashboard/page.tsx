@@ -122,7 +122,9 @@ function LiveKPICards({
       value: kpis.activeWOs,
       spark: [3, 5, 4, 6, kpis.activeWOs, kpis.activeWOs + 1, kpis.activeWOs],
       color: "#38bdf8",
-      trend: kpis.activeWOs > 3 ? "up" as const : "down" as const,
+      // No trend arrow — more active WOs can mean a growing backlog (bad) or
+      // a busy shop (good). A static threshold arrow misleads more than it helps.
+      trend: null as null,
       href: "/work-orders",
     },
     {
@@ -771,13 +773,13 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
 
-          {/* Active Work Orders */}
+          {/* Open Work Orders (all non-terminal statuses) */}
           <Card className="border-border/60">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-sm font-semibold flex items-center gap-2">
                   <ClipboardList className="w-4 h-4 text-muted-foreground" />
-                  Active Work Orders
+                  Open Work Orders
                 </CardTitle>
                 <Button asChild variant="ghost" size="sm" className="h-7 text-xs">
                   <Link to="/work-orders" className="flex items-center gap-1">

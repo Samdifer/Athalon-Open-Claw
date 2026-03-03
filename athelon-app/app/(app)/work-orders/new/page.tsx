@@ -449,11 +449,30 @@ export default function NewWorkOrderPage() {
                   type="date"
                   value={promisedDeliveryDate}
                   onChange={(e) => setPromisedDeliveryDate(e.target.value)}
-                  className="h-9 text-sm bg-muted/30 border-border/60"
+                  className={`h-9 text-sm bg-muted/30 border-border/60 ${
+                    promisedDeliveryDate &&
+                    new Date(promisedDeliveryDate).getTime() < Date.now() - 86400000
+                      ? "border-amber-500/60"
+                      : ""
+                  }`}
                 />
-                <p className="text-[11px] text-muted-foreground mt-1">
-                  The customer-committed return date. Used for schedule risk tracking.
-                </p>
+                {promisedDeliveryDate &&
+                  new Date(promisedDeliveryDate).getTime() < Date.now() - 86400000 && (
+                    <div className="flex items-center gap-1.5 mt-1">
+                      <AlertCircle className="w-3 h-3 text-amber-400 flex-shrink-0" />
+                      <p className="text-[11px] text-amber-400">
+                        This date is in the past — the WO will immediately show as overdue in schedule risk tracking.
+                      </p>
+                    </div>
+                  )}
+                {!(
+                  promisedDeliveryDate &&
+                  new Date(promisedDeliveryDate).getTime() < Date.now() - 86400000
+                ) && (
+                  <p className="text-[11px] text-muted-foreground mt-1">
+                    The customer-committed return date. Used for schedule risk tracking.
+                  </p>
+                )}
               </div>
               <div>
                 <Label

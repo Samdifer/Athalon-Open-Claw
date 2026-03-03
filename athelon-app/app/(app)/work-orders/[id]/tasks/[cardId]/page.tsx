@@ -556,13 +556,26 @@ export default function TaskCardPage() {
 
         {/* Progress */}
         <div className="text-right flex-shrink-0">
+          {/* BUG-LT-060: 0-step task cards showed "0/0 steps done" —
+              confusing for a card with no itemized work steps (just a
+              card-level sign-off requirement). "0/0" looks like a display
+              bug or a loading failure, not "this card has no steps".
+              Cards with no steps show "—" and "sign-off only" instead. */}
           <div className="text-2xl font-bold font-mono text-foreground">
-            {completedCount}
-            <span className="text-base text-muted-foreground">
-              /{totalSteps}
-            </span>
+            {totalSteps === 0 ? (
+              <span className="text-xl text-muted-foreground">—</span>
+            ) : (
+              <>
+                {completedCount}
+                <span className="text-base text-muted-foreground">
+                  /{totalSteps}
+                </span>
+              </>
+            )}
           </div>
-          <p className="text-[11px] text-muted-foreground">steps done</p>
+          <p className="text-[11px] text-muted-foreground">
+            {totalSteps === 0 ? "sign-off only" : "steps done"}
+          </p>
           {!cardIsVoided && !cardIsComplete && orgId && techId && (
             <div className="mt-2 flex items-center justify-end gap-1.5">
               {activeTaskTimerForThisCard ? (
@@ -577,12 +590,26 @@ export default function TaskCardPage() {
                   {timerActionLoading === "stop" ? "Stopping..." : "Stop Task Clock"}
                 </Button>
               ) : activeTimerEntry ? (
-                <Badge
+                // BUG-LT-061: When the tech has an active timer on a
+                // different task card or WO, the header showed an amber
+                // "Active step" badge with no context and no way to stop it.
+                // The tech was blocked from starting the task timer (guarded
+                // by "stop your active timer first") with no Stop button
+                // visible. They had to navigate to the Time Clock to stop it.
+                // Now we show a Stop Timer button for ANY active timer —
+                // the mutation targets activeTimerEntry._id regardless of
+                // which card or WO it belongs to.
+                <Button
                   variant="outline"
-                  className="text-[10px] border border-amber-500/30 text-amber-500 bg-amber-500/10"
+                  size="sm"
+                  className="h-7 text-xs gap-1 border-amber-500/40 text-amber-400 hover:bg-amber-500/10"
+                  onClick={handleStopActiveTimer}
+                  disabled={timerActionLoading === "stop"}
+                  title={`Stop active ${activeTimerEntry.entryType ?? "timer"} timer`}
                 >
-                  Active {activeTimerEntry.entryType ?? "timer"}
-                </Badge>
+                  <Square className="w-3 h-3" />
+                  {timerActionLoading === "stop" ? "Stopping..." : "Stop Timer"}
+                </Button>
               ) : (
                 <Button
                   variant="outline"
