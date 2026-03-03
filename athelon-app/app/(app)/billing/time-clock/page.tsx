@@ -180,6 +180,16 @@ export default function TimeClockPage() {
     [entries],
   );
 
+  // BUG-BM-099: Compute whether the currently selected Clock In tech already has an active timer.
+  // Used to disable the Clock In submit button so a manager can't accidentally create duplicate entries.
+  const existingActiveForSelectedTech = useMemo(
+    () =>
+      startTechId
+        ? activeEntries.find((entry) => (entry.technicianId as string) === startTechId) ?? null
+        : null,
+    [activeEntries, startTechId],
+  );
+
   const techMap = useMemo(
     () => new Map((technicians ?? []).map((tech) => [tech._id as string, tech.legalName])),
     [technicians],
@@ -841,7 +851,8 @@ export default function TimeClockPage() {
             <Button
               size="sm"
               onClick={handleStartTimer}
-              disabled={actionLoading === "start"}
+              disabled={actionLoading === "start" || !!existingActiveForSelectedTech}
+              title={existingActiveForSelectedTech ? "Technician already has an active timer — stop it first." : undefined}
               className="bg-green-600 hover:bg-green-700 gap-1.5"
             >
               <Play className="w-3.5 h-3.5" />

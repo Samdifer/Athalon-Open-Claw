@@ -75,15 +75,21 @@ export function derivePreconditions(
       : "PENDING";
 
   // PRE-6: Signing technician authorized
+  // BUG-LT-HUNT-106: PRE-6 previously used `signatureAuthEventId.trim()` as
+  // its PASS/PENDING condition — same dependency as PRE-1 ("Signature Auth
+  // Event"). This conflated "have you authenticated?" (PRE-1) with "are you
+  // certificated?" (PRE-6). An IA with a perfectly current certificate would
+  // see PRE-6 stuck at PENDING until they filled in the auth event ID, making
+  // it look like their certificate might be invalid. The real check for PRE-6
+  // is: did the backend fire any of the three certificate blockers? If not,
+  // the backend's readiness report has implicitly confirmed the tech holds a
+  // valid certificate. PRE-6 should show PASS as soon as the report loads with
+  // no certification issues — independent of whether the auth event is entered.
   const pre6Blocker =
     getBlocker("RTS_TECH_NOT_CERTIFICATED") ??
     getBlocker("RTS_TECH_NO_IA") ??
     getBlocker("RTS_TECH_IA_EXPIRED");
-  const pre6Status: PreconditionStatus = pre6Blocker
-    ? "FAIL"
-    : signatureAuthEventId.trim()
-      ? "PASS"
-      : "PENDING";
+  const pre6Status: PreconditionStatus = pre6Blocker ? "FAIL" : "PASS";
 
   // PRE-7: AD compliance reviewed
   const pre7Blocker =

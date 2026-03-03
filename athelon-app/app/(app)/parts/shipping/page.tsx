@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -47,6 +48,7 @@ const STATUS_COLORS: Record<string, string> = {
 export default function ShippingPage() {
   const { orgId: organizationId, isLoaded } = useCurrentOrg();
   const orgId = organizationId as Id<"organizations"> | undefined;
+  const navigate = useNavigate();
   const shipments = useQuery(api.shipping.list, orgId ? { organizationId: orgId } : "skip");
   const createShipment = useMutation(api.shipping.create);
   const updateStatus = useMutation(api.shipping.updateStatus);
@@ -121,7 +123,7 @@ export default function ShippingPage() {
       if (status === "delivered" && isInbound) {
         toast.success("Inbound shipment marked delivered — parts need receiving inspection.", {
           description: "Go to the Parts Receiving queue to inspect and accept these parts into inventory.",
-          action: { label: "Open Receiving", onClick: () => { window.location.href = "/parts/receiving"; } },
+          action: { label: "Open Receiving", onClick: () => { navigate("/parts/receiving"); } },
           duration: 8000,
         });
       } else {

@@ -77,10 +77,13 @@ function CreateCreditMemoDialog({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // BUG-BM-100: Include PAID invoices so billing managers can issue credit memos for refunds,
+  // warranty returns, or billing adjustments on already-paid invoices. PAID invoices are a
+  // common source of credit memos in real MRO shops (e.g., customer overpaid, part returned).
   const eligibleInvoices = useMemo(
     () => invoices.filter(
       (inv) =>
-        (inv.status === "SENT" || inv.status === "PARTIAL") &&
+        (inv.status === "SENT" || inv.status === "PARTIAL" || inv.status === "PAID") &&
         (customerId === "" || inv.customerId === customerId)
     ),
     [invoices, customerId],

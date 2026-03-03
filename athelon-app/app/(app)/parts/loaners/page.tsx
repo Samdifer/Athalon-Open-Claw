@@ -123,13 +123,24 @@ export default function LoanersPage() {
     }
     if (!search.trim()) return result;
     const q = search.toLowerCase();
-    return result.filter(
-      (l) =>
+    return result.filter((l) => {
+      if (
         l.partNumber.toLowerCase().includes(q) ||
         l.description.toLowerCase().includes(q) ||
-        (l.serialNumber ?? "").toLowerCase().includes(q),
-    );
-  }, [loaners, activeTab, search]);
+        (l.serialNumber ?? "").toLowerCase().includes(q)
+      ) return true;
+      // BUG-PC-091: Also search by customer name so clerk can find all loaners
+      // for a given customer (e.g. searching "FlySafe" shows all their loaners).
+      if (l.loanedToCustomerId) {
+        const customer = (customers ?? []).find((c) => c._id === l.loanedToCustomerId);
+        if (customer) {
+          const customerName = (customer.companyName ?? customer.name ?? "").toLowerCase();
+          if (customerName.includes(q)) return true;
+        }
+      }
+      return false;
+    });
+  }, [loaners, activeTab, search, customers]);
 
   const all = loaners ?? [];
   const statusCounts = useMemo(() => {
@@ -419,7 +430,7 @@ export default function LoanersPage() {
             </div>
             <div className="space-y-2">
               <Label>Expected Return Date</Label>
-              <Input type="date" min={new Date().toISOString().slice(0, 10)} value={loanForm.expectedReturnDate} onChange={(e) => setLoanForm({ ...loanForm, expectedReturnDate: e.target.value })} />
+              <Input type="date" min={(() => { const d = new Date(); const y = d.getFullYear(); const m = String(d.getMonth() + 1).padStart(2, "0"); const day = String(d.getDate()).padStart(2, "0"); return `${y}-${m}-${day}`; })()} value={loanForm.expectedReturnDate} onChange={(e) => setLoanForm({ ...loanForm, expectedReturnDate: e.target.value })} />
             </div>
             <div className="space-y-2">
               <Label>Condition at Loan-Out <span className="text-destructive">*</span></Label>

@@ -289,6 +289,13 @@ export function CreateRecordForm({
           : undefined,
         correctionReason: form.isCorrection ? form.correctionReason : undefined,
       });
+      // BUG-LT-REC-001: No success toast after maintenance record creation.
+      // The form silently closed with no confirmation the record was saved.
+      toast.success(
+        form.isCorrection
+          ? "Correction record created and signed"
+          : "Maintenance record created and signed",
+      );
       onSuccess();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to create record.");

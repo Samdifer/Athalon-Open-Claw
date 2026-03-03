@@ -17,6 +17,14 @@ import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import { formatDate } from "@/lib/format";
+import {
+  WO_STATUS_LABEL,
+  WO_STATUS_STYLES,
+  type WoStatus,
+  TASK_STATUS_LABEL,
+  TASK_STATUS_STYLES,
+  type TaskStatus,
+} from "@/lib/mro-constants";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -141,7 +149,18 @@ export default function WorkOrderLeadWorkspacePage() {
     }
     setWorkOrderTeamDrafts(nextTeamDrafts);
     setWorkOrderAssigneeDrafts(nextAssigneeDrafts);
-  }, [workspace?.reportDate, workspace?.report?._id, workspace?.report?.updatedAt]);
+  // BUG-LT-HUNT-109: workspace?.aiDraftSummary was missing from the dep
+  // array. When the backend regenerates the AI draft summary (e.g., a new
+  // batch of time-clock entries rolls in after midnight), the textarea would
+  // keep showing the stale draft because the effect never re-ran — reportDate,
+  // report._id, and report.updatedAt had not changed. The lead would see an
+  // outdated summary and potentially submit it verbatim. Added
+  // workspace?.aiDraftSummary to the dep array so the textarea updates when
+  // the backend provides a fresh draft. The in-effect guard
+  // `workspace.report ? report.aiDraftSummary : workspace.aiDraftSummary`
+  // already protects against overwriting user-edited text when a saved report
+  // exists (it reads from report.aiDraftSummary, not workspace.aiDraftSummary).
+  }, [workspace?.reportDate, workspace?.report?._id, workspace?.report?.updatedAt, workspace?.aiDraftSummary]);
 
   if (!isLoaded || (shouldQueryWorkspace && workspace === undefined)) {
     return (
@@ -449,8 +468,16 @@ export default function WorkOrderLeadWorkspacePage() {
                   <span className="font-mono text-sm font-semibold">
                     {workOrder.workOrderNumber}
                   </span>
-                  <Badge variant="outline" className="text-[10px] border-border/50">
-                    {workOrder.status}
+                  {/* BUG-LT-HUNT-107: Was showing raw snake_case status
+                      value (e.g. "in_progress") instead of the human-readable
+                      label ("In Progress"). Applied WO_STATUS_LABEL lookup
+                      and WO_STATUS_STYLES color coding to match the WO list
+                      page and detail page patterns. */}
+                  <Badge
+                    variant="outline"
+                    className={`text-[10px] border ${WO_STATUS_STYLES[workOrder.status as WoStatus] ?? "border-border/50 text-muted-foreground"}`}
+                  >
+                    {WO_STATUS_LABEL[workOrder.status as WoStatus] ?? workOrder.status}
                   </Badge>
                   <span className="text-xs text-muted-foreground">
                     {workOrder.promisedDeliveryDate
@@ -519,7 +546,22 @@ export default function WorkOrderLeadWorkspacePage() {
           {workspace?.taskCards.length === 0 ? (
             <p className="text-sm text-muted-foreground">No active task cards found.</p>
           ) : (
-            workspace?.taskCards.slice(0, 30).map((taskCard) => {
+            /* BUG-LT-HUNT-108: slice(0, 30) previously had no overflow
+               indicator. With 31+ task cards, the lead had no way to know
+               tasks beyond 30 were silently hidden — they could assign 30
+               tasks and believe the queue was fully staffed while tasks 31+
+               remained unassigned. Added "Showing X of Y" label and a
+               "View all" link to the work orders list when overflow exists. */
+            <>
+            {(workspace?.taskCards.length ?? 0) > 30 && (
+              <div className="flex items-center justify-between text-[11px] text-muted-foreground mb-1">
+                <span>Showing 30 of {workspace?.taskCards.length} task cards</span>
+                <Link to="/work-orders" className="text-primary hover:underline">
+                  View all in Work Orders →
+                </Link>
+              </div>
+            )}
+            {workspace?.taskCards.slice(0, 30).map((taskCard) => {
               const assignment = taskCardAssignmentById.get(String(taskCard._id));
               const selectedAssignee =
                 taskCard.assignedToTechnicianId
@@ -537,8 +579,12 @@ export default function WorkOrderLeadWorkspacePage() {
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-mono text-xs">{taskCard.workOrderNumber}</span>
                       <span className="text-xs text-muted-foreground">{taskCard.taskCardNumber}</span>
-                      <Badge variant="outline" className="text-[10px] border-border/50">
-                        {taskCard.status}
+                      {/* BUG-LT-HUNT-107: Same raw-status fix for task cards. */}
+                      <Badge
+                        variant="outline"
+                        className={`text-[10px] border ${TASK_STATUS_STYLES[taskCard.status as TaskStatus] ?? "border-border/50 text-muted-foreground"}`}
+                      >
+                        {TASK_STATUS_LABEL[taskCard.status as TaskStatus] ?? taskCard.status}
                       </Badge>
                     </div>
                     <p className="text-sm font-medium truncate">{taskCard.title}</p>
@@ -566,7 +612,8 @@ export default function WorkOrderLeadWorkspacePage() {
                   </div>
                 </div>
               );
-            })
+            })}
+            </>
           )}
         </CardContent>
       </Card>

@@ -414,6 +414,9 @@ function BatchPaymentDialog({
 export default function InvoicesPage() {
   const [activeTab, setActiveTab] = useState<InvoiceStatus>("all");
   const [search, setSearch] = useState("");
+  // BUG-BM-101: Sort state — billing managers need to sort by amount or date to prioritize collections
+  const [sortBy, setSortBy] = useState<"date" | "amount" | "balance">("date");
+  const [sortDir, setSortDir] = useState<"desc" | "asc">("desc");
   const { orgId, techId: currentTechId, isLoaded } = useCurrentOrg();
 
   // Selection state
@@ -450,13 +453,22 @@ export default function InvoicesPage() {
   const filtered = useMemo(() => {
     if (!invoices) return [];
     const byStatus = activeTab === "all" ? invoices : invoices.filter((inv) => inv.status === activeTab);
-    if (!search.trim()) return byStatus;
-    const q = search.toLowerCase();
-    return byStatus.filter((inv) =>
-      inv.invoiceNumber.toLowerCase().includes(q) ||
-      (customerMap.get(inv.customerId as string) ?? "").toLowerCase().includes(q),
-    );
-  }, [invoices, search, activeTab]);
+    const searched = !search.trim() ? byStatus : byStatus.filter((inv) => {
+      const q = search.toLowerCase();
+      return (
+        inv.invoiceNumber.toLowerCase().includes(q) ||
+        (customerMap.get(inv.customerId as string) ?? "").toLowerCase().includes(q)
+      );
+    });
+    // BUG-BM-101: Apply sort so billing manager can prioritize by largest balance, newest, etc.
+    return [...searched].sort((a, b) => {
+      let aVal: number, bVal: number;
+      if (sortBy === "amount") { aVal = a.total; bVal = b.total; }
+      else if (sortBy === "balance") { aVal = a.balance; bVal = b.balance; }
+      else { aVal = a._creationTime; bVal = b._creationTime; }
+      return sortDir === "desc" ? bVal - aVal : aVal - bVal;
+    });
+  }, [invoices, search, activeTab, sortBy, sortDir, customerMap]);
 
   const all = invoices ?? [];
 
@@ -640,18 +652,40 @@ export default function InvoicesPage() {
             ))}
           </TabsList>
         </Tabs>
-        <div className="relative ml-auto">
-          <Search
-            className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none"
-            aria-hidden="true"
-          />
-          <Input
-            placeholder="Search invoice # or customer..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="h-8 pl-8 pr-3 text-xs w-56 bg-muted/30 border-border/60"
-            aria-label="Search invoices by number or customer name"
-          />
+        {/* BUG-BM-101: Sort controls — billing manager needs to sort by amount/balance/date */}
+        <div className="flex items-center gap-2 ml-auto">
+          <Select value={sortBy} onValueChange={(v) => setSortBy(v as "date" | "amount" | "balance")}>
+            <SelectTrigger className="h-8 w-[120px] text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="date">Date</SelectItem>
+              <SelectItem value="amount">Total</SelectItem>
+              <SelectItem value="balance">Balance</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 text-xs px-2"
+            onClick={() => setSortDir((d) => d === "desc" ? "asc" : "desc")}
+            aria-label={`Sort direction: ${sortDir === "desc" ? "descending" : "ascending"}`}
+          >
+            {sortDir === "desc" ? "↓" : "↑"}
+          </Button>
+          <div className="relative">
+            <Search
+              className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none"
+              aria-hidden="true"
+            />
+            <Input
+              placeholder="Search invoice # or customer..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="h-8 pl-8 pr-3 text-xs w-56 bg-muted/30 border-border/60"
+              aria-label="Search invoices by number or customer name"
+            />
+          </div>
         </div>
       </div>
 
