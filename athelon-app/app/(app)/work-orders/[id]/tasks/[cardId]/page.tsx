@@ -1436,6 +1436,8 @@ export default function TaskCardPage() {
                             onChange={(e) => setVendorSvcActualCost(e.target.value)}
                             type="number"
                             placeholder="0.00"
+                            min="0"
+                            step="0.01"
                             className="text-xs h-8"
                           />
                         </div>
@@ -1458,6 +1460,14 @@ export default function TaskCardPage() {
                             const costNum = vendorSvcActualCost.trim()
                               ? parseFloat(vendorSvcActualCost)
                               : undefined;
+                            // BUG-LT-HUNT-095: Reject negative actual costs.
+                            // A tech typing "-100" would save a negative cost,
+                            // which would reduce the WO's billable amount and
+                            // produce incorrect P&L data.
+                            if (costNum !== undefined && (isNaN(costNum) || costNum < 0)) {
+                              toast.error("Actual cost must be a positive number.");
+                              return;
+                            }
                             await updateVendorServiceMutation({
                               id: svc.id as Id<"taskCardVendorServices">,
                               status: vendorSvcUpdateStatus,

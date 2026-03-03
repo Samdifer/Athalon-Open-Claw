@@ -279,6 +279,8 @@ export default function WorkOrderDetailPage() {
   const discrepancies = data.discrepancies ?? [];
   const auditEvents = data.auditEvents ?? [];
 
+  const isTerminalStatus = ["closed", "voided", "cancelled"].includes(wo.status);
+
   const tasksComplete = taskCards.filter((tc) => tc.status === "complete").length;
   const tasksTotal = taskCards.length;
   const openSquawks = discrepancies.filter(
@@ -511,7 +513,18 @@ export default function WorkOrderDetailPage() {
                 Execution Planning
               </Link>
             </Button>
-            {canClose ? (
+            {isTerminalStatus ? (
+              // BUG-SM-006: For closed/voided/cancelled WOs, replace the disabled
+              // "Sign Off & Close" button with a direct link to the RTS record.
+              // The disabled button was confusing on historical WOs (implied
+              // something was wrong with a job that already completed).
+              <Button asChild variant="outline" className="gap-2">
+                <Link to={`/work-orders/${workOrderId}/rts`}>
+                  <ShieldCheck className="w-4 h-4" />
+                  View RTS Record
+                </Link>
+              </Button>
+            ) : canClose ? (
               // BUG-QCM-001: Previously this went to /signature without returnTo
               // or intendedTable params. After entering their PIN, the QCM had no
               // "Continue to Sign-Off" button (it only renders when returnTo is set),
@@ -799,6 +812,29 @@ export default function WorkOrderDetailPage() {
         </TabsContent>
 
         <TabsContent value="notes" className="mt-0">
+          {/* BUG-SM-090 (re-applied): HandoffNotesPanel was rendered OUTSIDE the
+              Tabs component at page bottom, invisible to anyone on the Notes tab.
+              Moved here so shift handoff notes appear first (more time-sensitive
+              than audit history), followed by the audit activity timeline. */}
+          {taskCards.length > 0 && (
+            <div className="space-y-4 mb-4">
+              <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                <MessageSquare className="w-4 h-4 text-muted-foreground" />
+                Shift Handoff Notes
+              </h3>
+              {taskCards.map((tc) => (
+                <div key={tc._id}>
+                  <p className="text-xs text-muted-foreground mb-1 font-medium">
+                    {tc.taskCardNumber} — {tc.title}
+                  </p>
+                  <HandoffNotesPanel
+                    taskCardId={tc._id}
+                    notes={(tc.handoffNotes as { technicianId: string; technicianName: string; note: string; createdAt: number }[]) ?? []}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
           <Card className="border-border/60">
             <CardHeader className="pb-3">
               <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
@@ -812,32 +848,13 @@ export default function WorkOrderDetailPage() {
         </TabsContent>
       </Tabs>
 
-      {/* Shift Handoff Notes — per task card */}
-      {taskCards.length > 0 && (
-        <div className="space-y-4">
-          <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-            <MessageSquare className="w-4 h-4 text-muted-foreground" />
-            Shift Handoff Notes
-          </h3>
-          {taskCards.map((tc) => (
-            <div key={tc._id}>
-              <p className="text-xs text-muted-foreground mb-1 font-medium">
-                {tc.taskCardNumber} — {tc.title}
-              </p>
-              <HandoffNotesPanel
-                taskCardId={tc._id}
-                notes={(tc.handoffNotes as { technicianId: string; technicianName: string; note: string; createdAt: number }[]) ?? []}
-              />
-            </div>
-          ))}
-        </div>
+      {/* Close Readiness Panel — hidden for terminal-status WOs (BUG-SM-005) */}
+      {!isTerminalStatus && (
+        <CloseReadinessPanel
+          workOrderId={workOrderId}
+          organizationId={orgId}
+        />
       )}
-
-      {/* Close Readiness Panel */}
-      <CloseReadinessPanel
-        workOrderId={workOrderId}
-        organizationId={orgId}
-      />
 
       {/* Deferred Maintenance Capture Dialog (Wave 5) */}
       <DeferredMaintenanceCaptureDialog
