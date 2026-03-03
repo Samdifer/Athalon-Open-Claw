@@ -136,7 +136,7 @@ function CreateClaimDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+    <Dialog open={open} onOpenChange={(o) => { if (!o) { reset(); onClose(); } }}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle>New Warranty Claim</DialogTitle>
@@ -177,7 +177,7 @@ function CreateClaimDialog({
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button variant="outline" onClick={() => { reset(); onClose(); }}>Cancel</Button>
           <Button onClick={handleSubmit} disabled={saving || !description || !claimedAmount}>
             {saving ? "Creating…" : "Create Claim"}
           </Button>
@@ -381,8 +381,12 @@ export default function WarrantyPage() {
       {/* Claims Table */}
       {claimRows.length === 0 ? (
         <ActionableEmptyState
-          title="No warranty claims found"
-          missingInfo="Create your first claim to track warranty recovery against vendors and OEMs."
+          title={tab === "all" ? "No warranty claims found" : `No ${tab.replace(/_/g, " ")} claims`}
+          missingInfo={
+            tab === "all"
+              ? "Create your first claim to track warranty recovery against vendors and OEMs."
+              : `No claims are currently in "${tab.replace(/_/g, " ")}" status. Switch to "All" to see all claims or create a new one.`
+          }
           primaryActionLabel="New Claim"
           primaryActionType="button"
           primaryActionTarget={() => setCreateOpen(true)}

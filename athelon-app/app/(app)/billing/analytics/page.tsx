@@ -123,7 +123,7 @@ export default function AnalyticsPage() {
     orgId ? { orgId } : "skip",
   );
 
-  const isLoading = !isLoaded || quotes === undefined || invoices === undefined;
+  const isLoading = !isLoaded || quotes === undefined || invoices === undefined || customers === undefined;
 
   // ── Top-level invoice metrics ──────────────────────────────────────────────
   const invoiceMetrics = useMemo(() => {

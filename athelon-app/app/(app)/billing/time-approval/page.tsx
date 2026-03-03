@@ -318,7 +318,7 @@ export default function TimeApprovalPage() {
                       <TableHead className="text-xs">Context</TableHead>
                       <TableHead className="text-xs">Clock In</TableHead>
                       <TableHead className="text-xs">Clock Out</TableHead>
-                      <TableHead className="text-xs">Duration (min)</TableHead>
+                      <TableHead className="text-xs">Duration</TableHead>
                       <TableHead className="text-xs">Notes</TableHead>
                       <TableHead className="text-xs text-right">Actions</TableHead>
                     </TableRow>
@@ -389,7 +389,7 @@ export default function TimeApprovalPage() {
                       <TableHead className="text-xs">Context</TableHead>
                       <TableHead className="text-xs">Clock In</TableHead>
                       <TableHead className="text-xs">Clock Out</TableHead>
-                      <TableHead className="text-xs">Duration (min)</TableHead>
+                      <TableHead className="text-xs">Duration</TableHead>
                       <TableHead className="text-xs">Approved At</TableHead>
                       <TableHead className="text-xs">Approved By</TableHead>
                     </TableRow>
@@ -441,7 +441,7 @@ export default function TimeApprovalPage() {
                       <TableHead className="text-xs">Context</TableHead>
                       <TableHead className="text-xs">Clock In</TableHead>
                       <TableHead className="text-xs">Clock Out</TableHead>
-                      <TableHead className="text-xs">Duration (min)</TableHead>
+                      <TableHead className="text-xs">Duration</TableHead>
                       <TableHead className="text-xs">Rejection Reason</TableHead>
                       <TableHead className="text-xs">Rejected At</TableHead>
                     </TableRow>
