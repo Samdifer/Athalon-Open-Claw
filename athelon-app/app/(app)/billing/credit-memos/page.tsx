@@ -256,6 +256,7 @@ function ApplyInvoiceDialog({
         creditMemoId,
         invoiceId: selectedInvoiceId as Id<"invoices">,
       });
+      toast.success("Credit memo applied to invoice.");
       setSelectedInvoiceId("");
       onClose();
     } catch (err: unknown) {
@@ -333,7 +334,7 @@ export default function CreditMemosPage() {
     orgId ? { orgId } : "skip",
   );
 
-  const isLoading = !isLoaded || creditMemos === undefined || customers === undefined;
+  const isLoading = !isLoaded || creditMemos === undefined || customers === undefined || invoices === undefined;
 
   const customerMap = useMemo(() => {
     if (!customers) return new Map<string, string>();

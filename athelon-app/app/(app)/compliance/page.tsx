@@ -53,8 +53,15 @@ export default function CompliancePage() {
   if (prereq.state === "loading_context" || prereq.state === "loading_data") {
     return (
       <div className="space-y-6" data-testid="page-loading-state">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          {[1, 2, 3, 4].map((i) => (
+        {/* BUG-QCM-C15: Loading skeleton had 4 cards in a 4-column grid, but
+            FleetComplianceStats renders 5 cards in a 5-column grid (lg:grid-cols-5).
+            When the page finished loading, the layout shifted from 4 to 5 columns.
+            This caused a jarring reflow: the stat cards would jump and reposition.
+            A QCM landing here during a slow query would see the layout reorganize
+            unexpectedly, making it look like the page glitched. Fix: 5 skeletons
+            in a 5-column grid to match the resolved state exactly. */}
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+          {[1, 2, 3, 4, 5].map((i) => (
             <Card key={i} className="border-border/60">
               <CardContent className="p-4">
                 <Skeleton className="h-12 w-full" />

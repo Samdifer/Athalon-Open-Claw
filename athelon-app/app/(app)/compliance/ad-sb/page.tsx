@@ -218,8 +218,10 @@ export default function AdSbCompliancePage() {
     return (
       <div className="space-y-5" data-testid="page-loading-state">
         <Skeleton className="h-7 w-48" />
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-24" />)}
+        {/* BUG-QCM-C16: Skeleton had 4 cards in md:grid-cols-4, but FleetComplianceStats
+            renders 5 cards in sm:grid-cols-3 md:grid-cols-5. Layout shifted on load. */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+          {[1, 2, 3, 4, 5].map((i) => <Skeleton key={i} className="h-24" />)}
         </div>
         <Skeleton className="h-64" />
       </div>

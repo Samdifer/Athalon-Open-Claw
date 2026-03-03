@@ -76,6 +76,7 @@ export default function TimeApprovalPage() {
   const { orgId, techId, isLoaded } = useCurrentOrg();
 
   const [contextFilter, setContextFilter] = useState<ContextFilter>("all");
+  const [techFilter, setTechFilter] = useState<string>("all");
   const [rejectDialog, setRejectDialog] = useState<RejectDialogState>({
     open: false,
     entryId: null,
@@ -147,9 +148,14 @@ export default function TimeApprovalPage() {
     return items.filter((entry) => (entry.entryType ?? "work_order") === contextFilter);
   };
 
-  const filteredPending = useMemo(() => applyContextFilter(pending), [pending, contextFilter]);
-  const filteredApproved = useMemo(() => applyContextFilter(approved), [approved, contextFilter]);
-  const filteredRejected = useMemo(() => applyContextFilter(rejected), [rejected, contextFilter]);
+  const applyTechFilter = <T extends { technicianId: string }>(entries: T[]): T[] => {
+    if (techFilter === "all") return entries;
+    return entries.filter((entry) => (entry.technicianId as string) === techFilter);
+  };
+
+  const filteredPending = useMemo(() => applyTechFilter(applyContextFilter(pending)), [pending, contextFilter, techFilter]);
+  const filteredApproved = useMemo(() => applyTechFilter(applyContextFilter(approved)), [approved, contextFilter, techFilter]);
+  const filteredRejected = useMemo(() => applyTechFilter(applyContextFilter(rejected)), [rejected, contextFilter, techFilter]);
 
   const isLoading = !isLoaded || pending === undefined;
 
@@ -240,10 +246,25 @@ export default function TimeApprovalPage() {
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <Label className="text-xs text-muted-foreground">Technician</Label>
+          <Select value={techFilter} onValueChange={setTechFilter}>
+            <SelectTrigger className="h-8 w-[160px] text-xs">
+              <SelectValue placeholder="All techs" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Technicians</SelectItem>
+              {(technicians ?? []).map((tech) => (
+                <SelectItem key={tech._id as string} value={tech._id as string}>
+                  {tech.legalName}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
           <Label className="text-xs text-muted-foreground">Context</Label>
           <Select value={contextFilter} onValueChange={(value) => setContextFilter(value as ContextFilter)}>
-            <SelectTrigger className="h-8 w-[180px] text-xs">
+            <SelectTrigger className="h-8 w-[160px] text-xs">
               <SelectValue placeholder="Filter context" />
             </SelectTrigger>
             <SelectContent>

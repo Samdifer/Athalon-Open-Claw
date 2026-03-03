@@ -158,15 +158,22 @@ export default function SignaturePage() {
   return (
     <div className="max-w-md mx-auto space-y-5 pt-2">
       {/* Back */}
+      {/* BUG-QCM-C14: Back button was hardcoded to /work-orders/${workOrderId}.
+          When accessed from the RTS page (?returnTo=/work-orders/${id}/rts),
+          clicking Back would send the QCM to the WO detail overview — not back
+          to the RTS sign-off form they came from. They'd lose their place in
+          the sign-off workflow and have to navigate back through the Tabs UI.
+          Now: Back navigates to `returnTo` if set, otherwise the WO detail.
+          Label also contextually adapts so it's clear where the user is going. */}
       <Button
         asChild
         variant="ghost"
         size="sm"
         className="h-7 -ml-2 text-xs text-muted-foreground"
       >
-        <Link to={`/work-orders/${workOrderId}`}>
+        <Link to={returnTo ?? `/work-orders/${workOrderId}`}>
           <ArrowLeft className="w-3.5 h-3.5 mr-1.5" />
-          Back to Work Order
+          {returnTo ? "Back" : "Back to Work Order"}
         </Link>
       </Button>
 
@@ -182,6 +189,42 @@ export default function SignaturePage() {
           Generates a single-use 5-minute authorization token.
         </p>
       </div>
+
+      {/* BUG-QCM-C13: When orgLoaded but !techId, the PIN form renders and
+          the user can type a PIN — but the "Authorize Signature" button is
+          permanently disabled (disabled={... || !techId}) with no explanation.
+          A QCM inspector who hasn't set up their technician profile will enter
+          their PIN, press the button, nothing happens. They have no idea why.
+          They typically call IT or assume the system is broken. Per 14 CFR 65,
+          signing maintenance records requires a certificated technician identity
+          — you can't sign without a tech profile. Now: show a clear warning
+          card when the user is loaded but has no tech profile, directing them
+          to Personnel to create one. The PIN form is also hidden since it
+          cannot succeed. */}
+      {orgLoaded && !techId && (
+        <Card className="border-amber-500/30 bg-amber-500/5">
+          <CardContent className="p-4 space-y-2">
+            <div className="flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-semibold text-amber-600 dark:text-amber-400">
+                  No Technician Profile Found
+                </p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Signing maintenance records requires a technician profile with
+                  a valid certificate and PIN. Your account is not linked to a
+                  technician record in this organization.
+                </p>
+              </div>
+            </div>
+            <Button asChild variant="outline" size="sm" className="w-full text-xs border-border/60">
+              <Link to="/personnel">
+                Go to Personnel to Set Up Your Profile →
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Technician identity */}
       {tech && (
@@ -208,8 +251,8 @@ export default function SignaturePage() {
         </Card>
       )}
 
-      {/* Auth event active */}
-      {authEvent && !expired ? (
+      {/* Only render auth flow when user has a tech profile */}
+      {orgLoaded && !techId ? null : authEvent && !expired ? (
         <Card
           className={`border ${
             remaining > 120_000

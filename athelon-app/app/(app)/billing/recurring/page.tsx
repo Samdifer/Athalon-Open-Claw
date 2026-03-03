@@ -161,6 +161,7 @@ function CreateRecurringTemplateDialog({ open, onClose, orgId, techId }: CreateT
     if (!name.trim()) { toast.error("Template name is required."); return; }
     if (!customerId) { toast.error("Please select a customer."); return; }
     if (!nextGenerateAt) { toast.error("Please set the next generate date."); return; }
+    if (new Date(nextGenerateAt).getTime() < Date.now() - 24 * 60 * 60 * 1000) { toast.error("Next generate date must be today or in the future."); return; }
     if (lineItems.length === 0) { toast.error("At least one line item is required."); return; }
 
     const items = lineItems.map((li) => ({
@@ -283,6 +284,7 @@ function CreateRecurringTemplateDialog({ open, onClose, orgId, techId }: CreateT
                 id="tpl-next"
                 type="date"
                 value={nextGenerateAt}
+                min={new Date().toISOString().split("T")[0]}
                 onChange={(e) => setNextGenerateAt(e.target.value)}
                 className="h-8 text-sm"
               />

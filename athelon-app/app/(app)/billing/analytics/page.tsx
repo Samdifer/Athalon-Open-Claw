@@ -546,12 +546,13 @@ export default function AnalyticsPage() {
                 </TableHeader>
                 <TableBody>
                   {topCustomers.map((c, i) => (
-                    <TableRow key={c.id} className="border-border/40">
+                    <TableRow key={c.id} className="border-border/40 hover:bg-muted/30 cursor-pointer">
                       <TableCell className="text-sm">
-                        <div className="flex items-center gap-2">
+                        {/* BUG-BM-098: Make customer rows link to the customer billing page */}
+                        <Link to={`/billing/customers/${c.id}`} className="flex items-center gap-2 hover:text-primary transition-colors">
                           <span className="text-muted-foreground text-xs w-4">{i + 1}</span>
                           {c.name}
-                        </div>
+                        </Link>
                       </TableCell>
                       <TableCell className="text-sm text-right">{c.count}</TableCell>
                       <TableCell className="text-sm font-semibold text-right">

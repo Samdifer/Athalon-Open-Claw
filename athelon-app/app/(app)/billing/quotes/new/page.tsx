@@ -180,6 +180,15 @@ export default function NewQuotePage() {
   );
   const [kitSearch, setKitSearch] = useState("");
   const [notes, setNotes] = useState("");
+  // Default validity: 30 days from today (industry standard for MRO quotes)
+  const [expiresAt, setExpiresAt] = useState<string>(() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 30);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  });
   const [lineItems, setLineItems] = useState<DraftLineItem[]>([
     { id: crypto.randomUUID(), type: "labor", description: "", qty: "1", unitPrice: "0" },
   ]);
@@ -381,6 +390,7 @@ export default function NewQuotePage() {
         workOrderId: prefillWorkOrderId,
         createdByTechId: techId as Id<"technicians">,
         notes: notes.trim() || undefined,
+        expiresAt: expiresAt ? new Date(expiresAt).getTime() : undefined,
       });
 
       for (const item of lineItems) {
@@ -493,13 +503,28 @@ export default function NewQuotePage() {
             </div>
 
             <div className="space-y-1.5">
+              <Label className="text-xs font-medium">Valid Until</Label>
+              <input
+                type="date"
+                value={expiresAt}
+                onChange={(e) => setExpiresAt(e.target.value)}
+                className="flex h-9 w-full rounded-md border border-border/60 bg-background px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              />
+              <p className="text-[10px] text-muted-foreground">
+                Date after which this quote is no longer valid. Standard MRO: 30 days.
+              </p>
+            </div>
+
+            <div className="space-y-1.5">
               <Label className="text-xs font-medium">Notes</Label>
               <Textarea
                 value={notes}
-                onChange={(e) => setNotes(e.target.value)}
+                onChange={(e) => setNotes(e.target.value.slice(0, 1000))}
+                maxLength={1000}
                 placeholder="Optional notes for this quote..."
                 className="text-sm border-border/60 resize-none h-20"
               />
+              <p className="text-[10px] text-muted-foreground text-right">{notes.length}/1000</p>
             </div>
           </CardContent>
         </Card>

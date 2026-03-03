@@ -5,6 +5,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { type Id } from "@/convex/_generated/dataModel";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
+import { toast } from "sonner";
 import { Landmark, Plus, DollarSign, CheckCircle, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -112,6 +113,7 @@ function RecordDepositDialog({ open, onClose, orgId, techId, customers }: Record
         notes: notes.trim() || undefined,
         recordedByTechId: techId,
       });
+      toast.success(`Deposit of ${fmt(amtNum)} recorded.`);
       resetForm();
       onClose();
     } catch (err: unknown) {
@@ -283,6 +285,7 @@ function ApplyDepositDialog({
         invoiceId: selectedInvoiceId as Id<"invoices">,
         amount: amtNum,
       });
+      toast.success(`${fmt(amtNum)} deposit applied to invoice.`);
       resetForm();
       onClose();
     } catch (err: unknown) {
@@ -382,7 +385,7 @@ export default function DepositsPage() {
     orgId ? { orgId } : "skip"
   );
 
-  const isLoading = !isLoaded || deposits === undefined || customers === undefined;
+  const isLoading = !isLoaded || deposits === undefined || customers === undefined || invoices === undefined;
 
   const customerMap = useMemo(() => {
     if (!customers) return new Map<string, string>();

@@ -18,6 +18,7 @@ import {
   Pencil,
   Trash2,
   CalendarDays,
+  Plus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -145,6 +146,36 @@ export default function InvoiceDetailPage() {
   // GAP-06: Delete line item confirm
   const [deleteItemDialog, setDeleteItemDialog] = useState(false);
   const [deleteItemId, setDeleteItemId] = useState<Id<"invoiceLineItems"> | null>(null);
+
+  // BUG-BM-096: Add line item to DRAFT invoice
+  const addInvoiceLineItem = useMutation(api.billing.addInvoiceLineItem);
+  const [addLineDialog, setAddLineDialog] = useState(false);
+  const [addLineType, setAddLineType] = useState<"labor" | "part" | "external_service">("labor");
+  const [addLineDesc, setAddLineDesc] = useState("");
+  const [addLineQty, setAddLineQty] = useState("1");
+  const [addLineUnitPrice, setAddLineUnitPrice] = useState("");
+  const [addLineLoading, setAddLineLoading] = useState(false);
+  const [addLineError, setAddLineError] = useState<string | null>(null);
+
+  const handleAddLine = async () => {
+    if (!orgId) return;
+    const qty = parseFloat(addLineQty);
+    const unitPrice = parseFloat(addLineUnitPrice);
+    if (!addLineDesc.trim()) { setAddLineError("Description is required."); return; }
+    if (isNaN(qty) || qty === 0) { setAddLineError("Quantity must be non-zero."); return; }
+    if (isNaN(unitPrice) || unitPrice < 0) { setAddLineError("Enter a valid unit price."); return; }
+    setAddLineLoading(true); setAddLineError(null);
+    try {
+      await addInvoiceLineItem({ orgId, invoiceId, type: addLineType, description: addLineDesc.trim(), qty, unitPrice });
+      toast.success("Line item added.");
+      setAddLineDesc(""); setAddLineQty("1"); setAddLineUnitPrice(""); setAddLineType("labor");
+      setAddLineDialog(false);
+    } catch (err) {
+      setAddLineError(err instanceof Error ? err.message : "Failed to add line item.");
+    } finally {
+      setAddLineLoading(false);
+    }
+  };
 
   const isLoading = !isLoaded || invoice === undefined;
 
@@ -524,10 +555,16 @@ export default function InvoiceDetailPage() {
           </CardContent>
         </Card>
 
-        {/* Line Items — GAP-06: edit/delete on DRAFT */}
+        {/* Line Items — GAP-06: edit/delete on DRAFT; BUG-BM-096: add on DRAFT */}
         <Card className="border-border/60">
-          <CardHeader className="pb-3">
+          <CardHeader className="pb-3 flex flex-row items-center justify-between">
             <CardTitle className="text-sm font-medium">Line Items</CardTitle>
+            {isDraft && (
+              <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => { setAddLineError(null); setAddLineDialog(true); }}>
+                <Plus className="w-3 h-3" />
+                Add Line
+              </Button>
+            )}
           </CardHeader>
           <CardContent className="p-0">
             {invoice.lineItems.length === 0 ? (
@@ -924,6 +961,83 @@ export default function InvoiceDetailPage() {
                 disabled={!voidReason.trim() || actionLoading === "void"}
               >
                 {actionLoading === "void" ? "Voiding..." : "Void Invoice"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* BUG-BM-096: Add Line Item Dialog (DRAFT only) */}
+        <Dialog open={addLineDialog} onOpenChange={(v) => { if (!v && !addLineLoading) setAddLineDialog(false); }}>
+          <DialogContent className="max-w-[95vw] sm:max-w-lg">
+            <DialogHeader>
+              <DialogTitle>Add Line Item</DialogTitle>
+              <DialogDescription>
+                Add a labor, part, or external service charge to this draft invoice.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-3 py-2">
+              <div className="space-y-1.5">
+                <Label className="text-xs">Type</Label>
+                <Select value={addLineType} onValueChange={(v) => setAddLineType(v as typeof addLineType)}>
+                  <SelectTrigger className="h-8 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="labor" className="text-xs">Labor</SelectItem>
+                    <SelectItem value="part" className="text-xs">Part</SelectItem>
+                    <SelectItem value="external_service" className="text-xs">External Service</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Description *</Label>
+                <Input
+                  value={addLineDesc}
+                  onChange={(e) => setAddLineDesc(e.target.value.slice(0, 300))}
+                  placeholder="e.g. 100hr inspection labor — N12345"
+                  className="h-8 text-sm"
+                  maxLength={300}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Quantity</Label>
+                  <Input
+                    type="number"
+                    min="0.01"
+                    step="0.01"
+                    value={addLineQty}
+                    onChange={(e) => setAddLineQty(e.target.value)}
+                    className="h-8 text-sm"
+                    placeholder="1"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Unit Price ($)</Label>
+                  <Input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={addLineUnitPrice}
+                    onChange={(e) => setAddLineUnitPrice(e.target.value)}
+                    className="h-8 text-sm"
+                    placeholder="0.00"
+                  />
+                </div>
+              </div>
+              {addLineDesc && addLineQty && addLineUnitPrice && (
+                <p className="text-xs text-muted-foreground">
+                  Line total: <span className="font-semibold text-foreground">
+                    ${(parseFloat(addLineQty || "0") * parseFloat(addLineUnitPrice || "0")).toFixed(2)}
+                  </span>
+                </p>
+              )}
+              {addLineError && <p className="text-xs text-red-600 dark:text-red-400">{addLineError}</p>}
+            </div>
+            <DialogFooter>
+              <Button variant="outline" size="sm" onClick={() => setAddLineDialog(false)} disabled={addLineLoading}>Cancel</Button>
+              <Button size="sm" onClick={handleAddLine} disabled={addLineLoading || !addLineDesc.trim()}>
+                {addLineLoading ? "Adding..." : "Add Line Item"}
               </Button>
             </DialogFooter>
           </DialogContent>

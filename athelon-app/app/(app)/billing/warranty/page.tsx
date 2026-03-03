@@ -16,6 +16,7 @@ import {
   DollarSign,
   Clock,
   AlertTriangle,
+  Search,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -294,6 +295,7 @@ function ClaimDetailDialog({
 export default function WarrantyPage() {
   const { orgId, isLoaded } = useCurrentOrg();
   const [tab, setTab] = useState<ClaimStatus | "all">("all");
+  const [search, setSearch] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
   const [selectedClaim, setSelectedClaim] = useState<Id<"warrantyClaims"> | null>(null);
 
@@ -317,7 +319,19 @@ export default function WarrantyPage() {
     const recoveryRate = totalClaimed > 0 ? (approved / totalClaimed) * 100 : 0;
     return { total, pending, approved, recoveryRate };
   }, [claims]);
-  const claimRows = claims ?? [];
+  // BUG-BM-097: Client-side search so billing manager can find claims by number, part, or description
+  const claimRows = useMemo(() => {
+    const all = claims ?? [];
+    if (!search.trim()) return all;
+    const q = search.toLowerCase();
+    return all.filter(
+      (c) =>
+        c.claimNumber.toLowerCase().includes(q) ||
+        (c.partNumber ?? "").toLowerCase().includes(q) ||
+        (c.serialNumber ?? "").toLowerCase().includes(q) ||
+        c.description.toLowerCase().includes(q),
+    );
+  }, [claims, search]);
 
   if (prereq.state === "loading_context" || prereq.state === "loading_data") {
     return (
@@ -370,14 +384,25 @@ export default function WarrantyPage() {
           <CardContent><div className="text-2xl font-bold">{stats.recoveryRate.toFixed(1)}%</div></CardContent></Card>
       </div>
 
-      {/* Status Tabs */}
-      <div className="flex gap-1 border-b pb-1">
-        {STATUS_TABS.map((t) => (
-          <Button key={t.value} variant={tab === t.value ? "default" : "ghost"} size="sm"
-            onClick={() => setTab(t.value as ClaimStatus | "all")}>
-            {t.label}
-          </Button>
-        ))}
+      {/* Status Tabs + Search */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+        <div className="flex gap-1 border-b sm:border-b-0 pb-1 sm:pb-0 flex-wrap">
+          {STATUS_TABS.map((t) => (
+            <Button key={t.value} variant={tab === t.value ? "default" : "ghost"} size="sm"
+              onClick={() => setTab(t.value as ClaimStatus | "all")}>
+              {t.label}
+            </Button>
+          ))}
+        </div>
+        <div className="relative ml-auto">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
+          <Input
+            placeholder="Search claim #, part #, or description..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="h-8 pl-8 text-xs w-64 bg-muted/30 border-border/60"
+          />
+        </div>
       </div>
 
       {/* Claims Table */}
