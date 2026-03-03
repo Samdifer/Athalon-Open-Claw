@@ -39,6 +39,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { AircraftAdComplianceTab } from "./_components/AircraftAdComplianceTab";
+import { DeferredMaintenanceSection } from "./_components/DeferredMaintenanceSection";
 
 // ─── Status helpers ───────────────────────────────────────────────────────────
 
@@ -328,6 +329,10 @@ export default function AircraftDetailPage() {
             <TabsTrigger value="ad-compliance">
               <ShieldAlert className="w-3.5 h-3.5 mr-1.5" />
               AD Compliance
+            </TabsTrigger>
+            <TabsTrigger value="deferred">
+              <AlertTriangle className="w-3.5 h-3.5 mr-1.5" />
+              Deferred Maintenance
             </TabsTrigger>
             <TabsTrigger value="logbook">
               <BookOpen className="w-3.5 h-3.5 mr-1.5" />
@@ -746,6 +751,17 @@ export default function AircraftDetailPage() {
                 <Skeleton className="h-16 w-full" />
                 <Skeleton className="h-16 w-full" />
               </div>
+            )}
+          </TabsContent>
+
+          {/* ═══════════════════════════════════════════════════════════════ */}
+          {/* TAB: Deferred Maintenance (Wave 5)                            */}
+          {/* ═══════════════════════════════════════════════════════════════ */}
+          <TabsContent value="deferred" className="space-y-4">
+            {aircraft?._id ? (
+              <DeferredMaintenanceSection aircraftId={aircraft._id} />
+            ) : (
+              <Skeleton className="h-16 w-full" />
             )}
           </TabsContent>
 

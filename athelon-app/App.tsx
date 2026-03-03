@@ -27,6 +27,7 @@ const WorkOrderTemplatesPage = lazy(() => import("@/app/(app)/work-orders/templa
 const ReleaseAircraftPage = lazy(() => import("@/app/(app)/work-orders/[id]/release/page"));
 const CertificatesPage = lazy(() => import("@/app/(app)/work-orders/[id]/certificates/page"));
 const KanbanPage = lazy(() => import("@/app/(app)/work-orders/kanban/page"));
+const WOExecutionPage = lazy(() => import("@/app/(app)/work-orders/[id]/execution/page"));
 
 // Fleet
 const FleetPage = lazy(() => import("@/app/(app)/fleet/page"));
@@ -203,6 +204,7 @@ export default function App() {
                 <Route path="/work-orders/:id/rts" element={<RtsPage />} />
                 <Route path="/work-orders/:id/release" element={<ReleaseAircraftPage />} />
                 <Route path="/work-orders/:id/certificates" element={<CertificatesPage />} />
+                <Route path="/work-orders/:id/execution" element={<WOExecutionPage />} />
                 <Route path="/work-orders/:id/signature" element={<SignaturePage />} />
 
                 {/* Fleet */}

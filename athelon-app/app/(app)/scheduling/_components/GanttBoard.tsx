@@ -377,6 +377,7 @@ export function GanttBoard({
     }
 
     async function handlePointerUp(e: PointerEvent) {
+      (e.target as HTMLElement).releasePointerCapture?.(e.pointerId);
       const delta = e.clientX - dragState!.startX;
       const daysDelta = Math.round(delta / cellWidth);
       const nextHangarBayId =

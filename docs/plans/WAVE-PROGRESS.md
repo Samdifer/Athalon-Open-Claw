@@ -4,28 +4,28 @@
 
 ## Wave Status
 
-| Wave | Description | Status | Agent | Started | Completed |
-|------|-------------|--------|-------|---------|-----------|
-| 1 | Onboarding + Core Board + Touch + Undo | 🔄 IN PROGRESS | — | 02:20 | — |
-| 2 | Fullscreen + Panels + P&L | ⏳ WAITING (needs W1) | — | — | — |
-| 3 | Edit Mode + Magic Scheduler + Training | ⏳ WAITING (needs W1) | — | — | — |
-| 4 | Quote Parity + Embedded Builder | ⏳ WAITING (needs W1) | — | — | — |
-| 5 | Carry-Forward + Graveyard + AD | ⏳ WAITING (needs W4) | — | — | — |
-| 6 | WO Execution Gantt (Tech→Task) | ⏳ WAITING (needs W3) | — | — | — |
-| 7 | Multi-Location + Command Center | ⏳ WAITING (needs W1) | — | — | — |
-| 8 | Hardening & Cleanup | ⏳ WAITING (needs all) | — | — | — |
+| Wave | Description | Status | Commit | Completed |
+|------|-------------|--------|--------|-----------|
+| 1 | Onboarding + Core Board + Touch + Undo | ✅ BACKEND DONE / 🔄 FRONTEND PARTIAL | `4029c00`, `cbf497d` | Backend done, hooks done, touch/onboarding wiring pending |
+| 2 | Fullscreen + Panels + P&L | ✅ COMPLETE (pre-existing) | — | Already built |
+| 3 | Training Constraints + Magic Scheduler | ✅ BACKEND + UI DONE | `cbf497d` | technicianTraining.ts, training UI, magicSchedule upgraded |
+| 4 | Quote Parity + Embedded Builder | ✅ BACKEND + PARTIAL UI | `cbf497d` | quoteTemplates.ts, quoteEnhancements.ts, line economics, templates page |
+| 5 | Carry-Forward + Graveyard + AD | ✅ BACKEND DONE | `cbf497d` | carryForwardItems.ts, cloneDeclinedQuote, schema |
+| 6 | WO Execution Gantt (Tech→Task) | ✅ BACKEND DONE / ❌ FRONTEND PENDING | `cbf497d` | taskAssignments.ts done, WOExecutionGantt.tsx NOT created |
+| 7 | Multi-Location + Command Center | ⏳ MOSTLY DONE (minor items) | — | — |
+| 8 | Hardening & Cleanup | ⏳ WAITING | — | — |
 
-## Deliverable Tracking
+## Remaining Work
+- [ ] Wave 1: Touch/pointer events on GanttBoard + BacklogSidebar
+- [ ] Wave 1: Onboarding wizard wiring into scheduling page
+- [ ] Wave 1: Undo/keyboard hooks wired into page
+- [ ] Wave 5: Frontend — carry-forward UI in fleet detail, WO close dialog, quote suggestions
+- [ ] Wave 6: WOExecutionGantt.tsx component + execution page route + App.tsx route
+- [ ] Wave 7: Multi-location onboarding, repair station cert display, RBAC
+- [ ] Wave 8: Deprecations, RBAC, performance, mobile layout, E2E regression
 
-### Wave 1
-- [ ] 1.1 Guided onboarding wizard
-- [x] 1.2 Sample data generation (convex/onboarding.ts) — `4029c00`
-- [ ] 1.8 Touch/pointer events for all DnD
-- [ ] 1.9 Undo stack + Ctrl+Z
-- [ ] 1.10 Keyboard shortcuts
-- [x] 1.11 Audit log on schedule mutations — `4029c00`
-- [x] 1.3 Backlog → bay drag-drop (DONE)
-- [x] 1.4 Cross-bay vertical move (DONE)
-- [x] 1.5 Horizontal date resize (DONE)
-- [x] 1.6 Bay row reorder (DONE)
-- [x] 1.7 Drop-zone visual feedback (DONE)
+## Deployed
+- Convex: All 4 new tables deployed (technicianTraining, taskAssignments, carryForwardItems, quoteTemplates)
+- TypeScript: 0 errors
+- Vite build: Clean
+- Pushed to GitHub main: `cbf497d`

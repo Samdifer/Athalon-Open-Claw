@@ -138,6 +138,8 @@ export default function NewQuotePage() {
   const prefillWorkOrderId = prefillWorkOrderIdParam
     ? (prefillWorkOrderIdParam as Id<"workOrders">)
     : undefined;
+  const prefillAircraftIdParam = searchParams.get("aircraftId");
+  const prefillCarryForwardIdParam = searchParams.get("carryForwardId");
 
   const customers = useQuery(
     api.customers.listCustomers,
@@ -164,6 +166,13 @@ export default function NewQuotePage() {
   const createQuote = useMutation(api.billing.createQuote);
   const addQuoteLineItem = useMutation(api.billing.addQuoteLineItem);
   const computePrice = useAction(api.pricing.computePrice);
+  const consumeCarryForward = useMutation(api.carryForwardItems.consumeByQuote);
+
+  // Carry-forward items for selected aircraft
+  const carryForwardItems = useQuery(
+    api.carryForwardItems.listByAircraft,
+    aircraftId ? { aircraftId: aircraftId as Id<"aircraft"> } : "skip",
+  );
 
   const [customerId, setCustomerId] = useState<string>("");
   const [pricingLoading, setPricingLoading] = useState<string | null>(null);
@@ -175,6 +184,7 @@ export default function NewQuotePage() {
   ]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [addedCarryForwardIds, setAddedCarryForwardIds] = useState<Set<string>>(new Set());
 
   const isLoading =
     !isLoaded ||

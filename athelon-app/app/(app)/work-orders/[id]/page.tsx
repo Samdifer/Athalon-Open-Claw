@@ -52,6 +52,7 @@ import { CloseReadinessPanel } from "@/components/CloseReadinessPanel";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import { ActivityTimeline } from "@/app/(app)/work-orders/[id]/_components/ActivityTimeline";
 import { DiscrepancyList } from "@/app/(app)/work-orders/[id]/_components/DiscrepancyList";
+import { DeferredMaintenanceCaptureDialog } from "@/app/(app)/work-orders/[id]/_components/DeferredMaintenanceCaptureDialog";
 
 type AuditEventForTimeline = {
   _id: string;
@@ -135,6 +136,7 @@ export default function WorkOrderDetailPage() {
   const { id: routeRef = "" } = useParams<{ id: string }>();
   const { orgId, techId, isLoaded } = useCurrentOrg();
   const [timerActionLoading, setTimerActionLoading] = useState<"start" | "stop" | null>(null);
+  const [deferredCaptureOpen, setDeferredCaptureOpen] = useState(false);
 
   const legacyResolution = useQuery(
     api.workOrders.resolveWorkOrderRef,
@@ -461,6 +463,12 @@ export default function WorkOrderDetailPage() {
               <Download className="w-3.5 h-3.5" />
               Download PDF
             </Button>
+            <Button variant="outline" asChild className="gap-2">
+              <Link to={`/work-orders/${workOrderId}/execution`}>
+                <Calendar className="w-4 h-4" />
+                Execution Planning
+              </Link>
+            </Button>
             {canClose ? (
               // BUG-QCM-001: Previously this went to /signature without returnTo
               // or intendedTable params. After entering their PIN, the QCM had no
@@ -471,11 +479,9 @@ export default function WorkOrderDetailPage() {
               // is the correct entry point — that page has the proper link to the
               // signature page with returnTo + intendedTable set, so the redirect
               // back to /rts?authEventId=... flows correctly.
-              <Button asChild className="gap-2">
-                <Link to={`/work-orders/${workOrderId}/rts`}>
-                  <ShieldCheck className="w-4 h-4" />
-                  Sign Off & Close
-                </Link>
+              <Button className="gap-2" onClick={() => setDeferredCaptureOpen(true)}>
+                <ShieldCheck className="w-4 h-4" />
+                Sign Off & Close
               </Button>
             ) : (
               <Button variant="outline" disabled className="gap-2 opacity-50">
@@ -742,6 +748,19 @@ export default function WorkOrderDetailPage() {
       <CloseReadinessPanel
         workOrderId={workOrderId}
         organizationId={orgId}
+      />
+
+      {/* Deferred Maintenance Capture Dialog (Wave 5) */}
+      <DeferredMaintenanceCaptureDialog
+        open={deferredCaptureOpen}
+        onOpenChange={setDeferredCaptureOpen}
+        workOrderId={workOrderId}
+        organizationId={orgId}
+        onComplete={() => {
+          setDeferredCaptureOpen(false);
+          // Navigate to RTS after capturing (or skipping) deferred items
+          window.location.href = `/work-orders/${workOrderId}/rts`;
+        }}
       />
     </div>
   );
