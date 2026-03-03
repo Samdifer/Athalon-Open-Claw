@@ -1,0 +1,15 @@
+
+
+Hi Nat,
+Had a chance to inventory N793WE, B300, FL-555. Currently installed components:
+RTU-822-0730-461
+IOCs-822-1361-614
+FMC-822-0883-053
+TDRs-622-9352-005
+GPS-822-2189-004.
+Looking for options/quote on ADS-b out. I know you had some #s for upgrades. Let me know your thoughts.
+
+Thanks again, 
+
+
+

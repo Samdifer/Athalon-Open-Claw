@@ -1,0 +1,625 @@
+# Mayo Historical Quotes, Pricing, and Retrofit Context Index
+
+## Scope
+This index catalogs Mayo historical quote/pricing and retrofit package artifacts.
+Primary feature relevance:
+- Feature 51: Operational Report Builder + Scheduled Report Runs
+- Feature 44: Work Order Routing Templates + Standard Minutes
+- Feature 52: Part Lineage Drilldown Explorer
+
+## Corpus Slice Summary
+- Total files in Mayo corpus: 719
+- Dominant structure: dated labor-rate records, flat-rate libraries, proposal packets, quote detail workbooks, and retrofit evidence packs.
+
+## Recommended Feature Relevance
+- High: 51, 44, 52
+- Medium: 12, 18, 46
+
+## Exhaustive High-Signal File List (Non-Image Documents)
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/2009/2009 Aircraft Maintenance Labor Rates.doc`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/2009/N113YS 2009 Forest Service App.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/2009/N222BE 2009 Forest Service App.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/2009/N350JB 2009 Forest Service App.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/2009/N39TW 2009 Forest Service App.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/2009/N520MC 2009 Forest Service App.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/2009/N553V 2009 Forest Service App.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/2009/N594M 2009 Forest Service App.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/2009/N5ST 2009 Forest Service App.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/2009/N643CR 2009 Forest Service Appl.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/2009/N68EU 2009 Forest Service App.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/2009/N717EB 2009 Forest Service App.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/2009/N825TT 2009 Forest Service App.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/2011/2011 Aircraft Maintenance Labor Rates.doc`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/2012/2012 Aircraft Maintenance Labor Rates.doc`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/2012/2012 Battery Flat Rate Letter with signature.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/2013/2013 Aircraft Maintenance Labor Rates.doc`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/2013/2013 Aircraft Maintenance Labor Rates.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/2013/2013 Battery Flat Rate Letter with signature.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/2014/2014 Aircraft Maintenance Labor Rates.doc`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/2015 (April)/2015 (April) Aircraft Maintenance Labor Rates.doc`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/2017/2017 (January) Aircraft Maintenance Labor Rates.doc`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/2017/~$17 (January) Aircraft Maintenance Labor Rates.doc`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Flat Rates/90 series flat rate guide.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Flat Rates/90 series flate rate guideHBC.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Flat Rates/Aerospatiale Flat Rates.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Flat Rates/B-300 Flat Rates.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Flat Rates/B200 Flate rates.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Flat Rates/Baron Series Flate Rates.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Flat Rates/Beechcraft Flat Rates.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Flat Rates/Beechjet & Mitsubishi Flat Rates.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Flat Rates/Beechjet Flate Rates.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Flat Rates/Bonanza Series Flate Rates.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Flat Rates/Bonanza flate rates.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Flat Rates/Cessna Citation Flat Rates.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Flat Rates/Cessna Piston Flat Rates.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Flat Rates/Challenger Flat Rates.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Flat Rates/Dassault Falcon Flat Rates.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Flat Rates/Garrett Engines Flat Rates.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Flat Rates/Grumman Flat Rates.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Flat Rates/Gulfstream Flat Rates.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Flat Rates/HBC/BB-Super King Air 200-B200.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Flat Rates/HBC/BL-Super King Air 200-B200.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Flat Rates/HBC/EA-Bonanza B36TC.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Flat Rates/HBC/EA-Bonanza Series.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Flat Rates/HBC/FA-Super King Air 300-300LW.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Flat Rates/HBC/FL-Super King Air 350.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Flat Rates/HBC/HA-Hawker 900XP.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Flat Rates/HBC/HB-Hawker 750.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Flat Rates/HBC/HK-Hawker 1-900 Series.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Flat Rates/HBC/LJ-King Air C90.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Flat Rates/HBC/MC-Sierra.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Flat Rates/HBC/NC-Starship 1.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Flat Rates/HBC/RB-Premier 1.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Flat Rates/HBC/RC-Hawker 4000 (Horizon).xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Flat Rates/HBC/RC-Hawker 800 HA-HB-HK-RF-RG-RH.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Flat Rates/HBC/RJ-BeechJet 400A MU-RJ-RK-TT-TX.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Flat Rates/HBC/RK-BeechJet 400A MU-RJ-RK-TT-TX.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Flat Rates/HBC/TH-Baron 58-58A.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Flat Rates/HBC/UE-Airliner 1900D U-UA-UB-UC-UD-UE.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Flat Rates/Hawker Flat Rates.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Flat Rates/IAI Flat Rates.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Flat Rates/King Air Flat Rates.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Flat Rates/Lear Pricing.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Flat Rates/LearJet Flat Rates.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Flat Rates/Lockheed Jetstar Flat Rates.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Flat Rates/Merlin Flat Rates.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Flat Rates/Miscellaneous Services Flat Rates.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Flat Rates/Mooney Flat Rates.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Flat Rates/Piaggio Flat Rates.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Flat Rates/Piper Cheyenne Flat Rates.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Flat Rates/Piper Piston Flat Rates.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Flat Rates/Piper Twin Engine Flat Rates.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Flat Rates/SAAB Flat Rates.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Flat Rates/Socata Labor Guide.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Flat rates labor rates/B200 HBC Flat Rates.csv`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Flat rates labor rates/B300 HBC Flat Rates.csv`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Flat rates labor rates/C90 HBC Flat Rates.csv`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Flat rates labor rates/CL 600 Flat Rate Hours.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Flat rates labor rates/Citation 560 Series Flat Rate Hours.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Flat rates labor rates/Hawker 800 Series Flat Rate Hours.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Flat rates labor rates/KA 200 Flat Rate Hours.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Flat rates labor rates/KA 300 Flat Rate Hours.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Flat rates labor rates/KA 90 Flat Hour Rate Hours.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Flat rates labor rates/LearJet 35 Flat Rate Hours.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Flat rates labor rates/LearJet 55 Flat Rate Hours.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/AS Aspen/N925EM, 525B0202 Proline 21 CMD ADS-B STC.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Aztec Well Servicing/Contact Log.txt`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Aztec Well Servicing/Proposal 2016-09-10.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Aztec Well Servicing/Proposal 2016-09-10.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Aztec Well Servicing/QD 2016-09-10.xlsx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/BB-125TS ADS-B  Proline 21 WAAS Upgrades Collins package 4.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Banner Health/N75TW/Garmin package upgrade 1_6_18 G600 650 345 335 N75TW.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Banner Health/N75TW/Proposal 2018-01-06 N75TW.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Banner Health/N75TW/Proposal 2018-01-06 N75TW.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Banner Health/N98TG/2017 quotes/Garmin package upgrade.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Banner Health/N98TG/2017 quotes/N98TG, 7904027  IRIS A100.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Banner Health/N98TG/2017 quotes/Proposal 2017-06-08.1.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Banner Health/N98TG/2017 quotes/Proposal 2017-06-08.1.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Banner Health/N98TG/2017 quotes/Proposal 2017-06-08.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Banner Health/N98TG/2017 quotes/Proposal 2017-06-08.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Banner Health/N98TG/2018 quotes/Garmin package upgrade 1_6_18 G600 650 345 335 N75TW.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Banner Health/N98TG/2018 quotes/Garmin package upgrade 1_6_18 G600 650 345 335.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Banner Health/N98TG/2018 quotes/Proposal 2018-01-06 N98TG.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Banner Health/N98TG/2018 quotes/Proposal 2018-01-06 N98TG.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Banner Health/N98TG/Nats old quote/KA Center Layout.pptx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Banner Health/N98TG/Nats old quote/Proposal 2016-10-16.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Banner Health/N98TG/Nats old quote/Proposal 2016-11-04.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Banner Health/N98TG/Nats old quote/Proposal 2016-11-04.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Banner Health/N98TG/Nats old quote/QD 2016-10-16.xlsx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Banner Health/N98TG/Nats old quote/QD 2016-11-04.xlsx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Banner Health/N98TG/Nats old quote/Thumbs.db`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Barnstormers N657KT/Garmin package upgrade.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Barnstormers N657KT/Proposal 2016-10-16.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Barnstormers N657KT/Proposal 2017-06-06.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Barnstormers N657KT/Proposal 2017-06-06.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Berland Development N2DB/Proposal 2017-03-01.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Berland Development N2DB/Proposal 2017-03-01.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Berland Development N2DB/QD 2017-03-01.xlsx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Berland Development N2DB/Thumbs.db`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Colorado SP/KA Center Layout.pptx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Colorado SP/N201SP, T182/GTN 650 and GTX-345 N201SP, 18268313.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Colorado SP/N201SP, T182/Proposal 2017-02-09.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Colorado SP/N201SP, T182/Proposal 2017-07-19.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Colorado SP/Proposal 2016-10-12.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Colorado SP/Proposal 2016-10-12.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Colorado SP/QD 2016-10-12.xlsx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Colorado SP/Thumbs.db`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Copy of N157WW CNI5000 Upgrade.xlsx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Copy of N184CD ADS-B  MST-70B GTX-3000 GTN-750.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Copy of N525DY ADS-B Upgrade  ATG-2000.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/DBU-5000 upgrade from CPAS (003).xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/DBU-5000 upgrade from CPAS Rev A.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/DBU-5000 upgrade from CPAS.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/David Linscomb/Club Car/N850EP SN 039/AirCell ATG-5000 N850EP SN 039.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/David Linscomb/N2UW/ADS-B  Upgrades CMD solution.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/David Linscomb/N525DY/N525DY ADS-B Upgrade & ATG-2000.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/David Linscomb/N525DY/N525DY Bendix King KT-70 ADS-B Upgrade.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/David Linscomb/N543SC, Big Red Aviation/N543SC G600 GTN-750 GTX-3000 2017-09-30.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/David Linscomb/N543SC, Big Red Aviation/N543SC G600 GTN-750 GTX-3000 2017-11-28.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/David Linscomb/N543SC, Big Red Aviation/N543SC Proposal 2017-09-30.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Denver East, N350JB, FL-213/G1000 FL-213, N350JB.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Eaton Metals/Contact Log.txt`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Eaton Metals/Proposal 2016-11-03.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Eaton Metals/Proposal 2016-11-03.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Eaton Metals/Proposal 2016-11-03R1.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Eaton Metals/Proposal 2016-11-03R1.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Eaton Metals/QD 2016-11-03.xlsx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Eaton Metals/QD 2016-11-03R1.xlsx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Encana 825TT/EQL N825TT.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Encana 825TT/Proposal 2017-02-02.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Encana 825TT/Proposal 2017-02-02.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Encana 825TT/QD 2017-02-02.xlsx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Francis Aviation/Proposal 2016-10-05.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Francis Aviation/Proposal 2016-10-05.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Francis Aviation/Proposal 2016-10-06.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Francis Aviation/Proposal 2016-10-06.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Francis Aviation/QD 2016-10-05.xlsx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Fremont Motors/KA Center Layout.pptx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Fremont Motors/Proposal 2016-xx-xx.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Fremont Motors/QD 2016-xx-xx.xlsx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Fremont Motors/Thumbs.db`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Fremont Motors/_archived/KA Center Layout.pptx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Fremont Motors/_archived/Proposal 2016-10-11.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Fremont Motors/_archived/Proposal 2016-10-11.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Fremont Motors/_archived/QD 2016-10-11.xlsx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Fremont Motors/_archived/Thumbs.db`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/G1000NXI, UNS and CMD ADS-B FL-213, N350JB.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/G500 package For experimental aircraft Parts Sale.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/GNS WAAS and GTX ADS-B Upgrade for CJ N525DR.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Goodland/GTN 625 N613RF, LJ 1068 Rev A.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Goodland/GTN 625 N613RF, LJ 1172 Vertical.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Goodland/GTN 625 N613RF, LJ 1172.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Goodland/Proposal 2017-02-09.A`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Goodland/Proposal 2017-02-09.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Goodland/Proposal 2017-02-09.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Goodland/Proposal 2017-04-06. A.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Goodland/Proposal 2017-04-06.A.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Goodland/Proposal 2017-04-06.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Goodland/Proposal 2017-04-06.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Goodland/Proposal 2017-08-05 Vertical.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Goodland/Proposal 2017-08-05 Vertical.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Goodland/QD 2017-02-09.xlsx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Goodland/_archive/Proposal 2016-10-09.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Goodland/_archive/Proposal 2016-10-09.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Goodland/_archive/QD 2016-10-09.xlsx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Goodland/~$oposal 2016-10-08.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Greenwood Express, N8885Z/FL-940, N8885Z ADS-B  Proline 21 WAAS Upgrades Collins package 6 and CMD solution Rev. A.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Greenwood Express, N8885Z/FL-940, N8885Z ADS-B  Proline 21 WAAS Upgrades Collins package 6 and CMD solution.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Greenwood Express, N8885Z/Maintenance Proposal .docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Greenwood Express, N8885Z/Pictures/Thumbs.db`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Greenwood Express, N8885Z/Proposal 2017-06-06.1 Rev. A.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Greenwood Express, N8885Z/Proposal 2017-06-06.1 Rev. A.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Greenwood Express, N8885Z/Proposal 2017-06-06.1.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Greenwood Express, N8885Z/Proposal 2017-06-06.1.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/JETLINX/N553BW 800XP/ADSB N553BW.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/JETLINX/N553BW 800XP/Proposal 2017-04-19.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/JETLINX/N553BW 800XP/Proposal 2017-04-19.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/JETLINX/N553BW 800XP/~$oposal 2017-04-19.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Job Descriptions/Job Descriptions_ Archive/Accessory Lead Mechanic.doc`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Job Descriptions/Job Descriptions_ Archive/Associate.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Job Descriptions/Job Descriptions_ Archive/Chief Inspector.doc`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Job Descriptions/Job Descriptions_ Archive/Director of Maintenance.doc`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Job Descriptions/Job Descriptions_ Archive/FFL Crew Chief.doc`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Job Descriptions/Job Descriptions_ Archive/Line Service Supervisor.doc`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Job Descriptions/Job Descriptions_ Archive/Line Service Technician.doc`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Job Descriptions/Job Descriptions_ Archive/Maintenance Assistant.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Job Descriptions/Job Descriptions_ Archive/Maintenance Supervisor .doc`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Job Descriptions/Job Descriptions_ Archive/Maintenance Support Manager.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Job Descriptions/Job Descriptions_ Archive/Maintenance Technician.doc`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Job Descriptions/Job Descriptions_ Archive/Mtce Sales Rep.doc`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Job Descriptions/Job Descriptions_ Archive/Mtce Training Coordinator.doc`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Job Descriptions/Job Descriptions_ Archive/Off Site Coordinator.doc`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Job Descriptions/Job Descriptions_ Archive/Sovereign Crew Chief.doc`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Job Descriptions/Job Descriptions_ Archive/Supervisor Maintenance Support.DOCX`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Job Descriptions/Job Descriptions_ Archive/Team Leader - Mechanic.doc`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Job Descriptions/Job Descriptions_ Current/Inspector Job Description.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Job Descriptions/Maintenance Assistant How To_s/337_s.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Job Descriptions/Maintenance Assistant How To_s/FOS troubleshooting.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Job Descriptions/Maintenance Assistant How To_s/Honeywell MSP.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Job Descriptions/Maintenance Assistant How To_s/Honeywell how to.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Job Descriptions/Maintenance Assistant How To_s/Maintenance Assistant Book.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Job Descriptions/Maintenance Assistant How To_s/Monthly Work Orders.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Job Descriptions/Maintenance Assistant How To_s/Newly Acquired Aircraft Compliance.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Job Descriptions/Maintenance Assistant How To_s/OPENING WORK ORDERS IN CORRIDOR.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Job Descriptions/Maintenance Assistant How To_s/Permanent Records How To.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Job Descriptions/Maintenance Assistant How To_s/Permanent Records.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Job Descriptions/Maintenance Assistant How To_s/REVISIONS how to.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Job Descriptions/Maintenance Assistant How To_s/Word Settings for revisions.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Laggs/N785JH GTN-750 GTX-345.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Laggs/Thumbs.db`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Mayo Aviation/N217LG/N217LG, Cabin Com.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Mayo Aviation/N520MC/Crystal Reports - ProgressBillingInvoice.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Mayo Aviation/N520MC/KA B300 G1000  IRIS A100.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Mayo Aviation/N520MC/N520MC Avidyne.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Mayo Aviation/N520MC/N520MC GTN-750 GTX-345 2017-06-1.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Mayo Aviation/N520MC/N520MC GTN-750 GTX-345.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Mayo Aviation/N520MC/N520MC Proposal 2017-05-31.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Mayo Aviation/N520MC/N520MC Proposal 2017-06-1.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Mayo Aviation/N520MC/N520MC Proposal 2017-06-1.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Mayo Aviation/N520MC/Picures/Thumbs.db`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Mayo Aviation/N5ST/N5ST GTN-750 GTX-345 2017-09-26.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Mayo Aviation/N5ST/N5ST Proposal 2017-09-26.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Mayo Aviation/N5ST/N5ST Proposal 2017-09-26.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Midwest PMS/Proposal 2017-01-01.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Midwest PMS/Proposal 2017-01-01.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Midwest PMS/QD 2017-01-01.xlsx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Monfort/ADS-B Proposal Acceptance N694ES.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Monfort/N694ES ADS-B  Proline 21 WAAS Upgrades - Copy.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Monfort/N694ES ADS-B  Proline 21 WAAS Upgrades.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Mountain Air Ltd. N74AW/AeroVue Proposal 28-01-19.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Mountain Air Ltd. N74AW/AeroVue Proposal 28-01-19.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Mountain Air Ltd. N74AW/AeroVue Proposal 28-02-27.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Mountain Air Ltd. N74AW/AeroVue Proposal 28-02-27.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Mountain Air Ltd. N74AW/AeroVue.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Mountain Air Ltd. N74AW/KA B200 G1000 with options.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Mountain Air Ltd. N74AW/KA B200 G1000.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Mountain Air Ltd. N74AW/N74AW BB1233 G1000 and AeroVue.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Mountain Air Ltd. N74AW/Proposal 2017-05-12.1.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Mountain Air Ltd. N74AW/Proposal 2017-05-12.1.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Mountain Air Ltd. N74AW/Proposal 2017-05-12.2.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Mountain Air Ltd. N74AW/Proposal 2017-05-12.2.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Mountain Air Ltd. N74AW/Proposal 2017-05-12.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Mountain Air Ltd. N74AW/Proposal 2017-05-12.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Mountain Air Ltd. N74AW/Proposal 2018-01-19.1.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Mountain Air Ltd. N74AW/Proposal 2018-01-19.1.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Mountain Air Ltd. N74AW/Proposal 2018-01-19.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/N10WZ ADSB WAAS  CJ2 CMD and Textron SB.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/N10WZ,  CJ2 ADS-B.xlsx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/N1220W Spreadsheet CNI 5000 ADSB.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/N124CM GDL-69A.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/N174SJ ADSB Spreadsheet (002).xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/N184CD ADS-B  MST-70B GTX-3000 GTN-750 Rev A.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/N184CD ADS-B  MST-70B GTX-3000 GTN-750.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/N2310K GTN-625 GTX-345_335.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/N265EJ GTN_725 GWX_70 GTX-335R_345R.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/N265EJ/N265EJ GTN_725 GWX_70 GTX-335R_345R.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/N312LG ADSB.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/N312LG/N312LG ADSB.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/N312LG/Proposal 2018-02-08.1.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/N312LG/Proposal 2018-02-08.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/N312LG/Proposal 2018-02-08.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/N350JB, FL-213, G1000NXI.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/N374R, English Aviation/ADS-B  Proline 21 WAAS Upgrade.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/N374R, English Aviation/Proposal 2017-09-29.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/N374R, English Aviation/Proposal 2017-09-29.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/N525KM/N525KM Bendix King KT-70 ADS-B Upgrade Rev A.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/N525KM/N525KM Bendix King KT-70 ADS-B Upgrade.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/N551FP, CJ1,  CNI5000 Upgrade.xlsx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/N592DR GNS WAAS and GTX ADS-B Upgrade for CJ.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/N61GB, TAI, LLC/N61GB RK_341 ADS-B  Proline 4 WAAS Upgrades CMD Sollution.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/N61GB, TAI, LLC/Proposal 2017-09-08 N61GB.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/N640RJ Talahone, LLC/GTN 650 N640RJ, LJ 1106.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/N640RJ Talahone, LLC/Garmin N640RJ, LJ-1106.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/N640RJ Talahone, LLC/N640RJ April 2018.mpp`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/N640RJ Talahone, LLC/Proposal 2017-07-17.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/N640RJ Talahone, LLC/Proposal 2017-07-17.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/N640RJ Talahone, LLC/Proposal 2018-01-23.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/N640RJ Talahone, LLC/Proposal 2018-01-23.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/N657KT, BB-1761 GTN-750 GTX-345.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/N65LW, 525B0373 Proline 21 CMD ADS-B STC CJ3.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/N727TX GTN-750 GTX-345 GTX-335  GWX-70 GDL-69A.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/N777SS GTN-625 GTX-345_335.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/N823LT 525B-0011  DBU-5000_CPAS.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/N925EM CJ ADSB CMD Solution.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/N925EM, 525B0202 Proline 21 CMD ADS-B STC.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/N925EM/N525B ADS-B  Proline 21 ADS-B WAAS Upgrades CMD.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/N925EM/Proposal 2017-09-21 N925EM ADSB GOGO.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/N925EM/Proposal 2017-09-21 N925EM ADSB GOGO.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/N925EM/Proposal 2018-02-22 N925EM ADSB .docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/N92CJ 092 Falcon 50 Club Jets ADS_B.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/N98TG, 7904027  IRIS A100.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Nats Quotes/Bowman and Kemp/Contact Log.txt`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Nats Quotes/Bowman and Kemp/Proposal 2016-10-08.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Nats Quotes/Bowman and Kemp/Proposal 2016-10-08.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Nats Quotes/Bowman and Kemp/QD 2016-10-08.xlsx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Nats Quotes/Bowman and Kemp/~$oposal 2016-10-08.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Nats Quotes/Bradley Operating Co N100PY/Proposal 2017-02-12.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Nats Quotes/Bradley Operating Co N100PY/Proposal 2017-02-12.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Nats Quotes/Bradley Operating Co N100PY/QD 2017-02-12.xlsx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Nats Quotes/Employee Benefit Management/Proposal 2016-12-05.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Nats Quotes/Employee Benefit Management/Proposal 2016-12-05.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Nats Quotes/Employee Benefit Management/QD 2016-12-05.xlsx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Nats Quotes/Employee Benefit Management/_archive/Proposal 2016-10-15.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Nats Quotes/Employee Benefit Management/_archive/Proposal 2016-10-15.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Nats Quotes/Employee Benefit Management/_archive/Proposal 2016-11-02.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Nats Quotes/Employee Benefit Management/_archive/Proposal 2016-11-02.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Nats Quotes/Employee Benefit Management/_archive/QD 2016-11-02.xlsx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Nats Quotes/Pete Lien & Sons/Proposal 2016-12-04.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Nats Quotes/Pete Lien & Sons/Proposal 2016-12-04.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Nats Quotes/Pete Lien & Sons/QD 2016-12-04.xlsx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Nats Quotes/Pete Lien & Sons/QD 2016-12-XXX KA300.xlsx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Nats Quotes/Pete Lien & Sons/_archive/Proposal 2016-09-03 R1.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Nats Quotes/Pete Lien & Sons/_archive/QD 2016-09-03.xlsx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Nats Quotes/RACI Management/Proposal 2017-02-08.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Nats Quotes/RACI Management/Proposal 2017-02-08.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Nats Quotes/RACI Management/QD 2017-02-08.xlsx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Nats Quotes/Redhawk Properties/Proposal 2016-10-02.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Nats Quotes/Redhawk Properties/Proposal 2016-10-02.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Nats Quotes/Redhawk Properties/QD 2016-10-02.xlsx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Old Glory Inc/Garmin package upgrade.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Old Glory Inc/Pictures/Thumbs.db`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Old Glory Inc/Proposal 2017-07-07.4.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Old Glory Inc/Proposal 2017-07-07.4.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Penkhus Motor Co/FL-0542 ADS-B  Proline 21 WAAS Upgrades Collins package 4.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Penkhus Motor Co/FL-0542, N304BP ADS-B  Proline 21 WAAS Upgrades Collins package 6 and CMD solution.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Penkhus Motor Co/Proposal 2017-02-01.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Penkhus Motor Co/Proposal 2017-02-01.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Penkhus Motor Co/Proposal 2017-06-30.1.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Penkhus Motor Co/Proposal 2017-06-30.1.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Penkhus Motor Co/Proposal 2017-06-30.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Penkhus Motor Co/Proposal 2017-06-30.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Penkhus Motor Co/Proposal 2017-11-20 STC.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Penkhus Motor Co/Proposal 2017-11-20 STC.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Penkhus Motor Co/QD 2017-02-01a.xlsx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Penkhus Motor Co/STC Request Form (BS rev-B)_.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Penkhus Motor Co/_archive/Proposal 2016-10-13.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Penkhus Motor Co/_archive/Proposal 2016-10-13.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Penkhus Motor Co/_archive/QD 2016-10-13.xlsx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Pro-Serve/Pro Serve N507GF/BB1778 N507GF G1000 and AeroVue.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Pro-Serve/Pro Serve N507GF/Bendix King AeroVue Proposal 28-01-20.1.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Pro-Serve/Pro Serve N507GF/G600 package upgrade N507GF.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Pro-Serve/Pro Serve N507GF/Garmin G1000 Proposal 2018-01-20.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Pro-Serve/Pro Serve N507GF/Garmin G1000 Proposal 2018-01-20.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Pro-Serve/Pro Serve N507GF/Garmin G600 Proposal 2018-01-20.2.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Pro-Serve/Pro Serve N507GF/Proposal 2018-01-20.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Pro-Serve/Pro Serve N507GF/Thumbs.db`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Pro-Serve/ProServe 14RP/Archive/Proposal 2016-12-02.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Pro-Serve/ProServe 14RP/Archive/QD 2016-12-02R1.xlsx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Pro-Serve/ProServe 14RP/Archive/QD 2016-12-02RO.xlsx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Pro-Serve/ProServe 14RP/Crystal Reports - ProgressBillingInvoice.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Pro-Serve/ProServe 14RP/N14RP GTN-750 GTX-345 2017-4-14.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Pro-Serve/ProServe 14RP/Proposal 2016-04-19.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Pro-Serve/ProServe 14RP/Proposal 2017-04-19.1.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Pro-Serve/ProServe 14RP/Proposal 2017-04-19.1.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Pro-Serve/ProServe 14RP/Proposal 2017-04-19.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Pro-Serve/ProServe 14RP/Proposal 2017-04-19.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Pro-Serve/ProServe 14RP/Rons Aircraft/N100PY/GTN 625 N100PY, BB-890. Rev A.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Pro-Serve/ProServe 14RP/Rons Aircraft/N100PY/GTN 625 N100PY, BB-890. Rev B.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Pro-Serve/ProServe 14RP/Rons Aircraft/N100PY/GTN 625 N100PY, BB-890.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Pro-Serve/ProServe 14RP/Rons Aircraft/N100PY/Pictures/Thumbs.db`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Pro-Serve/ProServe 14RP/Rons Aircraft/N100PY/Proposal 2017-07-07.2-A.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Pro-Serve/ProServe 14RP/Rons Aircraft/N100PY/Proposal 2017-07-07.2-A.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Pro-Serve/ProServe 14RP/Rons Aircraft/N100PY/Proposal 2017-07-07.2-B.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Pro-Serve/ProServe 14RP/Rons Aircraft/N100PY/Proposal 2017-07-07.2-B.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Pro-Serve/ProServe 14RP/Rons Aircraft/N100PY/Proposal 2017-07-07.2.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Pro-Serve/ProServe 14RP/Rons Aircraft/N100PY/Proposal 2017-07-07.2.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Pro-Serve/ProServe 14RP/Rons Aircraft/N35TV/GTN 625 N35VT, LJ-572 Rev A.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Pro-Serve/ProServe 14RP/Rons Aircraft/N35TV/GTN 625 N35VT, LJ-572 Rev B.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Pro-Serve/ProServe 14RP/Rons Aircraft/N35TV/GTN 625 N35VT, LJ-572.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Pro-Serve/ProServe 14RP/Rons Aircraft/N35TV/Proposal 2017-07-07.1.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Pro-Serve/ProServe 14RP/Rons Aircraft/N35TV/Proposal 2017-07-07.1.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Pro-Serve/ProServe 14RP/Rons Aircraft/N35TV/Proposal 2017-09-17.1.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Pro-Serve/ProServe 14RP/Rons Aircraft/N35TV/Proposal 2017-09-17.1.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Pro-Serve/ProServe 14RP/Rons Aircraft/N35TV/Proposal 2017-09-17.2.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Pro-Serve/ProServe 14RP/Rons Aircraft/N35TV/Proposal 2017-09-17.2.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Pro-Serve/ProServe 14RP/Rons Aircraft/N640RJ/GTN 625 N640RJ, LJ-1106.A.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Pro-Serve/ProServe 14RP/Rons Aircraft/N640RJ/GTN 625 N640RJ, LJ-1106.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Pro-Serve/ProServe 14RP/Rons Aircraft/N640RJ/N640RJ, Proposal 2017-09-19.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Pro-Serve/ProServe 14RP/Rons Aircraft/N640RJ/N640RJ, Proposal 2017-09-19.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Pro-Serve/ProServe 14RP/Rons Aircraft/N640RJ/Proposal 2017-07-07.3.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Pro-Serve/ProServe 14RP/Rons Aircraft/N640RJ/Proposal 2017-07-07.3.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Pro-Serve/ProServe 14RP/Rons Aircraft/N87699/GTN 650 N87699, BB-877 Final.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Pro-Serve/ProServe 14RP/Rons Aircraft/N87699/GTN 650 N87699, BB-877 REV A.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Pro-Serve/ProServe 14RP/Rons Aircraft/N87699/GTN 650 N87699, BB-877 REV B.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Pro-Serve/ProServe 14RP/Rons Aircraft/N87699/GTN 650 N87699, BB-877 REV C.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Pro-Serve/ProServe 14RP/Rons Aircraft/N87699/GTN 650 N87699, BB-877 REV D.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Pro-Serve/ProServe 14RP/Rons Aircraft/N87699/GTN 650 N87699, BB-877 REV E.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Pro-Serve/ProServe 14RP/Rons Aircraft/N87699/GTN 650 N87699, BB-877.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Pro-Serve/ProServe 14RP/Rons Aircraft/N87699/Pictures/Thumbs.db`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Pro-Serve/ProServe 14RP/Rons Aircraft/N87699/Proposal 2017-07-07 . A.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Pro-Serve/ProServe 14RP/Rons Aircraft/N87699/Proposal 2017-07-07.A`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Pro-Serve/ProServe 14RP/Rons Aircraft/N87699/Proposal 2017-07-07.A.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Pro-Serve/ProServe 14RP/Rons Aircraft/N87699/Proposal 2017-07-07.D.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Pro-Serve/ProServe 14RP/Rons Aircraft/N87699/Proposal 2017-07-07.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Pro-Serve/ProServe 14RP/Rons Aircraft/N87699/Proposal 2017-07-07.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Pro-Serve/ProServe 14RP/Rons Aircraft/N87699/Proposal 2017-11-07.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Pro-Serve/ProServe 14RP/Rons Aircraft/N87699/Proposal 2017-11-07.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Pro-Serve/ProServe 14RP/Rons Aircraft/N87699/Proposal 2017-11-14.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Pro-Serve/ProServe 14RP/Rons Aircraft/N87699/Proposal 2017-11-16.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Pro-Serve/ProServe 315RP/KA Center Layout.pptx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Pro-Serve/ProServe 315RP/Proposal 2016-12-01.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Pro-Serve/ProServe 315RP/Proposal 2016-12-01.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Pro-Serve/ProServe 315RP/Proposal 2016-12-01R2.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Pro-Serve/ProServe 315RP/Proposal 2016-12-01R3.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Pro-Serve/ProServe 315RP/Proposal 2016-12-01R3.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Pro-Serve/ProServe 315RP/QD 2016-12-01R2.xlsx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Pro-Serve/ProServe 315RP/QD 2016-12-01R3.xlsx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Pro-Serve/ProServe 315RP/QD 2016-12-01RO.xlsx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Pro-Serve/ProServe 315RP/Thumbs.db`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Proposal 2018-02-22 N925EM ADSB .pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/S&R Air LLC/N806KM  GTX-345 GDL- 9A 2017-08-04.4.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/S&R Air LLC/Proposal 2017-08-04.4.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/S&R Air LLC/Proposal 2017-08-04.4.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/S&R Air LLC/pictures/Thumbs.db`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Sad Monkey Aviation N111WA/N111WA GTN-750 GTX-345 Rev. A.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Sad Monkey Aviation N111WA/N111WA GTN-750 GTX-345 Rev. B.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Sad Monkey Aviation N111WA/N111WA GTN-750 GTX-345 Rev. C.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Sad Monkey Aviation N111WA/N111WA GTN-750 GTX-345.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Sad Monkey Aviation N111WA/Proposal 2017-02-11 Rev B.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Sad Monkey Aviation N111WA/Proposal 2017-02-11 Rev C.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Sad Monkey Aviation N111WA/Proposal 2017-02-11 Rev. A.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Sad Monkey Aviation N111WA/Proposal 2017-02-11 Rev. a.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Sad Monkey Aviation N111WA/Proposal 2017-02-11 Rev.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Sad Monkey Aviation N111WA/Proposal 2017-02-11.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Sad Monkey Aviation N111WA/Proposal 2017-02-11.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Sad Monkey Aviation N111WA/QD 2016-02-11.xlsx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Sad Monkey Aviation N111WA/Signed Proposal.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Sad Monkey Aviation N111WA/Thumbs.db`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Sidney Mauldin N87699/G600 package upgrade N87699.1.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Sidney Mauldin N87699/G600 package upgrade N87699.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Sidney Mauldin N87699/Proposal 2017-02-10.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Sidney Mauldin N87699/Proposal 2017-02-10.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Sidney Mauldin N87699/Thumbs.db`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Spacefinders Realty/Proposal 2016-10-14.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Spacefinders Realty/Proposal 2016-10-14.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Spacefinders Realty/QD 2016-10-14.xlsx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tempus/N612NG/FAA registration.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tempus/N612NG/Pilatus PC_12 AGT2000.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tempus/N612NG/Proposal 2017-04-06 WIFI.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tempus/N612NG/Proposal 2017-04-13 WIFI.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tex Air Aviation Group, LLC/GNS WAAS and GTX ADS-B Upgrade, N791JK, 525A0152.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tex Air Aviation Group, LLC/N525MR, 525A-0173/GNS WAAS and GTX ADS-B Upgrade, N525MR, 525A0173.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tex Air Aviation Group, LLC/N525MR, 525A-0173/Proposal 2017-07-21.3.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tex Air Aviation Group, LLC/N525MR, 525A-0173/Proposal 2017-07-21.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tex Air Aviation Group, LLC/N525MR, 525A-0173/Proposal 2017-08-11 GOGO.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tex Air Aviation Group, LLC/N525MR, 525A-0173/Proposal 2017-08-11 GOGO.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tex Air Aviation Group, LLC/N65LW, 525B-0373/N65LW, 525B0373 Proline 21 CMD ADS-B STC CJ3.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tex Air Aviation Group, LLC/N65LW, 525B-0373/N65LW, 525B0373 Proline 21 CMD ADS-B STC.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tex Air Aviation Group, LLC/N65LW, 525B-0373/Proposal 2017-11-03.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tex Air Aviation Group, LLC/N65LW, 525B-0373/Proposal 2017-11-03.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tex Air Aviation Group, LLC/N750SL, 525A-0150/Archived/GNS WAAS and GTX ADS-B Upgrade, N791JK, 525A0152 Rev A.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tex Air Aviation Group, LLC/N750SL, 525A-0150/Archived/GNS WAAS and GTX ADS-B Upgrade, N791JK, 525A0152 Rev.A.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tex Air Aviation Group, LLC/N750SL, 525A-0150/Archived/GNS WAAS and GTX ADS-B Upgrade, N791JK, 525A0152.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tex Air Aviation Group, LLC/N750SL, 525A-0150/Archived/Proposal 2017-07-21.2.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tex Air Aviation Group, LLC/N750SL, 525A-0150/Archived/Proposal 2017-08-11.1 GOGO.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tex Air Aviation Group, LLC/N750SL, 525A-0150/Archived/Proposal 2017-08-11.1 GOGO.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tex Air Aviation Group, LLC/N750SL, 525A-0150/Archived/Proposal 2017-08-11.1.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tex Air Aviation Group, LLC/N750SL, 525A-0150/Archived/Proposal 2017-10-25.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tex Air Aviation Group, LLC/N750SL, 525A-0150/Archived/Proposal 2017-10-25.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tex Air Aviation Group, LLC/N750SL, 525A-0150/Archived/Proposal N750SL 2017-07-21.2.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tex Air Aviation Group, LLC/N750SL, 525A-0150/GNS WAAS and GTX ADS-B Upgrade, N750SL, 525A0150 Final approved and signed.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tex Air Aviation Group, LLC/N750SL, 525A-0150/~$oposal 2017-07-21.2.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tex Air Aviation Group, LLC/N791JK, 525A-0152/GNS WAAS and GTX ADS-B Upgrade, N791JK, 525A0152.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tex Air Aviation Group, LLC/N791JK, 525A-0152/Proposal 2017-07-21.1.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tex Air Aviation Group, LLC/N791JK, 525A-0152/Proposal 2017-08-11.2 GOGO.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tex Air Aviation Group, LLC/N791JK, 525A-0152/Proposal 2017-08-11.2.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tex Air Aviation Group, LLC/N791JK, 525A-0152/Proposal N791JK 2017-07-21.1.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tex Air Aviation Group, LLC/N812PJ, 525A-0176/GNS WAAS and GTX ADS-B Upgrade, N812PJ, 525A0176.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tex Air Aviation Group, LLC/N812PJ, 525A-0176/Proposal 2017-07-21.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tex Air Aviation Group, LLC/N812PJ, 525A-0176/Proposal N812PJ 2017-07-21.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tex Air Aviation Group, LLC/N823LT, 525B-0011/N823LT 525B-0011  DBU-5000_CPAS.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tex Air Aviation Group, LLC/N823LT, 525B-0011/Proposal 2018-02-06.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tex Air Aviation Group, LLC/N823LT, 525B-0011/Proposal 2018-02-06.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tex Air Aviation Group, LLC/N823LT, 525B-0011/Proposal 2018-03-06 DBU-5000.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tex Air Aviation Group, LLC/N823LT, 525B-0011/Proposal 2018-03-06 DBU-5000.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Towhaul N809TH/GTX-345 335 FS510.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Towhaul N809TH/PT6-135A Hot Section Quote.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Towhaul N809TH/Proposal 2016-10-07 R1.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Towhaul N809TH/Proposal 2016-10-07 R1.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Towhaul N809TH/Proposal 2016-10-07. A.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Towhaul N809TH/Proposal 2016-10-07.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Towhaul N809TH/Proposal 2016-10-07.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Towhaul N809TH/QD 2016-10-07 R1.xlsx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Towhaul N809TH/QD 2016-10-07.xlsx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Towhaul N809TH/Signed proposal.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Towhaul N809TH/Thumbs.db`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tradewind Charter/B200 N222UR/N222UR GTN-625 GTX-345_335 2017-08-4.2.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tradewind Charter/B200 N222UR/Old quote/Proposal 2017-02-04.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tradewind Charter/B200 N222UR/Old quote/Proposal 2017-02-04.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tradewind Charter/B200 N222UR/Old quote/QD 2017-02-04.xlsx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tradewind Charter/B200 N222UR/Pictures/Thumbs.db`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tradewind Charter/B200 N222UR/Proposal 2017-08-04.2.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tradewind Charter/B200 N222UR/Proposal 2017-08-04.2.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tradewind Charter/B200 N222UR/Thumbs.db`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tradewind Charter/B300 N124CM/N124CM GTN-725 GTX-345_335 2017-08-4.1.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tradewind Charter/B300 N124CM/Old Quotes/Proposal 2017-02-05.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tradewind Charter/B300 N124CM/Old Quotes/Proposal 2017-02-05.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tradewind Charter/B300 N124CM/Old Quotes/Proposal 2017-02-11.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tradewind Charter/B300 N124CM/Old Quotes/Proposal 2017-02-11.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tradewind Charter/B300 N124CM/Old Quotes/QD 2017-02-05.xlsx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tradewind Charter/B300 N124CM/Old Quotes/QD 2017-02-11.xlsx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tradewind Charter/B300 N124CM/Proposal 2017-08-04.1.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tradewind Charter/B300 N124CM/Proposal 2017-08-04.1.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tradewind Charter/C650 N362TW/N362TW GTN-750 GTX-3000 2017-8-04.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tradewind Charter/C650 N362TW/Old quote/Proposal 2017-02-07.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tradewind Charter/C650 N362TW/Old quote/Proposal 2017-02-07.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tradewind Charter/C650 N362TW/Old quote/QD 2017-02-07.xlsx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tradewind Charter/C650 N362TW/Pictures/Thumbs.db`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tradewind Charter/C650 N362TW/Proposal 2017-08-04.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tradewind Charter/C650 N362TW/Proposal 2017-08-04.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tradewind Charter/C650 N362TW/Thumbs.db`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tradewind Charter/C650 N362TW/~$oposal 2017-08-04.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tradewind Charter/C650 N727TX/650-0118 ADS-B upgrade 2017_08_03.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tradewind Charter/C650 N727TX/Old quotes/650-0118ADS-B upgrade.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tradewind Charter/C650 N727TX/Old quotes/Proposal 2017-02-06.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tradewind Charter/C650 N727TX/Old quotes/Proposal 2017-02-06.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tradewind Charter/C650 N727TX/Old quotes/QD 2017-02-06.xlsx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tradewind Charter/C650 N727TX/Pictures/Thumbs.db`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tradewind Charter/C650 N727TX/Proposal 2017-08-03.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tradewind Charter/C650 N727TX/Proposal 2017-08-03.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tradewind Charter/C650 N727TX/Thumbs.db`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tradewind Charter/C650 N727TX/~$oposal 2017-08-03.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tradewind Charter/Thumbs.db`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Transwest/Proposal 2016-11-03.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Transwest/Proposal 2016-11-03.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Transwest/QD 2016-11-03.xlsx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Travel Managment 700SB/Proposal 2016-10-14.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Travel Managment 700SB/Proposal 2016-10-14R1.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Travel Managment 700SB/Proposal 2016-10-14R1.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Travel Managment 700SB/QD 2016-10-14.xlsx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Travel Managment 700SB/~$oposal 2016-10-08.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tri-State Gen/N125TS/BB-125TS ADS-B  Proline 21 WAAS Upgrades Collins package 4.a.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tri-State Gen/N125TS/BB-125TS ADS-B  Proline 21 WAAS Upgrades Collins package 4.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tri-State Gen/N125TS/BB-125TS Collins ADS-B  Proline 21 .xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tri-State Gen/N125TS/BB-125TS Collins ADS-B  Proline 21 2017-12-7 Preliminary.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tri-State Gen/N125TS/BB-125TS Collins ADS-B  Proline 21, 2017-12-7.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tri-State Gen/N125TS/Nats Quote/Proposal 2017-02-13.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tri-State Gen/N125TS/Nats Quote/QD 2017-02-13.xlsx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tri-State Gen/N125TS/Older quotes/BB-125TS ADS-B  Proline 21 WAAS Upgrades.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tri-State Gen/N125TS/Older quotes/Proposal 2017-02-13.1.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tri-State Gen/N125TS/Older quotes/Proposal 2017-02-13.1.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tri-State Gen/N125TS/Proposal 2017-06-15.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tri-State Gen/N125TS/Proposal 2017-06-15.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tri-State Gen/N125TS/Proposal 2017-07-18 ADS-B Proposal.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tri-State Gen/N125TS/Proposal 2017-07-18.1.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tri-State Gen/N125TS/Proposal 2017-07-18.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tri-State Gen/N125TS/Proposal 2017-12-7 ADS-B Proposal Final.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tri-State Gen/N125TS/Proposal 2017-12-7 ADS-B Proposal Preliminary.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tri-State Gen/N125TS/Proposal 2017-12-7 ADS-B Proposal.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tri-State Gen/N954BL/ADS-B  Proline 21 WAAS Upgrades Rev. A.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tri-State Gen/N954BL/ADS-B  Proline 21 WAAS Upgrades.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tri-State Gen/N954BL/Proposal 2017-02-13.2.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tri-State Gen/N954BL/Proposal 2017-02-13.2.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tri-State Gen/N954BL/Proposal 2017-07-18.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Tri-State Gen/N954BL/Proposal 2017-07-18.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/True Drilling/N845YT/BY-108 Proline 21 CMD ADS-B STC.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/True Drilling/N845YT/Proposal 2017-08-29.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/True Drilling/N845YT/Proposal N845YT ADS-B.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/True Drilling/N845YT/~$oposal 2017-08-29.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/True Drilling/N846YT/FL-0617 Proline 21 CMD ADS-B STC.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/True Drilling/N846YT/Proposal 2017-08-10.1.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/True Drilling/N846YT/Proposal N846YT ADS-B.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/True Drilling/Old Quote/BY-108, N845YT ADS-B  Proline 21 WAAS Upgrades Collins package 6 and CMD solution.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/True Drilling/Old Quote/Proposal 2016-10-03.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/True Drilling/Old Quote/Proposal 2017-06-07.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/True Drilling/Old Quote/Proposal 2017-06-07.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/True Drilling/Old Quote/Proposal 2017-08-10.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/True Drilling/Old Quote/QD 2016-10-03.xlsx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Wagner Equipment/N793WE_FL_555 ADSB.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Wagner Equipment/Old quotes/Proposal 2016-11-01.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Wagner Equipment/Old quotes/QD 2016-11-01.xlsx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Wagner Equipment/Proposal 2016-11-01.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Wagner Equipment/Proposal 2017-05-16.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Wagner Equipment/Proposal 2017-05-16.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Wagner Equipment/Proposal 2017-06-05.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Wagner Equipment/Proposal 2017-06-05.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/Wagner Equipment/Wagner Equip.txt`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/YD Flight/N459SB CMD ADS-B  Upgrade.xls`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/YD Flight/Proposal 2017-06-06.1.pdf`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Mayo Quotes 2016_2017/YD Flight/Proposal 2017-06-19.docx`
+- `research/industry-context-field-artifacts/Mayo Aviation historical quotes and pricing data/Top Flight Detailing/Top_Flight_Price_List_2014.pdf`
+
+## Image Corpus Note
+- Image files in this Mayo corpus are reviewed in full under:
+  - [05-photo-full-review-ledger.md](./05-photo-full-review-ledger.md)
+- They are excluded from this non-image high-signal list to keep pricing/quote references navigable.
