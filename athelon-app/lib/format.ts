@@ -20,6 +20,17 @@ const DATE_FORMATTER = new Intl.DateTimeFormat("en-US", {
   day: "numeric",
 });
 
+// UTC-pinned formatter for date-only fields stored as UTC midnight timestamps.
+// Use this (not DATE_FORMATTER) for fields like completionDate, scheduledDate,
+// and other calendar-day-only values where the stored timestamp is always
+// UTC midnight and local-timezone offset would produce the wrong calendar day.
+const DATE_FORMATTER_UTC = new Intl.DateTimeFormat("en-US", {
+  year: "numeric",
+  month: "short",
+  day: "numeric",
+  timeZone: "UTC",
+});
+
 const DATETIME_FORMATTER = new Intl.DateTimeFormat("en-US", {
   year: "numeric",
   month: "short",
@@ -31,12 +42,24 @@ const DATETIME_FORMATTER = new Intl.DateTimeFormat("en-US", {
 // ─── Exported utilities ───────────────────────────────────────────────────────
 
 /**
- * Format a Unix timestamp (ms) as a short date string.
+ * Format a Unix timestamp (ms) as a short date string (local timezone).
+ * Use for event timestamps that include time-of-day context (e.g. clock-in, created_at).
  *
  * @example formatDate(1740355200000) → "Feb 24, 2026"
  */
 export function formatDate(ms: number): string {
   return DATE_FORMATTER.format(new Date(ms));
+}
+
+/**
+ * Format a Unix timestamp (ms) as a short date string, always in UTC.
+ * Use for date-only fields stored as UTC midnight (e.g. completionDate, scheduledDate,
+ * certExpiry). Prevents off-by-one-day display errors in UTC-negative timezones.
+ *
+ * @example formatDateUTC(1740355200000) → "Feb 24, 2026"
+ */
+export function formatDateUTC(ms: number): string {
+  return DATE_FORMATTER_UTC.format(new Date(ms));
 }
 
 /**

@@ -31,7 +31,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { formatDate } from "@/lib/format";
+import { formatDateUTC } from "@/lib/format";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -214,12 +214,12 @@ function LogbookEntry({
           {/* Date — pushed right when no RTS badge */}
           {!record.returnedToService && (
             <span className="text-[11px] text-muted-foreground ml-auto">
-              {formatDate(record.completionDate)}
+              {formatDateUTC(record.completionDate)}
             </span>
           )}
           {record.returnedToService && (
             <span className="text-[11px] text-muted-foreground">
-              {formatDate(record.completionDate)}
+              {formatDateUTC(record.completionDate)}
             </span>
           )}
         </div>

@@ -170,12 +170,30 @@ export default function AircraftDetailPage() {
   async function handleUpdateTT(e: React.FormEvent) {
     e.preventDefault();
     if (!aircraft?._id || !newTT || !asOfDate) return;
+
+    const parsedTT = parseFloat(newTT);
+    if (isNaN(parsedTT) || parsedTT < 0) {
+      setUpdateTTError("Total time must be a valid positive number.");
+      return;
+    }
+    // BUG-DOM-070: No validation that the new TT is >= the current recorded value.
+    // Aircraft total airframe time is a legal record — it can never decrease.
+    // A DOM entering 400.0 when current is 4500.0 (a typo) would silently overwrite
+    // the higher value, producing a false airtime record that violates 14 CFR 43.9
+    // data integrity and may cause inspection interval miscalculations downstream.
+    if (parsedTT < aircraft.totalTimeAirframeHours) {
+      setUpdateTTError(
+        `New total time (${parsedTT.toFixed(1)} hrs) is less than the current recorded value (${aircraft.totalTimeAirframeHours.toFixed(1)} hrs). Aircraft total time cannot decrease. Verify the entry and try again.`,
+      );
+      return;
+    }
+
     setUpdateTTSubmitting(true);
     setUpdateTTError(null);
     try {
       await updateTotalTime({
         aircraftId: aircraft._id,
-        totalTimeAirframeHours: parseFloat(newTT),
+        totalTimeAirframeHours: parsedTT,
         asOfDate: new Date(asOfDate).getTime(),
       });
       toast.success("Total time updated successfully");
@@ -733,6 +751,7 @@ export default function AircraftDetailPage() {
                   wos={pastWOs}
                   emptyMessage="No closed work orders"
                   truncated={pastWOsTruncated}
+                  tailLink={`/work-orders?aircraft=${encodeURIComponent(tailNumber)}&status=closed`}
                 />
               </>
             )}
@@ -965,12 +984,14 @@ function WoSection({
   wos,
   emptyMessage,
   truncated,
+  tailLink,
 }: {
   title: string;
   count: number;
   wos: WoRow[];
   emptyMessage?: string;
   truncated?: boolean;
+  tailLink?: string;
 }) {
   return (
     <div>
@@ -1032,9 +1053,18 @@ function WoSection({
             );
           })}
           {truncated && (
-            <p className="text-xs text-muted-foreground text-center py-2 border border-border/40 rounded-md bg-muted/20">
-              Showing most recent 20 of {count} closed work orders
-            </p>
+            tailLink ? (
+              <Link
+                to={tailLink}
+                className="block text-xs text-sky-600 dark:text-sky-400 hover:text-sky-500 dark:hover:text-sky-300 underline text-center py-2 border border-border/40 rounded-md bg-muted/20 transition-colors"
+              >
+                Showing most recent 20 of {count} closed work orders — view all →
+              </Link>
+            ) : (
+              <p className="text-xs text-muted-foreground text-center py-2 border border-border/40 rounded-md bg-muted/20">
+                Showing most recent 20 of {count} closed work orders
+              </p>
+            )
           )}
         </div>
       )}
