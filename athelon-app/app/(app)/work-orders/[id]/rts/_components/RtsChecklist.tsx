@@ -60,12 +60,26 @@ function PreconditionBadge({ status }: { status: PreconditionStatus }) {
 // ─── Component ─────────────────────────────────────────────────────────────────
 
 export function RtsChecklist({ preconditions }: RtsChecklistProps) {
+  // BUG-QCM-049: Title hardcoded "All 9 Must Pass" — gave the QCM no real-time
+  // progress indication. When reviewing a complex WO a QCM had to read through
+  // every row to understand how many preconditions were satisfied. Now the header
+  // shows a live "X / N passed" count: once all pass it shows "All N Passed" in
+  // green. The count updates reactively as the QCM completes each prerequisite.
+  const passCount = preconditions.filter((p) => p.status === "PASS").length;
+  const total = preconditions.length;
+  const allPass = passCount === total;
+
   return (
     <Card className="border-border/60">
       <CardHeader className="pb-2">
-        <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
-          <ClipboardCheck className="w-3.5 h-3.5" />
-          RTS Preconditions — All 9 Must Pass
+        <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center justify-between gap-2">
+          <span className="flex items-center gap-2">
+            <ClipboardCheck className="w-3.5 h-3.5" />
+            RTS Preconditions
+          </span>
+          <span className={`font-mono font-bold ${allPass ? "text-green-400" : "text-amber-400"}`}>
+            {allPass ? `All ${total} Passed ✓` : `${passCount} / ${total} passed`}
+          </span>
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-0">

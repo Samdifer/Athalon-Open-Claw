@@ -312,63 +312,6 @@ export default function TimeApprovalPage() {
             <div className="rounded-md border border-border/60 overflow-hidden">
               <div className="overflow-x-auto">
               <Table>
-                <TableHeader>
-                  <TableRow className="bg-muted/30 hover:bg-muted/30">
-                    <TableHead className="text-xs">Technician</TableHead>
-                    <TableHead className="text-xs">Work Order</TableHead>
-                    <TableHead className="text-xs">Clock In</TableHead>
-                    <TableHead className="text-xs">Clock Out</TableHead>
-                    <TableHead className="text-xs">Duration</TableHead>
-                    <TableHead className="text-xs">Notes</TableHead>
-                    <TableHead className="text-xs text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {pending!.map((entry) => (
-                    <TableRow key={entry._id} className="hover:bg-muted/20">
-                      <TableCell className="text-xs font-medium text-foreground truncate max-w-[120px]">
-                        {resolveTech(entry.technicianId as string)}
-                      </TableCell>
-                      <TableCell className="text-xs font-mono text-muted-foreground truncate max-w-[110px]">
-                        {resolveWO(entry.workOrderId as string | undefined)}
-                      </TableCell>
-                      <TableCell className="text-xs text-muted-foreground">
-                        {fmtTs(entry.clockInAt)}
-                      </TableCell>
-                      <TableCell className="text-xs text-muted-foreground">
-                        {fmtTs(entry.clockOutAt)}
-                      </TableCell>
-                      <TableCell className="text-xs text-muted-foreground">
-                        {fmtDuration(entry.clockInAt, entry.clockOutAt)}
-                      </TableCell>
-                      <TableCell className="text-xs text-muted-foreground max-w-[160px] truncate">
-                        {entry.notes ?? "—"}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-1.5">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-7 px-2 text-green-500 hover:text-green-400 hover:bg-green-500/10"
-                            onClick={() => handleApprove(entry._id)}
-                            aria-label="Approve time entry"
-                          >
-                            <CheckCircle className="w-3.5 h-3.5 mr-1" />
-                            Approve
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-7 px-2 text-red-500 hover:text-red-400 hover:bg-red-500/10"
-                            onClick={() => openRejectDialog(entry._id)}
-                            aria-label="Reject time entry"
-                          >
-                            <XCircle className="w-3.5 h-3.5 mr-1" />
-                            Reject
-                          </Button>
-                        </div>
-                      </TableCell>
-                <Table>
                   <TableHeader>
                     <TableRow className="bg-muted/30 hover:bg-muted/30">
                       <TableHead className="text-xs">Technician</TableHead>
@@ -440,44 +383,6 @@ export default function TimeApprovalPage() {
             <div className="rounded-md border border-border/60 overflow-hidden">
               <div className="overflow-x-auto">
               <Table>
-                <TableHeader>
-                  <TableRow className="bg-muted/30 hover:bg-muted/30">
-                    <TableHead className="text-xs">Technician</TableHead>
-                    <TableHead className="text-xs">Work Order</TableHead>
-                    <TableHead className="text-xs">Clock In</TableHead>
-                    <TableHead className="text-xs">Clock Out</TableHead>
-                    <TableHead className="text-xs">Duration</TableHead>
-                    <TableHead className="text-xs">Approved At</TableHead>
-                    <TableHead className="text-xs">Approved By</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {approved.map((entry) => (
-                    <TableRow key={entry._id} className="hover:bg-muted/20">
-                      <TableCell className="text-xs font-medium text-foreground truncate max-w-[120px]">
-                        {resolveTech(entry.technicianId as string)}
-                      </TableCell>
-                      <TableCell className="text-xs font-mono text-muted-foreground truncate max-w-[110px]">
-                        {resolveWO(entry.workOrderId as string | undefined)}
-                      </TableCell>
-                      <TableCell className="text-xs text-muted-foreground">
-                        {fmtTs(entry.clockInAt)}
-                      </TableCell>
-                      <TableCell className="text-xs text-muted-foreground">
-                        {fmtTs(entry.clockOutAt)}
-                      </TableCell>
-                      <TableCell className="text-xs text-muted-foreground">
-                        {fmtDuration(entry.clockInAt, entry.clockOutAt)}
-                      </TableCell>
-                      <TableCell className="text-xs text-muted-foreground">
-                        {fmtTs((entry as { approvedAt?: number }).approvedAt)}
-                      </TableCell>
-                      <TableCell className="text-xs font-medium text-foreground truncate max-w-[120px]">
-                        {(entry as { approvedByTechId?: string }).approvedByTechId
-                          ? resolveTech((entry as { approvedByTechId: string }).approvedByTechId)
-                          : "—"}
-                      </TableCell>
-                <Table>
                   <TableHeader>
                     <TableRow className="bg-muted/30 hover:bg-muted/30">
                       <TableHead className="text-xs">Technician</TableHead>
@@ -530,42 +435,6 @@ export default function TimeApprovalPage() {
             <div className="rounded-md border border-border/60 overflow-hidden">
               <div className="overflow-x-auto">
               <Table>
-                <TableHeader>
-                  <TableRow className="bg-muted/30 hover:bg-muted/30">
-                    <TableHead className="text-xs">Technician</TableHead>
-                    <TableHead className="text-xs">Work Order</TableHead>
-                    <TableHead className="text-xs">Clock In</TableHead>
-                    <TableHead className="text-xs">Clock Out</TableHead>
-                    <TableHead className="text-xs">Duration</TableHead>
-                    <TableHead className="text-xs">Rejection Reason</TableHead>
-                    <TableHead className="text-xs">Rejected At</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {rejected.map((entry) => (
-                    <TableRow key={entry._id} className="hover:bg-muted/20">
-                      <TableCell className="text-xs font-medium text-foreground truncate max-w-[120px]">
-                        {resolveTech(entry.technicianId as string)}
-                      </TableCell>
-                      <TableCell className="text-xs font-mono text-muted-foreground truncate max-w-[110px]">
-                        {resolveWO(entry.workOrderId as string | undefined)}
-                      </TableCell>
-                      <TableCell className="text-xs text-muted-foreground">
-                        {fmtTs(entry.clockInAt)}
-                      </TableCell>
-                      <TableCell className="text-xs text-muted-foreground">
-                        {fmtTs(entry.clockOutAt)}
-                      </TableCell>
-                      <TableCell className="text-xs text-muted-foreground">
-                        {fmtDuration(entry.clockInAt, entry.clockOutAt)}
-                      </TableCell>
-                      <TableCell className="text-xs text-muted-foreground max-w-[160px] truncate">
-                        {(entry as { rejectionReason?: string }).rejectionReason ?? "—"}
-                      </TableCell>
-                      <TableCell className="text-xs text-muted-foreground">
-                        {fmtTs((entry as { rejectedAt?: number }).rejectedAt)}
-                      </TableCell>
-                <Table>
                   <TableHeader>
                     <TableRow className="bg-muted/30 hover:bg-muted/30">
                       <TableHead className="text-xs">Technician</TableHead>

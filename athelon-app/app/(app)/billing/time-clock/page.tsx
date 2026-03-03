@@ -575,8 +575,6 @@ export default function TimeClockPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Work Orders</SelectItem>
-                {(workOrders ?? []).slice(0, 100).map((w) => (
-                  <SelectItem key={w._id} value={w._id}>{w.workOrderNumber}</SelectItem>
                 {(workOrders ?? []).slice(0, 40).map((wo) => (
                   <SelectItem key={wo._id} value={wo._id}>
                     {wo.workOrderNumber}
@@ -656,7 +654,6 @@ export default function TimeClockPage() {
       </div>
 
       {/* Clock In Dialog */}
-      <Dialog open={clockInDialog} onOpenChange={(v) => { if (!v) { setError(null); setClockInWO(""); setClockInNotes(""); } setClockInDialog(v); }}>
       <Dialog open={startDialogOpen} onOpenChange={setStartDialogOpen}>
         <DialogContent className="max-w-[95vw] sm:max-w-lg">
           <DialogHeader>

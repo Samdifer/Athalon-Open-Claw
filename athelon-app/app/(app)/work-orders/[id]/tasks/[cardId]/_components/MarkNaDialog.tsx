@@ -10,6 +10,7 @@
  */
 
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -96,6 +97,12 @@ export function MarkNaDialog({
         callerTechnicianId: techId,
       });
       setReason("");
+      // BUG-QCM-MNA-001: No toast after step is marked N/A. Same silent-close
+      // issue as SignStepDialog / SignCardDialog. A tech marking 3 steps N/A
+      // on a large task card has no confirmation the action was recorded — they
+      // must scroll up to see the step status change before the Convex
+      // subscription fires. Added toast so the action is clearly acknowledged.
+      toast.success(`Step ${stepNumber} marked N/A`);
       onSuccess();
       onClose();
     } catch (err) {

@@ -2053,3 +2053,100 @@ async function recomputePOTotals(
     updatedAt: now,
   });
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MUTATION: cloneDeclinedQuote (Wave 5)
+// Creates a new DRAFT quote from a DECLINED quote, copying line items.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const cloneDeclinedQuote = mutation({
+  args: {
+    quoteId: v.id("quotes"),
+    createdByTechId: v.id("technicians"),
+  },
+  handler: async (ctx, args): Promise<Id<"quotes">> => {
+    const now = Date.now();
+    const callerUserId = await requireAuth(ctx);
+
+    const original = await ctx.db.get(args.quoteId);
+    if (!original) throw new Error("Quote not found.");
+    if (original.status !== "DECLINED") {
+      throw new Error(`Can only clone DECLINED quotes. Current status: ${original.status}`);
+    }
+
+    const quoteNumber = await getNextNumber(ctx, original.orgId, "quote", "Q");
+
+    const newQuoteId = await ctx.db.insert("quotes", {
+      orgId: original.orgId,
+      customerId: original.customerId,
+      aircraftId: original.aircraftId,
+      workOrderId: original.workOrderId,
+      status: "DRAFT",
+      quoteNumber,
+      createdByTechId: args.createdByTechId,
+      laborTotal: original.laborTotal,
+      partsTotal: original.partsTotal,
+      subtotal: original.subtotal,
+      tax: original.tax,
+      total: original.total,
+      currency: original.currency,
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    // Copy line items
+    const lineItems = await ctx.db
+      .query("quoteLineItems")
+      .withIndex("by_quote", (q) => q.eq("quoteId", args.quoteId))
+      .collect();
+
+    for (const li of lineItems) {
+      await ctx.db.insert("quoteLineItems", {
+        orgId: li.orgId,
+        quoteId: newQuoteId,
+        type: li.type,
+        description: li.description,
+        qty: li.qty,
+        unitPrice: li.unitPrice,
+        total: li.total,
+        partNumber: li.partNumber,
+        partId: li.partId,
+        departmentSection: li.departmentSection,
+        createdAt: now,
+        updatedAt: now,
+      });
+    }
+
+    // Copy department sections
+    const departments = await ctx.db
+      .query("quoteDepartments")
+      .withIndex("by_quote", (q) => q.eq("quoteId", args.quoteId))
+      .collect();
+
+    for (const dept of departments) {
+      await ctx.db.insert("quoteDepartments", {
+        orgId: dept.orgId,
+        quoteId: newQuoteId,
+        departmentName: dept.departmentName,
+        laborTotal: dept.laborTotal,
+        partsTotal: dept.partsTotal,
+        subtotal: dept.subtotal,
+        status: "PENDING",
+        createdAt: now,
+        updatedAt: now,
+      });
+    }
+
+    await ctx.db.insert("auditLog", {
+      organizationId: original.orgId,
+      eventType: "record_created",
+      tableName: "quotes",
+      recordId: newQuoteId,
+      userId: callerUserId,
+      notes: `Quote ${quoteNumber} cloned from declined quote ${original.quoteNumber}.`,
+      timestamp: now,
+    });
+
+    return newQuoteId;
+  },
+});

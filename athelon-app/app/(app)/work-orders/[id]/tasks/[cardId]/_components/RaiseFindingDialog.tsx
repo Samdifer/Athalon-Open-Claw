@@ -10,6 +10,7 @@
  */
 
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -247,6 +248,12 @@ export function RaiseFindingDialog({
       });
 
       resetForm();
+      // BUG-QCM-RFD-001: No success toast after raising a finding/discrepancy.
+      // A QCM who submits a finding has no confirmation it was recorded before
+      // the dialog closes. If the WO discrepancy list is not visible in the
+      // current scroll position, they may wonder if the finding was lost and
+      // submit a duplicate. Findings are permanent maintenance records.
+      toast.success("Finding raised — discrepancy created");
       onSuccess?.();
       onClose();
     } catch (err) {

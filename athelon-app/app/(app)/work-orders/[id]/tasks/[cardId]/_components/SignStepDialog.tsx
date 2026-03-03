@@ -7,6 +7,7 @@
  */
 
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -226,6 +227,13 @@ export function SignStepDialog({
       setApprovedDataRef("");
       setPartsInstalled([]);
       setPhotoStorageIds([]);
+      // BUG-QCM-SSD-001: No success toast after step sign-off. A technician
+      // completing a safety-critical sign-off under 14 CFR 43.9 would see the
+      // dialog silently close with zero confirmation. If the step list was
+      // scrolled or the status hadn't yet updated from Convex, they had no
+      // indication the signature was recorded. Added toast so the action is
+      // clearly acknowledged before the UI catches up.
+      toast.success(`Step ${stepNumber} signed`);
       onSuccess();
       onClose();
     } catch (err) {

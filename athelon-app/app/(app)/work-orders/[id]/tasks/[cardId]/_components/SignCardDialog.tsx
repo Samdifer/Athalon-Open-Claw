@@ -7,6 +7,7 @@
  */
 
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -121,6 +122,13 @@ export function SignCardDialog({
 
       setPin("");
       setStatement("");
+      // BUG-QCM-SCD-001: No success toast after card-level sign-off. For a
+      // 14 CFR 43.9 certification event (permanently locking a task card), the
+      // dialog was closing silently. A QCM or IA had no confirmation the record
+      // was written before the Convex subscription re-rendered the card as
+      // "Signed & Complete". On slow connections this window could be several
+      // seconds with no feedback at all.
+      toast.success("Task card signed & locked");
       onSuccess();
       onClose();
     } catch (err) {

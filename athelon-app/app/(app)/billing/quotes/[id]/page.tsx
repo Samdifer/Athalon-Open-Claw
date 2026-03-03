@@ -22,6 +22,11 @@ import {
   Plus,
   Package,
   Wrench,
+  ArrowUp,
+  ArrowDown,
+  ChevronDown,
+  DollarSign,
+  TrendingUp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -50,6 +55,7 @@ import { formatDate } from "@/lib/format";
 import { Download } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
+import { LineEconomicsEditor } from "./_components/LineEconomicsEditor";
 
 const STATUS_STYLES: Record<string, string> = {
   DRAFT: "bg-muted text-muted-foreground border-muted-foreground/30",
@@ -189,6 +195,19 @@ export default function QuoteDetailPage() {
   const updateQuoteLineItem = useMutation(api.billingV4.updateQuoteLineItem);
   const removeQuoteLineItem = useMutation(api.billingV4.removeQuoteLineItem);
   const computePrice = useAction(api.pricing.computePrice);
+
+  // Wave 4: Line reordering & economics
+  const reorderLineItems = useMutation(api.quoteEnhancements.reorderLineItems);
+  const updateLineEconomics = useMutation(api.quoteEnhancements.updateLineEconomics);
+
+  // Wave 4: Quote templates
+  const templates = useQuery(
+    api.quoteTemplates.list,
+    orgId ? { orgId } : "skip",
+  );
+  const insertTemplate = useMutation(api.quoteTemplates.insertIntoQuote);
+
+  const [expandedEconomics, setExpandedEconomics] = useState<string | null>(null);
 
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -616,6 +635,70 @@ export default function QuoteDetailPage() {
   const canCreateInvoice = quote.status === "APPROVED";
   const isDraft = quote.status === "DRAFT";
 
+  // Wave 4: Sort line items by sortOrder
+  const sortedLineItems = useMemo(() => {
+    return [...quote.lineItems].sort((a, b) => {
+      const sa = (a as Record<string, unknown>).sortOrder as number | undefined ?? 0;
+      const sb = (b as Record<string, unknown>).sortOrder as number | undefined ?? 0;
+      return sa - sb;
+    });
+  }, [quote.lineItems]);
+
+  // Wave 4: Reorder handler
+  const handleMoveItem = async (index: number, direction: "up" | "down") => {
+    const items = [...sortedLineItems];
+    const swapIdx = direction === "up" ? index - 1 : index + 1;
+    if (swapIdx < 0 || swapIdx >= items.length) return;
+    [items[index], items[swapIdx]] = [items[swapIdx], items[index]];
+    try {
+      await reorderLineItems({
+        quoteId,
+        orderedIds: items.map((i) => i._id as Id<"quoteLineItems">),
+      });
+    } catch (err) {
+      toast.error("Failed to reorder items");
+    }
+  };
+
+  // Wave 4: Economics handler
+  const handleSaveEconomics = async (
+    lineItemId: Id<"quoteLineItems">,
+    data: { directCost?: number; markupMultiplier?: number; fixedPriceOverride?: number; pricingMode?: "derived" | "override" }
+  ) => {
+    try {
+      await updateLineEconomics({ lineItemId, ...data });
+      toast.success("Line economics updated");
+    } catch (err) {
+      toast.error("Failed to update economics");
+    }
+  };
+
+  // Wave 4: Insert template
+  const handleInsertTemplate = async (templateId: Id<"quoteTemplates">) => {
+    if (!orgId) return;
+    try {
+      await insertTemplate({ orgId, quoteId, templateId });
+      toast.success("Template lines added to quote");
+    } catch (err) {
+      toast.error("Failed to insert template");
+    }
+  };
+
+  // Wave 4: Profitability calculations
+  const profitability = useMemo(() => {
+    const laborRev = quote.lineItems.filter((l) => l.type === "labor").reduce((s, l) => s + l.total, 0);
+    const partsRev = quote.lineItems.filter((l) => l.type === "part").reduce((s, l) => s + l.total, 0);
+    const extRev = quote.lineItems.filter((l) => l.type === "external_service").reduce((s, l) => s + l.total, 0);
+    const totalRev = laborRev + partsRev + extRev;
+    const estCost = quote.lineItems.reduce((s, l) => {
+      const dc = (l as Record<string, unknown>).directCost as number | undefined;
+      return s + (dc ?? 0) * l.qty;
+    }, 0);
+    const grossMargin = totalRev - estCost;
+    const marginPct = totalRev > 0 ? (grossMargin / totalRev) * 100 : 0;
+    return { laborRev, partsRev, extRev, totalRev, estCost, grossMargin, marginPct };
+  }, [quote.lineItems]);
+
   const now = Date.now();
   // GAP-07: Expiry logic
   const isExpired =
@@ -956,13 +1039,66 @@ export default function QuoteDetailPage() {
         </Card>
       )}
 
-      {/* Line Items — GAP-06: edit/delete on DRAFT */}
+      {/* Wave 4: Profitability Panel */}
+      {quote.lineItems.length > 0 && (
+        <Card className="border-border/60">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <TrendingUp className="w-4 h-4" /> Profitability Summary
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Labor Revenue</p>
+                <p className="text-lg font-semibold tabular-nums">${profitability.laborRev.toFixed(2)}</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Parts Revenue</p>
+                <p className="text-lg font-semibold tabular-nums">${profitability.partsRev.toFixed(2)}</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Est. Cost</p>
+                <p className="text-lg font-semibold tabular-nums">${profitability.estCost.toFixed(2)}</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Gross Margin</p>
+                <p className={`text-lg font-semibold tabular-nums ${profitability.grossMargin >= 0 ? "text-green-600" : "text-red-500"}`}>
+                  ${profitability.grossMargin.toFixed(2)} ({profitability.marginPct.toFixed(1)}%)
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Line Items — GAP-06: edit/delete on DRAFT, Wave 4: reorder + economics */}
       <Card className="border-border/60">
-        <CardHeader className="pb-3">
+        <CardHeader className="pb-3 flex flex-row items-center justify-between">
           <CardTitle className="text-sm font-medium">Line Items</CardTitle>
+          {/* Wave 4: Template insertion */}
+          {isDraft && templates && templates.length > 0 && (
+            <div className="flex items-center gap-2">
+              <select
+                className="text-xs border rounded px-2 py-1 bg-background"
+                defaultValue=""
+                onChange={(e) => {
+                  if (e.target.value) {
+                    handleInsertTemplate(e.target.value as Id<"quoteTemplates">);
+                    e.target.value = "";
+                  }
+                }}
+              >
+                <option value="" disabled>Insert template…</option>
+                {templates.filter((t) => t.isActive).map((t) => (
+                  <option key={t._id} value={t._id}>{t.name}</option>
+                ))}
+              </select>
+            </div>
+          )}
         </CardHeader>
         <CardContent className="p-0">
-          {quote.lineItems.length === 0 ? (
+          {sortedLineItems.length === 0 ? (
             <div className="py-10 text-center">
               <FileText className="w-6 h-6 text-muted-foreground/40 mx-auto mb-2" />
               <p className="text-xs text-muted-foreground">No line items on this quote.</p>
@@ -972,67 +1108,118 @@ export default function QuoteDetailPage() {
             <Table>
               <TableHeader>
                 <TableRow className="border-border/50">
+                  {isDraft && <TableHead className="text-xs w-16">Order</TableHead>}
                   <TableHead className="text-xs">Description</TableHead>
                   <TableHead className="text-xs">Type</TableHead>
                   <TableHead className="text-xs text-right">Qty</TableHead>
                   <TableHead className="text-xs text-right">Unit $</TableHead>
                   <TableHead className="text-xs text-right">Total</TableHead>
-                  {isDraft && <TableHead className="text-xs w-16" />}
+                  {isDraft && <TableHead className="text-xs w-20" />}
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {quote.lineItems.map((item) => (
-                  <TableRow key={item._id} className="border-border/40">
-                    <TableCell className="text-sm">
-                      <div>{item.description}</div>
-                      {/* GAP-06: Show discount percentage label */}
-                      {item.discountPercent ? (
-                        <div className="text-[10px] text-amber-600 dark:text-amber-400 mt-0.5">- {item.discountPercent}%</div>
-                      ) : null}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className="text-[10px] border-border/50">
-                        {LINE_TYPE_LABELS[item.type] ?? item.type}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-sm text-right">{item.qty}</TableCell>
-                    <TableCell className="text-sm text-right tabular-nums">${item.unitPrice.toFixed(2)}</TableCell>
-                    <TableCell className="text-sm font-medium text-right tabular-nums">${item.total.toFixed(2)}</TableCell>
-                    {isDraft && (
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            title="Edit line item"
-                            className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
-                            onClick={() => openEditItem({
-                              _id: item._id as Id<"quoteLineItems">,
-                              description: item.description,
-                              qty: item.qty,
-                              unitPrice: item.unitPrice,
-                              discountPercent: item.discountPercent,
-                            })}
-                          >
-                            <Pencil className="w-3.5 h-3.5" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            title="Remove line item"
-                            className="h-7 w-7 p-0 text-muted-foreground hover:text-red-400"
-                            onClick={() => {
-                              setDeleteItemId(item._id as Id<"quoteLineItems">);
-                              setDeleteItemDialog(true);
-                            }}
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    )}
-                  </TableRow>
-                ))}
+                {sortedLineItems.map((item, idx) => {
+                  const itemAny = item as Record<string, unknown>;
+                  const isExpanded = expandedEconomics === item._id;
+                  return (
+                    <>
+                      <TableRow key={item._id} className="border-border/40">
+                        {isDraft && (
+                          <TableCell>
+                            <div className="flex flex-col gap-0.5">
+                              <Button
+                                variant="ghost" size="sm"
+                                className="h-5 w-5 p-0"
+                                disabled={idx === 0}
+                                onClick={() => handleMoveItem(idx, "up")}
+                              >
+                                <ArrowUp className="w-3 h-3" />
+                              </Button>
+                              <Button
+                                variant="ghost" size="sm"
+                                className="h-5 w-5 p-0"
+                                disabled={idx === sortedLineItems.length - 1}
+                                onClick={() => handleMoveItem(idx, "down")}
+                              >
+                                <ArrowDown className="w-3 h-3" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        )}
+                        <TableCell className="text-sm">
+                          <div className="flex items-center gap-1">
+                            <span>{item.description}</span>
+                            {isDraft && (
+                              <Button
+                                variant="ghost" size="sm"
+                                className="h-5 w-5 p-0 text-muted-foreground"
+                                title="Line economics"
+                                onClick={() => setExpandedEconomics(isExpanded ? null : item._id)}
+                              >
+                                <ChevronDown className={`w-3 h-3 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
+                              </Button>
+                            )}
+                          </div>
+                          {item.discountPercent ? (
+                            <div className="text-[10px] text-amber-600 dark:text-amber-400 mt-0.5">- {item.discountPercent}%</div>
+                          ) : null}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className="text-[10px] border-border/50">
+                            {LINE_TYPE_LABELS[item.type] ?? item.type}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-sm text-right">{item.qty}</TableCell>
+                        <TableCell className="text-sm text-right tabular-nums">${item.unitPrice.toFixed(2)}</TableCell>
+                        <TableCell className="text-sm font-medium text-right tabular-nums">${item.total.toFixed(2)}</TableCell>
+                        {isDraft && (
+                          <TableCell className="text-right">
+                            <div className="flex items-center justify-end gap-1">
+                              <Button
+                                variant="ghost" size="sm" title="Edit line item"
+                                className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
+                                onClick={() => openEditItem({
+                                  _id: item._id as Id<"quoteLineItems">,
+                                  description: item.description,
+                                  qty: item.qty,
+                                  unitPrice: item.unitPrice,
+                                  discountPercent: item.discountPercent,
+                                })}
+                              >
+                                <Pencil className="w-3.5 h-3.5" />
+                              </Button>
+                              <Button
+                                variant="ghost" size="sm" title="Remove line item"
+                                className="h-7 w-7 p-0 text-muted-foreground hover:text-red-400"
+                                onClick={() => {
+                                  setDeleteItemId(item._id as Id<"quoteLineItems">);
+                                  setDeleteItemDialog(true);
+                                }}
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        )}
+                      </TableRow>
+                      {/* Wave 4: Expanded economics editor */}
+                      {isDraft && isExpanded && (
+                        <TableRow key={`${item._id}-econ`} className="bg-muted/20">
+                          <TableCell colSpan={7} className="py-3 px-4">
+                            <LineEconomicsEditor
+                              lineItemId={item._id as Id<"quoteLineItems">}
+                              directCost={itemAny.directCost as number | undefined}
+                              markupMultiplier={itemAny.markupMultiplier as number | undefined}
+                              fixedPriceOverride={itemAny.fixedPriceOverride as number | undefined}
+                              pricingMode={(itemAny.pricingMode as "derived" | "override" | undefined) ?? "derived"}
+                              onSave={handleSaveEconomics}
+                            />
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </>
+                  );
+                })}
               </TableBody>
             </Table>
             </div>

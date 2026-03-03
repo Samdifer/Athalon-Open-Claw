@@ -340,7 +340,18 @@ export default function QcmReviewPage() {
     // ones a QCM can authorize RTS for), then sort remaining alphabetically by WO#.
     return (workOrders ?? [])
       .filter(
-        (wo) => !["closed", "cancelled", "voided"].includes(wo.status ?? ""),
+        // BUG-QCM-047: Draft WOs must be excluded from the close-readiness
+        // panel. A draft WO is an uncommitted estimate that has never been
+        // formally opened — it has no task cards, no tech assignments, and no
+        // scope confirmation. The readiness check for a draft returns a wall of
+        // blockers ("no task cards", "no aircraft assigned", etc.) that are
+        // misleading: the WO isn't blocked, it was just never opened. The QCM
+        // would be confused why a "0-task, 0-step" WO appears in the sign-off
+        // queue alongside legitimate pending_signoff candidates.
+        // Same exclusion applied in: dashboard (BUG-SM-HUNT-001), scheduling
+        // (BUG-SM-HUNT-002). Now consistently excluded everywhere draft status
+        // has no business being in an active workflow.
+        (wo) => !["draft", "closed", "cancelled", "voided"].includes(wo.status ?? ""),
       )
       .map((wo) => ({
         _id: wo._id,

@@ -1418,6 +1418,9 @@ export default defineSchema({
     rtsCertificateNumber: v.optional(v.string()),
     rtsSignatureAuthEventId: v.optional(v.id("signatureAuthEvents")),
 
+    // Wave 3: Required training types for task assignment constraint validation
+    requiredTraining: v.optional(v.array(v.string())),
+
     stepCount: v.number(),
     completedStepCount: v.number(),
     naStepCount: v.number(),
@@ -2887,12 +2890,42 @@ export default defineSchema({
     customerDecisionNotes: v.optional(v.string()),
     customerDecisionAt: v.optional(v.number()),
 
+    // Wave 4: Line economics & reordering
+    sortOrder: v.optional(v.number()),
+    directCost: v.optional(v.number()),
+    markupMultiplier: v.optional(v.number()),
+    fixedPriceOverride: v.optional(v.number()),
+    pricingMode: v.optional(v.union(v.literal("derived"), v.literal("override"))),
+
     createdAt: v.number(),
     updatedAt: v.number(),
   })
     .index("by_quote", ["quoteId"])
     .index("by_org", ["orgId"])
     .index("by_org_quote", ["orgId", "quoteId"]),
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // QUOTE TEMPLATES
+  //
+  // Reusable quote templates with pre-configured line items (Wave 4).
+  // ═══════════════════════════════════════════════════════════════════════════
+  quoteTemplates: defineTable({
+    orgId: v.id("organizations"),
+    name: v.string(),
+    aircraftTypeFilter: v.optional(v.string()),
+    lineItems: v.array(v.object({
+      type: v.union(v.literal("labor"), v.literal("part"), v.literal("external_service")),
+      description: v.string(),
+      qty: v.number(),
+      unitPrice: v.number(),
+      directCost: v.optional(v.number()),
+      markupMultiplier: v.optional(v.number()),
+    })),
+    isActive: v.boolean(),
+    createdAt: v.number(),
+    updatedAt: v.optional(v.number()),
+  })
+    .index("by_org", ["orgId"]),
 
   // ═══════════════════════════════════════════════════════════════════════════
   // QUOTE DEPARTMENTS
@@ -3502,6 +3535,25 @@ export default defineSchema({
     .index("by_org_status", ["organizationId", "status"]),
 
   // ═══════════════════════════════════════════════════════════════════════════
+  // TECHNICIAN TRAINING — Wave 3: Training-Based Constraints
+  //
+  // Per-technician training records for scheduling constraint validation.
+  // Training types include FAR 91.411, 91.413, borescope, NDT, and custom.
+  // Used by the magic scheduler to validate tech–task assignment eligibility.
+  // ═══════════════════════════════════════════════════════════════════════════
+  technicianTraining: defineTable({
+    technicianId: v.id("technicians"),
+    organizationId: v.string(),
+    trainingType: v.string(),          // "91.411", "91.413", "borescope", "ndt", or custom
+    completedAt: v.number(),           // Unix ms
+    expiresAt: v.optional(v.number()), // Unix ms — undefined = never expires
+    certificateRef: v.optional(v.string()), // Certificate/document reference
+    createdAt: v.number(),
+  })
+    .index("by_technician", ["technicianId"])
+    .index("by_org", ["organizationId"]),
+
+  // ═══════════════════════════════════════════════════════════════════════════
   // TRAINING RECORDS — Phase 8 Training & Qualifications
   //
   // Tracks technician training completions, certifications, and expiry dates.
@@ -4093,4 +4145,60 @@ export default defineSchema({
     .index("by_aircraft", ["organizationId", "aircraftId"])
     .index("by_status", ["organizationId", "status"])
     .index("by_severity", ["organizationId", "severity"]),
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // CARRY-FORWARD ITEMS (Wave 5)
+  // Deferred maintenance items captured when closing a work order.
+  // ═══════════════════════════════════════════════════════════════════════════
+  carryForwardItems: defineTable({
+    aircraftId: v.id("aircraft"),
+    organizationId: v.id("organizations"),
+    sourceWorkOrderId: v.id("workOrders"),
+    description: v.string(),
+    category: v.union(
+      v.literal("deferred_maintenance"),
+      v.literal("note"),
+      v.literal("ad_tracking"),
+    ),
+    priority: v.union(
+      v.literal("low"),
+      v.literal("medium"),
+      v.literal("high"),
+      v.literal("critical"),
+    ),
+    status: v.union(
+      v.literal("open"),
+      v.literal("consumed"),
+      v.literal("dismissed"),
+    ),
+    createdAt: v.number(),
+    consumedByQuoteId: v.optional(v.id("quotes")),
+    consumedByWorkOrderId: v.optional(v.id("workOrders")),
+    dismissedReason: v.optional(v.string()),
+  })
+    .index("by_aircraft", ["aircraftId", "status"])
+    .index("by_org", ["organizationId", "status"]),
+
+  // === TASK ASSIGNMENTS (Wave 6: WO Execution Gantt) ===
+  taskAssignments: defineTable({
+    workOrderId: v.id("workOrders"),
+    taskCardId: v.id("taskCards"),
+    technicianId: v.id("technicians"),
+    organizationId: v.string(),
+    shopLocationId: v.optional(v.id("shopLocations")),
+    scheduledStart: v.number(),
+    scheduledEnd: v.number(),
+    actualHoursLogged: v.optional(v.number()),
+    percentComplete: v.optional(v.number()),
+    status: v.union(
+      v.literal("scheduled"),
+      v.literal("in_progress"),
+      v.literal("complete"),
+    ),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_workOrder", ["workOrderId"])
+    .index("by_technician", ["technicianId"])
+    .index("by_org", ["organizationId"]),
 });

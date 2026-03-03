@@ -16,6 +16,7 @@
  *   block return to service.
  */
 
+import { useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -30,6 +31,8 @@ import {
   ExternalLink,
   RefreshCcw,
   Info,
+  ChevronDown,
+  ChevronRight as ChevronRightIcon,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -276,6 +279,13 @@ export function AircraftAdComplianceTab({
 
   const isLoading = records === undefined;
 
+  // BUG-QCM-047: "Not Applicable / Superseded" section was commented
+  // "(collapsed)" but had no actual collapse logic. An aircraft with 20+
+  // superseded ADs forced the QCM to scroll past all of them before reaching
+  // the compliant/needs-attention rows they care about. Now starts collapsed;
+  // inspector can expand to audit N/A coverage if needed.
+  const [showNa, setShowNa] = useState(false);
+
   // Partition into buckets for display
   const applicableRecords = (records ?? []).filter(
     (r) => r.applicable === true && r.complianceStatus !== "not_applicable" && r.complianceStatus !== "superseded",
@@ -472,30 +482,42 @@ export function AircraftAdComplianceTab({
         </div>
       )}
 
-      {/* Not Applicable / Superseded (collapsed) */}
+      {/* Not Applicable / Superseded — collapsible (starts closed) */}
       {!isLoading && notApplicableRecords.length > 0 && (
         <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <h3 className="text-xs font-semibold text-muted-foreground">
+          <button
+            type="button"
+            onClick={() => setShowNa((v) => !v)}
+            className="flex items-center gap-2 w-full text-left group"
+            aria-expanded={showNa}
+          >
+            {showNa ? (
+              <ChevronDown className="w-3.5 h-3.5 text-muted-foreground/60 flex-shrink-0" />
+            ) : (
+              <ChevronRightIcon className="w-3.5 h-3.5 text-muted-foreground/60 flex-shrink-0" />
+            )}
+            <h3 className="text-xs font-semibold text-muted-foreground group-hover:text-foreground transition-colors">
               Not Applicable / Superseded
             </h3>
             <Badge variant="secondary" className="text-[10px] bg-muted">
               {notApplicableRecords.length}
             </Badge>
-          </div>
-          <Card className="border-border/60">
-            <CardContent className="px-4 py-0">
-              <div className="divide-y divide-border/30">
-                {notApplicableRecords.map((rec) => (
-                  <AdRow
-                    key={rec._id}
-                    record={rec as Parameters<typeof AdRow>[0]["record"]}
-                    totalTimeHours={totalTimeHours}
-                  />
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+          </button>
+          {showNa && (
+            <Card className="border-border/60">
+              <CardContent className="px-4 py-0">
+                <div className="divide-y divide-border/30">
+                  {notApplicableRecords.map((rec) => (
+                    <AdRow
+                      key={rec._id}
+                      record={rec as Parameters<typeof AdRow>[0]["record"]}
+                      totalTimeHours={totalTimeHours}
+                    />
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
       )}
     </div>

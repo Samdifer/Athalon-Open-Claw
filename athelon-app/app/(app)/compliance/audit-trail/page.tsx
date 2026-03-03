@@ -16,6 +16,8 @@ import {
   ClipboardList,
   ShieldAlert,
   ArrowLeft,
+  ExternalLink,
+  Loader2,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
@@ -29,6 +31,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ActionableEmptyState } from "@/components/zero-state/ActionableEmptyState";
 
 // ─── Status Badge ────────────────────────────────────────────────────────────
 
@@ -275,27 +278,41 @@ function AdCompliancePanel({
       {/* Blocking Banner */}
       {summary.hasBlockingItems && (
         <Card className="border-red-500/30 bg-red-500/5">
-          <CardContent className="p-3 flex items-center gap-2.5">
-            <AlertTriangle className="w-4 h-4 text-red-400 flex-shrink-0" />
-            <p className="text-xs text-red-400 font-medium">
-              {/* BUG-QCM-AT-002: Previous inline JSX text-node concatenation produced
-                  garbled output when overdueCount=0 but both notComplied and
-                  pendingDetermination were >0 (e.g. "N776AB has 1 not-complied1
-                  pending-determination ADs."). The " and " separator only rendered
-                  when overdueCount>0, so two non-overdue issue types ran together
-                  with no space or comma between them. Replaced with a helper that
-                  builds the list as a JS array joined with " and " / ", " — same
-                  pattern used throughout the billing analytics page. */}
-              {aircraftRegistration} has{" "}
-              {(() => {
-                const parts: string[] = [];
-                if (summary.overdueCount > 0) parts.push(`${summary.overdueCount} overdue`);
-                if (summary.notCompliedCount > 0) parts.push(`${summary.notCompliedCount} not-complied`);
-                if (summary.pendingDeterminationCount > 0) parts.push(`${summary.pendingDeterminationCount} pending-determination`);
-                return parts.length === 1 ? parts[0] : parts.slice(0, -1).join(", ") + " and " + parts[parts.length - 1];
-              })()}{" "}
-              ADs. Aircraft may not return to service until these are resolved.
-            </p>
+          <CardContent className="p-3 flex items-start justify-between gap-2.5">
+            <div className="flex items-start gap-2.5 flex-1 min-w-0">
+              <AlertTriangle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+              <p className="text-xs text-red-400 font-medium">
+                {/* BUG-QCM-AT-002: Previous inline JSX text-node concatenation produced
+                    garbled output when overdueCount=0 but both notComplied and
+                    pendingDetermination were >0 (e.g. "N776AB has 1 not-complied1
+                    pending-determination ADs."). The " and " separator only rendered
+                    when overdueCount>0, so two non-overdue issue types ran together
+                    with no space or comma between them. Replaced with a helper that
+                    builds the list as a JS array joined with " and " / ", " — same
+                    pattern used throughout the billing analytics page. */}
+                {aircraftRegistration} has{" "}
+                {(() => {
+                  const parts: string[] = [];
+                  if (summary.overdueCount > 0) parts.push(`${summary.overdueCount} overdue`);
+                  if (summary.notCompliedCount > 0) parts.push(`${summary.notCompliedCount} not-complied`);
+                  if (summary.pendingDeterminationCount > 0) parts.push(`${summary.pendingDeterminationCount} pending-determination`);
+                  return parts.length === 1 ? parts[0] : parts.slice(0, -1).join(", ") + " and " + parts[parts.length - 1];
+                })()}{" "}
+                ADs. Aircraft may not return to service until these are resolved.
+              </p>
+            </div>
+            {/* BUG-QCM-048: Blocking banner had no action link. QCM could see
+                "3 overdue ADs" but had no direct path to record compliance or
+                update status — they had to navigate away to Compliance → AD/SB,
+                then re-select the aircraft from a dropdown. Now provides a
+                direct link to /compliance/ad-sb pre-filtered to this aircraft. */}
+            <Link
+              to={`/compliance/ad-sb?aircraft=${encodeURIComponent(aircraftId)}`}
+              className="flex items-center gap-1 text-[11px] text-red-400 hover:text-red-300 whitespace-nowrap flex-shrink-0 font-medium border border-red-500/30 rounded px-1.5 py-0.5 hover:bg-red-500/10 transition-colors"
+            >
+              <ExternalLink className="w-3 h-3" />
+              Update AD/SB
+            </Link>
           </CardContent>
         </Card>
       )}
@@ -483,8 +500,17 @@ function FleetOverviewPanel({
           <List className="w-3.5 h-3.5" />
           Fleet Overview — Click a row to drill in
         </CardTitle>
+        {/* BUG-QCM-049: "Non-compliant first" subtitle was always shown even during
+            the window while fleetAdSummary is still loading (sortedAircraft falls back
+            to insertion order). Aircraft were rendering in database insertion order but
+            the subtitle told the QCM they were sorted by compliance tier. A QCM who
+            checks "N776AB at the top must be the worst" was wrong.
+            Now: subtitle says "Loading sort order…" until fleetAdSummary resolves, then
+            switches to "Non-compliant first" only when the sort is actually applied. */}
         <p className="text-[11px] text-muted-foreground">
-          All {aircraft.length} fleet aircraft · Non-compliant first · Overdue ADs block RTS
+          All {aircraft.length} fleet aircraft ·{" "}
+          {(summaryByAircraftId?.size ?? 0) > 0 ? "Non-compliant first" : "Loading sort order…"}{" "}
+          · Overdue ADs block RTS
         </p>
       </CardHeader>
       <CardContent className="p-0">
@@ -506,7 +532,15 @@ function FleetOverviewPanel({
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function AuditTrailPage() {
-  const { orgId } = useCurrentOrg();
+  // BUG-QCM-048: Previously `useCurrentOrg()` was destructured without `isLoaded`.
+  // Every other compliance page (compliance/page.tsx, ad-sb/page.tsx,
+  // qcm-review/page.tsx) guards against missing org context via `usePagePrereqs`
+  // or `isLoaded` checks — the audit trail was the only one that didn't.
+  // Consequence: a user without an organization, or with a slow Clerk load,
+  // would see skeleton states permanently with no explanation and no path forward.
+  // Now: while org context is loading we show a spinner; once loaded without
+  // an org we show the standard "missing context" ActionableEmptyState.
+  const { orgId, isLoaded: orgLoaded } = useCurrentOrg();
 
   const [selectedAircraftId, setSelectedAircraftId] = useState<string | null>(null);
 
@@ -568,6 +602,27 @@ export default function AuditTrailPage() {
       return (a.currentRegistration ?? "").localeCompare(b.currentRegistration ?? "");
     });
   }, [aircraft, fleetAdSummary]);
+
+  // BUG-QCM-048: Guard against missing org context (see comment above on isLoaded).
+  if (!orgLoaded) {
+    return (
+      <div className="flex items-center justify-center py-24">
+        <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (!orgId) {
+    return (
+      <ActionableEmptyState
+        title="Audit trail requires organization setup"
+        missingInfo="Complete onboarding before reviewing per-aircraft AD compliance and audit data."
+        primaryActionLabel="Complete Setup"
+        primaryActionType="link"
+        primaryActionTarget="/onboarding"
+      />
+    );
+  }
 
   return (
     <div className="space-y-5">
