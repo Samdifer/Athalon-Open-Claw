@@ -257,8 +257,23 @@ export default function MyWorkPage() {
             // My Work uses its own card rendering and was never updated. Without
             // this, a tech who finished all their steps just sees "In Progress"
             // and has no visual cue that they need to open the card and sign it.
+            //
+            // BUG-LT-075: Original condition required `card.totalSteps > 0` —
+            // zero-step task cards (valid for certain task types, e.g. a
+            // documentation-only card with no procedural steps) would never
+            // show "Awaiting Sign-Off" in My Work even though the card still
+            // requires a card-level sign-off before it can be closed. The task
+            // card page itself was fixed (BUG-LT3-002) by treating 0-step
+            // cards as "all steps done" for sign-off readiness, but My Work
+            // was never updated to match. A tech with a zero-step card
+            // assigned to them would see "In Progress" status with no visual
+            // cue to open the card and sign it — the card would sit pending
+            // indefinitely, blocking WO close. Fix: remove the `totalSteps > 0`
+            // guard so zero-step cards also surface the "Awaiting Sign-Off"
+            // badge when they're not yet complete/voided. Mirrors the task card
+            // page's BUG-LT3-002 logic: a card with 0 steps has no incomplete
+            // steps by definition, so sign-off is always the next action.
             const awaitingSignOff =
-              card.totalSteps > 0 &&
               card.pendingSteps === 0 &&
               card.status !== "complete" &&
               card.status !== "voided";

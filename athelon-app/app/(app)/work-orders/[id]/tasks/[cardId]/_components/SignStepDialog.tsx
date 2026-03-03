@@ -454,13 +454,24 @@ export function SignStepDialog({
                   }}
                   className="h-7 text-xs bg-muted/30 border-border/60"
                 />
+                {/* BUG-LT-074: `Number(e.target.value) || 1` evaluates to
+                    the input value for any non-zero number, including negative
+                    values. `Number("-1") = -1`, which is truthy, so `|| 1`
+                    never fires — -1 passes through as the quantity. No
+                    validation existed in handleSign() either. A maintenance
+                    record with quantity=-1 is nonsensical (cannot install
+                    negative parts) and potentially a 14 CFR 43.9(a)(4)
+                    records violation. Fix: clamp to Math.max(1, ...) so the
+                    minimum quantity is always 1, regardless of what the user
+                    types or whether the `|| 1` short-circuit fires. */}
                 <Input
                   type="number"
                   min={1}
                   value={part.quantity}
                   onChange={(e) => {
                     const updated = [...partsInstalled];
-                    updated[idx] = { ...updated[idx], quantity: Number(e.target.value) || 1 };
+                    const parsed = parseInt(e.target.value, 10);
+                    updated[idx] = { ...updated[idx], quantity: isNaN(parsed) ? 1 : Math.max(1, parsed) };
                     setPartsInstalled(updated);
                   }}
                   className="h-7 text-xs bg-muted/30 border-border/60"

@@ -147,19 +147,38 @@ export function MarkNaDialog({
               Reason Step Does Not Apply{" "}
               <span className="text-red-400" aria-hidden="true">*</span>
             </Label>
+            {/* BUG-LT-073: N/A reason textarea had no maxLength cap. All other
+                sign-off dialog textareas (SignStepDialog notes, SignCardDialog
+                RTS statement, RaiseFindingDialog description) were capped in
+                prior cycles, but MarkNaDialog was missed. A tech pasting a
+                long AMM statement or discrepancy description into the reason
+                field could exceed the backend schema limit and get a cryptic
+                validation error on submit — losing the entered text and having
+                to re-type. Under 14 CFR 43.9(a)(2) the N/A reason is a
+                permanent maintenance record; an unclear error on submit is
+                especially bad here. 500 chars is generous for any N/A reason
+                (e.g. "Not installed — aircraft does not have ADS-B Out
+                equipment; modification deferred per AMM 34-51-00 Rev 12").
+                Counter turns amber at ≥450 chars. */}
             <Textarea
               id="na-reason"
               value={reason}
-              onChange={(e) => setReason(e.target.value)}
+              onChange={(e) => setReason(e.target.value.slice(0, 500))}
               placeholder="e.g. Not applicable — aircraft does not have this system installed. See task card note for details."
               rows={3}
+              maxLength={500}
               className="text-sm bg-muted/30 border-border/60 resize-none"
               aria-required="true"
               autoFocus
             />
-            <p className="text-[10px] text-muted-foreground mt-1">
-              This reason becomes part of the permanent maintenance record.
-            </p>
+            <div className="flex items-center justify-between mt-1">
+              <p className="text-[10px] text-muted-foreground">
+                This reason becomes part of the permanent maintenance record.
+              </p>
+              <p className={`text-[10px] ${reason.length >= 450 ? "text-amber-400" : "text-muted-foreground/50"}`}>
+                {reason.length}/500
+              </p>
+            </div>
           </div>
 
           {error && (
