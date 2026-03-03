@@ -324,15 +324,22 @@ export default function InventoryCountPage() {
                         {countDetail.status === "in_progress" ? (
                           <Input
                             type="number"
+                            min="0"
                             className="w-20 ml-auto"
                             defaultValue={item.actualQuantity ?? ""}
                             onBlur={async (e) => {
                               const val = e.target.value;
                               if (val !== "") {
+                                const num = Number(val);
+                                if (isNaN(num) || num < 0) {
+                                  toast.error("Actual quantity cannot be negative.");
+                                  e.target.value = item.actualQuantity?.toString() ?? "";
+                                  return;
+                                }
                                 try {
                                   await recordItem({
                                     itemId: item._id,
-                                    actualQuantity: Number(val),
+                                    actualQuantity: num,
                                   });
                                 } catch (err) {
                                   toast.error(err instanceof Error ? err.message : "Failed to record count");
@@ -371,16 +378,20 @@ export default function InventoryCountPage() {
                             placeholder="Location"
                             maxLength={50}
                             onBlur={async (e) => {
-                              if (item.actualQuantity !== undefined) {
-                                try {
-                                  await recordItem({
-                                    itemId: item._id,
-                                    actualQuantity: item.actualQuantity,
-                                    location: e.target.value || undefined,
-                                  });
-                                } catch (err) {
-                                  toast.error("Failed to save location");
+                              if (item.actualQuantity === undefined) {
+                                if (e.target.value.trim()) {
+                                  toast.warning("Enter the actual quantity first — location will be saved with the count.");
                                 }
+                                return;
+                              }
+                              try {
+                                await recordItem({
+                                  itemId: item._id,
+                                  actualQuantity: item.actualQuantity,
+                                  location: e.target.value || undefined,
+                                });
+                              } catch (err) {
+                                toast.error("Failed to save location");
                               }
                             }}
                           />
@@ -396,16 +407,20 @@ export default function InventoryCountPage() {
                             placeholder="Notes"
                             maxLength={200}
                             onBlur={async (e) => {
-                              if (item.actualQuantity !== undefined) {
-                                try {
-                                  await recordItem({
-                                    itemId: item._id,
-                                    actualQuantity: item.actualQuantity,
-                                    notes: e.target.value || undefined,
-                                  });
-                                } catch (err) {
-                                  toast.error("Failed to save notes");
+                              if (item.actualQuantity === undefined) {
+                                if (e.target.value.trim()) {
+                                  toast.warning("Enter the actual quantity first — notes will be saved with the count.");
                                 }
+                                return;
+                              }
+                              try {
+                                await recordItem({
+                                  itemId: item._id,
+                                  actualQuantity: item.actualQuantity,
+                                  notes: e.target.value || undefined,
+                                });
+                              } catch (err) {
+                                toast.error("Failed to save notes");
                               }
                             }}
                           />

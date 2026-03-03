@@ -167,7 +167,12 @@ function CreateCoreDialog({
             </div>
             <div>
               <Label>Return Due Date</Label>
-              <Input type="date" value={returnDueDate} onChange={(e) => setReturnDueDate(e.target.value)} />
+              <Input
+                type="date"
+                value={returnDueDate}
+                onChange={(e) => setReturnDueDate(e.target.value)}
+                min={(() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; })()}
+              />
             </div>
           </div>
           <div>
