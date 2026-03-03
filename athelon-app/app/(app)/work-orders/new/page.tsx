@@ -339,12 +339,16 @@ export default function NewWorkOrderPage() {
                 <Textarea
                   id="description"
                   value={description}
-                  onChange={(e) => setDescription(e.target.value)}
+                  onChange={(e) => setDescription(e.target.value.slice(0, 500))}
                   placeholder="Brief description of the work to be performed..."
                   required
                   rows={3}
+                  maxLength={500}
                   className="text-sm bg-muted/30 border-border/60 resize-none"
                 />
+                <p className={`text-[11px] mt-1 text-right ${description.length >= 450 ? "text-amber-400" : "text-muted-foreground/50"}`}>
+                  {description.length}/500
+                </p>
               </div>
 
               {/* Pilot-Reported Squawks */}
@@ -361,11 +365,15 @@ export default function NewWorkOrderPage() {
                 <Textarea
                   id="squawks"
                   value={squawks}
-                  onChange={(e) => setSquawks(e.target.value)}
+                  onChange={(e) => setSquawks(e.target.value.slice(0, 1000))}
                   placeholder="Any pilot-reported issues at intake..."
                   rows={2}
+                  maxLength={1000}
                   className="text-sm bg-muted/30 border-border/60 resize-none"
                 />
+                {squawks.length >= 900 && (
+                  <p className="text-[11px] mt-1 text-right text-amber-400">{squawks.length}/1000</p>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -512,11 +520,15 @@ export default function NewWorkOrderPage() {
             <CardContent className="pt-0">
               <Textarea
                 value={notes}
-                onChange={(e) => setNotes(e.target.value)}
+                onChange={(e) => setNotes(e.target.value.slice(0, 500))}
                 placeholder="Internal notes for this work order..."
                 rows={2}
+                maxLength={500}
                 className="text-sm bg-muted/30 border-border/60 resize-none"
               />
+              {notes.length >= 450 && (
+                <p className="text-[11px] mt-1 text-right text-amber-400">{notes.length}/500</p>
+              )}
             </CardContent>
           </Card>
 

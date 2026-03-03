@@ -13,7 +13,6 @@ import {
   Clock,
   Play,
   Square,
-  User,
   Calendar,
   TrendingUp,
   Paperclip,

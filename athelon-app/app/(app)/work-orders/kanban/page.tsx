@@ -193,7 +193,7 @@ const WoCard = memo(function WoCard({
       {wo.promisedDeliveryDate && (
         <div className="flex items-center gap-1.5 text-[10px] mt-1">
           <span className={wo.promisedDeliveryDate < Date.now() ? "text-red-400 font-medium" : "text-muted-foreground/70"}>
-            Due: {new Date(wo.promisedDeliveryDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+            Due: {new Date(wo.promisedDeliveryDate).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" })}
           </span>
         </div>
       )}
