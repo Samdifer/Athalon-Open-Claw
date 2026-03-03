@@ -264,7 +264,7 @@ function LiveActiveWorkOrders({ workOrders }: { workOrders: WorkOrdersWithRisk |
   const active = useMemo(() => {
     if (!workOrders) return null;
     return workOrders
-      .filter((wo) => !["closed", "voided", "cancelled"].includes(wo.status))
+      .filter((wo) => !["draft", "closed", "voided", "cancelled"].includes(wo.status))
       .sort((a, b) => {
         // AOG first, then by openedAt desc
         if (a.priority === "aog" && b.priority !== "aog") return -1;

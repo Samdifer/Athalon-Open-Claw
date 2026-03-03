@@ -303,7 +303,9 @@ export default function SchedulingPage() {
   const unscheduledWorkOrders = useMemo(
     () =>
       workOrders.filter((wo) => {
-        if (["closed", "cancelled", "voided"].includes(wo.status)) return false;
+        // Exclude draft WOs — they haven't been formally opened yet and have no
+        // confirmed scope. Scheduling a draft WO leads to phantom bay occupancy.
+        if (["draft", "closed", "cancelled", "voided"].includes(wo.status)) return false;
         return !scheduledWoIds.has(wo._id);
       }),
     [workOrders, scheduledWoIds],
@@ -314,7 +316,7 @@ export default function SchedulingPage() {
   const magicCandidates = useMemo(
     () =>
       workOrders.filter(
-        (wo) => !["closed", "cancelled", "voided"].includes(wo.status),
+        (wo) => !["draft", "closed", "cancelled", "voided"].includes(wo.status),
       ),
     [workOrders],
   );

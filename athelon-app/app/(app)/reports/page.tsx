@@ -43,12 +43,17 @@ const MONTH_NAMES = [
 export default function ReportsPage() {
   const { orgId, isLoaded } = useCurrentOrg();
 
+  // Use local calendar date for defaults so a user in UTC-5 sees today's date
+  // rather than yesterday's date (which UTC toISOString produces after 7pm local).
   const [dateFrom, setDateFrom] = useState(() => {
     const d = new Date();
     d.setFullYear(d.getFullYear() - 1);
-    return d.toISOString().slice(0, 10);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   });
-  const [dateTo, setDateTo] = useState(() => new Date().toISOString().slice(0, 10));
+  const [dateTo, setDateTo] = useState(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  });
 
   const invoices = useQuery(
     api.billing.listInvoices,
@@ -67,8 +72,19 @@ export default function ReportsPage() {
     isDataLoading: !isLoaded || invoices === undefined || woResult === undefined,
   });
 
-  const fromTs = dateFrom ? new Date(dateFrom).getTime() : NaN;
-  const toTs = dateTo ? new Date(dateTo).getTime() + 86400000 : NaN;
+  // Parse YYYY-MM-DD as local midnight to avoid UTC-offset shifts when comparing
+  // against invoice timestamps (which are stored in local time context).
+  const fromTs = useMemo(() => {
+    if (!dateFrom) return NaN;
+    const [y, m, d] = dateFrom.split("-").map(Number);
+    return new Date(y!, m! - 1, d!).getTime();
+  }, [dateFrom]);
+  const toTs = useMemo(() => {
+    if (!dateTo) return NaN;
+    const [y, m, d] = dateTo.split("-").map(Number);
+    // +86400000 to include the full "to" day (midnight local start of next day)
+    return new Date(y!, m! - 1, d!).getTime() + 86400000;
+  }, [dateTo]);
   const dateInputMissing = !dateFrom || !dateTo;
   const dateRangeInvalid = !dateInputMissing && fromTs > toTs;
 
