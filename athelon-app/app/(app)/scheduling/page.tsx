@@ -19,9 +19,10 @@ import { GraveyardSidebar } from "./_components/GraveyardSidebar";
 import DailyFinancialTracker, {
   type DailyFinancialPoint,
 } from "./_components/DailyFinancialTracker";
-import CapacityForecaster, { type CapacityPoint } from "./_components/CapacityForecaster";
 import SchedulingAnalyticsPanel from "./_components/SchedulingAnalyticsPanel";
 import SchedulingRosterPanel from "./_components/SchedulingRosterPanel";
+import SchedulingRosterDockPreview from "./_components/roster/SchedulingRosterDockPreview";
+import SchedulingRosterWorkspace from "./_components/roster/SchedulingRosterWorkspace";
 import { SchedulingCommandCenterDialog } from "./_components/SchedulingCommandCenterDialog";
 import { SchedulingOnboardingPanel } from "./_components/SchedulingOnboardingPanel";
 import { SchedulingQuoteWorkspaceDialog } from "./_components/SchedulingQuoteWorkspaceDialog";
@@ -73,6 +74,7 @@ import { useScheduleUndo } from "./hooks/useScheduleUndo";
 import type { UndoAction } from "./hooks/useScheduleUndo";
 import { useSchedulerKeyboard, KEYBOARD_SHORTCUTS } from "./hooks/useSchedulerKeyboard";
 import { Undo2, Keyboard } from "lucide-react";
+import { buildDailyCapacityPoints } from "./_lib/capacityModel";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // LOADING SKELETON
@@ -185,21 +187,18 @@ export default function SchedulingPage() {
     }>
   >([]);
   const [pnlOpen, setPnlOpen] = useState(true);
-  const [capacityOpen, setCapacityOpen] = useState(true);
   const [analyticsOpen, setAnalyticsOpen] = useState(false);
   const [rosterOpen, setRosterOpen] = useState(false);
   const [pnlPopout, setPnlPopout] = useState(false);
-  const [capacityPopout, setCapacityPopout] = useState(false);
   const [analyticsPopout, setAnalyticsPopout] = useState(false);
   const [rosterPopout, setRosterPopout] = useState(false);
   const [panelHeights, setPanelHeights] = useState({
     pnl: 208,
-    capacity: 176,
     analytics: 176,
   });
   const [rosterWidth, setRosterWidth] = useState(320);
   const [resizingPanel, setResizingPanel] = useState<{
-    target: "pnl" | "capacity" | "analytics";
+    target: "pnl" | "analytics";
     startY: number;
     startHeight: number;
   } | null>(null);
@@ -221,7 +220,6 @@ export default function SchedulingPage() {
 
   const ganttScrollRef = useRef<HTMLDivElement>(null);
   const trackerScrollRef = useRef<HTMLDivElement>(null);
-  const capacityScrollRef = useRef<HTMLDivElement>(null);
 
   const data = useQuery(
     api.workOrders.getWorkOrdersWithScheduleRisk,
@@ -556,7 +554,7 @@ export default function SchedulingPage() {
   }, [resizingRoster]);
 
   const syncTimelineScroll = useCallback((scrollLeft: number) => {
-    const refs = [ganttScrollRef, trackerScrollRef, capacityScrollRef];
+    const refs = [ganttScrollRef, trackerScrollRef];
     for (const ref of refs) {
       const node = ref.current;
       if (!node) continue;
@@ -583,10 +581,10 @@ export default function SchedulingPage() {
   useEffect(() => {
     if (!ganttScrollRef.current) return;
     syncTimelineScroll(ganttScrollRef.current.scrollLeft);
-  }, [timelineConfig, pnlPopout, capacityPopout, analyticsPopout, syncTimelineScroll]);
+  }, [timelineConfig, pnlPopout, analyticsPopout, syncTimelineScroll]);
 
   const startPanelResize = useCallback(
-    (e: React.PointerEvent, target: "pnl" | "capacity" | "analytics") => {
+    (e: React.PointerEvent, target: "pnl" | "analytics") => {
       e.preventDefault();
       e.stopPropagation();
       setResizingPanel({
@@ -611,6 +609,7 @@ export default function SchedulingPage() {
   const timelineTotalDays = Math.max(1, timelineConfig.totalDays);
   const timelineCellWidth = Math.max(4, timelineConfig.cellWidth);
   const currentTimelineDay = Math.max(0, Math.min(timelineConfig.todayIndex, timelineTotalDays - 1));
+  const timelineFocusDateMs = timelineStartMs + currentTimelineDay * DAY_MS;
 
   const workOrderMap = useMemo(
     () => new Map(workOrders.map((wo) => [String(wo._id), wo])),
@@ -654,80 +653,25 @@ export default function SchedulingPage() {
     return { dailyCapacityProfile, dailyLaborCostProfile };
   }, [technicianWorkload, planningRates.defaultLaborCostRate]);
 
-  const dailyCapacityData = useMemo<CapacityPoint[]>(() => {
-    const loadHours = new Float32Array(timelineTotalDays);
-    const capacityHours = new Float32Array(timelineTotalDays);
-
-    for (let i = 0; i < timelineTotalDays; i++) {
-      const date = new Date(timelineStartMs + i * DAY_MS);
-      const dayOfWeek = date.getDay();
-      capacityHours[i] = laborProfiles.dailyCapacityProfile[dayOfWeek] ?? 0;
-    }
-
-    for (const project of scheduledProjects) {
-      if (["cancelled", "voided"].includes(project.workOrderStatus)) continue;
-
-      const wo = workOrderMap.get(String(project.workOrderId));
-      const totalHours = Math.max(
-        0,
-        wo?.remainingHours ?? wo?.effectiveEstimatedHours ?? 0,
-      );
-
-      const start = Math.floor((project.scheduledStartDate - timelineStartMs) / DAY_MS);
-      const durationDays = Math.max(
-        1,
-        Math.ceil((project.promisedDeliveryDate - project.scheduledStartDate) / DAY_MS),
-      );
-      const end = start + durationDays;
-
-      const effortByOffset = new Map<number, number>();
-      for (const point of project.dailyEffort ?? []) {
-        effortByOffset.set(point.dayOffset, Math.max(0, point.effortHours));
-      }
-
-      const nonWorkDays = new Set(project.nonWorkDays ?? []);
-      const weights = new Array(durationDays).fill(1);
-      let totalWeight = 0;
-      for (let i = 0; i < durationDays; i++) {
-        if (nonWorkDays.has(i)) {
-          weights[i] = 0;
-        } else if (effortByOffset.has(i)) {
-          weights[i] = effortByOffset.get(i)!;
-        }
-        totalWeight += weights[i];
-      }
-      if (totalWeight <= 0) continue;
-
-      const loopStart = Math.max(0, start);
-      const loopEnd = Math.min(timelineTotalDays, end);
-      for (let d = loopStart; d < loopEnd; d++) {
-        const offset = d - start;
-        const ratio = weights[offset] / totalWeight;
-        loadHours[d] += ratio * totalHours;
-      }
-    }
-
-    const points: CapacityPoint[] = new Array(timelineTotalDays);
-    for (let i = 0; i < timelineTotalDays; i++) {
-      const cap = capacityHours[i];
-      const load = loadHours[i];
-      points[i] = {
-        day: i,
-        capacity: cap,
-        load,
-        utilization: cap > 0 ? (load / cap) * 100 : load > 0 ? 100 : 0,
-      };
-    }
-
-    return points;
-  }, [
-    timelineTotalDays,
-    timelineStartMs,
-    planningRates,
-    laborProfiles,
-    scheduledProjects,
-    workOrderMap,
-  ]);
+  const dailyCapacityData = useMemo(
+    () =>
+      buildDailyCapacityPoints({
+        timelineTotalDays,
+        timelineStartMs,
+        scheduledProjects,
+        workOrders,
+        technicianWorkload: technicianWorkload ?? [],
+        dailyCapacityProfile: laborProfiles.dailyCapacityProfile,
+      }),
+    [
+      laborProfiles.dailyCapacityProfile,
+      scheduledProjects,
+      technicianWorkload,
+      timelineStartMs,
+      timelineTotalDays,
+      workOrders,
+    ],
+  );
 
   const dailyFinancialData = useMemo<DailyFinancialPoint[]>(() => {
     const loadByDay = new Float32Array(timelineTotalDays);
@@ -890,6 +834,7 @@ export default function SchedulingPage() {
         technicianId: String(tech.technicianId),
         name: tech.name,
         employeeId: tech.employeeId,
+        teamId: tech.teamId ? String(tech.teamId) : undefined,
         daysOfWeek: tech.daysOfWeek,
         startHour: tech.startHour,
         endHour: tech.endHour,
@@ -901,16 +846,50 @@ export default function SchedulingPage() {
     [technicianWorkload],
   );
 
+  const rosterWorkspaceSnapshot = useQuery(
+    api.schedulerRoster.getRosterWorkspace,
+    orgId
+      ? {
+          organizationId: orgId,
+          shopLocationId: selectedShopLocationFilter,
+          focusDateMs: timelineFocusDateMs,
+          dateMode: "focus",
+        }
+      : "skip",
+  );
+
+  const rosterWorkspaceEnabled = schedulingSettings?.rosterWorkspaceEnabled ?? false;
+
   const commandCenterRosterSummary = useMemo(
-    () => ({
-      activeTechnicians: rosterTechnicians.length,
-      assignedCards: rosterTechnicians.reduce((sum, tech) => sum + tech.assignedActiveCards, 0),
-      remainingHours: rosterTechnicians.reduce(
-        (sum, tech) => sum + tech.estimatedRemainingHours,
-        0,
-      ),
-    }),
-    [rosterTechnicians],
+    () => {
+      if (rosterWorkspaceSnapshot) {
+        return {
+          activeTechnicians: rosterWorkspaceSnapshot.analysis.activeTechnicians,
+          activeTeams: rosterWorkspaceSnapshot.analysis.activeTeams,
+          unsupervisedTeams: rosterWorkspaceSnapshot.analysis.unsupervisedTeams,
+          assignedCards: rosterWorkspaceSnapshot.analysis.assignedCards,
+          remainingHours: rosterWorkspaceSnapshot.analysis.remainingHours,
+        };
+      }
+
+      const activeTeams = new Set(
+        rosterTechnicians
+          .map((tech) => tech.teamId)
+          .filter((teamId): teamId is string => typeof teamId === "string" && teamId.length > 0),
+      ).size;
+
+      return {
+        activeTechnicians: rosterTechnicians.length,
+        activeTeams,
+        unsupervisedTeams: 0,
+        assignedCards: rosterTechnicians.reduce((sum, tech) => sum + tech.assignedActiveCards, 0),
+        remainingHours: rosterTechnicians.reduce(
+          (sum, tech) => sum + tech.estimatedRemainingHours,
+          0,
+        ),
+      };
+    },
+    [rosterTechnicians, rosterWorkspaceSnapshot],
   );
 
   const commandCenterConfigSummary = useMemo(
@@ -1080,14 +1059,12 @@ export default function SchedulingPage() {
       const next = !prev;
       if (next) {
         setScheduleEditMode(false);
-        if (unscheduledCount > 0) {
-          setBacklogOpen(true);
-          setGraveyardOpen(false);
-        }
+        setBacklogOpen(false);
+        setGraveyardOpen(false);
       }
       return next;
     });
-  }, [unscheduledCount]);
+  }, []);
 
   // Escape handling is now in useSchedulerKeyboard via onExitMode
 
@@ -1504,6 +1481,9 @@ export default function SchedulingPage() {
           <Link to="/scheduling/capacity">Capacity</Link>
         </Button>
         <Button variant="ghost" size="sm" className="text-xs h-7" asChild>
+          <Link to="/scheduling/roster">Roster & Teams</Link>
+        </Button>
+        <Button variant="ghost" size="sm" className="text-xs h-7" asChild>
           <Link to="/scheduling/financial-planning">Financial Planning</Link>
         </Button>
 
@@ -1771,32 +1751,6 @@ export default function SchedulingPage() {
                   />
                 </div>
               )}
-
-              {!capacityPopout && (
-                <div id="panel-capacity" className="relative">
-                  {capacityOpen && (
-                    <div
-                      className="h-1 w-full cursor-row-resize hover:bg-cyan-500/50 absolute top-0 left-0 z-50 transition-colors"
-                      onPointerDown={(e) => startPanelResize(e, "capacity")}
-                    />
-                  )}
-                  <CapacityForecaster
-                    data={dailyCapacityData}
-                    timelineStartMs={timelineStartMs}
-                    cellWidth={timelineCellWidth}
-                    isOpen={capacityOpen}
-                    onToggle={() => setCapacityOpen((prev) => !prev)}
-                    isPoppedOut={false}
-                    onPopOut={() => setCapacityPopout(true)}
-                    scrollRef={capacityScrollRef}
-                    onScroll={handlePanelTimelineScroll}
-                    height={panelHeights.capacity}
-                    currentDayIndex={currentTimelineDay}
-                    holidayDayIndexes={[]}
-                  />
-                </div>
-              )}
-
               {!analyticsPopout && (
                 <div id="panel-analytics" className="relative">
                   {analyticsOpen && (
@@ -1827,14 +1781,27 @@ export default function SchedulingPage() {
                 onPointerDown={startRosterResize}
               />
             )}
-            <SchedulingRosterPanel
-              technicians={rosterTechnicians}
-              isOpen={rosterOpen}
-              onToggle={() => setRosterOpen((prev) => !prev)}
-              width={rosterWidth}
-              isPoppedOut={false}
-              onPopOut={() => setRosterPopout(true)}
-            />
+            {rosterWorkspaceEnabled ? (
+              <SchedulingRosterDockPreview
+                organizationId={orgId}
+                shopLocationId={selectedShopLocationFilter}
+                focusDateMs={timelineFocusDateMs}
+                isOpen={rosterOpen}
+                onToggle={() => setRosterOpen((prev) => !prev)}
+                width={rosterWidth}
+                isPoppedOut={false}
+                onPopOut={() => setRosterPopout(true)}
+              />
+            ) : (
+              <SchedulingRosterPanel
+                technicians={rosterTechnicians}
+                isOpen={rosterOpen}
+                onToggle={() => setRosterOpen((prev) => !prev)}
+                width={rosterWidth}
+                isPoppedOut={false}
+                onPopOut={() => setRosterPopout(true)}
+              />
+            )}
           </div>
         )}
       </div>
@@ -1851,30 +1818,6 @@ export default function SchedulingPage() {
         >
           <DailyFinancialTracker
             data={dailyFinancialData}
-            timelineStartMs={timelineStartMs}
-            cellWidth={Math.max(40, timelineCellWidth)}
-            isOpen
-            onToggle={() => {}}
-            isPoppedOut
-            onPopOut={() => {}}
-            currentDayIndex={currentTimelineDay}
-            holidayDayIndexes={[]}
-          />
-        </DraggableWindow>
-      )}
-
-      {capacityPopout && (
-        <DraggableWindow
-          title="Capacity Forecaster"
-          onClose={() => {
-            setCapacityPopout(false);
-            setCapacityOpen(false);
-          }}
-          initialWidth={900}
-          initialHeight={430}
-        >
-          <CapacityForecaster
-            data={dailyCapacityData}
             timelineStartMs={timelineStartMs}
             cellWidth={Math.max(40, timelineCellWidth)}
             isOpen
@@ -1909,22 +1852,33 @@ export default function SchedulingPage() {
 
       {rosterPopout && (
         <DraggableWindow
-          title="Roster"
+          title={rosterWorkspaceEnabled ? "Roster & Teams" : "Roster"}
           onClose={() => {
             setRosterPopout(false);
             setRosterOpen(false);
           }}
-          initialWidth={460}
-          initialHeight={640}
+          initialWidth={rosterWorkspaceEnabled ? 980 : 460}
+          initialHeight={rosterWorkspaceEnabled ? 720 : 640}
         >
-          <SchedulingRosterPanel
-            technicians={rosterTechnicians}
-            isOpen
-            onToggle={() => {}}
-            width={420}
-            isPoppedOut
-            onPopOut={() => {}}
-          />
+          {rosterWorkspaceEnabled ? (
+            <div className="h-full overflow-auto p-3">
+              <SchedulingRosterWorkspace
+                organizationId={orgId}
+                shopLocationId={selectedShopLocationFilter}
+                focusDateMs={timelineFocusDateMs}
+                embedded
+              />
+            </div>
+          ) : (
+            <SchedulingRosterPanel
+              technicians={rosterTechnicians}
+              isOpen
+              onToggle={() => {}}
+              width={420}
+              isPoppedOut
+              onPopOut={() => {}}
+            />
+          )}
         </DraggableWindow>
       )}
 

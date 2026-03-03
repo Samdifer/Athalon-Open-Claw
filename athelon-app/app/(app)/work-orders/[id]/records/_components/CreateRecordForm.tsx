@@ -221,6 +221,37 @@ export function CreateRecordForm({
       }
     }
 
+    // BUG-LT-REC-002: No validation for correction fields when isCorrection is
+    // true. A tech could submit a correction record with no target record
+    // selected (correctsRecordId empty), no field name, or no reason — the
+    // backend would reject with a cryptic schema error after consuming the
+    // single-use auth event ID. Per AC 43-9C, all correction fields are
+    // required: the corrected record, the field being corrected, original value,
+    // corrected value, and reason. We validate them upfront so the tech gets
+    // clear, actionable errors before the auth event is consumed.
+    if (form.isCorrection) {
+      if (!form.correctsRecordId) {
+        setError("Please select the maintenance record being corrected.");
+        return;
+      }
+      if (!form.correctionFieldName.trim()) {
+        setError("Please identify the field being corrected (e.g. 'workPerformed', 'approvedDataRevision').");
+        return;
+      }
+      if (!form.correctionOriginalValue.trim()) {
+        setError("Please provide the original (incorrect) value per AC 43-9C.");
+        return;
+      }
+      if (!form.correctionCorrectedValue.trim()) {
+        setError("Please provide the corrected value per AC 43-9C.");
+        return;
+      }
+      if (!form.correctionReason.trim()) {
+        setError("A reason for the correction is required per AC 43-9C.");
+        return;
+      }
+    }
+
     setIsSubmitting(true);
     try {
       await createRecord({

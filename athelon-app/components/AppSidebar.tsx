@@ -103,6 +103,8 @@ const mainNav: NavEntry[] = [
     icon: ClipboardList,
     section: "work-orders",
     children: [
+      { title: "Lead Workspace", href: "/work-orders/lead" },
+      { title: "Dashboard", href: "/work-orders/dashboard" },
       { title: "Kanban", href: "/work-orders/kanban" },
     ],
   },
@@ -112,6 +114,8 @@ const mainNav: NavEntry[] = [
     icon: CalendarDays,
     section: "scheduling",
     children: [
+      { title: "Roster & Teams", href: "/scheduling/roster" },
+      { title: "Quote Workspace", href: "/scheduling/quotes" },
       { title: "Seed Audit", href: "/scheduling/seed-audit" },
     ],
   },

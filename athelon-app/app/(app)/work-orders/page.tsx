@@ -18,8 +18,14 @@ import {
   TrendingUp,
   Download,
   LayoutGrid,
+  Users,
+  Grid3X3,
+  List,
+  ListCollapse,
+  Image as ImageIcon,
 } from "lucide-react";
 import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
 import { formatDate } from "@/lib/format";
 import {
   WO_STATUS_LABEL,
@@ -49,6 +55,13 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { QRCodeBadge } from "@/components/QRCodeBadge";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -73,6 +86,7 @@ type WorkOrderRow = {
   href: string;
   number: string;
   status: string;
+  workOrderType: string;
   statusLabel: string;
   typeLabel: string;
   rawType: string;
@@ -81,6 +95,7 @@ type WorkOrderRow = {
   customer: string;
   aircraft: string;
   aircraftType: string;
+  aircraftImageUrl: string | null;
   promisedDeliveryDate: number | null;
   tasksComplete: number;
   tasksTotal: number;
@@ -129,8 +144,21 @@ function filterWorkOrders(rows: WorkOrderRow[], tab: FilterTab) {
 
 export default function WorkOrdersPage() {
   const { orgId, isLoaded } = useCurrentOrg();
+  const [filterLocationId, setFilterLocationId] = useState<string>("all");
   const raw = useQuery(
     api.workOrders.getWorkOrdersWithScheduleRisk,
+    orgId
+      ? {
+          organizationId: orgId,
+          shopLocationId:
+            filterLocationId === "all"
+              ? "all"
+              : (filterLocationId as Id<"shopLocations">),
+        }
+      : "skip",
+  );
+  const shopLocations = useQuery(
+    api.shopLocations.list,
     orgId ? { organizationId: orgId } : "skip",
   );
   const prereq = usePagePrereqs({
@@ -144,6 +172,7 @@ export default function WorkOrdersPage() {
   const [filterPriority, setFilterPriority] = useState<WoPriority | "">("");
   const [filterType, setFilterType] = useState<WoType | "">("");
   const [filterOpen, setFilterOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<"list" | "tiles" | "truncated">("list");
 
   const workOrders = useMemo<WorkOrderRow[]>(() => {
     const rows = raw ?? [];
@@ -152,6 +181,7 @@ export default function WorkOrdersPage() {
       href: `/work-orders/${wo._id}`,
       number: wo.workOrderNumber,
       status: wo.status,
+      workOrderType: wo.workOrderType,
       statusLabel: WO_STATUS_LABEL[wo.status as WoStatus] ?? wo.status,
       typeLabel: WO_TYPE_LABEL[wo.workOrderType as WoType] ?? wo.workOrderType,
       rawType: wo.workOrderType,
@@ -162,6 +192,7 @@ export default function WorkOrdersPage() {
       aircraftType: wo.aircraft
         ? `${wo.aircraft.make} ${wo.aircraft.model}`.trim()
         : "Aircraft unavailable",
+      aircraftImageUrl: wo.aircraft?.featuredImageUrl ?? null,
       promisedDeliveryDate: wo.promisedDeliveryDate ?? null,
       tasksComplete: wo.completedTaskCardCount ?? 0,
       tasksTotal: wo.taskCardCount ?? 0,
@@ -188,7 +219,10 @@ export default function WorkOrdersPage() {
     [activeTab, search, workOrders, filterPriority, filterType],
   );
 
-  const activeFilterCount = (filterPriority ? 1 : 0) + (filterType ? 1 : 0);
+  const activeFilterCount =
+    (filterPriority ? 1 : 0) +
+    (filterType ? 1 : 0) +
+    (filterLocationId !== "all" ? 1 : 0);
 
   // Single-pass counter — O(n) instead of the previous O(6n) from 6 separate
   // filterWorkOrders() calls each iterating the full array.
@@ -248,6 +282,28 @@ export default function WorkOrdersPage() {
           </p>
         </div>
         <div className="flex gap-2 w-full sm:w-auto">
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5 text-xs"
+            asChild
+          >
+            <Link to="/work-orders/dashboard">
+              <TrendingUp className="w-3.5 h-3.5" />
+              Dashboard
+            </Link>
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5 text-xs"
+            asChild
+          >
+            <Link to="/work-orders/lead">
+              <Users className="w-3.5 h-3.5" />
+              Lead
+            </Link>
+          </Button>
           <Button
             variant="outline"
             size="sm"
@@ -426,6 +482,26 @@ export default function WorkOrdersPage() {
                   ))}
                 </div>
               </div>
+              <Separator className="opacity-50" />
+              <div>
+                <p className="text-xs font-medium text-foreground mb-1.5">Location</p>
+                <Select
+                  value={filterLocationId}
+                  onValueChange={(value) => setFilterLocationId(value)}
+                >
+                  <SelectTrigger className="h-8 text-xs">
+                    <SelectValue placeholder="All locations" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All locations</SelectItem>
+                    {(shopLocations ?? []).map((loc) => (
+                      <SelectItem key={String(loc._id)} value={String(loc._id)}>
+                        {loc.code} - {loc.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
               {activeFilterCount > 0 && (
                 <>
                   <Separator className="opacity-50" />
@@ -433,7 +509,12 @@ export default function WorkOrdersPage() {
                     variant="ghost"
                     size="sm"
                     className="w-full h-7 text-xs"
-                    onClick={() => { setFilterPriority(""); setFilterType(""); setFilterOpen(false); }}
+                    onClick={() => {
+                      setFilterPriority("");
+                      setFilterType("");
+                      setFilterLocationId("all");
+                      setFilterOpen(false);
+                    }}
                   >
                     Clear All Filters
                   </Button>
@@ -441,6 +522,38 @@ export default function WorkOrdersPage() {
               )}
             </PopoverContent>
           </Popover>
+          <div className="flex items-center gap-1">
+            <Button
+              variant={viewMode === "list" ? "default" : "outline"}
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => setViewMode("list")}
+              title="Current view"
+              data-testid="wo-view-list"
+            >
+              <List className="w-3.5 h-3.5" />
+            </Button>
+            <Button
+              variant={viewMode === "tiles" ? "default" : "outline"}
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => setViewMode("tiles")}
+              title="Tile view"
+              data-testid="wo-view-tiles"
+            >
+              <Grid3X3 className="w-3.5 h-3.5" />
+            </Button>
+            <Button
+              variant={viewMode === "truncated" ? "default" : "outline"}
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => setViewMode("truncated")}
+              title="Truncated view"
+              data-testid="wo-view-truncated"
+            >
+              <ListCollapse className="w-3.5 h-3.5" />
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -474,8 +587,154 @@ export default function WorkOrdersPage() {
             </CardContent>
           </Card>
         )
+      ) : viewMode === "tiles" ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3" data-testid="wo-view-tiles-container">
+          {filtered.map((wo) => (
+            <Link key={wo.id} to={wo.href}>
+              <Card
+                className={`border-border/60 hover:border-primary/30 hover:bg-card/80 transition-all cursor-pointer h-full ${
+                  wo.priority === "aog" ? "border-l-4 border-l-red-500" : ""
+                }`}
+              >
+                <CardContent className="p-3 space-y-2.5">
+                  <div className="w-full h-32 rounded border border-border/60 bg-muted/30 overflow-hidden flex items-center justify-center">
+                    {wo.aircraftImageUrl ? (
+                      <img
+                        src={wo.aircraftImageUrl}
+                        alt={`${wo.aircraft} thumbnail`}
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <ImageIcon className="w-6 h-6 text-muted-foreground/50" />
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-mono text-xs text-muted-foreground font-medium">
+                      {wo.number}
+                    </span>
+                    {wo.priority === "aog" ? (
+                      <Badge className="bg-red-500/15 text-red-400 border border-red-500/30 text-[10px] font-semibold">
+                        AOG
+                      </Badge>
+                    ) : (
+                      <Badge
+                        variant="outline"
+                        className={`text-[10px] font-medium border ${
+                          WO_STATUS_STYLES[wo.status as WoStatus] ?? "bg-muted text-muted-foreground"
+                        }`}
+                      >
+                        {wo.statusLabel}
+                      </Badge>
+                    )}
+                    <Badge
+                      variant="outline"
+                      className="text-[10px] text-muted-foreground border-border/40"
+                    >
+                      {wo.typeLabel}
+                    </Badge>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <span className="font-mono font-bold text-sm text-foreground truncate">
+                        {wo.aircraft}
+                      </span>
+                      <span className="text-xs text-muted-foreground truncate">{wo.aircraftType}</span>
+                    </div>
+                    <p className="text-xs text-foreground/90 line-clamp-2">{wo.description}</p>
+                    <p className="text-[11px] text-muted-foreground truncate">{wo.customer}</p>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    {wo.tasksTotal > 0 ? (
+                      <span className="text-[11px] text-muted-foreground">
+                        Tasks {wo.tasksComplete}/{wo.tasksTotal}
+                      </span>
+                    ) : (
+                      <span className="text-[11px] text-muted-foreground">No tasks</span>
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 w-7 p-0 text-muted-foreground hover:text-primary"
+                      title="Show QR Code"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setQrWoNumber(wo.number);
+                      }}
+                    >
+                      <QrCode className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+          ))}
+        </div>
+      ) : viewMode === "truncated" ? (
+        <div className="border border-border/60 rounded-md divide-y divide-border/40" data-testid="wo-view-truncated-container">
+          {filtered.map((wo) => (
+            <Link key={wo.id} to={wo.href} className="block hover:bg-muted/20 transition-colors">
+              <div className="px-3 py-2.5 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="w-12 h-9 rounded border border-border/60 bg-muted/30 overflow-hidden flex items-center justify-center flex-shrink-0">
+                    {wo.aircraftImageUrl ? (
+                      <img
+                        src={wo.aircraftImageUrl}
+                        alt={`${wo.aircraft} thumbnail`}
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <ImageIcon className="w-3.5 h-3.5 text-muted-foreground/50" />
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="font-mono text-[11px] text-muted-foreground">{wo.number}</span>
+                      <span className="font-mono text-sm font-semibold text-foreground">{wo.aircraft}</span>
+                      <span className="text-[11px] text-muted-foreground truncate">{wo.typeLabel}</span>
+                      {wo.priority === "aog" && (
+                        <Badge className="bg-red-500/15 text-red-400 border border-red-500/30 text-[9px] font-semibold">
+                          AOG
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-[11px] text-muted-foreground truncate">
+                      {wo.description}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1.5 flex-shrink-0">
+                  <Badge
+                    variant="outline"
+                    className={`text-[9px] font-medium border ${
+                      WO_STATUS_STYLES[wo.status as WoStatus] ?? "bg-muted text-muted-foreground"
+                    }`}
+                  >
+                    {wo.statusLabel}
+                  </Badge>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 w-6 p-0 text-muted-foreground hover:text-primary"
+                    title="Show QR Code"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setQrWoNumber(wo.number);
+                    }}
+                  >
+                    <QrCode className="w-3 h-3" />
+                  </Button>
+                  <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/50" />
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-2" data-testid="wo-view-list-container">
           {filtered.map((wo) => (
             <Link key={wo.id} to={wo.href}>
               <Card
@@ -484,7 +743,19 @@ export default function WorkOrdersPage() {
                 }`}
               >
                 <CardContent className="p-4">
-                  <div className="flex items-start gap-4">
+                  <div className="flex items-start gap-3">
+                    <div className="w-16 h-12 rounded border border-border/60 bg-muted/30 overflow-hidden flex items-center justify-center flex-shrink-0">
+                      {wo.aircraftImageUrl ? (
+                        <img
+                          src={wo.aircraftImageUrl}
+                          alt={`${wo.aircraft} thumbnail`}
+                          className="w-full h-full object-cover"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <ImageIcon className="w-4 h-4 text-muted-foreground/50" />
+                      )}
+                    </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1 flex-wrap">
                         <span className="font-mono text-xs text-muted-foreground font-medium">

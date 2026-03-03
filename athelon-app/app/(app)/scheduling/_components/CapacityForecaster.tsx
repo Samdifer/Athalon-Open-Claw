@@ -44,6 +44,8 @@ interface CapacityForecasterProps {
   cellWidth: number;
   isPoppedOut: boolean;
   onPopOut: () => void;
+  showPopOutAction?: boolean;
+  statusText?: string;
   scrollRef?: RefObject<HTMLDivElement | null>;
   isOpen: boolean;
   onToggle: () => void;
@@ -60,6 +62,8 @@ export default function CapacityForecaster({
   cellWidth,
   isPoppedOut,
   onPopOut,
+  showPopOutAction = true,
+  statusText = "Timeline Synced",
   scrollRef,
   isOpen,
   onToggle,
@@ -199,10 +203,10 @@ export default function CapacityForecaster({
         <div className="flex items-center gap-2">
           {isOpen && (
             <span className="text-[10px] text-slate-500 italic hidden sm:inline mr-2">
-              Timeline Synced
+              {statusText}
             </span>
           )}
-          {isOpen && !isPoppedOut && (
+          {isOpen && !isPoppedOut && showPopOutAction && (
             <button
               onClick={(e) => {
                 e.stopPropagation();

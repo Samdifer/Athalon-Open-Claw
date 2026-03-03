@@ -16,6 +16,12 @@ const OnboardingPage = lazy(() => import("@/app/(app)/onboarding/page"));
 
 // Work Orders
 const WorkOrdersPage = lazy(() => import("@/app/(app)/work-orders/page"));
+const WorkOrdersDashboardPage = lazy(
+  () => import("@/app/(app)/work-orders/dashboard/page"),
+);
+const WorkOrdersLeadPage = lazy(
+  () => import("@/app/(app)/work-orders/lead/page"),
+);
 const WorkOrderDetailPage = lazy(() => import("@/app/(app)/work-orders/[id]/page"));
 const NewWorkOrderPage = lazy(() => import("@/app/(app)/work-orders/new/page"));
 const TaskCardPage = lazy(() => import("@/app/(app)/work-orders/[id]/tasks/[cardId]/page"));
@@ -92,9 +98,11 @@ const WarrantyPage = lazy(() => import("@/app/(app)/billing/warranty/page"));
 const SchedulingPage = lazy(() => import("@/app/(app)/scheduling/page"));
 const CapacityPage = lazy(() => import("@/app/(app)/scheduling/capacity/page"));
 const BaysPage = lazy(() => import("@/app/(app)/scheduling/bays/page"));
+const SchedulingRosterPage = lazy(() => import("@/app/(app)/scheduling/roster/page"));
 const FinancialPlanningPage = lazy(
   () => import("@/app/(app)/scheduling/financial-planning/page"),
 );
+const SchedulingQuotesPage = lazy(() => import("@/app/(app)/scheduling/quotes/page"));
 const SeedAuditPage = lazy(() => import("@/app/(app)/scheduling/seed-audit/page"));
 
 // Reports
@@ -194,6 +202,8 @@ export default function App() {
 
                 {/* Work Orders */}
                 <Route path="/work-orders" element={<WorkOrdersPage />} />
+                <Route path="/work-orders/dashboard" element={<WorkOrdersDashboardPage />} />
+                <Route path="/work-orders/lead" element={<WorkOrdersLeadPage />} />
                 <Route path="/work-orders/kanban" element={<KanbanPage />} />
                 <Route path="/work-orders/new" element={<NewWorkOrderPage />} />
                 <Route path="/work-orders/templates" element={<WorkOrderTemplatesPage />} />
@@ -280,10 +290,12 @@ export default function App() {
                 <Route path="/scheduling" element={<SchedulingPage />} />
                 <Route path="/scheduling/bays" element={<BaysPage />} />
                 <Route path="/scheduling/capacity" element={<CapacityPage />} />
+                <Route path="/scheduling/roster" element={<SchedulingRosterPage />} />
                 <Route
                   path="/scheduling/financial-planning"
                   element={<FinancialPlanningPage />}
                 />
+                <Route path="/scheduling/quotes" element={<SchedulingQuotesPage />} />
                 <Route path="/scheduling/seed-audit" element={<SeedAuditPage />} />
 
                 {/* Reports */}

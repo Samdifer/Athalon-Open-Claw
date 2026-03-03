@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import fs from "fs";
 import path from "path";
 import { execSync } from "child_process";
 
@@ -6,9 +7,10 @@ const SEEDED_AUTH_FILE = path.join(
   __dirname,
   "../playwright/.auth/seeded-admin.json",
 );
+const SEEDED_AUTH_STATE = JSON.parse(fs.readFileSync(SEEDED_AUTH_FILE, "utf8"));
 const APP_ROOT = path.resolve(__dirname, "..");
 
-test.use({ storageState: SEEDED_AUTH_FILE });
+test.use({ storageState: SEEDED_AUTH_STATE });
 
 async function openScheduling(
   page: import("@playwright/test").Page,
@@ -42,6 +44,22 @@ async function openScheduling(
       // Banner may not exist if onboarding is already completed/skipped.
     }
   }
+}
+
+async function openCapacity(page: import("@playwright/test").Page) {
+  await page.goto("/scheduling/capacity", {
+    waitUntil: "domcontentloaded",
+    timeout: 45_000,
+  });
+  await page.evaluate(() => {
+    const keys = Object.keys(window.localStorage);
+    for (const key of keys) {
+      if (key.startsWith("athelon:selected-location:")) {
+        window.localStorage.setItem(key, "all");
+      }
+    }
+  });
+  await page.reload({ waitUntil: "domcontentloaded" });
 }
 
 async function waitForSchedulerHydration(page: import("@playwright/test").Page) {
@@ -446,15 +464,13 @@ test.describe("Wave 8: Seeded scheduler user stories", () => {
     }
   });
 
-  test("scheduler shows docked daily P&L + capacity visuals and supports panel popout", async ({
+  test("scheduler keeps docked daily P&L and no longer renders docked capacity panel", async ({
     page,
   }) => {
     await openScheduling(page, { dismissOnboarding: true });
 
     await expect(page.getByTestId("daily-pnl-panel")).toBeVisible({ timeout: 20_000 });
-    await expect(page.getByTestId("capacity-forecaster-panel")).toBeVisible({
-      timeout: 20_000,
-    });
+    await expect(page.getByTestId("capacity-forecaster-panel")).toHaveCount(0);
 
     await page.getByRole("button", { name: "Pop out daily P&L" }).click();
     await expect(page.locator('button[title="Stow Tray"]').first()).toBeVisible({
@@ -462,27 +478,18 @@ test.describe("Wave 8: Seeded scheduler user stories", () => {
     });
     await page.locator('button[title="Stow Tray"]').first().click();
     await expect(page.getByTestId("daily-pnl-panel")).toBeVisible({ timeout: 15_000 });
-
-    await page.getByRole("button", { name: "Pop out capacity forecaster" }).click();
-    await expect(page.locator('button[title="Stow Tray"]').first()).toBeVisible({
-      timeout: 15_000,
-    });
-    await page.locator('button[title="Stow Tray"]').first().click();
-    await expect(page.getByTestId("capacity-forecaster-panel")).toBeVisible({ timeout: 15_000 });
   });
 
-  test("timeline scrolling stays synchronized between gantt, daily P&L, and capacity panels", async ({
+  test("timeline scrolling stays synchronized between gantt and daily P&L panels", async ({
     page,
   }) => {
     await openScheduling(page, { dismissOnboarding: true });
 
     const ganttScroll = page.getByTestId("gantt-timeline-scroll");
     const pnlScroll = page.getByTestId("daily-pnl-timeline-scroll");
-    const capacityScroll = page.getByTestId("capacity-forecaster-timeline-scroll");
 
     await expect(ganttScroll).toBeVisible({ timeout: 20_000 });
     await expect(pnlScroll).toBeVisible({ timeout: 20_000 });
-    await expect(capacityScroll).toBeVisible({ timeout: 20_000 });
 
     await ganttScroll.evaluate((node) => {
       node.scrollLeft = 720;
@@ -491,14 +498,52 @@ test.describe("Wave 8: Seeded scheduler user stories", () => {
 
     await page.waitForTimeout(250);
 
-    const [ganttLeft, pnlLeft, capacityLeft] = await Promise.all([
+    const [ganttLeft, pnlLeft] = await Promise.all([
       ganttScroll.evaluate((node) => node.scrollLeft),
       pnlScroll.evaluate((node) => node.scrollLeft),
-      capacityScroll.evaluate((node) => node.scrollLeft),
     ]);
 
     expect(Math.abs(pnlLeft - ganttLeft)).toBeLessThan(4);
-    expect(Math.abs(capacityLeft - ganttLeft)).toBeLessThan(4);
+    await expect(page.getByTestId("capacity-forecaster-timeline-scroll")).toHaveCount(0);
+  });
+
+  test("capacity page renders standalone forecaster and persists scheduling defaults", async ({
+    page,
+  }) => {
+    await openCapacity(page);
+
+    await expect(
+      page.getByRole("heading", { name: "Capacity Command Center" }),
+    ).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByTestId("capacity-forecaster-panel")).toBeVisible({
+      timeout: 20_000,
+    });
+
+    const rangeButton = page.getByRole("button", { name: "60d" });
+    await rangeButton.click();
+    await expect(rangeButton).toBeVisible({ timeout: 10_000 });
+
+    await page.getByRole("button", { name: "week" }).click();
+    await page.getByRole("button", { name: "Today" }).click();
+
+    const bufferInput = page.getByLabel("Capacity Buffer %");
+    const startHourInput = page.getByLabel("Default Start Hour");
+    const endHourInput = page.getByLabel("Default End Hour");
+    const defaultEfficiencyInput = page.getByLabel("Default Efficiency");
+
+    await bufferInput.fill("21");
+    await startHourInput.fill("6");
+    await endHourInput.fill("16");
+    await defaultEfficiencyInput.fill("1.1");
+    await page.getByTestId("capacity-save-scheduling-settings").click();
+
+    await expect(page.getByText("Scheduling settings saved")).toBeVisible({ timeout: 15_000 });
+
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await expect(bufferInput).toHaveValue("21", { timeout: 20_000 });
+    await expect(startHourInput).toHaveValue("6", { timeout: 20_000 });
+    await expect(endHourInput).toHaveValue("16", { timeout: 20_000 });
+    await expect(defaultEfficiencyInput).toHaveValue("1.1", { timeout: 20_000 });
   });
 
   test("financial planning assumptions save and reload on seeded planner workload", async ({

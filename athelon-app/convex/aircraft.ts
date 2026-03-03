@@ -14,6 +14,7 @@ export const list = query({
     organizationId: v.id("organizations"),
   },
   handler: async (ctx, args) => {
+    const now = Date.now();
     const scopedAircraft = await ctx.db
       .query("aircraft")
       .withIndex("by_organization", (q) =>
@@ -38,10 +39,32 @@ export const list = query({
     ]);
 
     const openCountByAircraft = new Map<string, number>();
+    const nextScheduledByAircraft = new Map<string, number>();
     for (const wo of orgWorkOrders) {
       if (!openStatuses.has(wo.status)) continue;
       const key = wo.aircraftId;
       openCountByAircraft.set(key, (openCountByAircraft.get(key) ?? 0) + 1);
+
+      if (!wo.scheduledStartDate || wo.scheduledStartDate <= now) continue;
+      const current = nextScheduledByAircraft.get(key);
+      if (current === undefined || wo.scheduledStartDate < current) {
+        nextScheduledByAircraft.set(key, wo.scheduledStartDate);
+      }
+    }
+
+    const aircraftDocs = await ctx.db
+      .query("documents")
+      .withIndex("by_org", (q) => q.eq("organizationId", args.organizationId))
+      .collect();
+
+    const imageDocsByAircraftId = new Map<string, any[]>();
+    for (const doc of aircraftDocs) {
+      if (doc.attachedToTable !== "aircraft") continue;
+      if (!doc.mimeType.startsWith("image/")) continue;
+      const key = doc.attachedToId;
+      const rows = imageDocsByAircraftId.get(key) ?? [];
+      rows.push(doc);
+      imageDocsByAircraftId.set(key, rows);
     }
 
     // Self-heal read path: include aircraft referenced by org work orders even if
@@ -63,10 +86,31 @@ export const list = query({
       aircraftById.set(aircraft._id, aircraft);
     }
 
-    return Array.from(aircraftById.values()).map((ac) => ({
-      ...ac,
-      openWorkOrderCount: openCountByAircraft.get(ac._id) ?? 0,
-    }));
+    const rows = await Promise.all(
+      Array.from(aircraftById.values()).map(async (ac) => {
+        const key = String(ac._id);
+        const imageDocs = imageDocsByAircraftId.get(key) ?? [];
+        const featuredDoc =
+          imageDocs.find((doc) =>
+            (doc.description ?? "").toLowerCase().includes("[featured]"),
+          ) ??
+          [...imageDocs].sort((a, b) => b.uploadedAt - a.uploadedAt)[0];
+
+        const featuredImageUrl = featuredDoc
+          ? await ctx.storage.getUrl(featuredDoc.storageId)
+          : null;
+
+        return {
+          ...ac,
+          openWorkOrderCount: openCountByAircraft.get(ac._id) ?? 0,
+          nextScheduledStartDate: nextScheduledByAircraft.get(ac._id) ?? null,
+          featuredImageUrl,
+          galleryImageCount: imageDocs.length,
+        };
+      }),
+    );
+
+    return rows;
   },
 });
 

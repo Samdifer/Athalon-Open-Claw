@@ -13,11 +13,13 @@ import {
   Clock,
   Play,
   Square,
+  User,
   Calendar,
   TrendingUp,
   Paperclip,
   CheckCircle2,
   MessageSquare,
+  Video,
 } from "lucide-react";
 import { api } from "@/convex/_generated/api";
 import { HandoffNotesPanel } from "@/components/HandoffNotesPanel";
@@ -47,6 +49,7 @@ import {
 } from "@/app/(app)/work-orders/[id]/_components/WorkItemsList";
 import { WOComplianceTab } from "@/app/(app)/work-orders/[id]/_components/WOComplianceTab";
 import { DocumentAttachmentPanel } from "@/app/(app)/work-orders/[id]/_components/DocumentAttachmentPanel";
+import { InDockRtsEvidenceTab } from "@/app/(app)/work-orders/[id]/_components/InDockRtsEvidenceTab";
 import { CloseReadinessPanel } from "@/components/CloseReadinessPanel";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import { ActivityTimeline } from "@/app/(app)/work-orders/[id]/_components/ActivityTimeline";
@@ -65,6 +68,22 @@ type AuditEventForTimeline = {
 };
 
 type RiskLevel = "overdue" | "at_risk" | "on_track" | "no_date";
+type WorkOrderStageKey =
+  | "quoting"
+  | "in_dock"
+  | "inspection"
+  | "repair"
+  | "return_to_service"
+  | "review_and_improvement";
+
+const WORK_ORDER_STAGE_FLOW: Array<{ key: WorkOrderStageKey; label: string }> = [
+  { key: "quoting", label: "Quoting" },
+  { key: "in_dock", label: "In-dock" },
+  { key: "inspection", label: "Inspection" },
+  { key: "repair", label: "Repair" },
+  { key: "return_to_service", label: "Return to Service" },
+  { key: "review_and_improvement", label: "Review & Improvement" },
+];
 
 function isWorkOrderNumberRef(value: string): boolean {
   return /^WO-/i.test(value.trim());
@@ -113,6 +132,29 @@ function partStatusStyle(location: string): string {
     removed_pending_disposition: "bg-orange-500/15 text-orange-400 border-orange-500/30",
   };
   return map[location] ?? "bg-slate-500/15 text-slate-400 border-slate-500/30";
+}
+
+function mapStatusToStageIndex(status: string): number {
+  switch (status) {
+    case "draft":
+      return 0;
+    case "open":
+      return 1;
+    case "pending_inspection":
+      return 2;
+    case "in_progress":
+    case "on_hold":
+    case "open_discrepancies":
+      return 3;
+    case "pending_signoff":
+      return 4;
+    case "closed":
+    case "cancelled":
+    case "voided":
+      return 5;
+    default:
+      return 0;
+  }
 }
 
 function ScheduleRiskChip({ riskLevel }: { riskLevel: RiskLevel }) {
@@ -235,10 +277,6 @@ export default function WorkOrderDetailPage() {
   const taskCards = data.taskCards ?? [];
   const discrepancies = data.discrepancies ?? [];
   const auditEvents = data.auditEvents ?? [];
-
-  // Derived flag — terminal statuses mean the WO is already done; several
-  // UI sections (timer, close readiness, sign-off button) must be hidden.
-  const isTerminalStatus = ["closed", "voided", "cancelled"].includes(wo.status);
 
   const tasksComplete = taskCards.filter((tc) => tc.status === "complete").length;
   const tasksTotal = taskCards.length;
@@ -396,44 +434,40 @@ export default function WorkOrderDetailPage() {
           </div>
 
           <div className="w-full sm:w-auto flex-shrink-0 flex flex-col gap-2">
-            {/* Timer controls — hidden for terminal-status WOs (closed/voided/cancelled).
-                Clocking time to a closed WO makes no sense and would pollute billing. */}
-            {!isTerminalStatus && (
-              activeTimerEntry ? (
-                <div className="flex items-center gap-2">
-                  <Badge
-                    variant="outline"
-                    className={`text-[10px] border ${
-                      activeTimerOnThisWorkOrder
-                        ? "bg-green-500/15 text-green-400 border-green-500/30"
-                        : "bg-amber-500/15 text-amber-500 border-amber-500/30"
-                    }`}
-                  >
-                    {activeTimerOnThisWorkOrder ? "Clocked to this WO" : `Active ${activeTimerEntry.entryType ?? "timer"}`}
-                  </Badge>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="gap-1.5 text-xs border-red-500/40 text-red-400 hover:bg-red-500/10"
-                    onClick={handleStopActiveTimer}
-                    disabled={timerActionLoading === "stop"}
-                  >
-                    <Square className="w-3.5 h-3.5" />
-                    {timerActionLoading === "stop" ? "Stopping..." : "Stop Timer"}
-                  </Button>
-                </div>
-              ) : (
+            {activeTimerEntry ? (
+              <div className="flex items-center gap-2">
+                <Badge
+                  variant="outline"
+                  className={`text-[10px] border ${
+                    activeTimerOnThisWorkOrder
+                      ? "bg-green-500/15 text-green-400 border-green-500/30"
+                      : "bg-amber-500/15 text-amber-500 border-amber-500/30"
+                  }`}
+                >
+                  {activeTimerOnThisWorkOrder ? "Clocked to this WO" : `Active ${activeTimerEntry.entryType ?? "timer"}`}
+                </Badge>
                 <Button
                   variant="outline"
                   size="sm"
-                  className="gap-1.5 text-xs border-green-500/40 text-green-400 hover:bg-green-500/10"
-                  onClick={handleStartWorkOrderTimer}
-                  disabled={timerActionLoading === "start"}
+                  className="gap-1.5 text-xs border-red-500/40 text-red-400 hover:bg-red-500/10"
+                  onClick={handleStopActiveTimer}
+                  disabled={timerActionLoading === "stop"}
                 >
-                  <Play className="w-3.5 h-3.5" />
-                  {timerActionLoading === "start" ? "Clocking..." : "Clock to WO"}
+                  <Square className="w-3.5 h-3.5" />
+                  {timerActionLoading === "stop" ? "Stopping..." : "Stop Timer"}
                 </Button>
-              )
+              </div>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5 text-xs border-green-500/40 text-green-400 hover:bg-green-500/10"
+                onClick={handleStartWorkOrderTimer}
+                disabled={timerActionLoading === "start"}
+              >
+                <Play className="w-3.5 h-3.5" />
+                {timerActionLoading === "start" ? "Clocking..." : "Clock to WO"}
+              </Button>
             )}
 
             <Button
@@ -476,16 +510,7 @@ export default function WorkOrderDetailPage() {
                 Execution Planning
               </Link>
             </Button>
-            {isTerminalStatus ? (
-              // WO is already closed/voided/cancelled — show RTS record link
-              // instead of the "Sign Off & Close" button.
-              <Button variant="outline" asChild className="gap-2">
-                <Link to={`/work-orders/${workOrderId}/rts`}>
-                  <ShieldCheck className="w-4 h-4" />
-                  View RTS Record
-                </Link>
-              </Button>
-            ) : canClose ? (
+            {canClose ? (
               // BUG-QCM-001: Previously this went to /signature without returnTo
               // or intendedTable params. After entering their PIN, the QCM had no
               // "Continue to Sign-Off" button (it only renders when returnTo is set),
@@ -508,6 +533,44 @@ export default function WorkOrderDetailPage() {
           </div>
         </div>
       </div>
+
+      <Card className="border-border/60">
+        <CardContent className="p-3 sm:p-4">
+          <p className="text-[11px] text-muted-foreground mb-3">Work Order Stage</p>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2.5">
+            {WORK_ORDER_STAGE_FLOW.map((stage, idx) => {
+              const activeStageIndex = mapStatusToStageIndex(wo.status);
+              const isComplete = idx < activeStageIndex;
+              const isCurrent = idx === activeStageIndex;
+              return (
+                <div key={stage.key} className="flex items-center gap-2 min-w-0">
+                  <span
+                    className={`w-3 h-3 rounded-full border flex-shrink-0 ${
+                      isCurrent
+                        ? "bg-primary border-primary"
+                        : isComplete
+                          ? "bg-green-500 border-green-500"
+                          : "bg-transparent border-border"
+                    }`}
+                    aria-hidden
+                  />
+                  <span
+                    className={`text-[11px] truncate ${
+                      isCurrent
+                        ? "text-foreground font-medium"
+                        : isComplete
+                          ? "text-green-600 dark:text-green-400"
+                          : "text-muted-foreground"
+                    }`}
+                  >
+                    {stage.label}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
         <Card className="border-border/60">
@@ -582,11 +645,7 @@ export default function WorkOrderDetailPage() {
         </Card>
       </div>
 
-      {/* Blocker banner — only relevant on in-progress WOs. For terminal statuses
-          (closed/voided/cancelled) the backend still returns blockers (e.g. "already
-          closed") which would render a misleading "Cannot close WO" warning on a
-          review-only page. */}
-      {!isTerminalStatus && !canClose && readinessBlockers.length > 0 && (
+      {!canClose && readinessBlockers.length > 0 && (
         <Card className="border-amber-500/30 bg-amber-500/5">
           <CardContent className="p-3">
             <div className="flex items-start gap-2.5">
@@ -615,22 +674,10 @@ export default function WorkOrderDetailPage() {
             [
               { value: "squawks", label: "Tasks & Findings", Icon: AlertTriangle, count: workItems.length, indicator: null as "red" | "amber" | "green" | null },
               { value: "compliance", label: "Compliance", Icon: ShieldCheck, count: null, indicator: complianceIndicator },
-              // BUG-SM-094: allParts query loads separately from the main WO data.
-              // While loading, allParts === undefined → partsForThisWorkOrder defaults to []
-              // → count badge shows "0" immediately, making the shop manager think there
-              // are no parts before the query resolves. Use null (no badge) while loading.
-              { value: "parts", label: "Parts", Icon: Package, count: allParts !== undefined ? partsForThisWorkOrder.length : null, indicator: null as "red" | "amber" | "green" | null },
+              { value: "parts", label: "Parts", Icon: Package, count: partsForThisWorkOrder.length, indicator: null as "red" | "amber" | "green" | null },
+              { value: "evidence", label: "In-dock & RTS", Icon: Video, count: null, indicator: null as "red" | "amber" | "green" | null },
               { value: "documents", label: "Documents", Icon: Paperclip, count: null, indicator: null as "red" | "amber" | "green" | null },
-              // BUG-LT-HUNT-092: "Notes & Activity" tab badge showed a raw count
-              // from the backend query which is capped at .take(20). When there
-              // are 20+ events, the badge shows "20" — making the shop manager
-              // think there are exactly 20 entries when there could be hundreds.
-              // This is misleading when reviewing a complex WO audit trail. Fix:
-              // show null (no badge) when the list is at the 20-event cap, since
-              // we can't reliably report the true count. When < 20 results come
-              // back, the count is accurate and can be shown. BACKEND-NEEDED:
-              // return a totalCount from the query so we can show "47+" accurately.
-              { value: "notes", label: "Notes & Activity", Icon: FileText, count: auditEvents.length < 20 ? auditEvents.length : null, indicator: null as "red" | "amber" | "green" | null },
+              { value: "notes", label: "Notes & Activity", Icon: FileText, count: auditEvents.length, indicator: null as "red" | "amber" | "green" | null },
             ]
           ).map(({ value, label, Icon, count, indicator }) => (
             <TabsTrigger
@@ -657,23 +704,13 @@ export default function WorkOrderDetailPage() {
 
         <TabsContent value="squawks" className="mt-0">
           {/* AI-053/054: Pass org/tech context for Log Squawk + FindingRow disposition */}
-          {/* BUG-QCM-C12: aircraftCurrentHours was set to wo.aircraftTotalTimeAtOpen —
-              the TTAF snapshot taken when the work order was created. On a long
-              inspection (multi-day annual, heavy-check), the aircraft may accumulate
-              hours from ground-run or ferry ops after the WO opened. Any squawk or
-              finding logged mid-job would record the wrong foundAtAircraftHours in the
-              permanent maintenance record. Under 14 CFR 43.9(a)(4) the total time in
-              service must be accurate at the time of the maintenance action.
-              Fix: prefer aircraft.totalTimeAirframeHours (the most recently recorded
-              TTAF from the aircraft record) with wo.aircraftTotalTimeAtOpen as fallback
-              when the aircraft record isn't available. */}
           <WorkItemsList
             items={workItems}
             workOrderId={String(workOrderId)}
             workOrderIdTyped={workOrderId}
             orgId={orgId}
             techId={techId ?? undefined}
-            aircraftCurrentHours={aircraft?.totalTimeAirframeHours ?? wo.aircraftTotalTimeAtOpen ?? null}
+            aircraftCurrentHours={wo.aircraftTotalTimeAtOpen ?? null}
             workOrderStatus={wo.status}
           />
           <div className="mt-4">
@@ -682,7 +719,7 @@ export default function WorkOrderDetailPage() {
               orgId={orgId}
               techId={techId}
               workOrderId={workOrderId}
-              aircraftCurrentHours={aircraft?.totalTimeAirframeHours ?? wo.aircraftTotalTimeAtOpen}
+              aircraftCurrentHours={wo.aircraftTotalTimeAtOpen}
             />
           </div>
         </TabsContent>
@@ -752,32 +789,15 @@ export default function WorkOrderDetailPage() {
           />
         </TabsContent>
 
+        <TabsContent value="evidence" className="mt-0">
+          <InDockRtsEvidenceTab
+            organizationId={orgId}
+            workOrderId={String(workOrderId)}
+            aircraftRegistration={aircraft?.currentRegistration ?? "AIRCRAFT"}
+          />
+        </TabsContent>
+
         <TabsContent value="notes" className="mt-0">
-          {/* BUG-SM-090: Shift Handoff Notes were rendered OUTSIDE the tabs panel,
-              below the CloseReadinessPanel at the very bottom of a very long page.
-              A busy shop manager reviewing a WO's notes would never scroll that far
-              and would miss shift-to-shift handoff context entirely.
-              Fix: move handoff notes inside the Notes & Activity tab so they appear
-              alongside the audit timeline in one logical place. */}
-          {taskCards.length > 0 && (
-            <div className="space-y-4 mb-5">
-              <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                <MessageSquare className="w-4 h-4 text-muted-foreground" />
-                Shift Handoff Notes
-              </h3>
-              {taskCards.map((tc) => (
-                <div key={tc._id}>
-                  <p className="text-xs text-muted-foreground mb-1 font-medium">
-                    {tc.taskCardNumber} — {tc.title}
-                  </p>
-                  <HandoffNotesPanel
-                    taskCardId={tc._id}
-                    notes={(tc.handoffNotes as { technicianId: string; technicianName: string; note: string; createdAt: number }[]) ?? []}
-                  />
-                </div>
-              ))}
-            </div>
-          )}
           <Card className="border-border/60">
             <CardHeader className="pb-3">
               <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
@@ -791,16 +811,32 @@ export default function WorkOrderDetailPage() {
         </TabsContent>
       </Tabs>
 
-      {/* Close Readiness Panel — only relevant while the WO is still open.
-          For closed/voided/cancelled WOs the checklist has no actionable
-          meaning and the "Go to RTS" button would confusingly re-trigger
-          the close flow on an already-finished record. */}
-      {!isTerminalStatus && (
-        <CloseReadinessPanel
-          workOrderId={workOrderId}
-          organizationId={orgId}
-        />
+      {/* Shift Handoff Notes — per task card */}
+      {taskCards.length > 0 && (
+        <div className="space-y-4">
+          <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+            <MessageSquare className="w-4 h-4 text-muted-foreground" />
+            Shift Handoff Notes
+          </h3>
+          {taskCards.map((tc) => (
+            <div key={tc._id}>
+              <p className="text-xs text-muted-foreground mb-1 font-medium">
+                {tc.taskCardNumber} — {tc.title}
+              </p>
+              <HandoffNotesPanel
+                taskCardId={tc._id}
+                notes={(tc.handoffNotes as { technicianId: string; technicianName: string; note: string; createdAt: number }[]) ?? []}
+              />
+            </div>
+          ))}
+        </div>
       )}
+
+      {/* Close Readiness Panel */}
+      <CloseReadinessPanel
+        workOrderId={workOrderId}
+        organizationId={orgId}
+      />
 
       {/* Deferred Maintenance Capture Dialog (Wave 5) */}
       <DeferredMaintenanceCaptureDialog
