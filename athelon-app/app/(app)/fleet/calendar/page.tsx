@@ -55,8 +55,12 @@ export default function FleetCalendarPage() {
       const dateMs = wo.scheduledStartDate ?? wo.promisedDeliveryDate;
       if (!dateMs) continue;
 
+      // BUG-DOM-057: scheduledStartDate is stored as a UTC midnight timestamp.
+      // Using local-timezone getDate()/getMonth() causes events to appear on the
+      // wrong calendar day for shops in non-UTC timezones (e.g. US Eastern sees
+      // a March 2 event on March 1). Use UTC accessors to build the date string.
       const d = new Date(dateMs);
-      const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+      const dateStr = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
 
       const tail = wo.tailNumber ?? "N/A";
 
@@ -216,9 +220,15 @@ export default function FleetCalendarPage() {
                               </Link>
                             );
                           })}
+                          {/* BUG-DOM-055: work-orders list page does not parse ?from=&to= query params
+                              so the previous link silently navigated to an unfiltered WO list,
+                              confusing the DOM. Link to /work-orders directly so the user lands
+                              on the list and can filter manually. The tooltip on hover shows the
+                              remaining tails/WOs so the DOM isn't left wondering what they are. */}
                           {dayEvents.length > 3 && (
                             <Link
-                              to={`/work-orders?from=${dateStr}&to=${dateStr}`}
+                              to="/work-orders"
+                              title={dayEvents.slice(3).map((e) => e.woNumber ? `${e.tail} — ${e.woNumber}` : e.tail).join("\n")}
                               className="block text-[10px] text-muted-foreground hover:text-foreground underline underline-offset-2 px-1"
                             >
                               +{dayEvents.length - 3} more

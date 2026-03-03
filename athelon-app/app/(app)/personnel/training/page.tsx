@@ -34,6 +34,16 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -286,7 +296,9 @@ export default function TrainingPage() {
         </div>
       </div>
 
-      {/* Stats Cards */}
+      {/* Stats Cards — show skeletons while either allTraining or expiringTraining is still loading
+          to prevent the DOM from seeing "0 Expiring / 0 Expired" and assuming compliance is clean
+          before data has arrived. */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <Card className="border-border/60">
           <CardContent className="p-4">
@@ -296,7 +308,11 @@ export default function TrainingPage() {
               </div>
               <div>
                 <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Current</p>
-                <p className="text-2xl font-bold text-foreground">{currentCount}</p>
+                {allTraining === undefined ? (
+                  <Skeleton className="h-8 w-10 mt-1" />
+                ) : (
+                  <p className="text-2xl font-bold text-foreground">{currentCount}</p>
+                )}
               </div>
             </div>
           </CardContent>
@@ -309,7 +325,11 @@ export default function TrainingPage() {
               </div>
               <div>
                 <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Expiring Soon</p>
-                <p className="text-2xl font-bold text-foreground">{expiringSoonCount}</p>
+                {expiringTraining === undefined ? (
+                  <Skeleton className="h-8 w-10 mt-1" />
+                ) : (
+                  <p className="text-2xl font-bold text-foreground">{expiringSoonCount}</p>
+                )}
               </div>
             </div>
           </CardContent>
@@ -322,7 +342,11 @@ export default function TrainingPage() {
               </div>
               <div>
                 <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Expired</p>
-                <p className="text-2xl font-bold text-foreground">{expiredRecords.length}</p>
+                {allTraining === undefined ? (
+                  <Skeleton className="h-8 w-10 mt-1" />
+                ) : (
+                  <p className="text-2xl font-bold text-foreground">{expiredRecords.length}</p>
+                )}
               </div>
             </div>
           </CardContent>
@@ -807,6 +831,9 @@ function SchedulingConstraintsTab({
   const [expiresAt, setExpiresAt] = useState("");
   const [certRef, setCertRef] = useState("");
   const [isAdding, setIsAdding] = useState(false);
+  // BUG-DOM-056: native confirm() blocks the main thread, looks wrong on mobile,
+  // and doesn't integrate with the app's design system. Replace with AlertDialog.
+  const [removeTarget, setRemoveTarget] = useState<Id<"technicianTraining"> | null>(null);
 
   const orgTraining = useQuery(
     api.technicianTraining.listByOrg,
@@ -871,7 +898,6 @@ function SchedulingConstraintsTab({
   }
 
   async function handleRemove(id: Id<"technicianTraining">) {
-    if (!confirm("Remove this training record?")) return;
     try {
       await removeTraining({ trainingId: id });
       toast.success("Training removed");
@@ -980,7 +1006,7 @@ function SchedulingConstraintsTab({
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8 text-muted-foreground hover:text-red-600"
-                        onClick={() => handleRemove(rec._id)}
+                        onClick={() => setRemoveTarget(rec._id)}
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
@@ -992,6 +1018,33 @@ function SchedulingConstraintsTab({
           )}
         </div>
       </div>
+
+      {/* BUG-DOM-056: Remove confirmation AlertDialog — replaces native confirm() */}
+      <AlertDialog open={!!removeTarget} onOpenChange={(v) => { if (!v) setRemoveTarget(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove Training Record?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will remove the scheduling constraint training record for this technician.
+              The technician may no longer be eligible for tasks requiring this qualification.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                if (removeTarget) {
+                  handleRemove(removeTarget);
+                  setRemoveTarget(null);
+                }
+              }}
+            >
+              Remove
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Add Constraint Training Dialog */}
       <Dialog open={showAdd} onOpenChange={(v) => { if (!isAdding) setShowAdd(v); }}>
