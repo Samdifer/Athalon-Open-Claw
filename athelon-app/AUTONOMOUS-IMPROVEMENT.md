@@ -80,5 +80,5 @@ Track which area was last audited to ensure coverage rotation:
 ## Bug Hunter Rotation
 Track which user persona was last tested (bug hunter cron):
 ```json
-{"lastPersona": "parts_clerk", "cycleCount": 66, "lastRun": "2026-03-03T09:13:00Z", "personas": ["shop_manager", "lead_technician", "parts_clerk", "billing_manager", "qcm_inspector", "dom"]}
+{"lastPersona": "billing_manager", "cycleCount": 67, "lastRun": "2026-03-03T09:28:00Z", "personas": ["shop_manager", "lead_technician", "parts_clerk", "billing_manager", "qcm_inspector", "dom"]}
 ```
