@@ -20,14 +20,15 @@ export default function WOExecutionPage() {
   const { id } = useParams<{ id: string }>();
   const { orgId } = useCurrentOrg();
 
-  const workOrder = useQuery(
-    api.workOrders.getById,
-    id ? { id: id as Id<"workOrders"> } : "skip",
+  const woResult = useQuery(
+    api.workOrders.getWorkOrder,
+    id && orgId
+      ? { workOrderId: id as Id<"workOrders">, organizationId: orgId }
+      : "skip",
   );
-  const aircraft = useQuery(
-    api.aircraft.getById,
-    workOrder?.aircraftId ? { id: workOrder.aircraftId } : "skip",
-  );
+
+  const workOrder = woResult?.workOrder ?? null;
+  const aircraft = woResult?.aircraft ?? null;
 
   if (!id) return null;
 
@@ -57,7 +58,8 @@ export default function WOExecutionPage() {
               </Badge>
               {aircraft && (
                 <span className="text-sm text-muted-foreground">
-                  {aircraft.registrationNumber} · {aircraft.aircraftType}
+                  {aircraft.currentRegistration} ·{" "}
+                  {`${aircraft.make} ${aircraft.model}`.trim()}
                 </span>
               )}
             </div>

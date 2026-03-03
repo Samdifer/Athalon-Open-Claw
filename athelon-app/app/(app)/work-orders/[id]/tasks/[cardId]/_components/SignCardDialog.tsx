@@ -200,12 +200,20 @@ export function SignCardDialog({
                 (min. 50 chars, 14 CFR 43.9)
               </span>
             </Label>
+            {/* BUG-LT-HUNT-054: RTS statement textarea had no maxLength cap.
+                A tech pasting AMM chapter text could exceed the backend schema
+                limit and get a cryptic validation error with no indication of
+                what went wrong or how to fix it. 2000 chars is generous for a
+                return-to-service statement (43.9 requires a concise description
+                of work performed; not an essay). Character counter turns amber
+                near the limit so the tech knows to trim before submitting. */}
             <Textarea
               id="sign-card-statement"
               value={statement}
-              onChange={(e) => setStatement(e.target.value)}
+              onChange={(e) => setStatement(e.target.value.slice(0, 2000))}
               placeholder="I certify that the work identified in this task card was performed in accordance with [approved data reference] and that the aircraft/component is approved for return to service..."
               rows={4}
+              maxLength={2000}
               className="text-sm bg-muted/30 border-border/60 resize-none"
               aria-required="true"
               aria-describedby="sign-card-statement-hint"
@@ -213,8 +221,9 @@ export function SignCardDialog({
             {/* BUG-LT2-002: Use trimmed length to match the disabled check
                 (statement.trim().length < 50). Showing raw length let a tech
                 type 50 spaces, see "50/50", and wonder why Sign is still grey. */}
-            <p id="sign-card-statement-hint" className="text-[10px] text-muted-foreground mt-1">
-              {statement.trim().length}/50 chars minimum
+            <p id="sign-card-statement-hint" className={`text-[10px] mt-1 flex justify-between ${statement.length >= 1900 ? "text-amber-400" : "text-muted-foreground"}`}>
+              <span>{statement.trim().length}/50 chars minimum</span>
+              <span>{statement.length}/2000</span>
             </p>
           </div>
 

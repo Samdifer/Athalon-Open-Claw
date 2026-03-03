@@ -237,6 +237,10 @@ export default function WorkOrderDetailPage() {
   const discrepancies = data.discrepancies ?? [];
   const auditEvents = data.auditEvents ?? [];
 
+  // Derived flag — terminal statuses mean the WO is already done; several
+  // UI sections (timer, close readiness, sign-off button) must be hidden.
+  const isTerminalStatus = ["closed", "voided", "cancelled"].includes(wo.status);
+
   const tasksComplete = taskCards.filter((tc) => tc.status === "complete").length;
   const tasksTotal = taskCards.length;
   const openSquawks = discrepancies.filter(
@@ -393,40 +397,44 @@ export default function WorkOrderDetailPage() {
           </div>
 
           <div className="w-full sm:w-auto flex-shrink-0 flex flex-col gap-2">
-            {activeTimerEntry ? (
-              <div className="flex items-center gap-2">
-                <Badge
-                  variant="outline"
-                  className={`text-[10px] border ${
-                    activeTimerOnThisWorkOrder
-                      ? "bg-green-500/15 text-green-400 border-green-500/30"
-                      : "bg-amber-500/15 text-amber-500 border-amber-500/30"
-                  }`}
-                >
-                  {activeTimerOnThisWorkOrder ? "Clocked to this WO" : `Active ${activeTimerEntry.entryType ?? "timer"}`}
-                </Badge>
+            {/* Timer controls — hidden for terminal-status WOs (closed/voided/cancelled).
+                Clocking time to a closed WO makes no sense and would pollute billing. */}
+            {!isTerminalStatus && (
+              activeTimerEntry ? (
+                <div className="flex items-center gap-2">
+                  <Badge
+                    variant="outline"
+                    className={`text-[10px] border ${
+                      activeTimerOnThisWorkOrder
+                        ? "bg-green-500/15 text-green-400 border-green-500/30"
+                        : "bg-amber-500/15 text-amber-500 border-amber-500/30"
+                    }`}
+                  >
+                    {activeTimerOnThisWorkOrder ? "Clocked to this WO" : `Active ${activeTimerEntry.entryType ?? "timer"}`}
+                  </Badge>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-1.5 text-xs border-red-500/40 text-red-400 hover:bg-red-500/10"
+                    onClick={handleStopActiveTimer}
+                    disabled={timerActionLoading === "stop"}
+                  >
+                    <Square className="w-3.5 h-3.5" />
+                    {timerActionLoading === "stop" ? "Stopping..." : "Stop Timer"}
+                  </Button>
+                </div>
+              ) : (
                 <Button
                   variant="outline"
                   size="sm"
-                  className="gap-1.5 text-xs border-red-500/40 text-red-400 hover:bg-red-500/10"
-                  onClick={handleStopActiveTimer}
-                  disabled={timerActionLoading === "stop"}
+                  className="gap-1.5 text-xs border-green-500/40 text-green-400 hover:bg-green-500/10"
+                  onClick={handleStartWorkOrderTimer}
+                  disabled={timerActionLoading === "start"}
                 >
-                  <Square className="w-3.5 h-3.5" />
-                  {timerActionLoading === "stop" ? "Stopping..." : "Stop Timer"}
+                  <Play className="w-3.5 h-3.5" />
+                  {timerActionLoading === "start" ? "Clocking..." : "Clock to WO"}
                 </Button>
-              </div>
-            ) : (
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-1.5 text-xs border-green-500/40 text-green-400 hover:bg-green-500/10"
-                onClick={handleStartWorkOrderTimer}
-                disabled={timerActionLoading === "start"}
-              >
-                <Play className="w-3.5 h-3.5" />
-                {timerActionLoading === "start" ? "Clocking..." : "Clock to WO"}
-              </Button>
+              )
             )}
 
             <Button
@@ -469,7 +477,16 @@ export default function WorkOrderDetailPage() {
                 Execution Planning
               </Link>
             </Button>
-            {canClose ? (
+            {isTerminalStatus ? (
+              // WO is already closed/voided/cancelled — show RTS record link
+              // instead of the "Sign Off & Close" button.
+              <Button variant="outline" asChild className="gap-2">
+                <Link to={`/work-orders/${workOrderId}/rts`}>
+                  <ShieldCheck className="w-4 h-4" />
+                  View RTS Record
+                </Link>
+              </Button>
+            ) : canClose ? (
               // BUG-QCM-001: Previously this went to /signature without returnTo
               // or intendedTable params. After entering their PIN, the QCM had no
               // "Continue to Sign-Off" button (it only renders when returnTo is set),
@@ -566,7 +583,11 @@ export default function WorkOrderDetailPage() {
         </Card>
       </div>
 
-      {!canClose && readinessBlockers.length > 0 && (
+      {/* Blocker banner — only relevant on in-progress WOs. For terminal statuses
+          (closed/voided/cancelled) the backend still returns blockers (e.g. "already
+          closed") which would render a misleading "Cannot close WO" warning on a
+          review-only page. */}
+      {!isTerminalStatus && !canClose && readinessBlockers.length > 0 && (
         <Card className="border-amber-500/30 bg-amber-500/5">
           <CardContent className="p-3">
             <div className="flex items-start gap-2.5">
@@ -744,11 +765,16 @@ export default function WorkOrderDetailPage() {
         </div>
       )}
 
-      {/* Close Readiness Panel */}
-      <CloseReadinessPanel
-        workOrderId={workOrderId}
-        organizationId={orgId}
-      />
+      {/* Close Readiness Panel — only relevant while the WO is still open.
+          For closed/voided/cancelled WOs the checklist has no actionable
+          meaning and the "Go to RTS" button would confusingly re-trigger
+          the close flow on an already-finished record. */}
+      {!isTerminalStatus && (
+        <CloseReadinessPanel
+          workOrderId={workOrderId}
+          organizationId={orgId}
+        />
+      )}
 
       {/* Deferred Maintenance Capture Dialog (Wave 5) */}
       <DeferredMaintenanceCaptureDialog

@@ -14,6 +14,7 @@ import {
   ChevronRight,
   Filter,
   Calendar,
+  TrendingDown,
   TrendingUp,
   Download,
   LayoutGrid,
@@ -98,8 +99,8 @@ function getScheduleRisk(promisedDeliveryMs: number | null | undefined): RiskLev
 
 function RiskIcon({ risk }: { risk: RiskLevel }) {
   if (risk === "no_date") return null;
-  if (risk === "overdue") return <TrendingUp className="w-3 h-3 text-red-400 flex-shrink-0" />;
-  if (risk === "at_risk") return <TrendingUp className="w-3 h-3 text-amber-400 flex-shrink-0" />;
+  if (risk === "overdue") return <TrendingDown className="w-3 h-3 text-red-400 flex-shrink-0" />;
+  if (risk === "at_risk") return <AlertTriangle className="w-3 h-3 text-amber-400 flex-shrink-0" />;
   return <TrendingUp className="w-3 h-3 text-green-400 flex-shrink-0" />;
 }
 

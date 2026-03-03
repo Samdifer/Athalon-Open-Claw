@@ -409,6 +409,43 @@ function TaskRow({
               {SYSTEM_LABELS[item.aircraftSystem] ?? item.aircraftSystem}
             </Badge>
           )}
+          {/* BUG-LT-WIL-002: Show "Inspection Item" badge for task cards
+              marked isInspectionItem. The field was in the TaskCardItem type
+              but never displayed in WorkItemsList. A lead tech or IA scanning
+              the WO task list had no visual cue which cards require IA
+              sign-off at the inspection-item level — they'd have to click into
+              each card to find out. Under 14 CFR 65.95, an IA must personally
+              observe the work on inspection items; missing this at a glance
+              causes scheduling failures (IA walks away before signing). */}
+          {item.isInspectionItem && (
+            <Badge
+              variant="outline"
+              className="text-[10px] font-medium bg-violet-500/10 text-violet-400 border-violet-500/30"
+            >
+              Insp. Item
+            </Badge>
+          )}
+          {/* BUG-LT-WIL-001: Show "Awaiting Sign-Off" badge when all steps are
+              done but the card hasn't been card-signed yet. Previously the
+              badge stayed "In Progress" even after the last step was signed —
+              giving no indication that the card-level 14 CFR 43.9 sign-off was
+              still needed. A lead tech or shop manager scanning the WO detail
+              page had no way to identify which cards were stalled at
+              card-sign-off vs actively being worked. They had to click into
+              each "In Progress" card individually.
+              My Work page had this badge (BUG-LT2-005); now WO detail matches. */}
+          {item.stepCount > 0 &&
+          item.completedStepCount === item.stepCount &&
+          item.status !== "complete" &&
+          item.status !== "voided" ? (
+            <Badge
+              variant="outline"
+              className="text-[10px] font-medium bg-amber-500/10 text-amber-400 border-amber-500/30"
+            >
+              <Lock className="w-2.5 h-2.5 mr-1" />
+              Awaiting Sign-Off
+            </Badge>
+          ) : (
           <Badge
             variant="outline"
             className={`text-[10px] font-medium border ${statusStyle}`}
@@ -421,6 +458,7 @@ function TaskRow({
             )}
             {statusLabel}
           </Badge>
+          )}
         </div>
         <p className="text-sm font-medium text-foreground truncate">
           {item.title}

@@ -79,7 +79,7 @@ export function WOExecutionGantt({ workOrderId }: Props) {
   );
   const taskCards = useQuery(
     api.taskCards.listTaskCardsForWorkOrder,
-    workOrderId ? { workOrderId } : "skip",
+    workOrderId && orgId ? { workOrderId, organizationId: orgId } : "skip",
   );
   const technicians = useQuery(
     api.technicians.list,

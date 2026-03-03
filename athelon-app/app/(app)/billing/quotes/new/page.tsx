@@ -168,15 +168,16 @@ export default function NewQuotePage() {
   const computePrice = useAction(api.pricing.computePrice);
   const consumeCarryForward = useMutation(api.carryForwardItems.consumeByQuote);
 
-  // Carry-forward items for selected aircraft
+  // State must be declared before any useQuery that depends on it
+  const [customerId, setCustomerId] = useState<string>("");
+  const [pricingLoading, setPricingLoading] = useState<string | null>(null);
+  const [aircraftId, setAircraftId] = useState<string>("");
+
+  // Carry-forward items for selected aircraft (depends on aircraftId state)
   const carryForwardItems = useQuery(
     api.carryForwardItems.listByAircraft,
     aircraftId ? { aircraftId: aircraftId as Id<"aircraft"> } : "skip",
   );
-
-  const [customerId, setCustomerId] = useState<string>("");
-  const [pricingLoading, setPricingLoading] = useState<string | null>(null);
-  const [aircraftId, setAircraftId] = useState<string>("");
   const [kitSearch, setKitSearch] = useState("");
   const [notes, setNotes] = useState("");
   const [lineItems, setLineItems] = useState<DraftLineItem[]>([

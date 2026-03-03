@@ -378,8 +378,18 @@ export default function TaskCardPage() {
   const complianceBlocksSignOff = blockingComplianceItems.length > 0;
 
   // ── GAP-18: Start a step (mark as in_progress) ───────────────────────────
+  // BUG-LT-HUNT-052: isStarting only disables the specific step being started.
+  // A tech can click Start on step 2 while step 1's mutation is still in-flight,
+  // since TaskStepRow receives isStarting={startingStepId === step._id}. Two
+  // concurrent startStep mutations could both succeed, leaving two steps in
+  // in_progress simultaneously — impossible to sign both cleanly without voiding.
+  // Fix: track a global "any step is starting" flag and pass it to all rows so
+  // ALL Start buttons are disabled while any one mutation is in-flight.
+  const isAnyStepStarting = startingStepId !== null;
+
   async function handleStartStep(stepId: Id<"taskCardSteps">) {
     if (!techId) return;
+    if (isAnyStepStarting) return; // guard against concurrent starts
     setStartingStepId(stepId as string);
     try {
       await startStepMutation({ stepId, technicianId: techId });
@@ -625,7 +635,7 @@ export default function TaskCardPage() {
                 techId={techId}
                 onSignClick={handleSignStepIntent}
                 onStartClick={handleStartStep}
-                isStarting={startingStepId === step._id}
+                isStarting={startingStepId === step._id || (isAnyStepStarting && startingStepId !== step._id)}
                 onNaClick={setNaTarget}
                 onStepTimerClick={handleStepTimerClick}
                 isStepTimerActive={
@@ -869,6 +879,17 @@ export default function TaskCardPage() {
               >
                 Cancel
               </Button>
+              {/* BUG-LT-COMPL-001: Explain why Save is disabled when the task
+                  card has no aircraft linked. Previously the button was just
+                  silently grayed out — a tech couldn't add an AD/SB compliance
+                  item and had no idea why. The work order must have an aircraft
+                  assigned before compliance tracking can be linked to the
+                  logbook record. */}
+              {!taskCard.aircraftId && (
+                <p className="text-[10px] text-amber-400/80 mr-auto">
+                  Compliance tracking requires an aircraft on the work order.
+                </p>
+              )}
               <Button
                 size="sm"
                 className="h-7 text-xs"

@@ -133,6 +133,14 @@ export function SignStepDialog({
     api.technicians.listWithExpiringCerts,
     orgId ? { organizationId: orgId, withinDays: 365 } : "skip",
   );
+  // BUG-LT-HUNT-053: While expiringCerts is still loading (undefined), iaIsExpired
+  // is false — meaning an expired-IA tech can click Sign on an IA-required step
+  // before the cert query resolves. On a fast connection the user hits Sign and
+  // the backend rejects it (or worse: the timing window allows an invalid sign-off
+  // through before the check resolves). Fix: treat cert status as "loading" when
+  // expiringCerts is undefined and requiresIa is true — disable the Sign button
+  // until we know the cert is current.
+  const certQueryLoading = requiresIa && expiringCerts === undefined;
   const myExpiryEntry = expiringCerts?.find(
     (e) => e.technician?._id === techId,
   );
@@ -535,16 +543,16 @@ export function SignStepDialog({
           </Button>
           <Button
             onClick={handleSign}
-            disabled={isSubmitting || pin.length < 4 || (requiresIa && iaIsExpired)}
+            disabled={isSubmitting || pin.length < 4 || (requiresIa && iaIsExpired) || certQueryLoading}
             className="gap-2"
             size="sm"
           >
-            {isSubmitting ? (
+            {isSubmitting || certQueryLoading ? (
               <Loader2 className="w-3.5 h-3.5 animate-spin" />
             ) : (
               <PenLine className="w-3.5 h-3.5" />
             )}
-            Sign Step
+            {certQueryLoading ? "Checking IA cert…" : "Sign Step"}
           </Button>
         </DialogFooter>
       </DialogContent>
