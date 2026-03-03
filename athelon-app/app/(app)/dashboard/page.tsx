@@ -848,7 +848,7 @@ export default function DashboardPage() {
               >
                 <Link to="/squawks">
                   <AlertTriangle className="w-3.5 h-3.5" />
-                  Log Squawk
+                  View Squawks
                 </Link>
               </Button>
               <Button

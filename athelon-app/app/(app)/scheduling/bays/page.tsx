@@ -147,7 +147,8 @@ function BayFormDialog({
             <Input
               id="bay-name"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => setName(e.target.value.slice(0, 50))}
+              maxLength={50}
               placeholder="Bay 1"
             />
           </div>
@@ -179,7 +180,8 @@ function BayFormDialog({
             <Textarea
               id="bay-desc"
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={(e) => setDescription(e.target.value.slice(0, 200))}
+              maxLength={200}
               placeholder="Optional notes..."
               rows={2}
             />

@@ -54,9 +54,12 @@ type KanbanStatus = (typeof KANBAN_COLUMNS)[number]["key"];
 const STATUS_MAP: Record<string, string[]> = {
   draft: ["draft"],
   open: ["open"],
-  in_progress: ["in_progress"],
+  // open_discrepancies means active work with found squawks — still "In Progress",
+  // not "Pending Inspection". Inspectors seeing a WO with open discrepancies in
+  // the "Pending Inspection" column would incorrectly assume it's ready for QC.
+  in_progress: ["in_progress", "open_discrepancies"],
   on_hold: ["on_hold"],
-  pending_inspection: ["pending_inspection", "pending_signoff", "open_discrepancies"],
+  pending_inspection: ["pending_inspection", "pending_signoff"],
   complete: ["closed"],
 };
 
