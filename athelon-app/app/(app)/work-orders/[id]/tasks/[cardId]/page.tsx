@@ -8,6 +8,7 @@ import { api } from "@/convex/_generated/api";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import type { Id } from "@/convex/_generated/dataModel";
 import { toast } from "sonner";
+import { formatDateTime } from "@/lib/format";
 import {
   ArrowLeft,
   CheckCircle2,
@@ -703,7 +704,7 @@ export default function TaskCardPage() {
                       {hn.technicianName ?? "Unknown Technician"}
                     </span>
                     <span className="text-[10px] text-muted-foreground">
-                      {new Date(hn.createdAt).toLocaleString()}
+                      {formatDateTime(hn.createdAt)}
                     </span>
                   </div>
                   <p className="text-xs text-muted-foreground">{hn.note}</p>
@@ -874,9 +875,10 @@ export default function TaskCardPage() {
                 </label>
                 <Input
                   value={addReference}
-                  onChange={(e) => setAddReference(e.target.value)}
+                  onChange={(e) => setAddReference(e.target.value.slice(0, 100))}
                   placeholder="e.g. AD 2023-15-01"
                   className="text-xs h-8"
+                  maxLength={100}
                 />
               </div>
             </div>
@@ -886,10 +888,11 @@ export default function TaskCardPage() {
               </label>
               <Textarea
                 value={addDescription}
-                onChange={(e) => setAddDescription(e.target.value)}
+                onChange={(e) => setAddDescription(e.target.value.slice(0, 500))}
                 placeholder="What must be complied with..."
                 rows={2}
                 className="text-xs bg-muted/30 border-border/60 resize-none"
+                maxLength={500}
               />
             </div>
             <div className="flex justify-end gap-2 pt-1">
@@ -1064,10 +1067,11 @@ export default function TaskCardPage() {
                       </label>
                       <Textarea
                         value={updateNotes}
-                        onChange={(e) => setUpdateNotes(e.target.value)}
+                        onChange={(e) => setUpdateNotes(e.target.value.slice(0, 500))}
                         placeholder="Reason for status change..."
                         rows={2}
                         className="text-xs bg-muted/30 border-border/60 resize-none"
+                        maxLength={500}
                       />
                     </div>
                     <div className="flex justify-end gap-2">
@@ -1153,7 +1157,7 @@ export default function TaskCardPage() {
                                 {COMPLIANCE_STATUS_LABEL[entry.status]}
                               </Badge>{" "}
                               <span className="text-muted-foreground/60">
-                                {new Date(entry.changedAt).toLocaleString()}
+                                {formatDateTime(entry.changedAt)}
                               </span>
                               {entry.notes && (
                                 <p className="text-muted-foreground mt-0.5">
