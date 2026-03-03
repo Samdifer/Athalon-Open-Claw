@@ -81,9 +81,17 @@ export default function NewWorkOrderPage() {
         priority,
         notes: notes.trim() || undefined,
         customerId: customerId ? (customerId as Id<"customers">) : undefined,
-        promisedDeliveryDate: promisedDeliveryDate
-          ? new Date(promisedDeliveryDate).getTime()
-          : undefined,
+        // BUG-SM-089: new Date("YYYY-MM-DD") parses as UTC midnight. For users
+        // in UTC+ timezones this produces a timestamp before local midnight,
+        // so March 10 gets stored as March 9 (e.g. 2026-03-09T19:00:00Z for
+        // UTC+5). The reports page uses split-and-construct to parse as LOCAL
+        // midnight — apply the same pattern here so the promised date the shop
+        // manager selects matches what gets stored and displayed everywhere.
+        promisedDeliveryDate: (() => {
+          if (!promisedDeliveryDate) return undefined;
+          const [y, m, d] = promisedDeliveryDate.split("-").map(Number);
+          return new Date(y!, m! - 1, d!).getTime();
+        })(),
         estimatedLaborHoursOverride: estimatedLaborHours
           ? Math.max(0, parseFloat(estimatedLaborHours) || 0) || undefined
           : undefined,

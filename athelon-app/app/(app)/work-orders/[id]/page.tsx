@@ -615,7 +615,11 @@ export default function WorkOrderDetailPage() {
             [
               { value: "squawks", label: "Tasks & Findings", Icon: AlertTriangle, count: workItems.length, indicator: null as "red" | "amber" | "green" | null },
               { value: "compliance", label: "Compliance", Icon: ShieldCheck, count: null, indicator: complianceIndicator },
-              { value: "parts", label: "Parts", Icon: Package, count: partsForThisWorkOrder.length, indicator: null as "red" | "amber" | "green" | null },
+              // BUG-SM-094: allParts query loads separately from the main WO data.
+              // While loading, allParts === undefined → partsForThisWorkOrder defaults to []
+              // → count badge shows "0" immediately, making the shop manager think there
+              // are no parts before the query resolves. Use null (no badge) while loading.
+              { value: "parts", label: "Parts", Icon: Package, count: allParts !== undefined ? partsForThisWorkOrder.length : null, indicator: null as "red" | "amber" | "green" | null },
               { value: "documents", label: "Documents", Icon: Paperclip, count: null, indicator: null as "red" | "amber" | "green" | null },
               { value: "notes", label: "Notes & Activity", Icon: FileText, count: auditEvents.length, indicator: null as "red" | "amber" | "green" | null },
             ]
@@ -740,6 +744,31 @@ export default function WorkOrderDetailPage() {
         </TabsContent>
 
         <TabsContent value="notes" className="mt-0">
+          {/* BUG-SM-090: Shift Handoff Notes were rendered OUTSIDE the tabs panel,
+              below the CloseReadinessPanel at the very bottom of a very long page.
+              A busy shop manager reviewing a WO's notes would never scroll that far
+              and would miss shift-to-shift handoff context entirely.
+              Fix: move handoff notes inside the Notes & Activity tab so they appear
+              alongside the audit timeline in one logical place. */}
+          {taskCards.length > 0 && (
+            <div className="space-y-4 mb-5">
+              <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                <MessageSquare className="w-4 h-4 text-muted-foreground" />
+                Shift Handoff Notes
+              </h3>
+              {taskCards.map((tc) => (
+                <div key={tc._id}>
+                  <p className="text-xs text-muted-foreground mb-1 font-medium">
+                    {tc.taskCardNumber} — {tc.title}
+                  </p>
+                  <HandoffNotesPanel
+                    taskCardId={tc._id}
+                    notes={(tc.handoffNotes as { technicianId: string; technicianName: string; note: string; createdAt: number }[]) ?? []}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
           <Card className="border-border/60">
             <CardHeader className="pb-3">
               <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
@@ -752,27 +781,6 @@ export default function WorkOrderDetailPage() {
           </Card>
         </TabsContent>
       </Tabs>
-
-      {/* Shift Handoff Notes — per task card */}
-      {taskCards.length > 0 && (
-        <div className="space-y-4">
-          <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-            <MessageSquare className="w-4 h-4 text-muted-foreground" />
-            Shift Handoff Notes
-          </h3>
-          {taskCards.map((tc) => (
-            <div key={tc._id}>
-              <p className="text-xs text-muted-foreground mb-1 font-medium">
-                {tc.taskCardNumber} — {tc.title}
-              </p>
-              <HandoffNotesPanel
-                taskCardId={tc._id}
-                notes={(tc.handoffNotes as { technicianId: string; technicianName: string; note: string; createdAt: number }[]) ?? []}
-              />
-            </div>
-          ))}
-        </div>
-      )}
 
       {/* Close Readiness Panel — only relevant while the WO is still open.
           For closed/voided/cancelled WOs the checklist has no actionable

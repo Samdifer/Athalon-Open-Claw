@@ -239,6 +239,15 @@ export default function KanbanPage() {
       });
   }, [workOrders]);
 
+  // Count of voided/cancelled WOs excluded from the board.
+  // BUG-SM-093: these WOs silently disappeared from the board — a shop manager
+  // who just voided a WO would think the board was broken. Show a count so they
+  // know where the WO went (and can use List View with "Complete" tab to see it).
+  const hiddenTerminalCount = useMemo(() => {
+    if (!workOrders) return 0;
+    return workOrders.filter((wo) => wo.status === "voided" || wo.status === "cancelled").length;
+  }, [workOrders]);
+
   // Filter work orders
   const filtered = useMemo(() => {
     if (!workOrders) return [];
@@ -421,6 +430,16 @@ export default function KanbanPage() {
           </SelectContent>
         </Select>
       </div>
+
+      {/* Hidden terminal WO notice — only shows if there are voided/cancelled WOs */}
+      {hiddenTerminalCount > 0 && (
+        <p className="text-xs text-muted-foreground/70">
+          {hiddenTerminalCount} voided or cancelled work order{hiddenTerminalCount !== 1 ? "s" : ""} hidden from board.{" "}
+          <Link to="/work-orders" className="text-primary hover:underline">
+            View in list →
+          </Link>
+        </p>
+      )}
 
       {/* Kanban board */}
       <div className="flex gap-4 overflow-x-auto pb-4 -mx-2 px-2 md:-mx-6 md:px-6">

@@ -481,8 +481,12 @@ export default function PredictionsPage() {
                             <Badge className={`${sev.bg} ${sev.color} ${sev.border} capitalize`}>
                               {pred.severity}
                             </Badge>
+                            {/* BUG-DOM-072: String.replace("_", " ") only replaces the FIRST
+                                underscore. "time_based" renders "time based" (OK), but any
+                                future multi-word type like "time_based_interval" would show
+                                "time based_interval". Use a global regex to replace all. */}
                             <Badge variant="outline" className="text-[10px]">
-                              {pred.predictionType.replace("_", " ")}
+                              {pred.predictionType.replace(/_/g, " ")}
                             </Badge>
                             <Badge variant="outline" className="text-[10px]">
                               {pred.status}

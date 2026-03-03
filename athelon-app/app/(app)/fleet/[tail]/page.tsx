@@ -100,6 +100,7 @@ function getWoStatusStyle(status: string): { color: string; label: string } {
     on_hold: { color: "bg-orange-500/15 text-orange-400 border-orange-500/30", label: "On Hold" },
     open_discrepancies: { color: "bg-red-500/15 text-red-400 border-red-500/30", label: "Open Discrepancies" },
     closed: { color: "bg-green-500/15 text-green-400 border-green-500/30", label: "Closed" },
+    cancelled: { color: "bg-slate-500/15 text-slate-400 border-slate-500/30", label: "Cancelled" },
   };
   return map[status] ?? { color: "bg-muted text-muted-foreground border-border/30", label: status };
 }
@@ -161,6 +162,12 @@ export default function AircraftDetailPage() {
   // Update TT dialog state
   const [updateTTOpen, setUpdateTTOpen] = useState(false);
   const [newTT, setNewTT] = useState("");
+  // BUG-DOM-071: asOfDate defaulted to "" forcing the DOM to manually type today's date
+  // every time they update TTAF. Aircraft time updates happen at the end of each flight day
+  // — requiring the user to type the current date for every entry is unnecessary friction
+  // and invites typos. Default to today (ISO YYYY-MM-DD) so the field is pre-filled but
+  // still editable for back-dated entries.
+  const todayISO = new Date().toISOString().split("T")[0];
   const [asOfDate, setAsOfDate] = useState("");
   const [updateTTError, setUpdateTTError] = useState<string | null>(null);
   const [updateTTSubmitting, setUpdateTTSubmitting] = useState(false);
@@ -273,8 +280,13 @@ export default function AircraftDetailPage() {
     () => workOrders?.filter((wo: { status: string }) => wo.status === "draft") ?? [],
     [workOrders],
   );
+  // BUG-DOM-073: Cancelled WOs were completely invisible — not included in active,
+  // planned, or past sections. A DOM reviewing an aircraft's WO history on an aircraft
+  // with a prior AOG that was resolved by a separate WO would see the cancelled WO
+  // simply disappear from the record. Include cancelled WOs in the past/history section
+  // so the full work history is visible. Closed and cancelled both represent terminal states.
   const allPastWOs = useMemo(
-    () => workOrders?.filter((wo: { status: string }) => wo.status === "closed") ?? [],
+    () => workOrders?.filter((wo: { status: string }) => wo.status === "closed" || wo.status === "cancelled") ?? [],
     [workOrders],
   );
   const pastWOs = useMemo(() => allPastWOs.slice(0, 20), [allPastWOs]);
@@ -569,7 +581,7 @@ export default function AircraftDetailPage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setUpdateTTOpen(true)}
+                    onClick={() => { setAsOfDate(todayISO); setUpdateTTOpen(true); }}
                   >
                     <Pencil className="w-3 h-3 mr-1.5" />
                     Update TT
@@ -838,6 +850,10 @@ export default function AircraftDetailPage() {
         open={updateTTOpen}
         onOpenChange={(open) => {
           setUpdateTTOpen(open);
+          if (open) {
+            // BUG-DOM-071: Pre-fill today's date so the DOM doesn't have to type it
+            setAsOfDate(todayISO);
+          }
           if (!open) {
             setNewTT("");
             setAsOfDate("");

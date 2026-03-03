@@ -30,12 +30,19 @@ export const TATChart = React.memo(function TATChart() {
     if (!woResult?.page) return [];
 
     return woResult.page
-      .filter((wo: any) => wo.completedAt && wo._creationTime)
+      // BUG-SM-088: openedAt is when the shop actually started work (WO moved
+      // out of draft). _creationTime is when the Convex document was created,
+      // which for drafted WOs can be days/weeks before induction. Using
+      // _creationTime inflates the reported TAT by the draft-sitting period —
+      // a WO drafted Feb 1, opened Feb 15, closed Feb 20 would falsely show
+      // 19 days TAT instead of the actual 5-day working TAT.
+      .filter((wo: any) => wo.completedAt && (wo.openedAt ?? wo._creationTime))
       .slice(0, 15)
       .map((wo: any) => {
+        const startTs = wo.openedAt ?? wo._creationTime;
         const days = Math.max(
           1,
-          Math.round((wo.completedAt - wo._creationTime) / (1000 * 60 * 60 * 24)),
+          Math.round((wo.completedAt - startTs) / (1000 * 60 * 60 * 24)),
         );
         return {
           // listWorkOrders returns `workOrderNumber` (not `number`).
