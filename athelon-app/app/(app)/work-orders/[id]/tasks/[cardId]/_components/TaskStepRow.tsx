@@ -67,7 +67,20 @@ export interface TaskStepRowProps {
     requiresIa: boolean;
   }) => void;
   onStartClick?: (stepId: Id<"taskCardSteps">) => void;
+  /** True only when THIS SPECIFIC STEP's start mutation is in-flight.
+   *  Controls the spinner on this row's Start button.
+   *  BUG-LT-HUNT-081: Previously page.tsx passed isAnyStepStarting to every
+   *  row via this prop, so ALL pending step Start buttons showed the Loader2
+   *  spinner whenever any one step was being started — confusing for a tech
+   *  who clicked Start on Step 3 and saw Steps 1, 4, and 5 also spinning. */
   isStarting?: boolean;
+  /** True when ANY step action is in-flight (not necessarily this row's).
+   *  Disables all action buttons (Start, N/A, Sign) without showing a spinner
+   *  on rows that are NOT the active mutation target.
+   *  BUG-LT-HUNT-081: Separating this from isStarting lets us block race-
+   *  condition clicks on other rows while keeping the spinner scoped to the
+   *  one row that is actually mutating. */
+  anyMutationPending?: boolean;
   /** Called when the tech clicks "N/A" on a pending step. */
   onNaClick?: (step: {
     stepId: Id<"taskCardSteps">;
@@ -96,6 +109,7 @@ export function TaskStepRow({
   onSignClick,
   onStartClick,
   isStarting,
+  anyMutationPending,
   onNaClick,
   onStepTimerClick,
   isStepTimerActive,
@@ -251,7 +265,11 @@ export function TaskStepRow({
                 variant="outline"
                 size="sm"
                 className="h-7 text-xs gap-1 border-yellow-500/40 text-yellow-400 hover:bg-yellow-500/10"
-                disabled={isStarting}
+                // BUG-LT-HUNT-081: disabled uses anyMutationPending (not
+                // isStarting) so OTHER steps' mutations also lock this button.
+                // But the spinner is scoped to isStarting — only THIS row
+                // shows the spinner when it's the one being started.
+                disabled={isStarting || (anyMutationPending ?? false)}
                 onClick={() => onStartClick(step._id as Id<"taskCardSteps">)}
                 aria-label={`Start step ${step.stepNumber}`}
               >
@@ -292,7 +310,7 @@ export function TaskStepRow({
                 variant="ghost"
                 size="sm"
                 className="h-7 text-xs flex-shrink-0 gap-1 text-muted-foreground hover:text-foreground border border-dashed border-border/40 hover:border-border/70"
-                disabled={isStarting}
+                disabled={isStarting || (anyMutationPending ?? false)}
                 onClick={() =>
                   onNaClick({
                     stepId: step._id as Id<"taskCardSteps">,
@@ -327,7 +345,7 @@ export function TaskStepRow({
                 variant="outline"
                 size="sm"
                 className="h-7 text-xs flex-shrink-0 gap-1 border-border/60"
-                disabled={isStarting}
+                disabled={isStarting || (anyMutationPending ?? false)}
                 onClick={() =>
                   onSignClick({
                     stepId: step._id as Id<"taskCardSteps">,

@@ -87,20 +87,42 @@ function TemplatePickerDialog({ open, onClose, orgId, onSelect }: TemplatePicker
 
         {templates === undefined ? (
           <div className="py-8 text-center text-sm text-muted-foreground">Loading templates…</div>
-        ) : templates.length === 0 ? (
-          <div className="py-8 text-center">
-            <LayoutTemplate className="w-7 h-7 text-muted-foreground/40 mx-auto mb-2" />
-            <p className="text-sm text-muted-foreground">
-              No templates found.{" "}
-              <Link to="/work-orders/templates" className="text-primary underline underline-offset-2">
-                Create one first.
-              </Link>
-            </p>
-          </div>
-        ) : (
+        ) : (() => {
+            // BUG-LT-HUNT-082: Previously checked `templates.length === 0` for
+            // the empty state. If templates exist but ALL are inactive, the
+            // filter yields an empty array and the dialog renders a blank space
+            // — no items, no message. A lead tech clicking "Load from Template"
+            // sees a white void and assumes the feature is broken. Fix: filter
+            // first, then check the active-list length for the empty state.
+            const activeTemplates = templates.filter((t) => t.active);
+            if (activeTemplates.length === 0) {
+              return (
+                <div className="py-8 text-center">
+                  <LayoutTemplate className="w-7 h-7 text-muted-foreground/40 mx-auto mb-2" />
+                  <p className="text-sm text-muted-foreground">
+                    {templates.length === 0 ? (
+                      <>
+                        No templates found.{" "}
+                        <Link to="/work-orders/templates" className="text-primary underline underline-offset-2">
+                          Create one first.
+                        </Link>
+                      </>
+                    ) : (
+                      <>
+                        No active templates.{" "}
+                        <Link to="/work-orders/templates" className="text-primary underline underline-offset-2">
+                          Activate a template
+                        </Link>{" "}
+                        to use it here.
+                      </>
+                    )}
+                  </p>
+                </div>
+              );
+            }
+            return (
           <div className="space-y-2">
-            {templates
-              .filter((t) => t.active)
+            {activeTemplates
               .map((tpl) => (
                 <button
                   key={tpl._id}
@@ -148,7 +170,8 @@ function TemplatePickerDialog({ open, onClose, orgId, onSelect }: TemplatePicker
                 </button>
               ))}
           </div>
-        )}
+            );
+          })()}
       </DialogContent>
     </Dialog>
   );

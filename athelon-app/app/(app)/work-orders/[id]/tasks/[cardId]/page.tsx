@@ -534,6 +534,20 @@ export default function TaskCardPage() {
     notes: svc.notes,
   }));
 
+  // ── BUG-LT-HUNT-083: Vendor services gate for Sign Card button ─────────────
+  // A tech must not sign RTS while a component is still at the vendor for NDT,
+  // overhaul, or repair. planned/sent_for_work/in_progress all mean the work
+  // has not been returned — certifying airworthiness at that point creates a
+  // false maintenance record under 14 CFR 43.9. Only completed/cancelled
+  // services allow sign-off (work is back or not needed).
+  const blockingVendorServices = vendorServices.filter(
+    (svc) =>
+      svc.status === "planned" ||
+      svc.status === "sent_for_work" ||
+      svc.status === "in_progress",
+  );
+  const vendorServicesBlockSignOff = blockingVendorServices.length > 0;
+
   return (
     <div className="max-w-2xl mx-auto space-y-5">
       {/* Back */}
@@ -698,7 +712,11 @@ export default function TaskCardPage() {
                 techId={techId}
                 onSignClick={handleSignStepIntent}
                 onStartClick={handleStartStep}
-                isStarting={startingStepId === step._id || (isAnyStepStarting && startingStepId !== step._id)}
+                // BUG-LT-HUNT-081: isStarting now only flags THIS specific
+                // step's mutation (controls spinner). anyMutationPending covers
+                // ALL-step locking without erroneously spinning other rows.
+                isStarting={startingStepId === step._id}
+                anyMutationPending={isAnyStepStarting}
                 onNaClick={setNaTarget}
                 onStepTimerClick={handleStepTimerClick}
                 isStepTimerActive={
@@ -1481,7 +1499,7 @@ export default function TaskCardPage() {
           className={`border ${
             cardIsComplete
               ? "border-green-500/30 bg-green-500/5"
-              : complianceBlocksSignOff && allStepsDone
+              : (complianceBlocksSignOff || vendorServicesBlockSignOff) && allStepsDone
               ? "border-amber-500/30 bg-amber-500/5"
               : allStepsDone
               ? "border-primary/30 bg-primary/5"
@@ -1502,6 +1520,11 @@ export default function TaskCardPage() {
                       <AlertTriangle className="w-4 h-4 text-amber-500 dark:text-amber-400" />
                       Compliance Items Blocking Sign-Off
                     </>
+                  ) : vendorServicesBlockSignOff && allStepsDone ? (
+                    <>
+                      <AlertTriangle className="w-4 h-4 text-amber-500 dark:text-amber-400" />
+                      Vendor Work Pending — Sign-Off Blocked
+                    </>
                   ) : (
                     <>
                       <Lock className="w-4 h-4 text-muted-foreground" />
@@ -1514,6 +1537,8 @@ export default function TaskCardPage() {
                     ? "This task card has been certified per 14 CFR 43.9."
                     : complianceBlocksSignOff && allStepsDone
                     ? `${blockingComplianceItems.length} compliance item${blockingComplianceItems.length !== 1 ? "s" : ""} require resolution before this card can be signed. Resolve all non-compliant and pending items above.`
+                    : vendorServicesBlockSignOff && allStepsDone
+                    ? `${blockingVendorServices.length} vendor service${blockingVendorServices.length !== 1 ? "s" : ""} ${blockingVendorServices.length !== 1 ? "are" : "is"} still open (${blockingVendorServices.map((s) => s.vendorName).join(", ")}). Mark ${blockingVendorServices.length !== 1 ? "them" : "it"} completed or cancelled before signing RTS.`
                     : allStepsDone
                     ? totalSteps === 0
                       ? "No steps required — ready for card-level sign-off."
@@ -1526,9 +1551,9 @@ export default function TaskCardPage() {
 
               {!cardIsComplete && orgId && techId && (
                 <Button
-                  variant={allStepsDone && !complianceBlocksSignOff ? "default" : "outline"}
+                  variant={allStepsDone && !complianceBlocksSignOff && !vendorServicesBlockSignOff ? "default" : "outline"}
                   size="sm"
-                  disabled={!allStepsDone || complianceBlocksSignOff}
+                  disabled={!allStepsDone || complianceBlocksSignOff || vendorServicesBlockSignOff}
                   className="gap-1.5 flex-shrink-0"
                   onClick={() => {
                     // BUG-LT-HUNT-077: Guard against signing the card while a
