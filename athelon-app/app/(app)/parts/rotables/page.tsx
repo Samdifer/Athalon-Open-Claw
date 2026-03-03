@@ -144,8 +144,8 @@ function RotableHistory({ rotableId, orgId }: { rotableId: Id<"rotables">; orgId
               ))}
             </SelectContent>
           </Select>
-          <Input placeholder="Performed by" value={performedBy} onChange={(e) => setPerformedBy(e.target.value)} className="h-7 text-xs" />
-          <Textarea placeholder="Notes" value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} className="text-xs" />
+          <Input placeholder="Performed by" value={performedBy} onChange={(e) => setPerformedBy(e.target.value.slice(0, 100))} className="h-7 text-xs" maxLength={100} />
+          <Textarea placeholder="Notes" value={notes} onChange={(e) => setNotes(e.target.value.slice(0, 500))} rows={2} className="text-xs" maxLength={500} />
           <div className="flex gap-2">
             <Button type="submit" size="sm" className="h-7 text-xs">Record</Button>
             <Button type="button" size="sm" variant="ghost" className="h-7 text-xs" onClick={() => setShowForm(false)}>Cancel</Button>
@@ -340,10 +340,10 @@ export default function RotablesPage() {
             <DialogHeader><DialogTitle>Add Rotable Component</DialogTitle></DialogHeader>
             <form onSubmit={handleCreate} className="space-y-4">
               <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2"><Label>Part Number *</Label><Input value={form.partNumber} onChange={(e) => setForm({ ...form, partNumber: e.target.value })} required /></div>
-                <div className="space-y-2"><Label>Serial Number *</Label><Input value={form.serialNumber} onChange={(e) => setForm({ ...form, serialNumber: e.target.value })} required /></div>
+                <div className="space-y-2"><Label>Part Number *</Label><Input value={form.partNumber} onChange={(e) => setForm({ ...form, partNumber: e.target.value.slice(0, 50) })} maxLength={50} required /></div>
+                <div className="space-y-2"><Label>Serial Number *</Label><Input value={form.serialNumber} onChange={(e) => setForm({ ...form, serialNumber: e.target.value.slice(0, 50) })} maxLength={50} required /></div>
               </div>
-              <div className="space-y-2"><Label>Description *</Label><Input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} required /></div>
+              <div className="space-y-2"><Label>Description *</Label><Input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value.slice(0, 200) })} maxLength={200} required /></div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
                   <Label>Status</Label>
@@ -374,7 +374,7 @@ export default function RotablesPage() {
                 <div className="space-y-2"><Label>Current Value</Label><Input type="number" value={form.currentValue} onChange={(e) => setForm({ ...form, currentValue: e.target.value })} /></div>
                 <div className="space-y-2"><Label>Core Value</Label><Input type="number" value={form.coreValue} onChange={(e) => setForm({ ...form, coreValue: e.target.value })} /></div>
               </div>
-              <div className="space-y-2"><Label>Notes</Label><Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={2} /></div>
+              <div className="space-y-2"><Label>Notes</Label><Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value.slice(0, 500) })} rows={2} maxLength={500} /></div>
               <div className="flex justify-end gap-2">
                 <Button type="button" variant="ghost" onClick={() => {
                   setForm({ partNumber: "", serialNumber: "", description: "", status: "serviceable", condition: "serviceable", tsnHours: "", tsoHours: "", tboHours: "", purchasePrice: "", currentValue: "", coreValue: "", notes: "" });

@@ -347,14 +347,28 @@ export function SignStepDialog({
                 (14 CFR 43.9(a)(3))
               </span>
             </Label>
+            {/* BUG-LT-069: approvedDataRef had no maxLength cap. A tech pasting
+                a long AMM chapter title or full URL could exceed the backend
+                schema limit and receive a cryptic validation error *after*
+                entering their PIN (a one-time-use, 5-minute auth event now
+                consumed). Same class as BUG-LT-059 (notes) and BUG-LT-HUNT-054
+                (RTS statement). 200 chars is generous for any standard approved
+                data reference (e.g. "FAA-approved AMM Chapter 71-10-01 Rev 42,
+                Sec 3.2.1"). Counter turns amber at ≥180 chars. */}
             <Input
               id="sign-step-data-ref"
               value={approvedDataRef}
-              onChange={(e) => setApprovedDataRef(e.target.value)}
+              onChange={(e) => setApprovedDataRef(e.target.value.slice(0, 200))}
+              maxLength={200}
               placeholder="e.g. AMM 71-00-00, Rev 42"
               className="h-9 text-sm bg-muted/30 border-border/60"
               aria-label="Approved data reference per 14 CFR 43.9(a)(3)"
             />
+            {approvedDataRef.length > 0 && (
+              <p className={`text-[10px] text-right mt-0.5 ${approvedDataRef.length >= 180 ? "text-amber-400" : "text-muted-foreground/50"}`}>
+                {approvedDataRef.length}/200
+              </p>
+            )}
           </div>
 
           {/* Parts Installed (Gap 2) */}
@@ -398,12 +412,22 @@ export function SignStepDialog({
                 key={idx}
                 className="grid grid-cols-2 sm:grid-cols-[1fr_1fr_2fr_60px_24px] gap-1.5 mb-1.5 items-end"
               >
+                {/* BUG-LT-072: Parts installed fields had no maxLength caps.
+                    A tech who pastes a long manufacturer part description or a
+                    verbose serial number string exceeding the backend schema
+                    limit would hit a cryptic validation error *after* entering
+                    their PIN (a one-time-use 5-minute auth event). Same pattern
+                    as BUG-QCM-C1 (Release Certificate fields) and BUG-LT-059
+                    (SignStepDialog notes). Caps: P/N = 50 chars, S/N = 50 chars,
+                    Description = 100 chars — consistent with BUG-QCM-C1 values
+                    and generous for any standard aviation part record entry. */}
                 <Input
                   placeholder="P/N"
                   value={part.partNumber}
+                  maxLength={50}
                   onChange={(e) => {
                     const updated = [...partsInstalled];
-                    updated[idx] = { ...updated[idx], partNumber: e.target.value };
+                    updated[idx] = { ...updated[idx], partNumber: e.target.value.slice(0, 50) };
                     setPartsInstalled(updated);
                   }}
                   className="h-7 text-xs bg-muted/30 border-border/60"
@@ -411,9 +435,10 @@ export function SignStepDialog({
                 <Input
                   placeholder="S/N"
                   value={part.serialNumber}
+                  maxLength={50}
                   onChange={(e) => {
                     const updated = [...partsInstalled];
-                    updated[idx] = { ...updated[idx], serialNumber: e.target.value };
+                    updated[idx] = { ...updated[idx], serialNumber: e.target.value.slice(0, 50) };
                     setPartsInstalled(updated);
                   }}
                   className="h-7 text-xs bg-muted/30 border-border/60"
@@ -421,9 +446,10 @@ export function SignStepDialog({
                 <Input
                   placeholder="Description"
                   value={part.description}
+                  maxLength={100}
                   onChange={(e) => {
                     const updated = [...partsInstalled];
-                    updated[idx] = { ...updated[idx], description: e.target.value };
+                    updated[idx] = { ...updated[idx], description: e.target.value.slice(0, 100) };
                     setPartsInstalled(updated);
                   }}
                   className="h-7 text-xs bg-muted/30 border-border/60"

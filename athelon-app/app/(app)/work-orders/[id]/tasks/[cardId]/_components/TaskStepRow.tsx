@@ -235,6 +235,16 @@ export function TaskStepRow({
               entire card was voided. Extending N/A to in_progress steps lets
               the tech recover gracefully: "I started this step then realized
               the aircraft doesn't have this system." */}
+          {/* BUG-LT-071: N/A button must be disabled when isStarting is true.
+              If a start mutation is in-flight for this step, clicking N/A opens
+              the MarkNaDialog. If the tech submits the N/A before the start
+              resolves, the start mutation may succeed (step → in_progress) just
+              as the N/A fires — two conflicting mutations on the same step.
+              The backend may process both, leaving the step in an ambiguous
+              state, or reject the N/A with "step already in_progress" after
+              the mark_na payload was already sent. Either way the tech sees a
+              confusing error or incorrect step state on a permanent maintenance
+              record. Disabled state matches the Start button pattern. */}
           {(isPending || isInProgress) &&
             !cardIsVoided &&
             !cardIsComplete &&
@@ -245,6 +255,7 @@ export function TaskStepRow({
                 variant="ghost"
                 size="sm"
                 className="h-7 text-xs flex-shrink-0 gap-1 text-muted-foreground hover:text-foreground border border-dashed border-border/40 hover:border-border/70"
+                disabled={isStarting}
                 onClick={() =>
                   onNaClick({
                     stepId: step._id as Id<"taskCardSteps">,
@@ -259,7 +270,17 @@ export function TaskStepRow({
               </Button>
             )}
 
-          {/* Sign button — for pending or in_progress steps */}
+          {/* Sign button — for pending or in_progress steps.
+              BUG-LT-070: Sign button must be disabled when isStarting is true.
+              If a start mutation is in-flight for this step, the step is still
+              in `pending` state from the frontend's perspective. Clicking Sign
+              opens the SignStepDialog; if the tech enters their PIN and submits
+              before the start resolves, the backend receives a completeStep
+              call on a `pending` step (not `in_progress`), which it rejects.
+              The tech then gets a confusing "step not in progress" error after
+              consuming their 5-minute auth event. Even for in_progress steps,
+              having two concurrent mutations (start + sign) is a race condition.
+              Disabled state matches the N/A and Start button patterns. */}
           {(isPending || isInProgress) &&
             !cardIsVoided &&
             !cardIsComplete &&
@@ -269,6 +290,7 @@ export function TaskStepRow({
                 variant="outline"
                 size="sm"
                 className="h-7 text-xs flex-shrink-0 gap-1 border-border/60"
+                disabled={isStarting}
                 onClick={() =>
                   onSignClick({
                     stepId: step._id as Id<"taskCardSteps">,

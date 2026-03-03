@@ -197,12 +197,16 @@ export default function LoanersPage() {
   async function handleReturn(e: React.FormEvent) {
     e.preventDefault();
     if (!orgId || !returnDialogId) return;
+    if (!returnForm.conditionIn.trim()) {
+      toast.error("Condition notes are required — document the item's condition on return for damage assessment.");
+      return;
+    }
     setIsReturning(true);
     try {
       await returnItem({
         id: returnDialogId,
         organizationId: orgId,
-        conditionIn: returnForm.conditionIn || undefined,
+        conditionIn: returnForm.conditionIn.trim(),
         notes: returnForm.notes || undefined,
       });
       setReturnDialogId(null);
@@ -417,16 +421,20 @@ export default function LoanersPage() {
               <Label>Condition at Loan-Out <span className="text-destructive">*</span></Label>
               <Textarea
                 value={loanForm.conditionOut}
-                onChange={(e) => setLoanForm({ ...loanForm, conditionOut: e.target.value })}
+                onChange={(e) => setLoanForm({ ...loanForm, conditionOut: e.target.value.slice(0, 250) })}
                 rows={2}
                 placeholder="Document visible condition before releasing (e.g. 'Serviceable, clean, no visible damage')"
+                maxLength={250}
                 required
               />
+              {loanForm.conditionOut.length >= 220 && (
+                <p className={`text-xs ${loanForm.conditionOut.length >= 250 ? "text-red-500" : "text-amber-500"}`}>{loanForm.conditionOut.length}/250</p>
+              )}
               <p className="text-[10px] text-muted-foreground">Required — used as baseline for return inspection and any damage disputes.</p>
             </div>
             <div className="space-y-2">
               <Label>Notes</Label>
-              <Textarea value={loanForm.notes} onChange={(e) => setLoanForm({ ...loanForm, notes: e.target.value })} rows={2} />
+              <Textarea value={loanForm.notes} onChange={(e) => setLoanForm({ ...loanForm, notes: e.target.value.slice(0, 500) })} rows={2} maxLength={500} />
             </div>
             <div className="flex justify-end gap-2">
               <Button type="button" variant="ghost" onClick={() => setLoanDialogId(null)} disabled={isLoaning}>Cancel</Button>
@@ -460,16 +468,19 @@ export default function LoanersPage() {
           })()}
           <form onSubmit={handleReturn} className="space-y-4">
             <div className="space-y-2">
-              <Label>Condition Notes</Label>
-              <Textarea value={returnForm.conditionIn} onChange={(e) => setReturnForm({ ...returnForm, conditionIn: e.target.value })} rows={2} placeholder="Condition upon return" />
+              <Label>Condition Notes <span className="text-red-600 dark:text-red-400">*</span></Label>
+              <Textarea value={returnForm.conditionIn} onChange={(e) => setReturnForm({ ...returnForm, conditionIn: e.target.value.slice(0, 250) })} rows={2} placeholder="Condition upon return" maxLength={250} />
+              {returnForm.conditionIn.length >= 220 && (
+                <p className={`text-xs ${returnForm.conditionIn.length >= 250 ? "text-red-500" : "text-amber-500"}`}>{returnForm.conditionIn.length}/250</p>
+              )}
             </div>
             <div className="space-y-2">
               <Label>Notes</Label>
-              <Textarea value={returnForm.notes} onChange={(e) => setReturnForm({ ...returnForm, notes: e.target.value })} rows={2} />
+              <Textarea value={returnForm.notes} onChange={(e) => setReturnForm({ ...returnForm, notes: e.target.value.slice(0, 500) })} rows={2} maxLength={500} />
             </div>
             <div className="flex justify-end gap-2">
               <Button type="button" variant="ghost" onClick={() => { setReturnDialogId(null); setReturnForm({ conditionIn: "", notes: "" }); }} disabled={isReturning}>Cancel</Button>
-              <Button type="submit" disabled={isReturning} className="min-w-[80px] gap-1.5">
+              <Button type="submit" disabled={isReturning || !returnForm.conditionIn.trim()} className="min-w-[80px] gap-1.5">
                 {isReturning ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
                 {isReturning ? "Saving…" : "Return"}
               </Button>
