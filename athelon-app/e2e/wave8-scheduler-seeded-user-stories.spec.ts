@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import fs from "fs";
 import path from "path";
 import { execSync } from "child_process";
 
@@ -6,9 +7,10 @@ const SEEDED_AUTH_FILE = path.join(
   __dirname,
   "../playwright/.auth/seeded-admin.json",
 );
+const SEEDED_AUTH_STATE = JSON.parse(fs.readFileSync(SEEDED_AUTH_FILE, "utf8"));
 const APP_ROOT = path.resolve(__dirname, "..");
 
-test.use({ storageState: SEEDED_AUTH_FILE });
+test.use({ storageState: SEEDED_AUTH_STATE });
 
 async function openScheduling(
   page: import("@playwright/test").Page,
