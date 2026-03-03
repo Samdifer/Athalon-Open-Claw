@@ -299,6 +299,32 @@ export default function NewQuotePage() {
     }
   }, [prefillWorkOrderId, prefillWorkOrder]);
 
+  // Prefill aircraft from URL param (e.g. from fleet deferred items)
+  useEffect(() => {
+    if (prefillAircraftIdParam && !aircraftId) {
+      setAircraftId(prefillAircraftIdParam);
+    }
+  }, [prefillAircraftIdParam, aircraftId]);
+
+  // Auto-add carry-forward item as line item when navigating from fleet page
+  useEffect(() => {
+    if (!prefillCarryForwardIdParam || !carryForwardItems) return;
+    const cfItem = carryForwardItems.find((i) => i._id === prefillCarryForwardIdParam);
+    if (cfItem && !addedCarryForwardIds.has(cfItem._id)) {
+      setAddedCarryForwardIds((prev) => new Set(prev).add(cfItem._id));
+      setLineItems((prev) => [
+        ...prev,
+        {
+          id: crypto.randomUUID(),
+          type: "labor" as LineItemType,
+          description: `[Deferred] ${cfItem.description}`,
+          qty: "1",
+          unitPrice: "0",
+        },
+      ]);
+    }
+  }, [prefillCarryForwardIdParam, carryForwardItems, addedCarryForwardIds]);
+
   const matchingLaborKits = useMemo(() => {
     const kits = ((laborKits ?? []) as LaborKitForQuote[]).filter((kit) => kit.isActive);
     const normalizedSearch = kitSearch.trim().toLowerCase();
@@ -365,6 +391,18 @@ export default function NewQuotePage() {
           qty: parseFloat(item.qty),
           unitPrice: parseFloat(item.unitPrice),
         });
+      }
+
+      // Mark carry-forward items as consumed
+      for (const cfId of addedCarryForwardIds) {
+        try {
+          await consumeCarryForward({
+            itemId: cfId as Id<"carryForwardItems">,
+            quoteId,
+          });
+        } catch {
+          // Non-blocking — item may already be consumed
+        }
       }
 
       router.push(`/billing/quotes/${quoteId}`);
@@ -464,6 +502,63 @@ export default function NewQuotePage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Carry-Forward Suggestions (Wave 5) */}
+        {carryForwardItems && carryForwardItems.length > 0 && (
+          <Card className="border-amber-500/30 bg-amber-500/5">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium flex items-center gap-2 text-amber-400">
+                <AlertCircle className="w-4 h-4" />
+                This aircraft has {carryForwardItems.length} deferred item{carryForwardItems.length > 1 ? "s" : ""}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {carryForwardItems.map((cfItem) => {
+                const alreadyAdded = addedCarryForwardIds.has(cfItem._id);
+                return (
+                  <div
+                    key={cfItem._id}
+                    className="rounded-md border border-border/60 bg-background px-3 py-2 flex items-center justify-between gap-3"
+                  >
+                    <div className="min-w-0">
+                      <p className="text-xs text-foreground truncate">{cfItem.description}</p>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">
+                        {cfItem.priority.toUpperCase()} · {cfItem.category.replace(/_/g, " ")}
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant={alreadyAdded ? "ghost" : "outline"}
+                      size="sm"
+                      className="h-7 text-xs gap-1 flex-shrink-0"
+                      disabled={alreadyAdded}
+                      onClick={() => {
+                        setAddedCarryForwardIds((prev) => new Set(prev).add(cfItem._id));
+                        setLineItems((prev) => [
+                          ...prev,
+                          {
+                            id: crypto.randomUUID(),
+                            type: "labor" as LineItemType,
+                            description: `[Deferred] ${cfItem.description}`,
+                            qty: "1",
+                            unitPrice: "0",
+                          },
+                        ]);
+                      }}
+                    >
+                      {alreadyAdded ? "Added ✓" : (
+                        <>
+                          <Plus className="w-3 h-3" />
+                          Add to Quote
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                );
+              })}
+            </CardContent>
+          </Card>
+        )}
 
         {/* Labor Kits */}
         <Card className="border-border/60">
