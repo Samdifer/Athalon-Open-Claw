@@ -198,12 +198,12 @@ export default function ShippingPage() {
                 </Select>
               </div>
               <div className="grid grid-cols-2 gap-4">
-                <div><Label>Carrier</Label><Input value={formCarrier} onChange={(e) => setFormCarrier(e.target.value)} placeholder="FedEx, UPS..." /></div>
-                <div><Label>Tracking #</Label><Input value={formTracking} onChange={(e) => setFormTracking(e.target.value)} placeholder="1Z999..." /></div>
+                <div><Label>Carrier</Label><Input value={formCarrier} onChange={(e) => setFormCarrier(e.target.value.slice(0, 100))} placeholder="FedEx, UPS..." maxLength={100} /></div>
+                <div><Label>Tracking #</Label><Input value={formTracking} onChange={(e) => setFormTracking(e.target.value.slice(0, 100))} placeholder="1Z999..." maxLength={100} /></div>
               </div>
               <div className="grid grid-cols-2 gap-4">
-                <div><Label>Origin</Label><Input value={formOrigin} onChange={(e) => setFormOrigin(e.target.value)} placeholder="Origin name" /></div>
-                <div><Label>Destination</Label><Input value={formDest} onChange={(e) => setFormDest(e.target.value)} placeholder="Destination name" /></div>
+                <div><Label>Origin</Label><Input value={formOrigin} onChange={(e) => setFormOrigin(e.target.value.slice(0, 100))} placeholder="Origin name" maxLength={100} /></div>
+                <div><Label>Destination</Label><Input value={formDest} onChange={(e) => setFormDest(e.target.value.slice(0, 100))} placeholder="Destination name" maxLength={100} /></div>
               </div>
               <div className="flex items-center gap-2">
                 <Checkbox
@@ -215,7 +215,7 @@ export default function ShippingPage() {
                   <AlertTriangle className="h-4 w-4 text-yellow-500" /> Hazmat
                 </Label>
               </div>
-              <div><Label>Notes</Label><Input value={formNotes} onChange={(e) => setFormNotes(e.target.value)} placeholder="Special instructions..." /></div>
+              <div><Label>Notes</Label><Input value={formNotes} onChange={(e) => setFormNotes(e.target.value.slice(0, 500))} placeholder="Special instructions..." maxLength={500} /></div>
               <Button onClick={handleCreate} className="w-full gap-1.5" disabled={isCreating}>
                 {isCreating ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
                 {isCreating ? "Creating…" : "Create Shipment"}

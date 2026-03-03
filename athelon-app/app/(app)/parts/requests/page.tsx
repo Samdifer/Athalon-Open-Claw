@@ -211,9 +211,10 @@ function InspectDialog({ open, onClose, part, techId }: InspectDialogProps) {
                 </Label>
                 <Textarea
                   value={rejectionReason}
-                  onChange={(e) => setRejectionReason(e.target.value)}
+                  onChange={(e) => setRejectionReason(e.target.value.slice(0, 500))}
                   placeholder="Describe why the part is being rejected…"
                   rows={2}
+                  maxLength={500}
                   className="text-sm bg-muted/30 border-border/60 resize-none"
                 />
               </div>
@@ -227,9 +228,10 @@ function InspectDialog({ open, onClose, part, techId }: InspectDialogProps) {
               </Label>
               <Textarea
                 value={inspectionNotes}
-                onChange={(e) => setInspectionNotes(e.target.value)}
+                onChange={(e) => setInspectionNotes(e.target.value.slice(0, 500))}
                 placeholder="Any observations during receiving inspection…"
                 rows={2}
+                maxLength={500}
                 className="text-sm bg-muted/30 border-border/60 resize-none"
               />
             </div>
@@ -455,6 +457,7 @@ export default function PartsRequestsPage() {
                                 month: "short",
                                 day: "numeric",
                                 year: "numeric",
+                                timeZone: "UTC",
                               })}
                             </span>
                           </>

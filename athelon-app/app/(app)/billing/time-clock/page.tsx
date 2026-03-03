@@ -586,7 +586,7 @@ export default function TimeClockPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Work Orders</SelectItem>
-                {(workOrders ?? []).slice(0, 40).map((wo) => (
+                {(workOrders ?? []).map((wo) => (
                   <SelectItem key={wo._id} value={wo._id}>
                     {wo.workOrderNumber}
                   </SelectItem>
@@ -617,7 +617,7 @@ export default function TimeClockPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {filteredEntries.slice(0, 80).map((entry) => {
+                      {filteredEntries.map((entry) => {
                         const approvalStatus = normalizeApprovalStatus(entry);
                         const isOpen = entry.clockOutAt === undefined;
                         const isPaused = isOpen && entry.pausedAt !== undefined;
@@ -657,6 +657,11 @@ export default function TimeClockPage() {
                       })}
                     </TableBody>
                   </Table>
+                </div>
+              )}
+              {filteredEntries.length > 0 && (
+                <div className="px-4 py-2 border-t border-border/40 text-[10px] text-muted-foreground text-right">
+                  {filteredEntries.length} {filteredEntries.length === 1 ? "entry" : "entries"}
                 </div>
               )}
             </CardContent>

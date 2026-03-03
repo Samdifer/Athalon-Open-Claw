@@ -369,6 +369,7 @@ export default function InventoryCountPage() {
                             className="w-24"
                             defaultValue={item.location ?? ""}
                             placeholder="Location"
+                            maxLength={50}
                             onBlur={async (e) => {
                               if (item.actualQuantity !== undefined) {
                                 try {
@@ -393,6 +394,7 @@ export default function InventoryCountPage() {
                             className="w-32"
                             defaultValue={item.notes ?? ""}
                             placeholder="Notes"
+                            maxLength={200}
                             onBlur={async (e) => {
                               if (item.actualQuantity !== undefined) {
                                 try {
@@ -596,16 +598,18 @@ export default function InventoryCountPage() {
               <Label>Name *</Label>
               <Input
                 value={newName}
-                onChange={(e) => setNewName(e.target.value)}
+                onChange={(e) => setNewName(e.target.value.slice(0, 100))}
                 placeholder="e.g., Q1 2026 Annual Count"
+                maxLength={100}
               />
             </div>
             <div>
               <Label>Notes</Label>
               <Textarea
                 value={newNotes}
-                onChange={(e) => setNewNotes(e.target.value)}
+                onChange={(e) => setNewNotes(e.target.value.slice(0, 500))}
                 rows={3}
+                maxLength={500}
               />
             </div>
           </div>
