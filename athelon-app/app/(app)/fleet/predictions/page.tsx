@@ -93,6 +93,7 @@ export default function PredictionsPage() {
   const [typeFilter, setTypeFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("active");
   const [dismissTarget, setDismissTarget] = useState<{ id: Id<"maintenancePredictions">; severity: string; description: string } | null>(null);
+  const [resolveTarget, setResolveTarget] = useState<{ id: Id<"maintenancePredictions">; severity: string; description: string } | null>(null);
 
   const predictions = useQuery(
     api.predictions.list,
@@ -150,15 +151,19 @@ export default function PredictionsPage() {
     return counts;
   }, [predictions]);
 
-  // Tab label counts — active predictions only, so badge reflects actionable items
+  // Tab label counts — reflects the currently applied status/aircraft/type filters
+  // so the badge numbers match what you see in each tab's content
   const tabCounts = useMemo(() => {
     if (!predictions) return { critical: 0, high: 0, medium: 0, low: 0 };
     const c = { critical: 0, high: 0, medium: 0, low: 0 };
     for (const p of predictions) {
-      if (p.status === "active" && p.severity in c) c[p.severity as Severity]++;
+      if (aircraftFilter !== "all" && p.aircraftId !== aircraftFilter) continue;
+      if (typeFilter !== "all" && p.predictionType !== typeFilter) continue;
+      if (statusFilter !== "all" && p.status !== statusFilter) continue;
+      if (p.severity in c) c[p.severity as Severity]++;
     }
     return c;
-  }, [predictions]);
+  }, [predictions, aircraftFilter, typeFilter, statusFilter]);
 
   async function handleGenerate() {
     if (!orgId) {
@@ -335,6 +340,44 @@ export default function PredictionsPage() {
         </Select>
       </div>
 
+      {/* Resolve confirmation for Critical / High predictions */}
+      <AlertDialog open={!!resolveTarget} onOpenChange={(v) => { if (!v) setResolveTarget(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <CheckCircle className={`h-5 w-5 ${resolveTarget?.severity === "critical" ? "text-red-500" : "text-orange-500"}`} />
+              Resolve {resolveTarget?.severity === "critical" ? "Critical" : "High"} Prediction?
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2">
+                <p className="text-sm text-muted-foreground italic">
+                  &ldquo;{resolveTarget?.description}&rdquo;
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Marking a{" "}
+                  <span className={`font-semibold ${resolveTarget?.severity === "critical" ? "text-red-500" : "text-orange-500"}`}>
+                    {resolveTarget?.severity}
+                  </span>{" "}
+                  prediction as resolved indicates the underlying condition has been corrected.
+                  Ensure the associated maintenance action is documented in the logbook before resolving.
+                </p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (resolveTarget) handleResolve(resolveTarget.id);
+                setResolveTarget(null);
+              }}
+            >
+              Confirm Resolve
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {/* Dismiss confirmation for Critical / High predictions */}
       <AlertDialog open={!!dismissTarget} onOpenChange={(v) => { if (!v) setDismissTarget(null); }}>
         <AlertDialogContent>
@@ -509,11 +552,17 @@ export default function PredictionsPage() {
                               size="sm"
                               variant="default"
                               className="text-xs"
-                              onClick={() =>
-                                handleResolve(
-                                  pred._id as Id<"maintenancePredictions">,
-                                )
-                              }
+                              onClick={() => {
+                                if (pred.severity === "critical" || pred.severity === "high") {
+                                  setResolveTarget({
+                                    id: pred._id as Id<"maintenancePredictions">,
+                                    severity: pred.severity,
+                                    description: pred.description,
+                                  });
+                                } else {
+                                  handleResolve(pred._id as Id<"maintenancePredictions">);
+                                }
+                              }}
                             >
                               <CheckCircle className="h-3 w-3 mr-1" />
                               Resolve

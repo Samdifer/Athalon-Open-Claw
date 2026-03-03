@@ -67,16 +67,57 @@ export default function CertificatesPage() {
   const [saving, setSaving] = useState(false);
 
   const openDialog = (type: "faa_8130" | "easa_form1") => {
+    // BUG-QCM-CERT-001: Reset all form fields on every dialog open so stale
+    // data from a prior session (or a cancelled entry) doesn't bleed through.
+    // Previously only `formType` and `approvalNumber` were set; everything else
+    // carried over from the last open/cancel cycle. A QCM who typed an 8130
+    // for Part A, cancelled, then opened a new 8130 for Part B would see Part
+    // A's description, P/N, and serial pre-filled — and might not notice before
+    // submitting, producing a regulatory document with wrong part information.
+    setPartDescription("");
+    setPartNumber("");
+    setSerialNumber("");
+    setBatchNumber("");
+    setQuantity("1");
+    setWorkPerformed("");
+    setCondition("");
+    setRemarks("");
     setFormType(type);
     // Auto-populate approval number from org cert
-    if (org?.part145CertificateNumber) {
-      setApprovalNumber(org.part145CertificateNumber);
-    }
+    setApprovalNumber(org?.part145CertificateNumber ?? "");
     setDialogOpen(true);
   };
 
   const handleCreate = async () => {
     if (!orgId || !techId || !workOrderId) return;
+
+    // BUG-QCM-CERT-002: Client-side validation for required regulatory fields.
+    // Previously blank submissions went straight to the backend, which either
+    // produced a schema error with no context, or created an invalid FAA 8130-3
+    // / EASA Form 1 with blank Part Description or Part Number — an unacceptable
+    // regulatory document under 14 CFR 43.9. Now the user gets a clear error
+    // message and the backend is never called with invalid data.
+    if (!partDescription.trim()) {
+      toast.error("Part description is required for a release certificate.");
+      return;
+    }
+    if (!partNumber.trim()) {
+      toast.error("Part number is required for a release certificate.");
+      return;
+    }
+    if (!workPerformed) {
+      toast.error("Work performed type is required.");
+      return;
+    }
+    if (!condition) {
+      toast.error("Part condition is required.");
+      return;
+    }
+    if (!approvalNumber.trim()) {
+      toast.error("Approval/repair station certificate number is required.");
+      return;
+    }
+
     setSaving(true);
     try {
       await createCert({

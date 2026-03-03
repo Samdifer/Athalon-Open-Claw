@@ -382,7 +382,7 @@ export default function TimeClockPage() {
       </div>
 
       {/* Clock In Dialog */}
-      <Dialog open={clockInDialog} onOpenChange={setClockInDialog}>
+      <Dialog open={clockInDialog} onOpenChange={(v) => { if (!v) { setError(null); setClockInWO(""); setClockInNotes(""); } setClockInDialog(v); }}>
         <DialogContent className="max-w-[95vw] sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Clock In</DialogTitle>

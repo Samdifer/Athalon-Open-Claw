@@ -308,9 +308,15 @@ export function AircraftAdComplianceTab({
           size="sm"
           className="h-7 text-xs gap-1.5 border-border/60"
         >
-          <Link to="/compliance">
+          {/* BUG-QCM-DEEP-001: Previously linked to /compliance (the fleet overview
+              page). A QCM inspector clicking this from an aircraft's AD tab expected
+              to land on the AD/SB tracking page with this aircraft pre-selected —
+              instead they had to re-navigate and re-select the aircraft from a
+              dropdown. Now links to /compliance/ad-sb?aircraft=<id> so the exact
+              aircraft's AD records are immediately visible in the compliance tracker. */}
+          <Link to={`/compliance/ad-sb?aircraft=${encodeURIComponent(aircraftId)}`}>
             <ExternalLink className="w-3 h-3" />
-            Fleet Compliance
+            AD/SB Tracking
           </Link>
         </Button>
       </div>
@@ -391,10 +397,16 @@ export function AircraftAdComplianceTab({
             <p className="text-sm font-medium text-muted-foreground">
               No AD compliance records
             </p>
+            {/* BUG-QCM-EMPTY-001: Previous empty-state text exposed an internal
+                Convex function name ("recordAdCompliance") to end users — a QCM
+                inspector seeing "records are created when recordAdCompliance is
+                called" would have no idea what to do. Replaced with actionable
+                guidance: navigate to the AD/SB tracking page to add compliance
+                records for this aircraft. */}
             <p className="text-xs text-muted-foreground/60 mt-1 max-w-xs mx-auto">
-              AD compliance records are created when recordAdCompliance is
-              called for this aircraft. Records will appear here once the AD
-              compliance module is populated.
+              No ADs are currently tracked for this aircraft. Visit the AD/SB
+              Compliance Tracking page to add applicable ADs and record
+              compliance events.
             </p>
           </CardContent>
         </Card>

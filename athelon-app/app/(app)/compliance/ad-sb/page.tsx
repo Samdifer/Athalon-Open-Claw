@@ -573,7 +573,7 @@ export default function AdSbCompliancePage() {
                                 size="sm"
                                 className="h-6 text-[10px] gap-1 text-primary hover:bg-primary/5"
                               >
-                                <Link to={`/fleet/${encodeURIComponent(acReg)}`}>
+                                <Link to={`/fleet/${encodeURIComponent(acReg)}?tab=ad-compliance`}>
                                   Manage <ExternalLink className="w-2.5 h-2.5" />
                                 </Link>
                               </Button>

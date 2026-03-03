@@ -71,7 +71,7 @@ export default function QuotesPage() {
     return m;
   }, [customers]);
 
-  const isLoading = !isLoaded || quotes === undefined;
+  const isLoading = !isLoaded || quotes === undefined || customers === undefined;
 
   const filtered = useMemo(() => {
     if (!quotes) return [];
@@ -197,7 +197,12 @@ export default function QuotesPage() {
         </Card>
       ) : (
         <div className="space-y-2" aria-live="polite" aria-label={`Quotes list, ${filtered.length} result${filtered.length !== 1 ? "s" : ""}`}>
-          {filtered.map((quote) => (
+          {filtered.map((quote) => {
+            const isExpired =
+              quote.expiresAt != null &&
+              quote.expiresAt < Date.now() &&
+              quote.status === "SENT";
+            return (
             <Link key={quote._id} to={`/billing/quotes/${quote._id}`} aria-label={`Quote ${quote.quoteNumber} — ${quote.status} — $${quote.total.toLocaleString("en-US", { minimumFractionDigits: 2 })}`}>
               <Card className="border-border/60 hover:border-primary/30 hover:bg-card/80 transition-all cursor-pointer">
                 <CardContent className="p-4">
@@ -213,19 +218,25 @@ export default function QuotesPage() {
                         >
                           {quote.status}
                         </Badge>
+                        {isExpired && (
+                          <Badge
+                            variant="outline"
+                            className="text-[10px] font-medium border bg-red-500/15 text-red-600 dark:text-red-400 border-red-500/30"
+                          >
+                            EXPIRED
+                          </Badge>
+                        )}
                       </div>
-                      {customerMap.size > 0 && (
-                        <p className="text-sm font-medium text-foreground truncate">
-                          {customerMap.get(quote.customerId as string) ?? "Unknown Customer"}
-                        </p>
-                      )}
+                      <p className="text-sm font-medium text-foreground truncate">
+                        {customerMap.get(quote.customerId as string) ?? "Unknown Customer"}
+                      </p>
                       <div className="flex items-center gap-3 mt-0.5">
                         <span className="text-xs text-muted-foreground">
                           Created {formatDate(quote.createdAt)}
                         </span>
                         {quote.expiresAt && (
-                          <span className="text-xs text-muted-foreground">
-                            · Expires {formatDate(quote.expiresAt)}
+                          <span className={`text-xs ${isExpired ? "text-red-600 dark:text-red-400 font-medium" : "text-muted-foreground"}`}>
+                            · {isExpired ? "Expired" : "Expires"} {formatDate(quote.expiresAt)}
                           </span>
                         )}
                       </div>
@@ -240,7 +251,8 @@ export default function QuotesPage() {
                 </CardContent>
               </Card>
             </Link>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

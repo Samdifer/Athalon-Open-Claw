@@ -596,7 +596,7 @@ export default function TrainingPage() {
       </Tabs>
 
       {/* Add Training Dialog */}
-      <Dialog open={showAddDialog} onOpenChange={(v) => { if (!isAddingRecord) setShowAddDialog(v); }}>
+      <Dialog open={showAddDialog} onOpenChange={(v) => { if (!isAddingRecord) { setShowAddDialog(v); if (!v) resetAddForm(); } }}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>Add Training Record</DialogTitle>
@@ -685,7 +685,7 @@ export default function TrainingPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowAddDialog(false)} disabled={isAddingRecord}>
+            <Button variant="outline" onClick={() => { setShowAddDialog(false); resetAddForm(); }} disabled={isAddingRecord}>
               Cancel
             </Button>
             <Button onClick={handleAddRecord} disabled={isAddingRecord}>

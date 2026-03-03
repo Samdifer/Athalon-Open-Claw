@@ -156,7 +156,7 @@ function VoidBatchDialog({ open, count, onClose, onConfirm }: VoidDialogProps) {
   };
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
+    <Dialog open={open} onOpenChange={(v) => { if (!v) { setReason(""); setError(null); onClose(); } }}>
       <DialogContent className="max-w-[95vw] sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Void {count} Invoice{count !== 1 ? "s" : ""}</DialogTitle>
@@ -176,7 +176,7 @@ function VoidBatchDialog({ open, count, onClose, onConfirm }: VoidDialogProps) {
           {error && <p className="text-xs text-red-600 dark:text-red-400">{error}</p>}
         </div>
         <DialogFooter>
-          <Button variant="outline" size="sm" onClick={onClose} disabled={loading}>Cancel</Button>
+          <Button variant="outline" size="sm" onClick={() => { setReason(""); setError(null); onClose(); }} disabled={loading}>Cancel</Button>
           <Button
             size="sm"
             variant="destructive"

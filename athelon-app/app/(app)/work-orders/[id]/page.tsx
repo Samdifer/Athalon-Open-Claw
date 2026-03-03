@@ -375,8 +375,17 @@ export default function WorkOrderDetailPage() {
               Download PDF
             </Button>
             {canClose ? (
+              // BUG-QCM-001: Previously this went to /signature without returnTo
+              // or intendedTable params. After entering their PIN, the QCM had no
+              // "Continue to Sign-Off" button (it only renders when returnTo is set),
+              // so they were stranded on the signature page with an active 5-min
+              // token and nowhere to go. The token would expire unused and they'd
+              // have to know to manually navigate to /rts. Going directly to /rts
+              // is the correct entry point — that page has the proper link to the
+              // signature page with returnTo + intendedTable set, so the redirect
+              // back to /rts?authEventId=... flows correctly.
               <Button asChild className="gap-2">
-                <Link to={`/work-orders/${workOrderId}/signature`}>
+                <Link to={`/work-orders/${workOrderId}/rts`}>
                   <ShieldCheck className="w-4 h-4" />
                   Sign Off & Close
                 </Link>

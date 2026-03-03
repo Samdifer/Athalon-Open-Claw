@@ -215,19 +215,21 @@ export default function FleetPage() {
             size="sm"
             className="gap-1.5 text-xs"
             onClick={() => {
-              if (filtered?.length) {
-                downloadCSV(
-                  filtered.map((ac) => ({
-                    Registration: ac.currentRegistration ?? "",
-                    Make: ac.make ?? "",
-                    Model: ac.model ?? "",
-                    "Serial Number": ac.serialNumber ?? "",
-                    Status: ac.status ?? "",
-                  })),
-                  "fleet.csv",
-                );
-                toast.success("Fleet exported");
+              if (!filtered || filtered.length === 0) {
+                toast.error("No aircraft to export. Clear your filters and try again.");
+                return;
               }
+              downloadCSV(
+                filtered.map((ac) => ({
+                  Registration: ac.currentRegistration ?? "",
+                  Make: ac.make ?? "",
+                  Model: ac.model ?? "",
+                  "Serial Number": ac.serialNumber ?? "",
+                  Status: ac.status ?? "",
+                })),
+                "fleet.csv",
+              );
+              toast.success(`Exported ${filtered.length} aircraft to fleet.csv`);
             }}
           >
             <Download className="w-3.5 h-3.5" />

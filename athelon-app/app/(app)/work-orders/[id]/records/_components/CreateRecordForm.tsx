@@ -62,13 +62,26 @@ export interface CreateFormState {
   correctionReason: string;
 }
 
+// BUG-QCM-REC-001: Use local date (not UTC) for completionDate default.
+// new Date().toISOString() returns a UTC string — for a technician in UTC-5
+// working after 7pm, this gives yesterday's date pre-filled. A maintenance
+// record with the wrong completion date is a regulatory error under 14 CFR
+// 43.9(a)(1). Use padded local year/month/day components instead.
+function todayLocalISO(): string {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
 const defaultFormState: CreateFormState = {
   workPerformed: "",
   approvedDataDocType: "AMM",
   approvedDataIdentifier: "",
   approvedDataRevision: "",
   approvedDataSection: "",
-  completionDate: new Date().toISOString().slice(0, 10),
+  completionDate: todayLocalISO(),
   returnedToService: false,
   returnToServiceStatement: "",
   ratingsExercised: "airframe",

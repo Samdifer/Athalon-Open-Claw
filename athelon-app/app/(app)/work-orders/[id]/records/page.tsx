@@ -130,7 +130,11 @@ export default function MaintenanceRecordsPage() {
       ...fullRecords.map((r) =>
         [
           r.sequenceNumber,
-          r.completionDate ? new Date(r.completionDate).toLocaleDateString() : "—",
+          // BUG-QCM-REC-002: completionDate is stored as a YYYY-MM-DD string
+          // (local date). Parsing with new Date() treats it as UTC midnight, so
+          // in UTC-5 the exported date shows as the prior calendar day. Use the
+          // UTC locale formatter to keep the date consistent with what was entered.
+          r.completionDate ? new Date(r.completionDate).toLocaleDateString("en-US", { timeZone: "UTC", year: "numeric", month: "short", day: "numeric" }) : "—",
           (r.workPerformed ?? "").replace(/\t/g, " ").slice(0, 80),
           r.approvedDataReference ?? "—",
           r.signatureHash ? "Yes" : "No",
@@ -352,7 +356,7 @@ export default function MaintenanceRecordsPage() {
                           {r.sequenceNumber}
                         </TableCell>
                         <TableCell className="text-xs whitespace-nowrap">
-                          {r.completionDate ? new Date(r.completionDate).toLocaleDateString() : "—"}
+                          {r.completionDate ? new Date(r.completionDate).toLocaleDateString("en-US", { timeZone: "UTC", year: "numeric", month: "short", day: "numeric" }) : "—"}
                         </TableCell>
                         <TableCell className="text-xs max-w-[250px] truncate">
                           {isCorrection && (
@@ -431,7 +435,7 @@ export default function MaintenanceRecordsPage() {
                             #{r.sequenceNumber}
                           </span>
                           <span className="text-xs text-muted-foreground">
-                            {r.completionDate ? new Date(r.completionDate).toLocaleDateString() : "—"}
+                            {r.completionDate ? new Date(r.completionDate).toLocaleDateString("en-US", { timeZone: "UTC", year: "numeric", month: "short", day: "numeric" }) : "—"}
                           </span>
                           {isCorrection && (
                             <Badge variant="outline" className="text-[9px] text-amber-600 border-amber-500/30">

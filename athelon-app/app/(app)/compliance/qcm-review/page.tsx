@@ -145,11 +145,18 @@ function CloseReadinessPanel({
           <SelectContent>
             {/* BUG-QCM-PS-001: WOs were in insertion order (arbitrary). A QCM
                 with 100 open WOs had no way to quickly find a specific WO.
-                Now sorted: pending_signoff first (these are the only ones the
-                QCM can actually authorize RTS for), then alphabetically within
-                each group. The "(ready)" label helps the QCM identify sign-off
+                Sorted: pending_signoff first (these are the only ones the QCM
+                can actually authorize RTS for), then alphabetically within
+                each group. The "ready" label helps the QCM identify sign-off
                 candidates immediately without checking each one. */}
-            {workOrders.map((wo) => (
+            {[...workOrders]
+              .sort((a, b) => {
+                const aPriority = a.status === "pending_signoff" ? 0 : 1;
+                const bPriority = b.status === "pending_signoff" ? 0 : 1;
+                if (aPriority !== bPriority) return aPriority - bPriority;
+                return a.workOrderNumber.localeCompare(b.workOrderNumber);
+              })
+              .map((wo) => (
               <SelectItem key={wo._id} value={wo._id}>
                 <span className="flex items-center gap-2">
                   <span className="font-mono text-xs">{wo.workOrderNumber}</span>

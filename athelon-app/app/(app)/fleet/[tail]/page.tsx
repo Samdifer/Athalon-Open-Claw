@@ -1,4 +1,4 @@
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import { useState, useMemo } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -137,6 +137,15 @@ const ACTIVE_WO_STATUSES = [
 export default function AircraftDetailPage() {
   const { tail = "" } = useParams<{ tail: string }>();
   const tailNumber = decodeURIComponent(tail);
+
+  // BUG-QCM-TAB-001: Fleet detail page always defaulted to "aircraft-info" tab,
+  // ignoring ?tab= query param. The AD/SB compliance page "Manage →" link deep-links
+  // here from a QCM inspector's compliance review — they expected to land directly on
+  // the "ad-compliance" tab instead of having to click through two tabs manually.
+  // Now reads ?tab= from the URL and uses it as the initial Tabs value; falls back to
+  // "aircraft-info" for direct navigation.
+  const [searchParams] = useSearchParams();
+  const initialTab = searchParams.get("tab") ?? "aircraft-info";
 
   const { orgId } = useCurrentOrg();
 
@@ -289,7 +298,7 @@ export default function AircraftDetailPage() {
       {isLoading ? (
         <DetailSkeleton />
       ) : (
-        <Tabs defaultValue="aircraft-info" className="space-y-4">
+        <Tabs defaultValue={initialTab} className="space-y-4">
           <TabsList className="flex-wrap h-auto gap-1">
             <TabsTrigger value="aircraft-info">
               <ClipboardList className="w-3.5 h-3.5 mr-1.5" />
