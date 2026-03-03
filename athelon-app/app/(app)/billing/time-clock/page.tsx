@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useMutation, usePaginatedQuery, useQuery } from "convex/react";
+import { toast } from "sonner";
 import { api } from "@/convex/_generated/api";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -351,8 +352,12 @@ export default function TimeClockPage() {
     setError(null);
     try {
       await stopTimer({ orgId, timeEntryId });
+      toast.success("Timer stopped");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to stop timer.");
+      const msg = err instanceof Error ? err.message : "Failed to stop timer.";
+      // BUG-BM-004: Use toast.error so failures are visible regardless of scroll position
+      toast.error(msg);
+      setError(msg);
     } finally {
       setActionLoading(null);
     }
@@ -365,8 +370,11 @@ export default function TimeClockPage() {
     setError(null);
     try {
       await pauseTimer({ orgId, timeEntryId, source: "billing_time_clock" });
+      toast.success("Timer paused");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to pause timer.");
+      const msg = err instanceof Error ? err.message : "Failed to pause timer.";
+      toast.error(msg);
+      setError(msg);
     } finally {
       setActionLoading(null);
     }
@@ -379,8 +387,11 @@ export default function TimeClockPage() {
     setError(null);
     try {
       await resumeTimer({ orgId, timeEntryId, source: "billing_time_clock" });
+      toast.success("Timer resumed");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to resume timer.");
+      const msg = err instanceof Error ? err.message : "Failed to resume timer.";
+      toast.error(msg);
+      setError(msg);
     } finally {
       setActionLoading(null);
     }

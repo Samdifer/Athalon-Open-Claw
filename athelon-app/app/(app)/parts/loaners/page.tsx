@@ -95,9 +95,10 @@ export default function LoanersPage() {
   const [returnDialogId, setReturnDialogId] = useState<Id<"loanerItems"> | null>(null);
   const { orgId, isLoaded } = useCurrentOrg();
 
+  // Always fetch all loaners — filter client-side so summary cards stay accurate across tab changes
   const loaners = useQuery(
     api.loaners.list,
-    orgId ? { organizationId: orgId, status: activeTab === "all" ? undefined : activeTab } : "skip",
+    orgId ? { organizationId: orgId } : "skip",
   );
   const customers = useQuery(
     api.customers.listCustomers,
@@ -115,15 +116,20 @@ export default function LoanersPage() {
 
   const filtered = useMemo(() => {
     if (!loaners) return [];
-    if (!search.trim()) return loaners;
+    let result = loaners;
+    // Client-side status filter so summary cards always show global counts
+    if (activeTab !== "all") {
+      result = result.filter((l) => l.status === activeTab);
+    }
+    if (!search.trim()) return result;
     const q = search.toLowerCase();
-    return loaners.filter(
+    return result.filter(
       (l) =>
         l.partNumber.toLowerCase().includes(q) ||
         l.description.toLowerCase().includes(q) ||
         (l.serialNumber ?? "").toLowerCase().includes(q),
     );
-  }, [loaners, search]);
+  }, [loaners, activeTab, search]);
 
   const all = loaners ?? [];
   const statusCounts = useMemo(() => {

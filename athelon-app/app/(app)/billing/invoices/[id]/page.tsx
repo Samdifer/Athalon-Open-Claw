@@ -100,6 +100,12 @@ export default function InvoiceDetailPage() {
     invoiceId ? { invoiceId } : "skip",
   );
 
+  // BUG-BM-002: Load customer so billing manager knows who this invoice is for
+  const customer = useQuery(
+    api.customers.getCustomer,
+    invoice?.customerId ? { customerId: invoice.customerId } : "skip",
+  );
+
   const sendInvoice = useMutation(api.billing.sendInvoice);
   const recordPayment = useMutation(api.billing.recordPayment);
   const voidInvoice = useMutation(api.billing.voidInvoice);
@@ -394,6 +400,10 @@ export default function InvoiceDetailPage() {
                   </Badge>
                 )}
               </div>
+              {/* BUG-BM-002: Show customer name in detail header */}
+              {customer && (
+                <p className="text-sm font-medium text-foreground mt-0.5">{customer.name}</p>
+              )}
               <p className="text-xs text-muted-foreground mt-0.5">
                 Created {formatDate(invoice.createdAt)}
                 {invoice.sentAt ? ` · Sent ${formatDate(invoice.sentAt)}` : ""}
@@ -482,7 +492,12 @@ export default function InvoiceDetailPage() {
         {/* Totals Summary */}
         <Card className="border-border/60">
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">Invoice Summary</CardTitle>
+            <div className="flex items-start justify-between">
+              <CardTitle className="text-sm font-medium">Invoice Summary</CardTitle>
+              {customer && (
+                <span className="text-xs text-muted-foreground">{customer.name}</span>
+              )}
+            </div>
           </CardHeader>
           <CardContent className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <div>

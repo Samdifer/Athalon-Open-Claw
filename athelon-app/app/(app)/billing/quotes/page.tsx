@@ -86,14 +86,17 @@ export default function QuotesPage() {
   }, [quotes, search, activeTab, customerMap]);
 
   const all = quotes ?? [];
-  const counts: Record<QuoteStatus, number> = {
-    all: all.length,
-    DRAFT: all.filter((q) => q.status === "DRAFT").length,
-    SENT: all.filter((q) => q.status === "SENT").length,
-    APPROVED: all.filter((q) => q.status === "APPROVED").length,
-    CONVERTED: all.filter((q) => q.status === "CONVERTED").length,
-    DECLINED: all.filter((q) => q.status === "DECLINED").length,
-  };
+  // BUG-BM-003: Single-pass counter — O(n) instead of O(5n). Memoized so counts
+  // don't recompute on search keystrokes or tab changes.
+  const counts = useMemo<Record<QuoteStatus, number>>(() => {
+    const acc: Record<QuoteStatus, number> = { all: 0, DRAFT: 0, SENT: 0, APPROVED: 0, CONVERTED: 0, DECLINED: 0 };
+    for (const q of all) {
+      acc.all++;
+      if (q.status in acc) acc[q.status as QuoteStatus]++;
+    }
+    return acc;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [quotes]);
 
   const tabs: { value: QuoteStatus; label: string }[] = [
     { value: "all", label: "All" },

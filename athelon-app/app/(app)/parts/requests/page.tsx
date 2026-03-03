@@ -512,7 +512,12 @@ export default function PartsRequestsPage() {
                           Disposition via WO →
                         </Link>
                       ) : isRemovedPending ? (
-                        <span className="text-[10px] text-muted-foreground italic">No WO linked</span>
+                        <Link
+                          to={`/parts?q=${encodeURIComponent(part.partNumber)}`}
+                          className="inline-flex items-center gap-1 h-7 px-2.5 text-xs rounded-md border border-border/50 text-muted-foreground hover:bg-muted/40 transition-colors"
+                        >
+                          View in Inventory →
+                        </Link>
                       ) : null}
                     </div>
                   </div>

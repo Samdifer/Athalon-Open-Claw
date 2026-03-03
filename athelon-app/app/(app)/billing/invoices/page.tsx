@@ -433,14 +433,29 @@ export default function InvoicesPage() {
     orgId ? { orgId } : "skip",
   );
 
-  const isLoading = !isLoaded || invoices === undefined;
+  const customers = useQuery(
+    api.customers.listCustomers,
+    orgId ? { orgId } : "skip",
+  );
+
+  const customerMap = useMemo(() => {
+    if (!customers) return new Map<string, string>();
+    const m = new Map<string, string>();
+    for (const c of customers) m.set(c._id as string, c.name);
+    return m;
+  }, [customers]);
+
+  const isLoading = !isLoaded || invoices === undefined || customers === undefined;
 
   const filtered = useMemo(() => {
     if (!invoices) return [];
     const byStatus = activeTab === "all" ? invoices : invoices.filter((inv) => inv.status === activeTab);
     if (!search.trim()) return byStatus;
     const q = search.toLowerCase();
-    return byStatus.filter((inv) => inv.invoiceNumber.toLowerCase().includes(q));
+    return byStatus.filter((inv) =>
+      inv.invoiceNumber.toLowerCase().includes(q) ||
+      (customerMap.get(inv.customerId as string) ?? "").toLowerCase().includes(q),
+    );
   }, [invoices, search, activeTab]);
 
   const all = invoices ?? [];
@@ -631,11 +646,11 @@ export default function InvoicesPage() {
             aria-hidden="true"
           />
           <Input
-            placeholder="Search invoice number..."
+            placeholder="Search invoice # or customer..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="h-8 pl-8 pr-3 text-xs w-56 bg-muted/30 border-border/60"
-            aria-label="Search invoices by number"
+            aria-label="Search invoices by number or customer name"
           />
         </div>
       </div>
@@ -733,6 +748,10 @@ export default function InvoicesPage() {
                             {overdue && <OverdueBadge />}
                             {aging !== null && aging > 30 && <AgingBadge days={aging} />}
                           </div>
+                          {/* BUG-BM-001: Show customer name so billing manager can identify invoices at a glance */}
+                          <p className="text-sm font-medium text-foreground mb-0.5">
+                            {customerMap.get(inv.customerId as string) ?? <span className="text-muted-foreground italic">Unknown Customer</span>}
+                          </p>
                           <div className="flex items-center gap-3 mt-1">
                             <span className="text-xs text-muted-foreground">
                               Created {formatDate(inv.createdAt)}

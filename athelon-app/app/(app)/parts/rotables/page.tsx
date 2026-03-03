@@ -193,12 +193,12 @@ export default function RotablesPage() {
       ? "all"
       : (selectedLocationId as Id<"shopLocations">);
 
+  // Always fetch all rotables — filter client-side so summary cards and totals stay accurate
   const rotables = useQuery(
     api.rotables.list,
     orgId
       ? {
           organizationId: orgId,
-          status: activeTab === "all" ? undefined : activeTab,
           shopLocationId: selectedShopLocationId,
         }
       : "skip",
@@ -222,15 +222,20 @@ export default function RotablesPage() {
 
   const filtered = useMemo(() => {
     if (!rotables) return [];
-    if (!search.trim()) return rotables;
+    let result = rotables;
+    // Client-side status filter so summary cards and totals always reflect global counts
+    if (activeTab !== "all") {
+      result = result.filter((r) => r.status === activeTab);
+    }
+    if (!search.trim()) return result;
     const q = search.toLowerCase();
-    return rotables.filter(
+    return result.filter(
       (r) =>
         r.partNumber.toLowerCase().includes(q) ||
         r.serialNumber.toLowerCase().includes(q) ||
         r.description.toLowerCase().includes(q),
     );
-  }, [rotables, search]);
+  }, [rotables, activeTab, search]);
 
   const all = rotables ?? [];
 
