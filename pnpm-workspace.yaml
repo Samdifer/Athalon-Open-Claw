@@ -1,0 +1,5 @@
+packages:
+  - apps/athelon-app
+  - apps/scheduler
+  - apps/marketing/video/sixty-second-pitch
+  - apps/marketing/video/sixty-second-pitch/my-video

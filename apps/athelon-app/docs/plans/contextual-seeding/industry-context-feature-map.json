@@ -1,0 +1,424 @@
+{
+  "corpus": {
+    "folder": "research/industry-context-field-artifacts",
+    "index_file": "INDEX.md",
+    "additional_index_files": [
+      "context-index/*.md"
+    ]
+  },
+  "output": {
+    "master_build_list": "apps/athelon-app/docs/spec/MASTER-BUILD-LIST.md",
+    "registry_csv": "apps/athelon-app/docs/plans/MASTER-FEATURE-REGISTRY.csv",
+    "section_title": "Field Contextual Seeding \u2014 Industry Context Corpus"
+  },
+  "feature_rules": {
+    "Training and OJT traceability": [
+      16
+    ],
+    "Scheduling and workload balancing": [
+      13,
+      14
+    ],
+    "Capacity and labor economics": [
+      12,
+      14,
+      21,
+      26,
+      51
+    ],
+    "Operations and shop flow": [
+      13,
+      44
+    ],
+    "External partner intelligence": [
+      17,
+      25
+    ],
+    "Regulatory compliance authority and audit evidence": [
+      20,
+      30,
+      41
+    ],
+    "Historical quoting and retrofit estimation": [
+      44,
+      51,
+      52
+    ],
+    "Operational screenshot telemetry (legacy workflow)": [
+      12,
+      26
+    ],
+    "Field photo evidence for retrofit traceability": [
+      44,
+      52
+    ]
+  },
+  "seeds": [
+    {
+      "id": "ICS-001",
+      "source_artifacts": [
+        "OJT Data Flow.pdf",
+        "Master OJT Logs AVEX BEN has ideas.xlsx",
+        "Tech capacity and training report BJC Jan 2023 1.2 (1).pdf"
+      ],
+      "source_context_anchor": "file-index",
+      "feature_number": 16,
+      "feature_name": "Training & Qualifications Mgmt",
+      "mbp_ids": [
+        "MBP-0001",
+        "MBP-0005",
+        "MBP-0025"
+      ],
+      "required_domains": [
+        "Training and OJT traceability"
+      ],
+      "confidence": "High",
+      "primary_doc": "OJT Data Flow.pdf",
+      "enhancement_context": "Seed trainer-signoff queues, step progression provenance, and readiness-driven qualification modeling.",
+      "future_state_delta": "Move from generic training CRUD to role-gated, auditable, progression-aware qualification workflows."
+    },
+    {
+      "id": "ICS-002",
+      "source_artifacts": [
+        "2023 leveling.pdf",
+        "Elevate MRO Capacity planning.xlsx",
+        "AVEX-NS Aviation Hldgs Lean slide.pptx"
+      ],
+      "source_context_anchor": "application-context-mapping",
+      "feature_number": 13,
+      "feature_name": "Scheduling \u2014 Drag-Drop Gantt",
+      "mbp_ids": [
+        "MBP-0047",
+        "MBP-0110",
+        "MBP-0128",
+        "MBP-0129"
+      ],
+      "required_domains": [
+        "Scheduling and workload balancing",
+        "Operations and shop flow"
+      ],
+      "confidence": "High",
+      "primary_doc": "2023 leveling.pdf",
+      "enhancement_context": "Seed bay-aware planning constraints and lean flow semantics in scheduler interactions.",
+      "future_state_delta": "Move from interactive visual scheduling to constraint-informed execution reflecting real hangar flow."
+    },
+    {
+      "id": "ICS-003",
+      "source_artifacts": [
+        "2023 leveling.pdf",
+        "Elevate MRO Capacity planning.xlsx",
+        "Tech capacity and training report BJC Jan 2023 1.2 (1).pdf"
+      ],
+      "source_context_anchor": "file-index",
+      "feature_number": 14,
+      "feature_name": "Scheduling \u2014 Auto-Schedule",
+      "mbp_ids": [
+        "MBP-0114"
+      ],
+      "required_domains": [
+        "Scheduling and workload balancing",
+        "Capacity and labor economics"
+      ],
+      "confidence": "High",
+      "primary_doc": "Elevate MRO Capacity planning.xlsx",
+      "enhancement_context": "Seed auto-schedule constraints with PTO/training burden and coarse-leveling assumptions.",
+      "future_state_delta": "Move from baseline assignment logic to workforce-readiness and capacity-aware auto-allocation."
+    },
+    {
+      "id": "ICS-004",
+      "source_artifacts": [
+        "Tech capacity and training report BJC Jan 2023 1.2 (1).pdf",
+        "Elevate MRO Capacity planning.xlsx"
+      ],
+      "source_context_anchor": "application-context-mapping",
+      "feature_number": 12,
+      "feature_name": "Reports & Analytics Dashboard",
+      "mbp_ids": [
+        "MBP-0056",
+        "MBP-0057",
+        "MBP-0058",
+        "MBP-0059",
+        "MBP-0103",
+        "MBP-0104"
+      ],
+      "required_domains": [
+        "Capacity and labor economics"
+      ],
+      "confidence": "High",
+      "primary_doc": "Tech capacity and training report BJC Jan 2023 1.2 (1).pdf",
+      "enhancement_context": "Seed labor-utilization, throughput, and TAT measures with field-derived assumptions and caveats.",
+      "future_state_delta": "Move from chart parity to operationally credible KPIs tied to real workforce and shop dynamics."
+    },
+    {
+      "id": "ICS-005",
+      "source_artifacts": [
+        "Tech capacity and training report BJC Jan 2023 1.2 (1).pdf",
+        "2023 leveling.pdf",
+        "Elevate MRO Capacity planning.xlsx"
+      ],
+      "source_context_anchor": "file-index",
+      "feature_number": 26,
+      "feature_name": "Dashboard KPIs",
+      "mbp_ids": [
+        "MBP-0050",
+        "MBP-0051"
+      ],
+      "required_domains": [
+        "Capacity and labor economics"
+      ],
+      "confidence": "High",
+      "primary_doc": "Tech capacity and training report BJC Jan 2023 1.2 (1).pdf",
+      "enhancement_context": "Seed KPI definitions with availability-loss factors and planning-vs-actual framing.",
+      "future_state_delta": "Move from basic KPI widgets to disciplined KPI contracts aligned to field planning reality."
+    },
+    {
+      "id": "ICS-006",
+      "source_artifacts": [
+        "Tech capacity and training report BJC Jan 2023 1.2 (1).pdf"
+      ],
+      "source_context_anchor": "file-index",
+      "feature_number": 21,
+      "feature_name": "Overtime / Shift Management",
+      "mbp_ids": [
+        "MBP-0134"
+      ],
+      "required_domains": [
+        "Capacity and labor economics"
+      ],
+      "confidence": "High",
+      "primary_doc": "Tech capacity and training report BJC Jan 2023 1.2 (1).pdf",
+      "enhancement_context": "Seed shift/overtime policies with observed labor-loss and monthly capacity variance patterns.",
+      "future_state_delta": "Move from time-clock extensions to policy-aware shift controls grounded in field utilization data."
+    },
+    {
+      "id": "ICS-007",
+      "source_artifacts": [
+        "AVEX-NS Aviation Hldgs Lean slide.pptx",
+        "Master OJT Logs AVEX BEN has ideas.xlsx",
+        "OJT Data Flow.pdf"
+      ],
+      "source_context_anchor": "application-context-mapping",
+      "feature_number": 44,
+      "feature_name": "Work Order Routing Templates + Standard Minutes",
+      "mbp_ids": [
+        "MBP-0136"
+      ],
+      "required_domains": [
+        "Operations and shop flow",
+        "Training and OJT traceability"
+      ],
+      "confidence": "High",
+      "primary_doc": "AVEX-NS Aviation Hldgs Lean slide.pptx",
+      "enhancement_context": "Seed routing templates with standardized task sequencing and signoff-aware execution structure.",
+      "future_state_delta": "Move from ad hoc WO execution to reusable operation templates with standard-minute baselines."
+    },
+    {
+      "id": "ICS-008",
+      "source_artifacts": [
+        "Tech capacity and training report BJC Jan 2023 1.2 (1).pdf",
+        "Elevate MRO Capacity planning.xlsx",
+        "2023 leveling.pdf"
+      ],
+      "source_context_anchor": "file-index",
+      "feature_number": 51,
+      "feature_name": "Operational Report Builder + Scheduled Report Runs",
+      "mbp_ids": [
+        "MBP-0137"
+      ],
+      "required_domains": [
+        "Capacity and labor economics"
+      ],
+      "confidence": "High",
+      "primary_doc": "Elevate MRO Capacity planning.xlsx",
+      "enhancement_context": "Seed scheduled reports with cadence and model assumptions used in recurring field planning cycles.",
+      "future_state_delta": "Move from static reporting to recurring operational intelligence runs with consistent planning semantics."
+    },
+    {
+      "id": "ICS-009",
+      "source_artifacts": [
+        "Repair Station Contacts with Ratings (Download).xlsx"
+      ],
+      "source_context_anchor": "file-index",
+      "feature_number": 17,
+      "feature_name": "Multi-Location Cross-Site UI",
+      "mbp_ids": [
+        "MBP-0030",
+        "MBP-0043"
+      ],
+      "required_domains": [
+        "External partner intelligence"
+      ],
+      "confidence": "High",
+      "primary_doc": "Repair Station Contacts with Ratings (Download).xlsx",
+      "enhancement_context": "Seed cross-site navigation with real repair-station location and contact metadata patterns.",
+      "future_state_delta": "Move from generic multi-site UI to field-informed site selection and location-scoped workflows."
+    },
+    {
+      "id": "ICS-010",
+      "source_artifacts": [
+        "Repair Station Contacts with Ratings (Download).xlsx"
+      ],
+      "source_context_anchor": "file-index",
+      "feature_number": 25,
+      "feature_name": "Search \u2014 Global Search",
+      "mbp_ids": [
+        "MBP-0135",
+        "MBP-0046"
+      ],
+      "required_domains": [
+        "External partner intelligence"
+      ],
+      "confidence": "High",
+      "primary_doc": "Repair Station Contacts with Ratings (Download).xlsx",
+      "enhancement_context": "Seed search/index strategy for large external entity catalogs and location-coded lookup flows.",
+      "future_state_delta": "Move from command-palette baseline to high-scale operational search tuned for field datasets."
+    },
+    {
+      "id": "ICS-011",
+      "source_artifacts": [
+        "RSQC Skysource HSYR817E Revision 22_20-FEB-2025.pdf",
+        "Elevate MRO QCM CRS# K4LR032E.pdf",
+        "Elevate MRO RSM CRS# K4LR032E.pdf"
+      ],
+      "source_context_file": "context-index/02-skysource-regulatory-audit.md",
+      "source_context_anchor": "exhaustive-high-signal-file-list",
+      "source_context_label": "Exhaustive High-Signal File List",
+      "feature_number": 20,
+      "feature_name": "AD/SB Fleet Compliance Dashboard",
+      "mbp_ids": [
+        "MBP-0011"
+      ],
+      "required_domains": [
+        "Regulatory compliance authority and audit evidence"
+      ],
+      "confidence": "High",
+      "primary_doc": "RSQC Skysource HSYR817E Revision 22_20-FEB-2025.pdf",
+      "enhancement_context": "Seed AD/SB compliance logic with current repair-station manual authority and quality-control constraints.",
+      "future_state_delta": "Move from static AD/SB tracking to policy-grounded compliance surfaces aligned to authoritative manuals."
+    },
+    {
+      "id": "ICS-012",
+      "source_artifacts": [
+        "EP_1_4_2_145F_AW_V21.PDF",
+        "audit-EP_1_4_2-findings-report.docx",
+        "audit-EP_4_7_4-findings-report.docx"
+      ],
+      "source_context_file": "context-index/02-skysource-regulatory-audit.md",
+      "source_context_anchor": "exhaustive-high-signal-file-list",
+      "source_context_label": "Exhaustive High-Signal File List",
+      "feature_number": 30,
+      "feature_name": "Conformity Inspection",
+      "mbp_ids": [
+        "MBP-0117",
+        "MBP-0118"
+      ],
+      "required_domains": [
+        "Regulatory compliance authority and audit evidence"
+      ],
+      "confidence": "High",
+      "primary_doc": "EP_1_4_2_145F_AW_V21.PDF",
+      "enhancement_context": "Seed conformity workflows with DCT evidence structure and real audit finding patterns.",
+      "future_state_delta": "Move from generic conformity records to inspection evidence models aligned with FAA DCT/audit criteria."
+    },
+    {
+      "id": "ICS-013",
+      "source_artifacts": [
+        "2013 Aircraft Maintenance Labor Rates.pdf",
+        "B200 Flate rates.xls",
+        "Miscellaneous Services Flat Rates.xls"
+      ],
+      "source_context_file": "context-index/03-mayo-quote-pricing-retrofit.md",
+      "source_context_anchor": "exhaustive-high-signal-file-list-non-image-documents",
+      "source_context_label": "Exhaustive High-Signal File List",
+      "feature_number": 51,
+      "feature_name": "Operational Report Builder + Scheduled Report Runs",
+      "mbp_ids": [
+        "MBP-0137"
+      ],
+      "required_domains": [
+        "Historical quoting and retrofit estimation"
+      ],
+      "confidence": "High",
+      "primary_doc": "2013 Aircraft Maintenance Labor Rates.pdf",
+      "enhancement_context": "Seed recurring report templates with historical labor-rate and flat-rate benchmarking context.",
+      "future_state_delta": "Move from generic scheduled reports to historically anchored estimation and margin-intelligence reporting."
+    },
+    {
+      "id": "ICS-014",
+      "source_artifacts": [
+        "Garmin.png",
+        "N2DB.jpg",
+        "Dual GTN-750.png"
+      ],
+      "source_context_file": "context-index/05-photo-full-review-ledger.md",
+      "source_context_anchor": "ledger-entries",
+      "source_context_label": "Ledger Entries",
+      "feature_number": 44,
+      "feature_name": "Work Order Routing Templates + Standard Minutes",
+      "mbp_ids": [
+        "MBP-0136"
+      ],
+      "required_domains": [
+        "Field photo evidence for retrofit traceability"
+      ],
+      "confidence": "High",
+      "primary_doc": "Garmin.png",
+      "enhancement_context": "Seed routing templates with visual retrofit baselines and panel-state evidence patterns.",
+      "future_state_delta": "Move from abstract template definitions to evidence-backed routing based on real retrofit baseline conditions."
+    },
+    {
+      "id": "ICS-015",
+      "source_artifacts": [
+        "Screenshot 2025-10-31 111606.png",
+        "Screenshot 2025-10-31 113252.png",
+        "Screenshot 2025-10-31 120029.png"
+      ],
+      "source_context_file": "context-index/05-photo-full-review-ledger.md",
+      "source_context_anchor": "ledger-entries",
+      "source_context_label": "Ledger Entries",
+      "feature_number": 12,
+      "feature_name": "Reports & Analytics Dashboard",
+      "mbp_ids": [
+        "MBP-0056",
+        "MBP-0057",
+        "MBP-0058",
+        "MBP-0059",
+        "MBP-0103",
+        "MBP-0104"
+      ],
+      "required_domains": [
+        "Operational screenshot telemetry (legacy workflow)"
+      ],
+      "confidence": "High",
+      "primary_doc": "Screenshot 2025-10-31 111606.png",
+      "enhancement_context": "Seed dashboard/report parity targets with real legacy operational telemetry screenshots.",
+      "future_state_delta": "Move from synthetic KPI views to workflows that reflect observed operational visibility and handoff states."
+    },
+    {
+      "id": "ICS-016",
+      "source_artifacts": [
+        "IMG_20170527_134716236.jpg",
+        "IMG_20170527_142423595.jpg",
+        "IMG_20170527_150716179.jpg"
+      ],
+      "source_context_file": "context-index/05-photo-full-review-ledger.md",
+      "source_context_anchor": "ledger-entries",
+      "source_context_label": "Ledger Entries",
+      "feature_number": 52,
+      "feature_name": "Part Lineage Drilldown Explorer",
+      "mbp_ids": [
+        "MBP-0035",
+        "MBP-0036",
+        "MBP-0049",
+        "MBP-0122"
+      ],
+      "required_domains": [
+        "Field photo evidence for retrofit traceability"
+      ],
+      "confidence": "High",
+      "primary_doc": "IMG_20170527_134716236.jpg",
+      "enhancement_context": "Seed part-lineage and receiving-inspection flows with real component-bay and avionics evidence patterns.",
+      "future_state_delta": "Move from document-only part lineage to image-linked evidence chains across install/remove/inspection states."
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 {
-  "buildCommand": "cd athelon-app && npm install && npm run build",
-  "outputDirectory": "athelon-app/dist",
+  "buildCommand": "pnpm install --frozen-lockfile && pnpm --filter athelon-app build",
+  "outputDirectory": "apps/athelon-app/dist",
   "rewrites": [{ "source": "/(.*)", "destination": "/" }],
   "framework": null
 }

@@ -1,0 +1,26 @@
+{
+  "corpus": "industry-context-field-artifacts",
+  "version": 1,
+  "last_run_utc": "2026-03-03T22:18:24.252093+00:00",
+  "last_mode": "apply",
+  "last_detected_new_docs": [],
+  "last_unindexed_docs": [],
+  "last_applied_seed_ids": [
+    "ICS-001",
+    "ICS-002",
+    "ICS-003",
+    "ICS-004",
+    "ICS-005",
+    "ICS-006",
+    "ICS-007",
+    "ICS-008",
+    "ICS-009",
+    "ICS-010",
+    "ICS-011",
+    "ICS-012",
+    "ICS-013",
+    "ICS-014",
+    "ICS-015",
+    "ICS-016"
+  ]
+}

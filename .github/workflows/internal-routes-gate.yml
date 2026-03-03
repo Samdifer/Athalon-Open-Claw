@@ -3,16 +3,13 @@ name: Internal Routes Gate
 on:
   pull_request:
     paths:
-      - "athelon-app/**"
+      - "apps/athelon-app/**"
       - ".github/workflows/internal-routes-gate.yml"
   workflow_dispatch:
 
 jobs:
   wave-gate:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: athelon-app
 
     steps:
       - name: Checkout
@@ -22,18 +19,23 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20"
-          cache: "npm"
-          cache-dependency-path: athelon-app/package-lock.json
+          cache: "pnpm"
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Setup PNPM
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Install Playwright Chromium
-        run: npx playwright install --with-deps chromium
+        run: pnpm --dir apps/athelon-app exec playwright install --with-deps chromium
 
       - name: Write CI .env.local
         run: |
-          cat > .env.local << 'EOF'
+          cat > apps/athelon-app/.env.local << 'EOF'
           VITE_CONVEX_URL=${{ secrets.VITE_CONVEX_URL }}
           VITE_CLERK_PUBLISHABLE_KEY=${{ secrets.VITE_CLERK_PUBLISHABLE_KEY }}
           CLERK_SECRET_KEY=${{ secrets.CLERK_SECRET_KEY }}
@@ -53,21 +55,21 @@ jobs:
             PLAYWRIGHT_SEEDED_EMAIL
           )
           for key in "${required[@]}"; do
-            if ! grep -Eq "^${key}=.+" .env.local; then
+            if ! grep -Eq "^${key}=.+" apps/athelon-app/.env.local; then
               echo "Missing required value for ${key}"
               exit 1
             fi
           done
 
       - name: Run first-user gate
-        run: npm run qa:first-user-gate
+        run: pnpm --dir apps/athelon-app run qa:first-user-gate
 
       - name: Upload Playwright report
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report
-          path: athelon-app/playwright-report
+          path: apps/athelon-app/playwright-report
           retention-days: 14
 
       - name: Upload test results
@@ -75,5 +77,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: playwright-test-results
-          path: athelon-app/test-results
+          path: apps/athelon-app/test-results
           retention-days: 14

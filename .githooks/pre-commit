@@ -45,7 +45,7 @@ case "${DRAFT_ANSWER}" in
   *) exit 0 ;;
 esac
 
-python3 scripts/seed_master_build_context.py --draft
+python3 ops/scripts/seed_master_build_context.py --draft
 
 read -r -p "Apply seed updates to MASTER-BUILD-LIST + MASTER-FEATURE-REGISTRY now? [y/N] " APPLY_ANSWER < /dev/tty || exit 0
 case "${APPLY_ANSWER}" in
@@ -53,10 +53,10 @@ case "${APPLY_ANSWER}" in
   *) exit 0 ;;
 esac
 
-python3 scripts/seed_master_build_context.py --apply
+python3 ops/scripts/seed_master_build_context.py --apply
 git add \
-  athelon-app/MASTER-BUILD-LIST.md \
-  athelon-app/docs/plans/MASTER-FEATURE-REGISTRY.csv \
-  athelon-app/docs/plans/contextual-seeding/industry-context-seed-state.json
+  apps/athelon-app/docs/spec/MASTER-BUILD-LIST.md \
+  apps/athelon-app/docs/plans/MASTER-FEATURE-REGISTRY.csv \
+  apps/athelon-app/docs/plans/contextual-seeding/industry-context-seed-state.json
 
 exit 0

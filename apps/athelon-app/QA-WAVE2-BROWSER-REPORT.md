@@ -1,0 +1,1 @@
+docs/qa/QA-WAVE2-BROWSER-REPORT.md

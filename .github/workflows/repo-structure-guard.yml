@@ -1,0 +1,21 @@
+name: Repository Structure Guard
+
+on:
+  pull_request:
+    paths:
+      - "apps/**"
+      - "archive/**"
+      - "knowledge/**"
+      - "ops/**"
+      - ".github/workflows/repo-structure-guard.yml"
+  workflow_dispatch:
+
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate repository structure
+        run: bash ops/scripts/ci/check-repo-structure.sh
