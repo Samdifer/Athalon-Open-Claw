@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -733,7 +733,8 @@ function PartSkeleton() {
 
 export default function PartsPage() {
   const [activeTab, setActiveTab] = useState<LocationFilter>("all");
-  const [search, setSearch] = useState("");
+  const [searchParams] = useSearchParams();
+  const [search, setSearch] = useState(() => searchParams.get("q") ?? "");
   const { orgId, isLoaded } = useCurrentOrg();
   const { selectedLocationId } = useSelectedLocation(orgId);
   const selectedShopLocationId =

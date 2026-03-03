@@ -170,6 +170,10 @@ export default function LoanersPage() {
       toast.error("Please select a customer before loaning out this item.");
       return;
     }
+    if (!loanForm.conditionOut.trim()) {
+      toast.error("Condition at time of loan-out is required — needed as baseline for return inspection.");
+      return;
+    }
     setIsLoaning(true);
     try {
       await loanOut({
@@ -410,8 +414,15 @@ export default function LoanersPage() {
               <Input type="date" min={new Date().toISOString().slice(0, 10)} value={loanForm.expectedReturnDate} onChange={(e) => setLoanForm({ ...loanForm, expectedReturnDate: e.target.value })} />
             </div>
             <div className="space-y-2">
-              <Label>Condition Notes</Label>
-              <Textarea value={loanForm.conditionOut} onChange={(e) => setLoanForm({ ...loanForm, conditionOut: e.target.value })} rows={2} />
+              <Label>Condition at Loan-Out <span className="text-destructive">*</span></Label>
+              <Textarea
+                value={loanForm.conditionOut}
+                onChange={(e) => setLoanForm({ ...loanForm, conditionOut: e.target.value })}
+                rows={2}
+                placeholder="Document visible condition before releasing (e.g. 'Serviceable, clean, no visible damage')"
+                required
+              />
+              <p className="text-[10px] text-muted-foreground">Required — used as baseline for return inspection and any damage disputes.</p>
             </div>
             <div className="space-y-2">
               <Label>Notes</Label>
@@ -419,7 +430,7 @@ export default function LoanersPage() {
             </div>
             <div className="flex justify-end gap-2">
               <Button type="button" variant="ghost" onClick={() => setLoanDialogId(null)} disabled={isLoaning}>Cancel</Button>
-              <Button type="submit" disabled={!loanForm.customerId || isLoaning} className="min-w-[90px] gap-1.5">
+              <Button type="submit" disabled={!loanForm.customerId || !loanForm.conditionOut.trim() || isLoaning} className="min-w-[90px] gap-1.5">
                 {isLoaning ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
                 {isLoaning ? "Saving…" : "Loan Out"}
               </Button>

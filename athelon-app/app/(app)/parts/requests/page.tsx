@@ -410,7 +410,7 @@ export default function PartsRequestsPage() {
                         <span className="font-mono text-xs font-semibold text-foreground">
                           P/N: {part.partNumber}
                         </span>
-                        {(part.condition === "unserviceable" || part.location === "quarantine") && (
+                        {part.condition === "unserviceable" && (
                           <Badge className="bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/30 text-[10px] font-semibold">
                             UNSERVICEABLE
                           </Badge>

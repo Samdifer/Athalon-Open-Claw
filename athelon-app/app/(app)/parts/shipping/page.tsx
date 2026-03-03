@@ -59,7 +59,7 @@ export default function ShippingPage() {
   const [expanded, setExpanded] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
   const [cancelConfirm, setCancelConfirm] = useState<{ id: Id<"shipments">; shipmentNumber: string; type: string } | null>(null);
-  const [deliverConfirm, setDeliverConfirm] = useState<{ id: Id<"shipments">; shipmentNumber: string; carrier?: string } | null>(null);
+  const [deliverConfirm, setDeliverConfirm] = useState<{ id: Id<"shipments">; shipmentNumber: string; carrier?: string; type: string } | null>(null);
 
   // Create form state
   const [formType, setFormType] = useState<"inbound" | "outbound">("outbound");
@@ -114,10 +114,18 @@ export default function ShippingPage() {
     }
   };
 
-  const handleStatusUpdate = async (id: Id<"shipments">, status: "pending" | "in_transit" | "delivered" | "cancelled") => {
+  const handleStatusUpdate = async (id: Id<"shipments">, status: "pending" | "in_transit" | "delivered" | "cancelled", isInbound?: boolean) => {
     try {
       await updateStatus({ id, status });
-      toast.success(`Status updated to ${status.replace("_", " ")}`);
+      if (status === "delivered" && isInbound) {
+        toast.success("Inbound shipment marked delivered — parts need receiving inspection.", {
+          description: "Go to the Parts Receiving queue to inspect and accept these parts into inventory.",
+          action: { label: "Open Receiving", onClick: () => { window.location.href = "/parts/receiving"; } },
+          duration: 8000,
+        });
+      } else {
+        toast.success(`Status updated to ${status.replace("_", " ")}`);
+      }
     } catch {
       toast.error("Failed to update status");
     }
@@ -288,7 +296,7 @@ export default function ShippingPage() {
                   </Button>
                 )}
                 {s.status === "in_transit" && (
-                  <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); setDeliverConfirm({ id: s._id, shipmentNumber: s.shipmentNumber, carrier: s.carrier ?? undefined }); }}>
+                  <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); setDeliverConfirm({ id: s._id, shipmentNumber: s.shipmentNumber, carrier: s.carrier ?? undefined, type: s.type }); }}>
                     Mark Delivered
                   </Button>
                 )}
@@ -347,7 +355,7 @@ export default function ShippingPage() {
               className="bg-green-600 hover:bg-green-700 text-white"
               onClick={() => {
                 if (deliverConfirm) {
-                  handleStatusUpdate(deliverConfirm.id, "delivered");
+                  void handleStatusUpdate(deliverConfirm.id, "delivered", deliverConfirm.type === "inbound");
                   setDeliverConfirm(null);
                 }
               }}
