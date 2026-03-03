@@ -1,0 +1,117 @@
+{
+  "$schema": "repair-station-index-v1",
+  "version": "1.0.0",
+  "created": "2026-01-12",
+  "last_updated": "2026-01-12",
+  "description": "Master index for FAA regulatory documents and repair station compliance analysis",
+  "statistics": {
+    "total_documents": 5,
+    "cfr_sections": 1,
+    "advisory_circulars": 57,
+    "order_8900_chapters": 29,
+    "dct_forms": 18,
+    "repair_station_docs": 2
+  },
+  "document_types": {
+    "cfr": {
+      "description": "14 CFR Code of Federal Regulations",
+      "index_path": "cfr/",
+      "citation_format": "14 CFR {part}.{section}({paragraph})"
+    },
+    "advisory-circular": {
+      "description": "FAA Advisory Circulars",
+      "index_path": "advisory-circulars/",
+      "citation_format": "AC {number}, Section {section}"
+    },
+    "order-8900": {
+      "description": "FAA Order 8900.1 Flight Standards Information Management System",
+      "index_path": "order-8900/",
+      "citation_format": "FAA Order 8900.1, Vol {volume}, Ch {chapter}, Sec {section}"
+    },
+    "dct": {
+      "description": "SAS FS Data Collection Tool Forms",
+      "index_path": "order-8900/dct/",
+      "citation_format": "{form_id} Item {item}"
+    },
+    "repair-station": {
+      "description": "Repair Station Internal Documents",
+      "index_path": "repair-station/",
+      "citation_format": "{document} Section {section}"
+    }
+  },
+  "entries": [
+    {
+      "id": "14-CFR-Part-145",
+      "type": "cfr",
+      "part": 145,
+      "title": "Repair Stations",
+      "source_file": "Source Files/14 CFR/CFR-2025-title14-vol3.xml",
+      "index_file": "cfr/part-145.md",
+      "sections": [
+        "145.1", "145.3", "145.5", "145.12",
+        "145.51", "145.53", "145.55", "145.57", "145.59", "145.61",
+        "145.101", "145.103", "145.105", "145.107", "145.109",
+        "145.151", "145.153", "145.155", "145.157", "145.159", "145.160", "145.161", "145.163", "145.165",
+        "145.201", "145.203", "145.205", "145.206", "145.207", "145.209", "145.211", "145.213", "145.215", "145.217", "145.219", "145.221", "145.223"
+      ],
+      "keywords": ["repair station", "certificate", "maintenance", "training", "quality control", "inspection", "personnel", "housing", "facilities", "recordkeeping"],
+      "cross_references": {
+        "advisory_circulars": ["AC 145-4A", "AC 145-5", "AC 145-10", "AC 43-9D", "AC 65-xx"],
+        "order_8900": ["Vol 6 Ch 9"],
+        "dct_forms": ["EP_1_4_x", "EP_4_3_x", "EP_4_3_6"]
+      },
+      "indexed_date": "2026-01-12"
+    },
+    {
+      "id": "AC-Index",
+      "type": "advisory-circular",
+      "title": "Advisory Circulars Index",
+      "source_file": "Source Files/Advisory Circular /",
+      "index_file": "advisory-circulars/ac-index.md",
+      "total_documents": 57,
+      "priority_high": ["AC 145-4A", "AC 145-5", "AC 145-10", "AC 145-2", "AC 43-9D", "AC 43-13-2B"],
+      "keywords": ["guidance", "best practices", "acceptable methods", "compliance"],
+      "cfr_references": ["145.103", "145.109", "145.163", "145.207", "145.211", "145.219"],
+      "indexed_date": "2026-01-12"
+    },
+    {
+      "id": "Order-8900-Vol6-Ch9",
+      "type": "order-8900",
+      "volume": 6,
+      "chapter": 9,
+      "title": "Part 145 Repair Station Surveillance",
+      "source_file": "Source Files/FAA Order 8900.1/",
+      "index_file": "order-8900/order-index.md",
+      "total_sections": 29,
+      "keywords": ["surveillance", "inspection", "certification", "compliance"],
+      "cfr_references": ["145.103", "145.109", "145.151-165", "145.201-223"],
+      "indexed_date": "2026-01-12"
+    },
+    {
+      "id": "DCT-Forms-Index",
+      "type": "dct",
+      "facility_type": "145F",
+      "category": "AW",
+      "title": "Data Collection Tool Forms",
+      "source_file": "Source Files/SAS FS DCT Data collection tools/",
+      "index_file": "order-8900/dct-items.md",
+      "total_forms": 18,
+      "priority_forms": ["EP_4_3_6", "EP_4_4_6", "EP_4_7_3", "EP_1_4_4", "EP_1_4_1"],
+      "keywords": ["evaluation", "audit", "compliance", "inspection"],
+      "indexed_date": "2026-01-12"
+    },
+    {
+      "id": "RS-Docs-Index",
+      "type": "repair-station",
+      "facility": "Skysource",
+      "certificate": "HSYR817E",
+      "title": "Repair Station Documents",
+      "source_file": "Source Files/Repair Station/",
+      "index_file": "repair-station/rs-docs-index.md",
+      "documents": ["RSTM-2025", "RSQC-Rev22"],
+      "keywords": ["training manual", "quality control", "procedures"],
+      "cfr_references": ["145.163", "145.211"],
+      "indexed_date": "2026-01-12"
+    }
+  ]
+}
