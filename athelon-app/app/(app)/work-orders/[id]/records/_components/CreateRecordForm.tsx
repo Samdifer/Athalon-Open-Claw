@@ -112,10 +112,20 @@ export function CreateRecordForm({
   onCancel,
   initialState,
 }: CreateRecordFormProps) {
-  const [form, setForm] = useState<CreateFormState>({
+  // BUG-LT-HUNT-077: Use a lazy initializer so completionDate is computed at
+  // first render, not at module load time. defaultFormState is a module-level
+  // constant — todayLocalISO() is called once when the module loads (e.g. when
+  // the user first visits the app). If the app is left open overnight (common
+  // in a maintenance shop — a tech closes his laptop at 5pm and reopens it at
+  // 7am the next day), the defaultFormState.completionDate is still yesterday.
+  // A maintenance record with the wrong completion date is a regulatory error
+  // under 14 CFR 43.9(a)(1). The lazy initializer runs fresh at each component
+  // mount, ensuring the date always reflects the actual current day.
+  const [form, setForm] = useState<CreateFormState>(() => ({
     ...defaultFormState,
+    completionDate: todayLocalISO(),
     ...initialState,
-  });
+  }));
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -174,6 +184,21 @@ export function CreateRecordForm({
     const completionTs = new Date(form.completionDate).getTime();
     if (isNaN(completionTs)) {
       setError("Completion date is invalid. Please enter a valid date.");
+      return;
+    }
+    // BUG-LT-HUNT-078: No future-date validation on completionDate. A tech
+    // accidentally typing 2027 instead of 2026 (or auto-fill suggesting a
+    // future year) could create a maintenance record with a future completion
+    // date — a regulatory error under 14 CFR 43.9(a)(1). The record would be
+    // permanently signed with an invalid date and cannot be corrected without
+    // creating an amendment record. "Tomorrow" is allowed (just barely in the
+    // future due to timezone edge cases); anything beyond 7 days in the future
+    // is almost certainly a data entry error.
+    const sevenDaysFuture = Date.now() + 7 * 24 * 60 * 60 * 1000;
+    if (completionTs > sevenDaysFuture) {
+      setError(
+        `Completion date (${form.completionDate}) is more than 7 days in the future. Please verify the date — maintenance records must reflect the actual date of work per 14 CFR 43.9(a)(1).`,
+      );
       return;
     }
     // BH-LT3-004: Validate RTS statement when "returned to service" is checked.
@@ -319,48 +344,57 @@ export function CreateRecordForm({
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1">
                 <Label className="text-xs">Field Being Corrected</Label>
+                {/* BUG-LT-077: correctionFieldName had no maxLength. Capped at 100 chars
+                    — sufficient for any field name (e.g. "returnToServiceStatement"). */}
                 <Input
                   value={form.correctionFieldName}
                   onChange={(e) =>
-                    setField("correctionFieldName", e.target.value)
+                    setField("correctionFieldName", e.target.value.slice(0, 100))
                   }
                   placeholder="e.g. workPerformed"
                   className="text-xs h-8"
+                  maxLength={100}
                 />
               </div>
               <div className="space-y-1">
                 <Label className="text-xs">Reason for Correction</Label>
+                {/* BUG-LT-077: correctionReason had no maxLength. Capped at 500. */}
                 <Input
                   value={form.correctionReason}
                   onChange={(e) =>
-                    setField("correctionReason", e.target.value)
+                    setField("correctionReason", e.target.value.slice(0, 500))
                   }
                   placeholder="Why is the original incorrect?"
                   className="text-xs h-8"
+                  maxLength={500}
                 />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1">
                 <Label className="text-xs">Original (Incorrect) Value</Label>
+                {/* BUG-LT-077: correctionOriginalValue had no maxLength. Capped at 1000. */}
                 <Textarea
                   value={form.correctionOriginalValue}
                   onChange={(e) =>
-                    setField("correctionOriginalValue", e.target.value)
+                    setField("correctionOriginalValue", e.target.value.slice(0, 1000))
                   }
                   rows={2}
                   className="text-xs resize-none"
+                  maxLength={1000}
                 />
               </div>
               <div className="space-y-1">
                 <Label className="text-xs">Corrected Value</Label>
+                {/* BUG-LT-077: correctionCorrectedValue had no maxLength. Capped at 1000. */}
                 <Textarea
                   value={form.correctionCorrectedValue}
                   onChange={(e) =>
-                    setField("correctionCorrectedValue", e.target.value)
+                    setField("correctionCorrectedValue", e.target.value.slice(0, 1000))
                   }
                   rows={2}
                   className="text-xs resize-none"
+                  maxLength={1000}
                 />
               </div>
             </div>
@@ -384,13 +418,23 @@ export function CreateRecordForm({
             {form.workPerformed.trim().length} / 50 min
           </span>
         </Label>
+        {/* BUG-LT-077: workPerformed textarea had no maxLength cap. This is the
+            14 CFR 43.9(a)(2) work description — the most important field on the
+            maintenance record. A technician pasting a verbose maintenance procedure
+            narrative (e.g. a full AMM inspection checklist) could exceed the backend
+            schema limit and get a cryptic validation error AFTER completing all other
+            fields including re-authentication. The auth event is single-use and
+            5-minute-limited; a backend error here means the tech must start over.
+            Capped at 3000 chars — generous for any legally-sufficient 43.9 description.
+            The "50 min" character counter already exists below this field. */}
         <Textarea
           value={form.workPerformed}
-          onChange={(e) => setField("workPerformed", e.target.value)}
+          onChange={(e) => setField("workPerformed", e.target.value.slice(0, 3000))}
           placeholder="Per AC 43-9C: describe work in sufficient detail for someone unfamiliar to understand what was done…"
           rows={3}
           required
           className="text-xs resize-none"
+          maxLength={3000}
         />
       </div>
 
@@ -439,13 +483,19 @@ export function CreateRecordForm({
             <Label className="text-[10px] text-muted-foreground">
               Identifier
             </Label>
+            {/* BUG-LT-HUNT-079: approvedDataIdentifier had no maxLength cap.
+                A tech pasting a long AMM chapter path could exceed the backend
+                schema limit and get a cryptic error AFTER entering their PIN
+                (single-use 5-minute auth event consumed). 100 chars is generous
+                for any standard document identifier (e.g. "71-00-00-400-001"). */}
             <Input
               value={form.approvedDataIdentifier}
               onChange={(e) =>
-                setField("approvedDataIdentifier", e.target.value)
+                setField("approvedDataIdentifier", e.target.value.slice(0, 100))
               }
               placeholder="e.g. 27-20-00"
               className="text-xs h-8"
+              maxLength={100}
               required
             />
           </div>
@@ -453,13 +503,15 @@ export function CreateRecordForm({
             <Label className="text-[10px] text-muted-foreground">
               Revision
             </Label>
+            {/* BUG-LT-HUNT-079: approvedDataRevision had no maxLength cap. */}
             <Input
               value={form.approvedDataRevision}
               onChange={(e) =>
-                setField("approvedDataRevision", e.target.value)
+                setField("approvedDataRevision", e.target.value.slice(0, 50))
               }
               placeholder="e.g. Rev 15"
               className="text-xs h-8"
+              maxLength={50}
               required
             />
           </div>
@@ -467,13 +519,15 @@ export function CreateRecordForm({
             <Label className="text-[10px] text-muted-foreground">
               Section (opt)
             </Label>
+            {/* BUG-LT-HUNT-079: approvedDataSection had no maxLength cap. */}
             <Input
               value={form.approvedDataSection}
               onChange={(e) =>
-                setField("approvedDataSection", e.target.value)
+                setField("approvedDataSection", e.target.value.slice(0, 100))
               }
               placeholder="e.g. §200-000"
               className="text-xs h-8"
+              maxLength={100}
             />
           </div>
         </div>
@@ -561,15 +615,24 @@ export function CreateRecordForm({
               {form.returnToServiceStatement?.trim().length ?? 0} / 50 min
             </span>
           </Label>
+          {/* BUG-LT-HUNT-080: returnToServiceStatement textarea had no maxLength
+              cap. The minimum (50 chars) was enforced but a tech pasting a
+              long paragraph could exceed the backend schema limit and get a
+              cryptic error AFTER entering their PIN (auth event consumed).
+              2000 chars matches the SignCardDialog RTS statement cap. */}
           <Textarea
             value={form.returnToServiceStatement}
             onChange={(e) =>
-              setField("returnToServiceStatement", e.target.value)
+              setField("returnToServiceStatement", e.target.value.slice(0, 2000))
             }
             placeholder="I certify that this aircraft/component has been…"
             rows={2}
+            maxLength={2000}
             className="text-xs resize-none"
           />
+          <p className={`text-[10px] text-right mt-0.5 ${(form.returnToServiceStatement?.length ?? 0) >= 1900 ? "text-amber-400" : "text-muted-foreground/50"}`}>
+            {form.returnToServiceStatement?.length ?? 0}/2000
+          </p>
         </div>
       )}
 

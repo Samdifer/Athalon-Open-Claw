@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { useQuery, useMutation } from "convex/react";
@@ -168,6 +168,17 @@ const VENDOR_SVC_TYPE_STYLES: Record<string, string> = {
 // (INITIAL_VENDOR_SERVICES and INITIAL_COMPLIANCE_ITEMS removed — data comes from Convex)
 
 // ─── Loading skeleton ─────────────────────────────────────────────────────────
+
+// ─── Utility: format elapsed ms as H:MM:SS or MM:SS ─────────────────────────
+
+function fmtElapsed(ms: number): string {
+  const totalSec = Math.floor(Math.max(0, ms) / 1000);
+  const h = Math.floor(totalSec / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  const s = totalSec % 60;
+  if (h > 0) return `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+}
 
 function TaskCardSkeleton() {
   return (
@@ -353,6 +364,26 @@ export default function TaskCardPage() {
     activeTimerEntry &&
     (activeTimerEntry.entryType ?? "work_order") === "step" &&
     activeTimerEntry.taskCardId === cardId;
+
+  // BUG-LT-HUNT-076: Live elapsed display for the active timer.
+  // Without this, when a task timer is running the header only shows
+  // "Stop Task Clock" with no time indicator. The tech has no idea if
+  // they forgot to stop the clock from the previous shift or just
+  // started it 5 minutes ago — they have to navigate to Time Clock to check.
+  // Ticks every second while any timer entry is active; resets on stop.
+  const [timerElapsedMs, setTimerElapsedMs] = useState<number>(0);
+  useEffect(() => {
+    if (!activeTimerEntry) {
+      setTimerElapsedMs(0);
+      return;
+    }
+    const clockInAt = (activeTimerEntry as { clockInAt?: number }).clockInAt;
+    if (!clockInAt) return;
+    setTimerElapsedMs(Date.now() - clockInAt);
+    const id = setInterval(() => setTimerElapsedMs(Date.now() - clockInAt), 1000);
+    return () => clearInterval(id);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [(activeTimerEntry as { _id?: string } | undefined)?._id]);
 
   // ── Map Convex compliance items to local shape ────────────────────────────
   const complianceItems: TaskComplianceItem[] = (complianceItemsRaw ?? []).map((item) => ({
@@ -588,7 +619,11 @@ export default function TaskCardPage() {
                   disabled={timerActionLoading === "stop"}
                 >
                   <Square className="w-3 h-3" />
-                  {timerActionLoading === "stop" ? "Stopping..." : "Stop Task Clock"}
+                  {timerActionLoading === "stop"
+                    ? "Stopping..."
+                    : timerElapsedMs > 0
+                    ? fmtElapsed(timerElapsedMs)
+                    : "Stop Task Clock"}
                 </Button>
               ) : activeTimerEntry ? (
                 // BUG-LT-061: When the tech has an active timer on a
@@ -674,6 +709,13 @@ export default function TaskCardPage() {
                 isStepTimerBusy={
                   timerActionLoading === "step-toggle" ||
                   timerActionLoading === "stop"
+                }
+                stepTimerClockInAt={
+                  activeTimerEntry &&
+                  (activeTimerEntry.entryType ?? "work_order") === "step" &&
+                  activeTimerEntry.taskStepId === step._id
+                    ? (activeTimerEntry as { clockInAt?: number }).clockInAt
+                    : undefined
                 }
               />
             ))}
@@ -1488,7 +1530,32 @@ export default function TaskCardPage() {
                   size="sm"
                   disabled={!allStepsDone || complianceBlocksSignOff}
                   className="gap-1.5 flex-shrink-0"
-                  onClick={() => setSignCardOpen(true)}
+                  onClick={() => {
+                    // BUG-LT-HUNT-077: Guard against signing the card while a
+                    // timer is still running. If the tech signs the card while
+                    // a step or task timer is active, the timer continues
+                    // accumulating after the card is certified — billing for
+                    // labor that doesn't exist. The backend sign-off succeeds
+                    // regardless, but the open time entry is orphaned. Show a
+                    // blocking toast so the tech stops the clock first. This is
+                    // especially important for the task timer (activeTaskTimerForThisCard)
+                    // but we also guard on any timer for this card.
+                    if (activeStepTimerForThisCard) {
+                      toast.error(
+                        "Stop your active step timer before signing the card.",
+                        { description: "An open step timer would continue billing after sign-off." },
+                      );
+                      return;
+                    }
+                    if (activeTaskTimerForThisCard) {
+                      toast.error(
+                        "Stop the task clock before signing the card.",
+                        { description: "Your task timer is still running. Stop it to close the billing entry." },
+                      );
+                      return;
+                    }
+                    setSignCardOpen(true);
+                  }}
                 >
                   <Lock className="w-3.5 h-3.5" />
                   Sign Card

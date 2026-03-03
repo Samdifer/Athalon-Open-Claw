@@ -7,6 +7,7 @@
  * Renders a single step row (status icon, description, sign-off info, sign/start button).
  */
 
+import { useState, useEffect } from "react";
 import {
   CheckCircle2,
   Circle,
@@ -23,6 +24,17 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import type { Id } from "@/convex/_generated/dataModel";
 import { formatDateTime } from "@/lib/format";
+
+// ─── Utility: format elapsed milliseconds as H:MM:SS ─────────────────────────
+
+function formatElapsed(ms: number): string {
+  const totalSec = Math.floor(Math.max(0, ms) / 1000);
+  const h = Math.floor(totalSec / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  const s = totalSec % 60;
+  if (h > 0) return `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+}
 
 // ─── Prop types ───────────────────────────────────────────────────────────────
 
@@ -65,6 +77,11 @@ export interface TaskStepRowProps {
   onStepTimerClick?: (stepId: Id<"taskCardSteps">) => void;
   isStepTimerActive?: boolean;
   isStepTimerBusy?: boolean;
+  /** BUG-LT-HUNT-076: Unix ms timestamp when the active step timer started.
+   *  When provided and isStepTimerActive=true, displays a live elapsed counter
+   *  on the "Stop Clock" button so the tech can see at a glance how long
+   *  they've been clocked on this step without navigating to Time Clock. */
+  stepTimerClockInAt?: number;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -83,9 +100,25 @@ export function TaskStepRow({
   onStepTimerClick,
   isStepTimerActive,
   isStepTimerBusy,
+  stepTimerClockInAt,
 }: TaskStepRowProps) {
   const isInProgress = step.status === "in_progress";
   const isPending = step.status === "pending";
+
+  // BUG-LT-HUNT-076: Live elapsed counter for the active step timer.
+  // Ticks every second while the step timer is running. Clears on stop.
+  const [stepElapsedMs, setStepElapsedMs] = useState<number>(0);
+  useEffect(() => {
+    if (!isStepTimerActive || !stepTimerClockInAt) {
+      setStepElapsedMs(0);
+      return;
+    }
+    setStepElapsedMs(Date.now() - stepTimerClockInAt);
+    const id = setInterval(() => {
+      setStepElapsedMs(Date.now() - stepTimerClockInAt);
+    }, 1000);
+    return () => clearInterval(id);
+  }, [isStepTimerActive, stepTimerClockInAt]);
 
   return (
     <div>
@@ -199,7 +232,11 @@ export function TaskStepRow({
                 ) : (
                   <Clock className="w-3 h-3" />
                 )}
-                {isStepTimerActive ? "Stop Clock" : "Clock Step"}
+                {isStepTimerActive
+                  ? stepElapsedMs > 0
+                    ? formatElapsed(stepElapsedMs)
+                    : "Stop Clock"
+                  : "Clock Step"}
               </Button>
             )}
 

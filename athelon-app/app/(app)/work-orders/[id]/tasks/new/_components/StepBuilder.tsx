@@ -58,12 +58,18 @@ function StepRow({ step, index, totalSteps, onChange, onRemove }: StepRowProps) 
               <Label className="text-xs text-muted-foreground mb-1 block">
                 Step description <span className="text-destructive">*</span>
               </Label>
+              {/* BUG-LT5-002: Missing maxLength on step description textarea.
+                  A tech who pastes a full AMM paragraph into a step description
+                  would hit a backend mutation error after configuring all steps,
+                  losing the entire task card form. Cap at 2000 chars — more than
+                  enough for any single maintenance step description. */}
               <Textarea
                 value={step.description}
                 onChange={(e) =>
-                  onChange(step.id, "description", e.target.value)
+                  onChange(step.id, "description", e.target.value.slice(0, 2000))
                 }
                 placeholder="Describe the maintenance action for this step…"
+                maxLength={2000}
                 className="min-h-[72px] text-sm bg-background border-border/60 resize-none"
               />
             </div>
@@ -128,12 +134,14 @@ function StepRow({ step, index, totalSteps, onChange, onRemove }: StepRowProps) 
                 <Label className="text-xs text-muted-foreground mb-1 block">
                   Tool reference / P/N
                 </Label>
+                {/* BUG-LT5-002: Missing maxLength on tool reference field. */}
                 <Input
                   value={step.specialToolReference}
                   onChange={(e) =>
-                    onChange(step.id, "specialToolReference", e.target.value)
+                    onChange(step.id, "specialToolReference", e.target.value.slice(0, 200))
                   }
                   placeholder="e.g. Torque wrench — 0-50 ft-lb"
+                  maxLength={200}
                   className="h-8 text-sm border-border/60 bg-background"
                 />
               </div>

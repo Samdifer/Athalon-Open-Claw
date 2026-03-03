@@ -8,6 +8,7 @@ import {
   User,
   Info,
 } from "lucide-react";
+import { formatDateTime } from "@/lib/format";
 
 const EVENT_CONFIG: Record<string, { icon: typeof Info; color: string; label: string }> = {
   record_created: { icon: ClipboardList, color: "text-blue-500 bg-blue-500/10", label: "Created" },
@@ -84,7 +85,16 @@ export function ActivityTimeline({ events }: { events: AuditEvent[] }) {
                   </span>
                   <span className="text-muted-foreground/40">·</span>
                   <time className="font-mono text-[10px] text-muted-foreground/70">
-                    {new Date(ev.timestamp).toLocaleString()}
+                    {/* BUG-LT-076: ActivityTimeline used raw toLocaleString() which
+                        applies the browser's default locale and timezone. All other
+                        timestamps in the WO detail page use formatDateTime() from
+                        @/lib/format — an en-US fixed-locale formatter. A tech on a
+                        French or German browser locale would see activity timestamps
+                        in a different format from every other date on the page. More
+                        importantly, toLocaleString() is inconsistent across OS/browser
+                        combinations for the same timezone. Using formatDateTime() ensures
+                        all timestamps in the maintenance record use the same formatter. */}
+                    {formatDateTime(ev.timestamp)}
                   </time>
                 </div>
               </div>

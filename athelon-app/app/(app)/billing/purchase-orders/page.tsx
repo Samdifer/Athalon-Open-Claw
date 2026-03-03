@@ -56,9 +56,11 @@ export default function PurchaseOrdersPage() {
   const [search, setSearch] = useState("");
   const { orgId, isLoaded } = useCurrentOrg();
 
+  // Always fetch ALL POs (no status filter) so badge counts stay accurate across tabs.
+  // Client-side filtering is fast enough for typical PO volumes (<1000 records).
   const pos = useQuery(
     api.billing.listPurchaseOrders,
-    orgId ? { orgId, status: activeTab === "all" ? undefined : activeTab } : "skip",
+    orgId ? { orgId } : "skip",
   );
 
   const vendors = useQuery(
@@ -76,15 +78,20 @@ export default function PurchaseOrdersPage() {
 
   const filtered = useMemo(() => {
     if (!pos) return [];
-    if (!search.trim()) return pos;
+    let result = pos;
+    // Apply tab filter client-side (backend always returns all POs for accurate counts)
+    if (activeTab !== "all") {
+      result = result.filter((p) => p.status === activeTab);
+    }
+    if (!search.trim()) return result;
     const q = search.toLowerCase();
-    return pos.filter((p) => {
+    return result.filter((p) => {
       if (p.poNumber.toLowerCase().includes(q)) return true;
       const vendorName = vendorMap[(p as unknown as { vendorId: string }).vendorId] ?? "";
       if (vendorName.toLowerCase().includes(q)) return true;
       return false;
     });
-  }, [pos, search, vendorMap]);
+  }, [pos, activeTab, search, vendorMap]);
 
   const all = pos ?? [];
 

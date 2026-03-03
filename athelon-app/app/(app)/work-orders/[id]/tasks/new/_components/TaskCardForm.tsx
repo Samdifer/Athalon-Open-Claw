@@ -135,11 +135,18 @@ export function TaskCardForm({
             >
               Card number <span className="text-destructive">*</span>
             </Label>
+            {/* BUG-LT5-001: Missing maxLength on task card number — user could
+                type or paste a very long string that exceeds the backend's
+                schema limit, causing a cryptic mutation error on submit after
+                the tech has already built out all their steps. 50 chars is
+                more than enough for any reasonable card number (e.g.
+                "ANNUAL-2024-N12345-001" is 22 chars). */}
             <Input
               id="tcNumber"
               value={taskCardNumber}
-              onChange={(e) => onTaskCardNumberChange(e.target.value)}
+              onChange={(e) => onTaskCardNumberChange(e.target.value.slice(0, 50))}
               placeholder="e.g. TC-001, INSP-A01"
+              maxLength={50}
               className="h-9 text-sm border-border/60"
             />
           </div>
@@ -222,11 +229,13 @@ export function TaskCardForm({
           >
             Title <span className="text-destructive">*</span>
           </Label>
+          {/* BUG-LT5-001: Missing maxLength on title. */}
           <Input
             id="title"
             value={title}
-            onChange={(e) => onTitleChange(e.target.value)}
+            onChange={(e) => onTitleChange(e.target.value.slice(0, 200))}
             placeholder="e.g. Annual Inspection — Airframe"
+            maxLength={200}
             className="h-9 text-sm border-border/60"
           />
         </div>
@@ -242,11 +251,13 @@ export function TaskCardForm({
               (14 CFR 43.9(a)(1))
             </span>
           </Label>
+          {/* BUG-LT5-001: Missing maxLength on approved data source. */}
           <Input
             id="approvedData"
             value={approvedDataSource}
-            onChange={(e) => onApprovedDataSourceChange(e.target.value)}
+            onChange={(e) => onApprovedDataSourceChange(e.target.value.slice(0, 300))}
             placeholder='e.g. "AMM 27-20-00 Rev 15" or "FAA AD 2024-15-07"'
+            maxLength={300}
             className="h-9 text-sm border-border/60"
           />
           <div className="flex items-start gap-1.5 mt-1.5">
@@ -269,11 +280,13 @@ export function TaskCardForm({
             >
               Revision / issue
             </Label>
+            {/* BUG-LT5-001: Missing maxLength on revision field. */}
             <Input
               id="dataRevision"
               value={approvedDataRevision}
-              onChange={(e) => onApprovedDataRevisionChange(e.target.value)}
+              onChange={(e) => onApprovedDataRevisionChange(e.target.value.slice(0, 100))}
               placeholder="e.g. Rev 15, Issue 3"
+              maxLength={100}
               className="h-9 text-sm border-border/60"
             />
           </div>
@@ -312,11 +325,16 @@ export function TaskCardForm({
           >
             Notes
           </Label>
+          {/* BUG-LT5-001: Missing maxLength on notes textarea. Without a cap,
+              a tech who pastes an entire AMM section into notes would hit a
+              backend schema error after completing all step configuration,
+              losing their work. 1000 chars is generous for a notes field. */}
           <Textarea
             id="notes"
             value={notes}
-            onChange={(e) => onNotesChange(e.target.value)}
+            onChange={(e) => onNotesChange(e.target.value.slice(0, 1000))}
             placeholder="Additional context, cautions, or references…"
+            maxLength={1000}
             className="min-h-[64px] text-sm border-border/60 resize-none"
           />
         </div>

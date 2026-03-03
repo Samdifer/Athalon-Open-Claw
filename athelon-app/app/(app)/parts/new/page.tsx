@@ -357,7 +357,10 @@ export default function NewPartPage() {
               Receive another
             </Button>
             <Button asChild variant="ghost" size="sm" className="text-green-400 h-7 text-xs">
-              <Link to="/parts/requests">View Queue</Link>
+              <Link to="/parts/receiving">Receiving Queue</Link>
+            </Button>
+            <Button asChild variant="ghost" size="sm" className="text-green-400 h-7 text-xs">
+              <Link to="/parts">View Inventory</Link>
             </Button>
           </div>
         </div>

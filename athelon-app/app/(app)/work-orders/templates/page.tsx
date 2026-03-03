@@ -122,9 +122,10 @@ function TemplateStepRow({ step, index, total, onChange, onRemove, onMoveUp, onM
               </Label>
               <Textarea
                 value={step.description}
-                onChange={(e) => onChange(step.id, "description", e.target.value)}
+                onChange={(e) => onChange(step.id, "description", e.target.value.slice(0, 500))}
                 placeholder="Describe the maintenance action…"
                 className="min-h-[60px] text-sm border-border/60 resize-none"
+                maxLength={500}
               />
             </div>
 
@@ -170,9 +171,10 @@ function TemplateStepRow({ step, index, total, onChange, onRemove, onMoveUp, onM
                 </Label>
                 <Input
                   value={step.specialToolReference}
-                  onChange={(e) => onChange(step.id, "specialToolReference", e.target.value)}
+                  onChange={(e) => onChange(step.id, "specialToolReference", e.target.value.slice(0, 100))}
                   placeholder="e.g. Torque wrench 0–50 ft-lb"
                   className="h-8 text-sm border-border/60"
+                  maxLength={100}
                 />
               </div>
             )}
@@ -186,8 +188,15 @@ function TemplateStepRow({ step, index, total, onChange, onRemove, onMoveUp, onM
                 <Input
                   type="number"
                   min={1}
+                  max={9999}
                   value={step.estimatedDurationMinutes}
-                  onChange={(e) => onChange(step.id, "estimatedDurationMinutes", e.target.value)}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    // Clamp to [1, 9999] — negative durations corrupt capacity planning
+                    if (v === "") { onChange(step.id, "estimatedDurationMinutes", ""); return; }
+                    const n = parseInt(v, 10);
+                    if (!isNaN(n)) onChange(step.id, "estimatedDurationMinutes", String(Math.max(1, Math.min(9999, n))));
+                  }}
                   placeholder="e.g. 30"
                   className="h-8 text-sm border-border/60"
                 />
@@ -198,9 +207,10 @@ function TemplateStepRow({ step, index, total, onChange, onRemove, onMoveUp, onM
                 </Label>
                 <Input
                   value={step.zoneReference}
-                  onChange={(e) => onChange(step.id, "zoneReference", e.target.value)}
+                  onChange={(e) => onChange(step.id, "zoneReference", e.target.value.slice(0, 50))}
                   placeholder="e.g. Zone 100"
                   className="h-8 text-sm border-border/60"
+                  maxLength={50}
                 />
               </div>
             </div>
@@ -327,7 +337,7 @@ function CreateTemplateDialog({ open, onClose, orgId }: CreateTemplateDialogProp
           signOffRequired: s.signOffRequired,
           signOffRequiresIa: s.signOffRequiresIa,
           estimatedDurationMinutes: s.estimatedDurationMinutes
-            ? parseInt(s.estimatedDurationMinutes, 10)
+            ? Math.max(1, parseInt(s.estimatedDurationMinutes, 10) || 1)
             : undefined,
           zoneReference: s.zoneReference.trim() || undefined,
         })),
@@ -359,9 +369,10 @@ function CreateTemplateDialog({ open, onClose, orgId }: CreateTemplateDialogProp
               </Label>
               <Input
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={(e) => setName(e.target.value.slice(0, 100))}
                 placeholder="e.g. Annual 100-Hour Inspection"
                 className="h-9 text-sm border-border/60"
+                maxLength={100}
               />
             </div>
             <div>
@@ -370,9 +381,10 @@ function CreateTemplateDialog({ open, onClose, orgId }: CreateTemplateDialogProp
               </Label>
               <Input
                 value={aircraftMake}
-                onChange={(e) => setAircraftMake(e.target.value)}
+                onChange={(e) => setAircraftMake(e.target.value.slice(0, 50))}
                 placeholder="e.g. Cessna"
                 className="h-9 text-sm border-border/60"
+                maxLength={50}
               />
             </div>
             <div>
@@ -381,9 +393,10 @@ function CreateTemplateDialog({ open, onClose, orgId }: CreateTemplateDialogProp
               </Label>
               <Input
                 value={aircraftModel}
-                onChange={(e) => setAircraftModel(e.target.value)}
+                onChange={(e) => setAircraftModel(e.target.value.slice(0, 50))}
                 placeholder="e.g. 172SP"
                 className="h-9 text-sm border-border/60"
+                maxLength={50}
               />
             </div>
             <div>
@@ -392,9 +405,10 @@ function CreateTemplateDialog({ open, onClose, orgId }: CreateTemplateDialogProp
               </Label>
               <Input
                 value={inspectionType}
-                onChange={(e) => setInspectionType(e.target.value)}
+                onChange={(e) => setInspectionType(e.target.value.slice(0, 100))}
                 placeholder="e.g. Annual, 100-Hour, AD"
                 className="h-9 text-sm border-border/60"
+                maxLength={100}
               />
             </div>
             <div>
@@ -403,9 +417,10 @@ function CreateTemplateDialog({ open, onClose, orgId }: CreateTemplateDialogProp
               </Label>
               <Input
                 value={approvedDataRevision}
-                onChange={(e) => setApprovedDataRevision(e.target.value)}
+                onChange={(e) => setApprovedDataRevision(e.target.value.slice(0, 50))}
                 placeholder="e.g. Rev 15"
                 className="h-9 text-sm border-border/60"
+                maxLength={50}
               />
             </div>
             <div className="col-span-2">
@@ -414,9 +429,10 @@ function CreateTemplateDialog({ open, onClose, orgId }: CreateTemplateDialogProp
               </Label>
               <Input
                 value={approvedDataSource}
-                onChange={(e) => setApprovedDataSource(e.target.value)}
+                onChange={(e) => setApprovedDataSource(e.target.value.slice(0, 200))}
                 placeholder='e.g. AMM 05-10-00 Rev 15 or FAA AC 43.13-1B'
                 className="h-9 text-sm border-border/60"
+                maxLength={200}
               />
             </div>
           </div>

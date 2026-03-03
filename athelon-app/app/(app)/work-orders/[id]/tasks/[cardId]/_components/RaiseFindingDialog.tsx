@@ -450,10 +450,12 @@ export function RaiseFindingDialog({
               <Label htmlFor="finding-component" className="text-xs font-medium mb-1.5 block">
                 Component Affected
               </Label>
+              {/* BUG-LT5-004: Missing maxLength on component/P/N/S/N fields. */}
               <Input
                 id="finding-component"
                 value={componentAffected}
-                onChange={(e) => setComponentAffected(e.target.value)}
+                onChange={(e) => setComponentAffected(e.target.value.slice(0, 200))}
+                maxLength={200}
                 placeholder="e.g. Left main gear"
                 className="h-9 text-sm bg-muted/30 border-border/60"
               />
@@ -465,7 +467,8 @@ export function RaiseFindingDialog({
               <Input
                 id="finding-part-number"
                 value={componentPartNumber}
-                onChange={(e) => setComponentPartNumber(e.target.value)}
+                onChange={(e) => setComponentPartNumber(e.target.value.slice(0, 50))}
+                maxLength={50}
                 placeholder="P/N"
                 className="h-9 text-sm bg-muted/30 border-border/60"
               />
@@ -477,7 +480,8 @@ export function RaiseFindingDialog({
               <Input
                 id="finding-serial-number"
                 value={componentSerialNumber}
-                onChange={(e) => setComponentSerialNumber(e.target.value)}
+                onChange={(e) => setComponentSerialNumber(e.target.value.slice(0, 50))}
+                maxLength={50}
                 placeholder="S/N"
                 className="h-9 text-sm bg-muted/30 border-border/60"
               />
@@ -529,7 +533,8 @@ export function RaiseFindingDialog({
                   <Input
                     id="finding-stc-number"
                     value={stcNumber}
-                    onChange={(e) => setStcNumber(e.target.value)}
+                    onChange={(e) => setStcNumber(e.target.value.slice(0, 50))}
+                    maxLength={50}
                     placeholder="e.g. SA02338SE"
                     className="h-9 text-sm bg-muted/30 border-border/60"
                   />

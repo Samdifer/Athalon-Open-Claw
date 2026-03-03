@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -215,7 +216,7 @@ export default function ShippingPage() {
                   <AlertTriangle className="h-4 w-4 text-yellow-500" /> Hazmat
                 </Label>
               </div>
-              <div><Label>Notes</Label><Input value={formNotes} onChange={(e) => setFormNotes(e.target.value.slice(0, 500))} placeholder="Special instructions..." maxLength={500} /></div>
+              <div><Label>Notes</Label><Textarea value={formNotes} onChange={(e) => setFormNotes(e.target.value.slice(0, 500))} placeholder="Special instructions..." maxLength={500} rows={2} className="text-sm resize-none" /></div>
               <Button onClick={handleCreate} className="w-full gap-1.5" disabled={isCreating}>
                 {isCreating ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
                 {isCreating ? "Creating…" : "Create Shipment"}

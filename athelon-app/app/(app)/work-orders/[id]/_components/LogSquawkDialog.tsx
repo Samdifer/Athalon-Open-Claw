@@ -190,12 +190,16 @@ export function LogSquawkDialog({
             <Label htmlFor="sq-description" className="text-xs">
               Description <span className="text-red-400">*</span>
             </Label>
+            {/* BUG-LT5-003: Missing maxLength on squawk description. A tech
+                who pastes a long write-up would get a cryptic mutation error
+                on submit. Cap at 1000 chars — generous for a squawk entry. */}
             <Textarea
               id="sq-description"
               placeholder="Describe the discrepancy found…"
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={(e) => setDescription(e.target.value.slice(0, 1000))}
               rows={3}
+              maxLength={1000}
               className="text-sm resize-none"
               disabled={isSubmitting}
             />
@@ -230,11 +234,13 @@ export function LogSquawkDialog({
               Component Affected
               <span className="text-muted-foreground ml-1">(optional)</span>
             </Label>
+            {/* BUG-LT5-003: Missing maxLength on component affected field. */}
             <Input
               id="sq-component"
               placeholder="e.g. Left main gear actuator"
               value={componentAffected}
-              onChange={(e) => setComponentAffected(e.target.value)}
+              onChange={(e) => setComponentAffected(e.target.value.slice(0, 200))}
+              maxLength={200}
               className="text-sm h-9"
               disabled={isSubmitting}
             />
@@ -270,12 +276,14 @@ export function LogSquawkDialog({
               Notes
               <span className="text-muted-foreground ml-1">(optional)</span>
             </Label>
+            {/* BUG-LT5-003: Missing maxLength on squawk notes. */}
             <Textarea
               id="sq-notes"
               placeholder="Additional notes or observations…"
               value={notes}
-              onChange={(e) => setNotes(e.target.value)}
+              onChange={(e) => setNotes(e.target.value.slice(0, 500))}
               rows={2}
+              maxLength={500}
               className="text-sm resize-none"
               disabled={isSubmitting}
             />
