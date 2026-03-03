@@ -180,13 +180,20 @@ export function InductAircraftDialog({
                   (optional)
                 </span>
               </Label>
+              {/* BUG-QCM-C9: All three induction textareas (inductionNotes,
+                  walkAroundFindings, logbookReviewNotes) had no maxLength caps.
+                  Aircraft induction data is part of the QCM audit trail —
+                  if the backend schema rejects an overlong field, the entire
+                  induction form submission fails and the tech has to re-enter
+                  all fields including the aircraft hours. Capped at 500 each. */}
               <Textarea
                 id="induction-notes"
                 value={inductionNotes}
-                onChange={(e) => setInductionNotes(e.target.value)}
+                onChange={(e) => setInductionNotes(e.target.value.slice(0, 500))}
                 placeholder="General notes about the induction..."
                 rows={2}
                 className="text-sm bg-muted/30 border-border/60 resize-none"
+                maxLength={500}
               />
             </div>
 
@@ -203,10 +210,11 @@ export function InductAircraftDialog({
               <Textarea
                 id="walkaround"
                 value={walkAroundFindings}
-                onChange={(e) => setWalkAroundFindings(e.target.value)}
+                onChange={(e) => setWalkAroundFindings(e.target.value.slice(0, 500))}
                 placeholder="Physical inspection findings on arrival..."
                 rows={2}
                 className="text-sm bg-muted/30 border-border/60 resize-none"
+                maxLength={500}
               />
             </div>
 
@@ -223,10 +231,11 @@ export function InductAircraftDialog({
               <Textarea
                 id="logbook"
                 value={logbookReviewNotes}
-                onChange={(e) => setLogbookReviewNotes(e.target.value)}
+                onChange={(e) => setLogbookReviewNotes(e.target.value.slice(0, 500))}
                 placeholder="Notes from reviewing aircraft logbooks..."
                 rows={2}
                 className="text-sm bg-muted/30 border-border/60 resize-none"
+                maxLength={500}
               />
             </div>
 

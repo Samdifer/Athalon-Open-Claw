@@ -468,13 +468,25 @@ export default function ReleaseAircraftPage() {
                 Pickup Notes{" "}
                 <span className="text-muted-foreground">(optional)</span>
               </Label>
+              {/* BUG-QCM-C7: pickupNotes had no maxLength cap. A shop manager
+                  pasting a long customer communication or condition report could
+                  exceed the backend schema limit and get a cryptic validation error
+                  after entering the aircraft hours and readying to submit the release.
+                  Cap at 500 chars — sufficient for any pickup note. Same class as
+                  BUG-QCM-C1, BUG-QCM-C3, BUG-SM-013. */}
               <Textarea
                 value={pickupNotes}
-                onChange={(e) => setPickupNotes(e.target.value)}
+                onChange={(e) => setPickupNotes(e.target.value.slice(0, 500))}
                 placeholder="Any notes about pickup, condition, or handoff…"
                 className="text-sm border-border/60 resize-none"
                 rows={3}
+                maxLength={500}
               />
+              {pickupNotes.length >= 450 && (
+                <p className={`text-[10px] mt-0.5 text-right ${pickupNotes.length >= 490 ? "text-amber-500" : "text-muted-foreground"}`}>
+                  {pickupNotes.length} / 500
+                </p>
+              )}
             </div>
 
             {/* Customer signature */}
@@ -484,12 +496,15 @@ export default function ReleaseAircraftPage() {
                 Customer Signature — Full Name{" "}
                 <span className="text-muted-foreground">(optional)</span>
               </Label>
+              {/* BUG-QCM-C7 (cont): customerSignature also uncapped. A full name
+                  should never exceed 100 chars. */}
               <Input
                 type="text"
                 value={customerSignature}
-                onChange={(e) => setCustomerSignature(e.target.value)}
+                onChange={(e) => setCustomerSignature(e.target.value.slice(0, 100))}
                 placeholder="Customer prints full name as signature"
                 className="h-9 text-sm border-border/60"
+                maxLength={100}
               />
               <p className="text-[10px] text-muted-foreground">
                 Customer name typed here serves as their acknowledgment of

@@ -135,11 +135,19 @@ export function DeferredMaintenanceCaptureDialog({
               </div>
               <div>
                 <Label className="text-xs">Description</Label>
+                {/* BUG-QCM-C8: Deferred item description had no maxLength cap.
+                    A tech pasting a verbose MEL text or squawk narrative could
+                    exceed the backend schema limit and lose all deferred items
+                    entered in the dialog (form clears on submit error). Deferred
+                    maintenance items are part of the QCM audit trail — an uncapped
+                    field is a regulatory documentation risk. Capped at 300 chars,
+                    consistent with other short description fields in the app. */}
                 <Input
                   value={item.description}
-                  onChange={(e) => updateItem(item.id, "description", e.target.value)}
+                  onChange={(e) => updateItem(item.id, "description", e.target.value.slice(0, 300))}
                   placeholder="Describe the deferred maintenance item..."
                   className="h-8 text-xs border-border/60 mt-1"
+                  maxLength={300}
                 />
               </div>
               <div className="grid grid-cols-2 gap-2">
