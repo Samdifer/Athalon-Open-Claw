@@ -1205,6 +1205,16 @@ export default function PartsPage() {
 
                           {/* Row 3: Additional info */}
                           <div className="flex items-center gap-3 mt-1 flex-wrap">
+                            {/* Quantity — only shown for non-serialized bulk parts in inventory */}
+                            {!part.isSerialized && isInventory && (part.quantityOnHand != null || part.quantity != null) && (
+                              <span className={`text-[11px] font-medium ${
+                                part.reorderPoint != null && (part.quantityOnHand ?? part.quantity ?? 0) <= part.reorderPoint
+                                  ? "text-amber-600 dark:text-amber-400"
+                                  : "text-foreground"
+                              }`}>
+                                Qty: {part.quantityOnHand ?? part.quantity}
+                              </span>
+                            )}
                             {part.supplier && (
                               <span className="text-[11px] text-muted-foreground">
                                 Supplier: {part.supplier}

@@ -95,9 +95,21 @@ export function DiscrepancyDispositionDialog({
   const [melItemNumber, setMelItemNumber] = useState("");
   const [melCategory, setMelCategory] = useState<"A" | "B" | "C" | "D" | "">("");
   const [melSignatureAuthEventId, setMelSignatureAuthEventId] = useState("");
-  const [melDeferralDate, setMelDeferralDate] = useState(
-    new Date().toISOString().slice(0, 10),
-  );
+  // BUG-LT-HUNT-008: Use local calendar date for MEL deferral date default.
+  // `toISOString().slice(0,10)` extracts the UTC date. A lead technician in
+  // UTC-5 working after 7:00 PM local time would see tomorrow's UTC date
+  // pre-filled (e.g., March 4 instead of March 3). The MEL deferral date is
+  // a regulatory record under 14 CFR 91.213; an incorrect date produces an
+  // invalid MEL deferral that an inspector or DAR can reject during a ramp
+  // check. Same bug was fixed in CreateRecordForm.tsx (BUG-QCM-REC-001)
+  // and reports/page.tsx (BUG-SM-HUNT-003) in prior cycles.
+  const [melDeferralDate, setMelDeferralDate] = useState(() => {
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  });
   const [melNotes, setMelNotes] = useState("");
 
   const [submitting, setSubmitting] = useState(false);
@@ -113,7 +125,12 @@ export function DiscrepancyDispositionDialog({
     setMelItemNumber("");
     setMelCategory("");
     setMelSignatureAuthEventId("");
-    setMelDeferralDate(new Date().toISOString().slice(0, 10));
+    // BUG-LT-HUNT-008: Same local-date fix as the initial useState above.
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    setMelDeferralDate(`${y}-${m}-${day}`);
     setMelNotes("");
   };
 
@@ -149,8 +166,17 @@ export function DiscrepancyDispositionDialog({
           notes: melNotes.trim() || undefined,
         });
 
+        // BUG-LT-HUNT-009: Use UTC timezone for MEL expiry date display.
+        // melExpiryDate is calculated by the backend as a UTC-midnight timestamp
+        // from the YYYY-MM-DD deferral date + MEL category interval. Calling
+        // toLocaleDateString() without a timezone option renders the previous
+        // calendar day for users west of UTC (e.g., UTC-5: March 31 UTC midnight
+        // = March 30 local). A tech who defers under MEL Cat B (3 calendar days)
+        // starting March 3 would see "Expires: March 5" when the correct
+        // expiry is March 6. Using {timeZone:"UTC"} ensures the date-only
+        // value is displayed as intended regardless of the user's local timezone.
         const expiryStr = result.melExpiryDate
-          ? ` Expires: ${new Date(result.melExpiryDate).toLocaleDateString()}.`
+          ? ` Expires: ${new Date(result.melExpiryDate).toLocaleDateString("en-US", { timeZone: "UTC", year: "numeric", month: "short", day: "numeric" })}.`
           : "";
         toast.success(
           `Discrepancy ${discrepancyNumber} deferred under MEL ${melItemNumber} (Cat ${melCategory}).${expiryStr}`,

@@ -106,7 +106,12 @@ function CreateCoreDialog({
   };
 
   const handleSubmit = async () => {
-    if (!partNumber || !description || !coreValue) return;
+    if (!partNumber.trim()) { toast.error("Part number is required."); return; }
+    if (!description.trim()) { toast.error("Description is required."); return; }
+    if (!coreValue || isNaN(parseFloat(coreValue)) || parseFloat(coreValue) <= 0) {
+      toast.error("Core value must be a positive number.");
+      return;
+    }
     setSaving(true);
     try {
       await create({
@@ -129,8 +134,13 @@ function CreateCoreDialog({
     }
   };
 
+  function handleClose() {
+    reset();
+    onClose();
+  }
+
   return (
-    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+    <Dialog open={open} onOpenChange={(o) => { if (!o && !saving) handleClose(); }}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle>New Core Return</DialogTitle>
@@ -166,8 +176,8 @@ function CreateCoreDialog({
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Cancel</Button>
-          <Button onClick={handleSubmit} disabled={saving || !partNumber || !description || !coreValue}>
+          <Button variant="outline" onClick={handleClose} disabled={saving}>Cancel</Button>
+          <Button onClick={handleSubmit} disabled={saving}>
             {saving ? "Creating…" : "Create Core Return"}
           </Button>
         </DialogFooter>

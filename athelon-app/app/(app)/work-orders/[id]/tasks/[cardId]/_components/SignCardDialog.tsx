@@ -77,10 +77,22 @@ export function SignCardDialog({
   // the old error banner immediately — before typing anything. Looks like the
   // dialog is broken or that the same PIN is already rejected. Clearing on
   // open ensures a clean slate each time.
+  //
+  // BUG-LT-HUNT-007: Also reset `statement` and `rating` on open.
+  // A tech who writes a partial return-to-service statement ("I certify this
+  // Cessna 172 alternator was replaced per..."), clicks Cancel, then opens
+  // SignCardDialog for a *different* task card (e.g. a landing gear inspection)
+  // will see the previous card's statement pre-filled. If they don't notice and
+  // submit, the signed RTS statement references the wrong work on a wrong
+  // component — a permanent maintenance record error under 14 CFR 43.9(a)(2).
+  // The `rating` field has the same issue: "Powerplant" selected for an engine
+  // card carries over to an airframe card sign-off.
   useEffect(() => {
     if (open) {
       setPin("");
       setError(null);
+      setStatement("");
+      setRating("airframe");
     }
   }, [open]);
 

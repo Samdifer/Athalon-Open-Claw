@@ -8,7 +8,7 @@ import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import { usePagePrereqs } from "@/hooks/usePagePrereqs";
 import { useSelectedLocation } from "@/components/LocationSwitcher";
 import {
-  Plus, Search, Cog, ChevronDown, ChevronRight, DollarSign, Loader2,
+  Plus, Search, ChevronDown, ChevronRight, DollarSign, Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,7 +16,6 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Progress } from "@/components/ui/progress";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
@@ -323,7 +322,12 @@ export default function RotablesPage() {
             <p className="text-sm text-muted-foreground mt-0.5">{all.length} components tracked</p>
           )}
         </div>
-        <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+        <Dialog open={createOpen} onOpenChange={(v) => {
+          if (!v) {
+            setForm({ partNumber: "", serialNumber: "", description: "", status: "serviceable", condition: "serviceable", tsnHours: "", tsoHours: "", tboHours: "", purchasePrice: "", currentValue: "", coreValue: "", notes: "" });
+          }
+          setCreateOpen(v);
+        }}>
           <DialogTrigger asChild>
             <Button size="sm"><Plus className="w-3.5 h-3.5 mr-1.5" />New Rotable</Button>
           </DialogTrigger>
@@ -367,7 +371,10 @@ export default function RotablesPage() {
               </div>
               <div className="space-y-2"><Label>Notes</Label><Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={2} /></div>
               <div className="flex justify-end gap-2">
-                <Button type="button" variant="ghost" onClick={() => setCreateOpen(false)}>Cancel</Button>
+                <Button type="button" variant="ghost" onClick={() => {
+                  setForm({ partNumber: "", serialNumber: "", description: "", status: "serviceable", condition: "serviceable", tsnHours: "", tsoHours: "", tboHours: "", purchasePrice: "", currentValue: "", coreValue: "", notes: "" });
+                  setCreateOpen(false);
+                }}>Cancel</Button>
                 <Button type="submit">Create</Button>
               </div>
             </form>

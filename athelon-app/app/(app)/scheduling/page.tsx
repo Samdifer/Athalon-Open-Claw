@@ -7,7 +7,6 @@ import {
   useCallback,
   useEffect,
   type UIEvent,
-  type MouseEvent as ReactMouseEvent,
 } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -70,6 +69,10 @@ import {
 } from "@/lib/scheduling/dayModel";
 import { usePagePrereqs } from "@/hooks/usePagePrereqs";
 import { ActionableEmptyState } from "@/components/zero-state/ActionableEmptyState";
+import { useScheduleUndo } from "./hooks/useScheduleUndo";
+import type { UndoAction } from "./hooks/useScheduleUndo";
+import { useSchedulerKeyboard, KEYBOARD_SHORTCUTS } from "./hooks/useSchedulerKeyboard";
+import { Undo2, Keyboard } from "lucide-react";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // LOADING SKELETON
@@ -272,6 +275,41 @@ export default function SchedulingPage() {
     api.schedulerPlanning.upsertPlanningFinancialSettings,
   );
   const upsertSchedulingSettings = useMutation(api.capacity.upsertSchedulingSettings);
+  // ── Undo stack ──────────────────────────────────────────────────────────
+  const undoExecutor = useCallback(
+    async (action: UndoAction) => {
+      if (!orgId) return;
+      if (action.mutationName === "upsertScheduleAssignment") {
+        await upsertScheduleAssignment({
+          organizationId: orgId,
+          ...(action.inverseParams as any),
+        });
+        toast.success(`Undone: ${action.label}`);
+      } else if (action.mutationName === "archiveScheduleAssignment") {
+        await restoreScheduleAssignment({
+          assignmentId: action.inverseParams.assignmentId as any,
+        });
+        toast.success(`Undone: ${action.label}`);
+      }
+    },
+    [orgId, upsertScheduleAssignment, restoreScheduleAssignment],
+  );
+  const { pushAction: pushUndo, undo, canUndo, undoLabel, undoCount } =
+    useScheduleUndo(undoExecutor);
+
+  // ── Keyboard shortcuts ─────────────────────────────────────────────────
+  const exitCurrentMode = useCallback(() => {
+    if (scheduleEditMode) setScheduleEditMode(false);
+    if (magicSelectionMode) setMagicSelectionMode(false);
+  }, [scheduleEditMode, magicSelectionMode]);
+
+  const { shortcutsOpen, setShortcutsOpen } = useSchedulerKeyboard({
+    onUndo: canUndo ? undo : undefined,
+    onExitMode: exitCurrentMode,
+    timelineScrollRef: ganttScrollRef,
+    cellWidth: timelineConfig.cellWidth,
+  });
+
   const prereq = usePagePrereqs({
     requiresOrg: true,
     isDataLoading:
@@ -477,21 +515,21 @@ export default function SchedulingPage() {
     if (!resizingPanel) return;
     const activeResize = resizingPanel;
 
-    function handleMouseMove(e: MouseEvent) {
+    function handlePointerMove(e: PointerEvent) {
       const delta = activeResize.startY - e.clientY;
       const nextHeight = Math.max(100, Math.min(600, activeResize.startHeight + delta));
       setPanelHeights((prev) => ({ ...prev, [activeResize.target]: nextHeight }));
     }
 
-    function handleMouseUp() {
+    function handlePointerUp() {
       setResizingPanel(null);
     }
 
-    window.addEventListener("mousemove", handleMouseMove);
-    window.addEventListener("mouseup", handleMouseUp);
+    window.addEventListener("pointermove", handlePointerMove);
+    window.addEventListener("pointerup", handlePointerUp);
     return () => {
-      window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("mouseup", handleMouseUp);
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerup", handlePointerUp);
     };
   }, [resizingPanel]);
 
@@ -499,21 +537,21 @@ export default function SchedulingPage() {
     if (!resizingRoster) return;
     const activeResize = resizingRoster;
 
-    function handleMouseMove(e: MouseEvent) {
+    function handlePointerMove(e: PointerEvent) {
       const delta = activeResize.startX - e.clientX;
       const nextWidth = Math.max(220, Math.min(560, activeResize.startWidth + delta));
       setRosterWidth(nextWidth);
     }
 
-    function handleMouseUp() {
+    function handlePointerUp() {
       setResizingRoster(null);
     }
 
-    window.addEventListener("mousemove", handleMouseMove);
-    window.addEventListener("mouseup", handleMouseUp);
+    window.addEventListener("pointermove", handlePointerMove);
+    window.addEventListener("pointerup", handlePointerUp);
     return () => {
-      window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("mouseup", handleMouseUp);
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerup", handlePointerUp);
     };
   }, [resizingRoster]);
 
@@ -548,7 +586,7 @@ export default function SchedulingPage() {
   }, [timelineConfig, pnlPopout, capacityPopout, analyticsPopout, syncTimelineScroll]);
 
   const startPanelResize = useCallback(
-    (e: ReactMouseEvent, target: "pnl" | "capacity" | "analytics") => {
+    (e: React.PointerEvent, target: "pnl" | "capacity" | "analytics") => {
       e.preventDefault();
       e.stopPropagation();
       setResizingPanel({
@@ -560,7 +598,7 @@ export default function SchedulingPage() {
     [panelHeights],
   );
 
-  const startRosterResize = useCallback((e: ReactMouseEvent) => {
+  const startRosterResize = useCallback((e: React.PointerEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setResizingRoster({
@@ -989,6 +1027,12 @@ export default function SchedulingPage() {
     sourceQuoteId?: string;
   }) {
     if (!orgId) throw new Error("Missing organization context");
+
+    // Capture previous state for undo
+    const prev = scheduledProjects.find((p) => p.workOrderId === args.workOrderId);
+    const wo = workOrderMap.get(args.workOrderId);
+    const woLabel = wo?.workOrderNumber ?? args.workOrderId.slice(0, 8);
+
     await upsertScheduleAssignment({
       organizationId: orgId,
       workOrderId: args.workOrderId as any,
@@ -998,6 +1042,21 @@ export default function SchedulingPage() {
       endDate: args.endDate,
       sourceQuoteId: args.sourceQuoteId as any,
     });
+
+    if (prev) {
+      pushUndo({
+        label: `Move ${woLabel}`,
+        mutationName: "upsertScheduleAssignment",
+        inverseParams: {
+          workOrderId: args.workOrderId,
+          hangarBayId: prev.hangarBayId,
+          shopLocationId: selectedShopLocationIdForMutations,
+          startDate: prev.scheduledStartDate,
+          endDate: prev.promisedDeliveryDate,
+          sourceQuoteId: prev.sourceQuoteId,
+        },
+      });
+    }
   }
 
   const toggleScheduleEditMode = useCallback(() => {
@@ -1030,19 +1089,7 @@ export default function SchedulingPage() {
     });
   }, [unscheduledCount]);
 
-  useEffect(() => {
-    function handleEscape(event: KeyboardEvent) {
-      if (event.key !== "Escape") return;
-      if (scheduleEditMode) {
-        setScheduleEditMode(false);
-      }
-      if (magicSelectionMode) {
-        setMagicSelectionMode(false);
-      }
-    }
-    window.addEventListener("keydown", handleEscape);
-    return () => window.removeEventListener("keydown", handleEscape);
-  }, [scheduleEditMode, magicSelectionMode]);
+  // Escape handling is now in useSchedulerKeyboard via onExitMode
 
   const setFullscreen = useCallback(
     (enabled: boolean) => {
@@ -1608,6 +1655,35 @@ export default function SchedulingPage() {
           <Sparkles className="w-3.5 h-3.5" />
           {autoScheduling ? "Scheduling..." : "Auto Schedule"}
         </Button>
+
+        <Button
+          variant="outline"
+          size="sm"
+          className="text-xs h-7"
+          onClick={() => void undo()}
+          disabled={!canUndo}
+          title={undoLabel ? `Undo: ${undoLabel}` : "Nothing to undo"}
+          data-testid="undo-button"
+        >
+          <Undo2 className="w-3.5 h-3.5" />
+          Undo
+          {undoCount > 0 && (
+            <Badge variant="secondary" className="h-4 px-1 text-[10px]">
+              {undoCount}
+            </Badge>
+          )}
+        </Button>
+
+        <Button
+          variant="outline"
+          size="sm"
+          className="text-xs h-7"
+          onClick={() => setShortcutsOpen(true)}
+          title="Keyboard shortcuts (?)"
+          data-testid="shortcuts-button"
+        >
+          <Keyboard className="w-3.5 h-3.5" />
+        </Button>
         </div>
       )}
 
@@ -1620,6 +1696,11 @@ export default function SchedulingPage() {
         onApplyDefaults={handleApplyOnboardingDefaults}
         onSkip={markOnboardingSkipped}
         onComplete={markOnboardingCompleted}
+        onOpenBacklog={() => {
+          setGraveyardOpen(false);
+          setBacklogOpen(true);
+        }}
+        storageKey={onboardingStorageKey ?? "default"}
       />
 
       {isFullscreen && (
@@ -1671,7 +1752,7 @@ export default function SchedulingPage() {
                   {pnlOpen && (
                     <div
                       className="h-1 w-full cursor-row-resize hover:bg-cyan-500/50 absolute top-0 left-0 z-50 transition-colors"
-                      onMouseDown={(e) => startPanelResize(e, "pnl")}
+                      onPointerDown={(e) => startPanelResize(e, "pnl")}
                     />
                   )}
                   <DailyFinancialTracker
@@ -1696,7 +1777,7 @@ export default function SchedulingPage() {
                   {capacityOpen && (
                     <div
                       className="h-1 w-full cursor-row-resize hover:bg-cyan-500/50 absolute top-0 left-0 z-50 transition-colors"
-                      onMouseDown={(e) => startPanelResize(e, "capacity")}
+                      onPointerDown={(e) => startPanelResize(e, "capacity")}
                     />
                   )}
                   <CapacityForecaster
@@ -1721,7 +1802,7 @@ export default function SchedulingPage() {
                   {analyticsOpen && (
                     <div
                       className="h-1 w-full cursor-row-resize hover:bg-indigo-500/50 absolute top-0 left-0 z-50 transition-colors"
-                      onMouseDown={(e) => startPanelResize(e, "analytics")}
+                      onPointerDown={(e) => startPanelResize(e, "analytics")}
                     />
                   )}
                   <SchedulingAnalyticsPanel
@@ -1743,7 +1824,7 @@ export default function SchedulingPage() {
             {rosterOpen && (
               <div
                 className="w-1 h-full cursor-col-resize hover:bg-indigo-500/50 transition-colors"
-                onMouseDown={startRosterResize}
+                onPointerDown={startRosterResize}
               />
             )}
             <SchedulingRosterPanel
@@ -1997,6 +2078,33 @@ export default function SchedulingPage() {
               {magicRunning ? "Applying..." : "Apply Magic Schedule"}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Keyboard shortcuts overlay */}
+      <Dialog open={shortcutsOpen} onOpenChange={setShortcutsOpen}>
+        <DialogContent className="max-w-sm" data-testid="keyboard-shortcuts-dialog">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Keyboard className="w-4 h-4" />
+              Keyboard Shortcuts
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-1">
+            {KEYBOARD_SHORTCUTS.map((s) => (
+              <div
+                key={s.keys}
+                className="flex items-center justify-between py-1.5 px-1"
+              >
+                <span className="text-sm text-muted-foreground">
+                  {s.description}
+                </span>
+                <kbd className="rounded border border-border bg-muted px-2 py-0.5 text-xs font-mono">
+                  {s.keys}
+                </kbd>
+              </div>
+            ))}
+          </div>
         </DialogContent>
       </Dialog>
     </div>

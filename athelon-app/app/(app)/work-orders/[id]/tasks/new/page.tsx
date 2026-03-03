@@ -22,6 +22,16 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import {
@@ -167,6 +177,18 @@ export default function NewTaskCardPage() {
   const [estimatedHours, setEstimatedHours] = useState<string>("");
 
   const [templatePickerOpen, setTemplatePickerOpen] = useState(false);
+  // BUG-LT-HUNT-007: Track a pending template load for confirmation.
+  // Before this fix, "Load from Template" immediately called setSteps() with
+  // the template's steps — silently discarding any steps the tech had already
+  // typed. A lead tech who builds 5 custom steps, then accidentally clicks
+  // "Load from Template" (it's right next to the Back button in the header),
+  // loses all their work with no warning or undo. Since creating steps requires
+  // looking up the AMM, writing descriptions, and configuring IA requirements,
+  // this could mean 15–30 minutes of lost work. pendingTemplate holds the
+  // chosen template until the tech confirms overwrite. If the current steps are
+  // all blank defaults (haven't been touched), confirmation is skipped.
+  type TemplateDraft = { approvedDataSource: string; approvedDataRevision?: string; steps: StepDraft[] };
+  const [pendingTemplate, setPendingTemplate] = useState<TemplateDraft | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -207,13 +229,29 @@ export default function NewTaskCardPage() {
 
   // ── Template load ────────────────────────────────────────────────────────────
 
-  const handleTemplateLoad = useCallback(
+  const applyTemplate = useCallback(
     (tpl: { approvedDataSource: string; approvedDataRevision?: string; steps: StepDraft[] }) => {
       setApprovedDataSource(tpl.approvedDataSource);
       setApprovedDataRevision(tpl.approvedDataRevision ?? "");
       setSteps(tpl.steps.length > 0 ? tpl.steps : [newStepDraft()]);
     },
     [],
+  );
+
+  const handleTemplateLoad = useCallback(
+    (tpl: { approvedDataSource: string; approvedDataRevision?: string; steps: StepDraft[] }) => {
+      // BUG-LT-HUNT-007: Check if any existing steps have been populated by
+      // the user. A single empty default step is treated as "not started".
+      const hasUserSteps = steps.some((s) => s.description.trim().length > 0);
+      if (hasUserSteps) {
+        // Hold the template — show confirmation dialog before applying.
+        setPendingTemplate(tpl);
+      } else {
+        // No user content to lose — apply immediately.
+        applyTemplate(tpl);
+      }
+    },
+    [steps, applyTemplate],
   );
 
   // ── Validation ──────────────────────────────────────────────────────────────
@@ -226,6 +264,15 @@ export default function NewTaskCardPage() {
     for (let i = 0; i < steps.length; i++) {
       if (!steps[i].description.trim())
         return `Step ${i + 1} description is required.`;
+      // BUG-LT-HUNT-045: Enforce special tool reference when the "Requires
+      // Special Tool" checkbox is checked. Previously the reference field was
+      // optional regardless — a tech could check the box and save without
+      // naming the tool. The next tech assigned to the job would see "Special
+      // tool required" with no reference, causing a shop-floor hunt and
+      // potential work stoppage. If the box is checked, the reference is the
+      // entire point: make it required.
+      if (steps[i].requiresSpecialTool && !steps[i].specialToolReference.trim())
+        return `Step ${i + 1}: a special tool reference is required when "Requires Special Tool" is checked (e.g. "Torque adapter P/N 1234").`;
     }
     return null;
   }
@@ -307,8 +354,22 @@ export default function NewTaskCardPage() {
   }
 
   const woData = wo.workOrder;
+  // BUG-LT-HUNT-006: Added "open_discrepancies" and "pending_inspection" to
+  // the canAddCards check. Previously, only "open" and "in_progress" were
+  // allowed. A WO in "open_discrepancies" has active discrepancy findings that
+  // need new task cards to address them — that's the PRIMARY reason that status
+  // exists. Blocking task card creation when a WO has open discrepancies is a
+  // complete workflow dead-end: the tech finds a problem, logs a discrepancy,
+  // status transitions to open_discrepancies, then they CAN'T add a task card
+  // to fix it. They have to ask the shop manager to manually change the WO
+  // status before they can continue. "pending_inspection" is also a live WO
+  // where the inspection work may be incomplete; additional task cards are
+  // legitimately needed before the IA can sign off.
   const canAddCards =
-    woData.status === "open" || woData.status === "in_progress";
+    woData.status === "open" ||
+    woData.status === "in_progress" ||
+    woData.status === "open_discrepancies" ||
+    woData.status === "pending_inspection";
 
   if (!canAddCards) {
     return (
@@ -319,7 +380,8 @@ export default function NewTaskCardPage() {
         </p>
         <p className="text-xs text-muted-foreground mt-1">
           Work order is in status &quot;{woData.status}&quot;. Task cards can
-          only be added to open or in-progress work orders.
+          only be added to open, in-progress, open discrepancies, or pending
+          inspection work orders.
         </p>
         <Button asChild variant="outline" size="sm" className="mt-4">
           <Link to={`/work-orders/${workOrderId}`}>Back to Work Order</Link>
@@ -492,6 +554,38 @@ export default function NewTaskCardPage() {
           onSelect={handleTemplateLoad}
         />
       )}
+
+      {/* BUG-LT-HUNT-007: Template overwrite confirmation dialog */}
+      <AlertDialog
+        open={pendingTemplate !== null}
+        onOpenChange={(open) => { if (!open) setPendingTemplate(null); }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Replace existing steps?</AlertDialogTitle>
+            <AlertDialogDescription>
+              You have already entered step descriptions. Loading this template
+              will permanently replace all current steps with the template's
+              steps. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setPendingTemplate(null)}>
+              Keep my steps
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (pendingTemplate) {
+                  applyTemplate(pendingTemplate);
+                  setPendingTemplate(null);
+                }
+              }}
+            >
+              Replace steps
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

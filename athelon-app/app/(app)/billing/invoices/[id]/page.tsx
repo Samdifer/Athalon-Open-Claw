@@ -151,7 +151,11 @@ export default function InvoiceDetailPage() {
   };
 
   const handlePayment = async () => {
-    if (!orgId || !techId || !invoice) return;
+    if (!orgId || !invoice) return;
+    if (!techId) {
+      setError("A technician profile is required to record payments. Go to Personnel and create your profile first.");
+      return;
+    }
     const amount = parseFloat(payAmount);
     if (isNaN(amount) || amount <= 0) { setError("Enter a valid payment amount."); return; }
     // Guard against overpayment — prevent recording more than the outstanding balance

@@ -9,7 +9,7 @@
  * and labor estimate fields per Elevate MRO Discrepancy Action Record.
  */
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -149,6 +149,13 @@ export function RaiseFindingDialog({
 
   function resetForm() {
     setDescription("");
+    // BUG-LT-HUNT-006: Reset foundDuring to its default — previously omitted,
+    // so if a tech changed "Found During" to "Annual Inspection" then cancelled,
+    // reopening the dialog for a new finding would pre-select "Annual Inspection"
+    // even for a routine maintenance squawk. The "Found During" value is stored
+    // on the discrepancy record; a wrong value creates an inaccurate maintenance
+    // record under 14 CFR 43.9(a).
+    setFoundDuring("routine_maintenance");
     setComponentAffected("");
     setComponentPartNumber("");
     setComponentSerialNumber("");
@@ -163,6 +170,28 @@ export function RaiseFindingDialog({
     setPhotoStorageIds([]);
     setAircraftHoursEntry(aircraftHours > 0 ? String(aircraftHours) : "");
   }
+
+  // BUG-LT-HUNT-006: Reset all form state and error when the dialog (re-)opens.
+  // Previously there was no useEffect hook here, so a tech who partially filled
+  // in a finding (description, photos, component info), clicked Cancel, then
+  // re-opened the dialog for a *different* discrepancy would see all the prior
+  // data pre-populated. This is particularly dangerous:
+  //   1. Description from finding A appears on finding B → wrong discrepancy
+  //      description permanently attached to the work order.
+  //   2. Photos of Component A show up pre-loaded for Component B → wrong
+  //      photographic evidence on the maintenance record.
+  //   3. "Mandatory — affects airworthiness" pre-selected from a prior finding
+  //      when the new finding is informational only → inflated severity in the
+  //      discrepancy log, triggering unnecessary RII holds.
+  // Under 14 CFR 43.9 discrepancy records are permanent; they cannot be
+  // corrected after the technician submits without a separate amendment.
+  useEffect(() => {
+    if (open) {
+      resetForm();
+      setError(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   async function handleSubmit() {
     if (!description.trim()) {

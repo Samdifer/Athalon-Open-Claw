@@ -538,6 +538,7 @@ export default function WorkOrderDetailPage() {
             orgId={orgId}
             techId={techId ?? undefined}
             aircraftCurrentHours={wo.aircraftTotalTimeAtOpen ?? null}
+            workOrderStatus={wo.status}
           />
           <div className="mt-4">
             <DiscrepancyList

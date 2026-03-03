@@ -323,7 +323,7 @@ export default function SquawksPage() {
                     <p className="text-sm text-foreground/80 line-clamp-2">
                       {d.description}
                     </p>
-                    <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground/60">
+                    <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground/60 flex-wrap">
                       {d.componentAffected && (
                         <span>Component: {d.componentAffected}</span>
                       )}
@@ -339,6 +339,22 @@ export default function SquawksPage() {
                       )}
                       {d.melCategory && (
                         <span>MEL Cat {d.melCategory}</span>
+                      )}
+                      {/* BUG-LT-HUNT-009: Add "View WO →" link so a Lead Tech can
+                          navigate to the parent work order for full context (steps
+                          completed, other task cards, parts used, audit trail).
+                          Previously the squawks list was a dead-end — no path from
+                          a squawk back to the WO where it was logged. The tech had
+                          to go to Work Orders, search/scroll for the right WO, then
+                          find the discrepancy — a multi-step detour mid-workflow. */}
+                      {d.workOrderId && (
+                        <Link
+                          to={`/work-orders/${d.workOrderId}`}
+                          className="text-primary hover:underline underline-offset-2 flex items-center gap-0.5"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          View WO →
+                        </Link>
                       )}
                     </div>
                   </div>

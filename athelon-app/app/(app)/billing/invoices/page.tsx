@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -204,6 +204,7 @@ interface BatchPaymentDialogProps {
   open: boolean;
   invoices: BatchPaymentInvoice[];
   orgId: Id<"organizations">;
+  currentTechId?: string;
   onClose: () => void;
   onSuccess: () => void;
 }
@@ -212,6 +213,7 @@ function BatchPaymentDialog({
   open,
   invoices,
   orgId,
+  currentTechId,
   onClose,
   onSuccess,
 }: BatchPaymentDialogProps) {
@@ -223,8 +225,14 @@ function BatchPaymentDialog({
 
   const [amounts, setAmounts] = useState<Record<string, string>>({});
   const [methods, setMethods] = useState<Record<string, PaymentMethod>>({});
-  const [techId, setTechId] = useState<string>("");
+  // Pre-populate with the current user's tech ID so they don't have to select themselves
+  const [techId, setTechId] = useState<string>(currentTechId ?? "");
   const [loading, setLoading] = useState(false);
+
+  // Sync pre-populated techId when auth finishes loading after first render
+  useEffect(() => {
+    if (currentTechId && !techId) setTechId(currentTechId);
+  }, [currentTechId]); // eslint-disable-line react-hooks/exhaustive-deps
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<{ recorded: number; errors: string[] } | null>(null);
 
@@ -406,7 +414,7 @@ function BatchPaymentDialog({
 export default function InvoicesPage() {
   const [activeTab, setActiveTab] = useState<InvoiceStatus>("all");
   const [search, setSearch] = useState("");
-  const { orgId, isLoaded } = useCurrentOrg();
+  const { orgId, techId: currentTechId, isLoaded } = useCurrentOrg();
 
   // Selection state
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -844,6 +852,7 @@ export default function InvoicesPage() {
             total: inv.total,
           }))}
           orgId={orgId}
+          currentTechId={currentTechId ?? undefined}
           onClose={() => setPaymentDialogOpen(false)}
           onSuccess={() => setSelectedIds(new Set())}
         />

@@ -171,6 +171,26 @@ export default function ReleaseAircraftPage() {
       setError("Aircraft total time at release is required.");
       return;
     }
+    const enteredHours = parseFloat(aircraftTotalTime);
+    if (enteredHours <= 0) {
+      setError("Aircraft total time must be greater than zero.");
+      return;
+    }
+    // BUG-LT-HUNT-044: Guard against impossible logbook entries.
+    // If the tech types hours LESS than the current logged airframe time, the
+    // resulting maintenance record would show the airframe going backwards in
+    // time — a permanent, uncorrectable data integrity violation. Under
+    // 14 CFR 43.9(a) all entries must be accurate; an airframe that shrinks
+    // from 5,000 to 1,000 hours is an obvious error that would flag in any
+    // FAA audit. The current airframe hours are already fetched and displayed
+    // on this page — use them to enforce a floor.
+    const currentAirframeHours = (data as { aircraft?: { totalTimeAirframeHours?: number } } | null)?.aircraft?.totalTimeAirframeHours;
+    if (currentAirframeHours !== undefined && enteredHours < currentAirframeHours) {
+      setError(
+        `Aircraft total time cannot decrease. Current logged time is ${currentAirframeHours.toFixed(1)} hrs — entered value must be at or above this.`,
+      );
+      return;
+    }
 
     setSubmitting(true);
     try {

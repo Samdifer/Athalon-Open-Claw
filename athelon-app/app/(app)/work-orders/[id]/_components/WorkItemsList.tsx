@@ -15,6 +15,7 @@ import {
   Filter,
   ClipboardList,
   SearchX,
+  Lock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -93,6 +94,8 @@ export interface WorkItemsListProps {
   orgId?: Id<"organizations">;
   techId?: Id<"technicians">;
   aircraftCurrentHours?: number | null;
+  /** BUG-LT-HUNT-008: WO status for gating the Add Task Card button. */
+  workOrderStatus?: string;
 }
 
 // ── Constants ────────────────────────────────────────────────────────────────
@@ -158,7 +161,12 @@ export function WorkItemsList({
   orgId,
   techId,
   aircraftCurrentHours,
+  workOrderStatus,
 }: WorkItemsListProps) {
+  // BUG-LT-HUNT-008: Gate the Add Task Card CTA to editable WO statuses.
+  const addableStatuses = ["open", "in_progress", "open_discrepancies", "pending_inspection"];
+  const canAddCards = !workOrderStatus || addableStatuses.includes(workOrderStatus);
+
   const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
   const [systemFilter, setSystemFilter] = useState<string>("all");
   const [originFilter, setOriginFilter] = useState<string>("all");
@@ -297,17 +305,25 @@ export function WorkItemsList({
 
       {/* Action buttons */}
       <div className="flex items-center gap-2 pt-1">
-        <Button
-          asChild
-          variant="outline"
-          size="sm"
-          className="flex-1 h-9 text-xs border-border/60 border-dashed gap-1.5"
-        >
-          <Link to={`/work-orders/${workOrderId}/tasks/new`}>
-            <Wrench className="w-3.5 h-3.5" />
-            Add Task Card
-          </Link>
-        </Button>
+        {/* BUG-LT-HUNT-008: Gate Add Task Card to editable WO statuses */}
+        {canAddCards ? (
+          <Button
+            asChild
+            variant="outline"
+            size="sm"
+            className="flex-1 h-9 text-xs border-border/60 border-dashed gap-1.5"
+          >
+            <Link to={`/work-orders/${workOrderId}/tasks/new`}>
+              <Wrench className="w-3.5 h-3.5" />
+              Add Task Card
+            </Link>
+          </Button>
+        ) : (
+          <div className="flex-1 flex items-center justify-center gap-1.5 text-xs text-muted-foreground/50 h-9 border border-border/30 border-dashed rounded-md">
+            <Lock className="w-3 h-3" />
+            Locked — no new task cards
+          </div>
+        )}
         {/* AI-053: Wire Log Squawk button to LogSquawkDialog */}
         <Button
           variant="outline"

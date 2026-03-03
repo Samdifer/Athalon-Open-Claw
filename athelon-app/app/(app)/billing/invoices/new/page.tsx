@@ -229,8 +229,12 @@ export default function NewInvoicePage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    if (!orgId || !techId) {
+    if (!orgId) {
       setError("Organization not loaded.");
+      return;
+    }
+    if (!techId) {
+      setError("A technician profile is required to create invoices. Go to Personnel and create your profile first.");
       return;
     }
 

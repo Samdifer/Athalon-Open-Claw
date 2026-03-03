@@ -297,9 +297,11 @@ export default function MyWorkPage() {
                   : "text-muted-foreground";
 
             return (
+                            // BUG-LT-HUNT-010: amber awaitingSignOff border overrides red risk border.
+              // See MASTER-BUILD-LIST.md for full description.
               <Card
                 key={card._id}
-                className={`border-border/60 hover:border-primary/30 transition-all ${riskBorderClass}${awaitingSignOff ? " border-amber-500/30 bg-amber-500/5" : ""}`}
+                className={`border-border/60 hover:border-primary/30 transition-all ${riskBorderClass}${awaitingSignOff && scheduleRisk === "no_date" ? " border-amber-500/30 bg-amber-500/5" : awaitingSignOff ? " bg-amber-500/5" : ""}`}
               >
                 <CardContent className="p-4 space-y-3">
                   {/* Row 1: Card number + title + status + continue button */}

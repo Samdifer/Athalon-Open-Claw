@@ -164,7 +164,15 @@ export default function ShippingPage() {
           <h1 className="text-lg sm:text-xl md:text-2xl font-semibold text-foreground flex items-center gap-2"><Truck className="w-5 h-5 text-muted-foreground" /> Shipping & Receiving</h1>
           <p className="text-sm text-muted-foreground mt-0.5">Track inbound and outbound shipments</p>
         </div>
-        <Dialog open={showCreate} onOpenChange={(v) => { if (!isCreating) setShowCreate(v); }}>
+        <Dialog open={showCreate} onOpenChange={(v) => {
+          if (!isCreating) {
+            if (!v) {
+              setFormCarrier(""); setFormTracking(""); setFormOrigin(""); setFormDest(""); setFormHazmat(false); setFormNotes("");
+              setFormType("outbound");
+            }
+            setShowCreate(v);
+          }
+        }}>
           <DialogTrigger asChild>
             <Button size="sm" className="h-9 gap-1.5"><Plus className="w-4 h-4" /> New Shipment</Button>
           </DialogTrigger>

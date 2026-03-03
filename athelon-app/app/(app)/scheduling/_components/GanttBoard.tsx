@@ -345,10 +345,11 @@ export function GanttBoard({
   }, [todayIndex, cellWidth, timelineScrollRef]);
 
   // ── Drag handlers ─────────────────────────────────────────────────────
-  const handleMouseDown = useCallback(
-    (e: React.MouseEvent, wo: ScheduledPlannerProject, type: "move" | "resize") => {
+  const handlePointerDown = useCallback(
+    (e: React.PointerEvent, wo: ScheduledPlannerProject, type: "move" | "resize") => {
       e.preventDefault();
       e.stopPropagation();
+      (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
       setDragState({
         workOrderId: wo.workOrderId,
         hangarBayId: wo.hangarBayId,
@@ -368,14 +369,14 @@ export function GanttBoard({
     if (!dragState) return;
     if (isEditMode || magicSelectionMode) return;
 
-    function handleMouseMove(e: MouseEvent) {
+    function handlePointerMove(e: PointerEvent) {
       setDragDelta(e.clientX - dragState!.startX);
       if (dragState?.type === "move") {
         setDragHoverBayId(resolveHoveredBayId(e.clientY));
       }
     }
 
-    async function handleMouseUp(e: MouseEvent) {
+    async function handlePointerUp(e: PointerEvent) {
       const delta = e.clientX - dragState!.startX;
       const daysDelta = Math.round(delta / cellWidth);
       const nextHangarBayId =
@@ -418,11 +419,11 @@ export function GanttBoard({
       setDragHoverBayId(null);
     }
 
-    window.addEventListener("mousemove", handleMouseMove);
-    window.addEventListener("mouseup", handleMouseUp);
+    window.addEventListener("pointermove", handlePointerMove);
+    window.addEventListener("pointerup", handlePointerUp);
     return () => {
-      window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("mouseup", handleMouseUp);
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerup", handlePointerUp);
     };
   }, [
     dragState,
@@ -936,10 +937,11 @@ export function GanttBoard({
                           (isDragging && dragState?.type === "resize" ? dragDelta : 0),
                         top: barTop,
                         height: BAR_HEIGHT,
+                        touchAction: "none",
                       }}
-                      onMouseDown={(e) => {
+                      onPointerDown={(e) => {
                         if (interactionPaused) return;
-                        handleMouseDown(e, wo, "move");
+                        handlePointerDown(e, wo, "move");
                       }}
                       onClick={(e) => {
                         if (!magicSelectionMode) return;
@@ -983,7 +985,7 @@ export function GanttBoard({
                           className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 rounded border border-white/30 bg-black/20 text-white hover:bg-black/35 flex items-center justify-center"
                           aria-label={`Archive ${wo.workOrderNumber}`}
                           data-testid={`archive-assignment-${wo.assignmentId}`}
-                          onMouseDown={(e) => {
+                          onPointerDown={(e) => {
                             e.stopPropagation();
                           }}
                           onClick={async (e) => {
@@ -1007,9 +1009,10 @@ export function GanttBoard({
                       {!interactionPaused && (
                         <div
                           className="absolute right-0 top-0 bottom-0 w-2 cursor-ew-resize hover:bg-white/20"
-                          onMouseDown={(e) => {
+                          style={{ touchAction: "none" }}
+                          onPointerDown={(e) => {
                             e.stopPropagation();
-                            handleMouseDown(e, wo, "resize");
+                            handlePointerDown(e, wo, "resize");
                           }}
                         />
                       )}
@@ -1044,7 +1047,7 @@ export function GanttBoard({
                                     : `Day ${dayOffset + 1}: ${isBlocked ? "blocked" : "active"}`
                                 }
                                 data-testid={`gantt-day-segment-${wo.assignmentId}-${dayOffset}`}
-                                onMouseDown={(event) => {
+                                onPointerDown={(event) => {
                                   event.preventDefault();
                                   event.stopPropagation();
                                 }}

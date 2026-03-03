@@ -59,11 +59,22 @@ interface TaskCard {
 export interface TaskCardListProps {
   taskCards: TaskCard[];
   workOrderId: string;
+  /** BUG-LT-HUNT-008: WO status for gating the Add Task Card button. */
+  workOrderStatus?: string;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export function TaskCardList({ taskCards, workOrderId }: TaskCardListProps) {
+export function TaskCardList({ taskCards, workOrderId, workOrderStatus }: TaskCardListProps) {
+  // BUG-LT-HUNT-008: Gate the "Add Task Card" CTA to statuses where task card
+  // creation is actually permitted. Previously the button was always rendered,
+  // so clicking it on a closed, voided, or cancelled WO navigated to the form
+  // which immediately showed a "Cannot add task cards" error screen — with no
+  // indication at the list level that the WO was locked. The tech would think
+  // the button was broken. Now the button is suppressed entirely for terminal
+  // statuses and replaced with a lock icon label for closed WOs.
+  const addableStatuses = ["open", "in_progress", "open_discrepancies", "pending_inspection"];
+  const canAddCards = !workOrderStatus || addableStatuses.includes(workOrderStatus);
   return (
     <div className="space-y-2">
       {taskCards.length === 0 ? (
@@ -169,18 +180,26 @@ export function TaskCardList({ taskCards, workOrderId }: TaskCardListProps) {
         })
       )}
 
-      {/* Add Task Card CTA */}
-      <Button
-        asChild
-        variant="outline"
-        size="sm"
-        className="w-full h-9 text-xs border-border/60 border-dashed gap-1.5 mt-2"
-      >
-        <Link to={`/work-orders/${workOrderId}/tasks/new`}>
-          <Wrench className="w-3.5 h-3.5" />
-          Add Task Card
-        </Link>
-      </Button>
+      {/* BUG-LT-HUNT-008: Only show Add Task Card CTA for editable WO statuses */}
+      {canAddCards && (
+        <Button
+          asChild
+          variant="outline"
+          size="sm"
+          className="w-full h-9 text-xs border-border/60 border-dashed gap-1.5 mt-2"
+        >
+          <Link to={`/work-orders/${workOrderId}/tasks/new`}>
+            <Wrench className="w-3.5 h-3.5" />
+            Add Task Card
+          </Link>
+        </Button>
+      )}
+      {!canAddCards && (
+        <div className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground/50 py-2">
+          <Lock className="w-3 h-3" />
+          Work order is locked — no new task cards can be added
+        </div>
+      )}
     </div>
   );
 }

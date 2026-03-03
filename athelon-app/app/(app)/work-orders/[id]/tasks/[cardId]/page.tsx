@@ -567,6 +567,13 @@ export default function TaskCardPage() {
                       note: handoffNote.trim(),
                     });
                     setHandoffNote("");
+                    // BUG-LT-HUNT-011: Add success toast so the tech gets
+                    // positive confirmation the note was saved. Previously the
+                    // textarea just silently cleared — if the notes list was
+                    // scrolled off-screen, the tech had no feedback and might
+                    // re-submit the same note a second time, creating duplicate
+                    // handoff entries in the maintenance record.
+                    toast.success("Handoff note added");
                   } catch (err) {
                     toast.error(
                       err instanceof Error ? err.message : "Failed to add handoff note — please try again",

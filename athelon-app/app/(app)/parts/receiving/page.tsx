@@ -58,6 +58,7 @@ interface InspectDialogProps {
   part: {
     _id: Id<"parts">;
     partNumber: string;
+    partName?: string | null;
     description?: string | null;
     serialNumber?: string | null;
   };
@@ -132,8 +133,11 @@ function InspectDialog({ open, onClose, part, techId }: InspectDialogProps) {
             <p className="text-sm font-semibold text-foreground font-mono">
               {part.partNumber}
             </p>
-            {part.description && (
-              <p className="text-xs text-muted-foreground">{part.description}</p>
+            {(part.partName || part.description) && (
+              <p className="text-xs text-muted-foreground">{part.partName ?? part.description}</p>
+            )}
+            {part.partName && part.description && (
+              <p className="text-xs text-muted-foreground/70">{part.description}</p>
             )}
             {part.serialNumber && (
               <p className="text-xs text-muted-foreground">S/N: {part.serialNumber}</p>
@@ -257,6 +261,7 @@ export default function PartsReceivingPage() {
   const [inspectTarget, setInspectTarget] = useState<{
     _id: Id<"parts">;
     partNumber: string;
+    partName?: string | null;
     description?: string | null;
     serialNumber?: string | null;
   } | null>(null);
@@ -328,7 +333,7 @@ export default function PartsReceivingPage() {
                   Part Number
                 </TableHead>
                 <TableHead className="text-xs font-semibold text-muted-foreground">
-                  Description
+                  Name / Description
                 </TableHead>
                 <TableHead className="text-xs font-semibold text-muted-foreground">
                   Serial Number
@@ -350,10 +355,15 @@ export default function PartsReceivingPage() {
                   <TableCell className="font-mono text-sm font-semibold text-foreground">
                     {part.partNumber}
                   </TableCell>
-                  <TableCell className="text-sm text-muted-foreground max-w-[200px]">
-                    <span className="truncate block">
-                      {part.description ?? "—"}
+                  <TableCell className="text-sm max-w-[200px]">
+                    <span className="truncate block font-medium text-foreground">
+                      {(part as unknown as { partName?: string }).partName ?? part.description ?? "—"}
                     </span>
+                    {(part as unknown as { partName?: string }).partName && part.description && (
+                      <span className="truncate block text-xs text-muted-foreground">
+                        {part.description}
+                      </span>
+                    )}
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground font-mono">
                     {part.serialNumber ?? "—"}
@@ -393,6 +403,7 @@ export default function PartsReceivingPage() {
                           setInspectTarget({
                             _id: part._id,
                             partNumber: part.partNumber,
+                            partName: (part as unknown as { partName?: string }).partName,
                             description: part.description,
                             serialNumber: part.serialNumber,
                           })
@@ -431,6 +442,7 @@ export default function PartsReceivingPage() {
               setInspectTarget({
                 _id: match._id,
                 partNumber: match.partNumber,
+                partName: (match as unknown as { partName?: string }).partName,
                 description: match.description,
                 serialNumber: match.serialNumber,
               });
