@@ -490,7 +490,7 @@ export default function ToolCribPage() {
                       <td className="py-2 pr-4">{statusBadge(tool.status)}</td>
                       <td className="py-2 pr-4 hidden lg:table-cell">
                         {tool.nextCalibrationDue
-                          ? new Date(tool.nextCalibrationDue).toLocaleDateString()
+                          ? new Date(tool.nextCalibrationDue).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" })
                           : "—"}
                       </td>
                       <td className="py-2">
@@ -618,7 +618,7 @@ export default function ToolCribPage() {
                             {tool.nextCalibrationDue
                               ? new Date(
                                   tool.nextCalibrationDue
-                                ).toLocaleDateString()
+                                ).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" })
                               : ""}
                           </p>
                         </div>

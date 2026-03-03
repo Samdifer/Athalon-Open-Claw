@@ -555,6 +555,7 @@ function PartDetailSheet({ part, onClose }: PartDetailSheetProps) {
                       month: "long",
                       day: "numeric",
                       year: "numeric",
+                      timeZone: "UTC",
                     })
                   : null,
               )}
@@ -569,6 +570,7 @@ function PartDetailSheet({ part, onClose }: PartDetailSheetProps) {
                     month: "short",
                     day: "numeric",
                     year: "numeric",
+                    timeZone: "UTC",
                   }),
                 )}
               {part.receivingInspectionNotes && row("Inspection Notes", part.receivingInspectionNotes)}
@@ -680,6 +682,7 @@ function PartDetailSheet({ part, onClose }: PartDetailSheetProps) {
                         month: "short",
                         day: "numeric",
                         year: "numeric",
+                        timeZone: "UTC",
                       }),
                     )}
                 </div>
@@ -1068,6 +1071,7 @@ export default function PartsPage() {
                               month: "short",
                               day: "numeric",
                               year: "numeric",
+                              timeZone: "UTC",
                             })
                           : <span className="text-muted-foreground/40">—</span>}
                       </td>
@@ -1231,7 +1235,7 @@ export default function PartsPage() {
                                 Received{" "}
                                 {new Date(part.receivingDate).toLocaleDateString(
                                   "en-US",
-                                  { month: "short", day: "numeric", year: "numeric" },
+                                  { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" },
                                 )}
                               </span>
                             )}

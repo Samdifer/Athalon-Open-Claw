@@ -181,11 +181,17 @@ function InspectDialog({ open, onClose, part, techId }: InspectDialogProps) {
               </Label>
               <Textarea
                 value={rejectionReason}
-                onChange={(e) => setRejectionReason(e.target.value)}
+                onChange={(e) => setRejectionReason(e.target.value.slice(0, 500))}
                 placeholder="Describe why the part is being rejected…"
                 rows={2}
+                maxLength={500}
                 className="text-sm bg-muted/30 border-border/60 resize-none"
               />
+              {rejectionReason.length >= 450 && (
+                <p className={`text-[10px] mt-0.5 text-right ${rejectionReason.length >= 490 ? "text-destructive" : "text-amber-400"}`}>
+                  {rejectionReason.length}/500
+                </p>
+              )}
             </div>
           )}
 
@@ -197,9 +203,10 @@ function InspectDialog({ open, onClose, part, techId }: InspectDialogProps) {
             </Label>
             <Textarea
               value={inspectionNotes}
-              onChange={(e) => setInspectionNotes(e.target.value)}
+              onChange={(e) => setInspectionNotes(e.target.value.slice(0, 500))}
               placeholder="Any observations during receiving inspection…"
               rows={2}
+              maxLength={500}
               className="text-sm bg-muted/30 border-border/60 resize-none"
             />
           </div>

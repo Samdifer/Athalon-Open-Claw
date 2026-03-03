@@ -149,16 +149,16 @@ function CreateCoreDialog({
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label>Part Number *</Label>
-              <Input value={partNumber} onChange={(e) => setPartNumber(e.target.value)} />
+              <Input value={partNumber} onChange={(e) => setPartNumber(e.target.value.slice(0, 50))} maxLength={50} />
             </div>
             <div>
               <Label>Serial Number</Label>
-              <Input value={serialNumber} onChange={(e) => setSerialNumber(e.target.value)} />
+              <Input value={serialNumber} onChange={(e) => setSerialNumber(e.target.value.slice(0, 50))} maxLength={50} />
             </div>
           </div>
           <div>
             <Label>Description *</Label>
-            <Textarea value={description} onChange={(e) => setDescription(e.target.value)} />
+            <Textarea value={description} onChange={(e) => setDescription(e.target.value.slice(0, 200))} maxLength={200} />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -172,7 +172,7 @@ function CreateCoreDialog({
           </div>
           <div>
             <Label>Notes</Label>
-            <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} />
+            <Textarea value={notes} onChange={(e) => setNotes(e.target.value.slice(0, 500))} maxLength={500} />
           </div>
         </div>
         <DialogFooter>
