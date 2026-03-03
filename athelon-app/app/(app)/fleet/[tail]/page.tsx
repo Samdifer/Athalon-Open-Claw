@@ -72,6 +72,14 @@ function getStatusStyle(status: string): { color: string; label: string } {
       color: "bg-slate-500/15 text-slate-500 dark:text-slate-400 border-slate-500/30",
       label: "Deregistered",
     },
+    out_of_service: {
+      color: "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30",
+      label: "Out of Service",
+    },
+    sold: {
+      color: "bg-slate-500/15 text-slate-500 dark:text-slate-400 border-slate-500/30",
+      label: "Sold",
+    },
   };
   return (
     map[status] ?? {

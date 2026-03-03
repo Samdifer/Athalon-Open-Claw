@@ -334,8 +334,10 @@ export default function AircraftLogbookPage() {
   const isLoading = !orgLoaded || aircraft === undefined || (aircraft !== null && rawRecords === undefined);
 
   // ── Filter logic ─────────────────────────────────────────────────────────────
-  const fromMs = dateFrom ? new Date(dateFrom).getTime() : null;
-  const toMs = dateTo ? new Date(dateTo).setHours(23, 59, 59, 999) : null;
+  // completionDate is stored as UTC midnight (date-only). Use UTC boundaries
+  // so filter edges align with stored values regardless of user's local timezone.
+  const fromMs = dateFrom ? new Date(dateFrom + "T00:00:00.000Z").getTime() : null;
+  const toMs = dateTo ? new Date(dateTo + "T23:59:59.999Z").getTime() : null;
 
   const filtered = (records ?? []).filter((r) => {
     if (filterType !== "all" && r.recordType !== filterType) return false;

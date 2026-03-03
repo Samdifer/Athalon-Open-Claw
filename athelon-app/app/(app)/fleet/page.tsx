@@ -34,6 +34,11 @@ function getStatusStyle(status: string): {
       dot: "bg-green-400",
       label: "Airworthy",
     },
+    airworthy_with_limitations: {
+      color: "bg-amber-500/15 text-amber-400 border-amber-500/30",
+      dot: "bg-amber-400",
+      label: "Airworthy w/ Limitations",
+    },
     in_maintenance: {
       color: "bg-sky-500/15 text-sky-400 border-sky-500/30",
       dot: "bg-sky-400",

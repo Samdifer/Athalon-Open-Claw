@@ -2109,7 +2109,6 @@ export const cloneDeclinedQuote = mutation({
         qty: li.qty,
         unitPrice: li.unitPrice,
         total: li.total,
-        partNumber: li.partNumber,
         partId: li.partId,
         departmentSection: li.departmentSection,
         createdAt: now,
@@ -2127,11 +2126,9 @@ export const cloneDeclinedQuote = mutation({
       await ctx.db.insert("quoteDepartments", {
         orgId: dept.orgId,
         quoteId: newQuoteId,
-        departmentName: dept.departmentName,
-        laborTotal: dept.laborTotal,
-        partsTotal: dept.partsTotal,
-        subtotal: dept.subtotal,
-        status: "PENDING",
+        sectionName: dept.sectionName,
+        assignedTechId: dept.assignedTechId,
+        status: "PENDING" as const,
         createdAt: now,
         updatedAt: now,
       });

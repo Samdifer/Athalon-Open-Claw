@@ -217,9 +217,12 @@ export default function FleetCalendarPage() {
                             );
                           })}
                           {dayEvents.length > 3 && (
-                            <span className="text-[10px] text-muted-foreground">
+                            <Link
+                              to={`/work-orders?from=${dateStr}&to=${dateStr}`}
+                              className="block text-[10px] text-muted-foreground hover:text-foreground underline underline-offset-2 px-1"
+                            >
                               +{dayEvents.length - 3} more
-                            </span>
+                            </Link>
                           )}
                         </div>
                       </>
