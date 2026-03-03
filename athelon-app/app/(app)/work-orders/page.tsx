@@ -172,6 +172,7 @@ export default function WorkOrdersPage() {
   const [filterPriority, setFilterPriority] = useState<WoPriority | "">("");
   const [filterType, setFilterType] = useState<WoType | "">("");
   const [filterOpen, setFilterOpen] = useState(false);
+  const [sortKey, setSortKey] = useState<"default" | "due_date" | "opened" | "progress">("default");
   const [viewMode, setViewMode] = useState<"list" | "tiles" | "truncated">("list");
 
   const workOrders = useMemo<WorkOrderRow[]>(() => {
@@ -202,22 +203,48 @@ export default function WorkOrdersPage() {
     }));
   }, [raw]);
 
-  const filtered = useMemo(
-    () =>
-      filterWorkOrders(workOrders, activeTab).filter((wo) => {
-        if (filterPriority && wo.priority !== filterPriority) return false;
-        if (filterType && wo.rawType !== filterType) return false;
-        if (!search.trim()) return true;
-        const q = search.toLowerCase();
-        return (
-          wo.number.toLowerCase().includes(q) ||
-          wo.aircraft.toLowerCase().includes(q) ||
-          wo.description.toLowerCase().includes(q) ||
-          wo.customer.toLowerCase().includes(q)
-        );
-      }),
-    [activeTab, search, workOrders, filterPriority, filterType],
-  );
+  const filtered = useMemo(() => {
+    const base = filterWorkOrders(workOrders, activeTab).filter((wo) => {
+      if (filterPriority && wo.priority !== filterPriority) return false;
+      if (filterType && wo.rawType !== filterType) return false;
+      if (!search.trim()) return true;
+      const q = search.toLowerCase();
+      return (
+        wo.number.toLowerCase().includes(q) ||
+        wo.aircraft.toLowerCase().includes(q) ||
+        wo.description.toLowerCase().includes(q) ||
+        wo.customer.toLowerCase().includes(q)
+      );
+    });
+
+    // AOG always surfaces first regardless of sort. Within AOG and non-AOG groups
+    // the user-selected sort applies.
+    const sortFn = (a: WorkOrderRow, b: WorkOrderRow): number => {
+      if (sortKey === "due_date") {
+        // No due date sorts last
+        if (!a.promisedDeliveryDate && !b.promisedDeliveryDate) return 0;
+        if (!a.promisedDeliveryDate) return 1;
+        if (!b.promisedDeliveryDate) return -1;
+        return a.promisedDeliveryDate - b.promisedDeliveryDate;
+      }
+      if (sortKey === "opened") {
+        // Oldest first (longest aging WOs at top)
+        return a.openedAt - b.openedAt;
+      }
+      if (sortKey === "progress") {
+        // Least-complete first (most work remaining at top)
+        const aPct = a.tasksTotal > 0 ? a.tasksComplete / a.tasksTotal : 0;
+        const bPct = b.tasksTotal > 0 ? b.tasksComplete / b.tasksTotal : 0;
+        return aPct - bPct;
+      }
+      // default: newest first (backend insertion order — no re-sort)
+      return 0;
+    };
+
+    const aogRows = base.filter((w) => w.priority === "aog").sort(sortFn);
+    const restRows = base.filter((w) => w.priority !== "aog").sort(sortFn);
+    return [...aogRows, ...restRows];
+  }, [activeTab, search, workOrders, filterPriority, filterType, sortKey]);
 
   const activeFilterCount =
     (filterPriority ? 1 : 0) +
@@ -418,6 +445,17 @@ export default function WorkOrdersPage() {
               className="h-8 pl-8 pr-3 text-xs w-full sm:w-64 bg-muted/30 border-border/60"
             />
           </div>
+          <Select value={sortKey} onValueChange={(v) => setSortKey(v as typeof sortKey)}>
+            <SelectTrigger className="h-8 text-xs w-36 border-border/60">
+              <SelectValue placeholder="Sort" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="default" className="text-xs">Default (AOG first)</SelectItem>
+              <SelectItem value="due_date" className="text-xs">Due Date (soonest)</SelectItem>
+              <SelectItem value="opened" className="text-xs">Opened (oldest first)</SelectItem>
+              <SelectItem value="progress" className="text-xs">Progress (least done)</SelectItem>
+            </SelectContent>
+          </Select>
           <Popover open={filterOpen} onOpenChange={setFilterOpen}>
             <PopoverTrigger asChild>
               <Button

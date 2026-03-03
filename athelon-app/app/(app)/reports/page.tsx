@@ -388,11 +388,13 @@ export default function ReportsPage() {
                   <TableHead className="text-xs">Month</TableHead>
                   <TableHead className="text-xs text-right">Revenue</TableHead>
                   <TableHead className="text-xs text-right">WOs Completed</TableHead>
+                  <TableHead className="text-xs text-right">Avg Rev / WO</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {revenueData.map((row) => {
                   const woCount = throughputData.find((t) => t.key === row.key)?.completed ?? 0;
+                  const avgPerWo = woCount > 0 ? row.revenue / woCount : null;
                   return (
                     <TableRow key={row.key} className="border-border/40">
                       <TableCell className="text-xs">
@@ -403,6 +405,11 @@ export default function ReportsPage() {
                         ${row.revenue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </TableCell>
                       <TableCell className="text-xs text-right tabular-nums">{woCount}</TableCell>
+                      <TableCell className="text-xs text-right tabular-nums text-muted-foreground">
+                        {avgPerWo !== null
+                          ? `$${avgPerWo.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                          : "—"}
+                      </TableCell>
                     </TableRow>
                   );
                 })}
@@ -410,6 +417,11 @@ export default function ReportsPage() {
                   <TableCell className="text-xs">Total</TableCell>
                   <TableCell className="text-xs text-right tabular-nums">${totalRevenue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
                   <TableCell className="text-xs text-right tabular-nums">{totalWOs}</TableCell>
+                  <TableCell className="text-xs text-right tabular-nums text-muted-foreground">
+                    {totalWOs > 0
+                      ? `$${(totalRevenue / totalWOs).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                      : "—"}
+                  </TableCell>
                 </TableRow>
               </TableBody>
             </Table>

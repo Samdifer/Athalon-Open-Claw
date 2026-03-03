@@ -489,11 +489,11 @@ export default function TrainingPage() {
                             <td className="py-2 pr-4 capitalize">{rec.courseType}</td>
                             <td className="py-2 pr-4">{rec.provider ?? "—"}</td>
                             <td className="py-2 pr-4">
-                              {new Date(rec.completedAt).toLocaleDateString()}
+                              {new Date(rec.completedAt).toLocaleDateString("en-US", { timeZone: "UTC" })}
                             </td>
                             <td className="py-2 pr-4">
                               {rec.expiresAt
-                                ? new Date(rec.expiresAt).toLocaleDateString()
+                                ? new Date(rec.expiresAt).toLocaleDateString("en-US", { timeZone: "UTC" })
                                 : "—"}
                             </td>
                             <td className="py-2">{statusBadge(rec.status)}</td>
@@ -534,7 +534,7 @@ export default function TrainingPage() {
                         <span className="text-muted-foreground text-xs">
                           Expires{" "}
                           {rec.expiresAt
-                            ? new Date(rec.expiresAt).toLocaleDateString()
+                            ? new Date(rec.expiresAt).toLocaleDateString("en-US", { timeZone: "UTC" })
                             : ""}
                         </span>
                       </div>
@@ -569,7 +569,7 @@ export default function TrainingPage() {
                       <span className="text-muted-foreground text-xs">
                         Expired{" "}
                         {rec.expiresAt
-                          ? new Date(rec.expiresAt).toLocaleDateString()
+                          ? new Date(rec.expiresAt).toLocaleDateString("en-US", { timeZone: "UTC" })
                           : ""}
                       </span>
                     </div>
@@ -1023,10 +1023,10 @@ function SchedulingConstraintsTab({
                       <div>
                         <p className="text-sm font-medium">{rec.trainingType}</p>
                         <p className="text-xs text-muted-foreground">
-                          Completed: {new Date(rec.completedAt).toLocaleDateString()}
+                          Completed: {new Date(rec.completedAt).toLocaleDateString("en-US", { timeZone: "UTC" })}
                           {rec.expiresAt && (
                             <> · Expires: <span className={isExpired ? "text-red-600 font-medium" : isExpiringSoon ? "text-amber-600 font-medium" : ""}>
-                              {new Date(rec.expiresAt).toLocaleDateString()}
+                              {new Date(rec.expiresAt).toLocaleDateString("en-US", { timeZone: "UTC" })}
                             </span></>
                           )}
                           {rec.certificateRef && <> · Cert: {rec.certificateRef}</>}

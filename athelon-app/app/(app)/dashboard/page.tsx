@@ -447,6 +447,24 @@ function LiveAttentionItems({ workOrders }: { workOrders: WorkOrdersWithRisk | u
       });
     }
 
+    // WOs awaiting QCM sign-off — ready to release but stuck in queue
+    const pendingSignoffWOs = workOrders.filter(
+      (wo) => wo.status === "pending_signoff",
+    );
+    if (pendingSignoffWOs.length > 0) {
+      result.push({
+        id: "pending-signoff",
+        severity: "warning",
+        title: `${pendingSignoffWOs.length} Work Order${pendingSignoffWOs.length !== 1 ? "s" : ""} Awaiting Sign-Off`,
+        description: pendingSignoffWOs.length === 1
+          ? `${pendingSignoffWOs[0]!.workOrderNumber} (${pendingSignoffWOs[0]!.aircraft?.currentRegistration ?? "—"}) is ready for QCM release`
+          : `${pendingSignoffWOs.map((w) => w.workOrderNumber).slice(0, 3).join(", ")}${pendingSignoffWOs.length > 3 ? ` +${pendingSignoffWOs.length - 3} more` : ""} — QCM sign-off required`,
+        action: "View",
+        href: "/work-orders",
+        icon: ClipboardList,
+      });
+    }
+
     // Expiring or expired IA certs
     for (const entry of (expiringCerts ?? []).slice(0, 3)) {
       const tech = entry.technician as { legalName?: string } | null;

@@ -473,6 +473,12 @@ export default function FleetPage() {
   const [classFilter, setClassFilter] = useState<string>("all");
   const [makeFilter, setMakeFilter] = useState<string>("all");
   const [modelFilter, setModelFilter] = useState<string>("all");
+  // BUG-DOM-105: Fleet list had no sort control — always alphabetical by registration.
+  // A DOM's first question each morning is "what's down today?" — they need to sort by
+  // status (out-of-service / in-maintenance first) or by next scheduled date (soonest
+  // due first) to quickly understand dispatch readiness. Scrolling through an alphabetical
+  // list of 20 aircraft to identify the 2 that are down is friction that adds up daily.
+  const [sortKey, setSortKey] = useState<"registration" | "status" | "next_scheduled">("registration");
   const [addAircraftOpen, setAddAircraftOpen] = useState(false);
 
   const customerMap = useMemo(() => {
@@ -529,11 +535,29 @@ export default function FleetPage() {
         return true;
       })
       .sort((a, b) => {
+        if (sortKey === "status") {
+          // Priority order: out_of_service → in_maintenance → airworthy_with_limitations → airworthy → others
+          const statusOrder: Record<string, number> = {
+            out_of_service: 0,
+            in_maintenance: 1,
+            airworthy_with_limitations: 2,
+            airworthy: 3,
+          };
+          const aOrd = statusOrder[a.status] ?? 4;
+          const bOrd = statusOrder[b.status] ?? 4;
+          if (aOrd !== bOrd) return aOrd - bOrd;
+        } else if (sortKey === "next_scheduled") {
+          // Soonest scheduled first; aircraft with no scheduled date sort to end
+          const aMs = a.nextScheduledStartDate ?? Infinity;
+          const bMs = b.nextScheduledStartDate ?? Infinity;
+          if (aMs !== bMs) return aMs - bMs;
+        }
+        // Fallback: alphabetical by registration
         const aKey = (a.currentRegistration ?? a.serialNumber).toUpperCase();
         const bKey = (b.currentRegistration ?? b.serialNumber).toUpperCase();
         return aKey.localeCompare(bKey);
       });
-  }, [classFilter, customerMap, fleet, makeFilter, modelFilter, scheduleFilter, searchTerm]);
+  }, [classFilter, customerMap, fleet, makeFilter, modelFilter, scheduleFilter, searchTerm, sortKey]);
 
   const totalCount = fleet?.length ?? 0;
   const filteredCount = filtered.length;
@@ -578,7 +602,7 @@ export default function FleetPage() {
       {ac.nextScheduledStartDate ? (
         <>
           <span>•</span>
-          <span>Next scheduled {new Date(ac.nextScheduledStartDate).toLocaleDateString()}</span>
+          <span>Next scheduled {new Date(ac.nextScheduledStartDate).toLocaleDateString("en-US", { timeZone: "UTC" })}</span>
         </>
       ) : null}
     </div>
@@ -614,7 +638,7 @@ export default function FleetPage() {
                   Status: ac.status ?? "",
                   "Open Work Orders": ac.openWorkOrderCount ?? 0,
                   "Next Scheduled": ac.nextScheduledStartDate
-                    ? new Date(ac.nextScheduledStartDate).toLocaleDateString()
+                    ? new Date(ac.nextScheduledStartDate).toLocaleDateString("en-US", { timeZone: "UTC" })
                     : "",
                   "Aircraft Class": classifyAircraftStyle(ac.make, ac.model),
                 })),
@@ -635,7 +659,7 @@ export default function FleetPage() {
       </div>
 
       <div className="flex flex-col gap-2.5">
-        <div className="grid grid-cols-1 xl:grid-cols-[1fr_170px_170px_170px_170px_auto] gap-2.5">
+        <div className="grid grid-cols-1 xl:grid-cols-[1fr_170px_170px_170px_170px_160px_auto] gap-2.5">
           <div className="relative">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
             <Input
@@ -704,6 +728,17 @@ export default function FleetPage() {
                   {model}
                 </SelectItem>
               ))}
+            </SelectContent>
+          </Select>
+
+          <Select value={sortKey} onValueChange={(v) => setSortKey(v as typeof sortKey)}>
+            <SelectTrigger className="h-8 text-xs">
+              <SelectValue placeholder="Sort by" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="registration">Sort: N-number</SelectItem>
+              <SelectItem value="status">Sort: Status (down first)</SelectItem>
+              <SelectItem value="next_scheduled">Sort: Next scheduled</SelectItem>
             </SelectContent>
           </Select>
 

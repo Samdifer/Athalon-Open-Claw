@@ -520,41 +520,49 @@ export default function PredictionsPage() {
                         </div>
 
                         <div className="flex flex-col gap-1">
+                          {/* BUG-DOM-104: Dismiss was only shown for "active" predictions.
+                              Once a DOM acknowledges a prediction and then determines it is a
+                              false positive (sensor glitch, stale data, etc.), there is no way
+                              to dismiss it — the only available action is Resolve, which implies
+                              maintenance was actually performed. This conflates "dismissed as
+                              false positive" with "maintenance completed", corrupting the
+                              prediction audit trail. Dismiss is now available on "acknowledged"
+                              status too, with the same critical/high confirmation guard. */}
                           {pred.status === "active" && (
-                            <>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="text-xs"
-                                disabled={!techId}
-                                onClick={() =>
-                                  handleAcknowledge(
-                                    pred._id as Id<"maintenancePredictions">,
-                                  )
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-xs"
+                              disabled={!techId}
+                              onClick={() =>
+                                handleAcknowledge(
+                                  pred._id as Id<"maintenancePredictions">,
+                                )
+                              }
+                            >
+                              Acknowledge
+                            </Button>
+                          )}
+                          {(pred.status === "active" || pred.status === "acknowledged") && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-xs"
+                              onClick={() => {
+                                if (pred.severity === "critical" || pred.severity === "high") {
+                                  setDismissTarget({
+                                    id: pred._id as Id<"maintenancePredictions">,
+                                    severity: pred.severity,
+                                    description: pred.description,
+                                  });
+                                } else {
+                                  handleDismiss(pred._id as Id<"maintenancePredictions">);
                                 }
-                              >
-                                Acknowledge
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="text-xs"
-                                onClick={() => {
-                                  if (pred.severity === "critical" || pred.severity === "high") {
-                                    setDismissTarget({
-                                      id: pred._id as Id<"maintenancePredictions">,
-                                      severity: pred.severity,
-                                      description: pred.description,
-                                    });
-                                  } else {
-                                    handleDismiss(pred._id as Id<"maintenancePredictions">);
-                                  }
-                                }}
-                              >
-                                <XCircle className="h-3 w-3 mr-1" />
-                                Dismiss
-                              </Button>
-                            </>
+                              }}
+                            >
+                              <XCircle className="h-3 w-3 mr-1" />
+                              Dismiss
+                            </Button>
                           )}
                           {(pred.status === "active" ||
                             pred.status === "acknowledged") && (
