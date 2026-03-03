@@ -1108,6 +1108,295 @@ export const seedSchedulerStories = mutation({
       }
     }
 
+    const locationRows = await ctx.db
+      .query("shopLocations")
+      .withIndex("by_organization", (q) => q.eq("organizationId", orgId))
+      .collect();
+
+    let primaryLocation =
+      locationRows.find((location) => location.isPrimary) ?? locationRows[0];
+
+    if (!primaryLocation) {
+      const locationId = await ctx.db.insert("shopLocations", {
+        organizationId: orgId,
+        name: "Main Shop",
+        code: "MAIN",
+        city: "Denver",
+        state: "CO",
+        country: "US",
+        isPrimary: true,
+        isActive: true,
+        createdAt: now,
+        updatedAt: now,
+      });
+      const createdLocation = await ctx.db.get(locationId);
+      if (!createdLocation) {
+        throw new Error("Unable to create seeded primary shop location");
+      }
+      primaryLocation = createdLocation;
+    }
+
+    if (!primaryLocation) {
+      throw new Error("Unable to resolve seeded primary shop location");
+    }
+
+    const primaryLocationId = primaryLocation._id;
+    const primaryLocationCode = primaryLocation.code || "MAIN";
+
+    async function ensureTechnician(params: {
+      legalName: string;
+      role: "admin" | "shop_manager" | "lead_technician" | "technician";
+      email: string;
+    }) {
+      const existing = await ctx.db
+        .query("technicians")
+        .withIndex("by_organization", (q) => q.eq("organizationId", orgId))
+        .filter((q) => q.eq(q.field("legalName"), params.legalName))
+        .first();
+
+      if (existing) {
+        await ctx.db.patch(existing._id, {
+          status: "active",
+          role: params.role,
+          email: existing.email ?? params.email,
+          primaryShopLocationId: primaryLocationId,
+          updatedAt: now,
+        });
+        return existing._id;
+      }
+
+      return await ctx.db.insert("technicians", {
+        organizationId: orgId,
+        legalName: params.legalName,
+        email: params.email,
+        status: "active",
+        role: params.role,
+        primaryShopLocationId: primaryLocationId,
+        createdAt: now,
+        updatedAt: now,
+      });
+    }
+
+    await ctx.db.patch(techId, {
+      status: "active",
+      role: "admin",
+      primaryShopLocationId: primaryLocationId,
+      updatedAt: now,
+    });
+
+    const leadTechnicianId = await ensureTechnician({
+      legalName: "E2E Lead Technician",
+      role: "lead_technician",
+      email: "e2e-lead@athelon.test",
+    });
+
+    const shopManagerId = await ensureTechnician({
+      legalName: "E2E Shop Manager",
+      role: "shop_manager",
+      email: "e2e-manager@athelon.test",
+    });
+
+    const supportTechnicianId = await ensureTechnician({
+      legalName: "E2E Line Technician",
+      role: "technician",
+      email: "e2e-tech@athelon.test",
+    });
+
+    const existingSettings = await ctx.db
+      .query("schedulingSettings")
+      .withIndex("by_org", (q) => q.eq("organizationId", orgId))
+      .unique();
+
+    const settingsPatch = {
+      capacityBufferPercent: existingSettings?.capacityBufferPercent ?? 15,
+      defaultShiftDays: existingSettings?.defaultShiftDays ?? [1, 2, 3, 4, 5],
+      defaultStartHour: existingSettings?.defaultStartHour ?? 7,
+      defaultEndHour: existingSettings?.defaultEndHour ?? 17,
+      defaultEfficiencyMultiplier: existingSettings?.defaultEfficiencyMultiplier ?? 1,
+      rosterWorkspaceEnabled: true,
+      rosterWorkspaceBootstrappedAt: now,
+      updatedAt: now,
+      updatedByUserId: args.clerkUserId,
+    };
+
+    if (existingSettings) {
+      await ctx.db.patch(existingSettings._id, settingsPatch);
+    } else {
+      await ctx.db.insert("schedulingSettings", {
+        organizationId: orgId,
+        ...settingsPatch,
+      });
+    }
+
+    const existingShifts = await ctx.db
+      .query("rosterShifts")
+      .withIndex("by_org_location", (q) =>
+        q.eq("organizationId", orgId).eq("shopLocationId", primaryLocationId),
+      )
+      .collect();
+
+    async function ensureRosterShift(params: {
+      name: string;
+      daysOfWeek: number[];
+      startHour: number;
+      endHour: number;
+      efficiencyMultiplier: number;
+      sortOrder: number;
+    }) {
+      const existing = existingShifts.find((shift) => shift.name === params.name);
+      if (existing) {
+        await ctx.db.patch(existing._id, {
+          daysOfWeek: params.daysOfWeek,
+          startHour: params.startHour,
+          endHour: params.endHour,
+          efficiencyMultiplier: params.efficiencyMultiplier,
+          isActive: true,
+          sortOrder: params.sortOrder,
+          updatedAt: now,
+        });
+        return existing._id;
+      }
+
+      const shiftId = await ctx.db.insert("rosterShifts", {
+        organizationId: orgId,
+        shopLocationId: primaryLocationId,
+        name: params.name,
+        daysOfWeek: params.daysOfWeek,
+        startHour: params.startHour,
+        endHour: params.endHour,
+        efficiencyMultiplier: params.efficiencyMultiplier,
+        isActive: true,
+        sortOrder: params.sortOrder,
+        createdAt: now,
+        updatedAt: now,
+      });
+      const inserted = await ctx.db.get(shiftId);
+      if (inserted) existingShifts.push(inserted);
+      return shiftId;
+    }
+
+    const dayShiftId = await ensureRosterShift({
+      name: `${primaryLocationCode} Day Shift`,
+      daysOfWeek: [1, 2, 3, 4, 5],
+      startHour: 7,
+      endHour: 17,
+      efficiencyMultiplier: 1,
+      sortOrder: 0,
+    });
+
+    const swingShiftId = await ensureRosterShift({
+      name: `${primaryLocationCode} Swing Shift`,
+      daysOfWeek: [1, 2, 3, 4, 5],
+      startHour: 14,
+      endHour: 22,
+      efficiencyMultiplier: 0.95,
+      sortOrder: 1,
+    });
+
+    const existingTeams = await ctx.db
+      .query("rosterTeams")
+      .withIndex("by_org_location", (q) =>
+        q.eq("organizationId", orgId).eq("shopLocationId", primaryLocationId),
+      )
+      .collect();
+
+    async function ensureRosterTeam(params: {
+      name: string;
+      colorToken: string;
+      shiftId: any;
+      sortOrder: number;
+    }) {
+      const existing = existingTeams.find((team) => team.name === params.name);
+      if (existing) {
+        await ctx.db.patch(existing._id, {
+          colorToken: params.colorToken,
+          shiftId: params.shiftId,
+          isActive: true,
+          sortOrder: params.sortOrder,
+          updatedAt: now,
+        });
+        return existing._id;
+      }
+
+      const teamId = await ctx.db.insert("rosterTeams", {
+        organizationId: orgId,
+        shopLocationId: primaryLocationId,
+        name: params.name,
+        colorToken: params.colorToken,
+        shiftId: params.shiftId,
+        isActive: true,
+        sortOrder: params.sortOrder,
+        createdAt: now,
+        updatedAt: now,
+      });
+      const inserted = await ctx.db.get(teamId);
+      if (inserted) existingTeams.push(inserted);
+      return teamId;
+    }
+
+    const alphaTeamId = await ensureRosterTeam({
+      name: "Alpha Crew",
+      colorToken: "bg-cyan-500",
+      shiftId: dayShiftId,
+      sortOrder: 0,
+    });
+    const bravoTeamId = await ensureRosterTeam({
+      name: "Bravo Crew",
+      colorToken: "bg-indigo-500",
+      shiftId: swingShiftId,
+      sortOrder: 1,
+    });
+    const backlogTeamId = await ensureRosterTeam({
+      name: "Backlog Crew",
+      colorToken: "bg-amber-500",
+      shiftId: dayShiftId,
+      sortOrder: 2,
+    });
+
+    await ctx.db.patch(techId, { rosterTeamId: alphaTeamId, updatedAt: now });
+    await ctx.db.patch(leadTechnicianId, { rosterTeamId: alphaTeamId, updatedAt: now });
+    await ctx.db.patch(shopManagerId, { rosterTeamId: bravoTeamId, updatedAt: now });
+    await ctx.db.patch(supportTechnicianId, { rosterTeamId: backlogTeamId, updatedAt: now });
+
+    function dateKeyFromMs(ms: number) {
+      const d = new Date(ms);
+      const y = d.getFullYear();
+      const m = `${d.getMonth() + 1}`.padStart(2, "0");
+      const dayOfMonth = `${d.getDate()}`.padStart(2, "0");
+      return `${y}-${m}-${dayOfMonth}`;
+    }
+
+    const holidayDateKey = dateKeyFromMs(now + 14 * day);
+    const existingHoliday = await ctx.db
+      .query("schedulingHolidays")
+      .withIndex("by_org_location_date", (q) =>
+        q
+          .eq("organizationId", orgId)
+          .eq("shopLocationId", primaryLocationId)
+          .eq("dateKey", holidayDateKey),
+      )
+      .first();
+
+    if (existingHoliday) {
+      await ctx.db.patch(existingHoliday._id, {
+        name: "E2E Capacity Holiday",
+        isObserved: true,
+        notes: "Seeded holiday fixture for roster/capacity parity checks.",
+        updatedAt: now,
+      });
+    } else {
+      await ctx.db.insert("schedulingHolidays", {
+        organizationId: orgId,
+        shopLocationId: primaryLocationId,
+        dateKey: holidayDateKey,
+        name: "E2E Capacity Holiday",
+        isObserved: true,
+        notes: "Seeded holiday fixture for roster/capacity parity checks.",
+        createdAt: now,
+        updatedAt: now,
+      });
+    }
+
     return {
       message: "Scheduler story seed prepared",
       organizationId: orgId,
@@ -1123,6 +1412,14 @@ export const seedSchedulerStories = mutation({
         DRAFT_QUOTE_NUMBER: draftQuoteId,
       },
       laborKitId,
+      roster: {
+        locationId: primaryLocationId,
+        teamIds: {
+          alphaTeamId,
+          bravoTeamId,
+          backlogTeamId,
+        },
+      },
     };
   },
 });

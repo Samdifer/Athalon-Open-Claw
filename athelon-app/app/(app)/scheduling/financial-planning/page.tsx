@@ -204,8 +204,14 @@ export default function FinancialPlanningPage() {
         <Button variant="ghost" size="sm" className="text-xs h-7" asChild>
           <Link to="/scheduling/capacity">Capacity</Link>
         </Button>
+        <Button variant="ghost" size="sm" className="text-xs h-7" asChild>
+          <Link to="/scheduling/roster">Roster & Teams</Link>
+        </Button>
         <Button variant="secondary" size="sm" className="text-xs h-7" asChild>
           <Link to="/scheduling/financial-planning">Financial Planning</Link>
+        </Button>
+        <Button variant="ghost" size="sm" className="text-xs h-7" asChild>
+          <Link to="/scheduling/quotes">Quote Workspace</Link>
         </Button>
       </div>
 

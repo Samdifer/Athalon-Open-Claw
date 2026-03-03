@@ -59,7 +59,9 @@ export const INTERNAL_ROUTE_MANIFEST: InternalRoute[] = [
   { label: "Scheduling", path: "/scheduling" },
   { label: "Scheduling Bays", path: "/scheduling/bays" },
   { label: "Scheduling Capacity", path: "/scheduling/capacity" },
+  { label: "Scheduling Roster", path: "/scheduling/roster" },
   { label: "Scheduling Financial Planning", path: "/scheduling/financial-planning" },
+  { label: "Scheduling Quote Workspace", path: "/scheduling/quotes" },
 
   { label: "Reports", path: "/reports" },
 

@@ -112,6 +112,13 @@ const MODULE_ROUTES: RouteEntry[] = [
   // Settings
   { path: "/settings/shop", label: "Settings shop" },
 
+  // Scheduling
+  { path: "/scheduling", label: "Scheduling gantt" },
+  { path: "/scheduling/bays", label: "Scheduling bays" },
+  { path: "/scheduling/capacity", label: "Scheduling capacity" },
+  { path: "/scheduling/financial-planning", label: "Scheduling financial planning" },
+  { path: "/scheduling/quotes", label: "Scheduling quote workspace" },
+
   // Technician MVP (new pages)
   { path: "/my-work", label: "My Work (tech view)" },
 ];

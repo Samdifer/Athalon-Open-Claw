@@ -1,44 +1,43 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Badge } from "@/components/ui/badge";
+import { Link } from "react-router-dom";
+import { ArrowUpRight, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { ExternalLink } from "lucide-react";
 
-type QuoteWorkspaceWorkOrder = {
+type WorkspaceWorkOrder = {
   _id: string;
   workOrderNumber: string;
   description: string;
   priority: "routine" | "urgent" | "aog";
-  aircraft: { currentRegistration: string | undefined; make: string; model: string } | null;
-  sourceQuoteId?: string;
+  aircraft?: {
+    currentRegistration?: string | null;
+    make?: string | null;
+    model?: string | null;
+  } | null;
+  sourceQuoteId?: string | null;
   quoteNumber?: string | null;
   quoteStatus?: string | null;
 };
 
-type SchedulingQuoteWorkspaceDialogProps = {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  workOrders: QuoteWorkspaceWorkOrder[];
-  initialWorkOrderId?: string;
-};
-
-function priorityBadge(priority: QuoteWorkspaceWorkOrder["priority"]) {
+function priorityBadge(priority: WorkspaceWorkOrder["priority"]) {
   if (priority === "aog") {
-    return <Badge className="text-[10px] bg-red-600 text-white border-red-500">AOG</Badge>;
+    return <Badge className="text-[10px] bg-red-500/15 text-red-400 border-red-500/40">AOG</Badge>;
   }
   if (priority === "urgent") {
-    return <Badge className="text-[10px] bg-orange-500 text-white border-orange-400">URGENT</Badge>;
+    return <Badge className="text-[10px] bg-amber-500/15 text-amber-400 border-amber-500/40">Urgent</Badge>;
   }
   return (
-    <Badge variant="outline" className="text-[10px]">
-      ROUTINE
+    <Badge variant="outline" className="text-[10px] border-border/60 text-muted-foreground">
+      Routine
     </Badge>
   );
 }
@@ -48,124 +47,134 @@ export function SchedulingQuoteWorkspaceDialog({
   onOpenChange,
   workOrders,
   initialWorkOrderId,
-}: SchedulingQuoteWorkspaceDialogProps) {
-  const [selectedWorkOrderId, setSelectedWorkOrderId] = useState<string | undefined>(
-    initialWorkOrderId ?? workOrders[0]?._id,
-  );
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  workOrders: WorkspaceWorkOrder[];
+  initialWorkOrderId?: string;
+}) {
+  const ordered = useMemo(() => {
+    const selected = workOrders.find((wo) => wo._id === initialWorkOrderId);
+    if (!selected) return workOrders;
+    return [selected, ...workOrders.filter((wo) => wo._id !== initialWorkOrderId)];
+  }, [initialWorkOrderId, workOrders]);
+
+  const [selectedWorkOrderId, setSelectedWorkOrderId] = useState<string>("");
 
   useEffect(() => {
     if (!open) return;
-    if (initialWorkOrderId && workOrders.some((wo) => wo._id === initialWorkOrderId)) {
+    if (ordered.length === 0) {
+      setSelectedWorkOrderId("");
+      return;
+    }
+
+    if (initialWorkOrderId && ordered.some((wo) => wo._id === initialWorkOrderId)) {
       setSelectedWorkOrderId(initialWorkOrderId);
       return;
     }
-    if (!selectedWorkOrderId || !workOrders.some((wo) => wo._id === selectedWorkOrderId)) {
-      setSelectedWorkOrderId(workOrders[0]?._id);
-    }
-  }, [open, initialWorkOrderId, selectedWorkOrderId, workOrders]);
 
-  const selectedWorkOrder = useMemo(
-    () => workOrders.find((wo) => wo._id === selectedWorkOrderId) ?? null,
-    [selectedWorkOrderId, workOrders],
-  );
+    setSelectedWorkOrderId((prev) => {
+      if (prev && ordered.some((wo) => wo._id === prev)) {
+        return prev;
+      }
+      return ordered[0]._id;
+    });
+  }, [open, ordered, initialWorkOrderId]);
 
-  const workspaceUrl = useMemo(() => {
-    if (!selectedWorkOrder) return "/billing/quotes/new?from=scheduling";
-    if (selectedWorkOrder.sourceQuoteId) {
-      return `/billing/quotes/${selectedWorkOrder.sourceQuoteId}?from=scheduling`;
-    }
-    return `/billing/quotes/new?workOrderId=${selectedWorkOrder._id}&from=scheduling`;
-  }, [selectedWorkOrder]);
+  const selectedWorkOrder =
+    ordered.find((wo) => wo._id === selectedWorkOrderId) ?? ordered[0];
+
+  const iframeSrc = selectedWorkOrder
+    ? selectedWorkOrder.sourceQuoteId
+      ? `/billing/quotes/${selectedWorkOrder.sourceQuoteId}?workOrderId=${selectedWorkOrder._id}`
+      : `/billing/quotes/new?workOrderId=${selectedWorkOrder._id}`
+    : "/billing/quotes";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="max-w-[96vw] w-[96vw] h-[88vh] p-0 gap-0 overflow-hidden"
+        className="sm:max-w-[94vw] lg:max-w-6xl"
         data-testid="quote-workspace-dialog"
       >
-        <DialogHeader className="px-4 py-3 border-b border-border/50">
-          <DialogTitle className="text-base">Scheduling Quote Workspace</DialogTitle>
+        <DialogHeader>
+          <DialogTitle>Quote Workspace</DialogTitle>
+          <DialogDescription>
+            Select a work order and use the embedded quote flow without leaving the scheduler.
+          </DialogDescription>
         </DialogHeader>
 
-        <div className="min-h-0 flex flex-1">
-          <aside className="w-80 border-r border-border/50 bg-muted/20 min-h-0 flex flex-col">
-            <div className="px-3 py-2 border-b border-border/40 text-xs text-muted-foreground">
-              Choose a work order to open quote workflow in-line.
-            </div>
-            <div className="flex-1 overflow-y-auto">
-              {workOrders.length === 0 ? (
-                <div className="p-4 text-sm text-muted-foreground">
-                  No active work orders available for quote workflow.
-                </div>
-              ) : (
-                <ul className="divide-y divide-border/40">
-                  {workOrders.map((wo) => {
-                    const selected = wo._id === selectedWorkOrderId;
-                    return (
-                      <li key={wo._id}>
-                        <button
-                          type="button"
-                          className={`w-full text-left px-3 py-2.5 transition-colors ${
-                            selected
-                              ? "bg-violet-500/10 border-l-2 border-violet-500"
-                              : "hover:bg-muted/40"
-                          }`}
-                          onClick={() => setSelectedWorkOrderId(wo._id)}
-                          data-testid={`quote-workspace-select-${wo._id}`}
+        {ordered.length === 0 ? (
+          <div className="py-10 text-center text-sm text-muted-foreground">
+            No active work orders available for quote workspace.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 xl:grid-cols-[360px_1fr] gap-3">
+            <div className="max-h-[60vh] overflow-y-auto rounded-md border border-border/50 divide-y divide-border/40">
+              {ordered.map((wo) => {
+                const isSelected = wo._id === selectedWorkOrder?._id;
+                return (
+                  <button
+                    key={wo._id}
+                    className={`w-full text-left p-3 transition-colors ${
+                      isSelected ? "bg-primary/10" : "hover:bg-muted/40"
+                    }`}
+                    onClick={() => setSelectedWorkOrderId(wo._id)}
+                  >
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-mono text-xs text-muted-foreground">{wo.workOrderNumber}</span>
+                      {priorityBadge(wo.priority)}
+                      {wo.quoteNumber ? (
+                        <Badge variant="outline" className="text-[10px] border-border/60">
+                          {wo.quoteNumber}
+                        </Badge>
+                      ) : (
+                        <Badge
+                          variant="outline"
+                          className="text-[10px] border-border/60 text-muted-foreground"
                         >
-                          <div className="flex items-center justify-between gap-2">
-                            <span className="text-xs font-mono font-semibold truncate">
-                              {wo.workOrderNumber}
-                            </span>
-                            {priorityBadge(wo.priority)}
-                          </div>
-                          <p className="text-[11px] text-muted-foreground truncate mt-0.5">
-                            {wo.aircraft?.currentRegistration ?? "No aircraft"} • {wo.description}
-                          </p>
-                          <p className="text-[11px] text-muted-foreground mt-0.5">
-                            {wo.quoteNumber
-                              ? `${wo.quoteNumber}${wo.quoteStatus ? ` • ${wo.quoteStatus}` : ""}`
-                              : "No linked quote yet"}
-                          </p>
-                        </button>
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
+                          No quote linked
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="text-sm text-foreground truncate mt-1">{wo.description}</div>
+                    <div className="text-[11px] text-muted-foreground truncate mt-1">
+                      {wo.aircraft?.currentRegistration ?? "—"} · {wo.aircraft?.make ?? ""} {wo.aircraft?.model ?? ""}
+                    </div>
+                  </button>
+                );
+              })}
             </div>
-          </aside>
 
-          <section className="min-w-0 flex-1 flex flex-col">
-            <div className="px-3 py-2 border-b border-border/40 flex items-center justify-between gap-2 bg-background">
-              <div className="min-w-0">
-                <p className="text-xs font-semibold truncate">
-                  {selectedWorkOrder?.workOrderNumber ?? "Quote Builder"}
-                </p>
-                <p className="text-[11px] text-muted-foreground truncate">
-                  {selectedWorkOrder?.quoteNumber
-                    ? `Editing ${selectedWorkOrder.quoteNumber}`
-                    : "Creating a new quote draft"}
-                </p>
+            <div className="rounded-md border border-border/50 overflow-hidden bg-background/70">
+              <div className="flex items-center justify-between gap-2 px-3 py-2 border-b border-border/50">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium truncate">
+                    {selectedWorkOrder?.workOrderNumber ?? "Quote Workspace"}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground truncate">
+                    {selectedWorkOrder?.description ?? ""}
+                  </p>
+                </div>
+                {selectedWorkOrder && (
+                  <Button asChild size="sm" variant="outline" className="h-7 text-[11px] gap-1.5 flex-shrink-0">
+                    <Link to={iframeSrc} onClick={() => onOpenChange(false)}>
+                      <FileText className="w-3.5 h-3.5" />
+                      Open
+                      <ArrowUpRight className="w-3 h-3" />
+                    </Link>
+                  </Button>
+                )}
               </div>
-              <Button variant="outline" size="sm" asChild className="text-xs h-7">
-                <a href={workspaceUrl} target="_blank" rel="noreferrer">
-                  <ExternalLink className="w-3.5 h-3.5" />
-                  Open Tab
-                </a>
-              </Button>
-            </div>
-            <div className="flex-1 min-h-0 bg-background">
+
               <iframe
-                key={workspaceUrl}
-                src={workspaceUrl}
-                className="w-full h-full border-0"
-                title="Scheduling Quote Workspace"
+                title="Quote Workspace"
+                src={iframeSrc}
+                className="w-full h-[58vh] bg-background"
                 data-testid="quote-workspace-iframe"
               />
             </div>
-          </section>
-        </div>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );

@@ -13,6 +13,8 @@ import { BarChart3, Settings2, Users, Wrench } from "lucide-react";
 
 type RosterSummary = {
   activeTechnicians: number;
+  activeTeams: number;
+  unsupervisedTeams: number;
   assignedCards: number;
   remainingHours: number;
 };
@@ -173,11 +175,23 @@ export function SchedulingCommandCenterDialog({
           </TabsList>
 
           <TabsContent value="personnel" className="mt-4 space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
               <div className="rounded border border-border/60 p-3">
                 <div className="text-[11px] uppercase text-muted-foreground">Active Techs</div>
                 <div className="text-xl font-mono font-semibold mt-1">
                   {rosterSummary.activeTechnicians}
+                </div>
+              </div>
+              <div className="rounded border border-border/60 p-3">
+                <div className="text-[11px] uppercase text-muted-foreground">Active Teams</div>
+                <div className="text-xl font-mono font-semibold mt-1">
+                  {rosterSummary.activeTeams}
+                </div>
+              </div>
+              <div className="rounded border border-border/60 p-3">
+                <div className="text-[11px] uppercase text-muted-foreground">Unsupervised Teams</div>
+                <div className="text-xl font-mono font-semibold mt-1 text-amber-500">
+                  {rosterSummary.unsupervisedTeams}
                 </div>
               </div>
               <div className="rounded border border-border/60 p-3">
@@ -360,4 +374,3 @@ export function SchedulingCommandCenterDialog({
     </Dialog>
   );
 }
-

@@ -14,7 +14,7 @@ const ALL_PAGES = [
   "/billing/time-clock", "/billing/pricing", "/billing/warranty", "/billing/otc",
   "/billing/labor-kits", "/billing/deposits", "/billing/credit-memos",
   "/billing/recurring", "/billing/tax-config", "/billing/settings",
-  "/scheduling", "/scheduling/bays", "/scheduling/capacity",
+  "/scheduling", "/scheduling/bays", "/scheduling/capacity", "/scheduling/financial-planning", "/scheduling/quotes",
   "/personnel", "/personnel/training",
   "/compliance", "/compliance/audit-trail", "/compliance/qcm-review", "/compliance/ad-sb",
   "/squawks", "/my-work", "/reports",

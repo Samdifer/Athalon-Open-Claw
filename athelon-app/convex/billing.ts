@@ -281,10 +281,63 @@ export const getQuote = query({
     if (!quote) throw new Error(`Quote ${args.quoteId} not found.`);
     if (quote.orgId !== args.orgId) throw new Error(`Quote ${args.quoteId} does not belong to org ${args.orgId}.`);
 
-    const lineItems = await ctx.db
+    const lineItemsRaw = await ctx.db
       .query("quoteLineItems")
       .withIndex("by_org_quote", (q) => q.eq("orgId", args.orgId).eq("quoteId", args.quoteId))
       .collect();
+
+    // Enrich line items with linked discrepancy metadata so UI can present
+    // customer-decision categories (airworthiness/recommended/info).
+    const discrepancyIds = Array.from(
+      new Set(
+        lineItemsRaw
+          .map((item) => item.discrepancyId)
+          .filter((id): id is Id<"discrepancies"> => id !== undefined),
+      ),
+    );
+
+    const discrepancyRows = await Promise.all(
+      discrepancyIds.map(async (id) => ctx.db.get(id)),
+    );
+
+    const discrepancyById = new Map<string, (typeof discrepancyRows)[number]>();
+    for (const row of discrepancyRows) {
+      if (row?._id) discrepancyById.set(String(row._id), row);
+    }
+
+    const decisionTechnicianIds = Array.from(
+      new Set(
+        lineItemsRaw
+          .map((item) => item.customerDecisionByTechnicianId)
+          .filter((id): id is Id<"technicians"> => id !== undefined),
+      ),
+    );
+
+    const decisionTechnicians = await Promise.all(
+      decisionTechnicianIds.map(async (id) => ctx.db.get(id)),
+    );
+
+    const decisionTechById = new Map<string, (typeof decisionTechnicians)[number]>();
+    for (const tech of decisionTechnicians) {
+      if (tech?._id) decisionTechById.set(String(tech._id), tech);
+    }
+
+    const lineItems = lineItemsRaw.map((item) => {
+      const linkedDiscrepancy = item.discrepancyId
+        ? discrepancyById.get(String(item.discrepancyId))
+        : undefined;
+      const decisionTech = item.customerDecisionByTechnicianId
+        ? decisionTechById.get(String(item.customerDecisionByTechnicianId))
+        : undefined;
+
+      return {
+        ...item,
+        discrepancyType: linkedDiscrepancy?.discrepancyType,
+        discrepancyNumber: linkedDiscrepancy?.discrepancyNumber,
+        customerDecisionByNameResolved:
+          item.customerDecisionByName ?? decisionTech?.legalName ?? undefined,
+      };
+    });
 
     const departments = await ctx.db
       .query("quoteDepartments")

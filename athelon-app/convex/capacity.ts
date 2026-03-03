@@ -3,6 +3,7 @@
 //
 // Queries and mutations for:
 //   - Per-technician shift patterns (daysOfWeek, hours, efficiency multiplier)
+//   - Team-owned shift defaults + holiday exclusions for roster parity
 //   - Shop-wide scheduling settings (capacity buffer, defaults)
 //   - Available-hours calculation over a date range
 //   - Capacity utilization vs. committed hours
@@ -10,8 +11,14 @@
 import { mutation, query } from "./_generated/server";
 import type { Id } from "./_generated/dataModel";
 import { v } from "convex/values";
-
-// ─── Defaults ─────────────────────────────────────────────────────────────────
+import {
+  dateKeyFromMs,
+  ensureShopLocationBelongsToOrg,
+  isDateKeyWithinRange,
+  isShiftActive,
+  resolveEffectiveShift,
+  type ShiftLike,
+} from "./lib/rosterHelpers";
 
 const DEFAULT_SETTINGS = {
   capacityBufferPercent: 15,
@@ -25,54 +32,182 @@ const shopLocationFilterValidator = v.optional(
   v.union(v.id("shopLocations"), v.literal("all")),
 );
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
 function requireAuth(identity: { subject: string } | null): string {
   if (!identity) throw new Error("Not authenticated");
   return identity.subject;
 }
 
-async function ensureShopLocationBelongsToOrg(
-  ctx: { db: { get: (id: Id<"shopLocations">) => Promise<any> } },
-  organizationId: Id<"organizations">,
-  shopLocationId: Id<"shopLocations">,
-) {
-  const location = await ctx.db.get(shopLocationId);
-  if (!location || location.organizationId !== organizationId) {
-    throw new Error("Shop location does not belong to this organization");
-  }
+function resolveScopedLocationId(
+  shopLocationId?: Id<"shopLocations"> | "all",
+): Id<"shopLocations"> | undefined {
+  if (!shopLocationId || shopLocationId === "all") return undefined;
+  return shopLocationId;
 }
 
-/** Returns true if the shift is currently active (no effectiveTo, or effectiveTo in future). */
-function isShiftActive(
-  shift: { effectiveTo?: number },
-  nowMs: number,
-): boolean {
-  return shift.effectiveTo === undefined || shift.effectiveTo > nowMs;
-}
-
-/** Hours per day for a shift, after efficiency multiplier. */
 function hoursPerShiftDay(
   startHour: number,
   endHour: number,
   efficiencyMultiplier: number,
 ): number {
-  return (endHour - startHour) * efficiencyMultiplier;
+  return Math.max(0, endHour - startHour) * efficiencyMultiplier;
 }
 
-// ─── getSchedulingSettings ────────────────────────────────────────────────────
+async function loadBaseSchedulingContext(
+  ctx: any,
+  organizationId: Id<"organizations">,
+  scopedLocationId?: Id<"shopLocations">,
+) {
+  if (scopedLocationId) {
+    await ensureShopLocationBelongsToOrg(ctx, organizationId, scopedLocationId);
+  }
+
+  const [settings, allTechs, allRosterTeams, allRosterShifts, allTechShifts] = await Promise.all([
+    ctx.db
+      .query("schedulingSettings")
+      .withIndex("by_org", (q: any) => q.eq("organizationId", organizationId))
+      .unique(),
+    ctx.db
+      .query("technicians")
+      .withIndex("by_status", (q: any) =>
+        q.eq("organizationId", organizationId).eq("status", "active"),
+      )
+      .collect(),
+    ctx.db
+      .query("rosterTeams")
+      .withIndex("by_org", (q: any) => q.eq("organizationId", organizationId))
+      .collect(),
+    ctx.db
+      .query("rosterShifts")
+      .withIndex("by_org", (q: any) => q.eq("organizationId", organizationId))
+      .collect(),
+    ctx.db
+      .query("technicianShifts")
+      .withIndex("by_org", (q: any) => q.eq("organizationId", organizationId))
+      .collect(),
+  ]);
+
+  const defaultShift: ShiftLike = {
+    daysOfWeek: settings?.defaultShiftDays ?? DEFAULT_SETTINGS.defaultShiftDays,
+    startHour: settings?.defaultStartHour ?? DEFAULT_SETTINGS.defaultStartHour,
+    endHour: settings?.defaultEndHour ?? DEFAULT_SETTINGS.defaultEndHour,
+    efficiencyMultiplier:
+      settings?.defaultEfficiencyMultiplier ?? DEFAULT_SETTINGS.defaultEfficiencyMultiplier,
+  };
+
+  const techs = scopedLocationId
+    ? allTechs.filter((tech: any) => tech.primaryShopLocationId === scopedLocationId)
+    : allTechs;
+
+  const rosterTeams = allRosterTeams.filter(
+    (team: any) =>
+      team.isActive !== false &&
+      (scopedLocationId ? team.shopLocationId === scopedLocationId : true),
+  );
+  const rosterShifts = allRosterShifts.filter(
+    (shift: any) =>
+      shift.isActive !== false &&
+      (scopedLocationId ? shift.shopLocationId === scopedLocationId : true),
+  );
+
+  const nowMs = Date.now();
+  const activeTechShiftByTechId = new Map<string, any>();
+  for (const shift of allTechShifts) {
+    if (!isShiftActive(shift, nowMs)) continue;
+    activeTechShiftByTechId.set(String(shift.technicianId), shift);
+  }
+
+  return {
+    settings,
+    defaultShift,
+    techs,
+    rosterTeams,
+    rosterShifts,
+    activeTechShiftByTechId,
+  };
+}
+
+function resolveEffectiveShiftForTech(args: {
+  tech: any;
+  defaultShift: ShiftLike;
+  rosterTeams: any[];
+  rosterShifts: any[];
+  activeTechShiftByTechId: Map<string, any>;
+}) {
+  const team = args.tech.rosterTeamId
+    ? args.rosterTeams.find((row: any) => row._id === args.tech.rosterTeamId)
+    : undefined;
+
+  const teamShift = team
+    ? args.rosterShifts.find((row: any) => row._id === team.shiftId)
+    : undefined;
+
+  const override = args.activeTechShiftByTechId.get(String(args.tech._id));
+
+  const resolved = resolveEffectiveShift({
+    technicianShift: override
+      ? {
+          daysOfWeek: override.daysOfWeek,
+          startHour: override.startHour,
+          endHour: override.endHour,
+          efficiencyMultiplier: override.efficiencyMultiplier,
+        }
+      : undefined,
+    teamShift: teamShift
+      ? {
+          daysOfWeek: teamShift.daysOfWeek,
+          startHour: teamShift.startHour,
+          endHour: teamShift.endHour,
+          efficiencyMultiplier: teamShift.efficiencyMultiplier,
+        }
+      : undefined,
+    defaultShift: args.defaultShift,
+  });
+
+  return {
+    team,
+    teamShift,
+    resolved,
+  };
+}
+
+async function fetchObservedHolidayDateKeys(
+  ctx: any,
+  args: {
+    organizationId: Id<"organizations">;
+    scopedLocationId?: Id<"shopLocations">;
+    startDateMs: number;
+    endDateMs: number;
+  },
+): Promise<Set<string>> {
+  const holidays = await ctx.db
+    .query("schedulingHolidays")
+    .withIndex("by_org", (q: any) => q.eq("organizationId", args.organizationId))
+    .collect();
+
+  const dateKeys = new Set<string>();
+  for (const holiday of holidays) {
+    if (!holiday.isObserved) continue;
+    if (args.scopedLocationId && holiday.shopLocationId !== args.scopedLocationId) continue;
+    if (!isDateKeyWithinRange(holiday.dateKey, args.startDateMs, args.endDateMs)) continue;
+    dateKeys.add(holiday.dateKey);
+  }
+
+  return dateKeys;
+}
 
 export const getSchedulingSettings = query({
   args: { organizationId: v.id("organizations") },
   handler: async (ctx, args) => {
     const row = await ctx.db
       .query("schedulingSettings")
-      .withIndex("by_org", (q) => q.eq("organizationId", args.organizationId))
+      .withIndex("by_org", (q: any) => q.eq("organizationId", args.organizationId))
       .unique();
 
     if (!row) {
       return {
         ...DEFAULT_SETTINGS,
+        rosterWorkspaceEnabled: false,
+        rosterWorkspaceBootstrappedAt: undefined,
         organizationId: args.organizationId,
         updatedAt: null,
         updatedByUserId: null,
@@ -81,8 +216,6 @@ export const getSchedulingSettings = query({
     return row;
   },
 });
-
-// ─── upsertSchedulingSettings ─────────────────────────────────────────────────
 
 export const upsertSchedulingSettings = mutation({
   args: {
@@ -100,12 +233,14 @@ export const upsertSchedulingSettings = mutation({
 
     const existing = await ctx.db
       .query("schedulingSettings")
-      .withIndex("by_org", (q) => q.eq("organizationId", args.organizationId))
+      .withIndex("by_org", (q: any) => q.eq("organizationId", args.organizationId))
       .unique();
 
     const patch = {
       capacityBufferPercent:
-        args.capacityBufferPercent ?? existing?.capacityBufferPercent ?? DEFAULT_SETTINGS.capacityBufferPercent,
+        args.capacityBufferPercent ??
+        existing?.capacityBufferPercent ??
+        DEFAULT_SETTINGS.capacityBufferPercent,
       defaultShiftDays:
         args.defaultShiftDays ?? existing?.defaultShiftDays ?? DEFAULT_SETTINGS.defaultShiftDays,
       defaultStartHour:
@@ -125,13 +260,13 @@ export const upsertSchedulingSettings = mutation({
     } else {
       await ctx.db.insert("schedulingSettings", {
         organizationId: args.organizationId,
+        rosterWorkspaceEnabled: false,
+        rosterWorkspaceBootstrappedAt: undefined,
         ...patch,
       });
     }
   },
 });
-
-// ─── getTechnicianShift ───────────────────────────────────────────────────────
 
 export const getTechnicianShift = query({
   args: {
@@ -139,37 +274,38 @@ export const getTechnicianShift = query({
     organizationId: v.id("organizations"),
   },
   handler: async (ctx, args) => {
-    const nowMs = Date.now();
+    const context = await loadBaseSchedulingContext(ctx, args.organizationId);
+    const tech = context.techs.find((row: any) => row._id === args.technicianId);
 
-    const shifts = await ctx.db
-      .query("technicianShifts")
-      .withIndex("by_technician", (q) => q.eq("technicianId", args.technicianId))
-      .collect();
+    if (!tech) {
+      throw new Error("Technician not found or inactive");
+    }
 
-    const active = shifts.find((s) => isShiftActive(s, nowMs));
-
-    if (active) return active;
-
-    // Fall back to org defaults
-    const settings = await ctx.db
-      .query("schedulingSettings")
-      .withIndex("by_org", (q) => q.eq("organizationId", args.organizationId))
-      .unique();
+    const resolved = resolveEffectiveShiftForTech({
+      tech,
+      defaultShift: context.defaultShift,
+      rosterTeams: context.rosterTeams,
+      rosterShifts: context.rosterShifts,
+      activeTechShiftByTechId: context.activeTechShiftByTechId,
+    });
 
     return {
-      technicianId: args.technicianId,
+      technicianId: tech._id,
       organizationId: args.organizationId,
-      daysOfWeek: settings?.defaultShiftDays ?? DEFAULT_SETTINGS.defaultShiftDays,
-      startHour: settings?.defaultStartHour ?? DEFAULT_SETTINGS.defaultStartHour,
-      endHour: settings?.defaultEndHour ?? DEFAULT_SETTINGS.defaultEndHour,
-      efficiencyMultiplier:
-        settings?.defaultEfficiencyMultiplier ?? DEFAULT_SETTINGS.defaultEfficiencyMultiplier,
-      isDefault: true,
+      daysOfWeek: resolved.resolved.daysOfWeek,
+      startHour: resolved.resolved.startHour,
+      endHour: resolved.resolved.endHour,
+      efficiencyMultiplier: resolved.resolved.efficiencyMultiplier,
+      source: resolved.resolved.source,
+      usingDefaultShift: resolved.resolved.usingDefaultShift,
+      teamId: resolved.team?._id,
+      teamName: resolved.team?.name,
+      teamShiftId: resolved.teamShift?._id,
+      teamShiftName: resolved.teamShift?.name,
+      isDefault: resolved.resolved.usingDefaultShift,
     };
   },
 });
-
-// ─── upsertTechnicianShift ────────────────────────────────────────────────────
 
 export const upsertTechnicianShift = mutation({
   args: {
@@ -186,10 +322,9 @@ export const upsertTechnicianShift = mutation({
     const userId = requireAuth(identity);
     const nowMs = Date.now();
 
-    // Retire the currently-active shift (set effectiveTo = now)
     const existing = await ctx.db
       .query("technicianShifts")
-      .withIndex("by_technician", (q) => q.eq("technicianId", args.technicianId))
+      .withIndex("by_technician", (q: any) => q.eq("technicianId", args.technicianId))
       .collect();
 
     for (const shift of existing) {
@@ -198,7 +333,6 @@ export const upsertTechnicianShift = mutation({
       }
     }
 
-    // Create the new active shift
     const newShiftId = await ctx.db.insert("technicianShifts", {
       technicianId: args.technicianId,
       organizationId: args.organizationId,
@@ -213,7 +347,6 @@ export const upsertTechnicianShift = mutation({
       createdByUserId: userId,
     });
 
-    // Audit log
     await ctx.db.insert("auditLog", {
       organizationId: args.organizationId,
       eventType: "record_created",
@@ -228,75 +361,40 @@ export const upsertTechnicianShift = mutation({
   },
 });
 
-// ─── getTechnicianWorkload ────────────────────────────────────────────────────
-
 export const getTechnicianWorkload = query({
   args: {
     organizationId: v.id("organizations"),
     shopLocationId: shopLocationFilterValidator,
   },
   handler: async (ctx, args) => {
-    const nowMs = Date.now();
-    const scopedLocationId =
-      args.shopLocationId && args.shopLocationId !== "all"
-        ? args.shopLocationId
-        : undefined;
-    if (scopedLocationId) {
-      await ensureShopLocationBelongsToOrg(ctx, args.organizationId, scopedLocationId);
-    }
+    const scopedLocationId = resolveScopedLocationId(args.shopLocationId);
+    const context = await loadBaseSchedulingContext(
+      ctx,
+      args.organizationId,
+      scopedLocationId,
+    );
 
-    // Fetch all active technicians
-    const allTechs = await ctx.db
-      .query("technicians")
-      .withIndex("by_status", (q) =>
-        q.eq("organizationId", args.organizationId).eq("status", "active"),
-      )
-      .collect();
-    const techs = scopedLocationId
-      ? allTechs.filter((tech) => tech.primaryShopLocationId === scopedLocationId)
-      : allTechs;
-
-    // Fetch org settings for defaults
-    const settings = await ctx.db
-      .query("schedulingSettings")
-      .withIndex("by_org", (q) => q.eq("organizationId", args.organizationId))
-      .unique();
-
-    const defaultDays = settings?.defaultShiftDays ?? DEFAULT_SETTINGS.defaultShiftDays;
-    const defaultStart = settings?.defaultStartHour ?? DEFAULT_SETTINGS.defaultStartHour;
-    const defaultEnd = settings?.defaultEndHour ?? DEFAULT_SETTINGS.defaultEndHour;
-    const defaultEff = settings?.defaultEfficiencyMultiplier ?? DEFAULT_SETTINGS.defaultEfficiencyMultiplier;
-
-    // For each tech, get their active shift and active task card count
     const results = await Promise.all(
-      techs.map(async (tech) => {
-        // Active shift
-        const shifts = await ctx.db
-          .query("technicianShifts")
-          .withIndex("by_technician", (q) => q.eq("technicianId", tech._id))
-          .collect();
+      context.techs.map(async (tech: any) => {
+        const shiftResolution = resolveEffectiveShiftForTech({
+          tech,
+          defaultShift: context.defaultShift,
+          rosterTeams: context.rosterTeams,
+          rosterShifts: context.rosterShifts,
+          activeTechShiftByTechId: context.activeTechShiftByTechId,
+        });
 
-        const activeShift = shifts.find((s) => isShiftActive(s, nowMs));
-
-        const daysOfWeek = activeShift?.daysOfWeek ?? defaultDays;
-        const startHour = activeShift?.startHour ?? defaultStart;
-        const endHour = activeShift?.endHour ?? defaultEnd;
-        const efficiencyMultiplier = activeShift?.efficiencyMultiplier ?? defaultEff;
-
-        // Active task cards assigned to this tech
         const assignedCards = await ctx.db
           .query("taskCards")
-          .withIndex("by_assigned", (q) =>
-            q.eq("assignedToTechnicianId", tech._id),
-          )
+          .withIndex("by_assigned", (q: any) => q.eq("assignedToTechnicianId", tech._id))
           .collect();
 
         const activeCards = assignedCards.filter(
-          (c) => c.status !== "complete" && c.status !== "voided",
+          (card: any) => card.status !== "complete" && card.status !== "voided",
         );
 
         const estimatedRemainingHours = activeCards.reduce(
-          (sum, c) => sum + (c.estimatedHours ?? 0),
+          (sum: number, card: any) => sum + (card.estimatedHours ?? 0),
           0,
         );
 
@@ -304,12 +402,20 @@ export const getTechnicianWorkload = query({
           technicianId: tech._id,
           name: tech.legalName,
           employeeId: tech.employeeId,
+          role: tech.role,
           primaryShopLocationId: tech.primaryShopLocationId,
-          daysOfWeek,
-          startHour,
-          endHour,
-          efficiencyMultiplier,
-          usingDefaultShift: !activeShift,
+          teamId: shiftResolution.team?._id,
+          teamName: shiftResolution.team?.name,
+          teamColorToken: shiftResolution.team?.colorToken,
+          shiftId: shiftResolution.teamShift?._id,
+          shiftName: shiftResolution.teamShift?.name,
+          shiftSource: shiftResolution.resolved.source,
+          daysOfWeek: shiftResolution.resolved.daysOfWeek,
+          startHour: shiftResolution.resolved.startHour,
+          endHour: shiftResolution.resolved.endHour,
+          efficiencyMultiplier: shiftResolution.resolved.efficiencyMultiplier,
+          usingDefaultShift: shiftResolution.resolved.usingDefaultShift,
+          usingTeamShift: shiftResolution.resolved.usingTeamShift,
           assignedActiveCards: activeCards.length,
           estimatedRemainingHours,
         };
@@ -320,8 +426,6 @@ export const getTechnicianWorkload = query({
   },
 });
 
-// ─── getShopCapacity ─────────────────────────────────────────────────────────
-
 export const getShopCapacity = query({
   args: {
     organizationId: v.id("organizations"),
@@ -330,68 +434,61 @@ export const getShopCapacity = query({
     endDateMs: v.number(),
   },
   handler: async (ctx, args) => {
-    const nowMs = Date.now();
-    const scopedLocationId =
-      args.shopLocationId && args.shopLocationId !== "all"
-        ? args.shopLocationId
-        : undefined;
-    if (scopedLocationId) {
-      await ensureShopLocationBelongsToOrg(ctx, args.organizationId, scopedLocationId);
-    }
+    const scopedLocationId = resolveScopedLocationId(args.shopLocationId);
+    const context = await loadBaseSchedulingContext(
+      ctx,
+      args.organizationId,
+      scopedLocationId,
+    );
 
-    const allTechs = await ctx.db
-      .query("technicians")
-      .withIndex("by_status", (q) =>
-        q.eq("organizationId", args.organizationId).eq("status", "active"),
-      )
-      .collect();
-    const techs = scopedLocationId
-      ? allTechs.filter((tech) => tech.primaryShopLocationId === scopedLocationId)
-      : allTechs;
-
-    const settings = await ctx.db
-      .query("schedulingSettings")
-      .withIndex("by_org", (q) => q.eq("organizationId", args.organizationId))
-      .unique();
-
-    const defaultDays = settings?.defaultShiftDays ?? DEFAULT_SETTINGS.defaultShiftDays;
-    const defaultStart = settings?.defaultStartHour ?? DEFAULT_SETTINGS.defaultStartHour;
-    const defaultEnd = settings?.defaultEndHour ?? DEFAULT_SETTINGS.defaultEndHour;
-    const defaultEff = settings?.defaultEfficiencyMultiplier ?? DEFAULT_SETTINGS.defaultEfficiencyMultiplier;
+    const observedHolidayKeys = await fetchObservedHolidayDateKeys(ctx, {
+      organizationId: args.organizationId,
+      scopedLocationId,
+      startDateMs: args.startDateMs,
+      endDateMs: args.endDateMs,
+    });
 
     let totalAvailableHours = 0;
     const byTechnician: Array<{
       technicianId: string;
       name: string;
       primaryShopLocationId?: string;
+      teamId?: string;
+      teamName?: string;
       availableHours: number;
       shiftDays: number[];
       startHour: number;
       endHour: number;
       efficiencyMultiplier: number;
+      shiftSource: string;
     }> = [];
 
-    for (const tech of techs) {
-      const shifts = await ctx.db
-        .query("technicianShifts")
-        .withIndex("by_technician", (q) => q.eq("technicianId", tech._id))
-        .collect();
+    for (const tech of context.techs) {
+      const shiftResolution = resolveEffectiveShiftForTech({
+        tech,
+        defaultShift: context.defaultShift,
+        rosterTeams: context.rosterTeams,
+        rosterShifts: context.rosterShifts,
+        activeTechShiftByTechId: context.activeTechShiftByTechId,
+      });
 
-      const activeShift = shifts.find((s) => isShiftActive(s, nowMs));
-
-      const daysOfWeek = activeShift?.daysOfWeek ?? defaultDays;
-      const startHour = activeShift?.startHour ?? defaultStart;
-      const endHour = activeShift?.endHour ?? defaultEnd;
-      const efficiencyMultiplier = activeShift?.efficiencyMultiplier ?? defaultEff;
-
-      // Iterate each day in the range
       let availableHours = 0;
       const current = new Date(args.startDateMs);
       const end = new Date(args.endDateMs);
       while (current <= end) {
+        const dayKey = dateKeyFromMs(current.getTime());
+        if (observedHolidayKeys.has(dayKey)) {
+          current.setDate(current.getDate() + 1);
+          continue;
+        }
+
         const dow = current.getDay();
-        if (daysOfWeek.includes(dow)) {
-          availableHours += hoursPerShiftDay(startHour, endHour, efficiencyMultiplier);
+        if (shiftResolution.resolved.daysOfWeek.includes(dow)) {
+          availableHours += hoursPerShiftDay(
+            shiftResolution.resolved.startHour,
+            shiftResolution.resolved.endHour,
+            shiftResolution.resolved.efficiencyMultiplier,
+          );
         }
         current.setDate(current.getDate() + 1);
       }
@@ -401,19 +498,20 @@ export const getShopCapacity = query({
         technicianId: tech._id,
         name: tech.legalName,
         primaryShopLocationId: tech.primaryShopLocationId,
+        teamId: shiftResolution.team?._id,
+        teamName: shiftResolution.team?.name,
         availableHours,
-        shiftDays: daysOfWeek,
-        startHour,
-        endHour,
-        efficiencyMultiplier,
+        shiftDays: shiftResolution.resolved.daysOfWeek,
+        startHour: shiftResolution.resolved.startHour,
+        endHour: shiftResolution.resolved.endHour,
+        efficiencyMultiplier: shiftResolution.resolved.efficiencyMultiplier,
+        shiftSource: shiftResolution.resolved.source,
       });
     }
 
     return { totalAvailableHours, byTechnician };
   },
 });
-
-// ─── getCapacityUtilization ───────────────────────────────────────────────────
 
 export const getCapacityUtilization = query({
   args: {
@@ -424,34 +522,23 @@ export const getCapacityUtilization = query({
   handler: async (ctx, args) => {
     const nowMs = Date.now();
     const endDateMs = nowMs + args.periodWeeks * 7 * 24 * 60 * 60 * 1000;
-    const scopedLocationId =
-      args.shopLocationId && args.shopLocationId !== "all"
-        ? args.shopLocationId
-        : undefined;
-    if (scopedLocationId) {
-      await ensureShopLocationBelongsToOrg(ctx, args.organizationId, scopedLocationId);
-    }
+    const scopedLocationId = resolveScopedLocationId(args.shopLocationId);
 
-    const allTechs = await ctx.db
-      .query("technicians")
-      .withIndex("by_status", (q) =>
-        q.eq("organizationId", args.organizationId).eq("status", "active"),
-      )
-      .collect();
-    const techs = scopedLocationId
-      ? allTechs.filter((tech) => tech.primaryShopLocationId === scopedLocationId)
-      : allTechs;
+    const context = await loadBaseSchedulingContext(
+      ctx,
+      args.organizationId,
+      scopedLocationId,
+    );
 
-    const settings = await ctx.db
-      .query("schedulingSettings")
-      .withIndex("by_org", (q) => q.eq("organizationId", args.organizationId))
-      .unique();
+    const observedHolidayKeys = await fetchObservedHolidayDateKeys(ctx, {
+      organizationId: args.organizationId,
+      scopedLocationId,
+      startDateMs: nowMs,
+      endDateMs,
+    });
 
-    const bufferPercent = settings?.capacityBufferPercent ?? DEFAULT_SETTINGS.capacityBufferPercent;
-    const defaultDays = settings?.defaultShiftDays ?? DEFAULT_SETTINGS.defaultShiftDays;
-    const defaultStart = settings?.defaultStartHour ?? DEFAULT_SETTINGS.defaultStartHour;
-    const defaultEnd = settings?.defaultEndHour ?? DEFAULT_SETTINGS.defaultEndHour;
-    const defaultEff = settings?.defaultEfficiencyMultiplier ?? DEFAULT_SETTINGS.defaultEfficiencyMultiplier;
+    const bufferPercent =
+      context.settings?.capacityBufferPercent ?? DEFAULT_SETTINGS.capacityBufferPercent;
 
     let totalAvailableHours = 0;
     let totalCommittedHours = 0;
@@ -460,51 +547,55 @@ export const getCapacityUtilization = query({
       technicianId: string;
       name: string;
       primaryShopLocationId?: string;
+      teamId?: string;
+      teamName?: string;
       availableHours: number;
       assignedEstimatedHours: number;
       utilizationPercent: number;
+      shiftSource: string;
     }> = [];
 
-    for (const tech of techs) {
-      // Shift
-      const shifts = await ctx.db
-        .query("technicianShifts")
-        .withIndex("by_technician", (q) => q.eq("technicianId", tech._id))
-        .collect();
+    for (const tech of context.techs) {
+      const shiftResolution = resolveEffectiveShiftForTech({
+        tech,
+        defaultShift: context.defaultShift,
+        rosterTeams: context.rosterTeams,
+        rosterShifts: context.rosterShifts,
+        activeTechShiftByTechId: context.activeTechShiftByTechId,
+      });
 
-      const activeShift = shifts.find((s) => isShiftActive(s, nowMs));
-      const daysOfWeek = activeShift?.daysOfWeek ?? defaultDays;
-      const startHour = activeShift?.startHour ?? defaultStart;
-      const endHour = activeShift?.endHour ?? defaultEnd;
-      const efficiencyMultiplier = activeShift?.efficiencyMultiplier ?? defaultEff;
-
-      // Available hours over period
       let availableHours = 0;
       const current = new Date(nowMs);
       const end = new Date(endDateMs);
       while (current <= end) {
+        const dayKey = dateKeyFromMs(current.getTime());
+        if (observedHolidayKeys.has(dayKey)) {
+          current.setDate(current.getDate() + 1);
+          continue;
+        }
+
         const dow = current.getDay();
-        if (daysOfWeek.includes(dow)) {
-          availableHours += hoursPerShiftDay(startHour, endHour, efficiencyMultiplier);
+        if (shiftResolution.resolved.daysOfWeek.includes(dow)) {
+          availableHours += hoursPerShiftDay(
+            shiftResolution.resolved.startHour,
+            shiftResolution.resolved.endHour,
+            shiftResolution.resolved.efficiencyMultiplier,
+          );
         }
         current.setDate(current.getDate() + 1);
       }
 
-      // Assigned task card hours (incomplete)
       const assignedCards = await ctx.db
         .query("taskCards")
-        .withIndex("by_assigned", (q) =>
-          q.eq("assignedToTechnicianId", tech._id),
-        )
+        .withIndex("by_assigned", (q: any) => q.eq("assignedToTechnicianId", tech._id))
         .collect();
 
       const assignedEstimatedHours = assignedCards
-        .filter((c) => c.status !== "complete" && c.status !== "voided")
-        .reduce((sum, c) => sum + (c.estimatedHours ?? 0), 0);
+        .filter((card: any) => card.status !== "complete" && card.status !== "voided")
+        .reduce((sum: number, card: any) => sum + (card.estimatedHours ?? 0), 0);
 
-      const techUtil = availableHours > 0
-        ? Math.round((assignedEstimatedHours / availableHours) * 100)
-        : 0;
+      const techUtil =
+        availableHours > 0 ? Math.round((assignedEstimatedHours / availableHours) * 100) : 0;
 
       totalAvailableHours += availableHours;
       totalCommittedHours += assignedEstimatedHours;
@@ -513,9 +604,12 @@ export const getCapacityUtilization = query({
         technicianId: tech._id,
         name: tech.legalName,
         primaryShopLocationId: tech.primaryShopLocationId,
+        teamId: shiftResolution.team?._id,
+        teamName: shiftResolution.team?.name,
         availableHours,
         assignedEstimatedHours,
         utilizationPercent: techUtil,
+        shiftSource: shiftResolution.resolved.source,
       });
     }
 
@@ -532,6 +626,7 @@ export const getCapacityUtilization = query({
       isOverCapacity: totalCommittedHours > totalAvailableHours,
       isNearBuffer: utilizationPercent > 100 - bufferPercent,
       periodWeeks: args.periodWeeks,
+      observedHolidayCount: observedHolidayKeys.size,
       byTechnician,
     };
   },

@@ -799,14 +799,24 @@ export const decideQuoteLineItem = mutation({
     decisionNotes: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    await requireAuth(ctx);
+    const callerUserId = await requireAuth(ctx);
     const item = await ctx.db.get(args.lineItemId);
     if (!item) throw new Error("Line item not found.");
     if (item.orgId !== args.orgId) throw new Error("ORG_MISMATCH.");
+
+    const decidingTechnician = await ctx.db
+      .query("technicians")
+      .withIndex("by_organization", (q) => q.eq("organizationId", args.orgId))
+      .filter((q) => q.eq(q.field("userId"), callerUserId))
+      .first();
+
     await ctx.db.patch(args.lineItemId, {
       customerDecision: args.decision,
       customerDecisionNotes: args.decisionNotes?.trim(),
       customerDecisionAt: Date.now(),
+      customerDecisionByUserId: callerUserId,
+      customerDecisionByTechnicianId: decidingTechnician?._id,
+      customerDecisionByName: decidingTechnician?.legalName,
     });
 
     // GAP-10: If declined and linked to a discrepancy, defer the discrepancy

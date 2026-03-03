@@ -225,6 +225,60 @@ export const deleteDocument = mutation({
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
+// MUTATION: markAircraftPhotoFeatured
+//
+// Sets one aircraft image document as featured by adding a "[featured]" token
+// to its description and removing that token from sibling aircraft image docs.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const markAircraftPhotoFeatured = mutation({
+  args: {
+    organizationId: v.id("organizations"),
+    aircraftId: v.string(),
+    documentId: v.id("documents"),
+  },
+  handler: async (ctx, args) => {
+    await requireAuth(ctx);
+
+    const candidate = await ctx.db.get(args.documentId);
+    if (!candidate) throw new Error("Document not found.");
+    if (candidate.organizationId !== args.organizationId) {
+      throw new Error("ORG_MISMATCH: document does not belong to this organization.");
+    }
+    if (candidate.attachedToTable !== "aircraft" || candidate.attachedToId !== args.aircraftId) {
+      throw new Error("Document is not attached to the requested aircraft.");
+    }
+    if (!candidate.mimeType.startsWith("image/")) {
+      throw new Error("Only image documents can be marked as featured.");
+    }
+
+    const siblings = await ctx.db
+      .query("documents")
+      .withIndex("by_attachment", (q) =>
+        q.eq("attachedToTable", "aircraft").eq("attachedToId", args.aircraftId),
+      )
+      .collect();
+
+    for (const doc of siblings) {
+      if (!doc.mimeType.startsWith("image/")) continue;
+      const existing = doc.description ?? "";
+      const withoutFeatured = existing.replace(/\[featured\]\s*/gi, "").trim();
+      if (doc._id === args.documentId) {
+        await ctx.db.patch(doc._id, {
+          description: `[featured] ${withoutFeatured}`.trim(),
+        });
+      } else if (existing.toLowerCase().includes("[featured]")) {
+        await ctx.db.patch(doc._id, {
+          description: withoutFeatured || undefined,
+        });
+      }
+    }
+
+    return { success: true };
+  },
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
 // QUERY: getDocumentCount
 //
 // Returns the number of documents attached to a record.

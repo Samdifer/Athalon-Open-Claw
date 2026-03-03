@@ -93,11 +93,17 @@ interface WorkloadEntry {
   technicianId: string;
   name: string;
   employeeId?: string;
+  role?: string;
+  teamId?: string;
+  teamName?: string;
+  teamColorToken?: string;
+  shiftSource?: "technician_override" | "team_shift" | "org_default";
   daysOfWeek: number[];
   startHour: number;
   endHour: number;
   efficiencyMultiplier: number;
   usingDefaultShift: boolean;
+  usingTeamShift?: boolean;
   assignedActiveCards: number;
   estimatedRemainingHours: number;
 }
@@ -322,6 +328,8 @@ export default function PersonnelPage() {
   const { orgId } = useCurrentOrg();
 
   const [editingTechId, setEditingTechId] = useState<string | null>(null);
+  const [teamDraftByTechId, setTeamDraftByTechId] = useState<Record<string, string>>({});
+  const [mutatingTeamTechId, setMutatingTeamTechId] = useState<string | null>(null);
 
   const technicians = useQuery(
     api.technicians.list,
@@ -339,8 +347,29 @@ export default function PersonnelPage() {
     api.capacity.getTechnicianWorkload,
     orgId ? { organizationId: orgId } : "skip",
   );
+  const rosterWorkspace = useQuery(
+    api.schedulerRoster.getRosterWorkspace,
+    orgId
+      ? {
+          organizationId: orgId,
+          shopLocationId: "all",
+          dateMode: "today",
+        }
+      : "skip",
+  );
+  const myRole = useQuery(
+    api.roles.getMyRole,
+    orgId ? { organizationId: orgId } : "skip",
+  );
+  const assignTechnicianToRosterTeam = useMutation(
+    api.schedulerRoster.assignTechnicianToRosterTeam,
+  );
+  const clearTechnicianRosterTeam = useMutation(
+    api.schedulerRoster.clearTechnicianRosterTeam,
+  );
 
   const isLoading = technicians === undefined;
+  const canManageRoster = new Set(["admin", "shop_manager", "lead_technician"]).has(myRole ?? "");
 
   // Build a set of technicianIds with expiring certs for quick lookup
   const expiringTechIds = new Set(
@@ -594,6 +623,9 @@ export default function PersonnelPage() {
                           {workload.usingDefaultShift && (
                             <span className="text-muted-foreground/60 italic">(default)</span>
                           )}
+                          {workload.usingTeamShift && (
+                            <span className="text-muted-foreground/60 italic">(team shift)</span>
+                          )}
                           <span className="text-muted-foreground/40">·</span>
                           <span className="text-muted-foreground/70">
                             {workload.assignedActiveCards} card
@@ -643,6 +675,110 @@ export default function PersonnelPage() {
                           initial={workload}
                           onClose={() => setEditingTechId(null)}
                         />
+                      )}
+
+                      {rosterWorkspace && (
+                        <div className="mt-2.5 pt-2.5 border-t border-border/40 space-y-2">
+                          <div className="flex items-center justify-between gap-2 flex-wrap">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                                Roster Team
+                              </span>
+                              <Badge
+                                variant="outline"
+                                className={`text-[10px] border-border/50 ${
+                                  workload.teamColorToken ?? "bg-muted/20"
+                                }`}
+                              >
+                                {workload.teamName ?? "Unassigned"}
+                              </Badge>
+                            </div>
+                            <Button
+                              asChild
+                              size="sm"
+                              variant="ghost"
+                              className="h-6 text-[11px] px-2 text-muted-foreground hover:text-foreground"
+                            >
+                              <Link to="/scheduling/roster">
+                                Open Roster Workspace
+                                <ExternalLink className="w-3 h-3 ml-1" />
+                              </Link>
+                            </Button>
+                          </div>
+
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <Select
+                              value={
+                                teamDraftByTechId[tech._id] ??
+                                workload.teamId ??
+                                "__unassigned__"
+                              }
+                              onValueChange={(value) =>
+                                setTeamDraftByTechId((prev) => ({
+                                  ...prev,
+                                  [tech._id]: value,
+                                }))
+                              }
+                              disabled={!canManageRoster || mutatingTeamTechId === tech._id}
+                            >
+                              <SelectTrigger size="sm" className="w-[240px] text-xs">
+                                <SelectValue placeholder="Select roster team" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="__unassigned__">Unassigned</SelectItem>
+                                {(rosterWorkspace.teams ?? []).map((team) => (
+                                  <SelectItem key={team.teamId} value={team.teamId}>
+                                    {team.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <Button
+                              size="sm"
+                              className="h-7 text-xs px-3"
+                              disabled={!canManageRoster || mutatingTeamTechId === tech._id}
+                              onClick={async () => {
+                                if (!orgId) return;
+                                const selectedTeamId =
+                                  teamDraftByTechId[tech._id] ??
+                                  workload.teamId ??
+                                  "__unassigned__";
+                                setMutatingTeamTechId(tech._id);
+                                try {
+                                  if (selectedTeamId === "__unassigned__") {
+                                    await clearTechnicianRosterTeam({
+                                      organizationId: orgId,
+                                      technicianId: tech._id as Id<"technicians">,
+                                    });
+                                  } else {
+                                    await assignTechnicianToRosterTeam({
+                                      organizationId: orgId,
+                                      technicianId: tech._id as Id<"technicians">,
+                                      teamId: selectedTeamId as Id<"rosterTeams">,
+                                    });
+                                  }
+                                  toast.success("Roster team updated");
+                                } catch (err) {
+                                  toast.error(
+                                    err instanceof Error
+                                      ? err.message
+                                      : "Failed to update roster team",
+                                  );
+                                } finally {
+                                  setMutatingTeamTechId(null);
+                                }
+                              }}
+                            >
+                              {mutatingTeamTechId === tech._id ? "Saving..." : "Apply Team"}
+                            </Button>
+                          </div>
+                          {!canManageRoster && (
+                            <p className="text-[10px] text-amber-600 dark:text-amber-400">
+                              Admin, shop manager, or lead technician role required to change team
+                              assignments.
+                            </p>
+                          )}
+                        </div>
                       )}
                     </div>
                   )}

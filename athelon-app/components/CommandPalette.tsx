@@ -39,6 +39,8 @@ const NAV_ITEMS = [
   { label: "Parts Requests", path: "/parts/requests", icon: Package },
   { label: "Parts Receiving", path: "/parts/receiving", icon: Package },
   { label: "Scheduling", path: "/scheduling", icon: CalendarDays },
+  { label: "Roster & Teams", path: "/scheduling/roster", icon: Users },
+  { label: "Quote Workspace", path: "/scheduling/quotes", icon: FileText },
   { label: "Invoices", path: "/billing/invoices", icon: ReceiptText },
   { label: "Quotes", path: "/billing/quotes", icon: FileText },
   { label: "Customers", path: "/billing/customers", icon: Users },

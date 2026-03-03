@@ -19,6 +19,7 @@ import {
   Paperclip,
   CheckCircle2,
   MessageSquare,
+  Video,
 } from "lucide-react";
 import { api } from "@/convex/_generated/api";
 import { HandoffNotesPanel } from "@/components/HandoffNotesPanel";
@@ -48,6 +49,7 @@ import {
 } from "@/app/(app)/work-orders/[id]/_components/WorkItemsList";
 import { WOComplianceTab } from "@/app/(app)/work-orders/[id]/_components/WOComplianceTab";
 import { DocumentAttachmentPanel } from "@/app/(app)/work-orders/[id]/_components/DocumentAttachmentPanel";
+import { InDockRtsEvidenceTab } from "@/app/(app)/work-orders/[id]/_components/InDockRtsEvidenceTab";
 import { CloseReadinessPanel } from "@/components/CloseReadinessPanel";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import { ActivityTimeline } from "@/app/(app)/work-orders/[id]/_components/ActivityTimeline";
@@ -66,6 +68,22 @@ type AuditEventForTimeline = {
 };
 
 type RiskLevel = "overdue" | "at_risk" | "on_track" | "no_date";
+type WorkOrderStageKey =
+  | "quoting"
+  | "in_dock"
+  | "inspection"
+  | "repair"
+  | "return_to_service"
+  | "review_and_improvement";
+
+const WORK_ORDER_STAGE_FLOW: Array<{ key: WorkOrderStageKey; label: string }> = [
+  { key: "quoting", label: "Quoting" },
+  { key: "in_dock", label: "In-dock" },
+  { key: "inspection", label: "Inspection" },
+  { key: "repair", label: "Repair" },
+  { key: "return_to_service", label: "Return to Service" },
+  { key: "review_and_improvement", label: "Review & Improvement" },
+];
 
 function isWorkOrderNumberRef(value: string): boolean {
   return /^WO-/i.test(value.trim());
@@ -114,6 +132,29 @@ function partStatusStyle(location: string): string {
     removed_pending_disposition: "bg-orange-500/15 text-orange-400 border-orange-500/30",
   };
   return map[location] ?? "bg-slate-500/15 text-slate-400 border-slate-500/30";
+}
+
+function mapStatusToStageIndex(status: string): number {
+  switch (status) {
+    case "draft":
+      return 0;
+    case "open":
+      return 1;
+    case "pending_inspection":
+      return 2;
+    case "in_progress":
+    case "on_hold":
+    case "open_discrepancies":
+      return 3;
+    case "pending_signoff":
+      return 4;
+    case "closed":
+    case "cancelled":
+    case "voided":
+      return 5;
+    default:
+      return 0;
+  }
 }
 
 function ScheduleRiskChip({ riskLevel }: { riskLevel: RiskLevel }) {
@@ -493,6 +534,44 @@ export default function WorkOrderDetailPage() {
         </div>
       </div>
 
+      <Card className="border-border/60">
+        <CardContent className="p-3 sm:p-4">
+          <p className="text-[11px] text-muted-foreground mb-3">Work Order Stage</p>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2.5">
+            {WORK_ORDER_STAGE_FLOW.map((stage, idx) => {
+              const activeStageIndex = mapStatusToStageIndex(wo.status);
+              const isComplete = idx < activeStageIndex;
+              const isCurrent = idx === activeStageIndex;
+              return (
+                <div key={stage.key} className="flex items-center gap-2 min-w-0">
+                  <span
+                    className={`w-3 h-3 rounded-full border flex-shrink-0 ${
+                      isCurrent
+                        ? "bg-primary border-primary"
+                        : isComplete
+                          ? "bg-green-500 border-green-500"
+                          : "bg-transparent border-border"
+                    }`}
+                    aria-hidden
+                  />
+                  <span
+                    className={`text-[11px] truncate ${
+                      isCurrent
+                        ? "text-foreground font-medium"
+                        : isComplete
+                          ? "text-green-600 dark:text-green-400"
+                          : "text-muted-foreground"
+                    }`}
+                  >
+                    {stage.label}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
         <Card className="border-border/60">
           <CardContent className="p-3">
@@ -596,6 +675,7 @@ export default function WorkOrderDetailPage() {
               { value: "squawks", label: "Tasks & Findings", Icon: AlertTriangle, count: workItems.length, indicator: null as "red" | "amber" | "green" | null },
               { value: "compliance", label: "Compliance", Icon: ShieldCheck, count: null, indicator: complianceIndicator },
               { value: "parts", label: "Parts", Icon: Package, count: partsForThisWorkOrder.length, indicator: null as "red" | "amber" | "green" | null },
+              { value: "evidence", label: "In-dock & RTS", Icon: Video, count: null, indicator: null as "red" | "amber" | "green" | null },
               { value: "documents", label: "Documents", Icon: Paperclip, count: null, indicator: null as "red" | "amber" | "green" | null },
               { value: "notes", label: "Notes & Activity", Icon: FileText, count: auditEvents.length, indicator: null as "red" | "amber" | "green" | null },
             ]
@@ -706,6 +786,14 @@ export default function WorkOrderDetailPage() {
             organizationId={orgId}
             attachedToTable="workOrders"
             attachedToId={String(workOrderId)}
+          />
+        </TabsContent>
+
+        <TabsContent value="evidence" className="mt-0">
+          <InDockRtsEvidenceTab
+            organizationId={orgId}
+            workOrderId={String(workOrderId)}
+            aircraftRegistration={aircraft?.currentRegistration ?? "AIRCRAFT"}
           />
         </TabsContent>
 

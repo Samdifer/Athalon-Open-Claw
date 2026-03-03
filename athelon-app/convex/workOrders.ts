@@ -1814,7 +1814,7 @@ export const getWorkOrdersWithScheduleRisk = query({
       await ensureShopLocationBelongsToOrg(ctx, args.organizationId, scopedLocationId);
     }
 
-    const [rows, allParts] = await Promise.all([
+    const [rows, allParts, allDocuments] = await Promise.all([
       scopedLocationId
         ? ctx.db
             .query("workOrders")
@@ -1836,6 +1836,12 @@ export const getWorkOrdersWithScheduleRisk = query({
           q.eq("organizationId", args.organizationId),
         )
         .collect(),
+      ctx.db
+        .query("documents")
+        .withIndex("by_org", (q) =>
+          q.eq("organizationId", args.organizationId),
+        )
+        .collect(),
     ]);
 
     const pendingPartCountByWoId = new Map<string, number>();
@@ -1851,6 +1857,15 @@ export const getWorkOrdersWithScheduleRisk = query({
         const key = String(woId);
         pendingPartCountByWoId.set(key, (pendingPartCountByWoId.get(key) ?? 0) + 1);
       }
+    }
+
+    const aircraftImageDocsById = new Map<string, any[]>();
+    for (const doc of allDocuments) {
+      if (doc.attachedToTable !== "aircraft") continue;
+      if (!doc.mimeType.startsWith("image/")) continue;
+      const rowsForAircraft = aircraftImageDocsById.get(doc.attachedToId) ?? [];
+      rowsForAircraft.push(doc);
+      aircraftImageDocsById.set(doc.attachedToId, rowsForAircraft);
     }
 
     const enriched = await Promise.all(
@@ -1908,6 +1923,18 @@ export const getWorkOrdersWithScheduleRisk = query({
           nowMs: now,
         });
 
+        const aircraftImageDocs = aircraft
+          ? aircraftImageDocsById.get(String(aircraft._id)) ?? []
+          : [];
+        const featuredImageDoc =
+          aircraftImageDocs.find((doc) =>
+            (doc.description ?? "").toLowerCase().includes("[featured]"),
+          ) ??
+          [...aircraftImageDocs].sort((a, b) => b.uploadedAt - a.uploadedAt)[0];
+        const aircraftFeaturedImageUrl = featuredImageDoc
+          ? await ctx.storage.getUrl(featuredImageDoc.storageId)
+          : null;
+
         return {
           _id: wo._id,
           shopLocationId: wo.shopLocationId,
@@ -1939,6 +1966,7 @@ export const getWorkOrdersWithScheduleRisk = query({
                 currentRegistration: aircraft.currentRegistration,
                 make: aircraft.make,
                 model: aircraft.model,
+                featuredImageUrl: aircraftFeaturedImageUrl,
               }
             : null,
         };

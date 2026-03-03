@@ -673,6 +673,7 @@ export default defineSchema({
     employeeId: v.optional(v.string()),
     organizationId: v.id("organizations"),
     primaryShopLocationId: v.optional(v.id("shopLocations")),
+    rosterTeamId: v.optional(v.id("rosterTeams")),
 
     status: v.union(
       v.literal("active"),
@@ -706,7 +707,8 @@ export default defineSchema({
     .index("by_organization", ["organizationId"])
     .index("by_user", ["userId"])
     .index("by_status", ["organizationId", "status"])
-    .index("by_org_location", ["organizationId", "primaryShopLocationId"]),
+    .index("by_org_location", ["organizationId", "primaryShopLocationId"])
+    .index("by_org_roster_team", ["organizationId", "rosterTeamId"]),
 
   // ═══════════════════════════════════════════════════════════════════════════
   // TECHNICIAN SHIFTS
@@ -748,10 +750,79 @@ export default defineSchema({
     defaultStartHour: v.number(),
     defaultEndHour: v.number(),
     defaultEfficiencyMultiplier: v.number(),
+    rosterWorkspaceEnabled: v.optional(v.boolean()),
+    rosterWorkspaceBootstrappedAt: v.optional(v.number()),
     updatedAt: v.number(),
     updatedByUserId: v.string(),
   })
     .index("by_org", ["organizationId"]),
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ROSTER SHIFTS (Scheduler roster workspace)
+  //
+  // Team-owned shift defaults for active roster visualization. Individual
+  // technician overrides continue to use technicianShifts.
+  // ═══════════════════════════════════════════════════════════════════════════
+  rosterShifts: defineTable({
+    organizationId: v.id("organizations"),
+    shopLocationId: v.optional(v.id("shopLocations")),
+    name: v.string(),
+    daysOfWeek: v.array(v.number()), // 0=Sun..6=Sat
+    startHour: v.number(),
+    endHour: v.number(),
+    efficiencyMultiplier: v.number(),
+    isActive: v.boolean(),
+    sortOrder: v.number(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_org", ["organizationId"])
+    .index("by_org_location", ["organizationId", "shopLocationId"])
+    .index("by_org_active", ["organizationId", "isActive"])
+    .index("by_org_location_active", ["organizationId", "shopLocationId", "isActive"]),
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ROSTER TEAMS (Scheduler roster workspace)
+  //
+  // First-class team model used by scheduler roster grouping, staffing
+  // operations, and supervisory coverage analytics.
+  // ═══════════════════════════════════════════════════════════════════════════
+  rosterTeams: defineTable({
+    organizationId: v.id("organizations"),
+    shopLocationId: v.optional(v.id("shopLocations")),
+    name: v.string(),
+    colorToken: v.string(),
+    shiftId: v.id("rosterShifts"),
+    isActive: v.boolean(),
+    sortOrder: v.number(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_org", ["organizationId"])
+    .index("by_org_location", ["organizationId", "shopLocationId"])
+    .index("by_org_active", ["organizationId", "isActive"])
+    .index("by_org_location_active", ["organizationId", "shopLocationId", "isActive"])
+    .index("by_org_shift", ["organizationId", "shiftId"]),
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // SCHEDULING HOLIDAYS (Scheduler roster workspace)
+  //
+  // Explicit holiday observance model used by roster activity and capacity math.
+  // dateKey uses YYYY-MM-DD in local shop context.
+  // ═══════════════════════════════════════════════════════════════════════════
+  schedulingHolidays: defineTable({
+    organizationId: v.id("organizations"),
+    shopLocationId: v.optional(v.id("shopLocations")),
+    dateKey: v.string(),
+    name: v.string(),
+    isObserved: v.boolean(),
+    notes: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_org", ["organizationId"])
+    .index("by_org_date", ["organizationId", "dateKey"])
+    .index("by_org_location_date", ["organizationId", "shopLocationId", "dateKey"]),
 
   // ═══════════════════════════════════════════════════════════════════════════
   // SCHEDULE ASSIGNMENTS (Planner v2 foundation)
@@ -2889,6 +2960,9 @@ export default defineSchema({
     )),
     customerDecisionNotes: v.optional(v.string()),
     customerDecisionAt: v.optional(v.number()),
+    customerDecisionByUserId: v.optional(v.string()),
+    customerDecisionByTechnicianId: v.optional(v.id("technicians")),
+    customerDecisionByName: v.optional(v.string()),
 
     // Wave 4: Line economics & reordering
     sortOrder: v.optional(v.number()),
@@ -4121,6 +4195,81 @@ export default defineSchema({
   })
     .index("by_organization", ["organizationId"])
     .index("by_code", ["organizationId", "code"]),
+
+  // === LEAD ASSIGNMENTS ===
+  // Lead/team assignment records for work orders, task cards, and task steps.
+  leadAssignments: defineTable({
+    organizationId: v.id("organizations"),
+    entityType: v.union(
+      v.literal("work_order"),
+      v.literal("task_card"),
+      v.literal("task_step"),
+    ),
+    workOrderId: v.optional(v.id("workOrders")),
+    taskCardId: v.optional(v.id("taskCards")),
+    taskStepId: v.optional(v.id("taskCardSteps")),
+    assignedToTechnicianId: v.optional(v.id("technicians")),
+    assignedTeamName: v.optional(v.string()),
+    assignmentNote: v.optional(v.string()),
+    assignedByTechnicianId: v.id("technicians"),
+    isActive: v.boolean(),
+    assignedAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_org_entity", ["organizationId", "entityType"])
+    .index("by_org_assignee", ["organizationId", "assignedToTechnicianId"])
+    .index("by_org_work_order", ["organizationId", "workOrderId"])
+    .index("by_org_task_card", ["organizationId", "taskCardId"])
+    .index("by_org_task_step", ["organizationId", "taskStepId"]),
+
+  // === TURNOVER REPORTS ===
+  // Draft/submitted handoff reports owned by lead technicians.
+  turnoverReports: defineTable({
+    organizationId: v.id("organizations"),
+    reportDate: v.string(), // YYYY-MM-DD (shop local date)
+    windowStartAt: v.number(),
+    windowEndAt: v.number(),
+    status: v.union(v.literal("draft"), v.literal("submitted")),
+    leadTechnicianId: v.id("technicians"),
+    selectedWorkOrderIds: v.array(v.id("workOrders")),
+    summaryText: v.optional(v.string()),
+    aiDraftSummary: v.optional(v.string()),
+    leadNotes: v.optional(v.string()),
+    upcomingDeadlinesNotes: v.optional(v.string()),
+    partsOrderedSummary: v.optional(v.string()),
+    partsReceivedSummary: v.optional(v.string()),
+    timeAppliedMinutes: v.number(),
+    shopWorkOrderMinutes: v.number(),
+    personBreakdown: v.array(v.object({
+      technicianId: v.optional(v.id("technicians")),
+      technicianName: v.string(),
+      minutes: v.number(),
+      notes: v.optional(v.string()),
+    })),
+    teamBreakdown: v.array(v.object({
+      teamName: v.string(),
+      minutes: v.number(),
+      notes: v.optional(v.string()),
+    })),
+    workOrderNotes: v.array(v.object({
+      workOrderId: v.id("workOrders"),
+      workOrderNumber: v.optional(v.string()),
+      notes: v.optional(v.string()),
+    })),
+    submittedAt: v.optional(v.number()),
+    submittedByTechnicianId: v.optional(v.id("technicians")),
+    submissionSignature: v.optional(v.object({
+      signedName: v.string(),
+      signedRole: v.optional(v.string()),
+      signedAt: v.number(),
+    })),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_org_date", ["organizationId", "reportDate"])
+    .index("by_org_status", ["organizationId", "status"])
+    .index("by_org_lead", ["organizationId", "leadTechnicianId"])
+    .index("by_org_submitted_at", ["organizationId", "submittedAt"]),
 
   // === PREDICTIVE MAINTENANCE ===
   maintenancePredictions: defineTable({
