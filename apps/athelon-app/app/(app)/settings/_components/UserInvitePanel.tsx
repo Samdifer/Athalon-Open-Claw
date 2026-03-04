@@ -116,7 +116,7 @@ export function UserInvitePanel({ technicians }: { technicians: TechnicianRow[] 
   };
 
   return (
-    <RoleGuard allowedRoles={["admin"]} fallback={<p className="text-sm text-muted-foreground">Admins only.</p>}>
+    <RoleGuard allowedRoles={["admin"]}>
       <div className="space-y-4">
         <Card>
           <CardHeader>

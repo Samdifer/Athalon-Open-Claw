@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { useMutation, useQuery } from "convex/react";
 import {
@@ -55,6 +55,12 @@ import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import { ActivityTimeline } from "@/app/(app)/work-orders/[id]/_components/ActivityTimeline";
 import { DiscrepancyList } from "@/app/(app)/work-orders/[id]/_components/DiscrepancyList";
 import { DeferredMaintenanceCaptureDialog } from "@/app/(app)/work-orders/[id]/_components/DeferredMaintenanceCaptureDialog";
+import { VoiceNotesPanel } from "@/components/VoiceNotesPanel";
+import {
+  readVoiceNotesForWorkOrder,
+  writeVoiceNotesForWorkOrder,
+  type StoredVoiceNote,
+} from "@/lib/voiceNotes";
 
 type AuditEventForTimeline = {
   _id: string;
@@ -167,6 +173,7 @@ export default function WorkOrderDetailPage() {
   const navigate = useNavigate();
   const [timerActionLoading, setTimerActionLoading] = useState<"start" | "stop" | null>(null);
   const [deferredCaptureOpen, setDeferredCaptureOpen] = useState(false);
+  const [voiceNotes, setVoiceNotes] = useState<StoredVoiceNote[]>([]);
 
   const legacyResolution = useQuery(
     api.workOrders.resolveWorkOrderRef,
@@ -181,6 +188,14 @@ export default function WorkOrderDetailPage() {
     if (isConvexIdLike(routeRef)) return routeRef as Id<"workOrders">;
     return undefined;
   }, [legacyResolution?.workOrderId, routeRef]);
+
+  useEffect(() => {
+    if (!orgId || !workOrderId) {
+      setVoiceNotes([]);
+      return;
+    }
+    setVoiceNotes(readVoiceNotesForWorkOrder({ orgId, workOrderId: String(workOrderId) }));
+  }, [orgId, workOrderId]);
 
   const data = useQuery(
     api.workOrders.getWorkOrder,
@@ -403,6 +418,32 @@ export default function WorkOrderDetailPage() {
         : canClose
           ? "green"      // fully compliant, ready to close
           : "amber";     // something pending but not blocking
+
+  const handleUpdateVoiceNoteTranscript = async (noteId: string, transcript: string) => {
+    if (!orgId || !workOrderId) return;
+    setVoiceNotes((prev) => {
+      const next = prev.map((note) =>
+        note.id === noteId
+          ? {
+              ...note,
+              transcript,
+              updatedAt: Date.now(),
+            }
+          : note,
+      );
+      writeVoiceNotesForWorkOrder({ orgId, workOrderId: String(workOrderId) }, next);
+      return next;
+    });
+  };
+
+  const handleDeleteVoiceNote = async (noteId: string) => {
+    if (!orgId || !workOrderId) return;
+    setVoiceNotes((prev) => {
+      const next = prev.filter((note) => note.id !== noteId);
+      writeVoiceNotesForWorkOrder({ orgId, workOrderId: String(workOrderId) }, next);
+      return next;
+    });
+  };
 
   return (
     <div className="space-y-5">
@@ -713,7 +754,7 @@ export default function WorkOrderDetailPage() {
               { value: "parts", label: "Parts", Icon: Package, count: partsForThisWorkOrder.length, indicator: null as "red" | "amber" | "green" | null },
               { value: "evidence", label: "In-dock & RTS", Icon: Video, count: null, indicator: null as "red" | "amber" | "green" | null },
               { value: "documents", label: "Documents", Icon: Paperclip, count: null, indicator: null as "red" | "amber" | "green" | null },
-              { value: "notes", label: "Notes & Activity", Icon: FileText, count: auditEvents.length, indicator: null as "red" | "amber" | "green" | null },
+              { value: "notes", label: "Notes & Activity", Icon: FileText, count: auditEvents.length + voiceNotes.length, indicator: null as "red" | "amber" | "green" | null },
             ]
           ).map(({ value, label, Icon, count, indicator }) => (
             <TabsTrigger
@@ -838,8 +879,9 @@ export default function WorkOrderDetailPage() {
               Tabs component at page bottom, invisible to anyone on the Notes tab.
               Moved here so shift handoff notes appear first (more time-sensitive
               than audit history), followed by the audit activity timeline. */}
-          {taskCards.length > 0 && (
-            <div className="space-y-4 mb-4">
+          <div className="space-y-4 mb-4">
+            {taskCards.length > 0 && (
+              <>
               <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
                 <MessageSquare className="w-4 h-4 text-muted-foreground" />
                 Shift Handoff Notes
@@ -855,8 +897,14 @@ export default function WorkOrderDetailPage() {
                   />
                 </div>
               ))}
-            </div>
-          )}
+              </>
+            )}
+            <VoiceNotesPanel
+              notes={voiceNotes}
+              onUpdateTranscript={handleUpdateVoiceNoteTranscript}
+              onDelete={handleDeleteVoiceNote}
+            />
+          </div>
           <Card className="border-border/60">
             <CardHeader className="pb-3">
               <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
