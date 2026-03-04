@@ -46,6 +46,8 @@ const FleetPage = lazy(() => import("@/app/(app)/fleet/page"));
 const FleetCalendarPage = lazy(() => import("@/app/(app)/fleet/calendar/page"));
 const PredictionsPage = lazy(() => import("@/app/(app)/fleet/predictions/page"));
 const FleetLLPDashboardPage = lazy(() => import("@/app/(app)/fleet/llp/page"));
+const MaintenanceProgramsPage = lazy(() => import("@/app/(app)/fleet/maintenance-programs/page"));
+const MaintenanceProgramDetailPage = lazy(() => import("@/app/(app)/fleet/maintenance-programs/[id]/page"));
 const AircraftDetailPage = lazy(() => import("@/app/(app)/fleet/[tail]/page"));
 const AircraftLLPDetailPage = lazy(() => import("@/app/(app)/fleet/[tail]/llp/page"));
 const AircraftLogbookPage = lazy(() => import("@/app/(app)/fleet/[tail]/logbook/page"));
@@ -201,6 +203,8 @@ export function protectedAppRoutes() {
             <Route path="/fleet/calendar" element={<FleetCalendarPage />} />
             <Route path="/fleet/predictions" element={<PredictionsPage />} />
             <Route path="/fleet/llp" element={<FleetLLPDashboardPage />} />
+            <Route path="/fleet/maintenance-programs" element={<MaintenanceProgramsPage />} />
+            <Route path="/fleet/maintenance-programs/:id" element={<MaintenanceProgramDetailPage />} />
             <Route path="/fleet/:tail" element={<AircraftDetailPage />} />
             <Route path="/fleet/:tail/llp" element={<AircraftLLPDetailPage />} />
             <Route path="/fleet/:tail/logbook" element={<AircraftLogbookPage />} />

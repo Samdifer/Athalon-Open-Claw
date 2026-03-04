@@ -35,6 +35,7 @@ const NAV_ITEMS = [
   { label: "Work Orders", path: "/work-orders", icon: ClipboardList },
   { label: "Fleet", path: "/fleet", icon: PlaneTakeoff },
   { label: "Fleet Calendar", path: "/fleet/calendar", icon: CalendarDays },
+  { label: "Maintenance Programs", path: "/fleet/maintenance-programs", icon: CalendarDays },
   { label: "Parts", path: "/parts", icon: Package },
   { label: "Parts Requests", path: "/parts/requests", icon: Package },
   { label: "Parts Receiving", path: "/parts/receiving", icon: Package },

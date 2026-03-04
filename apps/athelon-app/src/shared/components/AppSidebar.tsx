@@ -112,6 +112,7 @@ const mainNav: NavEntry[] = [
     children: [
       { title: "Calendar", href: "/fleet/calendar" },
       { title: "Predictions", href: "/fleet/predictions" },
+      { title: "Maintenance Programs", href: "/fleet/maintenance-programs", icon: CalendarDays },
       { title: "Life-Limited Parts", href: "/fleet/llp", icon: Shield },
     ],
   },
