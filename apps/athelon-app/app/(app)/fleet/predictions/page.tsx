@@ -32,6 +32,7 @@ import {
   Calendar,
   Plane,
 } from "lucide-react";
+import { PredictionToOpportunityBanner } from "@/app/(app)/crm/_components/PredictionToOpportunityBanner";
 import type { Id } from "@/convex/_generated/dataModel";
 import { ActionableEmptyState } from "@/components/zero-state/ActionableEmptyState";
 import { MissingPrereqBanner } from "@/components/zero-state/MissingPrereqBanner";
@@ -109,13 +110,21 @@ export default function PredictionsPage() {
     api.aircraft.list,
     orgId ? { organizationId: orgId } : "skip",
   );
+  const workOrders = useQuery(
+    api.workOrders.getWorkOrdersWithScheduleRisk,
+    orgId ? { organizationId: orgId } : "skip",
+  );
   const generatePredictions = useMutation(api.predictions.generatePredictions);
   const acknowledgePrediction = useMutation(api.predictions.acknowledge);
   const resolvePrediction = useMutation(api.predictions.resolve);
   const dismissPrediction = useMutation(api.predictions.dismiss);
   const prereq = usePagePrereqs({
     requiresOrg: true,
-    isDataLoading: !isLoaded || predictions === undefined || aircraftList === undefined,
+    isDataLoading:
+      !isLoaded ||
+      predictions === undefined ||
+      aircraftList === undefined ||
+      workOrders === undefined,
   });
 
   // Build aircraft lookup
@@ -156,6 +165,25 @@ export default function PredictionsPage() {
     }
     return counts;
   }, [predictions]);
+
+  // Banner: predictions in next 90 days with no open WO on that aircraft.
+  const opportunityCount = useMemo(() => {
+    if (!predictions || !workOrders) return 0;
+    const horizon = Date.now() + 90 * 24 * 60 * 60 * 1000;
+    const openWoAircraft = new Set(
+      workOrders
+        .filter((wo) => !["closed", "cancelled", "voided"].includes(wo.status))
+        .map((wo) => wo.aircraft?._id)
+        .filter((id): id is string => Boolean(id)),
+    );
+
+    return predictions.filter(
+      (p) =>
+        p.status === "active" &&
+        p.predictedDate <= horizon &&
+        !openWoAircraft.has(p.aircraftId),
+    ).length;
+  }, [predictions, workOrders]);
 
   // Tab label counts — reflects the currently applied status/aircraft/type filters
   // so the badge numbers match what you see in each tab's content
@@ -249,7 +277,7 @@ export default function PredictionsPage() {
       />
     );
   }
-  if (!orgId || !predictions || !aircraftList) return null;
+  if (!orgId || !predictions || !aircraftList || !workOrders) return null;
 
   const uniqueAircraft = [...new Set(predictions.map((p) => p.aircraftId))];
 
@@ -276,6 +304,8 @@ export default function PredictionsPage() {
           actionTarget="/personnel"
         />
       )}
+
+      <PredictionToOpportunityBanner opportunityCount={opportunityCount} />
 
       {/* Summary cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
