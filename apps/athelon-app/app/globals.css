@@ -241,3 +241,16 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* Spell-check accessibility layer for MRO terms */
+@layer components {
+  .mro-term {
+    text-decoration: none !important;
+    text-decoration-line: none !important;
+  }
+
+  .mro-tooltip {
+    z-index: 10;
+    backdrop-filter: blur(4px);
+  }
+}
