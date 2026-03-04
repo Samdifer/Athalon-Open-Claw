@@ -52,8 +52,9 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { formatDate } from "@/lib/format";
-import { Download } from "lucide-react";
 import { toast } from "sonner";
+import { DownloadPDFButton } from "@/src/shared/components/pdf/DownloadPDFButton";
+import { InvoicePDF } from "@/src/shared/components/pdf/InvoicePDF";
 
 const STATUS_STYLES: Record<string, string> = {
   DRAFT: "bg-muted text-muted-foreground border-muted-foreground/30",
@@ -311,41 +312,6 @@ export default function InvoiceDetailPage() {
     }
   };
 
-  // PDF Download
-  const handleDownloadPDF = async () => {
-    setActionLoading("pdf"); setError(null);
-    try {
-      const { InvoicePDF } = await import("@/lib/pdf/InvoicePDF");
-      const { downloadPDF } = await import("@/lib/pdf/download");
-      const el = InvoicePDF({
-        orgName: "Athelon Aviation",
-        invoiceNumber: invoice!.invoiceNumber,
-        createdAt: invoice!.createdAt,
-        dueDate: invoice!.dueDate ?? undefined,
-        status: invoice!.status,
-        lineItems: invoice!.lineItems.map((li) => ({
-          description: li.description,
-          qty: li.qty,
-          unitPrice: li.unitPrice,
-          discountPercent: li.discountPercent,
-          discountAmount: li.discountAmount,
-          total: li.total,
-        })),
-        subtotal: invoice!.subtotal,
-        tax: invoice!.tax,
-        total: invoice!.total,
-        amountPaid: invoice!.amountPaid,
-        balance: invoice!.balance,
-        paymentTerms: invoice!.paymentTerms ?? undefined,
-      });
-      await downloadPDF(el, `Invoice-${invoice!.invoiceNumber}.pdf`);
-      toast.success("Invoice PDF downloaded");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to generate PDF.");
-    } finally {
-      setActionLoading(null);
-    }
-  };
 
   // GAP-06: Delete line item
   const handleDeleteItem = async () => {
@@ -399,6 +365,28 @@ export default function InvoiceDetailPage() {
   // GAP-05: Payment subtotal
   const paymentsData = paymentsV4 ?? [];
   const paymentSubtotal = paymentsData.reduce((sum, p) => sum + p.amount, 0);
+
+  const invoicePdfDocument = (
+    <InvoicePDF
+      orgName="Athelon Aviation"
+      invoice={{
+        invoiceNumber: invoice.invoiceNumber,
+        createdAt: invoice.createdAt,
+        dueDate: invoice.dueDate ?? undefined,
+        paymentTerms: invoice.paymentTerms ?? undefined,
+        subtotal: invoice.subtotal,
+        tax: invoice.tax,
+        total: invoice.total,
+      }}
+      lineItems={invoice.lineItems.map((li) => ({
+        description: li.description,
+        qty: li.qty,
+        unitPrice: li.unitPrice,
+        total: li.total,
+      }))}
+      customer={customer ?? undefined}
+    />
+  );
 
   return (
     <>
@@ -470,16 +458,11 @@ export default function InvoiceDetailPage() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleDownloadPDF}
-              disabled={actionLoading === "pdf"}
-              className="h-8 gap-1.5 text-xs"
-            >
-              <Download className="w-3.5 h-3.5" />
-              {actionLoading === "pdf" ? "Generating..." : "Download PDF"}
-            </Button>
+            <DownloadPDFButton
+              document={invoicePdfDocument}
+              fileName={`Invoice-${invoice.invoiceNumber}.pdf`}
+              label="Download PDF"
+            />
             <Button
               variant="outline"
               size="sm"
