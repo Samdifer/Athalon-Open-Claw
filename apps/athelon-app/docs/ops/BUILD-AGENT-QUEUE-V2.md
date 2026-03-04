@@ -1,7 +1,8 @@
 # BUILD-AGENT-QUEUE-V2.md — Feature Build Queue
 # Source: research/Notes/FEATURE-RESEARCH-AND-READINESS-REPORT.md
 # Created: 2026-03-04 16:30 UTC
-# Max concurrent agents: 4
+# Max concurrent agents: 5
+# Agents MAY modify convex/ files when needed — deploy with: npx convex dev --once --typecheck=disable
 
 ## Backend Wave 0 (Jarvis direct — must complete before frontend agents)
 - [x] BQ2-001: Schema — 7 OJT tables + maintenancePrograms + voiceNotes + LLP fields

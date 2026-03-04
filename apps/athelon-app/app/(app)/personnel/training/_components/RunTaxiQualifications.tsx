@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useMemo, useState } from "react";
 import { useConvex, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";

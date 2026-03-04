@@ -46,6 +46,7 @@ export function CapabilitiesListPrint({
             <p><span className="font-medium">Certificate:</span> {certificateNumber}</p>
             <p><span className="font-medium">Station:</span> {stationName}</p>
             <p><span className="font-medium">Address:</span> {stationAddress}</p>
+            <p><span className="font-medium">Generated:</span> {new Date().toLocaleDateString("en-US", { timeZone: "UTC", year: "numeric", month: "long", day: "numeric" })} (UTC)</p>
           </div>
         </div>
 

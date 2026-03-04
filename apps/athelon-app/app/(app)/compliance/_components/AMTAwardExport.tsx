@@ -21,15 +21,20 @@ const tierLabel: Record<DiamondTier, string> = {
   gold: "Gold",
 };
 
+function escapeCsvField(value: string) {
+  if (/[",\r\n]/.test(value)) return `"${value.replace(/"/g, '""')}"`;
+  return value;
+}
+
 function toCsv(rows: AMTAwardExportRow[]) {
   const header = ["Employee Name", "Certificate Number", "Training Hours", "Tier Achieved"];
   const body = rows.map((r) => [
-    `"${r.employeeName.replace(/"/g, '""')}"`,
-    `"${(r.certificateNumber ?? "—").replace(/"/g, '""')}"`,
+    escapeCsvField(r.employeeName),
+    escapeCsvField(r.certificateNumber ?? ""),
     r.trainingHours.toFixed(1),
-    tierLabel[r.tier],
+    escapeCsvField(tierLabel[r.tier]),
   ]);
-  return [header, ...body].map((line) => line.join(",")).join("\n");
+  return "\uFEFF" + [header.map(escapeCsvField), ...body].map((line) => line.join(",")).join("\r\n");
 }
 
 export function AMTAwardExport({ rows, year }: { rows: AMTAwardExportRow[]; year: number }) {

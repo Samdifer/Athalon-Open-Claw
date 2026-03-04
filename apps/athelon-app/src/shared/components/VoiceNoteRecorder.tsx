@@ -238,8 +238,14 @@ export function VoiceNoteRecorder({
     if (elapsedMs < MAX_RECORDING_MS) return;
 
     toast.info("Max recording length reached (3 minutes). Stopping recording.");
-    stopRecording();
-  }, [elapsedMs, mode]);
+    // Inline stop logic to avoid stale closure over stopRecording
+    const recorder = mediaRecorderRef.current;
+    if (recorder && recorder.state !== "inactive") {
+      setMode("processing");
+      clearElapsedInterval();
+      recorder.stop();
+    }
+  }, [elapsedMs, mode, clearElapsedInterval]);
 
   useEffect(() => {
     return () => {

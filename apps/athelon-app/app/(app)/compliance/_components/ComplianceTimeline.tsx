@@ -1,5 +1,6 @@
 "use client";
 
+import { Link } from "react-router-dom";
 import { AlertTriangle, CalendarClock, CheckCircle2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -46,7 +47,7 @@ export function ComplianceTimeline({ items }: { items: ComplianceDeadline[] }) {
                     : "border-emerald-500/30 bg-emerald-500/5";
 
               return (
-                <a key={item.id} href={item.href} className={`block rounded-md border p-3 hover:bg-muted/30 ${color}`}>
+                <Link key={item.id} to={item.href} className={`block rounded-md border p-3 hover:bg-muted/30 ${color}`}>
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <p className="text-xs font-semibold text-foreground">{item.label}</p>
@@ -62,7 +63,7 @@ export function ComplianceTimeline({ items }: { items: ComplianceDeadline[] }) {
                       )}
                     </Badge>
                   </div>
-                </a>
+                </Link>
               );
             })}
           </div>

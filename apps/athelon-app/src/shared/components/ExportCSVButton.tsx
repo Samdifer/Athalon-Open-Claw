@@ -48,7 +48,11 @@ function toUtcString(value: unknown): string {
 
 function escapeCsv(value: unknown): string {
   const raw = toUtcString(value);
-  if (/[,"\n\r]/.test(raw)) return `"${raw.replace(/"/g, '""')}"`;
+  // Always quote fields that contain CSV-special chars OR start with formula
+  // triggers (=, +, -, @, tab, CR) to prevent CSV injection in Excel/Sheets.
+  if (/[,"\n\r]/.test(raw) || /^[=+\-@\t\r]/.test(raw)) {
+    return `"${raw.replace(/"/g, '""')}"`;
+  }
   return raw;
 }
 

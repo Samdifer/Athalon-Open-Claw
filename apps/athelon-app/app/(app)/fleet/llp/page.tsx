@@ -88,6 +88,8 @@ export default function LLPDashboardPage() {
     };
   }, [aircraft, parts]);
 
+  const isLoading = aircraft === undefined || parts === undefined;
+
   return (
     <div className="space-y-4">
       <div>
@@ -106,6 +108,13 @@ export default function LLPDashboardPage() {
           <CardTitle className="text-sm">Fleet LLP Stoplight Grid</CardTitle>
         </CardHeader>
         <CardContent className="overflow-x-auto">
+          {isLoading ? (
+            <div className="py-10 text-center text-sm text-muted-foreground">Loading fleet LLP data…</div>
+          ) : model.totalTracked === 0 ? (
+            <div className="py-10 text-center text-sm text-muted-foreground">
+              No life-limited parts tracked yet. Add parts with life limits to see the stoplight grid.
+            </div>
+          ) : (
           <table className="w-full min-w-[760px] text-sm">
             <thead>
               <tr className="border-b border-border/40">
@@ -129,12 +138,13 @@ export default function LLPDashboardPage() {
                       }
 
                       const worst = Math.min(...rows.map((p) => worstRemainingPercent(p)));
+                      const displayPercent = Number.isFinite(worst) ? `${worst.toFixed(1)}%` : "N/A";
                       return (
                         <td key={`${ac._id}-${category}`} className="py-2 px-2">
                           <Link to={`/fleet/${tail}/llp`}>
-                            <div className={`h-7 rounded px-2 flex items-center justify-between ${cellColor(worst)}`}>
+                            <div className={`h-7 rounded px-2 flex items-center justify-between ${Number.isFinite(worst) ? cellColor(worst) : "bg-muted text-muted-foreground"}`}>
                               <span className="text-[11px]">{rows.length} parts</span>
-                              <Badge variant="secondary" className="text-[10px]">{worst.toFixed(1)}%</Badge>
+                              <Badge variant="secondary" className="text-[10px]">{displayPercent}</Badge>
                             </div>
                           </Link>
                         </td>
@@ -145,6 +155,7 @@ export default function LLPDashboardPage() {
               })}
             </tbody>
           </table>
+          )}
         </CardContent>
       </Card>
 

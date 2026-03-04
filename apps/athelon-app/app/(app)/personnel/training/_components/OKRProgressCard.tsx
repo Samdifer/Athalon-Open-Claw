@@ -37,10 +37,16 @@ export function OKRProgressCard({ goal, technicianName }: { goal: Goal; technici
   const [status, setStatus] = useState<Goal["status"]>(goal.status);
   const updateGoalProgress = useMutation(api.ojt.updateGoalProgress);
 
-  const progress = useMemo(() => {
+  const periodExpired = goal.periodEnd < Date.now() && goal.status === "active";
+
+  const { progress, exceeded } = useMemo(() => {
     const actual = goal.actualValue ?? 0;
-    if (goal.targetValue <= 0) return 0;
-    return Math.max(0, Math.min(100, Math.round((actual / goal.targetValue) * 100)));
+    if (goal.targetValue <= 0) return { progress: 0, exceeded: false };
+    const raw = (actual / goal.targetValue) * 100;
+    return {
+      progress: Math.max(0, Math.min(100, Math.round(raw))),
+      exceeded: raw > 100,
+    };
   }, [goal.actualValue, goal.targetValue]);
 
   async function handleSave() {
@@ -78,6 +84,16 @@ export function OKRProgressCard({ goal, technicianName }: { goal: Goal; technici
           {goal.targetType.replaceAll("_", " ")}: <span className="text-foreground font-medium">{goal.actualValue ?? 0}</span> / {goal.targetValue}
         </p>
         <Progress value={progress} />
+        {exceeded && (
+          <Badge className="bg-emerald-500/15 text-emerald-600 border-emerald-500/30 text-[10px]">
+            🎯 Target exceeded
+          </Badge>
+        )}
+        {periodExpired && (
+          <Badge className="bg-red-500/15 text-red-600 border-red-500/30 text-[10px]">
+            ⚠️ Period ended — mark as completed or missed
+          </Badge>
+        )}
         <p className="text-xs text-muted-foreground">
           {new Date(goal.periodStart).toLocaleDateString("en-US", { timeZone: "UTC" })} → {new Date(goal.periodEnd).toLocaleDateString("en-US", { timeZone: "UTC" })}
         </p>

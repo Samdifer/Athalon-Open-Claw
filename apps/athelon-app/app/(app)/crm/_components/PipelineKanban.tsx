@@ -1,4 +1,4 @@
-import { useMemo, useState, type PointerEvent } from "react";
+import { useMemo, useRef, useState, type PointerEvent } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -29,9 +29,20 @@ export function PipelineKanban({
 }: {
   opportunities: PipelineOpportunity[];
 }) {
-  const [items, setItems] = useState(opportunities);
+  const [overrides, setOverrides] = useState<Record<string, PipelineStatus>>({});
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState<PipelineStatus | null>(null);
+  const draggingIdRef = useRef<string | null>(null);
+
+  // Derive items from prop + local overrides so kanban stays in sync with
+  // parent data (e.g. when lookahead window changes or predictions refresh).
+  const items = useMemo(
+    () =>
+      opportunities.map((opp) =>
+        overrides[opp.id] ? { ...opp, status: overrides[opp.id] } : opp,
+      ),
+    [opportunities, overrides],
+  );
 
   const grouped = useMemo(() => {
     const map: Record<PipelineStatus, PipelineOpportunity[]> = {
@@ -47,20 +58,18 @@ export function PipelineKanban({
     return map;
   }, [items]);
 
-  const pointerDrop = (targetStatus: PipelineStatus) => {
-    if (!draggingId) return;
-    setItems((prev) =>
-      prev.map((opp) =>
-        opp.id === draggingId ? { ...opp, status: targetStatus } : opp,
-      ),
-    );
+  const applyDrop = (targetStatus: PipelineStatus, id: string | null) => {
+    if (!id) return;
+    setOverrides((prev) => ({ ...prev, [id]: targetStatus }));
     setDraggingId(null);
+    draggingIdRef.current = null;
     setDragOver(null);
   };
 
   const onPointerDown = (e: PointerEvent<HTMLDivElement>, id: string) => {
     if (e.pointerType !== "mouse") {
       setDraggingId(id);
+      draggingIdRef.current = id;
     }
   };
 
@@ -78,7 +87,7 @@ export function PipelineKanban({
               column.color,
               dragOver === column.key && "ring-2 ring-primary/40",
             )}
-            onPointerUp={() => pointerDrop(column.key)}
+            onPointerUp={() => applyDrop(column.key, draggingIdRef.current)}
             onDragOver={(event) => {
               event.preventDefault();
               setDragOver(column.key);
@@ -86,8 +95,7 @@ export function PipelineKanban({
             onDrop={(event) => {
               event.preventDefault();
               const id = event.dataTransfer.getData("text/plain");
-              setDraggingId(id);
-              pointerDrop(column.key);
+              applyDrop(column.key, id);
             }}
           >
             <CardHeader className="px-3 py-3">

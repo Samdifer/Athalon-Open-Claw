@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "convex/react";
 import { Sparkles, ShieldAlert } from "lucide-react";
 import { api } from "@/convex/_generated/api";
@@ -51,14 +51,16 @@ export function AIInspectionSuggestions({ aircraftType, ataChapter, onChange }: 
   }, [programs, ataChapter]);
 
   const [suggestions, setSuggestions] = useState<InspectionSuggestion[]>([]);
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
 
   useEffect(() => {
     setSuggestions(baseSuggestions);
   }, [baseSuggestions]);
 
   useEffect(() => {
-    onChange?.(suggestions);
-  }, [suggestions, onChange]);
+    onChangeRef.current?.(suggestions);
+  }, [suggestions]);
 
   const selectedCount = suggestions.filter((s) => s.selected).length;
 

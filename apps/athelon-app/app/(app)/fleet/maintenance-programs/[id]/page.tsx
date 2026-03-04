@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -17,6 +18,24 @@ export default function MaintenanceProgramDetailPage() {
     api.maintenancePrograms.get,
     id ? { id: id as Id<"maintenancePrograms"> } : "skip",
   );
+
+  // Fetch fleet aircraft to compute average time/cycles for this aircraft type
+  const aircraft = useQuery(
+    api.aircraft.list,
+    orgId ? { organizationId: orgId } : "skip",
+  ) as Array<{ _id: string; aircraftType?: string; totalTimeAirframeHours?: number; totalLandingCycles?: number }> | undefined;
+
+  const fleetAverages = useMemo(() => {
+    if (!aircraft || !program) return { avgTime: 0, avgCycles: 0 };
+    const matching = aircraft.filter((a) => a.aircraftType === program.aircraftType);
+    if (matching.length === 0) return { avgTime: 0, avgCycles: 0 };
+    const totalTime = matching.reduce((sum, a) => sum + (a.totalTimeAirframeHours ?? 0), 0);
+    const totalCycles = matching.reduce((sum, a) => sum + (a.totalLandingCycles ?? 0), 0);
+    return {
+      avgTime: totalTime / matching.length,
+      avgCycles: totalCycles / matching.length,
+    };
+  }, [aircraft, program]);
 
   if (!program) {
     return (
@@ -82,8 +101,8 @@ export default function MaintenanceProgramDetailPage() {
         <DueDateProjection
           organizationId={orgId}
           aircraftType={program.aircraftType}
-          currentTotalTime={0}
-          currentCycles={0}
+          currentTotalTime={fleetAverages.avgTime}
+          currentCycles={fleetAverages.avgCycles}
           averageMonthlyHours={35}
           averageMonthlyCycles={25}
           focusProgramId={program._id}
@@ -94,6 +113,8 @@ export default function MaintenanceProgramDetailPage() {
         <LevelLoadingChart
           organizationId={orgId}
           aircraftType={program.aircraftType}
+          currentTotalTime={fleetAverages.avgTime}
+          currentCycles={fleetAverages.avgCycles}
         />
       )}
     </div>

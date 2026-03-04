@@ -92,8 +92,8 @@ export default function OjtJacketDetailPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-2">
         <Button asChild variant="ghost" className="h-11 px-3">
-          <Link to="/training/ojt">
-            <ArrowLeft className="w-4 h-4 mr-1" /> Back
+          <Link to="/training/ojt/jackets">
+            <ArrowLeft className="w-4 h-4 mr-1" /> Back to Jackets
           </Link>
         </Button>
       </div>

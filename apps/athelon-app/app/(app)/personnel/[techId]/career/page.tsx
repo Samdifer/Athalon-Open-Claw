@@ -268,7 +268,7 @@ export default function CareerProfilePage() {
           <div className="rounded-md border p-3">
             <p className="font-medium">Current Role: {technician.role ?? "Technician"}</p>
             <p className="text-muted-foreground">
-              Organization start record: {new Date(technician.createdAt).toLocaleDateString("en-US", { timeZone: "UTC" })}
+              Organization start record: {new Date(technician._creationTime).toLocaleDateString("en-US", { timeZone: "UTC" })}
             </p>
           </div>
           <p className="text-xs text-muted-foreground">

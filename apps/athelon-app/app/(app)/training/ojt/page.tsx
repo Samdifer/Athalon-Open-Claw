@@ -42,7 +42,8 @@ export default function OjtDashboardPage() {
   const { orgId, techId } = useCurrentOrg();
   const convex = useConvex();
 
-  const curricula = useQuery(api.ojt.listCurricula, orgId ? { organizationId: orgId } : "skip") ?? [];
+  const curriculaRaw = useQuery(api.ojt.listCurricula, orgId ? { organizationId: orgId } : "skip");
+  const curricula = useMemo(() => curriculaRaw ?? [], [curriculaRaw]);
   const createCurriculum = useMutation(api.ojt.createCurriculum);
 
   const [aircraftFilter, setAircraftFilter] = useState("all");

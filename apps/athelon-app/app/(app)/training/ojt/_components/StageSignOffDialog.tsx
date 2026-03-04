@@ -71,11 +71,11 @@ export function StageSignOffDialog({
   }, [auth]);
 
   const trainerOptions = useMemo(
-    () => technicians.filter((t) => authorizedTrainerIds.has(t._id)),
-    [technicians, authorizedTrainerIds],
+    () => technicians.filter((t) => authorizedTrainerIds.has(t._id) && t._id !== technicianId),
+    [technicians, authorizedTrainerIds, technicianId],
   );
 
-  const canSubmit = !!stage && !!trainerId && !isSubmitting;
+  const canSubmit = !!selectedStage && !!trainerId && !isSubmitting;
 
   const handleOpenChange = (value: boolean) => {
     if (!isSubmitting) onOpenChange(value);
@@ -88,7 +88,8 @@ export function StageSignOffDialog({
     }
   };
 
-  const selectedStage = (stage || nextStage) as Stage | null;
+  // Derive effective selected stage: explicit user pick, or auto-advance to next
+  const selectedStage: Stage | null = (stage || nextStage) ?? null;
 
   async function handleSubmit() {
     if (!selectedStage || !trainerId) {
@@ -161,9 +162,14 @@ export function StageSignOffDialog({
                 <SelectValue placeholder="Select stage" />
               </SelectTrigger>
               <SelectContent>
-                {STAGES.map((s) => (
-                  <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>
-                ))}
+                {STAGES.map((s) => {
+                  const idx = STAGES.indexOf(s);
+                  const nextIdx = nextStage ? STAGES.indexOf(nextStage) : STAGES.length;
+                  const disabled = completedStages.includes(s) || idx > nextIdx;
+                  return (
+                    <SelectItem key={s} value={s} disabled={disabled} className="capitalize">{s}</SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
           </div>

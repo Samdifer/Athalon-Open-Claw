@@ -113,7 +113,11 @@ export default function AdsbSettingsPage() {
                       min="0.5"
                       max="1.2"
                       value={cfg.correctionFactor}
-                      onChange={(e) => updateConfig(aircraft._id, { correctionFactor: Number(e.target.value || 0) })}
+                      onChange={(e) => {
+                        const raw = Number(e.target.value);
+                        const clamped = Number.isFinite(raw) ? Math.min(1.2, Math.max(0.5, raw)) : 0.92;
+                        updateConfig(aircraft._id, { correctionFactor: clamped });
+                      }}
                       className="font-mono"
                     />
                     <p className="text-[11px] text-muted-foreground">

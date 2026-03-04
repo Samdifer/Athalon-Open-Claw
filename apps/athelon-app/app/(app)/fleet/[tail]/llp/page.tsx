@@ -98,6 +98,40 @@ export default function AircraftLLPDetailPage() {
       .sort((a, b) => a.percentRemaining - b.percentRemaining);
   }, [aircraft, parts]);
 
+  const isLoading = aircraft === undefined || parts === undefined;
+
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-xl font-semibold">{tailNumber} — Life-Limited Parts</h1>
+            <p className="text-sm text-muted-foreground">Loading LLP data…</p>
+          </div>
+          <Button asChild variant="outline" size="sm">
+            <Link to="/fleet/llp"><ArrowLeft className="w-4 h-4 mr-1" />Fleet LLP Dashboard</Link>
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!aircraft) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-xl font-semibold">{tailNumber} — Life-Limited Parts</h1>
+            <p className="text-sm text-muted-foreground">Aircraft not found.</p>
+          </div>
+          <Button asChild variant="outline" size="sm">
+            <Link to="/fleet/llp"><ArrowLeft className="w-4 h-4 mr-1" />Fleet LLP Dashboard</Link>
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   const stackLeader = llpRows[0];
 
   const byEngine = useMemo(() => {

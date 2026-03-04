@@ -9,6 +9,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 
+type OjtTask = Doc<"ojtTasks">;
+type OjtSection = Doc<"ojtCurriculumSections">;
+
 type OJTDashboardOverviewProps = {
   curriculumId: Id<"ojtCurricula">;
 };
@@ -34,6 +37,8 @@ export function OJTDashboardOverview({ curriculumId }: OJTDashboardOverviewProps
   const { orgId } = useCurrentOrg();
   const jackets = useQuery(api.ojt.listJacketsByCurriculum, { curriculumId });
   const technicians = useQuery(api.technicians.list, orgId ? { organizationId: orgId } : "skip");
+  const tasks = useQuery(api.ojt.listTasksByCurriculum, { curriculumId }) as OjtTask[] | undefined;
+  const sections = useQuery(api.ojt.listSections, { curriculumId }) as OjtSection[] | undefined;
   const [eventsByJacket, setEventsByJacket] = useState<Record<string, StageEvent[]>>({});
 
   const onEventsReady = useCallback((jacketId: Id<"ojtJackets">, events: StageEvent[]) => {
@@ -83,6 +88,18 @@ export function OJTDashboardOverview({ curriculumId }: OJTDashboardOverviewProps
     };
   }, [jackets, eventsByJacket]);
 
+  const taskSectionMap = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const task of tasks ?? []) map.set(String(task._id), String(task.sectionId));
+    return map;
+  }, [tasks]);
+
+  const sectionNameMap = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const section of sections ?? []) map.set(String(section._id), section.name);
+    return map;
+  }, [sections]);
+
   const sectionHeat = useMemo(() => {
     if (!jackets) return [];
 
@@ -91,11 +108,12 @@ export function OJTDashboardOverview({ curriculumId }: OJTDashboardOverviewProps
       const events = eventsByJacket[String(jacket._id)] ?? [];
       const trainedSections = new Set<string>();
       for (const e of events) {
-        const sectionGuess = e.approvedDataRef ?? "General";
-        trainedSections.add(sectionGuess);
-        const entry = sectionMap.get(sectionGuess) ?? { section: sectionGuess, trainedCount: 0, totalEvents: 0 };
+        const sectionId = taskSectionMap.get(String(e.taskId));
+        const sectionName = (sectionId && sectionNameMap.get(sectionId)) || "General";
+        trainedSections.add(sectionName);
+        const entry = sectionMap.get(sectionName) ?? { section: sectionName, trainedCount: 0, totalEvents: 0 };
         entry.totalEvents += 1;
-        sectionMap.set(sectionGuess, entry);
+        sectionMap.set(sectionName, entry);
       }
       for (const s of trainedSections) {
         const entry = sectionMap.get(s) ?? { section: s, trainedCount: 0, totalEvents: 0 };
@@ -105,9 +123,9 @@ export function OJTDashboardOverview({ curriculumId }: OJTDashboardOverviewProps
     }
 
     return Array.from(sectionMap.values()).sort((a, b) => b.trainedCount - a.trainedCount);
-  }, [jackets, eventsByJacket]);
+  }, [jackets, eventsByJacket, taskSectionMap, sectionNameMap]);
 
-  if (!jackets || !technicians || !stats) {
+  if (!jackets || !technicians || !tasks || !sections || !stats) {
     return <Skeleton className="h-[520px] w-full" />;
   }
 

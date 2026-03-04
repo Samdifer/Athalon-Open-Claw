@@ -1,5 +1,6 @@
 "use client";
 
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -27,7 +28,7 @@ export function AuditChecklistGenerator({ items }: { items: ChecklistItem[] }) {
     for (const [group, groupItems] of Object.entries(grouped)) {
       lines.push(group);
       for (const item of groupItems) {
-        lines.push(`- ${item.compliant ? "✅" : "❌"} ${item.title} (${item.actionHref})`);
+        lines.push(`- [${item.compliant ? "PASS" : "FAIL"}] ${item.title} (${item.actionHref})`);
       }
       lines.push("");
     }
@@ -57,14 +58,14 @@ export function AuditChecklistGenerator({ items }: { items: ChecklistItem[] }) {
             <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">{group}</h3>
             <div className="space-y-1.5">
               {groupItems.map((item) => (
-                <a
+                <Link
                   key={`${group}-${item.title}`}
-                  href={item.actionHref}
+                  to={item.actionHref}
                   className="flex items-center justify-between rounded-md border border-border/50 px-3 py-2 hover:bg-muted/40"
                 >
                   <span className="text-sm">{item.compliant ? "✅" : "❌"} {item.title}</span>
                   <span className="text-[11px] text-primary">Open</span>
-                </a>
+                </Link>
               ))}
             </div>
           </div>
