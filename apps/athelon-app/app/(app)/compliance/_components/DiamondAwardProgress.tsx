@@ -30,13 +30,22 @@ const TIER_LABELS: Record<DiamondTier, string> = {
   gold: "Gold",
 };
 
+const TIER_FLOORS: Record<DiamondTier, number> = {
+  none: 0,
+  bronze: 16,
+  silver: 40,
+  gold: 80,
+};
+
 function clampPct(value: number) {
   return Math.max(0, Math.min(100, value));
 }
 
 export function DiamondAwardProgress({ data }: { data: DiamondProgressInput }) {
+  const floor = TIER_FLOORS[data.tier];
+  const range = data.nextTierTargetHours - floor;
   const progressPct =
-    data.tier === "gold" ? 100 : clampPct((data.eligibleHours / data.nextTierTargetHours) * 100);
+    data.tier === "gold" ? 100 : range <= 0 ? 100 : clampPct(((data.eligibleHours - floor) / range) * 100);
   const remaining = Math.max(0, data.nextTierTargetHours - data.eligibleHours);
 
   const radius = 48;

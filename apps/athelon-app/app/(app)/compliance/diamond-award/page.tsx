@@ -46,6 +46,13 @@ function tierFromHours(hours: number): DiamondTier {
   return "none";
 }
 
+function currentTierFloor(hours: number) {
+  if (hours >= GOLD_HOURS) return GOLD_HOURS;
+  if (hours >= SILVER_HOURS) return SILVER_HOURS;
+  if (hours >= BRONZE_HOURS) return BRONZE_HOURS;
+  return 0;
+}
+
 function nextTierTarget(hours: number) {
   if (hours < BRONZE_HOURS) return BRONZE_HOURS;
   if (hours < SILVER_HOURS) return SILVER_HOURS;
@@ -150,7 +157,8 @@ export default function DiamondAwardPage() {
       const eligibleHours = eligibleMinutes / 60;
       const tier = tierFromHours(eligibleHours);
       const target = nextTierTarget(eligibleHours);
-      const progress = tier === "gold" ? 100 : Math.max(0, Math.min(100, (eligibleHours / target) * 100));
+      const floor = currentTierFloor(eligibleHours);
+      const progress = tier === "gold" ? 100 : target === floor ? 100 : Math.max(0, Math.min(100, ((eligibleHours - floor) / (target - floor)) * 100));
       return {
         id: String(tech._id),
         technicianName: tech.legalName,

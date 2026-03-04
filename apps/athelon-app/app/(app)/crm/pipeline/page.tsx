@@ -36,6 +36,10 @@ import { Building2, DollarSign, Percent, Target } from "lucide-react";
 
 const LOOKAHEAD_OPTIONS = [30, 60, 90, 180] as const;
 
+/** Default blended labor rate ($/hr) used for pipeline revenue estimates.
+ *  TODO: pull from org billing settings once configurable. */
+const DEFAULT_LABOR_RATE = 185;
+
 const STATUS_LABELS: Record<PipelineStatus, string> = {
   new: "New Opportunity",
   contacted: "Contacted",
@@ -142,7 +146,7 @@ export default function CrmPipelinePage() {
           : "Unassigned Customer";
 
         const estimatedLaborHours = estimateLaborHours(p.predictionType, p.severity);
-        const estimatedRevenue = estimatedLaborHours * 185;
+        const estimatedRevenue = estimatedLaborHours * DEFAULT_LABOR_RATE;
         const hasOpenWo = openWoAircraft.has(p.aircraftId);
 
         return {
@@ -234,6 +238,9 @@ export default function CrmPipelinePage() {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-semibold">{formatMoney(summary.pipelineValue)}</p>
+            <p className="text-[11px] text-muted-foreground mt-0.5">
+              Est. at {formatMoney(DEFAULT_LABOR_RATE)}/hr blended labor rate
+            </p>
           </CardContent>
         </Card>
         <Card>

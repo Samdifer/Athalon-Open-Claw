@@ -6,10 +6,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
   CartesianGrid,
+  ComposedChart,
   Line,
   ResponsiveContainer,
   Scatter,
-  ScatterChart,
   Tooltip,
   XAxis,
   YAxis,
@@ -226,15 +226,15 @@ export function EfficiencyBaseline({ orgId }: Props) {
             <p className="text-sm text-muted-foreground">No chart data yet.</p>
           ) : (
             <ResponsiveContainer width="100%" height="100%">
-              <ScatterChart margin={{ top: 12, right: 16, left: 0, bottom: 8 }}>
+              <ComposedChart data={chartData} margin={{ top: 12, right: 16, left: 0, bottom: 8 }}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis type="number" dataKey="x" name="Experience" unit=" mo" tick={{ fontSize: 12 }} />
-                <YAxis type="number" dataKey="y" name="Efficiency" unit="%" tick={{ fontSize: 12 }} />
+                <YAxis type="number" dataKey="y" name="Efficiency" unit="%" tick={{ fontSize: 12 }} domain={[0, (max: number) => Math.min(Math.ceil(max / 20) * 20, 250)]} />
                 <Tooltip
                   cursor={{ strokeDasharray: "3 3" }}
                   formatter={(value: number | string) => `${Number(value).toFixed(1)}%`}
                 />
-                <Scatter name="Technicians" data={chartData} fill="#3b82f6" />
+                <Scatter name="Technicians" dataKey="y" fill="#3b82f6" />
                 {trendlineData.length === 2 && (
                   <Line
                     type="linear"
@@ -246,7 +246,7 @@ export function EfficiencyBaseline({ orgId }: Props) {
                     isAnimationActive={false}
                   />
                 )}
-              </ScatterChart>
+              </ComposedChart>
             </ResponsiveContainer>
           )}
         </CardContent>

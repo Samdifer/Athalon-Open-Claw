@@ -38,7 +38,8 @@ function toCsv(rows: AMTAwardExportRow[]) {
 }
 
 export function AMTAwardExport({ rows, year }: { rows: AMTAwardExportRow[]; year: number }) {
-  const csv = useMemo(() => toCsv(rows), [rows]);
+  const qualifiedRows = useMemo(() => rows.filter((r) => r.tier !== "none"), [rows]);
+  const csv = useMemo(() => toCsv(qualifiedRows), [qualifiedRows]);
 
   function handleDownload() {
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
@@ -60,6 +61,11 @@ export function AMTAwardExport({ rows, year }: { rows: AMTAwardExportRow[]; year
       <CardContent className="space-y-3">
         <p className="text-xs text-muted-foreground">
           Printable/downloadable supporting documentation with technician, certificate number, total qualifying hours, and tier achieved.
+          {rows.length !== qualifiedRows.length && (
+            <span className="block mt-1 text-amber-600">
+              {rows.length - qualifiedRows.length} technician(s) below Bronze threshold excluded from export.
+            </span>
+          )}
         </p>
 
         <div className="flex gap-2">
@@ -82,14 +88,22 @@ export function AMTAwardExport({ rows, year }: { rows: AMTAwardExportRow[]; year
               </tr>
             </thead>
             <tbody>
-              {rows.map((row) => (
-                <tr key={row.id} className="border-t">
-                  <td className="px-2 py-1.5">{row.employeeName}</td>
-                  <td className="px-2 py-1.5">{row.certificateNumber ?? "—"}</td>
-                  <td className="px-2 py-1.5 text-right">{row.trainingHours.toFixed(1)}</td>
-                  <td className="px-2 py-1.5">{tierLabel[row.tier]}</td>
+              {qualifiedRows.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="px-2 py-3 text-center text-muted-foreground">
+                    No technicians have reached Bronze (16h) threshold yet.
+                  </td>
                 </tr>
-              ))}
+              ) : (
+                qualifiedRows.map((row) => (
+                  <tr key={row.id} className="border-t">
+                    <td className="px-2 py-1.5">{row.employeeName}</td>
+                    <td className="px-2 py-1.5">{row.certificateNumber ?? "—"}</td>
+                    <td className="px-2 py-1.5 text-right">{row.trainingHours.toFixed(1)}</td>
+                    <td className="px-2 py-1.5">{tierLabel[row.tier]}</td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
