@@ -13,9 +13,7 @@ import {
   CheckCircle2,
   XCircle,
   Loader2,
-  Download,
 } from "lucide-react";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -24,6 +22,8 @@ import { NotFoundCard } from "@/components/NotFoundCard";
 import { RtsChecklist } from "./_components/RtsChecklist";
 import { RtsSignoffForm } from "./_components/RtsSignoffForm";
 import { derivePreconditions } from "./_components/derivePreconditions";
+import { DownloadPDFButton } from "@/src/shared/components/pdf/DownloadPDFButton";
+import { RtsDocumentPDF } from "@/src/shared/components/pdf/RtsDocumentPDF";
 
 export default function RtsPage() {
   const params = useParams<{ id: string }>();
@@ -51,6 +51,11 @@ export default function RtsPage() {
     orgId && workOrderId
       ? { workOrderId, organizationId: orgId }
       : "skip",
+  );
+
+  const allParts = useQuery(
+    api.parts.listParts,
+    orgId ? { organizationId: orgId } : "skip",
   );
 
   // Mutation
@@ -132,39 +137,26 @@ export default function RtsPage() {
                   limitations, and authorization date. The pre-auth "Download" button
                   generated a blank/incomplete document. */}
               {report && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-1.5 text-xs"
-                  onClick={async () => {
-                    try {
-                      const { RtsPDF } = await import("@/lib/pdf/RtsPDF");
-                      const { downloadPDF } = await import("@/lib/pdf/download");
-                      const el = RtsPDF({
-                        orgName: "Athelon Aviation",
-                        workOrderNumber: report.workOrderNumber,
-                        aircraftRegistration: report.aircraftRegistration,
-                        aircraftType: `${report.aircraftMake} ${report.aircraftModel}`,
-                        totalTime: aircraftHoursAtRts ? `${aircraftHoursAtRts} hr` : undefined,
-                        taskCards: (report.taskCards ?? []).map((tc) => ({
-                          cardNumber: tc.taskCardNumber ?? "—",
-                          title: tc.title ?? "—",
-                          ataChapter: undefined,
-                          status: tc.status ?? "—",
-                        })),
-                        rtsStatement: rtsStatement.trim() || undefined,
-                        rtsDate: Date.now(),
-                      });
-                      await downloadPDF(el, `RTS-${report.workOrderNumber}.pdf`);
-                      toast.success("RTS certificate downloaded");
-                    } catch (err) {
-                      toast.error(err instanceof Error ? err.message : "Failed to generate PDF");
-                    }
-                  }}
-                >
-                  <Download className="w-3.5 h-3.5" />
-                  Download RTS Certificate
-                </Button>
+                <DownloadPDFButton
+                  label="Download RTS PDF"
+                  fileName={`RTS-${report.workOrderNumber}.pdf`}
+                  document={(
+                    <RtsDocumentPDF
+                      workOrder={{ workOrderNumber: report.workOrderNumber, _id: String(workOrderId) }}
+                      aircraft={{
+                        currentRegistration: report.aircraftRegistration,
+                        make: report.aircraftMake,
+                        model: report.aircraftModel,
+                        serialNumber: undefined,
+                        totalTimeAirframeHours: Number(aircraftHoursAtRts || report.aircraftCurrentHours || 0),
+                      }}
+                      taskCards={report.taskCards ?? []}
+                      discrepancies={report.discrepancies ?? []}
+                      parts={partsForThisWorkOrder}
+                      rtsData={{ statement: rtsStatement.trim() || undefined, date: Date.now() }}
+                    />
+                  )}
+                />
               )}
             </div>
           </CardContent>
@@ -259,6 +251,15 @@ export default function RtsPage() {
   );
   const allPass = preconditions.every((p) => p.status === "PASS");
   const anyFail = preconditions.some((p) => p.status === "FAIL");
+
+  const partsForThisWorkOrder = (allParts ?? []).filter(
+    (part) =>
+      part.receivingWorkOrderId === workOrderId ||
+      part.reservedForWorkOrderId === workOrderId ||
+      part.installedByWorkOrderId === workOrderId ||
+      part.installedOnWorkOrderId === workOrderId ||
+      part.removedByWorkOrderId === workOrderId,
+  );
 
   return (
     <div className="space-y-5">

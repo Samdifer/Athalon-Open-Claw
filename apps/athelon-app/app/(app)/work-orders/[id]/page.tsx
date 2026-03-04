@@ -25,8 +25,9 @@ import { api } from "@/convex/_generated/api";
 import { HandoffNotesPanel } from "@/components/HandoffNotesPanel";
 import type { Id } from "@/convex/_generated/dataModel";
 import { formatDate } from "@/lib/format";
-import { Download } from "lucide-react";
 import { toast } from "sonner";
+import { DownloadPDFButton } from "@/src/shared/components/pdf/DownloadPDFButton";
+import { WorkOrderPDF } from "@/src/shared/components/pdf/WorkOrderPDF";
 import {
   WO_STATUS_LABEL,
   WO_STATUS_STYLES,
@@ -219,6 +220,11 @@ export default function WorkOrderDetailPage() {
   const activeTimer = useQuery(
     api.timeClock.getActiveTimerForTechnician,
     orgId && techId ? { orgId, technicianId: techId } : "skip",
+  );
+
+  const timeLogs = useQuery(
+    api.timeClock.getTimeEntriesForWorkOrder,
+    orgId && workOrderId ? { orgId, workOrderId } : "skip",
   );
   const startTimer = useMutation(api.timeClock.startTimer);
   const stopTimer = useMutation(api.timeClock.stopTimer);
@@ -527,40 +533,27 @@ export default function WorkOrderDetailPage() {
               </Button>
             )}
 
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-1.5 text-xs"
-              onClick={async () => {
-                try {
-                  const { WorkOrderPDF } = await import("@/lib/pdf/WorkOrderPDF");
-                  const { downloadPDF } = await import("@/lib/pdf/download");
-                  const el = WorkOrderPDF({
-                    orgName: "Athelon Aviation",
-                    workOrderNumber: wo.workOrderNumber,
-                    status: wo.status,
-                    type: wo.workOrderType,
-                    createdAt: wo._creationTime,
-                    promisedDeliveryDate: wo.promisedDeliveryDate ?? undefined,
-                    aircraftRegistration: aircraft?.currentRegistration ?? undefined,
-                    aircraftType: aircraft ? `${aircraft.make} ${aircraft.model}` : undefined,
-                    taskCards: taskCards.map((tc) => ({
-                      cardNumber: tc.taskCardNumber ?? "—",
-                      title: tc.title ?? "—",
-                      status: tc.status ?? "—",
-                      assignedTo: undefined,
-                    })),
-                  });
-                  await downloadPDF(el, `WO-${wo.workOrderNumber}.pdf`);
-                  toast.success("Work Order PDF downloaded");
-                } catch (err) {
-                  toast.error(err instanceof Error ? err.message : "Failed to generate PDF");
-                }
-              }}
-            >
-              <Download className="w-3.5 h-3.5" />
-              Download PDF
-            </Button>
+            <DownloadPDFButton
+              label="Download WO Pack"
+              fileName={`WO-${wo.workOrderNumber}.pdf`}
+              document={(
+                <WorkOrderPDF
+                  workOrder={wo}
+                  aircraft={aircraft}
+                  customer={null}
+                  taskCards={taskCards}
+                  steps={taskCards.flatMap((tc) => tc.steps ?? []).map((s) => ({
+                    taskCardId: String(s.taskCardId ?? ""),
+                    description: s.description,
+                    status: s.status,
+                    partsInstalled: s.partsInstalled,
+                  }))}
+                  discrepancies={discrepancies}
+                  timeLogs={timeLogs ?? []}
+                  parts={partsForThisWorkOrder}
+                />
+              )}
+            />
             <Button variant="outline" asChild className="gap-2">
               <Link to={`/work-orders/${workOrderId}/execution`}>
                 <Calendar className="w-4 h-4" />
