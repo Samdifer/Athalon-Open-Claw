@@ -28,6 +28,7 @@ import { toast } from "sonner";
 import { ExportCSVButton } from "@/src/shared/components/ExportCSVButton";
 import { FaaLookupButton } from "@/components/faa/FaaLookupButton";
 import { AddAircraftWizard } from "./_components/AddAircraftWizard";
+import { LLPAlertBanner } from "./_components/LLPAlertBanner";
 import {
   Dialog,
   DialogContent,
@@ -654,6 +655,8 @@ export default function FleetPage() {
           </Button>
         </div>
       </div>
+
+      <LLPAlertBanner />
 
       <div className="flex flex-col gap-2.5">
         <div className="grid grid-cols-1 xl:grid-cols-[1fr_170px_170px_170px_170px_160px_auto] gap-2.5">

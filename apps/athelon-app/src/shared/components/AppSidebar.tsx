@@ -18,7 +18,9 @@ import {
   CalendarDays,
   Hammer,
   FileBarChart,
+  GraduationCap,
   ChevronRight,
+  Shield,
 } from "lucide-react";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import {
@@ -110,6 +112,7 @@ const mainNav: NavEntry[] = [
     children: [
       { title: "Calendar", href: "/fleet/calendar" },
       { title: "Predictions", href: "/fleet/predictions" },
+      { title: "Life-Limited Parts", href: "/fleet/llp", icon: Shield },
     ],
   },
   {
@@ -211,6 +214,12 @@ const bottomNav: NavEntry[] = [
       { title: "Training", href: "/personnel/training" },
       { title: "Lead Dashboard", href: "/lead" },
     ],
+  },
+  {
+    title: "OJT Training",
+    href: "/training/ojt",
+    icon: GraduationCap,
+    section: "personnel",
   },
   {
     title: "Settings",
@@ -375,7 +384,8 @@ function NavGroupItem({
                     isActive={isActive}
                     className={cn(isActive && "bg-primary/10 text-primary hover:bg-primary/15")}
                   >
-                    <Link to={child.href} className="flex w-full min-w-0 items-center">
+                    <Link to={child.href} className="flex w-full min-w-0 items-center gap-1.5">
+                      {child.icon ? <child.icon className="w-3.5 h-3.5" /> : null}
                       <span className="min-w-0 truncate">{child.title}</span>
                     </Link>
                   </SidebarMenuSubButton>

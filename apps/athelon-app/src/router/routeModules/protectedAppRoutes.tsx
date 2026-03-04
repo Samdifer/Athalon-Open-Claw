@@ -45,7 +45,9 @@ const WOExecutionPage = lazy(
 const FleetPage = lazy(() => import("@/app/(app)/fleet/page"));
 const FleetCalendarPage = lazy(() => import("@/app/(app)/fleet/calendar/page"));
 const PredictionsPage = lazy(() => import("@/app/(app)/fleet/predictions/page"));
+const FleetLLPDashboardPage = lazy(() => import("@/app/(app)/fleet/llp/page"));
 const AircraftDetailPage = lazy(() => import("@/app/(app)/fleet/[tail]/page"));
+const AircraftLLPDetailPage = lazy(() => import("@/app/(app)/fleet/[tail]/llp/page"));
 const AircraftLogbookPage = lazy(() => import("@/app/(app)/fleet/[tail]/logbook/page"));
 
 const PartsPage = lazy(() => import("@/app/(app)/parts/page"));
@@ -67,6 +69,9 @@ const POReceivingPage = lazy(() => import("@/app/(app)/parts/receiving/po/page")
 const SquawksPage = lazy(() => import("@/app/(app)/squawks/page"));
 const PersonnelPage = lazy(() => import("@/app/(app)/personnel/page"));
 const TrainingPage = lazy(() => import("@/app/(app)/personnel/training/page"));
+const OjtDashboardPage = lazy(() => import("@/app/(app)/training/ojt/page"));
+const OjtCurriculumDetailPage = lazy(() => import("@/app/(app)/training/ojt/[curriculumId]/page"));
+const OjtJacketsPage = lazy(() => import("@/app/(app)/training/ojt/jackets/page"));
 const MyWorkPage = lazy(() => import("@/app/(app)/my-work/page"));
 
 const CompliancePage = lazy(() => import("@/app/(app)/compliance/page"));
@@ -195,7 +200,9 @@ export function protectedAppRoutes() {
             <Route path="/fleet" element={<FleetPage />} />
             <Route path="/fleet/calendar" element={<FleetCalendarPage />} />
             <Route path="/fleet/predictions" element={<PredictionsPage />} />
+            <Route path="/fleet/llp" element={<FleetLLPDashboardPage />} />
             <Route path="/fleet/:tail" element={<AircraftDetailPage />} />
+            <Route path="/fleet/:tail/llp" element={<AircraftLLPDetailPage />} />
             <Route path="/fleet/:tail/logbook" element={<AircraftLogbookPage />} />
 
             <Route path="/parts" element={<PartsPage />} />
@@ -215,6 +222,9 @@ export function protectedAppRoutes() {
             <Route path="/squawks" element={<SquawksPage />} />
             <Route path="/personnel" element={<PersonnelPage />} />
             <Route path="/personnel/training" element={<TrainingPage />} />
+            <Route path="/training/ojt" element={<OjtDashboardPage />} />
+            <Route path="/training/ojt/:curriculumId" element={<OjtCurriculumDetailPage />} />
+            <Route path="/training/ojt/jackets" element={<OjtJacketsPage />} />
             <Route path="/my-work" element={<MyWorkPage />} />
 
             <Route path="/compliance" element={<CompliancePage />} />
