@@ -73,6 +73,7 @@ import {
 import { VendorServicePanel } from "./_components/VendorServicePanel";
 import { StepReferences } from "./_components/StepReferences";
 import { StepPartsTracker } from "./_components/StepPartsTracker";
+import { ReturnPartDialog } from "@/src/shared/components/ReturnPartDialog";
 import {
   VendorServicePickerModal,
   type AttachmentDetails,
@@ -942,10 +943,23 @@ export default function TaskCardPage() {
 
       <Card className="border-border/60">
         <CardHeader className="pb-3">
-          <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
-            <ArrowLeft className="w-3.5 h-3.5 rotate-180" />
-            Step Parts Traceability
-          </CardTitle>
+          <div className="flex items-center justify-between gap-2">
+            <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
+              <ArrowLeft className="w-3.5 h-3.5 rotate-180" />
+              Step Parts Traceability
+            </CardTitle>
+            <ReturnPartDialog
+              orgId={orgId}
+              workOrderId={workOrderId}
+              taskCardId={cardId}
+              steps={taskCard.steps.map((s) => ({
+                _id: String(s._id),
+                stepNumber: s.stepNumber,
+                description: s.description,
+                partsInstalled: s.partsInstalled,
+              }))}
+            />
+          </div>
         </CardHeader>
         <CardContent className="pt-0">
           <StepPartsTracker

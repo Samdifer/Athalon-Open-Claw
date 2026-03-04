@@ -131,6 +131,10 @@ function buildLineItemsFromLaborKit(kit: LaborKitForQuote): DraftLineItem[] {
   return lines;
 }
 
+function estimateStorageKey(orgId: string, workOrderId: string) {
+  return `athelon:wo-estimate-to-quote:${orgId}:${workOrderId}`;
+}
+
 export type QuoteNewEditorProps = {
   prefillWorkOrderId?: Id<"workOrders">;
   hideBackButton?: boolean;
@@ -306,6 +310,39 @@ export function QuoteNewEditor({
       setError("Referenced work order was not found. Continue by selecting customer and aircraft.");
     }
   }, [prefillWorkOrderId, prefillWorkOrder]);
+
+  useEffect(() => {
+    if (!orgId || !prefillWorkOrderId) return;
+    const key = estimateStorageKey(orgId, String(prefillWorkOrderId));
+    try {
+      const raw = window.localStorage.getItem(key);
+      if (!raw) return;
+      const staged = JSON.parse(raw) as {
+        lineItems?: Array<{ type: LineItemType; description: string; qty: number; unitPrice: number }>;
+        workOrderNumber?: string;
+        generatedAt?: number;
+      };
+      if (staged.lineItems && staged.lineItems.length > 0) {
+        setLineItems(
+          staged.lineItems.map((line) => ({
+            id: crypto.randomUUID(),
+            type: line.type,
+            description: line.description,
+            qty: numberToInputString(line.qty),
+            unitPrice: numberToInputString(line.unitPrice),
+          })),
+        );
+      }
+      if (!notes.trim()) {
+        setNotes(
+          `Quote generated from WO estimate${staged.workOrderNumber ? ` (${staged.workOrderNumber})` : ""}.`,
+        );
+      }
+      window.localStorage.removeItem(key);
+    } catch {
+      // ignore malformed staged estimate payload
+    }
+  }, [orgId, prefillWorkOrderId]);
 
   const matchingLaborKits = useMemo(() => {
     const kits = ((laborKits ?? []) as LaborKitForQuote[]).filter((kit) => kit.isActive);
