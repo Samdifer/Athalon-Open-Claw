@@ -48,7 +48,11 @@ export function TurnoverNotes({ workOrderId, taskCardId, readOnly = false }: Pro
 
   function persist(next: TurnoverEntry[]) {
     setEntries(next);
-    localStorage.setItem(key, JSON.stringify(next));
+    try {
+      localStorage.setItem(key, JSON.stringify(next));
+    } catch {
+      toast.error("Unable to save turnover note locally.");
+    }
   }
 
   function handleAdd() {

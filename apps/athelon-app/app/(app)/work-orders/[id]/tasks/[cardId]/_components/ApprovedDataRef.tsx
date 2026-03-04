@@ -43,7 +43,11 @@ export function ApprovedDataRef({
 
   useEffect(() => {
     const payload: StoredRef = { prefix, value };
-    localStorage.setItem(storageKey, JSON.stringify(payload));
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(payload));
+    } catch {
+      // Ignore quota/private-mode write failures; keep UI responsive.
+    }
   }, [prefix, value, storageKey]);
 
   return (

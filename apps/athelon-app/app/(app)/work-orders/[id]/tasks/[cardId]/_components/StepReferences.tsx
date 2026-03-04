@@ -42,7 +42,11 @@ export function StepReferences({ workOrderId, taskCardId, steps }: { workOrderId
   }, [storageKey]);
 
   useEffect(() => {
-    localStorage.setItem(storageKey, JSON.stringify(refs));
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(refs));
+    } catch {
+      // Ignore storage write failures (quota/private mode).
+    }
   }, [refs, storageKey]);
 
   function addReference(ref: Omit<StepRef, "id" | "createdAt">) {

@@ -87,7 +87,11 @@ export function VendorServicePanel({
 
   function persist(next: VendorService[]) {
     setServices(next);
-    localStorage.setItem(storageKey, JSON.stringify(next));
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(next));
+    } catch {
+      toast.error("Unable to save vendor service changes locally.");
+    }
   }
 
   function resetForm() {

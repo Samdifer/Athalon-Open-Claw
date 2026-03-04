@@ -70,7 +70,6 @@ import {
   resolveStepAuthorizationType,
   type StepAuthorizationType,
 } from "./_components/stepAuthorization";
-import { VendorServicePanel } from "./_components/VendorServicePanel";
 import { StepReferences } from "./_components/StepReferences";
 import { StepPartsTracker } from "./_components/StepPartsTracker";
 import { TurnoverNotes } from "./_components/TurnoverNotes";
@@ -1003,12 +1002,6 @@ export default function TaskCardPage() {
           />
         </CardContent>
       </Card>
-
-      <VendorServicePanel
-        workOrderId={workOrderId}
-        cardId={cardId}
-        readOnly={cardIsVoided || cardIsComplete}
-      />
 
       <Card className="border-border/60">
         <CardHeader className="pb-3">
