@@ -2,6 +2,5 @@
 export * from "./adCompliance";
 export * from "./aircraft";
 export * from "./fleetCalendar";
-export * from "./index";
 export * from "./logbook";
-export * from "./predictions";
+// predictions omitted — conflicts with aircraft on create/list; import directly

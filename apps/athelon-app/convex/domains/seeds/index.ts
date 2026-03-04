@@ -1,9 +1,8 @@
 // Domain barrel for seeds
-export * from "./index";
 export * from "./seed";
 export * from "./seedAudit";
 export * from "./seedGroundAero";
-export * from "./seedPartsServices";
+// seedPartsServices omitted — conflicts with seedGroundAero on seed; import directly
 export * from "./seedRepairStationScenario";
 export * from "./simHelper";
 export * from "./simPartsRunner";

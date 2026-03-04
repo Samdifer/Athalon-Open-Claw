@@ -47,12 +47,15 @@ export const requestPart = mutation({
       partName: args.partName.trim(),
       status: "requested",
       quantityRequested: Math.max(1, args.quantityRequested),
+      quantityIssued: 0,
+      quantityReturned: 0,
       unitCost: args.unitCost,
       totalCost: args.unitCost
         ? args.unitCost * Math.max(1, args.quantityRequested)
         : undefined,
       requestedByTechnicianId: args.requestedByTechnicianId,
       notes: args.notes?.trim() || undefined,
+      requestedAt: now,
       createdAt: now,
       updatedAt: now,
     });
@@ -63,8 +66,8 @@ export const requestPart = mutation({
         organizationId: args.organizationId,
         partId: args.partId,
         workOrderId: args.workOrderId,
-        workOrderPartId: wopId,
         eventType: "reserved",
+        performedByUserId: "system",
         notes: `Reserved for WO via parts request`,
       });
     }
@@ -167,12 +170,11 @@ export const issuePart = mutation({
       organizationId: record.organizationId,
       partId: args.partId,
       workOrderId: record.workOrderId,
-      workOrderPartId: args.requestId,
       eventType: "issued_to_wo",
-      performedByUserId: args.performedByUserId,
+      performedByUserId: args.performedByUserId ?? "system",
       performedByTechnicianId: args.issuedByTechnicianId,
-      previousLocation,
-      newLocation: "issued",
+      fromLocation: previousLocation,
+      toLocation: "issued",
       notes: `Issued to work order`,
     });
   },
@@ -237,11 +239,10 @@ export const returnPart = mutation({
       organizationId: record.organizationId,
       partId: record.partId,
       workOrderId: record.workOrderId,
-      workOrderPartId: args.requestId,
       eventType: "returned_from_wo",
-      performedByUserId: args.performedByUserId,
-      previousLocation: "issued",
-      newLocation: "inventory",
+      performedByUserId: args.performedByUserId ?? "system",
+      fromLocation: "issued",
+      toLocation: "inventory",
       notes: `Returned ${args.quantityReturned} unit(s) from work order`,
     });
   },
@@ -295,11 +296,10 @@ export const markInstalled = mutation({
         organizationId: record.organizationId,
         partId: record.partId,
         workOrderId: record.workOrderId,
-        workOrderPartId: args.requestId,
         eventType: "installed",
-        performedByUserId: args.performedByUserId,
-        previousLocation: "issued",
-        newLocation: "installed",
+        performedByUserId: args.performedByUserId ?? "system",
+        fromLocation: "issued",
+        toLocation: "installed",
         notes: `Installed on aircraft via work order`,
       });
     }
