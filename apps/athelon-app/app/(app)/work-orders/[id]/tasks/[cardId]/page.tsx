@@ -10,13 +10,6 @@ import type { Id } from "@/convex/_generated/dataModel";
 import { toast } from "sonner";
 import { formatDateTime } from "@/lib/format";
 import {
-  blobToDataUrl,
-  createVoiceNoteId,
-  readVoiceNotesForWorkOrder,
-  writeVoiceNotesForWorkOrder,
-  type StoredVoiceNote,
-} from "@/lib/voiceNotes";
-import {
   ArrowLeft,
   CheckCircle2,
   AlertTriangle,
@@ -56,7 +49,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { VoiceNoteRecorder, type VoiceNoteRecorderSavePayload } from "@/components/VoiceNoteRecorder";
+import { VoiceNoteRecorder } from "@/components/VoiceNoteRecorder";
 import { VoiceNotesPanel } from "@/components/VoiceNotesPanel";
 import { TimeVarianceBar } from "@/src/shared/components/TimeVarianceBar";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -283,7 +276,6 @@ export default function TaskCardPage() {
   const [findingOpen, setFindingOpen] = useState(false);
   const [handoffNote, setHandoffNote] = useState("");
   const [handoffSubmitting, setHandoffSubmitting] = useState(false);
-  const [voiceNotes, setVoiceNotes] = useState<StoredVoiceNote[]>([]);
   // GAP-18: Start step tracking
   const [startingStepId, setStartingStepId] = useState<string | null>(null);
   const [timerActionLoading, setTimerActionLoading] = useState<"task-start" | "step-toggle" | "stop" | null>(null);
@@ -390,14 +382,6 @@ export default function TaskCardPage() {
   // being raised with 0 hours if workOrderResult resolves after taskCards.
   const isLoading = !orgLoaded || taskCards === undefined || workOrderResult === undefined;
 
-  useEffect(() => {
-    if (!orgId || !workOrderId) {
-      setVoiceNotes([]);
-      return;
-    }
-    setVoiceNotes(readVoiceNotesForWorkOrder({ orgId, workOrderId }));
-  }, [orgId, workOrderId]);
-
   if (isLoading) return <TaskCardSkeleton />;
 
   if (!taskCards) {
@@ -424,8 +408,6 @@ export default function TaskCardPage() {
     );
   }
 
-  const currentTechName = tech?.legalName ?? selfData?.legalName ?? "Unknown Technician";
-  const taskVoiceNotes = voiceNotes.filter((note) => note.taskCardId === cardId);
   const findingCount = (discrepancies ?? []).filter(
     (d) => String(d.workOrderId ?? "") === workOrderId,
   ).length;
@@ -441,80 +423,6 @@ export default function TaskCardPage() {
         return sum + Math.max(0, now - entry.clockInAt) / 3600000;
       }, 0);
   }, [workOrderTimeEntries, cardId]);
-
-  const handleSaveVoiceNote = async (payload: VoiceNoteRecorderSavePayload) => {
-    if (!orgId || !techId) {
-      throw new Error("Unable to resolve technician context.");
-    }
-
-    const audioDataUrl = await blobToDataUrl(payload.audioBlob);
-    const now = Date.now();
-    const note: StoredVoiceNote = {
-      id: createVoiceNoteId(),
-      taskCardId: cardId,
-      taskCardNumber: taskCard.taskCardNumber,
-      taskCardTitle: taskCard.title,
-      transcript: payload.transcript,
-      duration: payload.duration,
-      recordedAt: payload.recordedAt,
-      authorId: techId,
-      authorName: currentTechName,
-      audioDataUrl,
-      audioMimeType: payload.audioBlob.type || "audio/webm",
-      createdAt: now,
-      updatedAt: now,
-    };
-
-    let persisted = true;
-    setVoiceNotes((prev) => {
-      const next = [note, ...prev];
-      persisted = writeVoiceNotesForWorkOrder({ orgId, workOrderId }, next);
-      if (!persisted) return prev;
-      return next;
-    });
-
-    if (!persisted) {
-      throw new Error("Local voice note storage is full. Delete older notes and try again.");
-    }
-
-    toast.success("Voice note saved.");
-  };
-
-  const handleUpdateVoiceNoteTranscript = async (noteId: string, transcript: string) => {
-    if (!orgId) return;
-    let persisted = true;
-    setVoiceNotes((prev) => {
-      const next = prev.map((note) =>
-        note.id === noteId
-          ? {
-              ...note,
-              transcript,
-              updatedAt: Date.now(),
-            }
-          : note,
-      );
-      persisted = writeVoiceNotesForWorkOrder({ orgId, workOrderId }, next);
-      return persisted ? next : prev;
-    });
-
-    if (!persisted) {
-      throw new Error("Unable to update transcript: local storage is unavailable.");
-    }
-  };
-
-  const handleDeleteVoiceNote = async (noteId: string) => {
-    if (!orgId) return;
-    let persisted = true;
-    setVoiceNotes((prev) => {
-      const next = prev.filter((note) => note.id !== noteId);
-      persisted = writeVoiceNotesForWorkOrder({ orgId, workOrderId }, next);
-      return persisted ? next : prev;
-    });
-
-    if (!persisted) {
-      throw new Error("Unable to delete voice note: local storage is unavailable.");
-    }
-  };
 
   // BUG-LT2-006: Include "in_progress" steps in the "remaining steps" count.
   // Previously only counted "pending" steps — if Step 3 is in_progress and
@@ -1158,14 +1066,21 @@ export default function TaskCardPage() {
 
           <div className="space-y-3 border-t border-border/50 pt-3">
             {!cardIsVoided && !cardIsComplete && orgId && techId && (
-              <VoiceNoteRecorder onSave={handleSaveVoiceNote} />
+              <VoiceNoteRecorder
+                organizationId={orgId}
+                technicianId={techId as Id<"technicians">}
+                workOrderId={workOrderId as Id<"workOrders">}
+                taskCardId={cardId as Id<"taskCards">}
+              />
             )}
-            <VoiceNotesPanel
-              notes={taskVoiceNotes}
-              onUpdateTranscript={handleUpdateVoiceNoteTranscript}
-              onDelete={handleDeleteVoiceNote}
-              compact
-            />
+            {orgId && (
+              <VoiceNotesPanel
+                organizationId={orgId as Id<"organizations">}
+                workOrderId={workOrderId as Id<"workOrders">}
+                taskCardId={cardId as Id<"taskCards">}
+                compact
+              />
+            )}
           </div>
         </CardContent>
       </Card>

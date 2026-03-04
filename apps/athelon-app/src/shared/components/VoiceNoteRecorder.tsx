@@ -1,22 +1,22 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useMutation, useQuery } from "convex/react";
 import { Loader2, Mic, RotateCcw, Save, Square } from "lucide-react";
 import { toast } from "sonner";
+import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
 import { formatVoiceNoteDuration } from "@/lib/voiceNotes";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-
-export type VoiceNoteRecorderSavePayload = {
-  audioBlob: Blob;
-  transcript: string;
-  duration: number;
-  recordedAt: number;
-};
+import { TranscriptionStatusBadge } from "@/components/TranscriptionStatusBadge";
 
 type VoiceNoteRecorderProps = {
-  onSave: (payload: VoiceNoteRecorderSavePayload) => Promise<void> | void;
+  organizationId: string;
+  technicianId: Id<"technicians">;
+  workOrderId?: Id<"workOrders">;
+  taskCardId?: Id<"taskCards">;
   disabled?: boolean;
   className?: string;
 };
@@ -25,34 +25,45 @@ type RecorderMode = "idle" | "recording" | "processing" | "ready";
 
 const MAX_RECORDING_MS = 3 * 60 * 1000;
 
-export function VoiceNoteRecorder({ onSave, disabled = false, className }: VoiceNoteRecorderProps) {
+export function VoiceNoteRecorder({
+  organizationId,
+  technicianId,
+  workOrderId,
+  taskCardId,
+  disabled = false,
+  className,
+}: VoiceNoteRecorderProps) {
   const [mode, setMode] = useState<RecorderMode>("idle");
   const [elapsedMs, setElapsedMs] = useState(0);
   const [durationMs, setDurationMs] = useState(0);
-  const [recordedAt, setRecordedAt] = useState<number | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
-  const [transcript, setTranscript] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [createdNoteId, setCreatedNoteId] = useState<Id<"voiceNotes"> | null>(null);
+  const [editableTranscript, setEditableTranscript] = useState("");
+  const [isSavingTranscript, setIsSavingTranscript] = useState(false);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const chunksRef = useRef<BlobPart[]>([]);
   const startedAtRef = useRef<number | null>(null);
   const elapsedIntervalRef = useRef<number | null>(null);
-  const processingTimeoutRef = useRef<number | null>(null);
+
+  const generateUploadUrl = useMutation(api.voiceNotes.generateUploadUrl);
+  const createVoiceNote = useMutation(api.voiceNotes.create);
+  const updateTranscript = useMutation(api.voiceNotes.updateTranscript);
+
+  const createdNote = useQuery(api.voiceNotes.get, createdNoteId ? { id: createdNoteId } : "skip");
+
+  useEffect(() => {
+    if (!createdNote?.transcript) return;
+    setEditableTranscript(createdNote.transcript);
+  }, [createdNote?.transcript]);
 
   const clearElapsedInterval = useCallback(() => {
     if (elapsedIntervalRef.current !== null) {
       window.clearInterval(elapsedIntervalRef.current);
       elapsedIntervalRef.current = null;
-    }
-  }, []);
-
-  const clearProcessingTimeout = useCallback(() => {
-    if (processingTimeoutRef.current !== null) {
-      window.clearTimeout(processingTimeoutRef.current);
-      processingTimeoutRef.current = null;
     }
   }, []);
 
@@ -68,7 +79,6 @@ export function VoiceNoteRecorder({ onSave, disabled = false, className }: Voice
 
   const clearDraft = useCallback(() => {
     clearElapsedInterval();
-    clearProcessingTimeout();
     stopAndReleaseStream();
     mediaRecorderRef.current = null;
     chunksRef.current = [];
@@ -77,18 +87,15 @@ export function VoiceNoteRecorder({ onSave, disabled = false, className }: Voice
     setMode("idle");
     setElapsedMs(0);
     setDurationMs(0);
-    setRecordedAt(null);
-    setTranscript("");
     setAudioBlob(null);
     setPreviewUrl((prev) => {
       revokePreview(prev);
       return null;
     });
-  }, [clearElapsedInterval, clearProcessingTimeout, revokePreview, stopAndReleaseStream]);
+  }, [clearElapsedInterval, revokePreview, stopAndReleaseStream]);
 
   const startRecording = async () => {
-    if (disabled) return;
-    if (mode === "recording") return;
+    if (disabled || mode === "recording") return;
     if (typeof window === "undefined") return;
     if (typeof MediaRecorder === "undefined") {
       toast.error("This browser does not support voice recording.");
@@ -110,14 +117,11 @@ export function VoiceNoteRecorder({ onSave, disabled = false, className }: Voice
 
       const startedAt = Date.now();
       startedAtRef.current = startedAt;
-      setRecordedAt(startedAt);
       setElapsedMs(0);
       setDurationMs(0);
 
       recorder.ondataavailable = (event: BlobEvent) => {
-        if (event.data.size > 0) {
-          chunksRef.current.push(event.data);
-        }
+        if (event.data.size > 0) chunksRef.current.push(event.data);
       };
 
       recorder.onerror = () => {
@@ -149,11 +153,7 @@ export function VoiceNoteRecorder({ onSave, disabled = false, className }: Voice
           revokePreview(prev);
           return URL.createObjectURL(blob);
         });
-        setMode("processing");
-        clearProcessingTimeout();
-        processingTimeoutRef.current = window.setTimeout(() => {
-          setMode("ready");
-        }, 1200);
+        setMode("ready");
       };
 
       recorder.start();
@@ -177,21 +177,59 @@ export function VoiceNoteRecorder({ onSave, disabled = false, className }: Voice
     recorder.stop();
   };
 
-  const handleSave = async () => {
-    if (!audioBlob || recordedAt === null) return;
+  const handleUploadAndCreate = async () => {
+    if (!audioBlob) return;
     setIsSaving(true);
     try {
-      await onSave({
-        audioBlob,
-        transcript: transcript.trim(),
-        duration: durationMs,
-        recordedAt,
+      const uploadUrl = await generateUploadUrl({});
+      const uploadResponse = await fetch(uploadUrl, {
+        method: "POST",
+        headers: { "Content-Type": audioBlob.type || "audio/webm" },
+        body: audioBlob,
       });
+
+      if (!uploadResponse.ok) {
+        throw new Error("Failed to upload audio.");
+      }
+
+      const uploadResult = (await uploadResponse.json()) as { storageId?: Id<"_storage"> };
+      if (!uploadResult.storageId) {
+        throw new Error("Upload did not return a storage id.");
+      }
+
+      const noteId = await createVoiceNote({
+        organizationId,
+        workOrderId,
+        taskCardId,
+        technicianId,
+        audioStorageId: uploadResult.storageId,
+        audioDurationSeconds: Math.max(1, Math.round(durationMs / 1000)),
+      });
+
+      setCreatedNoteId(noteId);
+      toast.success("Voice note uploaded. Transcription queued.");
       clearDraft();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to save voice note.");
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleSaveTranscript = async () => {
+    if (!createdNoteId) return;
+    setIsSavingTranscript(true);
+    try {
+      await updateTranscript({
+        id: createdNoteId,
+        transcript: editableTranscript.trim(),
+        transcriptionStatus: "manual",
+      });
+      toast.success("Transcript updated.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to update transcript.");
+    } finally {
+      setIsSavingTranscript(false);
     }
   };
 
@@ -230,18 +268,12 @@ export function VoiceNoteRecorder({ onSave, disabled = false, className }: Voice
 
       <div className="flex flex-wrap items-center gap-2">
         {mode === "recording" ? (
-          <Button
-            variant="destructive"
-            size="sm"
-            className="h-7 text-xs"
-            onClick={stopRecording}
-            disabled={disabled}
-          >
+          <Button variant="destructive" size="sm" className="h-7 text-xs" onClick={stopRecording} disabled={disabled}>
             <Square className="h-3 w-3" />
             Stop
           </Button>
         ) : (
-          <Button size="sm" className="h-7 text-xs" onClick={startRecording} disabled={disabled || mode === "processing"}>
+          <Button size="sm" className="h-7 text-xs" onClick={startRecording} disabled={disabled || mode === "processing" || isSaving}>
             <Mic className="h-3.5 w-3.5" />
             Record
           </Button>
@@ -255,31 +287,36 @@ export function VoiceNoteRecorder({ onSave, disabled = false, className }: Voice
         )}
       </div>
 
-      {previewUrl && (
-        <audio controls src={previewUrl} className="h-8 w-full" />
-      )}
+      {previewUrl && <audio controls src={previewUrl} className="h-8 w-full" />}
 
-      {mode === "processing" && (
-        <p className="text-xs text-muted-foreground">Transcription processing...</p>
-      )}
+      {mode === "processing" && <p className="text-xs text-muted-foreground">Processing recording...</p>}
 
       {mode === "ready" && (
-        <div className="space-y-2">
+        <div className="flex justify-end">
+          <Button size="sm" className="h-7 text-xs" onClick={handleUploadAndCreate} disabled={isSaving}>
+            {isSaving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+            Upload Voice Note
+          </Button>
+        </div>
+      )}
+
+      {createdNote && (
+        <div className="space-y-2 rounded-md border border-border/60 bg-background/50 p-2.5">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-xs font-medium text-foreground">Latest transcription</p>
+            <TranscriptionStatusBadge status={createdNote.transcriptionStatus} />
+          </div>
           <Textarea
-            value={transcript}
-            onChange={(event) => setTranscript(event.target.value)}
-            placeholder="Edit transcript before saving..."
+            value={editableTranscript}
+            onChange={(event) => setEditableTranscript(event.target.value)}
+            placeholder="Transcript will appear here when available..."
             rows={3}
             className="min-h-[88px] text-xs"
           />
           <div className="flex justify-end">
-            <Button size="sm" className="h-7 text-xs" onClick={handleSave} disabled={isSaving}>
-              {isSaving ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              ) : (
-                <Save className="h-3.5 w-3.5" />
-              )}
-              Save Voice Note
+            <Button size="sm" variant="outline" className="h-7 text-xs" onClick={handleSaveTranscript} disabled={isSavingTranscript}>
+              {isSavingTranscript ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+              Save Transcript
             </Button>
           </div>
         </div>
