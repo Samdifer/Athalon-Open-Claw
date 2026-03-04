@@ -6,6 +6,41 @@ This file is the markdown-authoritative source of truth for feature status, impl
 
 ## Bug Hunter Fixes
 
+- **BUG-DOM-109** — Fleet cards built detail links from raw registration/serial strings, so tails containing `/` or spaces could break routing and open the wrong aircraft (or 404).  
+  **File:** `app/(app)/fleet/page.tsx`  
+  **Fix:** URL-encoded the fleet tail parameter in all three "Open" links (list, tiles, truncated views).  
+  **Why it matters:** DOM users can reliably open aircraft detail/logbook screens even for legacy or imported tail formats.
+
+- **BUG-DOM-110** — Fleet detail `?tab=` deep links accepted any arbitrary tab value; invalid values rendered a blank tab body with no recovery hint.  
+  **File:** `app/(app)/fleet/[tail]/page.tsx`  
+  **Fix:** Added an allowlist for valid tab keys and fallback to `aircraft-info` when the query param is invalid.  
+  **Why it matters:** Shared links/bookmarks always land on a usable DOM view instead of appearing broken.
+
+- **BUG-DOM-111** — Scheduling Constraints "Add Scheduling Training" dialog retained stale form values when closed via backdrop/X.  
+  **File:** `app/(app)/personnel/training/page.tsx`  
+  **Fix:** Reset training type/date/cert form state whenever the dialog closes from any path.  
+  **Why it matters:** Prevents accidental carry-over records and reduces bad training data entry during batch updates.
+
+- **BUG-DOM-112** — Fleet logbook page could crash on malformed links because `decodeURIComponent` was called on an undefined route param.  
+  **File:** `app/(app)/fleet/[tail]/logbook/page.tsx`  
+  **Fix:** Guarded `tail` route param before decoding and defaulted safely when missing.  
+  **Why it matters:** DOM oversight/logbook access remains resilient even when links are malformed or manually edited.
+
+- **BUG-QCM-HUNT-001** — RTS authorization page could hang in an endless loading skeleton when org context was missing or still loading.  
+  **File:** `app/(app)/work-orders/[id]/rts/page.tsx`  
+  **Fix:** Added explicit org context guards (`isLoaded` spinner + onboarding empty state) before report rendering.  
+  **Why it matters:** QCM inspectors now get a clear recovery path instead of a dead-end loading screen during sign-off workflow.
+
+- **BUG-QCM-HUNT-002** — AD/SB aircraft filter changed UI state but did not persist to URL, so refresh/share/back lost the selected aircraft.  
+  **File:** `app/(app)/compliance/ad-sb/page.tsx`  
+  **Fix:** Synced aircraft selection into `?aircraft=` query params on dropdown changes (and remove param for fleet view).  
+  **Why it matters:** Inspectors can now deep-link and reliably return to the exact aircraft compliance context they were reviewing.
+
+- **BUG-QCM-HUNT-003** — QCM close-readiness selector kept stale work-order IDs after live status changes, showing "Work order not found" for removed items.  
+  **File:** `app/(app)/compliance/qcm-review/page.tsx`  
+  **Fix:** Added reconciliation effect to auto-reselect a valid pending-signoff/open WO when the current selection disappears.  
+  **Why it matters:** The readiness panel stays actionable during real-time shop activity instead of breaking when work orders transition state.
+
 - **BUG-BM-HUNT-005** — Invoice CSV export used local timezone date rendering for due dates, causing off-by-one day exports for UTC-stored date-only fields.  
   **File:** `app/(app)/billing/invoices/page.tsx`  
   **Fix:** Export due dates with `formatDateUTC()` and keep creation dates consistent with shared formatter usage.  

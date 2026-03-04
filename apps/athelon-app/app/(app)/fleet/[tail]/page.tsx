@@ -156,7 +156,22 @@ export default function AircraftDetailPage() {
   // Now reads ?tab= from the URL and uses it as the initial Tabs value; falls back to
   // "aircraft-info" for direct navigation.
   const [searchParams] = useSearchParams();
-  const initialTab = searchParams.get("tab") ?? "aircraft-info";
+  // BUG-DOM-110: `?tab=` accepted any arbitrary value. If a user/bookmark passed
+  // an invalid tab key (or typo), Tabs received an unknown defaultValue and rendered
+  // with no visible content, which looks like a broken page. Clamp deep-link tab
+  // values to known tabs and fall back to "aircraft-info".
+  const allowedTabs = new Set([
+    "aircraft-info",
+    "times-cycles",
+    "work-orders",
+    "ad-compliance",
+    "deferred",
+    "logbook",
+  ]);
+  const requestedTab = searchParams.get("tab");
+  const initialTab = requestedTab && allowedTabs.has(requestedTab)
+    ? requestedTab
+    : "aircraft-info";
 
   const { orgId } = useCurrentOrg();
 

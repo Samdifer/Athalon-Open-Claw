@@ -1105,7 +1105,24 @@ function SchedulingConstraintsTab({
       </AlertDialog>
 
       {/* Add Constraint Training Dialog */}
-      <Dialog open={showAdd} onOpenChange={(v) => { if (!isAdding) setShowAdd(v); }}>
+      <Dialog
+        open={showAdd}
+        onOpenChange={(v) => {
+          if (isAdding) return;
+          setShowAdd(v);
+          // BUG-DOM-111: Closing "Add Scheduling Training" via backdrop/X preserved
+          // stale form values (training type/dates/cert ref) and leaked them into the
+          // next entry. DOM/training coordinators often add records back-to-back for
+          // different techs; stale values can create accidental duplicate/incorrect data.
+          if (!v) {
+            setTrainingType("");
+            setCustomType("");
+            setCompletedAt("");
+            setExpiresAt("");
+            setCertRef("");
+          }
+        }}
+      >
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Add Scheduling Training</DialogTitle>

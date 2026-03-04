@@ -324,7 +324,11 @@ const FILTER_OPTIONS: { value: FilterType; label: string }[] = [
 
 export default function AircraftLogbookPage() {
   const params = useParams();
-  const tailNumber = decodeURIComponent(params.tail as string);
+  // BUG-DOM-112: decodeURIComponent(undefined) throws and white-screens the page.
+  // Route params are normally present, but malformed links/bookmarks can omit tail.
+  // Guard and provide a stable fallback instead of crashing.
+  const tailParam = params.tail ?? "";
+  const tailNumber = tailParam ? decodeURIComponent(tailParam) : "";
 
   const { orgId, isLoaded: orgLoaded } = useCurrentOrg();
 

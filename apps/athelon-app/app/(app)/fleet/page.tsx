@@ -870,7 +870,11 @@ export default function FleetPage() {
                         imageCount={ac.galleryImageCount ?? 0}
                       />
                       <Button asChild size="sm" className="h-7 text-[11px]">
-                        <Link to={`/fleet/${ac.currentRegistration ?? ac.serialNumber}`}>
+                        {/* BUG-DOM-109: Registration values can contain characters like "/" or spaces
+                            (common with imported legacy tail formats). Unencoded route params break
+                            navigation to fleet detail/logbook pages because react-router treats "/"
+                            as a path separator. Always URL-encode the tail identifier. */}
+                        <Link to={`/fleet/${encodeURIComponent(ac.currentRegistration ?? ac.serialNumber)}`}>
                           Open
                           <ChevronRight className="w-3.5 h-3.5 ml-1" />
                         </Link>
@@ -911,7 +915,7 @@ export default function FleetPage() {
                       imageCount={ac.galleryImageCount ?? 0}
                     />
                     <Button asChild size="sm" className="h-7 text-[11px]">
-                      <Link to={`/fleet/${ac.currentRegistration ?? ac.serialNumber}`}>
+                      <Link to={`/fleet/${encodeURIComponent(ac.currentRegistration ?? ac.serialNumber)}`}>
                         Open
                         <ChevronRight className="w-3.5 h-3.5 ml-1" />
                       </Link>
@@ -962,7 +966,7 @@ export default function FleetPage() {
                   imageCount={ac.galleryImageCount ?? 0}
                 />
                 <Button asChild size="sm" variant="outline" className="h-7 text-[11px]">
-                  <Link to={`/fleet/${ac.currentRegistration ?? ac.serialNumber}`}>
+                  <Link to={`/fleet/${encodeURIComponent(ac.currentRegistration ?? ac.serialNumber)}`}>
                     Open
                     <ChevronRight className="w-3.5 h-3.5 ml-1" />
                   </Link>

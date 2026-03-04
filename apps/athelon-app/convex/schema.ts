@@ -4706,4 +4706,228 @@ export default defineSchema({
     .index("by_org", ["organizationId"])
     .index("by_org_status", ["organizationId", "status"])
     .index("by_part", ["partId"]),
+
+  // ==========================================
+  // OJT TRAINING JACKET SYSTEM (7 tables)
+  // ==========================================
+
+  // Curriculum definitions per aircraft type
+  ojtCurricula: defineTable({
+    organizationId: v.string(),
+    aircraftType: v.string(), // e.g. "King Air B200", "Cessna 172"
+    name: v.string(),
+    description: v.optional(v.string()),
+    isActive: v.boolean(),
+    createdByTechnicianId: v.optional(v.id("technicians")),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_org", ["organizationId"])
+    .index("by_org_aircraft", ["organizationId", "aircraftType"])
+    .index("by_org_active", ["organizationId", "isActive"]),
+
+  // Sections within a curriculum (Initial, Basics, Intermediate, Advanced, Specialties)
+  ojtCurriculumSections: defineTable({
+    organizationId: v.string(),
+    curriculumId: v.id("ojtCurricula"),
+    name: v.string(), // "Initial", "Basics", "Intermediate", "Advanced", "Sheet Metal", "Avionics", "Powerplant"
+    description: v.optional(v.string()),
+    displayOrder: v.number(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_curriculum", ["curriculumId"])
+    .index("by_org", ["organizationId"]),
+
+  // Individual trainable tasks within a section
+  ojtTasks: defineTable({
+    organizationId: v.string(),
+    curriculumId: v.id("ojtCurricula"),
+    sectionId: v.id("ojtCurriculumSections"),
+    ataChapter: v.string(), // "71", "28-20", etc.
+    description: v.string(),
+    approvedDataRef: v.optional(v.string()), // AMM section reference
+    isSharedAcrossTypes: v.boolean(), // reusable across aircraft curricula
+    estimatedMinutes: v.optional(v.number()),
+    displayOrder: v.number(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_curriculum", ["curriculumId"])
+    .index("by_section", ["sectionId"])
+    .index("by_org", ["organizationId"])
+    .index("by_org_ata", ["organizationId", "ataChapter"]),
+
+  // Per-technician per-curriculum training jacket
+  ojtJackets: defineTable({
+    organizationId: v.string(),
+    technicianId: v.id("technicians"),
+    curriculumId: v.id("ojtCurricula"),
+    status: v.union(v.literal("not_started"), v.literal("in_progress"), v.literal("fully_qualified"), v.literal("suspended")),
+    startedAt: v.optional(v.number()),
+    qualifiedAt: v.optional(v.number()),
+    suspendedAt: v.optional(v.number()),
+    suspendedReason: v.optional(v.string()),
+    notes: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_technician", ["technicianId"])
+    .index("by_curriculum", ["curriculumId"])
+    .index("by_org", ["organizationId"])
+    .index("by_org_status", ["organizationId", "status"])
+    .index("by_tech_curriculum", ["technicianId", "curriculumId"]),
+
+  // APPEND-ONLY sign-off events (audit-immutable)
+  ojtStageEvents: defineTable({
+    organizationId: v.string(),
+    jacketId: v.id("ojtJackets"),
+    taskId: v.id("ojtTasks"),
+    technicianId: v.id("technicians"),
+    stage: v.union(v.literal("observe"), v.literal("assist"), v.literal("supervised"), v.literal("evaluated")),
+    trainerId: v.id("technicians"),
+    trainerCertificateSnapshot: v.optional(v.string()), // cert info at time of sign-off
+    approvedDataRef: v.optional(v.string()),
+    trainingMethod: v.optional(v.string()), // "hands-on", "classroom", "CBT"
+    actualMinutes: v.optional(v.number()),
+    techSignedAt: v.optional(v.number()),
+    trainerSignedAt: v.optional(v.number()),
+    chiefInspectorId: v.optional(v.id("technicians")),
+    chiefInspectorSignedAt: v.optional(v.number()),
+    notes: v.optional(v.string()),
+    createdAt: v.number(),
+  })
+    .index("by_jacket", ["jacketId"])
+    .index("by_task", ["taskId"])
+    .index("by_technician", ["technicianId"])
+    .index("by_trainer", ["trainerId"])
+    .index("by_org", ["organizationId"])
+    .index("by_jacket_task", ["jacketId", "taskId"]),
+
+  // Trainer authorization records
+  ojtTrainerAuthorizations: defineTable({
+    organizationId: v.string(),
+    technicianId: v.id("technicians"), // who is authorized to train
+    scope: v.union(v.literal("task"), v.literal("section"), v.literal("curriculum"), v.literal("all")),
+    scopeRefId: v.optional(v.string()), // ID of task/section/curriculum if scoped
+    grantedByTechnicianId: v.id("technicians"),
+    grantedAt: v.number(),
+    expiresAt: v.optional(v.number()),
+    revokedAt: v.optional(v.number()),
+    revokedByTechnicianId: v.optional(v.id("technicians")),
+    notes: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_technician", ["technicianId"])
+    .index("by_org", ["organizationId"])
+    .index("by_org_tech", ["organizationId", "technicianId"]),
+
+  // OKR / training goals
+  ojtTrainingGoals: defineTable({
+    organizationId: v.string(),
+    technicianId: v.id("technicians"),
+    setByTechnicianId: v.id("technicians"), // lead/manager who set the goal
+    period: v.union(v.literal("weekly"), v.literal("monthly"), v.literal("quarterly"), v.literal("yearly")),
+    periodStart: v.number(),
+    periodEnd: v.number(),
+    targetType: v.union(v.literal("stages_completed"), v.literal("tasks_completed"), v.literal("hours_trained")),
+    targetValue: v.number(),
+    actualValue: v.optional(v.number()),
+    status: v.union(v.literal("active"), v.literal("completed"), v.literal("missed"), v.literal("cancelled")),
+    notes: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_technician", ["technicianId"])
+    .index("by_org", ["organizationId"])
+    .index("by_org_period", ["organizationId", "period"]),
+
+  // ==========================================
+  // MAINTENANCE PROGRAMS (Chapter 5 intervals)
+  // ==========================================
+
+  maintenancePrograms: defineTable({
+    organizationId: v.string(),
+    aircraftType: v.string(),
+    serialNumberScope: v.union(v.literal("all"), v.literal("specific")),
+    specificSerials: v.optional(v.array(v.string())),
+    taskName: v.string(),
+    ataChapter: v.string(),
+    approvedDataRef: v.optional(v.string()),
+    calendarIntervalDays: v.optional(v.number()),
+    hourInterval: v.optional(v.number()),
+    cycleInterval: v.optional(v.number()),
+    triggerLogic: v.union(v.literal("first"), v.literal("greater")),
+    isPhaseInspection: v.boolean(),
+    phaseNumber: v.optional(v.number()),
+    requiredPartsTemplate: v.optional(v.array(v.string())),
+    estimatedLaborHours: v.optional(v.number()),
+    isActive: v.boolean(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_org", ["organizationId"])
+    .index("by_org_aircraft", ["organizationId", "aircraftType"])
+    .index("by_org_ata", ["organizationId", "ataChapter"]),
+
+  // ==========================================
+  // VOICE NOTES (Convex-persisted audio + transcripts)
+  // ==========================================
+
+  voiceNotes: defineTable({
+    organizationId: v.string(),
+    workOrderId: v.optional(v.id("workOrders")),
+    taskCardId: v.optional(v.id("taskCards")),
+    taskCardStepId: v.optional(v.id("taskCardSteps")),
+    technicianId: v.id("technicians"),
+    audioStorageId: v.optional(v.id("_storage")),
+    audioDurationSeconds: v.optional(v.number()),
+    transcript: v.optional(v.string()),
+    transcriptionStatus: v.union(v.literal("pending"), v.literal("processing"), v.literal("completed"), v.literal("failed"), v.literal("manual")),
+    transcribedAt: v.optional(v.number()),
+    isEdited: v.boolean(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_work_order", ["workOrderId"])
+    .index("by_task_card", ["taskCardId"])
+    .index("by_technician", ["technicianId"])
+    .index("by_org", ["organizationId"]),
+
+  // ==========================================
+  // ADS-B FLIGHT TRACKING
+  // ==========================================
+
+  adsbFlightSessions: defineTable({
+    organizationId: v.string(),
+    aircraftId: v.id("aircraft"),
+    nNumber: v.string(),
+    departureTimestamp: v.number(),
+    arrivalTimestamp: v.number(),
+    clockDurationMinutes: v.number(),
+    estimatedTachHours: v.optional(v.number()),
+    departureAirport: v.optional(v.string()),
+    arrivalAirport: v.optional(v.string()),
+    cycleCount: v.number(), // takeoffs detected
+    dataSource: v.union(v.literal("flightaware"), v.literal("adsbexchange"), v.literal("opensky"), v.literal("manual")),
+    rawPayload: v.optional(v.string()), // JSON blob for audit
+    createdAt: v.number(),
+  })
+    .index("by_aircraft", ["aircraftId"])
+    .index("by_org", ["organizationId"])
+    .index("by_aircraft_departure", ["aircraftId", "departureTimestamp"]),
+
+  adsbSyncState: defineTable({
+    organizationId: v.string(),
+    aircraftId: v.id("aircraft"),
+    lastSyncTimestamp: v.number(),
+    lastKnownIcao24Hex: v.optional(v.string()),
+    adsbTachCorrectionFactor: v.optional(v.number()), // e.g. 0.92
+    syncStatus: v.union(v.literal("active"), v.literal("paused"), v.literal("error")),
+    lastError: v.optional(v.string()),
+    updatedAt: v.number(),
+  })
+    .index("by_aircraft", ["aircraftId"])
+    .index("by_org", ["organizationId"]),
 });

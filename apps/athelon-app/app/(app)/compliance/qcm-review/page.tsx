@@ -113,8 +113,21 @@ function CloseReadinessPanel({
   useEffect(() => {
     if (selectedWoId === null && pendingSignoffWos.length === 1) {
       setSelectedWoId(pendingSignoffWos[0]._id);
+      return;
     }
-  }, [pendingSignoffWos, selectedWoId]);
+
+    // BUG-QCM-QR-001: Selected WO could go stale after live status changes.
+    // Example: QCM selects WO-1042, lead tech closes it, WO drops from list.
+    // The selector still points to the removed ID and readiness panel shows
+    // "Work order not found" instead of auto-recovering to a valid candidate.
+    if (selectedWoId && !workOrders.some((wo) => wo._id === selectedWoId)) {
+      if (pendingSignoffWos.length > 0) {
+        setSelectedWoId(pendingSignoffWos[0]._id);
+      } else {
+        setSelectedWoId(workOrders[0]?._id ?? null);
+      }
+    }
+  }, [pendingSignoffWos, selectedWoId, workOrders]);
 
   const readiness = useQuery(
     api.maintenanceRecords.getWorkOrderCloseReadinessV2,
