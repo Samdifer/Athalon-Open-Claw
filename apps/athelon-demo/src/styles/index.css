@@ -1,0 +1,24 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "SF Pro Display", "Inter", system-ui, -apple-system, sans-serif;
+  --radius-3xl: 1.5rem;
+  --radius-4xl: 2rem;
+  --color-canvas: #f5f5f7;
+}
+
+@layer base {
+  body {
+    @apply bg-canvas text-[#1d1d1f] antialiased overflow-x-hidden;
+  }
+}
+
+@layer components {
+  .glass {
+    @apply bg-white/70 backdrop-blur-xl border border-white/20;
+  }
+  
+  .bento-card {
+    @apply bg-white rounded-4xl shadow-[0_4px_24px_rgba(0,0,0,0.04)] p-8 transition-all duration-300;
+  }
+}
