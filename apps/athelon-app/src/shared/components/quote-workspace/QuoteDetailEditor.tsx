@@ -22,6 +22,7 @@ import {
   Plus,
   Package,
   Wrench,
+  Printer,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -214,11 +215,15 @@ export function QuoteDetailEditor({
   const router = useRouter();
   const quoteId = (quoteIdOverride ??
     (params.id as Id<"quotes"> | undefined)) as Id<"quotes">;
-  const { orgId, techId, isLoaded } = useCurrentOrg();
+  const { orgId, techId, isLoaded, org } = useCurrentOrg();
 
   const quote = useQuery(
     api.billing.getQuote,
     orgId && quoteId ? { orgId, quoteId } : "skip",
+  );
+  const customer = useQuery(
+    api.customers.getCustomer,
+    quote?.customerId ? { customerId: quote.customerId } : "skip",
   );
   const aircraft = useQuery(
     api.aircraft.list,
@@ -295,30 +300,37 @@ export function QuoteDetailEditor({
 
   // PDF Download
   const handleDownloadPDF = async () => {
-    setActionLoading("pdf"); setError(null);
+    setActionLoading("pdf");
+    setError(null);
     try {
-      const { QuotePDF } = await import("@/lib/pdf/QuotePDF");
+      const { QuotePDF } = await import("@/components/pdf/QuotePDF");
       const { downloadPDF } = await import("@/lib/pdf/download");
       const el = QuotePDF({
-        orgName: "Athelon Aviation",
-        quoteNumber: quote!.quoteNumber,
-        createdAt: quote!.createdAt,
-        expiresAt: quote!.expiresAt ?? undefined,
-        status: quote!.status,
-        validityDays: quote!.expiresAt
-          ? Math.ceil((quote!.expiresAt - quote!.createdAt) / (1000 * 60 * 60 * 24))
-          : undefined,
+        orgName: org?.name ?? "Athelon Aviation",
+        quote: {
+          quoteNumber: quote!.quoteNumber,
+          createdAt: quote!.createdAt,
+          expiresAt: quote!.expiresAt ?? undefined,
+          status: quote!.status,
+          subtotal: quote!.subtotal,
+          tax: quote!.tax,
+          total: quote!.total,
+          currency: quote!.currency,
+        },
         lineItems: quote!.lineItems.map((li) => ({
+          _id: String(li._id),
           description: li.description,
-          type: li.type,
           qty: li.qty,
           unitPrice: li.unitPrice,
-          discountPercent: li.discountPercent,
           total: li.total,
+          departmentSection: li.departmentSection,
+          customerDecision: li.customerDecision,
         })),
-        subtotal: quote!.subtotal,
-        tax: quote!.tax,
-        total: quote!.total,
+        departments: quote!.departments.map((dept) => ({
+          _id: String(dept._id),
+          sectionName: dept.sectionName,
+        })),
+        customer,
       });
       await downloadPDF(el, `Quote-${quote!.quoteNumber}.pdf`);
       toast.success("Quote PDF downloaded");
@@ -327,6 +339,10 @@ export function QuoteDetailEditor({
     } finally {
       setActionLoading(null);
     }
+  };
+
+  const handlePrint = () => {
+    window.print();
   };
 
   const handleSend = async () => {
@@ -806,6 +822,15 @@ export function QuoteDetailEditor({
           >
             <Download className="w-3.5 h-3.5" />
             {actionLoading === "pdf" ? "Generating..." : "Download PDF"}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handlePrint}
+            className="h-8 gap-1.5 text-xs"
+          >
+            <Printer className="w-3.5 h-3.5" />
+            Print
           </Button>
           {canSend && (
             <Button size="sm" onClick={handleSend} disabled={actionLoading === "send"} className="h-8 gap-1.5 text-xs">
