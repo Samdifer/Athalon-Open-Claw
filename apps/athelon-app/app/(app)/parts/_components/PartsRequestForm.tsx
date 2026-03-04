@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { PartStatusBadge } from "@/src/shared/components/PartStatusBadge";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
@@ -228,7 +229,7 @@ export function PartsRequestForm({
                   <p className="font-mono font-semibold truncate">{r.partNumber} · Qty {r.quantity}</p>
                   <p className="text-muted-foreground truncate">{r.description}</p>
                 </div>
-                <Badge variant="outline" className="text-[10px]">{r.status}</Badge>
+                <PartStatusBadge status={r.status} />
               </div>
             ))
           )}

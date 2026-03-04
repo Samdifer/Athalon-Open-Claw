@@ -5,6 +5,7 @@ type PartStatus =
   | "ordered"
   | "shipped"
   | "received"
+  | "inspected"
   | "issued"
   | "installed"
   | "returned";
@@ -24,11 +25,15 @@ const STATUS_META: Record<PartStatus, { label: string; className: string }> = {
   },
   received: {
     label: "Received",
-    className: "bg-green-500/15 text-green-600 dark:text-green-400 border-green-500/30",
+    className: "bg-purple-500/15 text-purple-600 dark:text-purple-400 border-purple-500/30",
+  },
+  inspected: {
+    label: "Inspected",
+    className: "bg-teal-500/15 text-teal-600 dark:text-teal-400 border-teal-500/30",
   },
   issued: {
     label: "Issued",
-    className: "bg-purple-500/15 text-purple-600 dark:text-purple-400 border-purple-500/30",
+    className: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30",
   },
   installed: {
     label: "Installed",
@@ -46,7 +51,7 @@ function mapRawStatus(status: string): PartStatus {
   }
   if (status === "issued") return "issued";
   if (status === "installed") return "installed";
-  if (status === "pending_inspection") return "received";
+  if (status === "pending_inspection") return "inspected";
   if (status === "inventory") return "received";
   if (status === "returned_to_stock" || status === "returned_to_vendor") return "returned";
   return "received";

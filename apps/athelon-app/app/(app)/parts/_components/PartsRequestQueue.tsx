@@ -1,6 +1,7 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
+import { PartStatusBadge } from "@/src/shared/components/PartStatusBadge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -64,7 +65,7 @@ export function PartsRequestQueue({ requests, onRequestsChange }: PartsRequestQu
                 </div>
                 <div className="flex items-center gap-1.5">
                   <Badge variant="outline" className={`text-[10px] ${urgencyClass(r.urgency)}`}>{r.urgency.toUpperCase()}</Badge>
-                  <Badge variant="outline" className="text-[10px]">{r.status}</Badge>
+                  <PartStatusBadge status={r.status} />
                 </div>
               </div>
               <div className="text-[11px] text-muted-foreground flex gap-3 flex-wrap">

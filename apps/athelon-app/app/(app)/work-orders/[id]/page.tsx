@@ -57,7 +57,7 @@ import { DiscrepancyList } from "@/app/(app)/work-orders/[id]/_components/Discre
 import { DeferredMaintenanceCaptureDialog } from "@/app/(app)/work-orders/[id]/_components/DeferredMaintenanceCaptureDialog";
 import { VoiceNotesPanel } from "@/components/VoiceNotesPanel";
 import { WOHeaderKPI } from "@/app/(app)/work-orders/[id]/_components/WOHeaderKPI";
-import { PartsLifecycleBoard } from "@/app/(app)/work-orders/[id]/_components/PartsLifecycleBoard";
+import { WOPartsLifecycleBoard } from "@/app/(app)/work-orders/[id]/_components/WOPartsLifecycleBoard";
 import { CostEstimationPanel } from "@/app/(app)/work-orders/[id]/_components/CostEstimationPanel";
 import type { PartsRequestRecord } from "@/app/(app)/parts/_components/PartsRequestForm";
 import { PartStatusBadge } from "@/src/shared/components/PartStatusBadge";
@@ -1061,7 +1061,7 @@ export default function WorkOrderDetailPage() {
               </CardContent>
             </Card>
           ) : partsTabView === "board" ? (
-            <PartsLifecycleBoard items={partsBoardItems} />
+            <WOPartsLifecycleBoard items={partsBoardItems} />
           ) : (
             <div className="space-y-2">
               {PARTS_LIFECYCLE_ORDER.map((status) => {
