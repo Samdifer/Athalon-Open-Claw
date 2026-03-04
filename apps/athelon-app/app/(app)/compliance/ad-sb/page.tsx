@@ -86,10 +86,20 @@ export default function AdSbCompliancePage() {
   // AircraftComplianceCard (on the main Compliance page) can pre-select a
   // specific aircraft and land the QCM inspector directly at that aircraft's
   // AD records — instead of requiring a second dropdown interaction.
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const initialAircraft = searchParams.get("aircraft") ?? "all";
   const [selectedAircraft, setSelectedAircraft] = useState<string>(initialAircraft);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+
+  const setAircraftFilterInUrl = (aircraftId: string) => {
+    const nextParams = new URLSearchParams(searchParams);
+    if (aircraftId === "all") {
+      nextParams.delete("aircraft");
+    } else {
+      nextParams.set("aircraft", aircraftId);
+    }
+    setSearchParams(nextParams, { replace: true });
+  };
 
   // BUG-QCM-C11: selectedAircraft was initialized from searchParams once at mount
   // but never updated when searchParams changed. Deep links from AircraftComplianceCard
@@ -349,7 +359,11 @@ export default function AdSbCompliancePage() {
         <Select
           value={selectedAircraft}
           onValueChange={(v) => {
+            // BUG-QCM-ADSB-001: Aircraft selection changed local state only. URL
+            // stayed stale, so refresh/share/back lost the selected aircraft and
+            // dumped inspectors back to fleet view. Keep query param in sync.
             setSelectedAircraft(v);
+            setAircraftFilterInUrl(v);
             // Reset status filter when switching aircraft — avoids "no results" confusion
             // when an overdue-filtered view from one aircraft carries over to another
             setStatusFilter("all");
@@ -487,6 +501,9 @@ export default function AdSbCompliancePage() {
                             className="h-6 text-[10px] gap-1"
                             onClick={() => {
                               setSelectedAircraft(s.aircraftId);
+                              // Keep URL in sync with drill-in actions from the fleet table.
+                              // Without this, refresh/share/back lost the selected aircraft.
+                              setAircraftFilterInUrl(s.aircraftId);
                               // BH-QCM-001: Reset status filter when drilling into a per-aircraft
                               // view via the fleet table "View" button. Previously this bypassed
                               // the aircraft-selector onValueChange handler that resets the filter.

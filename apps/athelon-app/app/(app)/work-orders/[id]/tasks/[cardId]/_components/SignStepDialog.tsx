@@ -70,6 +70,27 @@ function defaultRatingForAuthorization(
   }
 }
 
+function isRatingAllowedForAuthorization(
+  requiredAuthorizationType: StepAuthorizationType,
+  selectedRating: RatingValue,
+): boolean {
+  // `none` cannot be exercised for a signed maintenance step.
+  if (selectedRating === "none") return false;
+
+  // Inspection-required steps must be signed with IA exercised.
+  if (requiredAuthorizationType === "inspection") {
+    return selectedRating === "ia";
+  }
+
+  // Powerplant-required steps must exercise powerplant rating.
+  if (requiredAuthorizationType === "powerplant") {
+    return selectedRating === "powerplant";
+  }
+
+  // Airframe / NDT / borescope steps can exercise any certificated mechanic rating.
+  return selectedRating === "airframe" || selectedRating === "powerplant" || selectedRating === "ia";
+}
+
 function containsKeyword(value: string, keyword: "ndt" | "borescope"): boolean {
   const normalized = value.toLowerCase();
   if (keyword === "ndt") {
@@ -236,6 +257,7 @@ export function SignStepDialog({
   }, [certificateRatings, iaIsCurrent, rating, trainingRecords, technicianTraining]);
 
   const hasRequiredAuthorization = currentCapabilities.has(requiredAuthorizationType);
+  const isRatingValidForStep = isRatingAllowedForAuthorization(requiredAuthorizationType, rating);
   const currentRatingsDisplay = Array.from(currentCapabilities).map(
     (capability) => STEP_AUTHORIZATION_META[capability].requirementLabel,
   );
@@ -280,6 +302,17 @@ export function SignStepDialog({
         setError("Admin override reason is required.");
         return;
       }
+    }
+
+    if (!isRatingValidForStep) {
+      setError(
+        requiredAuthorizationType === "inspection"
+          ? "Inspection-required steps must be signed with IA exercised."
+          : requiredAuthorizationType === "powerplant"
+            ? "Powerplant-required steps must be signed with powerplant rating exercised."
+            : "Select a valid certificated rating before signing this step.",
+      );
+      return;
     }
 
     if (!bypassTrainingWarning && expiredTraining.length > 0) {
@@ -459,11 +492,14 @@ export function SignStepDialog({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {RATING_OPTIONS.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </SelectItem>
-                ))}
+                {RATING_OPTIONS.map((opt) => {
+                  const allowed = isRatingAllowedForAuthorization(requiredAuthorizationType, opt.value);
+                  return (
+                    <SelectItem key={opt.value} value={opt.value} disabled={!allowed}>
+                      {opt.label}
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
           </div>
@@ -745,6 +781,7 @@ export function SignStepDialog({
               isSubmitting ||
               pin.length < 4 ||
               certQueryLoading ||
+              !isRatingValidForStep ||
               (!hasRequiredAuthorization && !isAdminSigner) ||
               (!hasRequiredAuthorization && isAdminSigner && !overrideReason.trim())
             }

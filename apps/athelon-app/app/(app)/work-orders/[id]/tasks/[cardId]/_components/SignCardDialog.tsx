@@ -110,6 +110,11 @@ export function SignCardDialog({
   const signTaskCard = useMutation(api.taskCards.signTaskCard);
 
   async function handleSign(bypassTrainingWarning = false) {
+    if (rating === "none") {
+      setError("A certificated rating is required for card-level sign-off.");
+      return;
+    }
+
     if (!bypassTrainingWarning && expiredTraining.length > 0) {
       setTrainingWarningOpen(true);
       return;
@@ -197,7 +202,7 @@ export function SignCardDialog({
               </SelectTrigger>
               <SelectContent>
                 {RATING_OPTIONS.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
+                  <SelectItem key={opt.value} value={opt.value} disabled={opt.value === "none"}>
                     {opt.label}
                   </SelectItem>
                 ))}
@@ -283,7 +288,8 @@ export function SignCardDialog({
             disabled={
               isSubmitting ||
               pin.length < 4 ||
-              statement.trim().length < 50
+              statement.trim().length < 50 ||
+              rating === "none"
             }
             className="gap-2"
             size="sm"

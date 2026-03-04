@@ -26,11 +26,12 @@ import { RTSEvidenceSummary } from "../_components/RTSEvidenceSummary";
 import { DownloadPDFButton } from "@/src/shared/components/pdf/DownloadPDFButton";
 import { RtsDocumentPDF } from "@/src/shared/components/pdf/RtsDocumentPDF";
 import { PrintButton } from "@/src/shared/components/PrintButton";
+import { ActionableEmptyState } from "@/components/zero-state/ActionableEmptyState";
 
 export default function RtsPage() {
   const params = useParams<{ id: string }>();
   const workOrderId = params.id as Id<"workOrders">;
-  const { orgId } = useCurrentOrg();
+  const { orgId, isLoaded } = useCurrentOrg();
   const [searchParams] = useSearchParams();
 
   // BUG-HUNTER-002: Pre-populate the auth event ID from the URL when the
@@ -73,16 +74,25 @@ export default function RtsPage() {
     [allParts, workOrderId],
   );
 
-  const inDockEvidence = useMemo(() => {
-    if (typeof window === "undefined") return null;
-    try {
-      return JSON.parse(localStorage.getItem(`wo:${workOrderId}:in-dock-evidence`) ?? "null") as
-        | { photos?: unknown[]; compliance?: Array<{ checked?: boolean }> }
-        | null;
-    } catch {
-      return null;
-    }
-  }, [workOrderId]);
+  const workOrderDocuments = useQuery(
+    api.documents.listDocuments,
+    orgId && workOrderId
+      ? { attachedToTable: "workOrders", attachedToId: String(workOrderId) }
+      : "skip",
+  );
+
+  const hasComplianceDocument = useMemo(
+    () =>
+      (workOrderDocuments ?? []).some((doc) =>
+        ["approved_data", "ad_document", "parts_8130", "photo", "work_authorization"].includes(doc.documentType),
+      ),
+    [workOrderDocuments],
+  );
+
+  const hasCustomerAuthorizationDocument = useMemo(
+    () => (workOrderDocuments ?? []).some((doc) => doc.documentType === "work_authorization"),
+    [workOrderDocuments],
+  );
 
   // Mutation
   const authorizeRts = useMutation(
@@ -115,6 +125,30 @@ export default function RtsPage() {
     } finally {
       setIsSubmitting(false);
     }
+  }
+
+  // BUG-QCM-RTS-001: Without org load/missing-context guards this page could
+  // render an endless loading skeleton when Clerk had not loaded org context or
+  // when the user had no active organization. The report query is skipped when
+  // orgId is absent, leaving `report === undefined` forever with no path forward.
+  if (!isLoaded) {
+    return (
+      <div className="flex items-center justify-center py-24">
+        <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (!orgId) {
+    return (
+      <ActionableEmptyState
+        title="RTS authorization requires organization setup"
+        missingInfo="Complete onboarding before authorizing return-to-service records."
+        primaryActionLabel="Complete Setup"
+        primaryActionType="link"
+        primaryActionTarget="/onboarding"
+      />
+    );
   }
 
   // ── Success State ──────────────────────────────────────────────────────────
@@ -339,13 +373,8 @@ export default function RtsPage() {
         partsTraceabilityComplete={partsForThisWorkOrder.every(
           (part) => (!part.isSerialized || Boolean(part.serialNumber?.trim())) && (!part.isOwnerSupplied || Boolean(part.eightOneThirtyId)),
         )}
-        requiredDocsUploaded={
-          report.maintenanceRecords.length > 0 &&
-          ((inDockEvidence?.photos?.length ?? 0) > 0 || (inDockEvidence?.compliance?.some((item) => item.checked) ?? false))
-        }
-        customerAuthorizationOnFile={
-          report.workOrderStatus === "pending_signoff" || report.workOrderStatus === "closed"
-        }
+        requiredDocsUploaded={hasComplianceDocument}
+        customerAuthorizationOnFile={hasCustomerAuthorizationDocument}
       />
 
       {/* 9 Preconditions */}
