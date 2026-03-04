@@ -73,6 +73,8 @@ import {
 import { VendorServicePanel } from "./_components/VendorServicePanel";
 import { StepReferences } from "./_components/StepReferences";
 import { StepPartsTracker } from "./_components/StepPartsTracker";
+import { TurnoverNotes } from "./_components/TurnoverNotes";
+import { ApprovedDataRef } from "./_components/ApprovedDataRef";
 import { ReturnPartDialog } from "@/src/shared/components/ReturnPartDialog";
 import {
   VendorServicePickerModal,
@@ -897,45 +899,51 @@ export default function TaskCardPage() {
               });
 
               return (
-                <TaskStepRow
-                  key={step._id}
-                  step={{
-                    ...step,
-                    requiredAuthorizationType,
-                    requiredAuthorizationLabel:
-                      STEP_AUTHORIZATION_META[requiredAuthorizationType].badgeLabel,
-                  }}
-                  idx={idx}
-                  cardIsVoided={cardIsVoided}
-                  cardIsComplete={cardIsComplete}
-                  orgId={orgId}
-                  techId={techId}
-                  onSignClick={handleSignStepIntent}
-                  onStartClick={handleStartStep}
-                  // BUG-LT-HUNT-081: isStarting now only flags THIS specific
-                  // step's mutation (controls spinner). anyMutationPending covers
-                  // ALL-step locking without erroneously spinning other rows.
-                  isStarting={startingStepId === step._id}
-                  anyMutationPending={isAnyStepStarting}
-                  onNaClick={setNaTarget}
-                  onStepTimerClick={handleStepTimerClick}
-                  isStepTimerActive={
-                    !!activeTimerEntry &&
-                    (activeTimerEntry.entryType ?? "work_order") === "step" &&
-                    activeTimerEntry.taskStepId === step._id
-                  }
-                  isStepTimerBusy={
-                    timerActionLoading === "step-toggle" ||
-                    timerActionLoading === "stop"
-                  }
-                  stepTimerClockInAt={
-                    activeTimerEntry &&
-                    (activeTimerEntry.entryType ?? "work_order") === "step" &&
-                    activeTimerEntry.taskStepId === step._id
-                      ? (activeTimerEntry as { clockInAt?: number }).clockInAt
-                      : undefined
-                  }
-                />
+                <div key={step._id}>
+                  <TaskStepRow
+                    step={{
+                      ...step,
+                      requiredAuthorizationType,
+                      requiredAuthorizationLabel:
+                        STEP_AUTHORIZATION_META[requiredAuthorizationType].badgeLabel,
+                    }}
+                    idx={idx}
+                    cardIsVoided={cardIsVoided}
+                    cardIsComplete={cardIsComplete}
+                    orgId={orgId}
+                    techId={techId}
+                    onSignClick={handleSignStepIntent}
+                    onStartClick={handleStartStep}
+                    // BUG-LT-HUNT-081: isStarting now only flags THIS specific
+                    // step's mutation (controls spinner). anyMutationPending covers
+                    // ALL-step locking without erroneously spinning other rows.
+                    isStarting={startingStepId === step._id}
+                    anyMutationPending={isAnyStepStarting}
+                    onNaClick={setNaTarget}
+                    onStepTimerClick={handleStepTimerClick}
+                    isStepTimerActive={
+                      !!activeTimerEntry &&
+                      (activeTimerEntry.entryType ?? "work_order") === "step" &&
+                      activeTimerEntry.taskStepId === step._id
+                    }
+                    isStepTimerBusy={
+                      timerActionLoading === "step-toggle" ||
+                      timerActionLoading === "stop"
+                    }
+                    stepTimerClockInAt={
+                      activeTimerEntry &&
+                      (activeTimerEntry.entryType ?? "work_order") === "step" &&
+                      activeTimerEntry.taskStepId === step._id
+                        ? (activeTimerEntry as { clockInAt?: number }).clockInAt
+                        : undefined
+                    }
+                  />
+                  <ApprovedDataRef
+                    workOrderId={workOrderId}
+                    cardId={cardId}
+                    stepId={String(step._id)}
+                  />
+                </div>
               );
             })}
         </CardContent>
@@ -1129,6 +1137,12 @@ export default function TaskCardPage() {
           </div>
         </CardContent>
       </Card>
+
+      <TurnoverNotes
+        workOrderId={workOrderId}
+        taskCardId={cardId}
+        readOnly={cardIsVoided || cardIsComplete}
+      />
 
       {/* ─── Compliance section ──────────────────────────────────────────── */}
       <div>

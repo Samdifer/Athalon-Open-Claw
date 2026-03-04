@@ -53,6 +53,8 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { TrainerSignOffQueue } from "./_components/TrainerSignOffQueue";
 import { EfficiencyBaseline } from "./_components/EfficiencyBaseline";
+import { GrowthCurveDashboard } from "./_components/GrowthCurveDashboard";
+import { ComplianceRecords } from "./_components/ComplianceRecords";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -365,10 +367,12 @@ export default function TrainingPage() {
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
           <TabsTrigger value="records">Training Records</TabsTrigger>
+          <TabsTrigger value="compliance">Compliance</TabsTrigger>
           <TabsTrigger value="requirements">Qualification Requirements</TabsTrigger>
           <TabsTrigger value="constraints">Scheduling Constraints</TabsTrigger>
           <TabsTrigger value="signoff">Sign-Off Queue</TabsTrigger>
           <TabsTrigger value="efficiency">Efficiency</TabsTrigger>
+          <TabsTrigger value="growth">Growth</TabsTrigger>
         </TabsList>
 
         <TabsContent value="records" className="space-y-3 mt-3">
@@ -584,6 +588,14 @@ export default function TrainingPage() {
           )}
         </TabsContent>
 
+        <TabsContent value="compliance" className="space-y-3 mt-3">
+          {!allTraining || !technicians ? (
+            <Skeleton className="h-48 w-full" />
+          ) : (
+            <ComplianceRecords records={allTraining} technicians={technicians} />
+          )}
+        </TabsContent>
+
         <TabsContent value="requirements" className="space-y-3 mt-3">
           {!qualReqs ? (
             <Skeleton className="h-32 w-full" />
@@ -643,6 +655,10 @@ export default function TrainingPage() {
 
         <TabsContent value="efficiency" className="space-y-3 mt-3">
           <EfficiencyBaseline orgId={orgId} />
+        </TabsContent>
+
+        <TabsContent value="growth" className="space-y-3 mt-3">
+          <GrowthCurveDashboard orgId={orgId} />
         </TabsContent>
       </Tabs>
 
