@@ -10,7 +10,6 @@ import {
   FileText,
   ShieldCheck,
   XCircle,
-  Clock,
   Play,
   Square,
   User,
@@ -39,7 +38,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -49,7 +47,7 @@ import {
   type DiscrepancyItem,
 } from "@/app/(app)/work-orders/[id]/_components/WorkItemsList";
 import { WOComplianceTab } from "@/app/(app)/work-orders/[id]/_components/WOComplianceTab";
-import { DocumentAttachmentPanel } from "@/app/(app)/work-orders/[id]/_components/DocumentAttachmentPanel";
+import { DocumentsPanel } from "@/app/(app)/work-orders/[id]/_components/DocumentsPanel";
 import { InDockRtsEvidenceTab } from "@/app/(app)/work-orders/[id]/_components/InDockRtsEvidenceTab";
 import { CloseReadinessPanel } from "@/components/CloseReadinessPanel";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
@@ -57,6 +55,7 @@ import { ActivityTimeline } from "@/app/(app)/work-orders/[id]/_components/Activ
 import { DiscrepancyList } from "@/app/(app)/work-orders/[id]/_components/DiscrepancyList";
 import { DeferredMaintenanceCaptureDialog } from "@/app/(app)/work-orders/[id]/_components/DeferredMaintenanceCaptureDialog";
 import { VoiceNotesPanel } from "@/components/VoiceNotesPanel";
+import { WOHeaderKPI } from "@/app/(app)/work-orders/[id]/_components/WOHeaderKPI";
 import {
   readVoiceNotesForWorkOrder,
   writeVoiceNotesForWorkOrder,
@@ -294,11 +293,6 @@ export default function WorkOrderDetailPage() {
 
   const isTerminalStatus = ["closed", "voided", "cancelled"].includes(wo.status);
 
-  const tasksComplete = taskCards.filter((tc) => tc.status === "complete").length;
-  const tasksTotal = taskCards.length;
-  const openSquawks = discrepancies.filter(
-    (d) => d.status === "open" || d.status === "under_evaluation",
-  ).length;
   const riskLevel = getScheduleRiskLevel(wo.promisedDeliveryDate);
 
   const workItems: WorkItem[] = [
@@ -642,78 +636,12 @@ export default function WorkOrderDetailPage() {
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-        <Card className="border-border/60">
-          <CardContent className="p-3">
-            <p className="text-[11px] text-muted-foreground mb-1">Task Progress</p>
-            <div className="flex items-center gap-2">
-              <span className="text-lg font-bold text-foreground">
-                {tasksComplete}/{tasksTotal}
-              </span>
-              <Progress value={tasksTotal > 0 ? (tasksComplete / tasksTotal) * 100 : 0} className="h-1.5 flex-1" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="border-border/60">
-          <CardContent className="p-3">
-            <p className="text-[11px] text-muted-foreground mb-1">Open Squawks</p>
-            <span className={`text-lg font-bold ${openSquawks > 0 ? "text-red-400" : "text-foreground"}`}>
-              {openSquawks}
-            </span>
-          </CardContent>
-        </Card>
-        <Card className="border-border/60">
-          <CardContent className="p-3">
-            <p className="text-[11px] text-muted-foreground mb-1">Parts Linked</p>
-            <span className="text-lg font-bold text-foreground">{partsForThisWorkOrder.length}</span>
-          </CardContent>
-        </Card>
-        <Card className="border-border/60">
-          <CardContent className="p-3">
-            <p className="text-[11px] text-muted-foreground mb-1">Opened</p>
-            <span className="text-sm font-semibold text-foreground">{formatDate(wo.openedAt)}</span>
-          </CardContent>
-        </Card>
-        <Card
-          className={`border-border/60 ${
-            riskLevel === "overdue"
-              ? "border-red-500/40 bg-red-500/5"
-              : riskLevel === "at_risk"
-                ? "border-amber-500/40 bg-amber-500/5"
-                : ""
-          }`}
-        >
-          <CardContent className="p-3">
-            <div className="flex items-center gap-1 mb-1">
-              <Calendar className="w-3 h-3 text-muted-foreground" />
-              <p className="text-[11px] text-muted-foreground">Promised Delivery</p>
-            </div>
-            {wo.promisedDeliveryDate ? (
-              <span
-                className={`text-sm font-semibold ${
-                  riskLevel === "overdue"
-                    ? "text-red-400"
-                    : riskLevel === "at_risk"
-                      ? "text-amber-400"
-                      : "text-foreground"
-                }`}
-              >
-                {formatDate(wo.promisedDeliveryDate)}
-              </span>
-            ) : (
-              <span className="text-sm text-muted-foreground/60">Not set</span>
-            )}
-            {wo.estimatedLaborHoursOverride !== undefined && (
-              <div className="flex items-center gap-1 mt-1">
-                <Clock className="w-3 h-3 text-muted-foreground/60" />
-                <span className="text-[10px] text-muted-foreground">
-                  {wo.estimatedLaborHoursOverride}h est.
-                </span>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+      <WOHeaderKPI
+        workOrder={wo}
+        taskCards={taskCards}
+        timeEntries={timeLogs ?? []}
+        parts={partsForThisWorkOrder}
+      />
 
       {!canClose && readinessBlockers.length > 0 && (
         <Card className="border-amber-500/30 bg-amber-500/5">
@@ -798,7 +726,14 @@ export default function WorkOrderDetailPage() {
           <WOComplianceTab workOrderId={String(workOrderId)} />
         </TabsContent>
 
-        <TabsContent value="parts" className="mt-0">
+        <TabsContent value="parts" className="mt-0 space-y-3">
+          <div className="flex justify-end">
+            <Button asChild size="sm" className="h-8 text-xs">
+              <Link to={`/parts?tab=parts_requests&q=${encodeURIComponent(wo.workOrderNumber)}`}>
+                Request Part
+              </Link>
+            </Button>
+          </div>
           {partsForThisWorkOrder.length === 0 ? (
             <Card className="border-border/60">
               <CardContent className="py-10 text-center text-sm text-muted-foreground">
@@ -852,11 +787,7 @@ export default function WorkOrderDetailPage() {
         </TabsContent>
 
         <TabsContent value="documents" className="mt-0">
-          <DocumentAttachmentPanel
-            organizationId={orgId}
-            attachedToTable="workOrders"
-            attachedToId={String(workOrderId)}
-          />
+          <DocumentsPanel workOrderId={String(workOrderId)} />
         </TabsContent>
 
         <TabsContent value="evidence" className="mt-0">
