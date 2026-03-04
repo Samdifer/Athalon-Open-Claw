@@ -51,6 +51,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { TrainerSignOffQueue } from "./_components/TrainerSignOffQueue";
+import { EfficiencyBaseline } from "./_components/EfficiencyBaseline";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -365,6 +367,8 @@ export default function TrainingPage() {
           <TabsTrigger value="records">Training Records</TabsTrigger>
           <TabsTrigger value="requirements">Qualification Requirements</TabsTrigger>
           <TabsTrigger value="constraints">Scheduling Constraints</TabsTrigger>
+          <TabsTrigger value="signoff">Sign-Off Queue</TabsTrigger>
+          <TabsTrigger value="efficiency">Efficiency</TabsTrigger>
         </TabsList>
 
         <TabsContent value="records" className="space-y-3 mt-3">
@@ -631,6 +635,14 @@ export default function TrainingPage() {
         {/* ─── Scheduling Constraints Tab ─────────────────────────────────── */}
         <TabsContent value="constraints" className="space-y-3 mt-3">
           <SchedulingConstraintsTab orgId={orgId} technicians={technicians ?? []} techMap={techMap} />
+        </TabsContent>
+
+        <TabsContent value="signoff" className="space-y-3 mt-3">
+          <TrainerSignOffQueue orgId={orgId} />
+        </TabsContent>
+
+        <TabsContent value="efficiency" className="space-y-3 mt-3">
+          <EfficiencyBaseline orgId={orgId} />
         </TabsContent>
       </Tabs>
 
