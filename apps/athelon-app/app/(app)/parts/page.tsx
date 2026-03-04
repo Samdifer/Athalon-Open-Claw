@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -25,8 +25,11 @@ import {
 import { ExportCSVButton } from "@/src/shared/components/ExportCSVButton";
 import { BarcodeScanner } from "@/components/BarcodeScanner";
 import { printBarcodeLabel } from "@/lib/barcode";
+import { PartsRequestForm, type PartsRequestRecord } from "@/app/(app)/parts/_components/PartsRequestForm";
+import { PartsRequestQueue } from "@/app/(app)/parts/_components/PartsRequestQueue";
 import { QRCodeBadge } from "@/components/QRCodeBadge";
 import { QRScannerDialog } from "@/components/QRScannerDialog";
+import { InventoryMasterTab } from "./_components/InventoryMasterTab";
 import { QrCode } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -68,7 +71,9 @@ type LocationFilter =
   | "installed"
   | "quarantine"
   | "removed_pending_disposition"
-  | "low_stock";
+  | "low_stock"
+  | "inventory_master"
+  | "parts_requests";
 
 type InspectionResult = "approved" | "rejected";
 
@@ -120,6 +125,10 @@ const LOCATION_LABEL: Record<string, string> = {
   scrapped: "Scrapped",
   returned_to_vendor: "Returned to Vendor",
 };
+
+function getPartsRequestStorageKey(orgId: string) {
+  return `athelon:parts-requests:${orgId}`;
+}
 
 const CONDITION_LABEL: Record<string, string> = {
   new: "New",
@@ -737,6 +746,13 @@ export default function PartsPage() {
   const [activeTab, setActiveTab] = useState<LocationFilter>("all");
   const [searchParams] = useSearchParams();
   const [search, setSearch] = useState(() => searchParams.get("q") ?? "");
+
+  useEffect(() => {
+    const tab = searchParams.get("tab");
+    if (tab === "parts_requests") {
+      setActiveTab("parts_requests");
+    }
+  }, [searchParams]);
   const { orgId, isLoaded } = useCurrentOrg();
   const { selectedLocationId } = useSelectedLocation(orgId);
   const selectedShopLocationId =
@@ -751,6 +767,7 @@ export default function PartsPage() {
   const [qrPart, setQrPart] = useState<PartDoc | null>(null);
   const [qrScannerOpen, setQrScannerOpen] = useState(false);
   const [detailPart, setDetailPart] = useState<PartDoc | null>(null);
+  const [partsRequests, setPartsRequests] = useState<PartsRequestRecord[]>([]);
 
   // Load all parts
   const allParts = useQuery(
@@ -787,6 +804,24 @@ export default function PartsPage() {
   const parts = (allParts ?? []) as PartDoc[];
   const technicianId = selfTech?._id ?? null;
 
+  useEffect(() => {
+    if (!orgId) {
+      setPartsRequests([]);
+      return;
+    }
+    try {
+      const raw = window.localStorage.getItem(getPartsRequestStorageKey(orgId));
+      setPartsRequests(raw ? (JSON.parse(raw) as PartsRequestRecord[]) : []);
+    } catch {
+      setPartsRequests([]);
+    }
+  }, [orgId]);
+
+  useEffect(() => {
+    if (!orgId) return;
+    window.localStorage.setItem(getPartsRequestStorageKey(orgId), JSON.stringify(partsRequests));
+  }, [orgId, partsRequests]);
+
   // For pending tab, use the server-indexed query; otherwise use allParts filtered client-side
   const filtered = useMemo(() => {
     let result =
@@ -804,7 +839,12 @@ export default function PartsPage() {
           p.location === "inventory" &&
           (p.quantityOnHand ?? p.quantity ?? 0) <= p.reorderPoint,
       );
-    } else if (activeTab !== "all" && activeTab !== "pending_inspection") {
+    } else if (
+      activeTab !== "all" &&
+      activeTab !== "pending_inspection" &&
+      activeTab !== "inventory_master" &&
+      activeTab !== "parts_requests"
+    ) {
       result = result.filter((p) => p.location === activeTab);
     }
 
@@ -855,8 +895,10 @@ export default function PartsPage() {
       quarantine,
       removed_pending_disposition: removed,
       low_stock: lowStock,
+      inventory_master: parts.length,
+      parts_requests: partsRequests.length,
     };
-  }, [parts, pendingInspectionParts]);
+  }, [parts, pendingInspectionParts, partsRequests.length]);
 
   const exportRows = useMemo(
     () =>
@@ -965,6 +1007,8 @@ export default function PartsPage() {
                 ["quarantine", "Quarantine"],
                 ["removed_pending_disposition", "Disposition"],
                 ["low_stock", "Low Stock"],
+                ["inventory_master", "Inventory Master"],
+                ["parts_requests", "Parts Requests"],
               ] as const
             ).map(([tab, label]) => (
               <TabsTrigger
@@ -1108,8 +1152,27 @@ export default function PartsPage() {
         </div>
       )}
 
+      {activeTab === "parts_requests" && (
+        <div className="grid gap-4 lg:grid-cols-2">
+          <PartsRequestForm
+            partsCatalog={parts.map((p) => ({
+              _id: String(p._id),
+              partNumber: p.partNumber,
+              partName: p.partName,
+              description: p.description,
+              supplier: p.supplier,
+            }))}
+            requests={partsRequests}
+            onRequestsChange={setPartsRequests}
+          />
+          <PartsRequestQueue requests={partsRequests} onRequestsChange={setPartsRequests} />
+        </div>
+      )}
+
+      {activeTab === "inventory_master" && <InventoryMasterTab />}
+
       {/* Parts list (all other tabs) */}
-      {activeTab !== "pending_inspection" && (
+      {activeTab !== "pending_inspection" && activeTab !== "parts_requests" && activeTab !== "inventory_master" && (
         <>
           {isLoading ? (
             <div className="space-y-2">
