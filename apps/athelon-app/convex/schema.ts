@@ -1257,6 +1257,10 @@ export default defineSchema({
     estimatedLaborHoursOverride: v.optional(v.number()),
     scheduledStartDate: v.optional(v.number()),
 
+    // v7: Team-level assignment — which roster team is responsible for this WO.
+    // Separate from individual task-to-technician assignments in taskAssignments.
+    assignedRosterTeamId: v.optional(v.id("rosterTeams")),
+
     // Aircraft snapshot captured at work order open time (OP-1003 page 1 data)
     // This makes the WO self-contained for FAA audit — the state at time of opening
     // is preserved even if aircraft records are later updated.
@@ -1296,7 +1300,8 @@ export default defineSchema({
     .index("by_number", ["organizationId", "workOrderNumber"])
     .index("by_aircraft_status", ["aircraftId", "status"])
     .index("by_priority", ["organizationId", "priority", "status"])
-    .index("by_delivery_date", ["organizationId", "promisedDeliveryDate"]),
+    .index("by_delivery_date", ["organizationId", "promisedDeliveryDate"])
+    .index("by_org_assigned_team", ["organizationId", "assignedRosterTeamId"]),
 
   // ═══════════════════════════════════════════════════════════════════════════
   // DISCREPANCIES
@@ -2200,6 +2205,15 @@ export default defineSchema({
     partName: v.string(),
     description: v.optional(v.string()),
 
+    // v10: Part classification (Inventory System Phase 1)
+    partCategory: v.optional(v.union(
+      v.literal("consumable"),    // Nuts, bolts, fluids, filters — qty tracked, not serialized
+      v.literal("standard"),      // Standard hardware per spec (AN/MS/NAS)
+      v.literal("rotable"),       // Linked to rotables table for time/cycle tracking
+      v.literal("expendable"),    // One-time use (gaskets, seals, safety wire)
+      v.literal("repairable"),    // Can be repaired and returned to service
+    )),
+
     serialNumber: v.optional(v.string()),
     isSerialized: v.boolean(),
 
@@ -2277,6 +2291,24 @@ export default defineSchema({
     minStockLevel: v.optional(v.number()),
     reorderPoint: v.optional(v.number()),
 
+    // v10: Valuation fields (Inventory System Phase 1)
+    unitCost: v.optional(v.number()),             // Cost per unit at last receipt
+    averageCost: v.optional(v.number()),           // Weighted average cost across all receipts
+    lastPurchasePrice: v.optional(v.number()),     // Price from most recent PO
+    purchaseOrderId: v.optional(v.id("purchaseOrders")), // FK to originating PO
+
+    // v10: Lot/batch tracking (Inventory System Phase 1)
+    lotId: v.optional(v.id("lots")),               // FK to lots table
+    lotNumber: v.optional(v.string()),             // Denormalized for fast display
+    batchNumber: v.optional(v.string()),           // Manufacturer batch number
+
+    // v10: Bin location granularity (Inventory System Phase 1)
+    warehouseZone: v.optional(v.string()),         // e.g. "A", "B", "Hangar 2"
+    aisle: v.optional(v.string()),                 // e.g. "3"
+    shelf: v.optional(v.string()),                 // e.g. "B"
+    binNumber: v.optional(v.string()),             // e.g. "12"
+    binLocation: v.optional(v.string()),           // Composite display: "A-3-B-12"
+
     createdAt: v.number(),
     updatedAt: v.number(),
   })
@@ -2287,7 +2319,9 @@ export default defineSchema({
     .index("by_aircraft", ["currentAircraftId"])
     .index("by_condition", ["organizationId", "condition"])
     .index("by_location", ["organizationId", "location"]) // now covers pending_inspection queries
-    .index("by_shelf_life", ["hasShelfLifeLimit", "shelfLifeLimitDate"]),
+    .index("by_shelf_life", ["hasShelfLifeLimit", "shelfLifeLimitDate"])
+    .index("by_org_category", ["organizationId", "partCategory"])
+    .index("by_org_lot", ["organizationId", "lotId"]),
 
   // ═══════════════════════════════════════════════════════════════════════════
   // 8130-3 RECORDS  (FAA Airworthiness Approval Tag)
@@ -4446,4 +4480,230 @@ export default defineSchema({
     .index("by_workOrder", ["workOrderId"])
     .index("by_technician", ["technicianId"])
     .index("by_org", ["organizationId"]),
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // LOTS / BATCH TRACKING  (Inventory System v10)
+  //
+  // Tracks batches of parts under a single certificate of conformity.
+  // A lot represents a group of identical parts (same P/N) received together
+  // from a vendor, covered by the same CoC/8130-3 documentation.
+  //
+  // Example: 500 AN3-4A bolts arrive with one CoC — that's one lot record.
+  // As bolts are issued to work orders, remainingQuantity decrements.
+  // ═══════════════════════════════════════════════════════════════════════════
+  lots: defineTable({
+    organizationId: v.id("organizations"),
+    lotNumber: v.string(),                          // Unique within org, e.g. "LOT-2026-00142"
+    batchNumber: v.optional(v.string()),             // Manufacturer batch/heat number
+    partNumber: v.string(),
+    partName: v.string(),
+    description: v.optional(v.string()),
+
+    // Certification linkage
+    certificateOfConformityId: v.optional(v.id("documents")),     // FK to documents table (CoC PDF)
+    eightOneThirtyId: v.optional(v.id("eightOneThirtyRecords")), // 8130-3 tag for this lot
+
+    // Quantities
+    originalQuantity: v.number(),       // Total qty on the CoC at receipt
+    receivedQuantity: v.number(),       // Qty actually received (may differ from original)
+    issuedQuantity: v.number(),         // Qty issued to work orders
+    remainingQuantity: v.number(),      // receivedQuantity - issuedQuantity
+
+    // Source tracking
+    vendorId: v.optional(v.id("vendors")),
+    purchaseOrderId: v.optional(v.id("purchaseOrders")),
+    receivedDate: v.number(),
+    receivedByUserId: v.string(),       // Clerk user ID of receiver
+
+    // Shelf life (lot-level — many consumables expire by lot)
+    hasShelfLife: v.boolean(),
+    shelfLifeExpiryDate: v.optional(v.number()),
+
+    // Condition
+    condition: v.union(
+      v.literal("new"),
+      v.literal("serviceable"),
+      v.literal("quarantine"),
+      v.literal("expired"),
+      v.literal("depleted"),            // remainingQuantity === 0
+    ),
+
+    notes: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_org", ["organizationId"])
+    .index("by_org_part", ["organizationId", "partNumber"])
+    .index("by_lot_number", ["organizationId", "lotNumber"])
+    .index("by_shelf_life", ["hasShelfLife", "shelfLifeExpiryDate"]),
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // PART HISTORY  (Inventory System v10)
+  //
+  // Append-only event log for every part lifecycle transition.
+  // This is the "provenance chain" — the complete story of where a part
+  // came from, where it's been, and who touched it. Required for FAA
+  // traceability per 14 CFR 43.9 and AC 20-62E.
+  //
+  // INVARIANT [partHistory.append_only]:
+  //   Records in this table are NEVER updated or deleted.
+  //   Every state change creates a new record.
+  // ═══════════════════════════════════════════════════════════════════════════
+  partHistory: defineTable({
+    organizationId: v.id("organizations"),
+    partId: v.id("parts"),
+
+    eventType: v.union(
+      v.literal("received"),              // Part received into facility
+      v.literal("inspected"),             // Receiving inspection completed
+      v.literal("stocked"),               // Moved to inventory (issuable)
+      v.literal("moved"),                 // Bin/location change
+      v.literal("reserved"),              // Reserved for a work order
+      v.literal("reservation_released"),  // Reservation cancelled
+      v.literal("issued_to_wo"),          // Issued from inventory to work order
+      v.literal("returned_from_wo"),      // Returned unused from work order
+      v.literal("installed"),             // Installed on aircraft/engine
+      v.literal("removed"),               // Removed from aircraft/engine
+      v.literal("sent_to_vendor"),        // Sent out for repair/overhaul
+      v.literal("received_from_vendor"),  // Returned from vendor
+      v.literal("quarantined"),           // Moved to quarantine
+      v.literal("scrapped"),              // Condemned/scrapped
+      v.literal("condition_changed"),     // Condition status updated
+      v.literal("cost_updated"),          // Valuation changed
+      v.literal("document_attached"),     // Conformity doc linked
+      v.literal("shelf_life_alert"),      // Shelf life warning triggered
+    ),
+
+    // Context references (all optional — depends on event type)
+    workOrderId: v.optional(v.id("workOrders")),
+    aircraftId: v.optional(v.id("aircraft")),
+    vendorId: v.optional(v.id("vendors")),
+    shipmentId: v.optional(v.id("shipments")),
+    purchaseOrderId: v.optional(v.id("purchaseOrders")),
+    lotId: v.optional(v.id("lots")),
+
+    // Change tracking
+    fromLocation: v.optional(v.string()),
+    toLocation: v.optional(v.string()),
+    fromCondition: v.optional(v.string()),
+    toCondition: v.optional(v.string()),
+
+    // Who and when
+    performedByUserId: v.string(),        // Clerk user ID
+    performedByTechnicianId: v.optional(v.id("technicians")),
+    notes: v.optional(v.string()),
+
+    createdAt: v.number(),
+  })
+    .index("by_part", ["partId"])
+    .index("by_org", ["organizationId"])
+    .index("by_part_type", ["partId", "eventType"])
+    .index("by_work_order", ["workOrderId"]),
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // PART DOCUMENTS  (Inventory System v10)
+  //
+  // Junction table linking conformity documents to parts and/or lots.
+  // Each document has a role (CoC, CoA, 8130-3, test report, etc.) that
+  // classifies what kind of conformity evidence it provides.
+  //
+  // A single document can be linked to multiple parts (e.g., one CoC
+  // covers an entire lot). A single part can have multiple documents
+  // (e.g., CoC + test report + photo of dataplate).
+  // ═══════════════════════════════════════════════════════════════════════════
+  partDocuments: defineTable({
+    organizationId: v.id("organizations"),
+    partId: v.optional(v.id("parts")),    // FK to part (optional if lot-level)
+    lotId: v.optional(v.id("lots")),      // FK to lot (optional if part-level)
+    documentId: v.id("documents"),        // FK to documents table (file storage)
+
+    documentRole: v.union(
+      v.literal("certificate_of_conformity"),     // CoC from manufacturer
+      v.literal("certificate_of_airworthiness"),  // CoA / FAA Form 8100-2
+      v.literal("test_report"),                   // Lab/test results
+      v.literal("8130_3_tag"),                    // FAA Form 8130-3 scan/PDF
+      v.literal("receiving_inspection_report"),   // Internal receiving inspection
+      v.literal("vendor_invoice"),                // Vendor invoice/receipt
+      v.literal("packing_slip"),                  // Shipping packing slip
+      v.literal("material_certification"),        // Material/chemical cert
+      v.literal("spec_sheet"),                    // Specification/data sheet
+      v.literal("photo"),                         // Photo of part/dataplate/packaging
+      v.literal("other"),
+    ),
+
+    description: v.optional(v.string()),
+    linkedByUserId: v.string(),           // Clerk user ID
+    linkedAt: v.number(),
+  })
+    .index("by_part", ["partId"])
+    .index("by_lot", ["lotId"])
+    .index("by_document", ["documentId"])
+    .index("by_org", ["organizationId"]),
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // WORK ORDER PARTS  (Inventory System v10)
+  //
+  // Persistent tracking of parts requested, ordered, issued, installed,
+  // and returned for each work order. Replaces the previous localStorage-
+  // based parts request system with full backend state management.
+  //
+  // Lifecycle: requested → ordered → received → issued → installed
+  //                                                    → returned
+  //                                         → cancelled
+  //
+  // Financial fields support cost tracking and markup for billing.
+  // ═══════════════════════════════════════════════════════════════════════════
+  workOrderParts: defineTable({
+    organizationId: v.id("organizations"),
+    workOrderId: v.id("workOrders"),
+    partId: v.optional(v.id("parts")),    // FK when part exists in inventory
+
+    // Part identification (may exist before a parts record is created)
+    partNumber: v.string(),
+    partName: v.string(),
+    serialNumber: v.optional(v.string()),
+
+    // Request lifecycle
+    status: v.union(
+      v.literal("requested"),     // Technician needs this part
+      v.literal("ordered"),       // PO has been created
+      v.literal("received"),      // Part arrived at facility
+      v.literal("issued"),        // Issued from inventory to WO
+      v.literal("installed"),     // Installed on aircraft
+      v.literal("returned"),      // Returned unused to inventory
+      v.literal("cancelled"),     // Request cancelled
+    ),
+
+    quantityRequested: v.number(),
+    quantityIssued: v.number(),
+    quantityReturned: v.number(),
+
+    // Source references
+    requestedByTechnicianId: v.optional(v.id("technicians")),
+    issuedByTechnicianId: v.optional(v.id("technicians")),
+    purchaseOrderId: v.optional(v.id("purchaseOrders")),
+    lotId: v.optional(v.id("lots")),
+
+    // Financial
+    unitCost: v.optional(v.number()),
+    totalCost: v.optional(v.number()),
+    markupPercent: v.optional(v.number()),
+    billableAmount: v.optional(v.number()),
+
+    // Timestamps per status transition
+    requestedAt: v.number(),
+    orderedAt: v.optional(v.number()),
+    receivedAt: v.optional(v.number()),
+    issuedAt: v.optional(v.number()),
+    installedAt: v.optional(v.number()),
+    returnedAt: v.optional(v.number()),
+
+    notes: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_work_order", ["workOrderId"])
+    .index("by_org", ["organizationId"])
+    .index("by_org_status", ["organizationId", "status"])
+    .index("by_part", ["partId"]),
 });

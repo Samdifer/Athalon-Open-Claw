@@ -732,6 +732,46 @@ export const getRosterWorkspace = query({
   },
 });
 
+// ─────────────────────────────────────────────────────────────────────────────
+// QUERY: listActiveRosterTeams
+//
+// Lightweight query for populating team-assignment dropdowns (e.g. work order
+// team assignment). Returns only active teams with minimal fields.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const listActiveRosterTeams = query({
+  args: {
+    organizationId: v.id("organizations"),
+    shopLocationId: v.optional(v.id("shopLocations")),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Not authenticated");
+
+    const teams = await ctx.db
+      .query("rosterTeams")
+      .withIndex("by_org_active", (q) =>
+        q.eq("organizationId", args.organizationId).eq("isActive", true),
+      )
+      .collect();
+
+    // If shopLocationId provided, include teams for that location + org-wide teams (no location)
+    const filtered = args.shopLocationId
+      ? teams.filter(
+          (t) => !t.shopLocationId || t.shopLocationId === args.shopLocationId,
+        )
+      : teams;
+
+    return filtered
+      .sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name))
+      .map((team) => ({
+        _id: team._id,
+        name: team.name,
+        colorToken: team.colorToken,
+      }));
+  },
+});
+
 export const createRosterTeam = mutation({
   args: teamMutationValidator,
   handler: async (ctx, args) => {

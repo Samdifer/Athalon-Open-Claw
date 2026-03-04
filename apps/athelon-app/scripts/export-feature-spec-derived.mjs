@@ -7,6 +7,8 @@ const DEFAULT_MASTER = "docs/spec/MASTER-BUILD-LIST.md";
 const DEFAULT_REGISTRY = "docs/plans/MASTER-FEATURE-REGISTRY.csv";
 const DEFAULT_CROSSWALK = "docs/plans/MASTER-FEATURE-CROSSWALK.md";
 const DEFAULT_BUILD_PLAN = "docs/plans/MASTER-BUILD-PLAN.md";
+const DEFAULT_ROUTE_REGISTRY = "docs/plans/MASTER-ROUTE-CAPABILITY-REGISTRY.csv";
+const DEFAULT_ROUTE_ROLLUP = "docs/plans/MASTER-ROUTE-CATEGORY-ROLLUP.md";
 
 function parseArgs(argv) {
   const opts = {
@@ -14,6 +16,8 @@ function parseArgs(argv) {
     registryOut: DEFAULT_REGISTRY,
     crosswalkOut: DEFAULT_CROSSWALK,
     buildPlanOut: DEFAULT_BUILD_PLAN,
+    routeRegistryOut: DEFAULT_ROUTE_REGISTRY,
+    routeRollupOut: DEFAULT_ROUTE_ROLLUP,
   };
 
   for (let i = 0; i < argv.length; i += 1) {
@@ -38,6 +42,16 @@ function parseArgs(argv) {
       i += 1;
       continue;
     }
+    if (token === "--route-registry-out") {
+      opts.routeRegistryOut = argv[i + 1] || "";
+      i += 1;
+      continue;
+    }
+    if (token === "--route-rollup-out") {
+      opts.routeRollupOut = argv[i + 1] || "";
+      i += 1;
+      continue;
+    }
     if (token === "--help" || token === "-h") {
       printHelp();
       process.exit(0);
@@ -53,11 +67,13 @@ function printHelp() {
     [
       "Usage:",
       "  node scripts/export-feature-spec-derived.mjs [--master docs/spec/MASTER-BUILD-LIST.md]",
-      "",      
+      "",
       "Outputs:",
       "  - docs/plans/MASTER-FEATURE-REGISTRY.csv",
       "  - docs/plans/MASTER-FEATURE-CROSSWALK.md",
       "  - docs/plans/MASTER-BUILD-PLAN.md",
+      "  - docs/plans/MASTER-ROUTE-CAPABILITY-REGISTRY.csv",
+      "  - docs/plans/MASTER-ROUTE-CATEGORY-ROLLUP.md",
     ].join("\n"),
   );
 }
@@ -143,7 +159,7 @@ function rollupStatus(statuses) {
   return "implemented";
 }
 
-function toCsvRows(registryRows) {
+function toFeatureCsvRows(registryRows) {
   const csvHeaders = [
     "mbp_id",
     "canonical_group_id",
@@ -186,6 +202,36 @@ function toCsvRows(registryRows) {
       row.test_gate,
       row.notes,
     ];
+    lines.push(values.map(csvEscape).join(","));
+  }
+
+  return `${lines.join("\n")}\n`;
+}
+
+function toRouteCsvRows(routeRows) {
+  const csvHeaders = [
+    "route_id",
+    "route_path_template",
+    "route_label",
+    "route_kind",
+    "route_category_id",
+    "route_source",
+    "source_component",
+    "route_source_status",
+    "mapped_fs_ids",
+    "mapped_mbp_ids",
+    "implementation_state",
+    "verification_state",
+    "last_reviewed_at_utc",
+    "reviewed_by",
+    "key_subfeatures",
+    "gap_notes",
+    "evidence_links",
+  ];
+
+  const lines = [csvHeaders.join(",")];
+  for (const row of routeRows) {
+    const values = csvHeaders.map((header) => row[header]);
     lines.push(values.map(csvEscape).join(","));
   }
 
@@ -281,10 +327,35 @@ function buildCrosswalk(registryRows, priorGroupMeta) {
   return out.join("\n");
 }
 
-function buildDerivedBuildPlan(registryRows) {
+function buildRouteCategoryRollup(routeCategoryRows) {
+  const out = [];
+  const today = new Date().toISOString().slice(0, 10);
+
+  out.push("# Master Route Category Rollup (Derived)");
+  out.push("");
+  out.push(
+    `Derived from \`docs/spec/MASTER-BUILD-LIST.md\` Registry D on ${today}. Do not edit manually; regenerate via \`pnpm run spec:export:derived\`.`,
+  );
+  out.push("");
+  out.push("| Route Category ID | Category Name | Route Count | Mapped FS IDs | Mapped MBP IDs | Coverage State | Uncovered Route IDs | Notes |");
+  out.push("|---|---|---:|---|---|---|---|---|");
+
+  const sorted = [...routeCategoryRows].sort((a, b) => a.route_category_id.localeCompare(b.route_category_id));
+  for (const row of sorted) {
+    out.push(
+      `| ${row.route_category_id} | ${row.category_name} | ${row.route_count} | ${row.mapped_fs_ids} | ${row.mapped_mbp_ids} | ${row.coverage_state} | ${row.uncovered_route_ids} | ${row.notes} |`,
+    );
+  }
+
+  out.push("");
+  return out.join("\n");
+}
+
+function buildDerivedBuildPlan(registryRows, masterFeatureCount, routeRows, routeCategoryRows) {
   const sourceCounts = new Map();
   const statusCounts = new Map();
   const waveCounts = new Map();
+  const routeStatusCounts = new Map();
 
   for (const row of registryRows) {
     const source = row.source_pack || "UNKNOWN";
@@ -299,6 +370,11 @@ function buildDerivedBuildPlan(registryRows) {
     waveCounts.set(wave, (waveCounts.get(wave) || 0) + 1);
   }
 
+  for (const route of routeRows) {
+    const status = route.route_source_status || "unknown";
+    routeStatusCounts.set(status, (routeStatusCounts.get(status) || 0) + 1);
+  }
+
   const out = [];
   out.push("# MASTER BUILD PLAN (Derived Reference)");
   out.push("");
@@ -309,15 +385,20 @@ function buildDerivedBuildPlan(registryRows) {
   out.push("## Canonical Ownership");
   out.push("");
   out.push("1. Do not directly author feature status in this file.");
-  out.push("2. Update canonical feature records in `docs/spec/MASTER-BUILD-LIST.md` (Registry A/Registry B) or through Bug Hunter sync.");
-  out.push("3. Regenerate derived artifacts with `npm run spec:export:derived`.");
+  out.push("2. Update canonical feature records in `docs/spec/MASTER-BUILD-LIST.md` (Registry A/Registry B/Registry C/Registry D) or through Bug Hunter sync.");
+  out.push("3. Regenerate derived artifacts with `pnpm run spec:export:derived`.");
   out.push("");
   out.push("## Derived Snapshot");
   out.push("");
   out.push(`- Total atomic features: **${registryRows.length}**`);
-  out.push("- Total master features (Registry A): **53**");
+  out.push(`- Total master features (Registry A): **${masterFeatureCount}**`);
   out.push(
     `- Status counts: implemented=${statusCounts.get("implemented") || 0}, partial=${statusCounts.get("partial") || 0}, missing=${statusCounts.get("missing") || 0}, proposed=${statusCounts.get("proposed") || 0}`,
+  );
+  out.push(`- Total route entries (Registry C): **${routeRows.length}**`);
+  out.push(`- Total route categories (Registry D): **${routeCategoryRows.length}**`);
+  out.push(
+    `- Route source-status counts: routed=${routeStatusCounts.get("routed") || 0}, router_only=${routeStatusCounts.get("router_only") || 0}, orphan_page=${routeStatusCounts.get("orphan_page") || 0}`,
   );
   out.push("");
   out.push("## Source Coverage");
@@ -339,15 +420,18 @@ function buildDerivedBuildPlan(registryRows) {
   out.push("## Dependency and Group Reference");
   out.push("");
   out.push("Use `docs/plans/MASTER-FEATURE-CROSSWALK.md` for canonical group rollups and MBP-to-group mapping.");
+  out.push("Use `docs/plans/MASTER-ROUTE-CATEGORY-ROLLUP.md` for route-category coverage rollups.");
   out.push("");
   out.push("## Update Workflow");
   out.push("");
   out.push("1. Update canonical registries in `docs/spec/MASTER-BUILD-LIST.md` (or run Bug Hunter sync).");
-  out.push("2. Run `npm run spec:export:derived`.");
+  out.push("2. Run `pnpm run spec:export:derived`.");
   out.push("3. Review diffs in:");
   out.push("   - `docs/plans/MASTER-FEATURE-REGISTRY.csv`");
   out.push("   - `docs/plans/MASTER-FEATURE-CROSSWALK.md`");
   out.push("   - `docs/plans/MASTER-BUILD-PLAN.md` (this file)");
+  out.push("   - `docs/plans/MASTER-ROUTE-CAPABILITY-REGISTRY.csv`");
+  out.push("   - `docs/plans/MASTER-ROUTE-CATEGORY-ROLLUP.md`");
   out.push("");
   return out.join("\n");
 }
@@ -360,26 +444,64 @@ function main() {
   const registryOutPath = path.resolve(cwd, opts.registryOut);
   const crosswalkOutPath = path.resolve(cwd, opts.crosswalkOut);
   const buildPlanOutPath = path.resolve(cwd, opts.buildPlanOut);
+  const routeRegistryOutPath = path.resolve(cwd, opts.routeRegistryOut);
+  const routeRollupOutPath = path.resolve(cwd, opts.routeRollupOut);
 
   const masterLines = fs.readFileSync(masterPath, "utf8").split(/\r?\n/);
-  const registryRows = parseMarkdownTable(
+
+  const registryARows = parseMarkdownTable(
+    masterLines,
+    "## Registry A — Master Features",
+    "| fs_id |",
+  );
+  const registryBRows = parseMarkdownTable(
     masterLines,
     "## Registry B — Atomic Features",
     "| mbp_id |",
   );
+  const routeRows = parseMarkdownTable(
+    masterLines,
+    "## Registry C — Route Capability Registry",
+    "| route_id |",
+  );
+  const routeCategoryRows = parseMarkdownTable(
+    masterLines,
+    "## Registry D — Route Category Rollup",
+    "| route_category_id |",
+  );
 
-  if (registryRows.length === 0) {
+  if (registryARows.length === 0) {
+    throw new Error("No Registry A rows found in canonical master file.");
+  }
+  if (registryBRows.length === 0) {
     throw new Error("No Registry B rows found in canonical master file.");
   }
+  if (routeRows.length === 0) {
+    throw new Error("No Registry C rows found in canonical master file.");
+  }
+  if (routeCategoryRows.length === 0) {
+    throw new Error("No Registry D rows found in canonical master file.");
+  }
 
-  const csvData = toCsvRows(registryRows);
-  fs.writeFileSync(registryOutPath, csvData, "utf8");
+  const featureCsvData = toFeatureCsvRows(registryBRows);
+  fs.writeFileSync(registryOutPath, featureCsvData, "utf8");
 
   const priorGroupMeta = parseGroupMetadataFromCurrentCrosswalk(crosswalkOutPath);
-  const crosswalkMd = buildCrosswalk(registryRows, priorGroupMeta);
+  const crosswalkMd = buildCrosswalk(registryBRows, priorGroupMeta);
   fs.writeFileSync(crosswalkOutPath, `${crosswalkMd}\n`, "utf8");
 
-  const buildPlanMd = buildDerivedBuildPlan(registryRows);
+  const routeCsvData = toRouteCsvRows(routeRows);
+  fs.writeFileSync(routeRegistryOutPath, routeCsvData, "utf8");
+
+  const routeRollupMd = buildRouteCategoryRollup(routeCategoryRows);
+  fs.writeFileSync(routeRollupOutPath, `${routeRollupMd}\n`, "utf8");
+
+  const buildPlanMd = buildDerivedBuildPlan(
+    registryBRows,
+    registryARows.length,
+    routeRows,
+    routeCategoryRows,
+  );
   fs.writeFileSync(buildPlanOutPath, `${buildPlanMd}\n`, "utf8");
 
   process.stdout.write(
@@ -389,7 +511,12 @@ function main() {
         registryOut: path.relative(cwd, registryOutPath),
         crosswalkOut: path.relative(cwd, crosswalkOutPath),
         buildPlanOut: path.relative(cwd, buildPlanOutPath),
-        rowsExported: registryRows.length,
+        routeRegistryOut: path.relative(cwd, routeRegistryOutPath),
+        routeRollupOut: path.relative(cwd, routeRollupOutPath),
+        registryACount: registryARows.length,
+        registryBCount: registryBRows.length,
+        registryCCount: routeRows.length,
+        registryDCount: routeCategoryRows.length,
       },
       null,
       2,

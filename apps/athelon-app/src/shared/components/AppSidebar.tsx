@@ -141,6 +141,7 @@ const mainNav: NavEntry[] = [
     section: "parts",
     children: [
       { title: "Receiving Inspection", href: "/parts/receiving" },
+      { title: "PO Receiving", href: "/parts/receiving/po" },
       { title: "Part Requests", href: "/parts/requests" },
       { title: "Tool Crib", href: "/parts/tools" },
       { title: "Inventory Count", href: "/parts/inventory-count" },
@@ -148,6 +149,8 @@ const mainNav: NavEntry[] = [
       { title: "Shipping", href: "/parts/shipping" },
       { title: "Rotables", href: "/parts/rotables" },
       { title: "Loaners", href: "/parts/loaners" },
+      { title: "Lots & Batches", href: "/parts/lots" },
+      { title: "Alerts", href: "/parts/alerts" },
     ],
   },
   {
@@ -193,6 +196,7 @@ const mainNav: NavEntry[] = [
       { title: "Forecast", href: "/reports/financials/forecast" },
       { title: "Profitability", href: "/reports/financials/profitability" },
       { title: "Runway", href: "/reports/financials/runway" },
+      { title: "Inventory", href: "/reports/inventory" },
     ],
   },
 ];

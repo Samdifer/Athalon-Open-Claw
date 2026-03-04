@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Package, Plus, ClipboardCheck, AlertTriangle, CheckCircle2, XCircle, Loader2, AlertCircle } from "lucide-react";
+import { Package, Plus, ClipboardCheck, AlertTriangle, CheckCircle2, XCircle, Loader2, AlertCircle, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -31,8 +31,23 @@ import type { Id } from "@/convex/_generated/dataModel";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import { useSelectedLocation } from "@/components/LocationSwitcher";
 import { toast } from "sonner";
+import { PartStatusBadge } from "@/src/shared/components/PartStatusBadge";
+import { PartsIssueDialog } from "@/app/(app)/parts/_components/PartsIssueDialog";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
+
+/** Shape of a workOrderParts record from the live query. */
+interface WoPartRequest {
+  _id: Id<"workOrderParts">;
+  organizationId: Id<"organizations">;
+  workOrderId: Id<"workOrders">;
+  partNumber: string;
+  partName: string;
+  status: string;
+  quantityRequested: number;
+  notes?: string;
+  createdAt: number;
+}
 
 type InspectionResult = "approved" | "rejected";
 
@@ -321,6 +336,25 @@ export default function PartsRequestsPage() {
       : (selectedLocationId as Id<"shopLocations">);
 
   const [inspectTarget, setInspectTarget] = useState<PartItem | null>(null);
+  const [issueTarget, setIssueTarget] = useState<{
+    requestId: Id<"workOrderParts">;
+    partNumber: string;
+    partName: string;
+    workOrderId: Id<"workOrders">;
+  } | null>(null);
+
+  // Open WO part requests across all work orders
+  // NOTE: api.workOrderParts types resolve after `convex dev` regenerates types
+  /* eslint-disable @typescript-eslint/no-explicit-any */
+  const openRequests: WoPartRequest[] | undefined = useQuery(
+    (api as any).workOrderParts?.listOpenRequests,
+    orgId ? { organizationId: orgId } : "skip",
+  ) as WoPartRequest[] | undefined;
+
+  const cancelRequest = useMutation(
+    (api as any).workOrderParts?.cancelRequest,
+  );
+  /* eslint-enable @typescript-eslint/no-explicit-any */
 
   // Parts pending receiving inspection
   const pendingParts = useQuery(
@@ -339,8 +373,18 @@ export default function PartsRequestsPage() {
   );
 
   const isLoading = !isLoaded || pendingParts === undefined || removedParts === undefined;
+  const isOpenRequestsLoading = !isLoaded || openRequests === undefined;
 
   const allParts = [...(pendingParts ?? []), ...(removedParts ?? [])] as PartItem[];
+
+  async function handleCancelRequest(requestId: Id<"workOrderParts">) {
+    try {
+      await cancelRequest({ requestId });
+      toast.success("Part request cancelled.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to cancel request.");
+    }
+  }
 
   return (
     <div className="space-y-5">
@@ -354,6 +398,8 @@ export default function PartsRequestsPage() {
               <Skeleton className="h-3 w-32 inline-block" />
             ) : (
               <>
+                {(openRequests ?? []).length} open requests
+                {" · "}
                 {(pendingParts ?? []).length} pending inspection
                 {(removedParts ?? []).length > 0 && (
                   <> · <span className="text-orange-500 dark:text-orange-400">{(removedParts ?? []).length} removed / pending disposition</span></>
@@ -369,6 +415,86 @@ export default function PartsRequestsPage() {
           </Link>
         </Button>
       </div>
+
+      {/* ─── Open WO Part Requests ──────────────────────────────────────── */}
+      {!isOpenRequestsLoading && (openRequests ?? []).length > 0 && (
+        <Card className="border-border/60">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm flex items-center gap-2">
+              <Send className="w-4 h-4 text-primary" />
+              Open Work Order Part Requests
+              <Badge variant="outline" className="text-[10px] ml-1">
+                {(openRequests ?? []).length}
+              </Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {(openRequests ?? []).map((request) => (
+              <div
+                key={request._id}
+                className="rounded-md border border-border/50 p-3 space-y-2"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <span className="font-mono text-xs font-semibold">
+                        {request.partNumber}
+                      </span>
+                      <PartStatusBadge status={request.status} />
+                    </div>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {request.partName}
+                    </p>
+                  </div>
+                  <Link
+                    to={`/work-orders/${request.workOrderId}`}
+                    className="text-[10px] text-primary hover:underline flex-shrink-0"
+                  >
+                    View WO
+                  </Link>
+                </div>
+                <div className="text-[11px] text-muted-foreground flex gap-3 flex-wrap">
+                  <span>Qty: {request.quantityRequested}</span>
+                  {request.notes && <span>{request.notes}</span>}
+                  <span>
+                    {new Date(request.createdAt).toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                      timeZone: "UTC",
+                    })}
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {orgId && (
+                    <Button
+                      size="sm"
+                      className="h-7 text-xs"
+                      onClick={() =>
+                        setIssueTarget({
+                          requestId: request._id,
+                          partNumber: request.partNumber,
+                          partName: request.partName,
+                          workOrderId: request.workOrderId,
+                        })
+                      }
+                    >
+                      Issue from Inventory
+                    </Button>
+                  )}
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-7 text-xs text-destructive hover:text-destructive"
+                    onClick={() => handleCancelRequest(request._id)}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
 
       {isLoading ? (
         <div role="status" aria-label="Loading parts queue">
@@ -538,6 +664,20 @@ export default function PartsRequestsPage() {
           onClose={() => setInspectTarget(null)}
           part={inspectTarget}
           techId={techId}
+        />
+      )}
+
+      {/* Parts Issue Dialog */}
+      {issueTarget && orgId && (
+        <PartsIssueDialog
+          open={!!issueTarget}
+          onClose={() => setIssueTarget(null)}
+          requestId={issueTarget.requestId}
+          partNumber={issueTarget.partNumber}
+          partName={issueTarget.partName}
+          workOrderId={issueTarget.workOrderId}
+          organizationId={orgId}
+          technicianId={techId ?? undefined}
         />
       )}
     </div>

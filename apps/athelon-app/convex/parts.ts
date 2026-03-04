@@ -47,6 +47,7 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
+import { internal } from "./_generated/api";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SHARED VALIDATORS
@@ -533,6 +534,18 @@ export const receivePart = mutation({
       timestamp: now,
     });
 
+    // ── Part history: "received" event ──────────────────────────────────────
+    await ctx.runMutation(internal.partHistory.recordEvent, {
+      organizationId: args.organizationId,
+      partId,
+      eventType: "received",
+      toLocation: receivingLocation,
+      toCondition: args.condition,
+      purchaseOrderId: undefined,
+      performedByUserId: callerUserId,
+      notes: `Received: P/N ${args.partNumber.trim()}${args.serialNumber ? ` S/N ${args.serialNumber.trim()}` : ""} — ${args.condition}`,
+    });
+
     return { partId, eightOneThirtyId };
   },
 });
@@ -847,6 +860,20 @@ export const installPart = mutation({
       timestamp: now,
     });
 
+    // ── Part history: "installed" event ─────────────────────────────────────
+    await ctx.runMutation(internal.partHistory.recordEvent, {
+      organizationId: part.organizationId,
+      partId: args.partId,
+      eventType: "installed",
+      workOrderId: args.workOrderId,
+      aircraftId: args.aircraftId,
+      fromLocation: part.location,
+      toLocation: "installed",
+      performedByUserId: callerUserId,
+      performedByTechnicianId: args.installedByTechId,
+      notes: `Installed on ${args.aircraftId ? `aircraft ${args.aircraftId}` : `engine ${args.engineId}`} at ${args.aircraftHoursAtInstall}h TT. Position: ${args.installPosition ?? "N/A"}`,
+    });
+
     return { partInstallationHistoryId: historyId };
   },
 });
@@ -1033,6 +1060,20 @@ export const removePart = mutation({
       timestamp: now,
     });
 
+    // ── Part history: "removed" event ───────────────────────────────────────
+    await ctx.runMutation(internal.partHistory.recordEvent, {
+      organizationId: part.organizationId,
+      partId: args.partId,
+      eventType: "removed",
+      workOrderId: args.workOrderId,
+      aircraftId: part.currentAircraftId,
+      fromLocation: "installed",
+      toLocation: "removed_pending_disposition",
+      performedByUserId: callerUserId,
+      performedByTechnicianId: args.removedByTechId,
+      notes: `Removed at ${args.aircraftHoursAtRemoval}h TT. Reason: "${args.removalReason ?? "not specified"}"`,
+    });
+
     return {
       partInstallationHistoryId: openHistory._id,
       totalAccumulatedHours: newTotalHours,
@@ -1199,6 +1240,21 @@ export const tagPartUnserviceable = mutation({
         `Tagged by: ${args.taggedByTechId}. ` +
         `Auth event: ${args.signatureAuthEventId}.`,
       timestamp: now,
+    });
+
+    // ── Part history: "quarantined" event ───────────────────────────────────
+    await ctx.runMutation(internal.partHistory.recordEvent, {
+      organizationId: part.organizationId,
+      partId: args.partId,
+      eventType: "quarantined",
+      workOrderId: args.workOrderId,
+      fromLocation: previousLocation,
+      toLocation: "quarantine",
+      fromCondition: previousCondition,
+      toCondition: "unserviceable",
+      performedByUserId: callerUserId,
+      performedByTechnicianId: args.taggedByTechId,
+      notes: `RED TAG: [${args.unserviceableCategory.toUpperCase()}] ${args.unserviceableReason.trim()}`,
     });
 
     return { partId: args.partId, quarantinedAt: now };

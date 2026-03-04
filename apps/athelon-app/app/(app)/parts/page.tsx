@@ -7,6 +7,7 @@ import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import { useSelectedLocation } from "@/components/LocationSwitcher";
+import { useUserRole } from "@/hooks/useUserRole";
 import {
   Package,
   Plus,
@@ -78,6 +79,8 @@ type LocationFilter =
   | "kanban"
   | "parts_requests";
 
+type PartCategory = "all" | "consumable" | "standard" | "rotable" | "expendable" | "repairable";
+
 type InspectionResult = "approved" | "rejected";
 
 interface PartDoc {
@@ -117,6 +120,11 @@ interface PartDoc {
   quantity?: number;
   installPosition?: string;
   eightOneThirtyId?: Id<"eightOneThirtyRecords">;
+  // Phase 1-7 inventory extensions (fields resolve after schema migration)
+  partCategory?: string;
+  lotNumber?: string;
+  binLocation?: string;
+  unitCost?: number;
 }
 
 const LOCATION_LABEL: Record<string, string> = {
@@ -141,6 +149,22 @@ const CONDITION_LABEL: Record<string, string> = {
   unserviceable: "Unserviceable",
   quarantine: "Quarantine",
   scrapped: "Scrapped",
+};
+
+const CATEGORY_LABEL: Record<string, string> = {
+  consumable: "Consumable",
+  standard: "Standard",
+  rotable: "Rotable",
+  expendable: "Expendable",
+  repairable: "Repairable",
+};
+
+const CATEGORY_STYLES: Record<string, string> = {
+  consumable: "bg-slate-500/15 text-slate-600 dark:text-slate-400 border-slate-500/30",
+  standard: "bg-sky-500/15 text-sky-600 dark:text-sky-400 border-sky-500/30",
+  rotable: "bg-violet-500/15 text-violet-600 dark:text-violet-400 border-violet-500/30",
+  expendable: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30",
+  repairable: "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30",
 };
 
 function getConditionStyles(condition: string): string {
@@ -543,6 +567,21 @@ function PartDetailSheet({ part, onClose }: PartDetailSheetProps) {
               )}
               {row("Location", <PartStatusBadge status={part.location} />)}
               {part.installPosition && row("Install Position", part.installPosition)}
+              {part.partCategory && row(
+                "Category",
+                <Badge
+                  variant="outline"
+                  className={`text-[10px] border font-medium ${CATEGORY_STYLES[part.partCategory] ?? "bg-muted text-muted-foreground"}`}
+                >
+                  {CATEGORY_LABEL[part.partCategory] ?? part.partCategory}
+                </Badge>,
+              )}
+              {part.lotNumber && row("Lot Number", <span className="font-mono">{part.lotNumber}</span>)}
+              {part.binLocation && row("Bin Location", <span className="font-mono">{part.binLocation}</span>)}
+              {part.unitCost != null && row(
+                "Unit Cost",
+                `$${part.unitCost.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+              )}
             </div>
           </div>
 
@@ -742,8 +781,13 @@ function PartSkeleton() {
 
 export default function PartsPage() {
   const [activeTab, setActiveTab] = useState<LocationFilter>("all");
+  const [categoryFilter, setCategoryFilter] = useState<PartCategory>("all");
   const [searchParams] = useSearchParams();
   const [search, setSearch] = useState(() => searchParams.get("q") ?? "");
+  const { role } = useUserRole();
+
+  // Show cost column for admin and parts_clerk roles
+  const canViewCost = role === "admin" || role === "shop_manager" || role === "parts_clerk";
 
   useEffect(() => {
     const tab = searchParams.get("tab");
@@ -846,7 +890,12 @@ export default function PartsPage() {
       result = result.filter((p) => p.location === activeTab);
     }
 
-    // Search
+    // Category filter (Phase 8)
+    if (categoryFilter !== "all") {
+      result = result.filter((p) => p.partCategory === categoryFilter);
+    }
+
+    // Search — includes lot number and bin location
     if (search.trim()) {
       const q = search.toLowerCase();
       result = result.filter(
@@ -854,12 +903,14 @@ export default function PartsPage() {
           p.partNumber.toLowerCase().includes(q) ||
           p.partName.toLowerCase().includes(q) ||
           (p.serialNumber ?? "").toLowerCase().includes(q) ||
-          (p.description ?? "").toLowerCase().includes(q),
+          (p.description ?? "").toLowerCase().includes(q) ||
+          (p.lotNumber ?? "").toLowerCase().includes(q) ||
+          (p.binLocation ?? "").toLowerCase().includes(q),
       );
     }
 
     return result;
-  }, [parts, pendingInspectionParts, activeTab, search, selectedShopLocationId]);
+  }, [parts, pendingInspectionParts, activeTab, categoryFilter, search, selectedShopLocationId]);
 
   // Count per tab — memoized so badge counts don't recompute on dialog state changes or search keystrokes
   const counts = useMemo<Record<LocationFilter, number>>(() => {
@@ -907,7 +958,10 @@ export default function PartsPage() {
         quantity: p.quantityOnHand ?? p.quantity ?? "",
         location: LOCATION_LABEL[p.location] ?? p.location ?? "",
         condition: CONDITION_LABEL[p.condition] ?? p.condition ?? "",
-        cost: "",
+        category: p.partCategory ? (CATEGORY_LABEL[p.partCategory] ?? p.partCategory) : "",
+        lotNumber: p.lotNumber ?? "",
+        binLocation: p.binLocation ?? "",
+        cost: p.unitCost != null ? p.unitCost.toFixed(2) : "",
         createdAt: p._creationTime ? new Date(p._creationTime).toISOString() : "",
       })),
     [filtered],
@@ -970,9 +1024,12 @@ export default function PartsPage() {
             columns={[
               { key: "partNumber", header: "P/N" },
               { key: "description", header: "Description" },
+              { key: "category", header: "Category" },
               { key: "quantity", header: "Quantity" },
               { key: "location", header: "Location" },
               { key: "condition", header: "Condition" },
+              { key: "lotNumber", header: "Lot #" },
+              { key: "binLocation", header: "Bin" },
               { key: "cost", header: "Cost" },
             ]}
             fileName="parts-inventory.csv"
@@ -1035,10 +1092,24 @@ export default function PartsPage() {
         </Tabs>
 
         <div className="flex items-center gap-2 ml-auto">
+          {/* Category filter — Phase 8 */}
+          <Select value={categoryFilter} onValueChange={(v) => setCategoryFilter(v as PartCategory)}>
+            <SelectTrigger className="h-8 w-[130px] text-xs bg-muted/30 border-border/60">
+              <SelectValue placeholder="Category" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Categories</SelectItem>
+              <SelectItem value="consumable">Consumable</SelectItem>
+              <SelectItem value="standard">Standard</SelectItem>
+              <SelectItem value="rotable">Rotable</SelectItem>
+              <SelectItem value="expendable">Expendable</SelectItem>
+              <SelectItem value="repairable">Repairable</SelectItem>
+            </SelectContent>
+          </Select>
           <div className="relative">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
             <Input
-              placeholder="Search P/N, name, S/N…"
+              placeholder="Search P/N, name, S/N, lot, bin…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="h-8 pl-8 pr-3 text-xs w-56 bg-muted/30 border-border/60"
@@ -1278,6 +1349,14 @@ export default function PartsPage() {
                                 Reserved
                               </Badge>
                             )}
+                            {part.partCategory && (
+                              <Badge
+                                variant="outline"
+                                className={`text-[10px] border font-medium ${CATEGORY_STYLES[part.partCategory] ?? "bg-muted text-muted-foreground"}`}
+                              >
+                                {CATEGORY_LABEL[part.partCategory] ?? part.partCategory}
+                              </Badge>
+                            )}
                           </div>
 
                           {/* Row 2: Name */}
@@ -1319,6 +1398,21 @@ export default function PartsPage() {
                             {part.isLifeLimited && part.lifeLimitHours && (
                               <span className="text-[11px] text-purple-600 dark:text-purple-400">
                                 Life limit: {part.lifeLimitHours} hrs
+                              </span>
+                            )}
+                            {part.lotNumber && (
+                              <span className="text-[11px] text-muted-foreground">
+                                Lot: <span className="font-mono">{part.lotNumber}</span>
+                              </span>
+                            )}
+                            {part.binLocation && (
+                              <span className="text-[11px] text-muted-foreground">
+                                Bin: <span className="font-mono">{part.binLocation}</span>
+                              </span>
+                            )}
+                            {canViewCost && part.unitCost != null && (
+                              <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
+                                ${part.unitCost.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                               </span>
                             )}
                           </div>

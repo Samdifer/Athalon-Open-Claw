@@ -1278,6 +1278,19 @@ export const getWorkOrder = query({
       .order("desc")
       .take(20);
 
+    // Resolve assigned roster team (if set)
+    let assignedRosterTeam: { _id: string; name: string; colorToken: string } | null = null;
+    if (wo.assignedRosterTeamId) {
+      const team = await ctx.db.get(wo.assignedRosterTeamId);
+      if (team) {
+        assignedRosterTeam = {
+          _id: String(team._id),
+          name: team.name,
+          colorToken: team.colorToken,
+        };
+      }
+    }
+
     return {
       workOrder: wo,
       aircraft,
@@ -1286,6 +1299,7 @@ export const getWorkOrder = query({
       returnToService: rts ?? null,
       closingTechnicianName,
       auditEvents,
+      assignedRosterTeam,
     };
   },
 });
@@ -2158,5 +2172,83 @@ export const listByAircraft = query({
       .withIndex("by_aircraft", (q) => q.eq("aircraftId", args.aircraftId))
       .collect();
     return wos.filter((wo) => wo.organizationId === args.organizationId);
+  },
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MUTATION: assignRosterTeamToWorkOrder
+//
+// Sets or clears the roster team assignment on a work order.
+// Writes an audit log entry for traceability.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const assignRosterTeamToWorkOrder = mutation({
+  args: {
+    workOrderId: v.id("workOrders"),
+    organizationId: v.id("organizations"),
+    assignedRosterTeamId: v.optional(v.id("rosterTeams")),
+  },
+  handler: async (ctx, args) => {
+    const callerUserId = await requireAuth(ctx);
+    const now = Date.now();
+
+    const wo = await ctx.db.get(args.workOrderId);
+    if (!wo) throw new Error(`Work order ${args.workOrderId} not found.`);
+    if (wo.organizationId !== args.organizationId) {
+      throw new Error("Organization mismatch.");
+    }
+
+    const terminalStatuses = ["closed", "cancelled", "voided"];
+    if (terminalStatuses.includes(wo.status)) {
+      throw new Error(
+        `Cannot change team assignment on a ${wo.status} work order.`,
+      );
+    }
+
+    // Validate the team if assigning one
+    let newTeamName: string | null = null;
+    if (args.assignedRosterTeamId) {
+      const team = await ctx.db.get(args.assignedRosterTeamId);
+      if (!team || team.organizationId !== args.organizationId) {
+        throw new Error(
+          `Roster team ${args.assignedRosterTeamId} not found in this organization.`,
+        );
+      }
+      if (!team.isActive) {
+        throw new Error(
+          `Roster team "${team.name}" is inactive. Reactivate it before assigning to a work order.`,
+        );
+      }
+      newTeamName = team.name;
+    }
+
+    const oldTeamId = wo.assignedRosterTeamId;
+    // No-op if same team
+    if (oldTeamId === (args.assignedRosterTeamId ?? undefined)) return;
+
+    // Look up old team name for audit trail
+    let oldTeamName: string | null = null;
+    if (oldTeamId) {
+      const oldTeam = await ctx.db.get(oldTeamId);
+      oldTeamName = oldTeam?.name ?? null;
+    }
+
+    await ctx.db.patch(args.workOrderId, {
+      assignedRosterTeamId: args.assignedRosterTeamId,
+      updatedAt: now,
+    });
+
+    await ctx.db.insert("auditLog", {
+      organizationId: args.organizationId,
+      eventType: "record_updated",
+      tableName: "workOrders",
+      recordId: args.workOrderId,
+      userId: callerUserId,
+      fieldName: "assignedRosterTeamId",
+      oldValue: oldTeamName ? JSON.stringify(oldTeamName) : undefined,
+      newValue: newTeamName ? JSON.stringify(newTeamName) : undefined,
+      notes: `Work order ${wo.workOrderNumber} team assignment changed from "${oldTeamName ?? "Unassigned"}" to "${newTeamName ?? "Unassigned"}".`,
+      timestamp: now,
+    });
   },
 });

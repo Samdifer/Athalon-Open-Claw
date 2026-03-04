@@ -1,6 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select,
@@ -9,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 import { PartStatusBadge } from "@/src/shared/components/PartStatusBadge";
 
 export type PartsBoardColumn = "requested" | "ordered" | "received" | "issued" | "installed";
@@ -23,6 +27,15 @@ export type PartsBoardItem = {
   status: PartsBoardColumn;
 };
 
+/** Shape of a workOrderParts record returned by the query. */
+interface WoPartRecord {
+  _id: string;
+  partNumber: string;
+  partName: string;
+  status: string;
+  quantityRequested: number;
+}
+
 const COLUMNS: { key: PartsBoardColumn; label: string }[] = [
   { key: "requested", label: "Requested" },
   { key: "ordered", label: "Ordered" },
@@ -31,14 +44,96 @@ const COLUMNS: { key: PartsBoardColumn; label: string }[] = [
   { key: "installed", label: "Installed" },
 ];
 
-export function PartsLifecycleBoard({ items }: { items: PartsBoardItem[] }) {
+/**
+ * Maps a workOrderParts status to the board column. Statuses like
+ * "returned" and "cancelled" are excluded from the board.
+ */
+function mapWoPartStatusToColumn(
+  status: string,
+): PartsBoardColumn | null {
+  switch (status) {
+    case "requested":
+      return "requested";
+    case "ordered":
+      return "ordered";
+    case "received":
+      return "received";
+    case "issued":
+      return "issued";
+    case "installed":
+      return "installed";
+    default:
+      return null; // cancelled, returned -- not shown on board
+  }
+}
+
+interface PartsLifecycleBoardProps {
+  /** Pass items directly (legacy prop-based usage) */
+  items?: PartsBoardItem[];
+  /** When provided, fetches live data from the workOrderParts table */
+  workOrderId?: Id<"workOrders">;
+}
+
+export function PartsLifecycleBoard({ items, workOrderId }: PartsLifecycleBoardProps) {
   const [statusFilter, setStatusFilter] = useState<"all" | PartsBoardColumn>("all");
+
+  // Fetch live data when workOrderId is provided.
+  // NOTE: api.workOrderParts types resolve after `convex dev` regenerates
+  // the API module. The cast below is safe and will be unnecessary once
+  // the generated types include the new workOrderParts module.
+  /* eslint-disable @typescript-eslint/no-explicit-any */
+  const woPartsData: WoPartRecord[] | undefined = useQuery(
+    (api as any).workOrderParts?.listForWorkOrder,
+    workOrderId ? { workOrderId } : "skip",
+  ) as WoPartRecord[] | undefined;
+  /* eslint-enable @typescript-eslint/no-explicit-any */
+
+  // Transform workOrderParts records into board items
+  const liveItems = useMemo<PartsBoardItem[]>(() => {
+    if (!woPartsData) return [];
+    return (woPartsData as WoPartRecord[])
+      .map((record: WoPartRecord): PartsBoardItem | null => {
+        const column = mapWoPartStatusToColumn(record.status);
+        if (!column) return null;
+        return {
+          id: record._id,
+          partNumber: record.partNumber,
+          partName: record.partName,
+          quantity: record.quantityRequested,
+          status: column,
+        };
+      })
+      .filter((item: PartsBoardItem | null): item is PartsBoardItem => item !== null);
+  }, [woPartsData]);
+
+  // Use live items if workOrderId was provided; otherwise use prop items
+  const resolvedItems = workOrderId ? liveItems : (items ?? []);
+  const isLoading = workOrderId !== undefined && woPartsData === undefined;
 
   const visibleItems = useMemo(
     () =>
-      statusFilter === "all" ? items : items.filter((item) => item.status === statusFilter),
-    [items, statusFilter],
+      statusFilter === "all"
+        ? resolvedItems
+        : resolvedItems.filter((item) => item.status === statusFilter),
+    [resolvedItems, statusFilter],
   );
+
+  if (isLoading) {
+    return (
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+        {COLUMNS.map((column) => (
+          <Card key={column.key} className="border-border/60 bg-muted/20">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-xs font-semibold">{column.label}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Skeleton className="h-16 w-full" />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-3">

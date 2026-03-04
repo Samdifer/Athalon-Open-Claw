@@ -6,24 +6,24 @@ Derived from `docs/spec/MASTER-BUILD-LIST.md` Registry B on 2026-03-04. Do not e
 
 | Group ID | Group Name | Target Wave | Rollup Status | Atomic Count | Merged Source IDs |
 |---|---|---|---|---:|---|
-| GRP-001 | Identity and RBAC Control Plane | Wave0 | implemented | 6 | ROLE-001, ROLE-002, ROLE-003, ROLE-004, ROLE-005, RPT-017 |
+| GRP-001 | Identity and RBAC Control Plane | Wave0 | partial | 7 | MBL-069, ROLE-001, ROLE-002, ROLE-003, ROLE-004, ROLE-005, RPT-017 |
 | GRP-002 | Audit, Event Ledger, and Taxonomy | Wave0 | implemented | 2 | FR-025, RPT-018 |
-| GRP-003 | Work Order Core Execution | Wave1 | partial | 7 | FR-010, GAP-003, GAP-004, GAP-007, MBL-044, RPT-014, RPT-015 |
-| GRP-004 | Quote Governance and Commercial Controls | Wave1 | partial | 3 | FR-023, FR-024, SCH-A5 |
-| GRP-005 | Signoff Authority and Inspection Controls | Wave1 | partial | 2 | AUTH-001, FR-004 |
+| GRP-003 | Work Order Core Execution | Wave1 | partial | 11 | FR-010, GAP-003, GAP-004, GAP-007, MBL-044, MBL-054, MBL-055, MBL-056, MBL-058, RPT-014, RPT-015 |
+| GRP-004 | Quote Governance and Commercial Controls | Wave1 | partial | 4 | FR-023, FR-024, MBL-066, SCH-A5 |
+| GRP-005 | Signoff Authority and Inspection Controls | Wave1 | partial | 3 | AUTH-001, FR-004, MBL-059 |
 | GRP-006 | Parts Traceability and Receiving | Wave2 | missing | 8 | FR-006, FR-007, FR-008, FR-009, FR-019, FR-020, GAP-002, RPT-022 |
-| GRP-007 | Inventory and Tooling Operations | Wave2 | missing | 3 | RPT-020, RPT-021, RPT-023 |
-| GRP-008 | Lead Workspace and Turnover | Wave3 | missing | 5 | FR-011, FR-012, FR-013, GAP-005, MBL-021 |
+| GRP-007 | Inventory and Tooling Operations | Wave2 | missing | 4 | MBL-067, RPT-020, RPT-021, RPT-023 |
+| GRP-008 | Lead Workspace and Turnover | Wave3 | missing | 6 | FR-011, FR-012, FR-013, GAP-005, MBL-021, MBL-060 |
 | GRP-009 | KPI, Dashboard, and Reporting Surfaces | Wave3 | partial | 13 | CHART-001, CHART-002, CHART-003, CHART-004, CHART-005, FR-005, FR-021, FR-022, MBL-051, REPORT-001, REPORT-002, RPT-006, RPT-007 |
 | GRP-010 | Fleet/WO Discoverability and UX Views | Wave4 | missing | 5 | FR-001, FR-014, FR-015, FR-017, MBL-025 |
 | GRP-011 | Evidence Hub and Media Platform | Wave4 | partial | 7 | FILE-001, FILE-002, FILE-003, FILE-004, FILE-005, FILE-006, FR-016 |
-| GRP-012 | Scheduling Engine and Capacity Intelligence | Wave5 | partial | 12 | FR-018, RPT-008, SCH-A1, SCH-A2, SCH-A3, SCHED-001, SCHED-002, SCHED-003, SCHED-004, SCHED-005, SCHED-006, SCHED-007 |
+| GRP-012 | Scheduling Engine and Capacity Intelligence | Wave5 | partial | 13 | FR-018, MBL-068, RPT-008, SCH-A1, SCH-A2, SCH-A3, SCHED-001, SCHED-002, SCHED-003, SCHED-004, SCHED-005, SCHED-006, SCHED-007 |
 | GRP-013 | Predictive Maintenance Intelligence | Wave5 | missing | 4 | FR-002, RPT-009, RPT-010, RPT-026 |
-| GRP-014 | Cross-Module Data Bus and Integrations | Wave5 | partial | 2 | RPT-016, SCH-A6 |
-| GRP-015 | Customer Portal and Communications | Wave4 | partial | 8 | PORTAL-001, PORTAL-002, PORTAL-003, PORTAL-004, PORTAL-005, PORTAL-006, PORTAL-007, RPT-019 |
+| GRP-014 | Cross-Module Data Bus and Integrations | Wave5 | partial | 3 | MBL-064, RPT-016, SCH-A6 |
+| GRP-015 | Customer Portal and Communications | Wave4 | partial | 9 | MBL-062, PORTAL-001, PORTAL-002, PORTAL-003, PORTAL-004, PORTAL-005, PORTAL-006, PORTAL-007, RPT-019 |
 | GRP-016 | Training and OJT Program | Wave3 | partial | 4 | RPT-001, RPT-002, RPT-005, RPT-025 |
-| GRP-017 | Regulatory and Certification Framework | Wave1 | missing | 8 | FR-003, GAP-001, GAP-006, RPT-012, RPT-013, RPT-029, SCHEMA-001, SCHEMA-002 |
-| GRP-018 | Financial Planning and P&L Intelligence | Wave3 | partial | 6 | LABOR-001, LABOR-002, RPT-024, SCH-A4, TAX-001, TAX-002 |
+| GRP-017 | Regulatory and Certification Framework | Wave1 | missing | 10 | FR-003, GAP-001, GAP-006, MBL-057, MBL-061, RPT-012, RPT-013, RPT-029, SCHEMA-001, SCHEMA-002 |
+| GRP-018 | Financial Planning and P&L Intelligence | Wave3 | partial | 8 | LABOR-001, LABOR-002, MBL-063, MBL-065, RPT-024, SCH-A4, TAX-001, TAX-002 |
 | GRP-019 | Marketplace and Talent Matching | Wave6 | proposed | 1 | RPT-028 |
 | GRP-020 | Industry Benchmarking and Quote Book | Wave6 | proposed | 1 | RPT-027 |
 | GRP-021 | Reliability and Hardening Program | Wave0 | implemented | 3 | RPT-003, RPT-004, RPT-011 |
@@ -172,4 +172,20 @@ Derived from `docs/spec/MASTER-BUILD-LIST.md` Registry B on 2026-03-04. Do not e
 | MBP-0135 | MASTER | MBL-025 | GRP-010 | partial | Wave4 | Search — Global Search |
 | MBP-0136 | MASTER | MBL-044 | GRP-003 | partial | Wave1 | Work Order Routing Templates + Standard Minutes |
 | MBP-0137 | MASTER | MBL-051 | GRP-009 | partial | Wave3 | Operational Report Builder + Scheduled Report Runs |
+| MBP-0138 | MASTER | MBL-054 | GRP-003 | partial | Wave1 | Task-card compliance persistence guard |
+| MBP-0139 | MASTER | MBL-055 | GRP-003 | partial | Wave1 | Lead-tech execution safety orchestration |
+| MBP-0140 | MASTER | MBL-056 | GRP-003 | partial | Wave1 | Task-card authoring validation hardening |
+| MBP-0141 | MASTER | MBL-057 | GRP-017 | partial | Wave2 | Discrepancy raise/link integrity controls |
+| MBP-0142 | MASTER | MBL-058 | GRP-003 | partial | Wave1 | My Work assignment consistency checks |
+| MBP-0143 | MASTER | MBL-059 | GRP-005 | partial | Wave1 | Sign-off dialog integrity guardrails |
+| MBP-0144 | MASTER | MBL-060 | GRP-008 | partial | Wave2 | Squawk escalation and handoff safety |
+| MBP-0145 | MASTER | MBL-061 | GRP-017 | partial | Wave1 | Certificate normalization and hygiene |
+| MBP-0146 | MASTER | MBL-062 | GRP-015 | partial | Wave2 | Customer account CRM and profile ledger |
+| MBP-0147 | MASTER | MBL-063 | GRP-018 | partial | Wave2 | AR/deposits/credit memo control pack |
+| MBP-0148 | MASTER | MBL-064 | GRP-014 | partial | Wave2 | Procurement and vendor operations pack |
+| MBP-0149 | MASTER | MBL-065 | GRP-018 | partial | Wave3 | Recurring billing contract engine |
+| MBP-0150 | MASTER | MBL-066 | GRP-004 | partial | Wave2 | Labor-kit and quote-template library |
+| MBP-0151 | MASTER | MBL-067 | GRP-007 | partial | Wave2 | Parts logistics operations pack |
+| MBP-0152 | MASTER | MBL-068 | GRP-012 | partial | Wave4 | Roster and crew coordination controls |
+| MBP-0153 | MASTER | MBL-069 | GRP-001 | partial | Wave2 | Station config and org governance console |
 

@@ -19,6 +19,7 @@ import {
   CheckCircle2,
   MessageSquare,
   Video,
+  Plus,
 } from "lucide-react";
 import { api } from "@/convex/_generated/api";
 import { HandoffNotesPanel } from "@/components/HandoffNotesPanel";
@@ -59,6 +60,7 @@ import { VoiceNotesPanel } from "@/components/VoiceNotesPanel";
 import { WOHeaderKPI } from "@/app/(app)/work-orders/[id]/_components/WOHeaderKPI";
 import { WOPartsLifecycleBoard } from "@/app/(app)/work-orders/[id]/_components/WOPartsLifecycleBoard";
 import { CostEstimationPanel } from "@/app/(app)/work-orders/[id]/_components/CostEstimationPanel";
+import { PartRequestDialog } from "@/app/(app)/work-orders/[id]/_components/PartRequestDialog";
 import type { PartsRequestRecord } from "@/app/(app)/parts/_components/PartsRequestForm";
 import { PartStatusBadge } from "@/src/shared/components/PartStatusBadge";
 import {
@@ -76,6 +78,17 @@ type AuditEventForTimeline = {
   fieldName?: string | null;
   oldValue?: string | null;
   newValue?: string | null;
+};
+
+/** Shape of a workOrderParts record from the live query. */
+type WoPartLiveRecord = {
+  _id: string;
+  partNumber: string;
+  partName: string;
+  status: string;
+  quantityRequested: number;
+  notes?: string;
+  createdAt: number;
 };
 
 type RiskLevel = "overdue" | "at_risk" | "on_track" | "no_date";
@@ -249,6 +262,7 @@ export default function WorkOrderDetailPage() {
   const [voiceNotes, setVoiceNotes] = useState<StoredVoiceNote[]>([]);
   const [partsRequests, setPartsRequests] = useState<PartsRequestRecord[]>([]);
   const [partsTabView, setPartsTabView] = useState<PartsTabView>("list");
+  const [partRequestDialogOpen, setPartRequestDialogOpen] = useState(false);
 
   const legacyResolution = useQuery(
     api.workOrders.resolveWorkOrderRef,
@@ -321,6 +335,15 @@ export default function WorkOrderDetailPage() {
     api.parts.listParts,
     orgId ? { organizationId: orgId } : "skip",
   );
+
+  // Live workOrderParts data for this WO
+  // NOTE: api.workOrderParts types resolve after `convex dev` regenerates types
+  /* eslint-disable @typescript-eslint/no-explicit-any */
+  const woPartsLive: WoPartLiveRecord[] | undefined = useQuery(
+    (api as any).workOrderParts?.listForWorkOrder,
+    workOrderId ? { workOrderId } : "skip",
+  ) as WoPartLiveRecord[] | undefined;
+  /* eslint-enable @typescript-eslint/no-explicit-any */
 
   const activeTimer = useQuery(
     api.timeClock.getActiveTimerForTechnician,
@@ -1047,22 +1070,58 @@ export default function WorkOrderDetailPage() {
                 Board
               </Button>
             </div>
-            <Button asChild size="sm" className="h-8 text-xs">
-              <Link to={`/parts?tab=parts_requests&q=${encodeURIComponent(wo.workOrderNumber)}`}>
-                Request Part
-              </Link>
+            <Button size="sm" className="h-8 text-xs" onClick={() => setPartRequestDialogOpen(true)}>
+              <Plus className="w-3.5 h-3.5 mr-1" />
+              Request Part
             </Button>
           </div>
 
-          {partsLifecycleItems.length === 0 ? (
+          {/* Live WO parts from workOrderParts table */}
+          {(woPartsLive ?? []).length > 0 && partsTabView === "list" && (
+            <div className="space-y-2">
+              {(woPartsLive ?? [])
+                .filter((r) => r.status !== "cancelled")
+                .map((record) => (
+                  <Card key={record._id} className="border-border/60">
+                    <CardContent className="p-4">
+                      <div className="flex items-start gap-3">
+                        <Package className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-0.5" />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-0.5">
+                            <span className="font-mono text-xs font-semibold text-foreground">
+                              P/N: {record.partNumber}
+                            </span>
+                            <PartStatusBadge status={record.status} />
+                          </div>
+                          <p className="text-sm text-muted-foreground">{record.partName}</p>
+                          <div className="flex items-center gap-3 mt-1 flex-wrap">
+                            <span className="text-[11px] text-muted-foreground">Qty: {record.quantityRequested}</span>
+                            {record.notes && (
+                              <span className="text-[11px] text-muted-foreground">{record.notes}</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+            </div>
+          )}
+
+          {(woPartsLive ?? []).length > 0 && partsTabView === "board" && (
+            <WOPartsLifecycleBoard workOrderId={workOrderId} />
+          )}
+
+          {/* Legacy: inventory-linked parts (existing behavior) */}
+          {partsLifecycleItems.length === 0 && (woPartsLive ?? []).length === 0 ? (
             <Card className="border-border/60">
               <CardContent className="py-10 text-center text-sm text-muted-foreground">
                 No parts currently linked to this work order.
               </CardContent>
             </Card>
-          ) : partsTabView === "board" ? (
+          ) : partsLifecycleItems.length > 0 && partsTabView === "board" && (woPartsLive ?? []).length === 0 ? (
             <WOPartsLifecycleBoard items={partsBoardItems} />
-          ) : (
+          ) : partsLifecycleItems.length > 0 && partsTabView === "list" ? (
             <div className="space-y-2">
               {PARTS_LIFECYCLE_ORDER.map((status) => {
                 const items = lifecycleItemsByStatus[status];
@@ -1106,6 +1165,17 @@ export default function WorkOrderDetailPage() {
                 );
               })}
             </div>
+          ) : null}
+
+          {/* Part Request Dialog */}
+          {orgId && (
+            <PartRequestDialog
+              open={partRequestDialogOpen}
+              onClose={() => setPartRequestDialogOpen(false)}
+              workOrderId={workOrderId}
+              organizationId={orgId}
+              technicianId={techId ?? undefined}
+            />
           )}
         </TabsContent>
 

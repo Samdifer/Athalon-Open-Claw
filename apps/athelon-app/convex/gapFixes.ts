@@ -9,6 +9,7 @@ import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import { createNotificationHelper } from "./notifications";
+import { internal } from "./_generated/api";
 
 // ─── Auth helper ──────────────────────────────────────────────────────────────
 async function requireAuth(ctx: {
@@ -383,7 +384,7 @@ export const completeReceivingInspection = mutation({
     rejectionReason: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    await requireAuth(ctx);
+    const userId = await requireAuth(ctx);
     const part = await ctx.db.get(args.partId);
     if (!part) throw new Error("Part not found.");
     if (part.location !== "pending_inspection") {
@@ -398,6 +399,26 @@ export const completeReceivingInspection = mutation({
         receivingInspectionNotes: args.inspectionNotes,
         updatedAt: now,
       });
+      // Part history: inspected + stocked
+      await ctx.runMutation(internal.partHistory.recordEvent, {
+        organizationId: part.organizationId,
+        partId: args.partId,
+        eventType: "inspected",
+        fromLocation: "pending_inspection",
+        toLocation: "inventory",
+        performedByUserId: userId,
+        performedByTechnicianId: args.inspectedByTechnicianId,
+        notes: `Receiving inspection APPROVED${args.inspectionNotes ? `: ${args.inspectionNotes}` : ""}`,
+      });
+      await ctx.runMutation(internal.partHistory.recordEvent, {
+        organizationId: part.organizationId,
+        partId: args.partId,
+        eventType: "stocked",
+        toLocation: "inventory",
+        performedByUserId: userId,
+        performedByTechnicianId: args.inspectedByTechnicianId,
+        notes: "Part cleared receiving inspection — now available for issuance",
+      });
     } else {
       await ctx.db.patch(args.partId, {
         location: "quarantine",
@@ -407,6 +428,19 @@ export const completeReceivingInspection = mutation({
         receivingInspectionNotes: args.inspectionNotes,
         receivingRejectionReason: args.rejectionReason,
         updatedAt: now,
+      });
+      // Part history: inspected (rejected)
+      await ctx.runMutation(internal.partHistory.recordEvent, {
+        organizationId: part.organizationId,
+        partId: args.partId,
+        eventType: "inspected",
+        fromLocation: "pending_inspection",
+        toLocation: "quarantine",
+        fromCondition: part.condition,
+        toCondition: "unserviceable",
+        performedByUserId: userId,
+        performedByTechnicianId: args.inspectedByTechnicianId,
+        notes: `Receiving inspection REJECTED: ${args.rejectionReason ?? "No reason provided"}`,
       });
     }
     return { success: true, newLocation: args.inspectionResult === "approved" ? "inventory" : "quarantine" };
@@ -421,7 +455,7 @@ export const reservePartForWorkOrder = mutation({
     reservedByTechnicianId: v.id("technicians"),
   },
   handler: async (ctx, args) => {
-    await requireAuth(ctx);
+    const userId = await requireAuth(ctx);
     const part = await ctx.db.get(args.partId);
     if (!part) throw new Error("Part not found.");
     if (part.location !== "inventory") throw new Error("Only inventory parts can be reserved.");
@@ -432,6 +466,16 @@ export const reservePartForWorkOrder = mutation({
       reservedAt: Date.now(),
       updatedAt: Date.now(),
     });
+    // Part history: reserved
+    await ctx.runMutation(internal.partHistory.recordEvent, {
+      organizationId: part.organizationId,
+      partId: args.partId,
+      eventType: "reserved",
+      workOrderId: args.workOrderId,
+      performedByUserId: userId,
+      performedByTechnicianId: args.reservedByTechnicianId,
+      notes: `Reserved for work order ${args.workOrderId}`,
+    });
     return { success: true };
   },
 });
@@ -439,7 +483,7 @@ export const reservePartForWorkOrder = mutation({
 export const releasePartReservation = mutation({
   args: { partId: v.id("parts") },
   handler: async (ctx, args) => {
-    await requireAuth(ctx);
+    const userId = await requireAuth(ctx);
     const part = await ctx.db.get(args.partId);
     if (!part) throw new Error("Part not found.");
     await ctx.db.patch(args.partId, {
@@ -447,6 +491,14 @@ export const releasePartReservation = mutation({
       reservedByTechnicianId: undefined,
       reservedAt: undefined,
       updatedAt: Date.now(),
+    });
+    // Part history: reservation released
+    await ctx.runMutation(internal.partHistory.recordEvent, {
+      organizationId: part.organizationId,
+      partId: args.partId,
+      eventType: "reservation_released",
+      performedByUserId: userId,
+      notes: part.reservedForWorkOrderId ? `Released reservation for work order ${part.reservedForWorkOrderId}` : "Reservation released",
     });
     return { success: true };
   },

@@ -64,10 +64,10 @@ Required fields for both FS and MBP records:
 6. `evidence_links`
 7. `related_ids`
 
-## Registry A — Master Features (53)
+## Registry A — Master Features (69)
 
 | fs_id | feature_number | feature_name | implementation_state | verification_state | last_reviewed_at_utc | last_verified_in_app_at_utc | reviewed_by | intended_outcome | current_context_update | evidence_links | related_ids | interconnection_notes | legacy_state_snapshot |
-|---|---:|---|---|---|---|---|---|---|---|---|---|---|---|
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | FS-0001 | 1 | Dual Sign-off (Tech + Inspector) | partially_implemented | qa_verified | 2026-03-03T00:00:00Z | 2026-03-03T00:00:00Z | feature-spec-migration-agent | Partially Implemented / Bug Hunter hardening delivered across Cross-Module, Work Orders. / BUG-005, BUG-LT-001, BUG-LT-003, BUG-LT-HUNT-001, BUG-LT3-001 / GAP-18, GAP-22 / Rebuild from existing guards/flows and preserve post-cycle bug fixes as acceptance criteria. | Bug Hunter hardening delivered across Cross-Module, Work Orders. | BugHunter=BUG-005, BUG-LT-001, BUG-LT-003, BUG-LT-HUNT-001, BUG-LT3-001; QA=GAP-18, GAP-22 | Feature #1; FS-0001 | Rebuild from existing guards/flows and preserve post-cycle bug fixes as acceptance criteria. | Partially Implemented |
 | FS-0002 | 2 | PDF Generation — Invoices | not_implemented | doc_reviewed | 2026-03-03T00:00:00Z | null | feature-spec-migration-agent | Not Implemented / No new post-cycle evidence. / None / No new post-cycle evidence / Build from baseline spec; no confirmed implementation evidence in current cycle corpus. | No new post-cycle evidence. | BugHunter=None; QA=No new post-cycle evidence | Feature #2; FS-0002 | Build from baseline spec; no confirmed implementation evidence in current cycle corpus. | Not Implemented |
 | FS-0003 | 3 | PDF Generation — Quotes | not_implemented | doc_reviewed | 2026-03-03T00:00:00Z | null | feature-spec-migration-agent | Not Implemented / No new post-cycle evidence. / None / No new post-cycle evidence / Build from baseline spec; no confirmed implementation evidence in current cycle corpus. | No new post-cycle evidence. | BugHunter=None; QA=No new post-cycle evidence | Feature #3; FS-0003 | Build from baseline spec; no confirmed implementation evidence in current cycle corpus. | Not Implemented |
@@ -121,8 +121,24 @@ Required fields for both FS and MBP records:
 | FS-0051 | 51 | Operational Report Builder + Scheduled Report Runs | partially_implemented | qa_verified | 2026-03-03T00:00:00Z | 2026-03-03T00:00:00Z | feature-spec-migration-agent | Partially Implemented / No new post-cycle evidence. / None / TD-013 / Rebuild from existing guards/flows and preserve post-cycle bug fixes as acceptance criteria. | No new post-cycle evidence. | BugHunter=None; QA=TD-013 | Feature #51; FS-0051 | Rebuild from existing guards/flows and preserve post-cycle bug fixes as acceptance criteria. | Partially Implemented |
 | FS-0052 | 52 | Part Lineage Drilldown Explorer | backend_needed | qa_verified | 2026-03-03T00:00:00Z | 2026-03-03T00:00:00Z | feature-spec-migration-agent | Backend Needed / Bug Hunter hardening delivered across Billing, Cross-Module, Parts, Work Orders. / BACKEND-NEEDED-BH-P01, BH-008, BH-009, BH-010, BUG-008 +… / FEAT-LARGE-004, GAP-11, GAP-12, GAP-13 / Retain current UX guards; complete server contracts before parity. | Bug Hunter hardening delivered across Billing, Cross-Module, Parts, Work Orders. | BugHunter=BACKEND-NEEDED-BH-P01, BH-008, BH-009, BH-010, BUG-008 +…; QA=FEAT-LARGE-004, GAP-11, GAP-12, GAP-13 | Feature #52; FS-0052 | Retain current UX guards; complete server contracts before parity. | Backend Needed |
 | FS-0053 | 53 | Zero-Downtime Migration Control Plane | partially_implemented | unreviewed | 2026-03-04T04:05:06Z | null | agentic-reviewer | Not Implemented / No new post-cycle evidence. / None / No new post-cycle evidence / Build from baseline spec; no confirmed implementation evidence in current cycle corpus. | No new post-cycle evidence. | BugHunter=None; QA=No new post-cycle evidence; derived_from=MBP-0003,MBP-0004,MBP-0011,MBP-0016,MBP-0133 | Feature #53; FS-0053; MBP-0003,MBP-0004,MBP-0011,MBP-0016,MBP-0133 | Build from baseline spec; no confirmed implementation evidence in current cycle corpus. | Partially Implemented |
+| FS-0054 | 54 | Task Card Compliance Save Guardrail | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | — | master-spec-expansion-agent | Enforce hard-failure save guards for task-card compliance mutation paths and preserve operator-visible error fidelity. | Detected Bug Hunter threads show compliance save guard behavior in task-card execution views. | docs/feature-spec-appendices/detected-features-log.md#detected-features-not-previously-represented; app/(app)/work-orders/[id]/tasks/[cardId]/page.tsx | Feature #54; FS-0054; MBP-0138 | Complete backend mutation contracts and field-level validation parity for all task-card compliance save paths. | Partially Implemented |
+| FS-0055 | 55 | Lead Technician Execution Safety Orchestrator | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | — | master-spec-expansion-agent | Coordinate lead-tech execution, sign-off gating, and escalation safety checks across active work-order task flows. | In-code bug-hunter annotations indicate partial guard coverage in lead-tech execution dialogs and pages. | docs/feature-spec-appendices/detected-features-log.md#detected-features-not-previously-represented; app/(app)/work-orders/[id]/tasks/[cardId]/_components/RaiseFindingDialog.tsx | Feature #55; FS-0055; MBP-0139 | Consolidate execution safety checks into shared orchestration rules and remove divergent per-dialog behavior. | Partially Implemented |
+| FS-0056 | 56 | Task Card Authoring Validation Controls | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | — | master-spec-expansion-agent | Provide deterministic validation for task-card creation, template application, and work-item authoring constraints. | Task new-card surfaces include guard comments and partial validation, but capability parity is incomplete. | docs/feature-spec-appendices/detected-features-log.md#detected-features-not-previously-represented; app/(app)/work-orders/[id]/tasks/new/page.tsx | Feature #56; FS-0056; MBP-0140 | Harden schema-level validation and align frontend validator feedback with backend enforcement. | Partially Implemented |
+| FS-0057 | 57 | Discrepancy Raise-and-Link Integrity | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | — | master-spec-expansion-agent | Guarantee discrepancy records opened from task/work-order contexts maintain referential integrity and lifecycle linkage. | Raise-finding and discrepancy list components show partial controls with known consistency gaps. | docs/feature-spec-appendices/detected-features-log.md#detected-features-not-previously-represented; app/(app)/work-orders/[id]/_components/DiscrepancyList.tsx | Feature #57; FS-0057; MBP-0141 | Unify discrepancy creation contracts and ensure cross-context linking is transactionally safe. | Partially Implemented |
+| FS-0058 | 58 | My Work Assignment Consistency Controls | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | — | master-spec-expansion-agent | Keep technician assignment, task visibility, and handoff context synchronized for the My Work execution lane. | My Work page annotations capture partial protections against stale assignment and status drift. | docs/feature-spec-appendices/detected-features-log.md#detected-features-not-previously-represented; app/(app)/my-work/page.tsx | Feature #58; FS-0058; MBP-0142 | Add assignment freshness checks, mutation conflict handling, and deterministic queue ordering. | Partially Implemented |
+| FS-0059 | 59 | Sign-Off Dialog Data Integrity Guardrails | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | — | master-spec-expansion-agent | Ensure sign-off dialogs enforce required fields, bounds, and immutable audit payload composition before completion. | Sign-card dialog artifacts indicate partial safeguards with unresolved edge-case consistency. | docs/feature-spec-appendices/detected-features-log.md#detected-features-not-previously-represented; app/(app)/work-orders/[id]/tasks/[cardId]/_components/SignCardDialog.tsx | Feature #59; FS-0059; MBP-0143 | Promote guard logic into shared mutation contracts and expand regression tests for sign-off edge cases. | Partially Implemented |
+| FS-0060 | 60 | Squawk Escalation and Handoff Safeguards | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | — | master-spec-expansion-agent | Control squawk escalation, handoff note continuity, and queue transitions between lead and technician lanes. | Squawk and lead-workspace comments show partial handoff protections with remaining parity gaps. | docs/feature-spec-appendices/detected-features-log.md#detected-features-not-previously-represented; app/(app)/squawks/page.tsx | Feature #60; FS-0060; MBP-0144 | Close escalation path gaps and normalize handoff-state transitions across squawk and task modules. | Partially Implemented |
+| FS-0061 | 61 | Certificate Field Normalization Pipeline | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | — | master-spec-expansion-agent | Normalize certificate field formatting, trimming, and validation for regulatory record consistency and export safety. | Certificate forms include partial normalization controls documented in bug-hunter detected threads. | docs/feature-spec-appendices/detected-features-log.md#detected-features-not-previously-represented; app/(app)/work-orders/[id]/certificates/page.tsx | Feature #61; FS-0061; MBP-0145 | Complete end-to-end normalization in schema and serializer layers, including historical data backfill strategy. | Partially Implemented |
+| FS-0062 | 62 | Customer Account CRM & Profile Ledger | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | — | master-spec-expansion-agent | Establish customer profile ledgering with account-level commercial context, communication timeline, and portal alignment. | Customer and portal surfaces provide partial account context but lack full ledger and lifecycle cohesion. | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/billing/customers/page.tsx; app/(customer)/portal/page.tsx | Feature #62; FS-0062; MBP-0146 | Complete shared customer ledger domain model and unify internal/portal data contracts. | Partially Implemented |
+| FS-0063 | 63 | AR, Deposits, and Credit Memo Controls | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | — | master-spec-expansion-agent | Cover receivables control paths from deposit intake through memo adjustment and AR aging governance. | Dedicated AR, deposits, and credit memo pages exist with partial operational parity and control completeness. | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/billing/ar-dashboard/page.tsx; app/(app)/billing/deposits/page.tsx; app/(app)/billing/credit-memos/page.tsx | Feature #63; FS-0063; MBP-0147 | Finish posting/adjustment reconciliation contracts and strengthen approval/audit workflows for financial controls. | Partially Implemented |
+| FS-0064 | 64 | Procurement and Vendor Operations | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | — | master-spec-expansion-agent | Define procurement lifecycle operations for vendor management, purchase orders, and external service obligations. | Vendor and PO routes are present, but end-to-end procurement governance remains partially implemented. | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/billing/vendors/page.tsx; app/(app)/billing/purchase-orders/page.tsx | Feature #64; FS-0064; MBP-0148 | Add procurement state machine invariants, receiving hooks, and payable-side audit trace completeness. | Partially Implemented |
+| FS-0065 | 65 | Recurring Billing Contract Engine | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | — | master-spec-expansion-agent | Model recurring billing agreements with cadence control, renewal logic, and invoice generation linkage. | Recurring billing UI is implemented as a partial capability with contract lifecycle gaps still open. | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/billing/recurring/page.tsx | Feature #65; FS-0065; MBP-0149 | Introduce contract versioning, renewal events, and posting guarantees tied to billing periods. | Partially Implemented |
+| FS-0066 | 66 | Labor Kit and Quote Template Library | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | — | master-spec-expansion-agent | Manage reusable labor kits and quote templates for consistent estimating, quoting, and conversion workflows. | Labor kit routing is active while quote template management exists as an orphan page not yet wired in router modules. | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/billing/labor-kits/page.tsx; app/(app)/billing/quotes/templates/page.tsx | Feature #66; FS-0066; MBP-0150 | Wire template library into canonical routes and align quote conversion pipeline with reusable library primitives. | Partially Implemented |
+| FS-0067 | 67 | Parts Logistics Operations (Shipping, Loaners, Core Flow) | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | — | master-spec-expansion-agent | Coordinate outbound shipping, temporary loaner control, and core-return lifecycle with inventory/accountability guarantees. | Shipping, loaner, and core pages are present with partial lifecycle controls and reconciliation coverage. | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/parts/shipping/page.tsx; app/(app)/parts/loaners/page.tsx; app/(app)/parts/cores/page.tsx | Feature #67; FS-0067; MBP-0151 | Close state-transition and custody-link gaps between logistics events and inventory financial reconciliation. | Partially Implemented |
+| FS-0068 | 68 | Scheduling Roster and Crew Coordination | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | — | master-spec-expansion-agent | Provide crew roster governance and coordination controls integrated with bay/capacity scheduling outcomes. | Scheduling roster route exists and is partially implemented; coordination and optimization paths remain incomplete. | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/scheduling/roster/page.tsx | Feature #68; FS-0068; MBP-0152 | Complete crew assignment optimization rules and tie roster constraints directly into scheduling engines. | Partially Implemented |
+| FS-0069 | 69 | Station Configuration and Org Governance Console | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | — | master-spec-expansion-agent | Centralize station configuration, org policy, and governance controls for consistent operational posture by location. | Settings surfaces provide partial governance controls with known coverage gaps across org-level administration. | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/settings/station-config/page.tsx; app/(app)/settings/users/page.tsx | Feature #69; FS-0069; MBP-0153 | Consolidate governance policy storage and enforce policy propagation across dependent modules/routes. | Partially Implemented |
 
-## Registry B — Atomic Features (137)
+## Registry B — Atomic Features (153)
 
 | mbp_id | fs_links | canonical_group_id | title | normalized_requirement | source_pack | source_id | source_file | priority | wave | owner_lane | dependencies | acceptance_criteria | test_gate | legacy_status | implementation_state | verification_state | last_reviewed_at_utc | last_verified_in_app_at_utc | reviewed_by | evidence_links | related_ids | notes |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
@@ -263,27 +279,1766 @@ Required fields for both FS and MBP records:
 | MBP-0135 | FS-0025, FS-0029 | GRP-010 | Search — Global Search | Command-palette global search across aircraft, work orders, parts, and customers. | MASTER | MBL-025 | athelon-app/MASTER-BUILD-LIST.md | P2 | Wave4 | ux | ["GRP-003"] | All missing behaviors are completed and verified end-to-end against source requirement text. | npx tsc --noEmit; targeted Playwright scenario; Convex query/mutation validation where applicable. | partial | partially_implemented | doc_reviewed | 2026-03-03T00:00:00Z | null | feature-spec-migration-agent | athelon-app/MASTER-BUILD-LIST.md#MBL-025 | MBP-0135; MBL-025 | source=Master Build List feature #25; status=Partially Implemented in feature matrix.; ctx_seed=ICS-010/corpus=industry-context-field-artifacts/doc=Repair Station Contacts with Ratings (Download).xlsx/feature=25/conf=high/date=2026-03-03 |
 | MBP-0136 | FS-0044, FS-0023 | GRP-003 | Work Order Routing Templates + Standard Minutes | Template-driven work-order routing with operation-level standard-minute baselines. | MASTER | MBL-044 | athelon-app/MASTER-BUILD-LIST.md | P0 | Wave1 | workflow | ["GRP-001", "GRP-002"] | All missing behaviors are completed and verified end-to-end against source requirement text. | npx tsc --noEmit; targeted Playwright scenario; Convex query/mutation validation where applicable. | partial | partially_implemented | doc_reviewed | 2026-03-03T00:00:00Z | null | feature-spec-migration-agent | athelon-app/MASTER-BUILD-LIST.md#MBL-044 | MBP-0136; MBL-044 | source=Master Build List feature #44; backend-needed status captured under partial for canonical rollup.; ctx_seed=ICS-007/corpus=industry-context-field-artifacts/doc=AVEX-NS Aviation Hldgs Lean slide.pptx/feature=44/conf=high/date=2026-03-03 |
 | MBP-0137 | FS-0012, FS-0026, FS-0051 | GRP-009 | Operational Report Builder + Scheduled Report Runs | Configurable operational report definitions with scheduled run execution. | MASTER | MBL-051 | athelon-app/MASTER-BUILD-LIST.md | P2 | Wave3 | product | ["GRP-002", "GRP-003"] | All missing behaviors are completed and verified end-to-end against source requirement text. | npx tsc --noEmit; targeted Playwright scenario; Convex query/mutation validation where applicable. | partial | partially_implemented | doc_reviewed | 2026-03-03T00:00:00Z | null | feature-spec-migration-agent | athelon-app/MASTER-BUILD-LIST.md#MBL-051 | MBP-0137; MBL-051 | source=Master Build List feature #51; status=Partially Implemented in feature matrix.; ctx_seed=ICS-008/corpus=industry-context-field-artifacts/doc=Elevate MRO Capacity planning.xlsx/feature=51/conf=high/date=2026-03-03 |
+| MBP-0138 | FS-0054, FS-0023 | GRP-003 | Task-card compliance persistence guard | Task-card compliance save hard-failure guard and retry-safe mutation flow. | MASTER | MBL-054 | athelon-app/MASTER-BUILD-LIST.md | P1 | Wave1 | workflow | ["GRP-001", "GRP-002"] | All missing behaviors are completed and verified end-to-end against source requirement text. | npx tsc --noEmit; targeted Playwright scenario; Convex query/mutation validation where applicable. | partial | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | — | master-spec-expansion-agent | athelon-app/MASTER-BUILD-LIST.md#MBL-054 | MBP-0138; MBL-054 | Route/category audit promotion; mapped into canonical registry expansion. |
+| MBP-0139 | FS-0055, FS-0023 | GRP-003 | Lead-tech execution safety orchestration | Lead workspace and task execution safety guardrail consolidation. | MASTER | MBL-055 | athelon-app/MASTER-BUILD-LIST.md | P1 | Wave1 | workflow | ["GRP-001", "GRP-002"] | All missing behaviors are completed and verified end-to-end against source requirement text. | npx tsc --noEmit; targeted Playwright scenario; Convex query/mutation validation where applicable. | partial | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | — | master-spec-expansion-agent | athelon-app/MASTER-BUILD-LIST.md#MBL-055 | MBP-0139; MBL-055 | Route/category audit promotion; mapped into canonical registry expansion. |
+| MBP-0140 | FS-0056, FS-0044 | GRP-003 | Task-card authoring validation hardening | Template and ad hoc task-card authoring validation constraints. | MASTER | MBL-056 | athelon-app/MASTER-BUILD-LIST.md | P1 | Wave1 | workflow | ["GRP-001", "GRP-002"] | All missing behaviors are completed and verified end-to-end against source requirement text. | npx tsc --noEmit; targeted Playwright scenario; Convex query/mutation validation where applicable. | partial | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | — | master-spec-expansion-agent | athelon-app/MASTER-BUILD-LIST.md#MBL-056 | MBP-0140; MBL-056 | Route/category audit promotion; mapped into canonical registry expansion. |
+| MBP-0141 | FS-0057, FS-0022 | GRP-017 | Discrepancy raise/link integrity controls | Referentially safe discrepancy raise-and-link controls from task and WO contexts. | MASTER | MBL-057 | athelon-app/MASTER-BUILD-LIST.md | P1 | Wave2 | compliance | ["GRP-001", "GRP-002", "GRP-003"] | All missing behaviors are completed and verified end-to-end against source requirement text. | npx tsc --noEmit; targeted Playwright scenario; Convex query/mutation validation where applicable. | partial | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | — | master-spec-expansion-agent | athelon-app/MASTER-BUILD-LIST.md#MBL-057 | MBP-0141; MBL-057 | Route/category audit promotion; mapped into canonical registry expansion. |
+| MBP-0142 | FS-0058, FS-0023 | GRP-003 | My Work assignment consistency checks | Assignment freshness and stale-view protections for technician execution lanes. | MASTER | MBL-058 | athelon-app/MASTER-BUILD-LIST.md | P1 | Wave1 | workflow | ["GRP-001", "GRP-002"] | All missing behaviors are completed and verified end-to-end against source requirement text. | npx tsc --noEmit; targeted Playwright scenario; Convex query/mutation validation where applicable. | partial | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | — | master-spec-expansion-agent | athelon-app/MASTER-BUILD-LIST.md#MBL-058 | MBP-0142; MBL-058 | Route/category audit promotion; mapped into canonical registry expansion. |
+| MBP-0143 | FS-0059, FS-0001 | GRP-005 | Sign-off dialog integrity guardrails | Required-field and payload integrity rules for sign-off dialogs and commits. | MASTER | MBL-059 | athelon-app/MASTER-BUILD-LIST.md | P1 | Wave1 | workflow | ["GRP-001", "GRP-002", "GRP-003"] | All missing behaviors are completed and verified end-to-end against source requirement text. | npx tsc --noEmit; targeted Playwright scenario; Convex query/mutation validation where applicable. | partial | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | — | master-spec-expansion-agent | athelon-app/MASTER-BUILD-LIST.md#MBL-059 | MBP-0143; MBL-059 | Route/category audit promotion; mapped into canonical registry expansion. |
+| MBP-0144 | FS-0060, FS-0028 | GRP-008 | Squawk escalation and handoff safety | Deterministic squawk escalation and handoff continuity controls. | MASTER | MBL-060 | athelon-app/MASTER-BUILD-LIST.md | P1 | Wave2 | workflow | ["GRP-003", "GRP-009"] | All missing behaviors are completed and verified end-to-end against source requirement text. | npx tsc --noEmit; targeted Playwright scenario; Convex query/mutation validation where applicable. | partial | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | — | master-spec-expansion-agent | athelon-app/MASTER-BUILD-LIST.md#MBL-060 | MBP-0144; MBL-060 | Route/category audit promotion; mapped into canonical registry expansion. |
+| MBP-0145 | FS-0061, FS-0020 | GRP-017 | Certificate normalization and hygiene | Certificate field trim/normalize pipeline and compliance-form data hygiene. | MASTER | MBL-061 | athelon-app/MASTER-BUILD-LIST.md | P1 | Wave1 | compliance | ["GRP-001", "GRP-002", "GRP-003"] | All missing behaviors are completed and verified end-to-end against source requirement text. | npx tsc --noEmit; targeted Playwright scenario; Convex query/mutation validation where applicable. | partial | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | — | master-spec-expansion-agent | athelon-app/MASTER-BUILD-LIST.md#MBL-061 | MBP-0145; MBL-061 | Route/category audit promotion; mapped into canonical registry expansion. |
+| MBP-0146 | FS-0062, FS-0010 | GRP-015 | Customer account CRM and profile ledger | Unified customer profile ledger across internal billing and customer portal surfaces. | MASTER | MBL-062 | athelon-app/MASTER-BUILD-LIST.md | P1 | Wave2 | product | ["GRP-003", "GRP-014"] | All missing behaviors are completed and verified end-to-end against source requirement text. | npx tsc --noEmit; targeted Playwright scenario; Convex query/mutation validation where applicable. | partial | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | — | master-spec-expansion-agent | athelon-app/MASTER-BUILD-LIST.md#MBL-062 | MBP-0146; MBL-062 | Route/category audit promotion; mapped into canonical registry expansion. |
+| MBP-0147 | FS-0063, FS-0032 | GRP-018 | AR/deposits/credit memo control pack | Receivables controls for deposits, credit memo issuance, and AR aging consistency. | MASTER | MBL-063 | athelon-app/MASTER-BUILD-LIST.md | P1 | Wave2 | product | ["GRP-003", "GRP-014"] | All missing behaviors are completed and verified end-to-end against source requirement text. | npx tsc --noEmit; targeted Playwright scenario; Convex query/mutation validation where applicable. | partial | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | — | master-spec-expansion-agent | athelon-app/MASTER-BUILD-LIST.md#MBL-063 | MBP-0147; MBL-063 | Route/category audit promotion; mapped into canonical registry expansion. |
+| MBP-0148 | FS-0064, FS-0052 | GRP-014 | Procurement and vendor operations pack | Vendor and purchase-order operational controls with payable governance hooks. | MASTER | MBL-064 | athelon-app/MASTER-BUILD-LIST.md | P1 | Wave2 | workflow | ["GRP-003", "GRP-006", "GRP-018"] | All missing behaviors are completed and verified end-to-end against source requirement text. | npx tsc --noEmit; targeted Playwright scenario; Convex query/mutation validation where applicable. | partial | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | — | master-spec-expansion-agent | athelon-app/MASTER-BUILD-LIST.md#MBL-064 | MBP-0148; MBL-064 | Route/category audit promotion; mapped into canonical registry expansion. |
+| MBP-0149 | FS-0065, FS-0032 | GRP-018 | Recurring billing contract engine | Contract-driven recurring billing lifecycle, cadence, and renewal controls. | MASTER | MBL-065 | athelon-app/MASTER-BUILD-LIST.md | P1 | Wave3 | product | ["GRP-003", "GRP-014"] | All missing behaviors are completed and verified end-to-end against source requirement text. | npx tsc --noEmit; targeted Playwright scenario; Convex query/mutation validation where applicable. | partial | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | — | master-spec-expansion-agent | athelon-app/MASTER-BUILD-LIST.md#MBL-065 | MBP-0149; MBL-065 | Route/category audit promotion; mapped into canonical registry expansion. |
+| MBP-0150 | FS-0066, FS-0044 | GRP-004 | Labor-kit and quote-template library | Reusable labor and quote template library with conversion-safe mapping. | MASTER | MBL-066 | athelon-app/MASTER-BUILD-LIST.md | P1 | Wave2 | product | ["GRP-002", "GRP-003"] | All missing behaviors are completed and verified end-to-end against source requirement text. | npx tsc --noEmit; targeted Playwright scenario; Convex query/mutation validation where applicable. | partial | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | — | master-spec-expansion-agent | athelon-app/MASTER-BUILD-LIST.md#MBL-066 | MBP-0150; MBL-066 | Route/category audit promotion; mapped into canonical registry expansion. |
+| MBP-0151 | FS-0067, FS-0052 | GRP-007 | Parts logistics operations pack | Shipping, loaner, and core lifecycle controls with custody traceability. | MASTER | MBL-067 | athelon-app/MASTER-BUILD-LIST.md | P1 | Wave2 | workflow | ["GRP-006"] | All missing behaviors are completed and verified end-to-end against source requirement text. | npx tsc --noEmit; targeted Playwright scenario; Convex query/mutation validation where applicable. | partial | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | — | master-spec-expansion-agent | athelon-app/MASTER-BUILD-LIST.md#MBL-067 | MBP-0151; MBL-067 | Route/category audit promotion; mapped into canonical registry expansion. |
+| MBP-0152 | FS-0068, FS-0013 | GRP-012 | Roster and crew coordination controls | Crew roster coordination integrated with bay/capacity scheduling constraints. | MASTER | MBL-068 | athelon-app/MASTER-BUILD-LIST.md | P1 | Wave4 | workflow | ["GRP-003", "GRP-009"] | All missing behaviors are completed and verified end-to-end against source requirement text. | npx tsc --noEmit; targeted Playwright scenario; Convex query/mutation validation where applicable. | partial | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | — | master-spec-expansion-agent | athelon-app/MASTER-BUILD-LIST.md#MBL-068 | MBP-0152; MBL-068 | Route/category audit promotion; mapped into canonical registry expansion. |
+| MBP-0153 | FS-0069, FS-0015, FS-0053 | GRP-001 | Station config and org governance console | Station/org governance policy controls and configuration propagation rules. | MASTER | MBL-069 | athelon-app/MASTER-BUILD-LIST.md | P1 | Wave2 | platform | [] | All missing behaviors are completed and verified end-to-end against source requirement text. | npx tsc --noEmit; targeted Playwright scenario; Convex query/mutation validation where applicable. | partial | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | — | master-spec-expansion-agent | athelon-app/MASTER-BUILD-LIST.md#MBL-069 | MBP-0153; MBL-069 | Route/category audit promotion; mapped into canonical registry expansion. |
+
+## Registry C — Route Capability Registry (101)
+
+| route_id | route_path_template | route_label | route_kind | route_category_id | route_source | source_component | route_source_status | mapped_fs_ids | mapped_mbp_ids | implementation_state | verification_state | last_reviewed_at_utc | reviewed_by | key_subfeatures | gap_notes | evidence_links |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| RTC-0001 | /billing | Billing | redirect | CAT-BILLING | src/router/routeModules/protectedAppRoutes.tsx | Navigate(to=/billing/customers) | router_only | FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 | MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150 | implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Billing; Role-scoped access flow; State transition controls | Route exists in router modules without a dedicated page file; behavior is redirect/catch-all managed. | src/router/routeModules/protectedAppRoutes.tsx |
+| RTC-0002 | /billing/analytics | Billing Analytics | page | CAT-BILLING | src/router/routeModules/protectedAppRoutes.tsx | BillingAnalyticsPage | routed | FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 | MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Billing Analytics; Monthly Revenue — Last 6 Months; Revenue by Month; AR Aging; Top Customers by Collected Revenue | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/billing/analytics/page.tsx |
+| RTC-0003 | /billing/ar-dashboard | AR Dashboard | page | CAT-BILLING | src/router/routeModules/protectedAppRoutes.tsx | ArDashboardPage | routed | FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 | MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | AR Dashboard; Customer Balances; Validation and error-state handling | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/billing/ar-dashboard/page.tsx |
+| RTC-0004 | /billing/credit-memos | Credit Memos | page | CAT-BILLING | src/router/routeModules/protectedAppRoutes.tsx | BillingCreditMemosPage | routed | FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 | MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Credit Memos; Role-scoped action controls; Validation and error-state handling | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/billing/credit-memos/page.tsx |
+| RTC-0005 | /billing/customers | Customers | page | CAT-BILLING | src/router/routeModules/protectedAppRoutes.tsx | CustomersPage | routed | FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 | MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Customers; Role-scoped action controls; Validation and error-state handling | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/billing/customers/page.tsx |
+| RTC-0006 | /billing/customers/:id | Billing Customers Detail | page | CAT-BILLING | src/router/routeModules/protectedAppRoutes.tsx | CustomerDetailPage | routed | FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 | MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | customer?.name; Customer Information; Quotes; Invoices; Payment History | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/billing/customers/[id]/page.tsx |
+| RTC-0007 | /billing/deposits | Deposits | page | CAT-BILLING | src/router/routeModules/protectedAppRoutes.tsx | BillingDepositsPage | routed | FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 | MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Deposits; Role-scoped action controls; Validation and error-state handling | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/billing/deposits/page.tsx |
+| RTC-0008 | /billing/invoices | Invoices | page | CAT-BILLING | src/router/routeModules/protectedAppRoutes.tsx | InvoicesPage | routed | FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 | MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Invoices; Cash; Check; Credit Card; Wire Transfer | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/billing/invoices/page.tsx |
+| RTC-0009 | /billing/invoices/:id | Billing Invoices Detail | page | CAT-BILLING | src/router/routeModules/protectedAppRoutes.tsx | InvoiceDetailPage | routed | FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 | MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | invoice.invoiceNumber; Invoice invoice.invoiceNumber; Invoice Summary; Line Items; Payment History | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/billing/invoices/[id]/page.tsx |
+| RTC-0010 | /billing/invoices/new | Billing Invoices New | page | CAT-BILLING | src/router/routeModules/protectedAppRoutes.tsx | NewInvoicePage | routed | FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 | MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | New Invoice; Invoice Source; Invoice Details; Tax Rate | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/billing/invoices/new/page.tsx |
+| RTC-0011 | /billing/labor-kits | Labor Kits | page | CAT-BILLING | src/router/routeModules/protectedAppRoutes.tsx | LaborKitsPage | routed | FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 | MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Labor Kits; Role-scoped action controls; Validation and error-state handling | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/billing/labor-kits/page.tsx |
+| RTC-0012 | /billing/otc | OTC Sales | page | CAT-BILLING | src/router/routeModules/protectedAppRoutes.tsx | OTCSalesPage | routed | FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 | MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Counter Sales; Add Items; Cart (cart.length itemcart.length !== 1 ? "s" : ""); Payment; Sales History | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/billing/otc/page.tsx |
+| RTC-0013 | /billing/pricing | Pricing | page | CAT-BILLING | src/router/routeModules/protectedAppRoutes.tsx | BillingPricingPage | routed | FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 | MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Pricing; Pricing Profiles; Pricing Rules | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/billing/pricing/page.tsx |
+| RTC-0014 | /billing/purchase-orders | Purchase Orders | page | CAT-BILLING | src/router/routeModules/protectedAppRoutes.tsx | PurchaseOrdersPage | routed | FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 | MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Purchase Orders; Draft; Submitted; Partial; Received | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/billing/purchase-orders/page.tsx |
+| RTC-0015 | /billing/purchase-orders/:id | Billing Purchase Orders Detail | page | CAT-BILLING | src/router/routeModules/protectedAppRoutes.tsx | PODetailPage | routed | FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 | MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | po.poNumber; PO Summary; Line Items | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/billing/purchase-orders/[id]/page.tsx |
+| RTC-0016 | /billing/purchase-orders/new | Billing Purchase Orders New | page | CAT-BILLING | src/router/routeModules/protectedAppRoutes.tsx | NewPOPage | routed | FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 | MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | New Purchase Order; PO Details; Line Items | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/billing/purchase-orders/new/page.tsx |
+| RTC-0017 | /billing/quotes | Quotes | page | CAT-BILLING | src/router/routeModules/protectedAppRoutes.tsx | QuotesPage | routed | FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 | MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Quotes; Role-scoped action controls; Validation and error-state handling | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/billing/quotes/page.tsx |
+| RTC-0018 | /billing/quotes/:id | Billing Quotes Detail | page | CAT-BILLING | src/router/routeModules/protectedAppRoutes.tsx | QuoteDetailPage | routed | FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 | MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Billing Quotes Detail; Role-scoped action controls; Validation and error-state handling | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/billing/quotes/[id]/page.tsx |
+| RTC-0019 | /billing/quotes/new | Billing Quotes New | page | CAT-BILLING | src/router/routeModules/protectedAppRoutes.tsx | NewQuotePage | routed | FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 | MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Billing Quotes New; Role-scoped action controls; Validation and error-state handling | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/billing/quotes/new/page.tsx |
+| RTC-0020 | /billing/recurring | Recurring | page | CAT-BILLING | src/router/routeModules/protectedAppRoutes.tsx | BillingRecurringPage | routed | FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 | MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Recurring; Recurring Billing; Validation and error-state handling | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/billing/recurring/page.tsx |
+| RTC-0021 | /billing/settings | Billing Settings | page | CAT-BILLING | src/router/routeModules/protectedAppRoutes.tsx | BillingSettingsPage | routed | FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 | MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Billing Settings; Role-scoped action controls; Validation and error-state handling | Page includes explicit coming-soon/stub indicators; capability is partial. | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/billing/settings/page.tsx |
+| RTC-0022 | /billing/tax-config | Tax Config | page | CAT-BILLING | src/router/routeModules/protectedAppRoutes.tsx | BillingTaxConfigPage | routed | FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 | MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Tax Config; Tax Configuration; Validation and error-state handling | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/billing/tax-config/page.tsx |
+| RTC-0023 | /billing/time-approval | Time Approval | page | CAT-BILLING | src/router/routeModules/protectedAppRoutes.tsx | BillingTimeApprovalPage | routed | FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 | MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Time Approval; Time Clock Approval; Validation and error-state handling | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/billing/time-approval/page.tsx |
+| RTC-0024 | /billing/time-clock | Time Clock | page | CAT-BILLING | src/router/routeModules/protectedAppRoutes.tsx | BillingTimeClockPage | routed | FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 | MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Time Clock; Today&apos;s Summary; Validation and error-state handling | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/billing/time-clock/page.tsx |
+| RTC-0025 | /billing/vendors | Vendors | page | CAT-BILLING | src/router/routeModules/protectedAppRoutes.tsx | VendorsPage | routed | FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 | MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Vendors; Role-scoped action controls; Validation and error-state handling | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/billing/vendors/page.tsx |
+| RTC-0026 | /billing/vendors/:id | Billing Vendors Detail | page | CAT-BILLING | src/router/routeModules/protectedAppRoutes.tsx | VendorDetailPage | routed | FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 | MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | vendor.name; Services; Contact Information; Certification; Purchase Order History | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/billing/vendors/[id]/page.tsx |
+| RTC-0027 | /billing/vendors/new | Billing Vendors New | page | CAT-BILLING | src/router/routeModules/protectedAppRoutes.tsx | NewVendorPage | routed | FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 | MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | New Vendor; Vendor Information; Contact Information; Certification; Parts Supplier | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/billing/vendors/new/page.tsx |
+| RTC-0028 | /billing/warranty | Warranty | page | CAT-BILLING | src/router/routeModules/protectedAppRoutes.tsx | WarrantyPage | routed | FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 | MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Total Claims; Draft; Submitted; Under Review; Approved | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/billing/warranty/page.tsx |
+| RTC-0029 | /compliance | Compliance | page | CAT-COMPLIANCE | src/router/routeModules/protectedAppRoutes.tsx | CompliancePage | routed | FS-0020, FS-0030, FS-0061 | MBP-0011, MBP-0117, MBP-0145 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Compliance; Fleet AD Compliance Status; Compliance Tools | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/compliance/page.tsx |
+| RTC-0030 | /compliance/ad-sb | AD/SB | page | CAT-COMPLIANCE | src/router/routeModules/protectedAppRoutes.tsx | AdSbCompliancePage | routed | FS-0020, FS-0030, FS-0061 | MBP-0011, MBP-0117, MBP-0145 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | AD/SB; Role-scoped action controls; Validation and error-state handling | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/compliance/ad-sb/page.tsx |
+| RTC-0031 | /compliance/audit-trail | Audit Trail | page | CAT-COMPLIANCE | src/router/routeModules/protectedAppRoutes.tsx | AuditTrailPage | routed | FS-0020, FS-0030, FS-0061 | MBP-0011, MBP-0117, MBP-0145 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Audit Trail; Airworthiness Directives — aircraftRegistration; Validation and error-state handling | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/compliance/audit-trail/page.tsx |
+| RTC-0032 | /compliance/certificates | Compliance Certificates | redirect | CAT-COMPLIANCE | src/router/routeModules/protectedAppRoutes.tsx | Navigate(to=/compliance/audit-trail) | router_only | FS-0020, FS-0030, FS-0061 | MBP-0011, MBP-0117, MBP-0145 | implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Compliance Certificates; Role-scoped access flow; State transition controls | Route exists in router modules without a dedicated page file; behavior is redirect/catch-all managed. | src/router/routeModules/protectedAppRoutes.tsx |
+| RTC-0033 | /compliance/qcm-review | QCM Review | page | CAT-COMPLIANCE | src/router/routeModules/protectedAppRoutes.tsx | QcmReviewPage | routed | FS-0020, FS-0030, FS-0061 | MBP-0011, MBP-0117, MBP-0145 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | QCM Review; IA Sign-Off Queue; Validation and error-state handling | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/compliance/qcm-review/page.tsx |
+| RTC-0034 | /dashboard | Dashboard | page | CAT-DASHBOARD | src/router/routeModules/protectedAppRoutes.tsx | DashboardPage | routed | FS-0012, FS-0026 | MBP-0056, MBP-0057 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Dashboard; Active Work Orders; AOG Aircraft; Overdue ADs; Open Discrepancies | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/dashboard/page.tsx |
+| RTC-0035 | /fleet | Fleet | page | CAT-FLEET | src/router/routeModules/protectedAppRoutes.tsx | FleetPage | routed | FS-0020, FS-0029, FS-0035 | MBP-0009, MBP-0047, MBP-0126 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Fleet; Airworthy; Airworthy w/ Limitations; In Maintenance; Out of Service | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/fleet/page.tsx |
+| RTC-0036 | /fleet/:tail | Fleet Aircraft Tail | page | CAT-FLEET | src/router/routeModules/protectedAppRoutes.tsx | AircraftDetailPage | routed | FS-0020, FS-0029, FS-0035 | MBP-0009, MBP-0047, MBP-0126 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | aircraft!.currentRegistration; Work Orders; Identification; Customer; Airworthy | Page includes explicit coming-soon/stub indicators; capability is partial. | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/fleet/[tail]/page.tsx |
+| RTC-0037 | /fleet/:tail/logbook | Fleet Aircraft Tail Logbook | page | CAT-FLEET | src/router/routeModules/protectedAppRoutes.tsx | AircraftLogbookPage | routed | FS-0020, FS-0029, FS-0035 | MBP-0009, MBP-0047, MBP-0126 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | tailNumber; Maintenance; Inspection; Correction | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/fleet/[tail]/logbook/page.tsx |
+| RTC-0038 | /fleet/calendar | Fleet Calendar | page | CAT-FLEET | src/router/routeModules/protectedAppRoutes.tsx | FleetCalendarPage | routed | FS-0020, FS-0029, FS-0035 | MBP-0009, MBP-0047, MBP-0126 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Fleet Calendar; Role-scoped action controls; Validation and error-state handling | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/fleet/calendar/page.tsx |
+| RTC-0039 | /fleet/predictions | Fleet Predictions | page | CAT-FLEET | src/router/routeModules/protectedAppRoutes.tsx | PredictionsPage | routed | FS-0020, FS-0029, FS-0035 | MBP-0009, MBP-0047, MBP-0126 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Fleet Predictions; Predictive Maintenance; Validation and error-state handling | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/fleet/predictions/page.tsx |
+| RTC-0040 | /lead | Lead | page | CAT-LEAD | src/router/routeModules/protectedAppRoutes.tsx | LeadDashboardPage | routed | FS-0028, FS-0055 | MBP-0134, MBP-0139 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Lead Technician Workspace; My Team; Assignment Board; Team Capacity; Active WO Summary | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/lead/page.tsx |
+| RTC-0041 | /my-work | My Work | page | CAT-MY-WORK | src/router/routeModules/protectedAppRoutes.tsx | MyWorkPage | routed | FS-0023, FS-0044, FS-0058 | MBP-0123, MBP-0142 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | My Work; Role-scoped action controls; Validation and error-state handling | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/my-work/page.tsx |
+| RTC-0042 | /onboarding | Onboarding | page | CAT-ONBOARDING | src/router/routeModules/protectedAppRoutes.tsx | OnboardingPage | routed | FS-0041, FS-0069 | MBP-0105, MBP-0153 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Onboarding; Role-scoped action controls; Validation and error-state handling | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/onboarding/page.tsx |
+| RTC-0043 | /parts | Parts | page | CAT-PARTS | src/router/routeModules/protectedAppRoutes.tsx | PartsPage | routed | FS-0019, FS-0052, FS-0067 | MBP-0020, MBP-0122, MBP-0151 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Parts; Role-scoped action controls; Validation and error-state handling | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/parts/page.tsx |
+| RTC-0044 | /parts/cores | Cores | page | CAT-PARTS | src/router/routeModules/protectedAppRoutes.tsx | CoresPage | routed | FS-0019, FS-0052, FS-0067 | MBP-0020, MBP-0122, MBP-0151 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Cores Out; Value Outstanding; Overdue; Awaiting Return; Received | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/parts/cores/page.tsx |
+| RTC-0045 | /parts/inventory-count | Inventory Count | page | CAT-PARTS | src/router/routeModules/protectedAppRoutes.tsx | InventoryCountPage | routed | FS-0019, FS-0052, FS-0067 | MBP-0020, MBP-0122, MBP-0151 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Inventory Count; countDetail.name; Inventory Counts | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/parts/inventory-count/page.tsx |
+| RTC-0046 | /parts/loaners | Loaners | page | CAT-PARTS | src/router/routeModules/protectedAppRoutes.tsx | LoanersPage | routed | FS-0019, FS-0052, FS-0067 | MBP-0020, MBP-0122, MBP-0151 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Loaners; Rental / Loaner Tracking; Validation and error-state handling | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/parts/loaners/page.tsx |
+| RTC-0047 | /parts/new | New Part | page | CAT-PARTS | src/router/routeModules/protectedAppRoutes.tsx | NewPartPage | routed | FS-0019, FS-0052, FS-0067 | MBP-0020, MBP-0122, MBP-0151 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Serviceable (used); Overhauled; Repaired | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/parts/new/page.tsx |
+| RTC-0048 | /parts/receiving | Part Receiving | page | CAT-PARTS | src/router/routeModules/protectedAppRoutes.tsx | PartsReceivingPage | routed | FS-0019, FS-0052, FS-0067 | MBP-0020, MBP-0122, MBP-0151 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Part Receiving; Role-scoped action controls; Validation and error-state handling | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/parts/receiving/page.tsx |
+| RTC-0049 | /parts/requests | Part Requests | page | CAT-PARTS | src/router/routeModules/protectedAppRoutes.tsx | PartsRequestsPage | routed | FS-0019, FS-0052, FS-0067 | MBP-0020, MBP-0122, MBP-0151 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Parts Queue; Pending Inspection; In Stock; Installed; Removed — Pending Disposition | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/parts/requests/page.tsx |
+| RTC-0050 | /parts/rotables | Rotables | page | CAT-PARTS | src/router/routeModules/protectedAppRoutes.tsx | RotablesPage | routed | FS-0019, FS-0052, FS-0067 | MBP-0020, MBP-0122, MBP-0151 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Rotables; Rotable Components; Validation and error-state handling | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/parts/rotables/page.tsx |
+| RTC-0051 | /parts/shipping | Shipping | page | CAT-PARTS | src/router/routeModules/protectedAppRoutes.tsx | ShippingPage | routed | FS-0019, FS-0052, FS-0067 | MBP-0020, MBP-0122, MBP-0151 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Open Receiving; Total; Pending; In Transit; Delivered | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/parts/shipping/page.tsx |
+| RTC-0052 | /parts/tools | Tools | page | CAT-PARTS | src/router/routeModules/protectedAppRoutes.tsx | ToolCribPage | routed | FS-0019, FS-0052, FS-0067 | MBP-0020, MBP-0122, MBP-0151 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Hand Tool; Power Tool; Test Equipment; Special Tooling; Consumable | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/parts/tools/page.tsx |
+| RTC-0053 | /personnel | Personnel | page | CAT-PERSONNEL | src/router/routeModules/protectedAppRoutes.tsx | PersonnelPage | routed | FS-0016, FS-0021 | MBP-0001, MBP-0134 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Personnel; Role-scoped action controls; Validation and error-state handling | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/personnel/page.tsx |
+| RTC-0054 | /personnel/training | Training | page | CAT-PERSONNEL | src/router/routeModules/protectedAppRoutes.tsx | TrainingPage | routed | FS-0016, FS-0021 | MBP-0001, MBP-0134 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Training &amp; Qualifications; Initial; Recurrent; Regulatory; Safety | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/personnel/training/page.tsx |
+| RTC-0055 | /portal | Portal | page | CAT-PORTAL | src/router/routeModules/customerPortalRoutes.tsx | CustomerDashboardPage | routed | FS-0010, FS-0062 | MBP-0019, MBP-0146 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | No customer account linked; Active Work Orders; Pending Quotes; Outstanding Invoices; Total Fleet | — | src/router/routeModules/customerPortalRoutes.tsx; app/(customer)/portal/page.tsx |
+| RTC-0056 | /portal/fleet | Portal Fleet | page | CAT-PORTAL | src/router/routeModules/customerPortalRoutes.tsx | CustomerFleetPage | routed | FS-0010, FS-0062 | MBP-0019, MBP-0146 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Portal Fleet; My Fleet; Validation and error-state handling | — | src/router/routeModules/customerPortalRoutes.tsx; app/(customer)/portal/fleet/page.tsx |
+| RTC-0057 | /portal/invoices | Portal Invoices | page | CAT-PORTAL | src/router/routeModules/customerPortalRoutes.tsx | CustomerInvoicesPage | routed | FS-0010, FS-0062 | MBP-0019, MBP-0146 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Portal Invoices; Invoices; invoice.invoiceNumber | — | src/router/routeModules/customerPortalRoutes.tsx; app/(customer)/portal/invoices/page.tsx |
+| RTC-0058 | /portal/quotes | Portal Quotes | page | CAT-PORTAL | src/router/routeModules/customerPortalRoutes.tsx | CustomerQuotesPage | routed | FS-0010, FS-0062 | MBP-0019, MBP-0146 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Portal Quotes; Quotes; quote.quoteNumber | — | src/router/routeModules/customerPortalRoutes.tsx; app/(customer)/portal/quotes/page.tsx |
+| RTC-0059 | /portal/work-orders | Portal Work Orders | page | CAT-PORTAL | src/router/routeModules/customerPortalRoutes.tsx | CustomerWorkOrdersPage | routed | FS-0010, FS-0062 | MBP-0019, MBP-0146 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Work Orders; detail.workOrderNumber; Received; Inspection; In Progress | — | src/router/routeModules/customerPortalRoutes.tsx; app/(customer)/portal/work-orders/page.tsx |
+| RTC-0060 | /reports | Reports | page | CAT-REPORTS | src/router/routeModules/protectedAppRoutes.tsx | ReportsPage | routed | FS-0012, FS-0051 | MBP-0103, MBP-0137 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Monthly Revenue; WO Throughput; Revenue Summary Table | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/reports/page.tsx |
+| RTC-0061 | /reports/financials | Reports Financials | page | CAT-REPORTS | src/router/routeModules/protectedAppRoutes.tsx | FinancialDashboardPage | routed | FS-0012, FS-0051 | MBP-0103, MBP-0137 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Financial Dashboard; Monthly Revenue — Last 12 Months; Gross Margin Trend; Revenue by Aircraft Type | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/reports/financials/page.tsx |
+| RTC-0062 | /reports/financials/forecast | Reports Financials Forecast | page | CAT-REPORTS | src/router/routeModules/protectedAppRoutes.tsx | FinancialForecastPage | routed | FS-0012, FS-0051 | MBP-0103, MBP-0137 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Cash Flow Forecast; horizon-Month Revenue / Cost / Profit Projection; Monthly Cash Flow Detail | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/reports/financials/forecast/page.tsx |
+| RTC-0063 | /reports/financials/profitability | Reports Financials Profitability | page | CAT-REPORTS | src/router/routeModules/protectedAppRoutes.tsx | FinancialProfitabilityPage | routed | FS-0012, FS-0051 | MBP-0103, MBP-0137 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Reports Financials Profitability; WO Profitability; Per-WO Profit &amp; Loss | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/reports/financials/profitability/page.tsx |
+| RTC-0064 | /reports/financials/runway | Reports Financials Runway | page | CAT-REPORTS | src/router/routeModules/protectedAppRoutes.tsx | FinancialRunwayPage | routed | FS-0012, FS-0051 | MBP-0103, MBP-0137 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Reports Financials Runway; Business Runway; 12-Month Cash Position Projection | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/reports/financials/runway/page.tsx |
+| RTC-0065 | /scheduling | Scheduling | page | CAT-SCHEDULING | src/router/routeModules/protectedAppRoutes.tsx | SchedulingPage | routed | FS-0013, FS-0014, FS-0068 | MBP-0110, MBP-0114, MBP-0152 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Scheduling; Role-scoped action controls; Validation and error-state handling | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/scheduling/page.tsx |
+| RTC-0066 | /scheduling/bays | Scheduling Bays | page | CAT-SCHEDULING | src/router/routeModules/protectedAppRoutes.tsx | BaysPage | routed | FS-0013, FS-0014, FS-0068 | MBP-0110, MBP-0114, MBP-0152 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Scheduling Bays; Hangar Bays; Validation and error-state handling | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/scheduling/bays/page.tsx |
+| RTC-0067 | /scheduling/capacity | Scheduling Capacity | page | CAT-SCHEDULING | src/router/routeModules/protectedAppRoutes.tsx | CapacityPage | routed | FS-0013, FS-0014, FS-0068 | MBP-0110, MBP-0114, MBP-0152 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Scheduling Capacity; Role-scoped action controls; Validation and error-state handling | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/scheduling/capacity/page.tsx |
+| RTC-0068 | /scheduling/financial-planning | Scheduling Financial Planning | page | CAT-SCHEDULING | src/router/routeModules/protectedAppRoutes.tsx | FinancialPlanningPage | routed | FS-0013, FS-0014, FS-0068 | MBP-0110, MBP-0114, MBP-0152 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Scheduling Financial Planning; Assumptions; Validation and error-state handling | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/scheduling/financial-planning/page.tsx |
+| RTC-0069 | /scheduling/quotes | Scheduling Quote Workspace | page | CAT-SCHEDULING | src/router/routeModules/protectedAppRoutes.tsx | SchedulingQuotesPage | routed | FS-0013, FS-0014, FS-0068 | MBP-0110, MBP-0114, MBP-0152 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Scheduling Quote Workspace; Role-scoped action controls; Validation and error-state handling | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/scheduling/quotes/page.tsx |
+| RTC-0070 | /scheduling/roster | Scheduling Roster | page | CAT-SCHEDULING | src/router/routeModules/protectedAppRoutes.tsx | SchedulingRosterPage | routed | FS-0013, FS-0014, FS-0068 | MBP-0110, MBP-0114, MBP-0152 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Scheduling Roster; Role-scoped action controls; Validation and error-state handling | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/scheduling/roster/page.tsx |
+| RTC-0071 | /scheduling/seed-audit | Scheduling Seed Audit | page | CAT-SCHEDULING | src/router/routeModules/protectedAppRoutes.tsx | SeedAuditPage | routed | FS-0013, FS-0014, FS-0068 | MBP-0110, MBP-0114, MBP-0152 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Repair Station Seed Audit; Coverage Counts; Per-Location Scheduled Counts; Per-Location Tool Counts; Fleet Component Coverage | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/scheduling/seed-audit/page.tsx |
+| RTC-0072 | /settings/email-log | Settings Email Log | page | CAT-SETTINGS | src/router/routeModules/protectedAppRoutes.tsx | EmailLogPage | routed | FS-0015, FS-0053, FS-0069 | MBP-0106, MBP-0133, MBP-0153 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Settings Email Log; Email Log; Validation and error-state handling | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/settings/email-log/page.tsx |
+| RTC-0073 | /settings/import | Settings Import | page | CAT-SETTINGS | src/router/routeModules/protectedAppRoutes.tsx | ImportPage | routed | FS-0015, FS-0053, FS-0069 | MBP-0106, MBP-0133, MBP-0153 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Import Data; 2. Map columns; 3. Preview (csvRows.length rows) | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/settings/import/page.tsx |
+| RTC-0074 | /settings/locations | Settings Locations | page | CAT-SETTINGS | src/router/routeModules/protectedAppRoutes.tsx | ShopLocationsPage | routed | FS-0015, FS-0053, FS-0069 | MBP-0106, MBP-0133, MBP-0153 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Part 145; Part 135; Part 121; Part 91 | Page includes explicit coming-soon/stub indicators; capability is partial. | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/settings/locations/page.tsx |
+| RTC-0075 | /settings/notifications | Settings Notifications | page | CAT-SETTINGS | src/router/routeModules/protectedAppRoutes.tsx | NotificationPreferencesPage | routed | FS-0015, FS-0053, FS-0069 | MBP-0106, MBP-0133, MBP-0153 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Notification Preferences; Notification Types; Work Order Status Changes; Task Assignments; Quote Approved | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/settings/notifications/page.tsx |
+| RTC-0076 | /settings/quickbooks | Settings QuickBooks | page | CAT-SETTINGS | src/router/routeModules/protectedAppRoutes.tsx | QuickBooksPage | routed | FS-0015, FS-0053, FS-0069 | MBP-0106, MBP-0133, MBP-0153 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Sync Settings; Total Syncs; Pending; Synced; Failed | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/settings/quickbooks/page.tsx |
+| RTC-0077 | /settings/routing-templates | Settings Routing Templates | page | CAT-SETTINGS | src/router/routeModules/protectedAppRoutes.tsx | RoutingTemplatesPage | routed | FS-0015, FS-0053, FS-0069 | MBP-0106, MBP-0133, MBP-0153 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Settings Routing Templates; Role-scoped action controls; Validation and error-state handling | Page includes explicit coming-soon/stub indicators; capability is partial. | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/settings/routing-templates/page.tsx |
+| RTC-0078 | /settings/shop | Settings Shop | page | CAT-SETTINGS | src/router/routeModules/protectedAppRoutes.tsx | ShopSettingsPage | routed | FS-0015, FS-0053, FS-0069 | MBP-0106, MBP-0133, MBP-0153 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Eastern (ET) — America/New_York; Eastern (ET) — America/Detroit; Eastern (ET) — America/Indianapolis; Central (CT) — America/Chicago; Central (CT) — America/Menominee | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/settings/shop/page.tsx |
+| RTC-0079 | /settings/station-config | Settings Station Config | page | CAT-SETTINGS | src/router/routeModules/protectedAppRoutes.tsx | StationConfigPage | routed | FS-0015, FS-0053, FS-0069 | MBP-0106, MBP-0133, MBP-0153 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Settings Station Config; Role-scoped action controls; Validation and error-state handling | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/settings/station-config/page.tsx |
+| RTC-0080 | /settings/users | Settings Users | page | CAT-SETTINGS | src/router/routeModules/protectedAppRoutes.tsx | UsersSettingsPage | routed | FS-0015, FS-0053, FS-0069 | MBP-0106, MBP-0133, MBP-0153 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Settings Users; Role-scoped action controls; Validation and error-state handling | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/settings/users/page.tsx |
+| RTC-0081 | /sign-in/* | Sign In Wildcard | alias | CAT-AUTH | src/router/routeModules/authRoutes.tsx | app/(auth)/sign-in/[[...sign-in]]/page.tsx | routed | FS-0015, FS-0050 | MBP-0017, MBP-0108 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Sign In Wildcard; Role-scoped action controls; Validation and error-state handling | — | src/router/routeModules/authRoutes.tsx; app/(auth)/sign-in/[[...sign-in]]/page.tsx |
+| RTC-0082 | /sign-up/* | Sign Up Wildcard | alias | CAT-AUTH | src/router/routeModules/authRoutes.tsx | app/(auth)/sign-up/[[...sign-up]]/page.tsx | routed | FS-0015, FS-0050 | MBP-0017, MBP-0108 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Sign Up Wildcard; Role-scoped action controls; Validation and error-state handling | — | src/router/routeModules/authRoutes.tsx; app/(auth)/sign-up/[[...sign-up]]/page.tsx |
+| RTC-0083 | /squawks | Squawks | page | CAT-SQUAWKS | src/router/routeModules/protectedAppRoutes.tsx | SquawksPage | routed | FS-0024, FS-0060 | MBP-0041, MBP-0144 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Squawks & Discrepancies; Critical; Major; Minor; Observation | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/squawks/page.tsx |
+| RTC-0084 | /work-orders | Work Orders | page | CAT-WORK-ORDERS | src/router/routeModules/protectedAppRoutes.tsx | WorkOrdersPage | routed | FS-0023, FS-0044, FS-0054, FS-0055, FS-0056 | MBP-0014, MBP-0127, MBP-0138, MBP-0139, MBP-0140 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Work Orders; Role-scoped action controls; Validation and error-state handling | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/work-orders/page.tsx |
+| RTC-0085 | /work-orders/:id | Work Orders Detail | page | CAT-WORK-ORDERS | src/router/routeModules/protectedAppRoutes.tsx | WorkOrderDetailPage | routed | FS-0023, FS-0044, FS-0054, FS-0055, FS-0056 | MBP-0014, MBP-0127, MBP-0138, MBP-0139, MBP-0140 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | wo.workOrderNumber; Work Order Activity; Quoting; In-dock; Inspection | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/work-orders/[id]/page.tsx |
+| RTC-0086 | /work-orders/:id/certificates | Work Orders Detail Certificates | page | CAT-WORK-ORDERS | src/router/routeModules/protectedAppRoutes.tsx | CertificatesPage | routed | FS-0023, FS-0044, FS-0054, FS-0055, FS-0056, FS-0061 | MBP-0014, MBP-0127, MBP-0138, MBP-0139, MBP-0140, MBP-0145 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Work Orders Detail Certificates; Role-scoped action controls; Validation and error-state handling | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/work-orders/[id]/certificates/page.tsx |
+| RTC-0087 | /work-orders/:id/execution | Work Orders Detail Execution | page | CAT-WORK-ORDERS | src/router/routeModules/protectedAppRoutes.tsx | WOExecutionPage | routed | FS-0023, FS-0044, FS-0054, FS-0055, FS-0056 | MBP-0014, MBP-0127, MBP-0138, MBP-0139, MBP-0140 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Work Orders Detail Execution; workOrder.workOrderNumber — Execution Planning; Validation and error-state handling | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/work-orders/[id]/execution/page.tsx |
+| RTC-0088 | /work-orders/:id/records | Work Orders Detail Records | page | CAT-WORK-ORDERS | src/router/routeModules/protectedAppRoutes.tsx | MaintenanceRecordsPage | routed | FS-0023, FS-0044, FS-0054, FS-0055, FS-0056 | MBP-0014, MBP-0127, MBP-0138, MBP-0139, MBP-0140 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Annual; 100-Hour; Progressive; Conditional | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/work-orders/[id]/records/page.tsx |
+| RTC-0089 | /work-orders/:id/release | Work Orders Detail Release | page | CAT-WORK-ORDERS | src/router/routeModules/protectedAppRoutes.tsx | ReleaseAircraftPage | routed | FS-0023, FS-0044, FS-0054, FS-0055, FS-0056 | MBP-0014, MBP-0127, MBP-0138, MBP-0139, MBP-0140 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Work Orders Detail Release; Aircraft Released to Customer; Work Order Details | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/work-orders/[id]/release/page.tsx |
+| RTC-0090 | /work-orders/:id/rts | Work Orders Detail Rts | page | CAT-WORK-ORDERS | src/router/routeModules/protectedAppRoutes.tsx | RtsPage | routed | FS-0023, FS-0044, FS-0054, FS-0055, FS-0056 | MBP-0014, MBP-0127, MBP-0138, MBP-0139, MBP-0140 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Work Orders Detail Rts; Aircraft Returned to Service; Return-to-Service Already Authorized | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/work-orders/[id]/rts/page.tsx |
+| RTC-0091 | /work-orders/:id/signature | Work Orders Detail Signature | page | CAT-WORK-ORDERS | src/router/routeModules/protectedAppRoutes.tsx | SignaturePage | routed | FS-0023, FS-0044, FS-0054, FS-0055, FS-0056 | MBP-0014, MBP-0127, MBP-0138, MBP-0139, MBP-0140 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Work Orders Detail Signature; Re-Authentication Required; Validation and error-state handling | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/work-orders/[id]/signature/page.tsx |
+| RTC-0092 | /work-orders/:id/tasks/:cardId | Work Orders Detail Tasks Task Card | page | CAT-WORK-ORDERS | src/router/routeModules/protectedAppRoutes.tsx | TaskCardPage | routed | FS-0023, FS-0044, FS-0054, FS-0055, FS-0056 | MBP-0014, MBP-0127, MBP-0138, MBP-0139, MBP-0140 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Work Orders Detail Tasks Task Card; taskCard.title; Validation and error-state handling | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/work-orders/[id]/tasks/[cardId]/page.tsx |
+| RTC-0093 | /work-orders/:id/tasks/new | Work Orders Detail Tasks New | page | CAT-WORK-ORDERS | src/router/routeModules/protectedAppRoutes.tsx | NewTaskCardPage | routed | FS-0023, FS-0044, FS-0054, FS-0055, FS-0056 | MBP-0014, MBP-0127, MBP-0138, MBP-0139, MBP-0140 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Work Orders Detail Tasks New; Role-scoped action controls; Validation and error-state handling | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/work-orders/[id]/tasks/new/page.tsx |
+| RTC-0094 | /work-orders/dashboard | Work Orders Dashboard | page | CAT-WORK-ORDERS | src/router/routeModules/protectedAppRoutes.tsx | WorkOrdersDashboardPage | routed | FS-0023, FS-0044, FS-0054, FS-0055, FS-0056 | MBP-0014, MBP-0127, MBP-0138, MBP-0139, MBP-0140 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Work Orders Dashboard; Work Order Dashboard; Active Work Orders | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/work-orders/dashboard/page.tsx |
+| RTC-0095 | /work-orders/kanban | Work Order Kanban | page | CAT-WORK-ORDERS | src/router/routeModules/protectedAppRoutes.tsx | KanbanPage | routed | FS-0023, FS-0044, FS-0054, FS-0055, FS-0056 | MBP-0014, MBP-0127, MBP-0138, MBP-0139, MBP-0140 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Work Orders — Kanban; col.label; Draft; Open; In Progress | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/work-orders/kanban/page.tsx |
+| RTC-0096 | /work-orders/lead | Work Orders Lead | page | CAT-WORK-ORDERS | src/router/routeModules/protectedAppRoutes.tsx | WorkOrdersLeadPage | routed | FS-0023, FS-0044, FS-0054, FS-0055, FS-0056 | MBP-0014, MBP-0127, MBP-0138, MBP-0139, MBP-0140 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Lead Workspace; Task Assignment Feed; Turnover Report Editor; Submitted History | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/work-orders/lead/page.tsx |
+| RTC-0097 | /work-orders/new | New Work Order | page | CAT-WORK-ORDERS | src/router/routeModules/protectedAppRoutes.tsx | NewWorkOrderPage | routed | FS-0023, FS-0044, FS-0054, FS-0055, FS-0056 | MBP-0014, MBP-0127, MBP-0138, MBP-0139, MBP-0140 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | New Work Order; Work Order Details; Priority | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/work-orders/new/page.tsx |
+| RTC-0098 | /work-orders/templates | Work Order Templates | page | CAT-WORK-ORDERS | src/router/routeModules/protectedAppRoutes.tsx | WorkOrderTemplatesPage | routed | FS-0023, FS-0044, FS-0054, FS-0055, FS-0056 | MBP-0014, MBP-0127, MBP-0138, MBP-0139, MBP-0140 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Work Order Templates; Role-scoped action controls; Validation and error-state handling | — | src/router/routeModules/protectedAppRoutes.tsx; app/(app)/work-orders/templates/page.tsx |
+| RTC-0099 | * | App Not Found Catch-All | catch_all | CAT-SYSTEM | src/router/routeModules/protectedAppRoutes.tsx | AppNotFoundPage | router_only | FS-0053, FS-0069 | MBP-0133, MBP-0153 | implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | App Not Found Catch-All; Role-scoped access flow; State transition controls | Route exists in router modules without a dedicated page file; behavior is redirect/catch-all managed. | src/router/routeModules/protectedAppRoutes.tsx |
+| RTC-0100 | /billing/quotes/templates | Billing Quotes Templates | page | CAT-BILLING | app/(app)/billing/quotes/templates/page.tsx | app/(app)/billing/quotes/templates/page.tsx | orphan_page | FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 | MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Billing Quotes Templates; Quote Templates; t.name | Page exists in filesystem but is not wired in route modules. | app/(app)/billing/quotes/templates/page.tsx |
+| RTC-0101 | /not-found | Not Found | page | CAT-SYSTEM | app/(app)/not-found/page.tsx | app/(app)/not-found/page.tsx | orphan_page | FS-0053, FS-0069 | MBP-0133, MBP-0153 | partially_implemented | doc_reviewed | 2026-03-04T00:00:00Z | master-spec-expansion-agent | Not Found; Role-scoped action controls; Validation and error-state handling | Page exists in filesystem but is not wired in route modules. | app/(app)/not-found/page.tsx |
+
+## Registry D — Route Category Rollup (17)
+
+| route_category_id | category_name | route_count | mapped_fs_ids | mapped_mbp_ids | coverage_state | uncovered_route_ids | notes |
+|---|---|---|---|---|---|---|---|
+| CAT-AUTH | Authentication & Session Boundaries | 2 | FS-0015, FS-0050 | MBP-0017, MBP-0108 | complete | — | routed=2; router_only=0; orphan_page=0 |
+| CAT-BILLING | Billing, AR, and Commercial Operations | 29 | FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 | MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150 | complete | — | routed=27; router_only=1; orphan_page=1 |
+| CAT-COMPLIANCE | Compliance and Regulatory Traceability | 5 | FS-0020, FS-0030, FS-0061 | MBP-0011, MBP-0117, MBP-0145 | complete | — | routed=4; router_only=1; orphan_page=0 |
+| CAT-DASHBOARD | Operational Dashboard Surfaces | 1 | FS-0012, FS-0026 | MBP-0056, MBP-0057 | complete | — | routed=1; router_only=0; orphan_page=0 |
+| CAT-FLEET | Fleet Planning and Aircraft State | 5 | FS-0020, FS-0029, FS-0035 | MBP-0009, MBP-0047, MBP-0126 | complete | — | routed=5; router_only=0; orphan_page=0 |
+| CAT-LEAD | Lead Workspace and Shift Handoffs | 1 | FS-0028, FS-0055 | MBP-0134, MBP-0139 | complete | — | routed=1; router_only=0; orphan_page=0 |
+| CAT-MY-WORK | Technician Execution Workspace | 1 | FS-0023, FS-0044, FS-0058 | MBP-0123, MBP-0142 | complete | — | routed=1; router_only=0; orphan_page=0 |
+| CAT-ONBOARDING | Organization Onboarding | 1 | FS-0041, FS-0069 | MBP-0105, MBP-0153 | complete | — | routed=1; router_only=0; orphan_page=0 |
+| CAT-PARTS | Parts and Materials Operations | 10 | FS-0019, FS-0052, FS-0067 | MBP-0020, MBP-0122, MBP-0151 | complete | — | routed=10; router_only=0; orphan_page=0 |
+| CAT-PERSONNEL | Personnel and Training | 2 | FS-0016, FS-0021 | MBP-0001, MBP-0134 | complete | — | routed=2; router_only=0; orphan_page=0 |
+| CAT-PORTAL | Customer Portal | 5 | FS-0010, FS-0062 | MBP-0019, MBP-0146 | complete | — | routed=5; router_only=0; orphan_page=0 |
+| CAT-REPORTS | Reporting and Financial Analytics | 5 | FS-0012, FS-0051 | MBP-0103, MBP-0137 | complete | — | routed=5; router_only=0; orphan_page=0 |
+| CAT-SCHEDULING | Scheduling and Capacity Planning | 7 | FS-0013, FS-0014, FS-0068 | MBP-0110, MBP-0114, MBP-0152 | complete | — | routed=7; router_only=0; orphan_page=0 |
+| CAT-SETTINGS | System Settings and Governance | 9 | FS-0015, FS-0053, FS-0069 | MBP-0106, MBP-0133, MBP-0153 | complete | — | routed=9; router_only=0; orphan_page=0 |
+| CAT-SQUAWKS | Squawk Intake and Discrepancy Intake | 1 | FS-0024, FS-0060 | MBP-0041, MBP-0144 | complete | — | routed=1; router_only=0; orphan_page=0 |
+| CAT-SYSTEM | System and Fallback Routes | 2 | FS-0053, FS-0069 | MBP-0133, MBP-0153 | complete | — | routed=0; router_only=1; orphan_page=1 |
+| CAT-WORK-ORDERS | Work Order Lifecycle Execution | 15 | FS-0023, FS-0044, FS-0054, FS-0055, FS-0056, FS-0061 | MBP-0014, MBP-0127, MBP-0138, MBP-0139, MBP-0140, MBP-0145 | complete | — | routed=15; router_only=0; orphan_page=0 |
+
+## Application Page + Subpage Atlas (Derived)
+
+This section is a page-first view of every routed page and subpage in the application, with context joined from the feature list in Registry A and route mappings in Registry C.
+
+Scope and method:
+1. Source routes: Registry C (`RTC-0001` through `RTC-0101`).
+2. Feature context: Registry A (`FS-*`) names resolved from each route's `mapped_fs_ids`.
+3. Work package context: Registry B (`MBP-*`) references from each route's `mapped_mbp_ids`.
+
+### CAT-AUTH — Authentication & Session Boundaries (2 routes)
+
+Category feature context: FS-0015 Role Management Admin UI; FS-0050 Field-Level Visibility/Edit Policy Controls.
+
+| Route | Page Label | Page Level | Kind / Source Status | Key Contextual Behaviors | FS Links | MBP Links | Implementation | Verification | Gap Notes |
+|---|---|---|---|---|---|---|---|---|---|
+| `/sign-in/*` | Sign In Wildcard | system | `alias` / `routed` | Sign In Wildcard; Role-scoped action controls; Validation and error-state handling | FS-0015, FS-0050 | MBP-0017, MBP-0108 | `partially_implemented` | `doc_reviewed` | — |
+| `/sign-up/*` | Sign Up Wildcard | system | `alias` / `routed` | Sign Up Wildcard; Role-scoped action controls; Validation and error-state handling | FS-0015, FS-0050 | MBP-0017, MBP-0108 | `partially_implemented` | `doc_reviewed` | — |
+
+### CAT-BILLING — Billing, AR, and Commercial Operations (29 routes)
+
+Category feature context: FS-0007 Pricing Rules — Auto-Application; FS-0008 Tax Calculation; FS-0032 QuickBooks Integration; FS-0062 Customer Account CRM & Profile Ledger; FS-0063 AR, Deposits, and Credit Memo Controls; FS-0064 Procurement and Vendor Operations; FS-0065 Recurring Billing Contract Engine; FS-0066 Labor Kit and Quote Template Library.
+
+| Route | Page Label | Page Level | Kind / Source Status | Key Contextual Behaviors | FS Links | MBP Links | Implementation | Verification | Gap Notes |
+|---|---|---|---|---|---|---|---|---|---|
+| `/billing` | Billing | root | `redirect` / `router_only` | Billing; Role-scoped access flow; State transition controls | FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 | MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150 | `implemented` | `doc_reviewed` | Route exists in router modules without a dedicated page file; behavior is redirect/catch-all managed. |
+| `/billing/analytics` | Billing Analytics | subpage | `page` / `routed` | Billing Analytics; Monthly Revenue — Last 6 Months; Revenue by Month; AR Aging; Top Customers by Collected Revenue | FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 | MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150 | `partially_implemented` | `doc_reviewed` | — |
+| `/billing/ar-dashboard` | AR Dashboard | subpage | `page` / `routed` | AR Dashboard; Customer Balances; Validation and error-state handling | FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 | MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150 | `partially_implemented` | `doc_reviewed` | — |
+| `/billing/credit-memos` | Credit Memos | subpage | `page` / `routed` | Credit Memos; Role-scoped action controls; Validation and error-state handling | FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 | MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150 | `partially_implemented` | `doc_reviewed` | — |
+| `/billing/customers` | Customers | subpage | `page` / `routed` | Customers; Role-scoped action controls; Validation and error-state handling | FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 | MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150 | `partially_implemented` | `doc_reviewed` | — |
+| `/billing/customers/:id` | Billing Customers Detail | deep-subpage | `page` / `routed` | customer?.name; Customer Information; Quotes; Invoices; Payment History | FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 | MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150 | `partially_implemented` | `doc_reviewed` | — |
+| `/billing/deposits` | Deposits | subpage | `page` / `routed` | Deposits; Role-scoped action controls; Validation and error-state handling | FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 | MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150 | `partially_implemented` | `doc_reviewed` | — |
+| `/billing/invoices` | Invoices | subpage | `page` / `routed` | Invoices; Cash; Check; Credit Card; Wire Transfer | FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 | MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150 | `partially_implemented` | `doc_reviewed` | — |
+| `/billing/invoices/:id` | Billing Invoices Detail | deep-subpage | `page` / `routed` | invoice.invoiceNumber; Invoice invoice.invoiceNumber; Invoice Summary; Line Items; Payment History | FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 | MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150 | `partially_implemented` | `doc_reviewed` | — |
+| `/billing/invoices/new` | Billing Invoices New | deep-subpage | `page` / `routed` | New Invoice; Invoice Source; Invoice Details; Tax Rate | FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 | MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150 | `partially_implemented` | `doc_reviewed` | — |
+| `/billing/labor-kits` | Labor Kits | subpage | `page` / `routed` | Labor Kits; Role-scoped action controls; Validation and error-state handling | FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 | MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150 | `partially_implemented` | `doc_reviewed` | — |
+| `/billing/otc` | OTC Sales | subpage | `page` / `routed` | Counter Sales; Add Items; Cart (cart.length itemcart.length !== 1 ? "s" : ""); Payment; Sales History | FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 | MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150 | `partially_implemented` | `doc_reviewed` | — |
+| `/billing/pricing` | Pricing | subpage | `page` / `routed` | Pricing; Pricing Profiles; Pricing Rules | FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 | MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150 | `partially_implemented` | `doc_reviewed` | — |
+| `/billing/purchase-orders` | Purchase Orders | subpage | `page` / `routed` | Purchase Orders; Draft; Submitted; Partial; Received | FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 | MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150 | `partially_implemented` | `doc_reviewed` | — |
+| `/billing/purchase-orders/:id` | Billing Purchase Orders Detail | deep-subpage | `page` / `routed` | po.poNumber; PO Summary; Line Items | FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 | MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150 | `partially_implemented` | `doc_reviewed` | — |
+| `/billing/purchase-orders/new` | Billing Purchase Orders New | deep-subpage | `page` / `routed` | New Purchase Order; PO Details; Line Items | FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 | MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150 | `partially_implemented` | `doc_reviewed` | — |
+| `/billing/quotes` | Quotes | subpage | `page` / `routed` | Quotes; Role-scoped action controls; Validation and error-state handling | FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 | MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150 | `partially_implemented` | `doc_reviewed` | — |
+| `/billing/quotes/:id` | Billing Quotes Detail | deep-subpage | `page` / `routed` | Billing Quotes Detail; Role-scoped action controls; Validation and error-state handling | FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 | MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150 | `partially_implemented` | `doc_reviewed` | — |
+| `/billing/quotes/new` | Billing Quotes New | deep-subpage | `page` / `routed` | Billing Quotes New; Role-scoped action controls; Validation and error-state handling | FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 | MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150 | `partially_implemented` | `doc_reviewed` | — |
+| `/billing/recurring` | Recurring | subpage | `page` / `routed` | Recurring; Recurring Billing; Validation and error-state handling | FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 | MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150 | `partially_implemented` | `doc_reviewed` | — |
+| `/billing/settings` | Billing Settings | subpage | `page` / `routed` | Billing Settings; Role-scoped action controls; Validation and error-state handling | FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 | MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150 | `partially_implemented` | `doc_reviewed` | Page includes explicit coming-soon/stub indicators; capability is partial. |
+| `/billing/tax-config` | Tax Config | subpage | `page` / `routed` | Tax Config; Tax Configuration; Validation and error-state handling | FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 | MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150 | `partially_implemented` | `doc_reviewed` | — |
+| `/billing/time-approval` | Time Approval | subpage | `page` / `routed` | Time Approval; Time Clock Approval; Validation and error-state handling | FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 | MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150 | `partially_implemented` | `doc_reviewed` | — |
+| `/billing/time-clock` | Time Clock | subpage | `page` / `routed` | Time Clock; Today&apos;s Summary; Validation and error-state handling | FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 | MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150 | `partially_implemented` | `doc_reviewed` | — |
+| `/billing/vendors` | Vendors | subpage | `page` / `routed` | Vendors; Role-scoped action controls; Validation and error-state handling | FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 | MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150 | `partially_implemented` | `doc_reviewed` | — |
+| `/billing/vendors/:id` | Billing Vendors Detail | deep-subpage | `page` / `routed` | vendor.name; Services; Contact Information; Certification; Purchase Order History | FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 | MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150 | `partially_implemented` | `doc_reviewed` | — |
+| `/billing/vendors/new` | Billing Vendors New | deep-subpage | `page` / `routed` | New Vendor; Vendor Information; Contact Information; Certification; Parts Supplier | FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 | MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150 | `partially_implemented` | `doc_reviewed` | — |
+| `/billing/warranty` | Warranty | subpage | `page` / `routed` | Total Claims; Draft; Submitted; Under Review; Approved | FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 | MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150 | `partially_implemented` | `doc_reviewed` | — |
+| `/billing/quotes/templates` | Billing Quotes Templates | deep-subpage | `page` / `orphan_page` | Billing Quotes Templates; Quote Templates; t.name | FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 | MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150 | `partially_implemented` | `doc_reviewed` | Page exists in filesystem but is not wired in route modules. |
+
+### CAT-COMPLIANCE — Compliance and Regulatory Traceability (5 routes)
+
+Category feature context: FS-0020 AD/SB Fleet Compliance Dashboard; FS-0030 Conformity Inspection; FS-0061 Certificate Field Normalization Pipeline.
+
+| Route | Page Label | Page Level | Kind / Source Status | Key Contextual Behaviors | FS Links | MBP Links | Implementation | Verification | Gap Notes |
+|---|---|---|---|---|---|---|---|---|---|
+| `/compliance` | Compliance | root | `page` / `routed` | Compliance; Fleet AD Compliance Status; Compliance Tools | FS-0020, FS-0030, FS-0061 | MBP-0011, MBP-0117, MBP-0145 | `partially_implemented` | `doc_reviewed` | — |
+| `/compliance/ad-sb` | AD/SB | subpage | `page` / `routed` | AD/SB; Role-scoped action controls; Validation and error-state handling | FS-0020, FS-0030, FS-0061 | MBP-0011, MBP-0117, MBP-0145 | `partially_implemented` | `doc_reviewed` | — |
+| `/compliance/audit-trail` | Audit Trail | subpage | `page` / `routed` | Audit Trail; Airworthiness Directives — aircraftRegistration; Validation and error-state handling | FS-0020, FS-0030, FS-0061 | MBP-0011, MBP-0117, MBP-0145 | `partially_implemented` | `doc_reviewed` | — |
+| `/compliance/certificates` | Compliance Certificates | subpage | `redirect` / `router_only` | Compliance Certificates; Role-scoped access flow; State transition controls | FS-0020, FS-0030, FS-0061 | MBP-0011, MBP-0117, MBP-0145 | `implemented` | `doc_reviewed` | Route exists in router modules without a dedicated page file; behavior is redirect/catch-all managed. |
+| `/compliance/qcm-review` | QCM Review | subpage | `page` / `routed` | QCM Review; IA Sign-Off Queue; Validation and error-state handling | FS-0020, FS-0030, FS-0061 | MBP-0011, MBP-0117, MBP-0145 | `partially_implemented` | `doc_reviewed` | — |
+
+### CAT-DASHBOARD — Operational Dashboard Surfaces (1 routes)
+
+Category feature context: FS-0012 Reports & Analytics Dashboard; FS-0026 Dashboard KPIs.
+
+| Route | Page Label | Page Level | Kind / Source Status | Key Contextual Behaviors | FS Links | MBP Links | Implementation | Verification | Gap Notes |
+|---|---|---|---|---|---|---|---|---|---|
+| `/dashboard` | Dashboard | root | `page` / `routed` | Dashboard; Active Work Orders; AOG Aircraft; Overdue ADs; Open Discrepancies | FS-0012, FS-0026 | MBP-0056, MBP-0057 | `partially_implemented` | `doc_reviewed` | — |
+
+### CAT-FLEET — Fleet Planning and Aircraft State (5 routes)
+
+Category feature context: FS-0020 AD/SB Fleet Compliance Dashboard; FS-0029 Fleet Calendar Enhancements; FS-0035 AI Predictive Maintenance.
+
+| Route | Page Label | Page Level | Kind / Source Status | Key Contextual Behaviors | FS Links | MBP Links | Implementation | Verification | Gap Notes |
+|---|---|---|---|---|---|---|---|---|---|
+| `/fleet` | Fleet | root | `page` / `routed` | Fleet; Airworthy; Airworthy w/ Limitations; In Maintenance; Out of Service | FS-0020, FS-0029, FS-0035 | MBP-0009, MBP-0047, MBP-0126 | `partially_implemented` | `doc_reviewed` | — |
+| `/fleet/:tail` | Fleet Aircraft Tail | subpage | `page` / `routed` | aircraft!.currentRegistration; Work Orders; Identification; Customer; Airworthy | FS-0020, FS-0029, FS-0035 | MBP-0009, MBP-0047, MBP-0126 | `partially_implemented` | `doc_reviewed` | Page includes explicit coming-soon/stub indicators; capability is partial. |
+| `/fleet/:tail/logbook` | Fleet Aircraft Tail Logbook | deep-subpage | `page` / `routed` | tailNumber; Maintenance; Inspection; Correction | FS-0020, FS-0029, FS-0035 | MBP-0009, MBP-0047, MBP-0126 | `partially_implemented` | `doc_reviewed` | — |
+| `/fleet/calendar` | Fleet Calendar | subpage | `page` / `routed` | Fleet Calendar; Role-scoped action controls; Validation and error-state handling | FS-0020, FS-0029, FS-0035 | MBP-0009, MBP-0047, MBP-0126 | `partially_implemented` | `doc_reviewed` | — |
+| `/fleet/predictions` | Fleet Predictions | subpage | `page` / `routed` | Fleet Predictions; Predictive Maintenance; Validation and error-state handling | FS-0020, FS-0029, FS-0035 | MBP-0009, MBP-0047, MBP-0126 | `partially_implemented` | `doc_reviewed` | — |
+
+### CAT-LEAD — Lead Workspace and Shift Handoffs (1 routes)
+
+Category feature context: FS-0028 Handoff Notes; FS-0055 Lead Technician Execution Safety Orchestrator.
+
+| Route | Page Label | Page Level | Kind / Source Status | Key Contextual Behaviors | FS Links | MBP Links | Implementation | Verification | Gap Notes |
+|---|---|---|---|---|---|---|---|---|---|
+| `/lead` | Lead | root | `page` / `routed` | Lead Technician Workspace; My Team; Assignment Board; Team Capacity; Active WO Summary | FS-0028, FS-0055 | MBP-0134, MBP-0139 | `partially_implemented` | `doc_reviewed` | — |
+
+### CAT-MY-WORK — Technician Execution Workspace (1 routes)
+
+Category feature context: FS-0023 Work Order Close Readiness; FS-0044 Work Order Routing Templates + Standard Minutes; FS-0058 My Work Assignment Consistency Controls.
+
+| Route | Page Label | Page Level | Kind / Source Status | Key Contextual Behaviors | FS Links | MBP Links | Implementation | Verification | Gap Notes |
+|---|---|---|---|---|---|---|---|---|---|
+| `/my-work` | My Work | root | `page` / `routed` | My Work; Role-scoped action controls; Validation and error-state handling | FS-0023, FS-0044, FS-0058 | MBP-0123, MBP-0142 | `partially_implemented` | `doc_reviewed` | — |
+
+### CAT-ONBOARDING — Organization Onboarding (1 routes)
+
+Category feature context: FS-0041 Policy Enforcement Engine; FS-0069 Station Configuration and Org Governance Console.
+
+| Route | Page Label | Page Level | Kind / Source Status | Key Contextual Behaviors | FS Links | MBP Links | Implementation | Verification | Gap Notes |
+|---|---|---|---|---|---|---|---|---|---|
+| `/onboarding` | Onboarding | root | `page` / `routed` | Onboarding; Role-scoped action controls; Validation and error-state handling | FS-0041, FS-0069 | MBP-0105, MBP-0153 | `partially_implemented` | `doc_reviewed` | — |
+
+### CAT-PARTS — Parts and Materials Operations (10 routes)
+
+Category feature context: FS-0019 Tool Crib Management; FS-0052 Part Lineage Drilldown Explorer; FS-0067 Parts Logistics Operations (Shipping, Loaners, Core Flow).
+
+| Route | Page Label | Page Level | Kind / Source Status | Key Contextual Behaviors | FS Links | MBP Links | Implementation | Verification | Gap Notes |
+|---|---|---|---|---|---|---|---|---|---|
+| `/parts` | Parts | root | `page` / `routed` | Parts; Role-scoped action controls; Validation and error-state handling | FS-0019, FS-0052, FS-0067 | MBP-0020, MBP-0122, MBP-0151 | `partially_implemented` | `doc_reviewed` | — |
+| `/parts/cores` | Cores | subpage | `page` / `routed` | Cores Out; Value Outstanding; Overdue; Awaiting Return; Received | FS-0019, FS-0052, FS-0067 | MBP-0020, MBP-0122, MBP-0151 | `partially_implemented` | `doc_reviewed` | — |
+| `/parts/inventory-count` | Inventory Count | subpage | `page` / `routed` | Inventory Count; countDetail.name; Inventory Counts | FS-0019, FS-0052, FS-0067 | MBP-0020, MBP-0122, MBP-0151 | `partially_implemented` | `doc_reviewed` | — |
+| `/parts/loaners` | Loaners | subpage | `page` / `routed` | Loaners; Rental / Loaner Tracking; Validation and error-state handling | FS-0019, FS-0052, FS-0067 | MBP-0020, MBP-0122, MBP-0151 | `partially_implemented` | `doc_reviewed` | — |
+| `/parts/new` | New Part | subpage | `page` / `routed` | Serviceable (used); Overhauled; Repaired | FS-0019, FS-0052, FS-0067 | MBP-0020, MBP-0122, MBP-0151 | `partially_implemented` | `doc_reviewed` | — |
+| `/parts/receiving` | Part Receiving | subpage | `page` / `routed` | Part Receiving; Role-scoped action controls; Validation and error-state handling | FS-0019, FS-0052, FS-0067 | MBP-0020, MBP-0122, MBP-0151 | `partially_implemented` | `doc_reviewed` | — |
+| `/parts/requests` | Part Requests | subpage | `page` / `routed` | Parts Queue; Pending Inspection; In Stock; Installed; Removed — Pending Disposition | FS-0019, FS-0052, FS-0067 | MBP-0020, MBP-0122, MBP-0151 | `partially_implemented` | `doc_reviewed` | — |
+| `/parts/rotables` | Rotables | subpage | `page` / `routed` | Rotables; Rotable Components; Validation and error-state handling | FS-0019, FS-0052, FS-0067 | MBP-0020, MBP-0122, MBP-0151 | `partially_implemented` | `doc_reviewed` | — |
+| `/parts/shipping` | Shipping | subpage | `page` / `routed` | Open Receiving; Total; Pending; In Transit; Delivered | FS-0019, FS-0052, FS-0067 | MBP-0020, MBP-0122, MBP-0151 | `partially_implemented` | `doc_reviewed` | — |
+| `/parts/tools` | Tools | subpage | `page` / `routed` | Hand Tool; Power Tool; Test Equipment; Special Tooling; Consumable | FS-0019, FS-0052, FS-0067 | MBP-0020, MBP-0122, MBP-0151 | `partially_implemented` | `doc_reviewed` | — |
+
+### CAT-PERSONNEL — Personnel and Training (2 routes)
+
+Category feature context: FS-0016 Training & Qualifications Mgmt; FS-0021 Overtime / Shift Management.
+
+| Route | Page Label | Page Level | Kind / Source Status | Key Contextual Behaviors | FS Links | MBP Links | Implementation | Verification | Gap Notes |
+|---|---|---|---|---|---|---|---|---|---|
+| `/personnel` | Personnel | root | `page` / `routed` | Personnel; Role-scoped action controls; Validation and error-state handling | FS-0016, FS-0021 | MBP-0001, MBP-0134 | `partially_implemented` | `doc_reviewed` | — |
+| `/personnel/training` | Training | subpage | `page` / `routed` | Training &amp; Qualifications; Initial; Recurrent; Regulatory; Safety | FS-0016, FS-0021 | MBP-0001, MBP-0134 | `partially_implemented` | `doc_reviewed` | — |
+
+### CAT-PORTAL — Customer Portal (5 routes)
+
+Category feature context: FS-0010 Customer Portal (ServiceEdge equivalent); FS-0062 Customer Account CRM & Profile Ledger.
+
+| Route | Page Label | Page Level | Kind / Source Status | Key Contextual Behaviors | FS Links | MBP Links | Implementation | Verification | Gap Notes |
+|---|---|---|---|---|---|---|---|---|---|
+| `/portal` | Portal | root | `page` / `routed` | No customer account linked; Active Work Orders; Pending Quotes; Outstanding Invoices; Total Fleet | FS-0010, FS-0062 | MBP-0019, MBP-0146 | `partially_implemented` | `doc_reviewed` | — |
+| `/portal/fleet` | Portal Fleet | subpage | `page` / `routed` | Portal Fleet; My Fleet; Validation and error-state handling | FS-0010, FS-0062 | MBP-0019, MBP-0146 | `partially_implemented` | `doc_reviewed` | — |
+| `/portal/invoices` | Portal Invoices | subpage | `page` / `routed` | Portal Invoices; Invoices; invoice.invoiceNumber | FS-0010, FS-0062 | MBP-0019, MBP-0146 | `partially_implemented` | `doc_reviewed` | — |
+| `/portal/quotes` | Portal Quotes | subpage | `page` / `routed` | Portal Quotes; Quotes; quote.quoteNumber | FS-0010, FS-0062 | MBP-0019, MBP-0146 | `partially_implemented` | `doc_reviewed` | — |
+| `/portal/work-orders` | Portal Work Orders | subpage | `page` / `routed` | Work Orders; detail.workOrderNumber; Received; Inspection; In Progress | FS-0010, FS-0062 | MBP-0019, MBP-0146 | `partially_implemented` | `doc_reviewed` | — |
+
+### CAT-REPORTS — Reporting and Financial Analytics (5 routes)
+
+Category feature context: FS-0012 Reports & Analytics Dashboard; FS-0051 Operational Report Builder + Scheduled Report Runs.
+
+| Route | Page Label | Page Level | Kind / Source Status | Key Contextual Behaviors | FS Links | MBP Links | Implementation | Verification | Gap Notes |
+|---|---|---|---|---|---|---|---|---|---|
+| `/reports` | Reports | root | `page` / `routed` | Monthly Revenue; WO Throughput; Revenue Summary Table | FS-0012, FS-0051 | MBP-0103, MBP-0137 | `partially_implemented` | `doc_reviewed` | — |
+| `/reports/financials` | Reports Financials | subpage | `page` / `routed` | Financial Dashboard; Monthly Revenue — Last 12 Months; Gross Margin Trend; Revenue by Aircraft Type | FS-0012, FS-0051 | MBP-0103, MBP-0137 | `partially_implemented` | `doc_reviewed` | — |
+| `/reports/financials/forecast` | Reports Financials Forecast | deep-subpage | `page` / `routed` | Cash Flow Forecast; horizon-Month Revenue / Cost / Profit Projection; Monthly Cash Flow Detail | FS-0012, FS-0051 | MBP-0103, MBP-0137 | `partially_implemented` | `doc_reviewed` | — |
+| `/reports/financials/profitability` | Reports Financials Profitability | deep-subpage | `page` / `routed` | Reports Financials Profitability; WO Profitability; Per-WO Profit &amp; Loss | FS-0012, FS-0051 | MBP-0103, MBP-0137 | `partially_implemented` | `doc_reviewed` | — |
+| `/reports/financials/runway` | Reports Financials Runway | deep-subpage | `page` / `routed` | Reports Financials Runway; Business Runway; 12-Month Cash Position Projection | FS-0012, FS-0051 | MBP-0103, MBP-0137 | `partially_implemented` | `doc_reviewed` | — |
+
+### CAT-SCHEDULING — Scheduling and Capacity Planning (7 routes)
+
+Category feature context: FS-0013 Scheduling — Drag-Drop Gantt; FS-0014 Scheduling — Auto-Schedule; FS-0068 Scheduling Roster and Crew Coordination.
+
+| Route | Page Label | Page Level | Kind / Source Status | Key Contextual Behaviors | FS Links | MBP Links | Implementation | Verification | Gap Notes |
+|---|---|---|---|---|---|---|---|---|---|
+| `/scheduling` | Scheduling | root | `page` / `routed` | Scheduling; Role-scoped action controls; Validation and error-state handling | FS-0013, FS-0014, FS-0068 | MBP-0110, MBP-0114, MBP-0152 | `partially_implemented` | `doc_reviewed` | — |
+| `/scheduling/bays` | Scheduling Bays | subpage | `page` / `routed` | Scheduling Bays; Hangar Bays; Validation and error-state handling | FS-0013, FS-0014, FS-0068 | MBP-0110, MBP-0114, MBP-0152 | `partially_implemented` | `doc_reviewed` | — |
+| `/scheduling/capacity` | Scheduling Capacity | subpage | `page` / `routed` | Scheduling Capacity; Role-scoped action controls; Validation and error-state handling | FS-0013, FS-0014, FS-0068 | MBP-0110, MBP-0114, MBP-0152 | `partially_implemented` | `doc_reviewed` | — |
+| `/scheduling/financial-planning` | Scheduling Financial Planning | subpage | `page` / `routed` | Scheduling Financial Planning; Assumptions; Validation and error-state handling | FS-0013, FS-0014, FS-0068 | MBP-0110, MBP-0114, MBP-0152 | `partially_implemented` | `doc_reviewed` | — |
+| `/scheduling/quotes` | Scheduling Quote Workspace | subpage | `page` / `routed` | Scheduling Quote Workspace; Role-scoped action controls; Validation and error-state handling | FS-0013, FS-0014, FS-0068 | MBP-0110, MBP-0114, MBP-0152 | `partially_implemented` | `doc_reviewed` | — |
+| `/scheduling/roster` | Scheduling Roster | subpage | `page` / `routed` | Scheduling Roster; Role-scoped action controls; Validation and error-state handling | FS-0013, FS-0014, FS-0068 | MBP-0110, MBP-0114, MBP-0152 | `partially_implemented` | `doc_reviewed` | — |
+| `/scheduling/seed-audit` | Scheduling Seed Audit | subpage | `page` / `routed` | Repair Station Seed Audit; Coverage Counts; Per-Location Scheduled Counts; Per-Location Tool Counts; Fleet Component Coverage | FS-0013, FS-0014, FS-0068 | MBP-0110, MBP-0114, MBP-0152 | `partially_implemented` | `doc_reviewed` | — |
+
+### CAT-SETTINGS — System Settings and Governance (9 routes)
+
+Category feature context: FS-0015 Role Management Admin UI; FS-0053 Zero-Downtime Migration Control Plane; FS-0069 Station Configuration and Org Governance Console.
+
+| Route | Page Label | Page Level | Kind / Source Status | Key Contextual Behaviors | FS Links | MBP Links | Implementation | Verification | Gap Notes |
+|---|---|---|---|---|---|---|---|---|---|
+| `/settings/email-log` | Settings Email Log | subpage | `page` / `routed` | Settings Email Log; Email Log; Validation and error-state handling | FS-0015, FS-0053, FS-0069 | MBP-0106, MBP-0133, MBP-0153 | `partially_implemented` | `doc_reviewed` | — |
+| `/settings/import` | Settings Import | subpage | `page` / `routed` | Import Data; 2. Map columns; 3. Preview (csvRows.length rows) | FS-0015, FS-0053, FS-0069 | MBP-0106, MBP-0133, MBP-0153 | `partially_implemented` | `doc_reviewed` | — |
+| `/settings/locations` | Settings Locations | subpage | `page` / `routed` | Part 145; Part 135; Part 121; Part 91 | FS-0015, FS-0053, FS-0069 | MBP-0106, MBP-0133, MBP-0153 | `partially_implemented` | `doc_reviewed` | Page includes explicit coming-soon/stub indicators; capability is partial. |
+| `/settings/notifications` | Settings Notifications | subpage | `page` / `routed` | Notification Preferences; Notification Types; Work Order Status Changes; Task Assignments; Quote Approved | FS-0015, FS-0053, FS-0069 | MBP-0106, MBP-0133, MBP-0153 | `partially_implemented` | `doc_reviewed` | — |
+| `/settings/quickbooks` | Settings QuickBooks | subpage | `page` / `routed` | Sync Settings; Total Syncs; Pending; Synced; Failed | FS-0015, FS-0053, FS-0069 | MBP-0106, MBP-0133, MBP-0153 | `partially_implemented` | `doc_reviewed` | — |
+| `/settings/routing-templates` | Settings Routing Templates | subpage | `page` / `routed` | Settings Routing Templates; Role-scoped action controls; Validation and error-state handling | FS-0015, FS-0053, FS-0069 | MBP-0106, MBP-0133, MBP-0153 | `partially_implemented` | `doc_reviewed` | Page includes explicit coming-soon/stub indicators; capability is partial. |
+| `/settings/shop` | Settings Shop | subpage | `page` / `routed` | Eastern (ET) — America/New_York; Eastern (ET) — America/Detroit; Eastern (ET) — America/Indianapolis; Central (CT) — America/Chicago; Central (CT) — America/Menominee | FS-0015, FS-0053, FS-0069 | MBP-0106, MBP-0133, MBP-0153 | `partially_implemented` | `doc_reviewed` | — |
+| `/settings/station-config` | Settings Station Config | subpage | `page` / `routed` | Settings Station Config; Role-scoped action controls; Validation and error-state handling | FS-0015, FS-0053, FS-0069 | MBP-0106, MBP-0133, MBP-0153 | `partially_implemented` | `doc_reviewed` | — |
+| `/settings/users` | Settings Users | subpage | `page` / `routed` | Settings Users; Role-scoped action controls; Validation and error-state handling | FS-0015, FS-0053, FS-0069 | MBP-0106, MBP-0133, MBP-0153 | `partially_implemented` | `doc_reviewed` | — |
+
+### CAT-SQUAWKS — Squawk Intake and Discrepancy Intake (1 routes)
+
+Category feature context: FS-0024 Squawk Board Enhancements; FS-0060 Squawk Escalation and Handoff Safeguards.
+
+| Route | Page Label | Page Level | Kind / Source Status | Key Contextual Behaviors | FS Links | MBP Links | Implementation | Verification | Gap Notes |
+|---|---|---|---|---|---|---|---|---|---|
+| `/squawks` | Squawks | root | `page` / `routed` | Squawks & Discrepancies; Critical; Major; Minor; Observation | FS-0024, FS-0060 | MBP-0041, MBP-0144 | `partially_implemented` | `doc_reviewed` | — |
+
+### CAT-SYSTEM — System and Fallback Routes (2 routes)
+
+Category feature context: FS-0053 Zero-Downtime Migration Control Plane; FS-0069 Station Configuration and Org Governance Console.
+
+| Route | Page Label | Page Level | Kind / Source Status | Key Contextual Behaviors | FS Links | MBP Links | Implementation | Verification | Gap Notes |
+|---|---|---|---|---|---|---|---|---|---|
+| `*` | App Not Found Catch-All | system | `catch_all` / `router_only` | App Not Found Catch-All; Role-scoped access flow; State transition controls | FS-0053, FS-0069 | MBP-0133, MBP-0153 | `implemented` | `doc_reviewed` | Route exists in router modules without a dedicated page file; behavior is redirect/catch-all managed. |
+| `/not-found` | Not Found | root | `page` / `orphan_page` | Not Found; Role-scoped action controls; Validation and error-state handling | FS-0053, FS-0069 | MBP-0133, MBP-0153 | `partially_implemented` | `doc_reviewed` | Page exists in filesystem but is not wired in route modules. |
+
+### CAT-WORK-ORDERS — Work Order Lifecycle Execution (15 routes)
+
+Category feature context: FS-0023 Work Order Close Readiness; FS-0044 Work Order Routing Templates + Standard Minutes; FS-0054 Task Card Compliance Save Guardrail; FS-0055 Lead Technician Execution Safety Orchestrator; FS-0056 Task Card Authoring Validation Controls; FS-0061 Certificate Field Normalization Pipeline.
+
+| Route | Page Label | Page Level | Kind / Source Status | Key Contextual Behaviors | FS Links | MBP Links | Implementation | Verification | Gap Notes |
+|---|---|---|---|---|---|---|---|---|---|
+| `/work-orders` | Work Orders | root | `page` / `routed` | Work Orders; Role-scoped action controls; Validation and error-state handling | FS-0023, FS-0044, FS-0054, FS-0055, FS-0056 | MBP-0014, MBP-0127, MBP-0138, MBP-0139, MBP-0140 | `partially_implemented` | `doc_reviewed` | — |
+| `/work-orders/:id` | Work Orders Detail | subpage | `page` / `routed` | wo.workOrderNumber; Work Order Activity; Quoting; In-dock; Inspection | FS-0023, FS-0044, FS-0054, FS-0055, FS-0056 | MBP-0014, MBP-0127, MBP-0138, MBP-0139, MBP-0140 | `partially_implemented` | `doc_reviewed` | — |
+| `/work-orders/:id/certificates` | Work Orders Detail Certificates | deep-subpage | `page` / `routed` | Work Orders Detail Certificates; Role-scoped action controls; Validation and error-state handling | FS-0023, FS-0044, FS-0054, FS-0055, FS-0056, FS-0061 | MBP-0014, MBP-0127, MBP-0138, MBP-0139, MBP-0140, MBP-0145 | `partially_implemented` | `doc_reviewed` | — |
+| `/work-orders/:id/execution` | Work Orders Detail Execution | deep-subpage | `page` / `routed` | Work Orders Detail Execution; workOrder.workOrderNumber — Execution Planning; Validation and error-state handling | FS-0023, FS-0044, FS-0054, FS-0055, FS-0056 | MBP-0014, MBP-0127, MBP-0138, MBP-0139, MBP-0140 | `partially_implemented` | `doc_reviewed` | — |
+| `/work-orders/:id/records` | Work Orders Detail Records | deep-subpage | `page` / `routed` | Annual; 100-Hour; Progressive; Conditional | FS-0023, FS-0044, FS-0054, FS-0055, FS-0056 | MBP-0014, MBP-0127, MBP-0138, MBP-0139, MBP-0140 | `partially_implemented` | `doc_reviewed` | — |
+| `/work-orders/:id/release` | Work Orders Detail Release | deep-subpage | `page` / `routed` | Work Orders Detail Release; Aircraft Released to Customer; Work Order Details | FS-0023, FS-0044, FS-0054, FS-0055, FS-0056 | MBP-0014, MBP-0127, MBP-0138, MBP-0139, MBP-0140 | `partially_implemented` | `doc_reviewed` | — |
+| `/work-orders/:id/rts` | Work Orders Detail Rts | deep-subpage | `page` / `routed` | Work Orders Detail Rts; Aircraft Returned to Service; Return-to-Service Already Authorized | FS-0023, FS-0044, FS-0054, FS-0055, FS-0056 | MBP-0014, MBP-0127, MBP-0138, MBP-0139, MBP-0140 | `partially_implemented` | `doc_reviewed` | — |
+| `/work-orders/:id/signature` | Work Orders Detail Signature | deep-subpage | `page` / `routed` | Work Orders Detail Signature; Re-Authentication Required; Validation and error-state handling | FS-0023, FS-0044, FS-0054, FS-0055, FS-0056 | MBP-0014, MBP-0127, MBP-0138, MBP-0139, MBP-0140 | `partially_implemented` | `doc_reviewed` | — |
+| `/work-orders/:id/tasks/:cardId` | Work Orders Detail Tasks Task Card | deep-subpage | `page` / `routed` | Work Orders Detail Tasks Task Card; taskCard.title; Validation and error-state handling | FS-0023, FS-0044, FS-0054, FS-0055, FS-0056 | MBP-0014, MBP-0127, MBP-0138, MBP-0139, MBP-0140 | `partially_implemented` | `doc_reviewed` | — |
+| `/work-orders/:id/tasks/new` | Work Orders Detail Tasks New | deep-subpage | `page` / `routed` | Work Orders Detail Tasks New; Role-scoped action controls; Validation and error-state handling | FS-0023, FS-0044, FS-0054, FS-0055, FS-0056 | MBP-0014, MBP-0127, MBP-0138, MBP-0139, MBP-0140 | `partially_implemented` | `doc_reviewed` | — |
+| `/work-orders/dashboard` | Work Orders Dashboard | subpage | `page` / `routed` | Work Orders Dashboard; Work Order Dashboard; Active Work Orders | FS-0023, FS-0044, FS-0054, FS-0055, FS-0056 | MBP-0014, MBP-0127, MBP-0138, MBP-0139, MBP-0140 | `partially_implemented` | `doc_reviewed` | — |
+| `/work-orders/kanban` | Work Order Kanban | subpage | `page` / `routed` | Work Orders — Kanban; col.label; Draft; Open; In Progress | FS-0023, FS-0044, FS-0054, FS-0055, FS-0056 | MBP-0014, MBP-0127, MBP-0138, MBP-0139, MBP-0140 | `partially_implemented` | `doc_reviewed` | — |
+| `/work-orders/lead` | Work Orders Lead | subpage | `page` / `routed` | Lead Workspace; Task Assignment Feed; Turnover Report Editor; Submitted History | FS-0023, FS-0044, FS-0054, FS-0055, FS-0056 | MBP-0014, MBP-0127, MBP-0138, MBP-0139, MBP-0140 | `partially_implemented` | `doc_reviewed` | — |
+| `/work-orders/new` | New Work Order | subpage | `page` / `routed` | New Work Order; Work Order Details; Priority | FS-0023, FS-0044, FS-0054, FS-0055, FS-0056 | MBP-0014, MBP-0127, MBP-0138, MBP-0139, MBP-0140 | `partially_implemented` | `doc_reviewed` | — |
+| `/work-orders/templates` | Work Order Templates | subpage | `page` / `routed` | Work Order Templates; Role-scoped action controls; Validation and error-state handling | FS-0023, FS-0044, FS-0054, FS-0055, FS-0056 | MBP-0014, MBP-0127, MBP-0138, MBP-0139, MBP-0140 | `partially_implemented` | `doc_reviewed` | — |
+
+
+## Feature Narrative Specifications
+
+### FS-0001 — Dual Sign-off (Tech + Inspector)
+
+FS-0001 defines the technical contract for Dual Sign-off (Tech + Inspector) across cross-cutting platform categories. The intended behavior is deterministic role-gated execution, consistent data capture, and predictable state transitions so downstream workflows do not depend on operator memory or ad hoc sequencing. This feature is treated as a first-class capability in Registry A and is expected to remain stable under concurrent updates, retries, and cross-module navigation.
+
+Current canonical state is partially_implemented with verification at qa_verified. The latest review timestamp is 2026-03-03T00:00:00Z and evidence currently points to BugHunter=BUG-005, BUG-LT-001, BUG-LT-003, BUG-LT-HUNT-001, BUG-LT3-001; QA=GAP-18, GAP-22. This means the capability surface exists in the product, but the platform still carries documented parity and hardening gaps that must be tracked explicitly rather than implied by UI presence.
+
+Completion path for FS-0001 is to close all linked atomic work items (no MBP IDs currently linked) and retire open gap notes in interconnection controls. Delivery must preserve auditability, permissions, and regression safety in mapped route categories, then advance verification from documentation-level checks to app and QA evidence with repeatable gates. Constraints include dependency ordering in the feature graph and preserving behavior already stabilized by prior bug-hunter hardening.
+
+### FS-0002 — PDF Generation — Invoices
+
+FS-0002 defines the technical contract for PDF Generation — Invoices across cross-cutting platform categories. The intended behavior is deterministic role-gated execution, consistent data capture, and predictable state transitions so downstream workflows do not depend on operator memory or ad hoc sequencing. This feature is treated as a first-class capability in Registry A and is expected to remain stable under concurrent updates, retries, and cross-module navigation.
+
+Current canonical state is not_implemented with verification at doc_reviewed. The latest review timestamp is 2026-03-03T00:00:00Z and evidence currently points to BugHunter=None; QA=No new post-cycle evidence. This means the capability surface exists in the product, but the platform still carries documented parity and hardening gaps that must be tracked explicitly rather than implied by UI presence.
+
+Completion path for FS-0002 is to close all linked atomic work items (no MBP IDs currently linked) and retire open gap notes in interconnection controls. Delivery must preserve auditability, permissions, and regression safety in mapped route categories, then advance verification from documentation-level checks to app and QA evidence with repeatable gates. Constraints include dependency ordering in the feature graph and preserving behavior already stabilized by prior bug-hunter hardening.
+
+### FS-0003 — PDF Generation — Quotes
+
+FS-0003 defines the technical contract for PDF Generation — Quotes across cross-cutting platform categories. The intended behavior is deterministic role-gated execution, consistent data capture, and predictable state transitions so downstream workflows do not depend on operator memory or ad hoc sequencing. This feature is treated as a first-class capability in Registry A and is expected to remain stable under concurrent updates, retries, and cross-module navigation.
+
+Current canonical state is not_implemented with verification at doc_reviewed. The latest review timestamp is 2026-03-03T00:00:00Z and evidence currently points to BugHunter=None; QA=No new post-cycle evidence. This means the capability surface exists in the product, but the platform still carries documented parity and hardening gaps that must be tracked explicitly rather than implied by UI presence.
+
+Completion path for FS-0003 is to close all linked atomic work items (no MBP IDs currently linked) and retire open gap notes in interconnection controls. Delivery must preserve auditability, permissions, and regression safety in mapped route categories, then advance verification from documentation-level checks to app and QA evidence with repeatable gates. Constraints include dependency ordering in the feature graph and preserving behavior already stabilized by prior bug-hunter hardening.
+
+### FS-0004 — PDF Generation — RTS / 8610-2
+
+FS-0004 defines the technical contract for PDF Generation — RTS / 8610-2 across cross-cutting platform categories. The intended behavior is deterministic role-gated execution, consistent data capture, and predictable state transitions so downstream workflows do not depend on operator memory or ad hoc sequencing. This feature is treated as a first-class capability in Registry A and is expected to remain stable under concurrent updates, retries, and cross-module navigation.
+
+Current canonical state is partially_implemented with verification at qa_verified. The latest review timestamp is 2026-03-03T00:00:00Z and evidence currently points to BugHunter=None; QA=GAP-07. This means the capability surface exists in the product, but the platform still carries documented parity and hardening gaps that must be tracked explicitly rather than implied by UI presence.
+
+Completion path for FS-0004 is to close all linked atomic work items (no MBP IDs currently linked) and retire open gap notes in interconnection controls. Delivery must preserve auditability, permissions, and regression safety in mapped route categories, then advance verification from documentation-level checks to app and QA evidence with repeatable gates. Constraints include dependency ordering in the feature graph and preserving behavior already stabilized by prior bug-hunter hardening.
+
+### FS-0005 — PDF Generation — Work Order Pack
+
+FS-0005 defines the technical contract for PDF Generation — Work Order Pack across cross-cutting platform categories. The intended behavior is deterministic role-gated execution, consistent data capture, and predictable state transitions so downstream workflows do not depend on operator memory or ad hoc sequencing. This feature is treated as a first-class capability in Registry A and is expected to remain stable under concurrent updates, retries, and cross-module navigation.
+
+Current canonical state is not_implemented with verification at doc_reviewed. The latest review timestamp is 2026-03-03T00:00:00Z and evidence currently points to BugHunter=None; QA=No new post-cycle evidence. This means the capability surface exists in the product, but the platform still carries documented parity and hardening gaps that must be tracked explicitly rather than implied by UI presence.
+
+Completion path for FS-0005 is to close all linked atomic work items (no MBP IDs currently linked) and retire open gap notes in interconnection controls. Delivery must preserve auditability, permissions, and regression safety in mapped route categories, then advance verification from documentation-level checks to app and QA evidence with repeatable gates. Constraints include dependency ordering in the feature graph and preserving behavior already stabilized by prior bug-hunter hardening.
+
+### FS-0006 — Email / Notifications System
+
+FS-0006 defines the technical contract for Email / Notifications System across cross-cutting platform categories. The intended behavior is deterministic role-gated execution, consistent data capture, and predictable state transitions so downstream workflows do not depend on operator memory or ad hoc sequencing. This feature is treated as a first-class capability in Registry A and is expected to remain stable under concurrent updates, retries, and cross-module navigation.
+
+Current canonical state is partially_implemented with verification at qa_verified. The latest review timestamp is 2026-03-03T00:00:00Z and evidence currently points to BugHunter=None; QA=GAP-02, GAP-20, GAP-24. This means the capability surface exists in the product, but the platform still carries documented parity and hardening gaps that must be tracked explicitly rather than implied by UI presence.
+
+Completion path for FS-0006 is to close all linked atomic work items (no MBP IDs currently linked) and retire open gap notes in interconnection controls. Delivery must preserve auditability, permissions, and regression safety in mapped route categories, then advance verification from documentation-level checks to app and QA evidence with repeatable gates. Constraints include dependency ordering in the feature graph and preserving behavior already stabilized by prior bug-hunter hardening.
+
+### FS-0007 — Pricing Rules — Auto-Application
+
+FS-0007 defines the technical contract for Pricing Rules — Auto-Application across CAT-BILLING. The intended behavior is deterministic role-gated execution, consistent data capture, and predictable state transitions so downstream workflows do not depend on operator memory or ad hoc sequencing. This feature is treated as a first-class capability in Registry A and is expected to remain stable under concurrent updates, retries, and cross-module navigation.
+
+Current canonical state is partially_implemented with verification at qa_verified. The latest review timestamp is 2026-03-03T00:00:00Z and evidence currently points to BugHunter=BUG-031; QA=GAP-11, GAP-15. This means the capability surface exists in the product, but the platform still carries documented parity and hardening gaps that must be tracked explicitly rather than implied by UI presence.
+
+Completion path for FS-0007 is to close all linked atomic work items (no MBP IDs currently linked) and retire open gap notes in interconnection controls. Delivery must preserve auditability, permissions, and regression safety in mapped route categories, then advance verification from documentation-level checks to app and QA evidence with repeatable gates. Constraints include dependency ordering in the feature graph and preserving behavior already stabilized by prior bug-hunter hardening.
+
+### FS-0008 — Tax Calculation
+
+FS-0008 defines the technical contract for Tax Calculation across CAT-BILLING. The intended behavior is deterministic role-gated execution, consistent data capture, and predictable state transitions so downstream workflows do not depend on operator memory or ad hoc sequencing. This feature is treated as a first-class capability in Registry A and is expected to remain stable under concurrent updates, retries, and cross-module navigation.
+
+Current canonical state is partially_implemented with verification at qa_verified. The latest review timestamp is 2026-03-03T00:00:00Z and evidence currently points to BugHunter=BUG-033; QA=GAP-03, GAP-16. This means the capability surface exists in the product, but the platform still carries documented parity and hardening gaps that must be tracked explicitly rather than implied by UI presence.
+
+Completion path for FS-0008 is to close all linked atomic work items (no MBP IDs currently linked) and retire open gap notes in interconnection controls. Delivery must preserve auditability, permissions, and regression safety in mapped route categories, then advance verification from documentation-level checks to app and QA evidence with repeatable gates. Constraints include dependency ordering in the feature graph and preserving behavior already stabilized by prior bug-hunter hardening.
+
+### FS-0009 — Document Upload / Attachments
+
+FS-0009 defines the technical contract for Document Upload / Attachments across cross-cutting platform categories. The intended behavior is deterministic role-gated execution, consistent data capture, and predictable state transitions so downstream workflows do not depend on operator memory or ad hoc sequencing. This feature is treated as a first-class capability in Registry A and is expected to remain stable under concurrent updates, retries, and cross-module navigation.
+
+Current canonical state is partially_implemented with verification at qa_verified. The latest review timestamp is 2026-03-03T00:00:00Z and evidence currently points to BugHunter=None; QA=GAP-16. This means the capability surface exists in the product, but the platform still carries documented parity and hardening gaps that must be tracked explicitly rather than implied by UI presence.
+
+Completion path for FS-0009 is to close all linked atomic work items (no MBP IDs currently linked) and retire open gap notes in interconnection controls. Delivery must preserve auditability, permissions, and regression safety in mapped route categories, then advance verification from documentation-level checks to app and QA evidence with repeatable gates. Constraints include dependency ordering in the feature graph and preserving behavior already stabilized by prior bug-hunter hardening.
+
+### FS-0010 — Customer Portal (ServiceEdge equivalent)
+
+FS-0010 defines the technical contract for Customer Portal (ServiceEdge equivalent) across CAT-PORTAL. The intended behavior is deterministic role-gated execution, consistent data capture, and predictable state transitions so downstream workflows do not depend on operator memory or ad hoc sequencing. This feature is treated as a first-class capability in Registry A and is expected to remain stable under concurrent updates, retries, and cross-module navigation.
+
+Current canonical state is partially_implemented with verification at qa_verified. The latest review timestamp is 2026-03-03T00:00:00Z and evidence currently points to BugHunter=None; QA=GAP-23. This means the capability surface exists in the product, but the platform still carries documented parity and hardening gaps that must be tracked explicitly rather than implied by UI presence.
+
+Completion path for FS-0010 is to close all linked atomic work items (no MBP IDs currently linked) and retire open gap notes in interconnection controls. Delivery must preserve auditability, permissions, and regression safety in mapped route categories, then advance verification from documentation-level checks to app and QA evidence with repeatable gates. Constraints include dependency ordering in the feature graph and preserving behavior already stabilized by prior bug-hunter hardening.
+
+### FS-0011 — Barcoding / QR Scanning
+
+FS-0011 defines the technical contract for Barcoding / QR Scanning across cross-cutting platform categories. The intended behavior is deterministic role-gated execution, consistent data capture, and predictable state transitions so downstream workflows do not depend on operator memory or ad hoc sequencing. This feature is treated as a first-class capability in Registry A and is expected to remain stable under concurrent updates, retries, and cross-module navigation.
+
+Current canonical state is not_implemented with verification at doc_reviewed. The latest review timestamp is 2026-03-03T00:00:00Z and evidence currently points to BugHunter=None; QA=No new post-cycle evidence. This means the capability surface exists in the product, but the platform still carries documented parity and hardening gaps that must be tracked explicitly rather than implied by UI presence.
+
+Completion path for FS-0011 is to close all linked atomic work items (no MBP IDs currently linked) and retire open gap notes in interconnection controls. Delivery must preserve auditability, permissions, and regression safety in mapped route categories, then advance verification from documentation-level checks to app and QA evidence with repeatable gates. Constraints include dependency ordering in the feature graph and preserving behavior already stabilized by prior bug-hunter hardening.
+
+### FS-0012 — Reports & Analytics Dashboard
+
+FS-0012 defines the technical contract for Reports & Analytics Dashboard across CAT-DASHBOARD, CAT-REPORTS. The intended behavior is deterministic role-gated execution, consistent data capture, and predictable state transitions so downstream workflows do not depend on operator memory or ad hoc sequencing. This feature is treated as a first-class capability in Registry A and is expected to remain stable under concurrent updates, retries, and cross-module navigation.
+
+Current canonical state is backend_needed with verification at qa_verified. The latest review timestamp is 2026-03-03T00:00:00Z and evidence currently points to BugHunter=BACKEND-NEEDED-SM-01, BUG-007, BUG-011, BUG-012, BUG-013 +…; QA=GAP-04, GAP-05, GAP-07, GAP-10, GAP-13 +…. This means the capability surface exists in the product, but the platform still carries documented parity and hardening gaps that must be tracked explicitly rather than implied by UI presence.
+
+Completion path for FS-0012 is to close all linked atomic work items (no MBP IDs currently linked) and retire open gap notes in interconnection controls. Delivery must preserve auditability, permissions, and regression safety in mapped route categories, then advance verification from documentation-level checks to app and QA evidence with repeatable gates. Constraints include dependency ordering in the feature graph and preserving behavior already stabilized by prior bug-hunter hardening.
+
+### FS-0013 — Scheduling — Drag-Drop Gantt
+
+FS-0013 defines the technical contract for Scheduling — Drag-Drop Gantt across CAT-SCHEDULING. The intended behavior is deterministic role-gated execution, consistent data capture, and predictable state transitions so downstream workflows do not depend on operator memory or ad hoc sequencing. This feature is treated as a first-class capability in Registry A and is expected to remain stable under concurrent updates, retries, and cross-module navigation.
+
+Current canonical state is partially_implemented with verification at qa_verified. The latest review timestamp is 2026-03-03T00:00:00Z and evidence currently points to BugHunter=BUG-SM-HUNT-002; QA=No new post-cycle evidence. This means the capability surface exists in the product, but the platform still carries documented parity and hardening gaps that must be tracked explicitly rather than implied by UI presence.
+
+Completion path for FS-0013 is to close all linked atomic work items (no MBP IDs currently linked) and retire open gap notes in interconnection controls. Delivery must preserve auditability, permissions, and regression safety in mapped route categories, then advance verification from documentation-level checks to app and QA evidence with repeatable gates. Constraints include dependency ordering in the feature graph and preserving behavior already stabilized by prior bug-hunter hardening.
+
+### FS-0014 — Scheduling — Auto-Schedule
+
+FS-0014 defines the technical contract for Scheduling — Auto-Schedule across CAT-SCHEDULING. The intended behavior is deterministic role-gated execution, consistent data capture, and predictable state transitions so downstream workflows do not depend on operator memory or ad hoc sequencing. This feature is treated as a first-class capability in Registry A and is expected to remain stable under concurrent updates, retries, and cross-module navigation.
+
+Current canonical state is not_implemented with verification at doc_reviewed. The latest review timestamp is 2026-03-03T00:00:00Z and evidence currently points to BugHunter=None; QA=No new post-cycle evidence. This means the capability surface exists in the product, but the platform still carries documented parity and hardening gaps that must be tracked explicitly rather than implied by UI presence.
+
+Completion path for FS-0014 is to close all linked atomic work items (no MBP IDs currently linked) and retire open gap notes in interconnection controls. Delivery must preserve auditability, permissions, and regression safety in mapped route categories, then advance verification from documentation-level checks to app and QA evidence with repeatable gates. Constraints include dependency ordering in the feature graph and preserving behavior already stabilized by prior bug-hunter hardening.
+
+### FS-0015 — Role Management Admin UI
+
+FS-0015 defines the technical contract for Role Management Admin UI across CAT-AUTH, CAT-SETTINGS. The intended behavior is deterministic role-gated execution, consistent data capture, and predictable state transitions so downstream workflows do not depend on operator memory or ad hoc sequencing. This feature is treated as a first-class capability in Registry A and is expected to remain stable under concurrent updates, retries, and cross-module navigation.
+
+Current canonical state is implemented with verification at qa_verified. The latest review timestamp is 2026-03-04T04:05:06Z and evidence currently points to BugHunter=None; QA=No new post-cycle evidence; derived_from=MBP-0017,MBP-0105,MBP-0106,MBP-0107,MBP-0108,MBP-0109. This means the capability surface exists in the product, but the platform still carries documented parity and hardening gaps that must be tracked explicitly rather than implied by UI presence.
+
+Completion path for FS-0015 is to close all linked atomic work items (MBP-0017, MBP-0105, MBP-0106, MBP-0107, MBP-0108, MBP-0109) and retire open gap notes in interconnection controls. Delivery must preserve auditability, permissions, and regression safety in mapped route categories, then advance verification from documentation-level checks to app and QA evidence with repeatable gates. Constraints include dependency ordering in the feature graph and preserving behavior already stabilized by prior bug-hunter hardening.
+
+### FS-0016 — Training & Qualifications Mgmt
+
+FS-0016 defines the technical contract for Training & Qualifications Mgmt across CAT-PERSONNEL. The intended behavior is deterministic role-gated execution, consistent data capture, and predictable state transitions so downstream workflows do not depend on operator memory or ad hoc sequencing. This feature is treated as a first-class capability in Registry A and is expected to remain stable under concurrent updates, retries, and cross-module navigation.
+
+Current canonical state is partially_implemented with verification at qa_verified. The latest review timestamp is 2026-03-03T00:00:00Z and evidence currently points to BugHunter=BUG-DOM-5, BUG-DOM-6, BUG-DOM-7, BUG-DOM-9; QA=No new post-cycle evidence. This means the capability surface exists in the product, but the platform still carries documented parity and hardening gaps that must be tracked explicitly rather than implied by UI presence.
+
+Completion path for FS-0016 is to close all linked atomic work items (no MBP IDs currently linked) and retire open gap notes in interconnection controls. Delivery must preserve auditability, permissions, and regression safety in mapped route categories, then advance verification from documentation-level checks to app and QA evidence with repeatable gates. Constraints include dependency ordering in the feature graph and preserving behavior already stabilized by prior bug-hunter hardening.
+
+### FS-0017 — Multi-Location Cross-Site UI
+
+FS-0017 defines the technical contract for Multi-Location Cross-Site UI across cross-cutting platform categories. The intended behavior is deterministic role-gated execution, consistent data capture, and predictable state transitions so downstream workflows do not depend on operator memory or ad hoc sequencing. This feature is treated as a first-class capability in Registry A and is expected to remain stable under concurrent updates, retries, and cross-module navigation.
+
+Current canonical state is not_implemented with verification at doc_reviewed. The latest review timestamp is 2026-03-03T00:00:00Z and evidence currently points to BugHunter=None; QA=No new post-cycle evidence. This means the capability surface exists in the product, but the platform still carries documented parity and hardening gaps that must be tracked explicitly rather than implied by UI presence.
+
+Completion path for FS-0017 is to close all linked atomic work items (no MBP IDs currently linked) and retire open gap notes in interconnection controls. Delivery must preserve auditability, permissions, and regression safety in mapped route categories, then advance verification from documentation-level checks to app and QA evidence with repeatable gates. Constraints include dependency ordering in the feature graph and preserving behavior already stabilized by prior bug-hunter hardening.
+
+### FS-0018 — Warranty Management
+
+FS-0018 defines the technical contract for Warranty Management across cross-cutting platform categories. The intended behavior is deterministic role-gated execution, consistent data capture, and predictable state transitions so downstream workflows do not depend on operator memory or ad hoc sequencing. This feature is treated as a first-class capability in Registry A and is expected to remain stable under concurrent updates, retries, and cross-module navigation.
+
+Current canonical state is not_implemented with verification at doc_reviewed. The latest review timestamp is 2026-03-03T00:00:00Z and evidence currently points to BugHunter=None; QA=No new post-cycle evidence. This means the capability surface exists in the product, but the platform still carries documented parity and hardening gaps that must be tracked explicitly rather than implied by UI presence.
+
+Completion path for FS-0018 is to close all linked atomic work items (no MBP IDs currently linked) and retire open gap notes in interconnection controls. Delivery must preserve auditability, permissions, and regression safety in mapped route categories, then advance verification from documentation-level checks to app and QA evidence with repeatable gates. Constraints include dependency ordering in the feature graph and preserving behavior already stabilized by prior bug-hunter hardening.
+
+### FS-0019 — Tool Crib Management
+
+FS-0019 defines the technical contract for Tool Crib Management across CAT-PARTS. The intended behavior is deterministic role-gated execution, consistent data capture, and predictable state transitions so downstream workflows do not depend on operator memory or ad hoc sequencing. This feature is treated as a first-class capability in Registry A and is expected to remain stable under concurrent updates, retries, and cross-module navigation.
+
+Current canonical state is partially_implemented with verification at qa_verified. The latest review timestamp is 2026-03-03T00:00:00Z and evidence currently points to BugHunter=BUG-PC-002; QA=No new post-cycle evidence. This means the capability surface exists in the product, but the platform still carries documented parity and hardening gaps that must be tracked explicitly rather than implied by UI presence.
+
+Completion path for FS-0019 is to close all linked atomic work items (no MBP IDs currently linked) and retire open gap notes in interconnection controls. Delivery must preserve auditability, permissions, and regression safety in mapped route categories, then advance verification from documentation-level checks to app and QA evidence with repeatable gates. Constraints include dependency ordering in the feature graph and preserving behavior already stabilized by prior bug-hunter hardening.
+
+### FS-0020 — AD/SB Fleet Compliance Dashboard
+
+FS-0020 defines the technical contract for AD/SB Fleet Compliance Dashboard across CAT-COMPLIANCE, CAT-FLEET. The intended behavior is deterministic role-gated execution, consistent data capture, and predictable state transitions so downstream workflows do not depend on operator memory or ad hoc sequencing. This feature is treated as a first-class capability in Registry A and is expected to remain stable under concurrent updates, retries, and cross-module navigation.
+
+Current canonical state is partially_implemented with verification at qa_verified. The latest review timestamp is 2026-03-03T00:00:00Z and evidence currently points to BugHunter=BH-004, BH-005, BH-006, BH-007, BUG-015 +…; QA=GAP-01. This means the capability surface exists in the product, but the platform still carries documented parity and hardening gaps that must be tracked explicitly rather than implied by UI presence.
+
+Completion path for FS-0020 is to close all linked atomic work items (no MBP IDs currently linked) and retire open gap notes in interconnection controls. Delivery must preserve auditability, permissions, and regression safety in mapped route categories, then advance verification from documentation-level checks to app and QA evidence with repeatable gates. Constraints include dependency ordering in the feature graph and preserving behavior already stabilized by prior bug-hunter hardening.
+
+### FS-0021 — Overtime / Shift Management
+
+FS-0021 defines the technical contract for Overtime / Shift Management across CAT-PERSONNEL. The intended behavior is deterministic role-gated execution, consistent data capture, and predictable state transitions so downstream workflows do not depend on operator memory or ad hoc sequencing. This feature is treated as a first-class capability in Registry A and is expected to remain stable under concurrent updates, retries, and cross-module navigation.
+
+Current canonical state is partially_implemented with verification at qa_verified. The latest review timestamp is 2026-03-03T00:00:00Z and evidence currently points to BugHunter=None; QA=GAP-16, GAP-20. This means the capability surface exists in the product, but the platform still carries documented parity and hardening gaps that must be tracked explicitly rather than implied by UI presence.
+
+Completion path for FS-0021 is to close all linked atomic work items (no MBP IDs currently linked) and retire open gap notes in interconnection controls. Delivery must preserve auditability, permissions, and regression safety in mapped route categories, then advance verification from documentation-level checks to app and QA evidence with repeatable gates. Constraints include dependency ordering in the feature graph and preserving behavior already stabilized by prior bug-hunter hardening.
+
+### FS-0022 — Discrepancy Disposition Workflow
+
+FS-0022 defines the technical contract for Discrepancy Disposition Workflow across cross-cutting platform categories. The intended behavior is deterministic role-gated execution, consistent data capture, and predictable state transitions so downstream workflows do not depend on operator memory or ad hoc sequencing. This feature is treated as a first-class capability in Registry A and is expected to remain stable under concurrent updates, retries, and cross-module navigation.
+
+Current canonical state is partially_implemented with verification at qa_verified. The latest review timestamp is 2026-03-03T00:00:00Z and evidence currently points to BugHunter=BUG-003, BUG-006, BUG-DOM-12; QA=FEAT-LARGE-003, FEAT-LARGE-005, GAP-04, GAP-07, GAP-24. This means the capability surface exists in the product, but the platform still carries documented parity and hardening gaps that must be tracked explicitly rather than implied by UI presence.
+
+Completion path for FS-0022 is to close all linked atomic work items (no MBP IDs currently linked) and retire open gap notes in interconnection controls. Delivery must preserve auditability, permissions, and regression safety in mapped route categories, then advance verification from documentation-level checks to app and QA evidence with repeatable gates. Constraints include dependency ordering in the feature graph and preserving behavior already stabilized by prior bug-hunter hardening.
+
+### FS-0023 — Work Order Close Readiness
+
+FS-0023 defines the technical contract for Work Order Close Readiness across CAT-MY-WORK, CAT-WORK-ORDERS. The intended behavior is deterministic role-gated execution, consistent data capture, and predictable state transitions so downstream workflows do not depend on operator memory or ad hoc sequencing. This feature is treated as a first-class capability in Registry A and is expected to remain stable under concurrent updates, retries, and cross-module navigation.
+
+Current canonical state is partially_implemented with verification at unreviewed. The latest review timestamp is 2026-03-04T04:43:13Z and evidence currently points to BugHunter=BH-LT3-001, BH-LT3-002, BUG-001, BUG-002, BUG-031 +…; QA=FEAT-LARGE-001, GAP-06, GAP-09, GAP-10, GAP-11 +…; derived_from=MBP-0014,MBP-0015,MBP-0039,MBP-0040,MBP-0041,MBP-0042,MBP-0123,MBP-0124,MBP-0125,MBP-0127,MBP-0134,MBP-0136. This means the capability surface exists in the product, but the platform still carries documented parity and hardening gaps that must be tracked explicitly rather than implied by UI presence.
+
+Completion path for FS-0023 is to close all linked atomic work items (MBP-0014, MBP-0015, MBP-0039, MBP-0040, MBP-0041, MBP-0042, MBP-0123, MBP-0124) and retire open gap notes in interconnection controls. Delivery must preserve auditability, permissions, and regression safety in mapped route categories, then advance verification from documentation-level checks to app and QA evidence with repeatable gates. Constraints include dependency ordering in the feature graph and preserving behavior already stabilized by prior bug-hunter hardening.
+
+### FS-0024 — Squawk Board Enhancements
+
+FS-0024 defines the technical contract for Squawk Board Enhancements across CAT-SQUAWKS. The intended behavior is deterministic role-gated execution, consistent data capture, and predictable state transitions so downstream workflows do not depend on operator memory or ad hoc sequencing. This feature is treated as a first-class capability in Registry A and is expected to remain stable under concurrent updates, retries, and cross-module navigation.
+
+Current canonical state is partially_implemented with verification at qa_verified. The latest review timestamp is 2026-03-03T00:00:00Z and evidence currently points to BugHunter=None; QA=GAP-05. This means the capability surface exists in the product, but the platform still carries documented parity and hardening gaps that must be tracked explicitly rather than implied by UI presence.
+
+Completion path for FS-0024 is to close all linked atomic work items (no MBP IDs currently linked) and retire open gap notes in interconnection controls. Delivery must preserve auditability, permissions, and regression safety in mapped route categories, then advance verification from documentation-level checks to app and QA evidence with repeatable gates. Constraints include dependency ordering in the feature graph and preserving behavior already stabilized by prior bug-hunter hardening.
+
+### FS-0025 — Search — Global Search
+
+FS-0025 defines the technical contract for Search — Global Search across cross-cutting platform categories. The intended behavior is deterministic role-gated execution, consistent data capture, and predictable state transitions so downstream workflows do not depend on operator memory or ad hoc sequencing. This feature is treated as a first-class capability in Registry A and is expected to remain stable under concurrent updates, retries, and cross-module navigation.
+
+Current canonical state is partially_implemented with verification at qa_verified. The latest review timestamp is 2026-03-03T00:00:00Z and evidence currently points to BugHunter=BH-002; QA=GAP-21. This means the capability surface exists in the product, but the platform still carries documented parity and hardening gaps that must be tracked explicitly rather than implied by UI presence.
+
+Completion path for FS-0025 is to close all linked atomic work items (no MBP IDs currently linked) and retire open gap notes in interconnection controls. Delivery must preserve auditability, permissions, and regression safety in mapped route categories, then advance verification from documentation-level checks to app and QA evidence with repeatable gates. Constraints include dependency ordering in the feature graph and preserving behavior already stabilized by prior bug-hunter hardening.
+
+### FS-0026 — Dashboard KPIs
+
+FS-0026 defines the technical contract for Dashboard KPIs across CAT-DASHBOARD. The intended behavior is deterministic role-gated execution, consistent data capture, and predictable state transitions so downstream workflows do not depend on operator memory or ad hoc sequencing. This feature is treated as a first-class capability in Registry A and is expected to remain stable under concurrent updates, retries, and cross-module navigation.
+
+Current canonical state is partially_implemented with verification at qa_verified. The latest review timestamp is 2026-03-03T00:00:00Z and evidence currently points to BugHunter=BUG-SM-012, BUG-SM-HUNT-001; QA=GAP-21, TD-004, TD-016. This means the capability surface exists in the product, but the platform still carries documented parity and hardening gaps that must be tracked explicitly rather than implied by UI presence.
+
+Completion path for FS-0026 is to close all linked atomic work items (no MBP IDs currently linked) and retire open gap notes in interconnection controls. Delivery must preserve auditability, permissions, and regression safety in mapped route categories, then advance verification from documentation-level checks to app and QA evidence with repeatable gates. Constraints include dependency ordering in the feature graph and preserving behavior already stabilized by prior bug-hunter hardening.
+
+### FS-0027 — Kanban — Drag-Drop
+
+FS-0027 defines the technical contract for Kanban — Drag-Drop across cross-cutting platform categories. The intended behavior is deterministic role-gated execution, consistent data capture, and predictable state transitions so downstream workflows do not depend on operator memory or ad hoc sequencing. This feature is treated as a first-class capability in Registry A and is expected to remain stable under concurrent updates, retries, and cross-module navigation.
+
+Current canonical state is partially_implemented with verification at qa_verified. The latest review timestamp is 2026-03-03T00:00:00Z and evidence currently points to BugHunter=BUG-SM-004; QA=No new post-cycle evidence. This means the capability surface exists in the product, but the platform still carries documented parity and hardening gaps that must be tracked explicitly rather than implied by UI presence.
+
+Completion path for FS-0027 is to close all linked atomic work items (no MBP IDs currently linked) and retire open gap notes in interconnection controls. Delivery must preserve auditability, permissions, and regression safety in mapped route categories, then advance verification from documentation-level checks to app and QA evidence with repeatable gates. Constraints include dependency ordering in the feature graph and preserving behavior already stabilized by prior bug-hunter hardening.
+
+### FS-0028 — Handoff Notes
+
+FS-0028 defines the technical contract for Handoff Notes across CAT-LEAD. The intended behavior is deterministic role-gated execution, consistent data capture, and predictable state transitions so downstream workflows do not depend on operator memory or ad hoc sequencing. This feature is treated as a first-class capability in Registry A and is expected to remain stable under concurrent updates, retries, and cross-module navigation.
+
+Current canonical state is partially_implemented with verification at qa_verified. The latest review timestamp is 2026-03-03T00:00:00Z and evidence currently points to BugHunter=BUG-LT-HUNT-004, BUG-LT-HUNT-005; QA=FEAT-LARGE-006. This means the capability surface exists in the product, but the platform still carries documented parity and hardening gaps that must be tracked explicitly rather than implied by UI presence.
+
+Completion path for FS-0028 is to close all linked atomic work items (no MBP IDs currently linked) and retire open gap notes in interconnection controls. Delivery must preserve auditability, permissions, and regression safety in mapped route categories, then advance verification from documentation-level checks to app and QA evidence with repeatable gates. Constraints include dependency ordering in the feature graph and preserving behavior already stabilized by prior bug-hunter hardening.
+
+### FS-0029 — Fleet Calendar Enhancements
+
+FS-0029 defines the technical contract for Fleet Calendar Enhancements across CAT-FLEET. The intended behavior is deterministic role-gated execution, consistent data capture, and predictable state transitions so downstream workflows do not depend on operator memory or ad hoc sequencing. This feature is treated as a first-class capability in Registry A and is expected to remain stable under concurrent updates, retries, and cross-module navigation.
+
+Current canonical state is partially_implemented with verification at qa_verified. The latest review timestamp is 2026-03-03T00:00:00Z and evidence currently points to BugHunter=BUG-016, BUG-020, BUG-021, BUG-022, BUG-DOM-001 +…; QA=FEAT-LARGE-002, TD-006. This means the capability surface exists in the product, but the platform still carries documented parity and hardening gaps that must be tracked explicitly rather than implied by UI presence.
+
+Completion path for FS-0029 is to close all linked atomic work items (no MBP IDs currently linked) and retire open gap notes in interconnection controls. Delivery must preserve auditability, permissions, and regression safety in mapped route categories, then advance verification from documentation-level checks to app and QA evidence with repeatable gates. Constraints include dependency ordering in the feature graph and preserving behavior already stabilized by prior bug-hunter hardening.
+
+### FS-0030 — Conformity Inspection
+
+FS-0030 defines the technical contract for Conformity Inspection across CAT-COMPLIANCE. The intended behavior is deterministic role-gated execution, consistent data capture, and predictable state transitions so downstream workflows do not depend on operator memory or ad hoc sequencing. This feature is treated as a first-class capability in Registry A and is expected to remain stable under concurrent updates, retries, and cross-module navigation.
+
+Current canonical state is partially_implemented with verification at qa_verified. The latest review timestamp is 2026-03-03T00:00:00Z and evidence currently points to BugHunter=None; QA=GAP-15. This means the capability surface exists in the product, but the platform still carries documented parity and hardening gaps that must be tracked explicitly rather than implied by UI presence.
+
+Completion path for FS-0030 is to close all linked atomic work items (no MBP IDs currently linked) and retire open gap notes in interconnection controls. Delivery must preserve auditability, permissions, and regression safety in mapped route categories, then advance verification from documentation-level checks to app and QA evidence with repeatable gates. Constraints include dependency ordering in the feature graph and preserving behavior already stabilized by prior bug-hunter hardening.
+
+### FS-0031 — CAMP Connect Integration
+
+FS-0031 defines the technical contract for CAMP Connect Integration across cross-cutting platform categories. The intended behavior is deterministic role-gated execution, consistent data capture, and predictable state transitions so downstream workflows do not depend on operator memory or ad hoc sequencing. This feature is treated as a first-class capability in Registry A and is expected to remain stable under concurrent updates, retries, and cross-module navigation.
+
+Current canonical state is not_implemented with verification at doc_reviewed. The latest review timestamp is 2026-03-03T00:00:00Z and evidence currently points to BugHunter=None; QA=No new post-cycle evidence. This means the capability surface exists in the product, but the platform still carries documented parity and hardening gaps that must be tracked explicitly rather than implied by UI presence.
+
+Completion path for FS-0031 is to close all linked atomic work items (no MBP IDs currently linked) and retire open gap notes in interconnection controls. Delivery must preserve auditability, permissions, and regression safety in mapped route categories, then advance verification from documentation-level checks to app and QA evidence with repeatable gates. Constraints include dependency ordering in the feature graph and preserving behavior already stabilized by prior bug-hunter hardening.
+
+### FS-0032 — QuickBooks Integration
+
+FS-0032 defines the technical contract for QuickBooks Integration across CAT-BILLING. The intended behavior is deterministic role-gated execution, consistent data capture, and predictable state transitions so downstream workflows do not depend on operator memory or ad hoc sequencing. This feature is treated as a first-class capability in Registry A and is expected to remain stable under concurrent updates, retries, and cross-module navigation.
+
+Current canonical state is partially_implemented with verification at qa_verified. The latest review timestamp is 2026-03-03T00:00:00Z and evidence currently points to BugHunter=None; QA=FEAT-110, FEAT-LARGE-007, GAP-22. This means the capability surface exists in the product, but the platform still carries documented parity and hardening gaps that must be tracked explicitly rather than implied by UI presence.
+
+Completion path for FS-0032 is to close all linked atomic work items (no MBP IDs currently linked) and retire open gap notes in interconnection controls. Delivery must preserve auditability, permissions, and regression safety in mapped route categories, then advance verification from documentation-level checks to app and QA evidence with repeatable gates. Constraints include dependency ordering in the feature graph and preserving behavior already stabilized by prior bug-hunter hardening.
+
+### FS-0033 — Multi-Currency
+
+FS-0033 defines the technical contract for Multi-Currency across cross-cutting platform categories. The intended behavior is deterministic role-gated execution, consistent data capture, and predictable state transitions so downstream workflows do not depend on operator memory or ad hoc sequencing. This feature is treated as a first-class capability in Registry A and is expected to remain stable under concurrent updates, retries, and cross-module navigation.
+
+Current canonical state is not_implemented with verification at doc_reviewed. The latest review timestamp is 2026-03-03T00:00:00Z and evidence currently points to BugHunter=None; QA=No new post-cycle evidence. This means the capability surface exists in the product, but the platform still carries documented parity and hardening gaps that must be tracked explicitly rather than implied by UI presence.
+
+Completion path for FS-0033 is to close all linked atomic work items (no MBP IDs currently linked) and retire open gap notes in interconnection controls. Delivery must preserve auditability, permissions, and regression safety in mapped route categories, then advance verification from documentation-level checks to app and QA evidence with repeatable gates. Constraints include dependency ordering in the feature graph and preserving behavior already stabilized by prior bug-hunter hardening.
+
+### FS-0034 — ILS Parts Marketplace
+
+FS-0034 defines the technical contract for ILS Parts Marketplace across cross-cutting platform categories. The intended behavior is deterministic role-gated execution, consistent data capture, and predictable state transitions so downstream workflows do not depend on operator memory or ad hoc sequencing. This feature is treated as a first-class capability in Registry A and is expected to remain stable under concurrent updates, retries, and cross-module navigation.
+
+Current canonical state is not_implemented with verification at doc_reviewed. The latest review timestamp is 2026-03-03T00:00:00Z and evidence currently points to BugHunter=None; QA=No new post-cycle evidence. This means the capability surface exists in the product, but the platform still carries documented parity and hardening gaps that must be tracked explicitly rather than implied by UI presence.
+
+Completion path for FS-0034 is to close all linked atomic work items (no MBP IDs currently linked) and retire open gap notes in interconnection controls. Delivery must preserve auditability, permissions, and regression safety in mapped route categories, then advance verification from documentation-level checks to app and QA evidence with repeatable gates. Constraints include dependency ordering in the feature graph and preserving behavior already stabilized by prior bug-hunter hardening.
+
+### FS-0035 — AI Predictive Maintenance
+
+FS-0035 defines the technical contract for AI Predictive Maintenance across CAT-FLEET. The intended behavior is deterministic role-gated execution, consistent data capture, and predictable state transitions so downstream workflows do not depend on operator memory or ad hoc sequencing. This feature is treated as a first-class capability in Registry A and is expected to remain stable under concurrent updates, retries, and cross-module navigation.
+
+Current canonical state is not_implemented with verification at doc_reviewed. The latest review timestamp is 2026-03-03T00:00:00Z and evidence currently points to BugHunter=None; QA=No new post-cycle evidence. This means the capability surface exists in the product, but the platform still carries documented parity and hardening gaps that must be tracked explicitly rather than implied by UI presence.
+
+Completion path for FS-0035 is to close all linked atomic work items (no MBP IDs currently linked) and retire open gap notes in interconnection controls. Delivery must preserve auditability, permissions, and regression safety in mapped route categories, then advance verification from documentation-level checks to app and QA evidence with repeatable gates. Constraints include dependency ordering in the feature graph and preserving behavior already stabilized by prior bug-hunter hardening.
+
+### FS-0036 — eCommerce / Parts Sales
+
+FS-0036 defines the technical contract for eCommerce / Parts Sales across cross-cutting platform categories. The intended behavior is deterministic role-gated execution, consistent data capture, and predictable state transitions so downstream workflows do not depend on operator memory or ad hoc sequencing. This feature is treated as a first-class capability in Registry A and is expected to remain stable under concurrent updates, retries, and cross-module navigation.
+
+Current canonical state is not_implemented with verification at doc_reviewed. The latest review timestamp is 2026-03-03T00:00:00Z and evidence currently points to BugHunter=None; QA=No new post-cycle evidence. This means the capability surface exists in the product, but the platform still carries documented parity and hardening gaps that must be tracked explicitly rather than implied by UI presence.
+
+Completion path for FS-0036 is to close all linked atomic work items (no MBP IDs currently linked) and retire open gap notes in interconnection controls. Delivery must preserve auditability, permissions, and regression safety in mapped route categories, then advance verification from documentation-level checks to app and QA evidence with repeatable gates. Constraints include dependency ordering in the feature graph and preserving behavior already stabilized by prior bug-hunter hardening.
+
+### FS-0037 — Vertex Tax Integration
+
+FS-0037 defines the technical contract for Vertex Tax Integration across cross-cutting platform categories. The intended behavior is deterministic role-gated execution, consistent data capture, and predictable state transitions so downstream workflows do not depend on operator memory or ad hoc sequencing. This feature is treated as a first-class capability in Registry A and is expected to remain stable under concurrent updates, retries, and cross-module navigation.
+
+Current canonical state is not_implemented with verification at doc_reviewed. The latest review timestamp is 2026-03-03T00:00:00Z and evidence currently points to BugHunter=None; QA=No new post-cycle evidence. This means the capability surface exists in the product, but the platform still carries documented parity and hardening gaps that must be tracked explicitly rather than implied by UI presence.
+
+Completion path for FS-0037 is to close all linked atomic work items (no MBP IDs currently linked) and retire open gap notes in interconnection controls. Delivery must preserve auditability, permissions, and regression safety in mapped route categories, then advance verification from documentation-level checks to app and QA evidence with repeatable gates. Constraints include dependency ordering in the feature graph and preserving behavior already stabilized by prior bug-hunter hardening.
+
+### FS-0038 — UPS WorldShip Integration
+
+FS-0038 defines the technical contract for UPS WorldShip Integration across cross-cutting platform categories. The intended behavior is deterministic role-gated execution, consistent data capture, and predictable state transitions so downstream workflows do not depend on operator memory or ad hoc sequencing. This feature is treated as a first-class capability in Registry A and is expected to remain stable under concurrent updates, retries, and cross-module navigation.
+
+Current canonical state is not_implemented with verification at doc_reviewed. The latest review timestamp is 2026-03-03T00:00:00Z and evidence currently points to BugHunter=None; QA=No new post-cycle evidence. This means the capability surface exists in the product, but the platform still carries documented parity and hardening gaps that must be tracked explicitly rather than implied by UI presence.
+
+Completion path for FS-0038 is to close all linked atomic work items (no MBP IDs currently linked) and retire open gap notes in interconnection controls. Delivery must preserve auditability, permissions, and regression safety in mapped route categories, then advance verification from documentation-level checks to app and QA evidence with repeatable gates. Constraints include dependency ordering in the feature graph and preserving behavior already stabilized by prior bug-hunter hardening.
+
+### FS-0039 — FBO Line Sales
+
+FS-0039 defines the technical contract for FBO Line Sales across cross-cutting platform categories. The intended behavior is deterministic role-gated execution, consistent data capture, and predictable state transitions so downstream workflows do not depend on operator memory or ad hoc sequencing. This feature is treated as a first-class capability in Registry A and is expected to remain stable under concurrent updates, retries, and cross-module navigation.
+
+Current canonical state is not_implemented with verification at doc_reviewed. The latest review timestamp is 2026-03-03T00:00:00Z and evidence currently points to BugHunter=None; QA=No new post-cycle evidence. This means the capability surface exists in the product, but the platform still carries documented parity and hardening gaps that must be tracked explicitly rather than implied by UI presence.
+
+Completion path for FS-0039 is to close all linked atomic work items (no MBP IDs currently linked) and retire open gap notes in interconnection controls. Delivery must preserve auditability, permissions, and regression safety in mapped route categories, then advance verification from documentation-level checks to app and QA evidence with repeatable gates. Constraints include dependency ordering in the feature graph and preserving behavior already stabilized by prior bug-hunter hardening.
+
+### FS-0040 — Native Mobile App
+
+FS-0040 defines the technical contract for Native Mobile App across cross-cutting platform categories. The intended behavior is deterministic role-gated execution, consistent data capture, and predictable state transitions so downstream workflows do not depend on operator memory or ad hoc sequencing. This feature is treated as a first-class capability in Registry A and is expected to remain stable under concurrent updates, retries, and cross-module navigation.
+
+Current canonical state is partially_implemented with verification at qa_verified. The latest review timestamp is 2026-03-03T00:00:00Z and evidence currently points to BugHunter=None; QA=GAP-19. This means the capability surface exists in the product, but the platform still carries documented parity and hardening gaps that must be tracked explicitly rather than implied by UI presence.
+
+Completion path for FS-0040 is to close all linked atomic work items (no MBP IDs currently linked) and retire open gap notes in interconnection controls. Delivery must preserve auditability, permissions, and regression safety in mapped route categories, then advance verification from documentation-level checks to app and QA evidence with repeatable gates. Constraints include dependency ordering in the feature graph and preserving behavior already stabilized by prior bug-hunter hardening.
+
+### FS-0041 — Policy Enforcement Engine
+
+FS-0041 defines the technical contract for Policy Enforcement Engine across CAT-ONBOARDING. The intended behavior is deterministic role-gated execution, consistent data capture, and predictable state transitions so downstream workflows do not depend on operator memory or ad hoc sequencing. This feature is treated as a first-class capability in Registry A and is expected to remain stable under concurrent updates, retries, and cross-module navigation.
+
+Current canonical state is partially_implemented with verification at unreviewed. The latest review timestamp is 2026-03-04T04:05:06Z and evidence currently points to BugHunter=None; QA=GAP-25, ISSUE-001, ISSUE-002, ISSUE-003, TD-002 +…; derived_from=MBP-0003,MBP-0004,MBP-0011,MBP-0017,MBP-0018,MBP-0033,MBP-0054,MBP-0055,MBP-0105,MBP-0106,MBP-0107,MBP-0108,MBP-0109. This means the capability surface exists in the product, but the platform still carries documented parity and hardening gaps that must be tracked explicitly rather than implied by UI presence.
+
+Completion path for FS-0041 is to close all linked atomic work items (MBP-0003, MBP-0004, MBP-0011, MBP-0017, MBP-0018, MBP-0033, MBP-0054, MBP-0055) and retire open gap notes in interconnection controls. Delivery must preserve auditability, permissions, and regression safety in mapped route categories, then advance verification from documentation-level checks to app and QA evidence with repeatable gates. Constraints include dependency ordering in the feature graph and preserving behavior already stabilized by prior bug-hunter hardening.
+
+### FS-0042 — Immutable Record Locks & Compliance Holds
+
+FS-0042 defines the technical contract for Immutable Record Locks & Compliance Holds across cross-cutting platform categories. The intended behavior is deterministic role-gated execution, consistent data capture, and predictable state transitions so downstream workflows do not depend on operator memory or ad hoc sequencing. This feature is treated as a first-class capability in Registry A and is expected to remain stable under concurrent updates, retries, and cross-module navigation.
+
+Current canonical state is partially_implemented with verification at unreviewed. The latest review timestamp is 2026-03-04T04:38:57Z and evidence currently points to BugHunter=None; QA=No new post-cycle evidence; derived_from=MBP-0018,MBP-0045,MBP-0054,MBP-0063,MBP-0064,MBP-0065,MBP-0066,MBP-0067,MBP-0068. This means the capability surface exists in the product, but the platform still carries documented parity and hardening gaps that must be tracked explicitly rather than implied by UI presence.
+
+Completion path for FS-0042 is to close all linked atomic work items (MBP-0018, MBP-0045, MBP-0054, MBP-0063, MBP-0064, MBP-0065, MBP-0066, MBP-0067) and retire open gap notes in interconnection controls. Delivery must preserve auditability, permissions, and regression safety in mapped route categories, then advance verification from documentation-level checks to app and QA evidence with repeatable gates. Constraints include dependency ordering in the feature graph and preserving behavior already stabilized by prior bug-hunter hardening.
+
+### FS-0043 — Customer Portal Identity Link Model
+
+FS-0043 defines the technical contract for Customer Portal Identity Link Model across cross-cutting platform categories. The intended behavior is deterministic role-gated execution, consistent data capture, and predictable state transitions so downstream workflows do not depend on operator memory or ad hoc sequencing. This feature is treated as a first-class capability in Registry A and is expected to remain stable under concurrent updates, retries, and cross-module navigation.
+
+Current canonical state is not_implemented with verification at doc_reviewed. The latest review timestamp is 2026-03-03T00:00:00Z and evidence currently points to BugHunter=None; QA=No new post-cycle evidence. This means the capability surface exists in the product, but the platform still carries documented parity and hardening gaps that must be tracked explicitly rather than implied by UI presence.
+
+Completion path for FS-0043 is to close all linked atomic work items (no MBP IDs currently linked) and retire open gap notes in interconnection controls. Delivery must preserve auditability, permissions, and regression safety in mapped route categories, then advance verification from documentation-level checks to app and QA evidence with repeatable gates. Constraints include dependency ordering in the feature graph and preserving behavior already stabilized by prior bug-hunter hardening.
+
+### FS-0044 — Work Order Routing Templates + Standard Minutes
+
+FS-0044 defines the technical contract for Work Order Routing Templates + Standard Minutes across CAT-MY-WORK, CAT-WORK-ORDERS. The intended behavior is deterministic role-gated execution, consistent data capture, and predictable state transitions so downstream workflows do not depend on operator memory or ad hoc sequencing. This feature is treated as a first-class capability in Registry A and is expected to remain stable under concurrent updates, retries, and cross-module navigation.
+
+Current canonical state is partially_implemented with verification at unreviewed. The latest review timestamp is 2026-03-04T04:43:13Z and evidence currently points to BugHunter=BACKEND-NEEDED-BH-01; QA=GAP-06, GAP-08, TD-001, TD-005, TD-009 +…; derived_from=MBP-0014,MBP-0015,MBP-0016,MBP-0039,MBP-0052,MBP-0053,MBP-0123,MBP-0124,MBP-0127,MBP-0132,MBP-0133,MBP-0136. This means the capability surface exists in the product, but the platform still carries documented parity and hardening gaps that must be tracked explicitly rather than implied by UI presence.
+
+Completion path for FS-0044 is to close all linked atomic work items (MBP-0014, MBP-0015, MBP-0016, MBP-0039, MBP-0052, MBP-0053, MBP-0123, MBP-0124) and retire open gap notes in interconnection controls. Delivery must preserve auditability, permissions, and regression safety in mapped route categories, then advance verification from documentation-level checks to app and QA evidence with repeatable gates. Constraints include dependency ordering in the feature graph and preserving behavior already stabilized by prior bug-hunter hardening.
+
+### FS-0045 — Inspection & Exception Queue Governance
+
+FS-0045 defines the technical contract for Inspection & Exception Queue Governance across cross-cutting platform categories. The intended behavior is deterministic role-gated execution, consistent data capture, and predictable state transitions so downstream workflows do not depend on operator memory or ad hoc sequencing. This feature is treated as a first-class capability in Registry A and is expected to remain stable under concurrent updates, retries, and cross-module navigation.
+
+Current canonical state is not_implemented with verification at doc_reviewed. The latest review timestamp is 2026-03-03T00:00:00Z and evidence currently points to BugHunter=None; QA=No new post-cycle evidence. This means the capability surface exists in the product, but the platform still carries documented parity and hardening gaps that must be tracked explicitly rather than implied by UI presence.
+
+Completion path for FS-0045 is to close all linked atomic work items (no MBP IDs currently linked) and retire open gap notes in interconnection controls. Delivery must preserve auditability, permissions, and regression safety in mapped route categories, then advance verification from documentation-level checks to app and QA evidence with repeatable gates. Constraints include dependency ordering in the feature graph and preserving behavior already stabilized by prior bug-hunter hardening.
+
+### FS-0046 — Materials Demand Ledger + Reservation Controls
+
+FS-0046 defines the technical contract for Materials Demand Ledger + Reservation Controls across cross-cutting platform categories. The intended behavior is deterministic role-gated execution, consistent data capture, and predictable state transitions so downstream workflows do not depend on operator memory or ad hoc sequencing. This feature is treated as a first-class capability in Registry A and is expected to remain stable under concurrent updates, retries, and cross-module navigation.
+
+Current canonical state is not_implemented with verification at doc_reviewed. The latest review timestamp is 2026-03-03T00:00:00Z and evidence currently points to BugHunter=None; QA=No new post-cycle evidence. This means the capability surface exists in the product, but the platform still carries documented parity and hardening gaps that must be tracked explicitly rather than implied by UI presence.
+
+Completion path for FS-0046 is to close all linked atomic work items (no MBP IDs currently linked) and retire open gap notes in interconnection controls. Delivery must preserve auditability, permissions, and regression safety in mapped route categories, then advance verification from documentation-level checks to app and QA evidence with repeatable gates. Constraints include dependency ordering in the feature graph and preserving behavior already stabilized by prior bug-hunter hardening.
+
+### FS-0047 — Compliance Command Center
+
+FS-0047 defines the technical contract for Compliance Command Center across cross-cutting platform categories. The intended behavior is deterministic role-gated execution, consistent data capture, and predictable state transitions so downstream workflows do not depend on operator memory or ad hoc sequencing. This feature is treated as a first-class capability in Registry A and is expected to remain stable under concurrent updates, retries, and cross-module navigation.
+
+Current canonical state is not_implemented with verification at doc_reviewed. The latest review timestamp is 2026-03-03T00:00:00Z and evidence currently points to BugHunter=None; QA=No new post-cycle evidence. This means the capability surface exists in the product, but the platform still carries documented parity and hardening gaps that must be tracked explicitly rather than implied by UI presence.
+
+Completion path for FS-0047 is to close all linked atomic work items (no MBP IDs currently linked) and retire open gap notes in interconnection controls. Delivery must preserve auditability, permissions, and regression safety in mapped route categories, then advance verification from documentation-level checks to app and QA evidence with repeatable gates. Constraints include dependency ordering in the feature graph and preserving behavior already stabilized by prior bug-hunter hardening.
+
+### FS-0048 — Dynamic Custom Fields Framework
+
+FS-0048 defines the technical contract for Dynamic Custom Fields Framework across cross-cutting platform categories. The intended behavior is deterministic role-gated execution, consistent data capture, and predictable state transitions so downstream workflows do not depend on operator memory or ad hoc sequencing. This feature is treated as a first-class capability in Registry A and is expected to remain stable under concurrent updates, retries, and cross-module navigation.
+
+Current canonical state is not_implemented with verification at doc_reviewed. The latest review timestamp is 2026-03-03T00:00:00Z and evidence currently points to BugHunter=None; QA=No new post-cycle evidence. This means the capability surface exists in the product, but the platform still carries documented parity and hardening gaps that must be tracked explicitly rather than implied by UI presence.
+
+Completion path for FS-0048 is to close all linked atomic work items (no MBP IDs currently linked) and retire open gap notes in interconnection controls. Delivery must preserve auditability, permissions, and regression safety in mapped route categories, then advance verification from documentation-level checks to app and QA evidence with repeatable gates. Constraints include dependency ordering in the feature graph and preserving behavior already stabilized by prior bug-hunter hardening.
+
+### FS-0049 — Alert Rules + Escalation Engine
+
+FS-0049 defines the technical contract for Alert Rules + Escalation Engine across cross-cutting platform categories. The intended behavior is deterministic role-gated execution, consistent data capture, and predictable state transitions so downstream workflows do not depend on operator memory or ad hoc sequencing. This feature is treated as a first-class capability in Registry A and is expected to remain stable under concurrent updates, retries, and cross-module navigation.
+
+Current canonical state is not_implemented with verification at doc_reviewed. The latest review timestamp is 2026-03-03T00:00:00Z and evidence currently points to BugHunter=None; QA=No new post-cycle evidence. This means the capability surface exists in the product, but the platform still carries documented parity and hardening gaps that must be tracked explicitly rather than implied by UI presence.
+
+Completion path for FS-0049 is to close all linked atomic work items (no MBP IDs currently linked) and retire open gap notes in interconnection controls. Delivery must preserve auditability, permissions, and regression safety in mapped route categories, then advance verification from documentation-level checks to app and QA evidence with repeatable gates. Constraints include dependency ordering in the feature graph and preserving behavior already stabilized by prior bug-hunter hardening.
+
+### FS-0050 — Field-Level Visibility/Edit Policy Controls
+
+FS-0050 defines the technical contract for Field-Level Visibility/Edit Policy Controls across CAT-AUTH. The intended behavior is deterministic role-gated execution, consistent data capture, and predictable state transitions so downstream workflows do not depend on operator memory or ad hoc sequencing. This feature is treated as a first-class capability in Registry A and is expected to remain stable under concurrent updates, retries, and cross-module navigation.
+
+Current canonical state is implemented with verification at qa_verified. The latest review timestamp is 2026-03-04T04:05:06Z and evidence currently points to BugHunter=None; QA=No new post-cycle evidence; derived_from=MBP-0017,MBP-0105,MBP-0106,MBP-0107,MBP-0108,MBP-0109. This means the capability surface exists in the product, but the platform still carries documented parity and hardening gaps that must be tracked explicitly rather than implied by UI presence.
+
+Completion path for FS-0050 is to close all linked atomic work items (MBP-0017, MBP-0105, MBP-0106, MBP-0107, MBP-0108, MBP-0109) and retire open gap notes in interconnection controls. Delivery must preserve auditability, permissions, and regression safety in mapped route categories, then advance verification from documentation-level checks to app and QA evidence with repeatable gates. Constraints include dependency ordering in the feature graph and preserving behavior already stabilized by prior bug-hunter hardening.
+
+### FS-0051 — Operational Report Builder + Scheduled Report Runs
+
+FS-0051 defines the technical contract for Operational Report Builder + Scheduled Report Runs across CAT-REPORTS. The intended behavior is deterministic role-gated execution, consistent data capture, and predictable state transitions so downstream workflows do not depend on operator memory or ad hoc sequencing. This feature is treated as a first-class capability in Registry A and is expected to remain stable under concurrent updates, retries, and cross-module navigation.
+
+Current canonical state is partially_implemented with verification at qa_verified. The latest review timestamp is 2026-03-03T00:00:00Z and evidence currently points to BugHunter=None; QA=TD-013. This means the capability surface exists in the product, but the platform still carries documented parity and hardening gaps that must be tracked explicitly rather than implied by UI presence.
+
+Completion path for FS-0051 is to close all linked atomic work items (no MBP IDs currently linked) and retire open gap notes in interconnection controls. Delivery must preserve auditability, permissions, and regression safety in mapped route categories, then advance verification from documentation-level checks to app and QA evidence with repeatable gates. Constraints include dependency ordering in the feature graph and preserving behavior already stabilized by prior bug-hunter hardening.
+
+### FS-0052 — Part Lineage Drilldown Explorer
+
+FS-0052 defines the technical contract for Part Lineage Drilldown Explorer across CAT-PARTS. The intended behavior is deterministic role-gated execution, consistent data capture, and predictable state transitions so downstream workflows do not depend on operator memory or ad hoc sequencing. This feature is treated as a first-class capability in Registry A and is expected to remain stable under concurrent updates, retries, and cross-module navigation.
+
+Current canonical state is backend_needed with verification at qa_verified. The latest review timestamp is 2026-03-03T00:00:00Z and evidence currently points to BugHunter=BACKEND-NEEDED-BH-P01, BH-008, BH-009, BH-010, BUG-008 +…; QA=FEAT-LARGE-004, GAP-11, GAP-12, GAP-13. This means the capability surface exists in the product, but the platform still carries documented parity and hardening gaps that must be tracked explicitly rather than implied by UI presence.
+
+Completion path for FS-0052 is to close all linked atomic work items (no MBP IDs currently linked) and retire open gap notes in interconnection controls. Delivery must preserve auditability, permissions, and regression safety in mapped route categories, then advance verification from documentation-level checks to app and QA evidence with repeatable gates. Constraints include dependency ordering in the feature graph and preserving behavior already stabilized by prior bug-hunter hardening.
+
+### FS-0053 — Zero-Downtime Migration Control Plane
+
+FS-0053 defines the technical contract for Zero-Downtime Migration Control Plane across CAT-SETTINGS, CAT-SYSTEM. The intended behavior is deterministic role-gated execution, consistent data capture, and predictable state transitions so downstream workflows do not depend on operator memory or ad hoc sequencing. This feature is treated as a first-class capability in Registry A and is expected to remain stable under concurrent updates, retries, and cross-module navigation.
+
+Current canonical state is partially_implemented with verification at unreviewed. The latest review timestamp is 2026-03-04T04:05:06Z and evidence currently points to BugHunter=None; QA=No new post-cycle evidence; derived_from=MBP-0003,MBP-0004,MBP-0011,MBP-0016,MBP-0133. This means the capability surface exists in the product, but the platform still carries documented parity and hardening gaps that must be tracked explicitly rather than implied by UI presence.
+
+Completion path for FS-0053 is to close all linked atomic work items (MBP-0003, MBP-0004, MBP-0011, MBP-0016, MBP-0133) and retire open gap notes in interconnection controls. Delivery must preserve auditability, permissions, and regression safety in mapped route categories, then advance verification from documentation-level checks to app and QA evidence with repeatable gates. Constraints include dependency ordering in the feature graph and preserving behavior already stabilized by prior bug-hunter hardening.
+
+### FS-0054 — Task Card Compliance Save Guardrail
+
+FS-0054 defines the technical contract for Task Card Compliance Save Guardrail across CAT-WORK-ORDERS. The intended behavior is deterministic role-gated execution, consistent data capture, and predictable state transitions so downstream workflows do not depend on operator memory or ad hoc sequencing. This feature is treated as a first-class capability in Registry A and is expected to remain stable under concurrent updates, retries, and cross-module navigation.
+
+Current canonical state is partially_implemented with verification at doc_reviewed. The latest review timestamp is 2026-03-04T00:00:00Z and evidence currently points to docs/feature-spec-appendices/detected-features-log.md#detected-features-not-previously-represented; app/(app)/work-orders/[id]/tasks/[cardId]/page.tsx. This means the capability surface exists in the product, but the platform still carries documented parity and hardening gaps that must be tracked explicitly rather than implied by UI presence.
+
+Completion path for FS-0054 is to close all linked atomic work items (MBP-0138) and retire open gap notes in interconnection controls. Delivery must preserve auditability, permissions, and regression safety in mapped route categories, then advance verification from documentation-level checks to app and QA evidence with repeatable gates. Constraints include dependency ordering in the feature graph and preserving behavior already stabilized by prior bug-hunter hardening.
+
+### FS-0055 — Lead Technician Execution Safety Orchestrator
+
+FS-0055 defines the technical contract for Lead Technician Execution Safety Orchestrator across CAT-LEAD, CAT-WORK-ORDERS. The intended behavior is deterministic role-gated execution, consistent data capture, and predictable state transitions so downstream workflows do not depend on operator memory or ad hoc sequencing. This feature is treated as a first-class capability in Registry A and is expected to remain stable under concurrent updates, retries, and cross-module navigation.
+
+Current canonical state is partially_implemented with verification at doc_reviewed. The latest review timestamp is 2026-03-04T00:00:00Z and evidence currently points to docs/feature-spec-appendices/detected-features-log.md#detected-features-not-previously-represented; app/(app)/work-orders/[id]/tasks/[cardId]/_components/RaiseFindingDialog.tsx. This means the capability surface exists in the product, but the platform still carries documented parity and hardening gaps that must be tracked explicitly rather than implied by UI presence.
+
+Completion path for FS-0055 is to close all linked atomic work items (MBP-0139) and retire open gap notes in interconnection controls. Delivery must preserve auditability, permissions, and regression safety in mapped route categories, then advance verification from documentation-level checks to app and QA evidence with repeatable gates. Constraints include dependency ordering in the feature graph and preserving behavior already stabilized by prior bug-hunter hardening.
+
+### FS-0056 — Task Card Authoring Validation Controls
+
+FS-0056 defines the technical contract for Task Card Authoring Validation Controls across CAT-WORK-ORDERS. The intended behavior is deterministic role-gated execution, consistent data capture, and predictable state transitions so downstream workflows do not depend on operator memory or ad hoc sequencing. This feature is treated as a first-class capability in Registry A and is expected to remain stable under concurrent updates, retries, and cross-module navigation.
+
+Current canonical state is partially_implemented with verification at doc_reviewed. The latest review timestamp is 2026-03-04T00:00:00Z and evidence currently points to docs/feature-spec-appendices/detected-features-log.md#detected-features-not-previously-represented; app/(app)/work-orders/[id]/tasks/new/page.tsx. This means the capability surface exists in the product, but the platform still carries documented parity and hardening gaps that must be tracked explicitly rather than implied by UI presence.
+
+Completion path for FS-0056 is to close all linked atomic work items (MBP-0140) and retire open gap notes in interconnection controls. Delivery must preserve auditability, permissions, and regression safety in mapped route categories, then advance verification from documentation-level checks to app and QA evidence with repeatable gates. Constraints include dependency ordering in the feature graph and preserving behavior already stabilized by prior bug-hunter hardening.
+
+### FS-0057 — Discrepancy Raise-and-Link Integrity
+
+FS-0057 defines the technical contract for Discrepancy Raise-and-Link Integrity across cross-cutting platform categories. The intended behavior is deterministic role-gated execution, consistent data capture, and predictable state transitions so downstream workflows do not depend on operator memory or ad hoc sequencing. This feature is treated as a first-class capability in Registry A and is expected to remain stable under concurrent updates, retries, and cross-module navigation.
+
+Current canonical state is partially_implemented with verification at doc_reviewed. The latest review timestamp is 2026-03-04T00:00:00Z and evidence currently points to docs/feature-spec-appendices/detected-features-log.md#detected-features-not-previously-represented; app/(app)/work-orders/[id]/_components/DiscrepancyList.tsx. This means the capability surface exists in the product, but the platform still carries documented parity and hardening gaps that must be tracked explicitly rather than implied by UI presence.
+
+Completion path for FS-0057 is to close all linked atomic work items (MBP-0141) and retire open gap notes in interconnection controls. Delivery must preserve auditability, permissions, and regression safety in mapped route categories, then advance verification from documentation-level checks to app and QA evidence with repeatable gates. Constraints include dependency ordering in the feature graph and preserving behavior already stabilized by prior bug-hunter hardening.
+
+### FS-0058 — My Work Assignment Consistency Controls
+
+FS-0058 defines the technical contract for My Work Assignment Consistency Controls across CAT-MY-WORK. The intended behavior is deterministic role-gated execution, consistent data capture, and predictable state transitions so downstream workflows do not depend on operator memory or ad hoc sequencing. This feature is treated as a first-class capability in Registry A and is expected to remain stable under concurrent updates, retries, and cross-module navigation.
+
+Current canonical state is partially_implemented with verification at doc_reviewed. The latest review timestamp is 2026-03-04T00:00:00Z and evidence currently points to docs/feature-spec-appendices/detected-features-log.md#detected-features-not-previously-represented; app/(app)/my-work/page.tsx. This means the capability surface exists in the product, but the platform still carries documented parity and hardening gaps that must be tracked explicitly rather than implied by UI presence.
+
+Completion path for FS-0058 is to close all linked atomic work items (MBP-0142) and retire open gap notes in interconnection controls. Delivery must preserve auditability, permissions, and regression safety in mapped route categories, then advance verification from documentation-level checks to app and QA evidence with repeatable gates. Constraints include dependency ordering in the feature graph and preserving behavior already stabilized by prior bug-hunter hardening.
+
+### FS-0059 — Sign-Off Dialog Data Integrity Guardrails
+
+FS-0059 defines the technical contract for Sign-Off Dialog Data Integrity Guardrails across cross-cutting platform categories. The intended behavior is deterministic role-gated execution, consistent data capture, and predictable state transitions so downstream workflows do not depend on operator memory or ad hoc sequencing. This feature is treated as a first-class capability in Registry A and is expected to remain stable under concurrent updates, retries, and cross-module navigation.
+
+Current canonical state is partially_implemented with verification at doc_reviewed. The latest review timestamp is 2026-03-04T00:00:00Z and evidence currently points to docs/feature-spec-appendices/detected-features-log.md#detected-features-not-previously-represented; app/(app)/work-orders/[id]/tasks/[cardId]/_components/SignCardDialog.tsx. This means the capability surface exists in the product, but the platform still carries documented parity and hardening gaps that must be tracked explicitly rather than implied by UI presence.
+
+Completion path for FS-0059 is to close all linked atomic work items (MBP-0143) and retire open gap notes in interconnection controls. Delivery must preserve auditability, permissions, and regression safety in mapped route categories, then advance verification from documentation-level checks to app and QA evidence with repeatable gates. Constraints include dependency ordering in the feature graph and preserving behavior already stabilized by prior bug-hunter hardening.
+
+### FS-0060 — Squawk Escalation and Handoff Safeguards
+
+FS-0060 defines the technical contract for Squawk Escalation and Handoff Safeguards across CAT-SQUAWKS. The intended behavior is deterministic role-gated execution, consistent data capture, and predictable state transitions so downstream workflows do not depend on operator memory or ad hoc sequencing. This feature is treated as a first-class capability in Registry A and is expected to remain stable under concurrent updates, retries, and cross-module navigation.
+
+Current canonical state is partially_implemented with verification at doc_reviewed. The latest review timestamp is 2026-03-04T00:00:00Z and evidence currently points to docs/feature-spec-appendices/detected-features-log.md#detected-features-not-previously-represented; app/(app)/squawks/page.tsx. This means the capability surface exists in the product, but the platform still carries documented parity and hardening gaps that must be tracked explicitly rather than implied by UI presence.
+
+Completion path for FS-0060 is to close all linked atomic work items (MBP-0144) and retire open gap notes in interconnection controls. Delivery must preserve auditability, permissions, and regression safety in mapped route categories, then advance verification from documentation-level checks to app and QA evidence with repeatable gates. Constraints include dependency ordering in the feature graph and preserving behavior already stabilized by prior bug-hunter hardening.
+
+### FS-0061 — Certificate Field Normalization Pipeline
+
+FS-0061 defines the technical contract for Certificate Field Normalization Pipeline across CAT-COMPLIANCE, CAT-WORK-ORDERS. The intended behavior is deterministic role-gated execution, consistent data capture, and predictable state transitions so downstream workflows do not depend on operator memory or ad hoc sequencing. This feature is treated as a first-class capability in Registry A and is expected to remain stable under concurrent updates, retries, and cross-module navigation.
+
+Current canonical state is partially_implemented with verification at doc_reviewed. The latest review timestamp is 2026-03-04T00:00:00Z and evidence currently points to docs/feature-spec-appendices/detected-features-log.md#detected-features-not-previously-represented; app/(app)/work-orders/[id]/certificates/page.tsx. This means the capability surface exists in the product, but the platform still carries documented parity and hardening gaps that must be tracked explicitly rather than implied by UI presence.
+
+Completion path for FS-0061 is to close all linked atomic work items (MBP-0145) and retire open gap notes in interconnection controls. Delivery must preserve auditability, permissions, and regression safety in mapped route categories, then advance verification from documentation-level checks to app and QA evidence with repeatable gates. Constraints include dependency ordering in the feature graph and preserving behavior already stabilized by prior bug-hunter hardening.
+
+### FS-0062 — Customer Account CRM & Profile Ledger
+
+FS-0062 defines the technical contract for Customer Account CRM & Profile Ledger across CAT-BILLING, CAT-PORTAL. The intended behavior is deterministic role-gated execution, consistent data capture, and predictable state transitions so downstream workflows do not depend on operator memory or ad hoc sequencing. This feature is treated as a first-class capability in Registry A and is expected to remain stable under concurrent updates, retries, and cross-module navigation.
+
+Current canonical state is partially_implemented with verification at doc_reviewed. The latest review timestamp is 2026-03-04T00:00:00Z and evidence currently points to src/router/routeModules/protectedAppRoutes.tsx; app/(app)/billing/customers/page.tsx; app/(customer)/portal/page.tsx. This means the capability surface exists in the product, but the platform still carries documented parity and hardening gaps that must be tracked explicitly rather than implied by UI presence.
+
+Completion path for FS-0062 is to close all linked atomic work items (MBP-0146) and retire open gap notes in interconnection controls. Delivery must preserve auditability, permissions, and regression safety in mapped route categories, then advance verification from documentation-level checks to app and QA evidence with repeatable gates. Constraints include dependency ordering in the feature graph and preserving behavior already stabilized by prior bug-hunter hardening.
+
+### FS-0063 — AR, Deposits, and Credit Memo Controls
+
+FS-0063 defines the technical contract for AR, Deposits, and Credit Memo Controls across CAT-BILLING. The intended behavior is deterministic role-gated execution, consistent data capture, and predictable state transitions so downstream workflows do not depend on operator memory or ad hoc sequencing. This feature is treated as a first-class capability in Registry A and is expected to remain stable under concurrent updates, retries, and cross-module navigation.
+
+Current canonical state is partially_implemented with verification at doc_reviewed. The latest review timestamp is 2026-03-04T00:00:00Z and evidence currently points to src/router/routeModules/protectedAppRoutes.tsx; app/(app)/billing/ar-dashboard/page.tsx; app/(app)/billing/deposits/page.tsx. This means the capability surface exists in the product, but the platform still carries documented parity and hardening gaps that must be tracked explicitly rather than implied by UI presence.
+
+Completion path for FS-0063 is to close all linked atomic work items (MBP-0147) and retire open gap notes in interconnection controls. Delivery must preserve auditability, permissions, and regression safety in mapped route categories, then advance verification from documentation-level checks to app and QA evidence with repeatable gates. Constraints include dependency ordering in the feature graph and preserving behavior already stabilized by prior bug-hunter hardening.
+
+### FS-0064 — Procurement and Vendor Operations
+
+FS-0064 defines the technical contract for Procurement and Vendor Operations across CAT-BILLING. The intended behavior is deterministic role-gated execution, consistent data capture, and predictable state transitions so downstream workflows do not depend on operator memory or ad hoc sequencing. This feature is treated as a first-class capability in Registry A and is expected to remain stable under concurrent updates, retries, and cross-module navigation.
+
+Current canonical state is partially_implemented with verification at doc_reviewed. The latest review timestamp is 2026-03-04T00:00:00Z and evidence currently points to src/router/routeModules/protectedAppRoutes.tsx; app/(app)/billing/vendors/page.tsx; app/(app)/billing/purchase-orders/page.tsx. This means the capability surface exists in the product, but the platform still carries documented parity and hardening gaps that must be tracked explicitly rather than implied by UI presence.
+
+Completion path for FS-0064 is to close all linked atomic work items (MBP-0148) and retire open gap notes in interconnection controls. Delivery must preserve auditability, permissions, and regression safety in mapped route categories, then advance verification from documentation-level checks to app and QA evidence with repeatable gates. Constraints include dependency ordering in the feature graph and preserving behavior already stabilized by prior bug-hunter hardening.
+
+### FS-0065 — Recurring Billing Contract Engine
+
+FS-0065 defines the technical contract for Recurring Billing Contract Engine across CAT-BILLING. The intended behavior is deterministic role-gated execution, consistent data capture, and predictable state transitions so downstream workflows do not depend on operator memory or ad hoc sequencing. This feature is treated as a first-class capability in Registry A and is expected to remain stable under concurrent updates, retries, and cross-module navigation.
+
+Current canonical state is partially_implemented with verification at doc_reviewed. The latest review timestamp is 2026-03-04T00:00:00Z and evidence currently points to src/router/routeModules/protectedAppRoutes.tsx; app/(app)/billing/recurring/page.tsx. This means the capability surface exists in the product, but the platform still carries documented parity and hardening gaps that must be tracked explicitly rather than implied by UI presence.
+
+Completion path for FS-0065 is to close all linked atomic work items (MBP-0149) and retire open gap notes in interconnection controls. Delivery must preserve auditability, permissions, and regression safety in mapped route categories, then advance verification from documentation-level checks to app and QA evidence with repeatable gates. Constraints include dependency ordering in the feature graph and preserving behavior already stabilized by prior bug-hunter hardening.
+
+### FS-0066 — Labor Kit and Quote Template Library
+
+FS-0066 defines the technical contract for Labor Kit and Quote Template Library across CAT-BILLING. The intended behavior is deterministic role-gated execution, consistent data capture, and predictable state transitions so downstream workflows do not depend on operator memory or ad hoc sequencing. This feature is treated as a first-class capability in Registry A and is expected to remain stable under concurrent updates, retries, and cross-module navigation.
+
+Current canonical state is partially_implemented with verification at doc_reviewed. The latest review timestamp is 2026-03-04T00:00:00Z and evidence currently points to src/router/routeModules/protectedAppRoutes.tsx; app/(app)/billing/labor-kits/page.tsx; app/(app)/billing/quotes/templates/page.tsx. This means the capability surface exists in the product, but the platform still carries documented parity and hardening gaps that must be tracked explicitly rather than implied by UI presence.
+
+Completion path for FS-0066 is to close all linked atomic work items (MBP-0150) and retire open gap notes in interconnection controls. Delivery must preserve auditability, permissions, and regression safety in mapped route categories, then advance verification from documentation-level checks to app and QA evidence with repeatable gates. Constraints include dependency ordering in the feature graph and preserving behavior already stabilized by prior bug-hunter hardening.
+
+### FS-0067 — Parts Logistics Operations (Shipping, Loaners, Core Flow)
+
+FS-0067 defines the technical contract for Parts Logistics Operations (Shipping, Loaners, Core Flow) across CAT-PARTS. The intended behavior is deterministic role-gated execution, consistent data capture, and predictable state transitions so downstream workflows do not depend on operator memory or ad hoc sequencing. This feature is treated as a first-class capability in Registry A and is expected to remain stable under concurrent updates, retries, and cross-module navigation.
+
+Current canonical state is partially_implemented with verification at doc_reviewed. The latest review timestamp is 2026-03-04T00:00:00Z and evidence currently points to src/router/routeModules/protectedAppRoutes.tsx; app/(app)/parts/shipping/page.tsx; app/(app)/parts/loaners/page.tsx. This means the capability surface exists in the product, but the platform still carries documented parity and hardening gaps that must be tracked explicitly rather than implied by UI presence.
+
+Completion path for FS-0067 is to close all linked atomic work items (MBP-0151) and retire open gap notes in interconnection controls. Delivery must preserve auditability, permissions, and regression safety in mapped route categories, then advance verification from documentation-level checks to app and QA evidence with repeatable gates. Constraints include dependency ordering in the feature graph and preserving behavior already stabilized by prior bug-hunter hardening.
+
+### FS-0068 — Scheduling Roster and Crew Coordination
+
+FS-0068 defines the technical contract for Scheduling Roster and Crew Coordination across CAT-SCHEDULING. The intended behavior is deterministic role-gated execution, consistent data capture, and predictable state transitions so downstream workflows do not depend on operator memory or ad hoc sequencing. This feature is treated as a first-class capability in Registry A and is expected to remain stable under concurrent updates, retries, and cross-module navigation.
+
+Current canonical state is partially_implemented with verification at doc_reviewed. The latest review timestamp is 2026-03-04T00:00:00Z and evidence currently points to src/router/routeModules/protectedAppRoutes.tsx; app/(app)/scheduling/roster/page.tsx. This means the capability surface exists in the product, but the platform still carries documented parity and hardening gaps that must be tracked explicitly rather than implied by UI presence.
+
+Completion path for FS-0068 is to close all linked atomic work items (MBP-0152) and retire open gap notes in interconnection controls. Delivery must preserve auditability, permissions, and regression safety in mapped route categories, then advance verification from documentation-level checks to app and QA evidence with repeatable gates. Constraints include dependency ordering in the feature graph and preserving behavior already stabilized by prior bug-hunter hardening.
+
+### FS-0069 — Station Configuration and Org Governance Console
+
+FS-0069 defines the technical contract for Station Configuration and Org Governance Console across CAT-ONBOARDING, CAT-SETTINGS, CAT-SYSTEM. The intended behavior is deterministic role-gated execution, consistent data capture, and predictable state transitions so downstream workflows do not depend on operator memory or ad hoc sequencing. This feature is treated as a first-class capability in Registry A and is expected to remain stable under concurrent updates, retries, and cross-module navigation.
+
+Current canonical state is partially_implemented with verification at doc_reviewed. The latest review timestamp is 2026-03-04T00:00:00Z and evidence currently points to src/router/routeModules/protectedAppRoutes.tsx; app/(app)/settings/station-config/page.tsx; app/(app)/settings/users/page.tsx. This means the capability surface exists in the product, but the platform still carries documented parity and hardening gaps that must be tracked explicitly rather than implied by UI presence.
+
+Completion path for FS-0069 is to close all linked atomic work items (MBP-0153) and retire open gap notes in interconnection controls. Delivery must preserve auditability, permissions, and regression safety in mapped route categories, then advance verification from documentation-level checks to app and QA evidence with repeatable gates. Constraints include dependency ordering in the feature graph and preserving behavior already stabilized by prior bug-hunter hardening.
+
+## Route Narrative Specifications
+
+### RTC-0001 — /billing
+
+/billing is the Billing surface in CAT-BILLING. Intended behavior is to expose the capability cluster defined by Billing; Role-scoped access flow; State transition controls, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is implemented with source status router_only and verification at doc_reviewed. The bound component/source is Navigate(to=/billing/customers) from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is Route exists in router modules without a dedicated page file; behavior is redirect/catch-all managed.. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 and atomic backlog MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0002 — /billing/analytics
+
+/billing/analytics is the Billing Analytics surface in CAT-BILLING. Intended behavior is to expose the capability cluster defined by Billing Analytics; Monthly Revenue — Last 6 Months; Revenue by Month; AR Aging; Top Customers by Collected Revenue, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is BillingAnalyticsPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 and atomic backlog MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0003 — /billing/ar-dashboard
+
+/billing/ar-dashboard is the AR Dashboard surface in CAT-BILLING. Intended behavior is to expose the capability cluster defined by AR Dashboard; Customer Balances; Validation and error-state handling, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is ArDashboardPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 and atomic backlog MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0004 — /billing/credit-memos
+
+/billing/credit-memos is the Credit Memos surface in CAT-BILLING. Intended behavior is to expose the capability cluster defined by Credit Memos; Role-scoped action controls; Validation and error-state handling, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is BillingCreditMemosPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 and atomic backlog MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0005 — /billing/customers
+
+/billing/customers is the Customers surface in CAT-BILLING. Intended behavior is to expose the capability cluster defined by Customers; Role-scoped action controls; Validation and error-state handling, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is CustomersPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 and atomic backlog MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0006 — /billing/customers/:id
+
+/billing/customers/:id is the Billing Customers Detail surface in CAT-BILLING. Intended behavior is to expose the capability cluster defined by customer?.name; Customer Information; Quotes; Invoices; Payment History, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is CustomerDetailPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 and atomic backlog MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0007 — /billing/deposits
+
+/billing/deposits is the Deposits surface in CAT-BILLING. Intended behavior is to expose the capability cluster defined by Deposits; Role-scoped action controls; Validation and error-state handling, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is BillingDepositsPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 and atomic backlog MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0008 — /billing/invoices
+
+/billing/invoices is the Invoices surface in CAT-BILLING. Intended behavior is to expose the capability cluster defined by Invoices; Cash; Check; Credit Card; Wire Transfer, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is InvoicesPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 and atomic backlog MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0009 — /billing/invoices/:id
+
+/billing/invoices/:id is the Billing Invoices Detail surface in CAT-BILLING. Intended behavior is to expose the capability cluster defined by invoice.invoiceNumber; Invoice invoice.invoiceNumber; Invoice Summary; Line Items; Payment History, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is InvoiceDetailPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 and atomic backlog MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0010 — /billing/invoices/new
+
+/billing/invoices/new is the Billing Invoices New surface in CAT-BILLING. Intended behavior is to expose the capability cluster defined by New Invoice; Invoice Source; Invoice Details; Tax Rate, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is NewInvoicePage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 and atomic backlog MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0011 — /billing/labor-kits
+
+/billing/labor-kits is the Labor Kits surface in CAT-BILLING. Intended behavior is to expose the capability cluster defined by Labor Kits; Role-scoped action controls; Validation and error-state handling, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is LaborKitsPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 and atomic backlog MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0012 — /billing/otc
+
+/billing/otc is the OTC Sales surface in CAT-BILLING. Intended behavior is to expose the capability cluster defined by Counter Sales; Add Items; Cart (cart.length itemcart.length !== 1 ? "s" : ""); Payment; Sales History, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is OTCSalesPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 and atomic backlog MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0013 — /billing/pricing
+
+/billing/pricing is the Pricing surface in CAT-BILLING. Intended behavior is to expose the capability cluster defined by Pricing; Pricing Profiles; Pricing Rules, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is BillingPricingPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 and atomic backlog MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0014 — /billing/purchase-orders
+
+/billing/purchase-orders is the Purchase Orders surface in CAT-BILLING. Intended behavior is to expose the capability cluster defined by Purchase Orders; Draft; Submitted; Partial; Received, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is PurchaseOrdersPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 and atomic backlog MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0015 — /billing/purchase-orders/:id
+
+/billing/purchase-orders/:id is the Billing Purchase Orders Detail surface in CAT-BILLING. Intended behavior is to expose the capability cluster defined by po.poNumber; PO Summary; Line Items, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is PODetailPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 and atomic backlog MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0016 — /billing/purchase-orders/new
+
+/billing/purchase-orders/new is the Billing Purchase Orders New surface in CAT-BILLING. Intended behavior is to expose the capability cluster defined by New Purchase Order; PO Details; Line Items, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is NewPOPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 and atomic backlog MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0017 — /billing/quotes
+
+/billing/quotes is the Quotes surface in CAT-BILLING. Intended behavior is to expose the capability cluster defined by Quotes; Role-scoped action controls; Validation and error-state handling, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is QuotesPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 and atomic backlog MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0018 — /billing/quotes/:id
+
+/billing/quotes/:id is the Billing Quotes Detail surface in CAT-BILLING. Intended behavior is to expose the capability cluster defined by Billing Quotes Detail; Role-scoped action controls; Validation and error-state handling, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is QuoteDetailPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 and atomic backlog MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0019 — /billing/quotes/new
+
+/billing/quotes/new is the Billing Quotes New surface in CAT-BILLING. Intended behavior is to expose the capability cluster defined by Billing Quotes New; Role-scoped action controls; Validation and error-state handling, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is NewQuotePage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 and atomic backlog MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0020 — /billing/recurring
+
+/billing/recurring is the Recurring surface in CAT-BILLING. Intended behavior is to expose the capability cluster defined by Recurring; Recurring Billing; Validation and error-state handling, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is BillingRecurringPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 and atomic backlog MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0021 — /billing/settings
+
+/billing/settings is the Billing Settings surface in CAT-BILLING. Intended behavior is to expose the capability cluster defined by Billing Settings; Role-scoped action controls; Validation and error-state handling, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is BillingSettingsPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is Page includes explicit coming-soon/stub indicators; capability is partial.. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 and atomic backlog MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0022 — /billing/tax-config
+
+/billing/tax-config is the Tax Config surface in CAT-BILLING. Intended behavior is to expose the capability cluster defined by Tax Config; Tax Configuration; Validation and error-state handling, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is BillingTaxConfigPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 and atomic backlog MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0023 — /billing/time-approval
+
+/billing/time-approval is the Time Approval surface in CAT-BILLING. Intended behavior is to expose the capability cluster defined by Time Approval; Time Clock Approval; Validation and error-state handling, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is BillingTimeApprovalPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 and atomic backlog MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0024 — /billing/time-clock
+
+/billing/time-clock is the Time Clock surface in CAT-BILLING. Intended behavior is to expose the capability cluster defined by Time Clock; Today&apos;s Summary; Validation and error-state handling, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is BillingTimeClockPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 and atomic backlog MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0025 — /billing/vendors
+
+/billing/vendors is the Vendors surface in CAT-BILLING. Intended behavior is to expose the capability cluster defined by Vendors; Role-scoped action controls; Validation and error-state handling, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is VendorsPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 and atomic backlog MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0026 — /billing/vendors/:id
+
+/billing/vendors/:id is the Billing Vendors Detail surface in CAT-BILLING. Intended behavior is to expose the capability cluster defined by vendor.name; Services; Contact Information; Certification; Purchase Order History, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is VendorDetailPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 and atomic backlog MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0027 — /billing/vendors/new
+
+/billing/vendors/new is the Billing Vendors New surface in CAT-BILLING. Intended behavior is to expose the capability cluster defined by New Vendor; Vendor Information; Contact Information; Certification; Parts Supplier, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is NewVendorPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 and atomic backlog MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0028 — /billing/warranty
+
+/billing/warranty is the Warranty surface in CAT-BILLING. Intended behavior is to expose the capability cluster defined by Total Claims; Draft; Submitted; Under Review; Approved, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is WarrantyPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 and atomic backlog MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0029 — /compliance
+
+/compliance is the Compliance surface in CAT-COMPLIANCE. Intended behavior is to expose the capability cluster defined by Compliance; Fleet AD Compliance Status; Compliance Tools, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is CompliancePage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0020, FS-0030, FS-0061 and atomic backlog MBP-0011, MBP-0117, MBP-0145, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0030 — /compliance/ad-sb
+
+/compliance/ad-sb is the AD/SB surface in CAT-COMPLIANCE. Intended behavior is to expose the capability cluster defined by AD/SB; Role-scoped action controls; Validation and error-state handling, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is AdSbCompliancePage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0020, FS-0030, FS-0061 and atomic backlog MBP-0011, MBP-0117, MBP-0145, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0031 — /compliance/audit-trail
+
+/compliance/audit-trail is the Audit Trail surface in CAT-COMPLIANCE. Intended behavior is to expose the capability cluster defined by Audit Trail; Airworthiness Directives — aircraftRegistration; Validation and error-state handling, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is AuditTrailPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0020, FS-0030, FS-0061 and atomic backlog MBP-0011, MBP-0117, MBP-0145, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0032 — /compliance/certificates
+
+/compliance/certificates is the Compliance Certificates surface in CAT-COMPLIANCE. Intended behavior is to expose the capability cluster defined by Compliance Certificates; Role-scoped access flow; State transition controls, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is implemented with source status router_only and verification at doc_reviewed. The bound component/source is Navigate(to=/compliance/audit-trail) from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is Route exists in router modules without a dedicated page file; behavior is redirect/catch-all managed.. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0020, FS-0030, FS-0061 and atomic backlog MBP-0011, MBP-0117, MBP-0145, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0033 — /compliance/qcm-review
+
+/compliance/qcm-review is the QCM Review surface in CAT-COMPLIANCE. Intended behavior is to expose the capability cluster defined by QCM Review; IA Sign-Off Queue; Validation and error-state handling, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is QcmReviewPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0020, FS-0030, FS-0061 and atomic backlog MBP-0011, MBP-0117, MBP-0145, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0034 — /dashboard
+
+/dashboard is the Dashboard surface in CAT-DASHBOARD. Intended behavior is to expose the capability cluster defined by Dashboard; Active Work Orders; AOG Aircraft; Overdue ADs; Open Discrepancies, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is DashboardPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0012, FS-0026 and atomic backlog MBP-0056, MBP-0057, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0035 — /fleet
+
+/fleet is the Fleet surface in CAT-FLEET. Intended behavior is to expose the capability cluster defined by Fleet; Airworthy; Airworthy w/ Limitations; In Maintenance; Out of Service, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is FleetPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0020, FS-0029, FS-0035 and atomic backlog MBP-0009, MBP-0047, MBP-0126, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0036 — /fleet/:tail
+
+/fleet/:tail is the Fleet Aircraft Tail surface in CAT-FLEET. Intended behavior is to expose the capability cluster defined by aircraft!.currentRegistration; Work Orders; Identification; Customer; Airworthy, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is AircraftDetailPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is Page includes explicit coming-soon/stub indicators; capability is partial.. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0020, FS-0029, FS-0035 and atomic backlog MBP-0009, MBP-0047, MBP-0126, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0037 — /fleet/:tail/logbook
+
+/fleet/:tail/logbook is the Fleet Aircraft Tail Logbook surface in CAT-FLEET. Intended behavior is to expose the capability cluster defined by tailNumber; Maintenance; Inspection; Correction, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is AircraftLogbookPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0020, FS-0029, FS-0035 and atomic backlog MBP-0009, MBP-0047, MBP-0126, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0038 — /fleet/calendar
+
+/fleet/calendar is the Fleet Calendar surface in CAT-FLEET. Intended behavior is to expose the capability cluster defined by Fleet Calendar; Role-scoped action controls; Validation and error-state handling, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is FleetCalendarPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0020, FS-0029, FS-0035 and atomic backlog MBP-0009, MBP-0047, MBP-0126, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0039 — /fleet/predictions
+
+/fleet/predictions is the Fleet Predictions surface in CAT-FLEET. Intended behavior is to expose the capability cluster defined by Fleet Predictions; Predictive Maintenance; Validation and error-state handling, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is PredictionsPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0020, FS-0029, FS-0035 and atomic backlog MBP-0009, MBP-0047, MBP-0126, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0040 — /lead
+
+/lead is the Lead surface in CAT-LEAD. Intended behavior is to expose the capability cluster defined by Lead Technician Workspace; My Team; Assignment Board; Team Capacity; Active WO Summary, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is LeadDashboardPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0028, FS-0055 and atomic backlog MBP-0134, MBP-0139, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0041 — /my-work
+
+/my-work is the My Work surface in CAT-MY-WORK. Intended behavior is to expose the capability cluster defined by My Work; Role-scoped action controls; Validation and error-state handling, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is MyWorkPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0023, FS-0044, FS-0058 and atomic backlog MBP-0123, MBP-0142, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0042 — /onboarding
+
+/onboarding is the Onboarding surface in CAT-ONBOARDING. Intended behavior is to expose the capability cluster defined by Onboarding; Role-scoped action controls; Validation and error-state handling, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is OnboardingPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0041, FS-0069 and atomic backlog MBP-0105, MBP-0153, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0043 — /parts
+
+/parts is the Parts surface in CAT-PARTS. Intended behavior is to expose the capability cluster defined by Parts; Role-scoped action controls; Validation and error-state handling, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is PartsPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0019, FS-0052, FS-0067 and atomic backlog MBP-0020, MBP-0122, MBP-0151, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0044 — /parts/cores
+
+/parts/cores is the Cores surface in CAT-PARTS. Intended behavior is to expose the capability cluster defined by Cores Out; Value Outstanding; Overdue; Awaiting Return; Received, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is CoresPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0019, FS-0052, FS-0067 and atomic backlog MBP-0020, MBP-0122, MBP-0151, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0045 — /parts/inventory-count
+
+/parts/inventory-count is the Inventory Count surface in CAT-PARTS. Intended behavior is to expose the capability cluster defined by Inventory Count; countDetail.name; Inventory Counts, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is InventoryCountPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0019, FS-0052, FS-0067 and atomic backlog MBP-0020, MBP-0122, MBP-0151, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0046 — /parts/loaners
+
+/parts/loaners is the Loaners surface in CAT-PARTS. Intended behavior is to expose the capability cluster defined by Loaners; Rental / Loaner Tracking; Validation and error-state handling, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is LoanersPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0019, FS-0052, FS-0067 and atomic backlog MBP-0020, MBP-0122, MBP-0151, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0047 — /parts/new
+
+/parts/new is the New Part surface in CAT-PARTS. Intended behavior is to expose the capability cluster defined by Serviceable (used); Overhauled; Repaired, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is NewPartPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0019, FS-0052, FS-0067 and atomic backlog MBP-0020, MBP-0122, MBP-0151, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0048 — /parts/receiving
+
+/parts/receiving is the Part Receiving surface in CAT-PARTS. Intended behavior is to expose the capability cluster defined by Part Receiving; Role-scoped action controls; Validation and error-state handling, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is PartsReceivingPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0019, FS-0052, FS-0067 and atomic backlog MBP-0020, MBP-0122, MBP-0151, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0049 — /parts/requests
+
+/parts/requests is the Part Requests surface in CAT-PARTS. Intended behavior is to expose the capability cluster defined by Parts Queue; Pending Inspection; In Stock; Installed; Removed — Pending Disposition, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is PartsRequestsPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0019, FS-0052, FS-0067 and atomic backlog MBP-0020, MBP-0122, MBP-0151, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0050 — /parts/rotables
+
+/parts/rotables is the Rotables surface in CAT-PARTS. Intended behavior is to expose the capability cluster defined by Rotables; Rotable Components; Validation and error-state handling, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is RotablesPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0019, FS-0052, FS-0067 and atomic backlog MBP-0020, MBP-0122, MBP-0151, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0051 — /parts/shipping
+
+/parts/shipping is the Shipping surface in CAT-PARTS. Intended behavior is to expose the capability cluster defined by Open Receiving; Total; Pending; In Transit; Delivered, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is ShippingPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0019, FS-0052, FS-0067 and atomic backlog MBP-0020, MBP-0122, MBP-0151, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0052 — /parts/tools
+
+/parts/tools is the Tools surface in CAT-PARTS. Intended behavior is to expose the capability cluster defined by Hand Tool; Power Tool; Test Equipment; Special Tooling; Consumable, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is ToolCribPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0019, FS-0052, FS-0067 and atomic backlog MBP-0020, MBP-0122, MBP-0151, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0053 — /personnel
+
+/personnel is the Personnel surface in CAT-PERSONNEL. Intended behavior is to expose the capability cluster defined by Personnel; Role-scoped action controls; Validation and error-state handling, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is PersonnelPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0016, FS-0021 and atomic backlog MBP-0001, MBP-0134, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0054 — /personnel/training
+
+/personnel/training is the Training surface in CAT-PERSONNEL. Intended behavior is to expose the capability cluster defined by Training &amp; Qualifications; Initial; Recurrent; Regulatory; Safety, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is TrainingPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0016, FS-0021 and atomic backlog MBP-0001, MBP-0134, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0055 — /portal
+
+/portal is the Portal surface in CAT-PORTAL. Intended behavior is to expose the capability cluster defined by No customer account linked; Active Work Orders; Pending Quotes; Outstanding Invoices; Total Fleet, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is CustomerDashboardPage from src/router/routeModules/customerPortalRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0010, FS-0062 and atomic backlog MBP-0019, MBP-0146, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0056 — /portal/fleet
+
+/portal/fleet is the Portal Fleet surface in CAT-PORTAL. Intended behavior is to expose the capability cluster defined by Portal Fleet; My Fleet; Validation and error-state handling, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is CustomerFleetPage from src/router/routeModules/customerPortalRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0010, FS-0062 and atomic backlog MBP-0019, MBP-0146, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0057 — /portal/invoices
+
+/portal/invoices is the Portal Invoices surface in CAT-PORTAL. Intended behavior is to expose the capability cluster defined by Portal Invoices; Invoices; invoice.invoiceNumber, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is CustomerInvoicesPage from src/router/routeModules/customerPortalRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0010, FS-0062 and atomic backlog MBP-0019, MBP-0146, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0058 — /portal/quotes
+
+/portal/quotes is the Portal Quotes surface in CAT-PORTAL. Intended behavior is to expose the capability cluster defined by Portal Quotes; Quotes; quote.quoteNumber, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is CustomerQuotesPage from src/router/routeModules/customerPortalRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0010, FS-0062 and atomic backlog MBP-0019, MBP-0146, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0059 — /portal/work-orders
+
+/portal/work-orders is the Portal Work Orders surface in CAT-PORTAL. Intended behavior is to expose the capability cluster defined by Work Orders; detail.workOrderNumber; Received; Inspection; In Progress, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is CustomerWorkOrdersPage from src/router/routeModules/customerPortalRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0010, FS-0062 and atomic backlog MBP-0019, MBP-0146, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0060 — /reports
+
+/reports is the Reports surface in CAT-REPORTS. Intended behavior is to expose the capability cluster defined by Monthly Revenue; WO Throughput; Revenue Summary Table, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is ReportsPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0012, FS-0051 and atomic backlog MBP-0103, MBP-0137, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0061 — /reports/financials
+
+/reports/financials is the Reports Financials surface in CAT-REPORTS. Intended behavior is to expose the capability cluster defined by Financial Dashboard; Monthly Revenue — Last 12 Months; Gross Margin Trend; Revenue by Aircraft Type, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is FinancialDashboardPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0012, FS-0051 and atomic backlog MBP-0103, MBP-0137, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0062 — /reports/financials/forecast
+
+/reports/financials/forecast is the Reports Financials Forecast surface in CAT-REPORTS. Intended behavior is to expose the capability cluster defined by Cash Flow Forecast; horizon-Month Revenue / Cost / Profit Projection; Monthly Cash Flow Detail, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is FinancialForecastPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0012, FS-0051 and atomic backlog MBP-0103, MBP-0137, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0063 — /reports/financials/profitability
+
+/reports/financials/profitability is the Reports Financials Profitability surface in CAT-REPORTS. Intended behavior is to expose the capability cluster defined by Reports Financials Profitability; WO Profitability; Per-WO Profit &amp; Loss, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is FinancialProfitabilityPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0012, FS-0051 and atomic backlog MBP-0103, MBP-0137, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0064 — /reports/financials/runway
+
+/reports/financials/runway is the Reports Financials Runway surface in CAT-REPORTS. Intended behavior is to expose the capability cluster defined by Reports Financials Runway; Business Runway; 12-Month Cash Position Projection, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is FinancialRunwayPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0012, FS-0051 and atomic backlog MBP-0103, MBP-0137, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0065 — /scheduling
+
+/scheduling is the Scheduling surface in CAT-SCHEDULING. Intended behavior is to expose the capability cluster defined by Scheduling; Role-scoped action controls; Validation and error-state handling, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is SchedulingPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0013, FS-0014, FS-0068 and atomic backlog MBP-0110, MBP-0114, MBP-0152, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0066 — /scheduling/bays
+
+/scheduling/bays is the Scheduling Bays surface in CAT-SCHEDULING. Intended behavior is to expose the capability cluster defined by Scheduling Bays; Hangar Bays; Validation and error-state handling, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is BaysPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0013, FS-0014, FS-0068 and atomic backlog MBP-0110, MBP-0114, MBP-0152, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0067 — /scheduling/capacity
+
+/scheduling/capacity is the Scheduling Capacity surface in CAT-SCHEDULING. Intended behavior is to expose the capability cluster defined by Scheduling Capacity; Role-scoped action controls; Validation and error-state handling, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is CapacityPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0013, FS-0014, FS-0068 and atomic backlog MBP-0110, MBP-0114, MBP-0152, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0068 — /scheduling/financial-planning
+
+/scheduling/financial-planning is the Scheduling Financial Planning surface in CAT-SCHEDULING. Intended behavior is to expose the capability cluster defined by Scheduling Financial Planning; Assumptions; Validation and error-state handling, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is FinancialPlanningPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0013, FS-0014, FS-0068 and atomic backlog MBP-0110, MBP-0114, MBP-0152, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0069 — /scheduling/quotes
+
+/scheduling/quotes is the Scheduling Quote Workspace surface in CAT-SCHEDULING. Intended behavior is to expose the capability cluster defined by Scheduling Quote Workspace; Role-scoped action controls; Validation and error-state handling, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is SchedulingQuotesPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0013, FS-0014, FS-0068 and atomic backlog MBP-0110, MBP-0114, MBP-0152, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0070 — /scheduling/roster
+
+/scheduling/roster is the Scheduling Roster surface in CAT-SCHEDULING. Intended behavior is to expose the capability cluster defined by Scheduling Roster; Role-scoped action controls; Validation and error-state handling, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is SchedulingRosterPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0013, FS-0014, FS-0068 and atomic backlog MBP-0110, MBP-0114, MBP-0152, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0071 — /scheduling/seed-audit
+
+/scheduling/seed-audit is the Scheduling Seed Audit surface in CAT-SCHEDULING. Intended behavior is to expose the capability cluster defined by Repair Station Seed Audit; Coverage Counts; Per-Location Scheduled Counts; Per-Location Tool Counts; Fleet Component Coverage, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is SeedAuditPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0013, FS-0014, FS-0068 and atomic backlog MBP-0110, MBP-0114, MBP-0152, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0072 — /settings/email-log
+
+/settings/email-log is the Settings Email Log surface in CAT-SETTINGS. Intended behavior is to expose the capability cluster defined by Settings Email Log; Email Log; Validation and error-state handling, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is EmailLogPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0015, FS-0053, FS-0069 and atomic backlog MBP-0106, MBP-0133, MBP-0153, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0073 — /settings/import
+
+/settings/import is the Settings Import surface in CAT-SETTINGS. Intended behavior is to expose the capability cluster defined by Import Data; 2. Map columns; 3. Preview (csvRows.length rows), enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is ImportPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0015, FS-0053, FS-0069 and atomic backlog MBP-0106, MBP-0133, MBP-0153, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0074 — /settings/locations
+
+/settings/locations is the Settings Locations surface in CAT-SETTINGS. Intended behavior is to expose the capability cluster defined by Part 145; Part 135; Part 121; Part 91, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is ShopLocationsPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is Page includes explicit coming-soon/stub indicators; capability is partial.. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0015, FS-0053, FS-0069 and atomic backlog MBP-0106, MBP-0133, MBP-0153, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0075 — /settings/notifications
+
+/settings/notifications is the Settings Notifications surface in CAT-SETTINGS. Intended behavior is to expose the capability cluster defined by Notification Preferences; Notification Types; Work Order Status Changes; Task Assignments; Quote Approved, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is NotificationPreferencesPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0015, FS-0053, FS-0069 and atomic backlog MBP-0106, MBP-0133, MBP-0153, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0076 — /settings/quickbooks
+
+/settings/quickbooks is the Settings QuickBooks surface in CAT-SETTINGS. Intended behavior is to expose the capability cluster defined by Sync Settings; Total Syncs; Pending; Synced; Failed, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is QuickBooksPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0015, FS-0053, FS-0069 and atomic backlog MBP-0106, MBP-0133, MBP-0153, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0077 — /settings/routing-templates
+
+/settings/routing-templates is the Settings Routing Templates surface in CAT-SETTINGS. Intended behavior is to expose the capability cluster defined by Settings Routing Templates; Role-scoped action controls; Validation and error-state handling, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is RoutingTemplatesPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is Page includes explicit coming-soon/stub indicators; capability is partial.. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0015, FS-0053, FS-0069 and atomic backlog MBP-0106, MBP-0133, MBP-0153, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0078 — /settings/shop
+
+/settings/shop is the Settings Shop surface in CAT-SETTINGS. Intended behavior is to expose the capability cluster defined by Eastern (ET) — America/New_York; Eastern (ET) — America/Detroit; Eastern (ET) — America/Indianapolis; Central (CT) — America/Chicago; Central (CT) — America/Menominee, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is ShopSettingsPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0015, FS-0053, FS-0069 and atomic backlog MBP-0106, MBP-0133, MBP-0153, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0079 — /settings/station-config
+
+/settings/station-config is the Settings Station Config surface in CAT-SETTINGS. Intended behavior is to expose the capability cluster defined by Settings Station Config; Role-scoped action controls; Validation and error-state handling, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is StationConfigPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0015, FS-0053, FS-0069 and atomic backlog MBP-0106, MBP-0133, MBP-0153, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0080 — /settings/users
+
+/settings/users is the Settings Users surface in CAT-SETTINGS. Intended behavior is to expose the capability cluster defined by Settings Users; Role-scoped action controls; Validation and error-state handling, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is UsersSettingsPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0015, FS-0053, FS-0069 and atomic backlog MBP-0106, MBP-0133, MBP-0153, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0081 — /sign-in/*
+
+/sign-in/* is the Sign In Wildcard surface in CAT-AUTH. Intended behavior is to expose the capability cluster defined by Sign In Wildcard; Role-scoped action controls; Validation and error-state handling, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is app/(auth)/sign-in/[[...sign-in]]/page.tsx from src/router/routeModules/authRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0015, FS-0050 and atomic backlog MBP-0017, MBP-0108, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0082 — /sign-up/*
+
+/sign-up/* is the Sign Up Wildcard surface in CAT-AUTH. Intended behavior is to expose the capability cluster defined by Sign Up Wildcard; Role-scoped action controls; Validation and error-state handling, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is app/(auth)/sign-up/[[...sign-up]]/page.tsx from src/router/routeModules/authRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0015, FS-0050 and atomic backlog MBP-0017, MBP-0108, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0083 — /squawks
+
+/squawks is the Squawks surface in CAT-SQUAWKS. Intended behavior is to expose the capability cluster defined by Squawks & Discrepancies; Critical; Major; Minor; Observation, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is SquawksPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0024, FS-0060 and atomic backlog MBP-0041, MBP-0144, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0084 — /work-orders
+
+/work-orders is the Work Orders surface in CAT-WORK-ORDERS. Intended behavior is to expose the capability cluster defined by Work Orders; Role-scoped action controls; Validation and error-state handling, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is WorkOrdersPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0023, FS-0044, FS-0054, FS-0055, FS-0056 and atomic backlog MBP-0014, MBP-0127, MBP-0138, MBP-0139, MBP-0140, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0085 — /work-orders/:id
+
+/work-orders/:id is the Work Orders Detail surface in CAT-WORK-ORDERS. Intended behavior is to expose the capability cluster defined by wo.workOrderNumber; Work Order Activity; Quoting; In-dock; Inspection, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is WorkOrderDetailPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0023, FS-0044, FS-0054, FS-0055, FS-0056 and atomic backlog MBP-0014, MBP-0127, MBP-0138, MBP-0139, MBP-0140, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0086 — /work-orders/:id/certificates
+
+/work-orders/:id/certificates is the Work Orders Detail Certificates surface in CAT-WORK-ORDERS. Intended behavior is to expose the capability cluster defined by Work Orders Detail Certificates; Role-scoped action controls; Validation and error-state handling, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is CertificatesPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0023, FS-0044, FS-0054, FS-0055, FS-0056, FS-0061 and atomic backlog MBP-0014, MBP-0127, MBP-0138, MBP-0139, MBP-0140, MBP-0145, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0087 — /work-orders/:id/execution
+
+/work-orders/:id/execution is the Work Orders Detail Execution surface in CAT-WORK-ORDERS. Intended behavior is to expose the capability cluster defined by Work Orders Detail Execution; workOrder.workOrderNumber — Execution Planning; Validation and error-state handling, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is WOExecutionPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0023, FS-0044, FS-0054, FS-0055, FS-0056 and atomic backlog MBP-0014, MBP-0127, MBP-0138, MBP-0139, MBP-0140, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0088 — /work-orders/:id/records
+
+/work-orders/:id/records is the Work Orders Detail Records surface in CAT-WORK-ORDERS. Intended behavior is to expose the capability cluster defined by Annual; 100-Hour; Progressive; Conditional, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is MaintenanceRecordsPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0023, FS-0044, FS-0054, FS-0055, FS-0056 and atomic backlog MBP-0014, MBP-0127, MBP-0138, MBP-0139, MBP-0140, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0089 — /work-orders/:id/release
+
+/work-orders/:id/release is the Work Orders Detail Release surface in CAT-WORK-ORDERS. Intended behavior is to expose the capability cluster defined by Work Orders Detail Release; Aircraft Released to Customer; Work Order Details, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is ReleaseAircraftPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0023, FS-0044, FS-0054, FS-0055, FS-0056 and atomic backlog MBP-0014, MBP-0127, MBP-0138, MBP-0139, MBP-0140, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0090 — /work-orders/:id/rts
+
+/work-orders/:id/rts is the Work Orders Detail Rts surface in CAT-WORK-ORDERS. Intended behavior is to expose the capability cluster defined by Work Orders Detail Rts; Aircraft Returned to Service; Return-to-Service Already Authorized, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is RtsPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0023, FS-0044, FS-0054, FS-0055, FS-0056 and atomic backlog MBP-0014, MBP-0127, MBP-0138, MBP-0139, MBP-0140, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0091 — /work-orders/:id/signature
+
+/work-orders/:id/signature is the Work Orders Detail Signature surface in CAT-WORK-ORDERS. Intended behavior is to expose the capability cluster defined by Work Orders Detail Signature; Re-Authentication Required; Validation and error-state handling, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is SignaturePage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0023, FS-0044, FS-0054, FS-0055, FS-0056 and atomic backlog MBP-0014, MBP-0127, MBP-0138, MBP-0139, MBP-0140, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0092 — /work-orders/:id/tasks/:cardId
+
+/work-orders/:id/tasks/:cardId is the Work Orders Detail Tasks Task Card surface in CAT-WORK-ORDERS. Intended behavior is to expose the capability cluster defined by Work Orders Detail Tasks Task Card; taskCard.title; Validation and error-state handling, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is TaskCardPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0023, FS-0044, FS-0054, FS-0055, FS-0056 and atomic backlog MBP-0014, MBP-0127, MBP-0138, MBP-0139, MBP-0140, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0093 — /work-orders/:id/tasks/new
+
+/work-orders/:id/tasks/new is the Work Orders Detail Tasks New surface in CAT-WORK-ORDERS. Intended behavior is to expose the capability cluster defined by Work Orders Detail Tasks New; Role-scoped action controls; Validation and error-state handling, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is NewTaskCardPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0023, FS-0044, FS-0054, FS-0055, FS-0056 and atomic backlog MBP-0014, MBP-0127, MBP-0138, MBP-0139, MBP-0140, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0094 — /work-orders/dashboard
+
+/work-orders/dashboard is the Work Orders Dashboard surface in CAT-WORK-ORDERS. Intended behavior is to expose the capability cluster defined by Work Orders Dashboard; Work Order Dashboard; Active Work Orders, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is WorkOrdersDashboardPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0023, FS-0044, FS-0054, FS-0055, FS-0056 and atomic backlog MBP-0014, MBP-0127, MBP-0138, MBP-0139, MBP-0140, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0095 — /work-orders/kanban
+
+/work-orders/kanban is the Work Order Kanban surface in CAT-WORK-ORDERS. Intended behavior is to expose the capability cluster defined by Work Orders — Kanban; col.label; Draft; Open; In Progress, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is KanbanPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0023, FS-0044, FS-0054, FS-0055, FS-0056 and atomic backlog MBP-0014, MBP-0127, MBP-0138, MBP-0139, MBP-0140, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0096 — /work-orders/lead
+
+/work-orders/lead is the Work Orders Lead surface in CAT-WORK-ORDERS. Intended behavior is to expose the capability cluster defined by Lead Workspace; Task Assignment Feed; Turnover Report Editor; Submitted History, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is WorkOrdersLeadPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0023, FS-0044, FS-0054, FS-0055, FS-0056 and atomic backlog MBP-0014, MBP-0127, MBP-0138, MBP-0139, MBP-0140, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0097 — /work-orders/new
+
+/work-orders/new is the New Work Order surface in CAT-WORK-ORDERS. Intended behavior is to expose the capability cluster defined by New Work Order; Work Order Details; Priority, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is NewWorkOrderPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0023, FS-0044, FS-0054, FS-0055, FS-0056 and atomic backlog MBP-0014, MBP-0127, MBP-0138, MBP-0139, MBP-0140, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0098 — /work-orders/templates
+
+/work-orders/templates is the Work Order Templates surface in CAT-WORK-ORDERS. Intended behavior is to expose the capability cluster defined by Work Order Templates; Role-scoped action controls; Validation and error-state handling, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status routed and verification at doc_reviewed. The bound component/source is WorkOrderTemplatesPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is —. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0023, FS-0044, FS-0054, FS-0055, FS-0056 and atomic backlog MBP-0014, MBP-0127, MBP-0138, MBP-0139, MBP-0140, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0099 — *
+
+* is the App Not Found Catch-All surface in CAT-SYSTEM. Intended behavior is to expose the capability cluster defined by App Not Found Catch-All; Role-scoped access flow; State transition controls, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is implemented with source status router_only and verification at doc_reviewed. The bound component/source is AppNotFoundPage from src/router/routeModules/protectedAppRoutes.tsx, and current gap assessment is Route exists in router modules without a dedicated page file; behavior is redirect/catch-all managed.. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0053, FS-0069 and atomic backlog MBP-0133, MBP-0153, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0100 — /billing/quotes/templates
+
+/billing/quotes/templates is the Billing Quotes Templates surface in CAT-BILLING. Intended behavior is to expose the capability cluster defined by Billing Quotes Templates; Quote Templates; t.name, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status orphan_page and verification at doc_reviewed. The bound component/source is app/(app)/billing/quotes/templates/page.tsx from app/(app)/billing/quotes/templates/page.tsx, and current gap assessment is Page exists in filesystem but is not wired in route modules.. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0007, FS-0008, FS-0032, FS-0062, FS-0063, FS-0064, FS-0065, FS-0066 and atomic backlog MBP-0024, MBP-0119, MBP-0146, MBP-0147, MBP-0148, MBP-0149, MBP-0150, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
+### RTC-0101 — /not-found
+
+/not-found is the Not Found surface in CAT-SYSTEM. Intended behavior is to expose the capability cluster defined by Not Found; Role-scoped action controls; Validation and error-state handling, enforce route-level access expectations, and keep navigation outcomes deterministic whether the user enters from sidebar flows, deep links, or redirected states.
+
+Current implementation is partially_implemented with source status orphan_page and verification at doc_reviewed. The bound component/source is app/(app)/not-found/page.tsx from app/(app)/not-found/page.tsx, and current gap assessment is Page exists in filesystem but is not wired in route modules.. This establishes the real implemented posture for the route instead of assuming parity from static menu presence.
+
+Completion path requires closing mapped capability work for FS-0053, FS-0069 and atomic backlog MBP-0133, MBP-0153, then re-validating route behavior under role guards, data loading, and error boundaries. Route-level signoff is complete only when redirect/alias behavior, page rendering, and linked mutations all satisfy the canonical acceptance gates without orphaned data paths.
+
 
 ### Field Contextual Seeding — Industry Context Corpus
 
 | Seed ID | Source Artifact | Source Context Link | Mapped Feature # | Feature Name | Registry MBP IDs | Confidence | Enhancement Context | Future-State Delta |
 |---|---|---|---:|---|---|---|---|---|
-| ICS-001 | `OJT Data Flow.pdf`, `Master OJT Logs AVEX BEN has ideas.xlsx`, `Tech capacity and training report BJC Jan 2023 1.2 (1).pdf` | [`INDEX.md` File Index](../../research/industry-context-field-artifacts/INDEX.md#file-index) | [16](#feature-state-matrix-all-53-features) | Training & Qualifications Mgmt | `MBP-0001`, `MBP-0005`, `MBP-0025` | High | Seed trainer-signoff queues, step progression provenance, and readiness-driven qualification modeling. | Move from generic training CRUD to role-gated, auditable, progression-aware qualification workflows. |
-| ICS-002 | `2023 leveling.pdf`, `Elevate MRO Capacity planning.xlsx`, `AVEX-NS Aviation Hldgs Lean slide.pptx` | [`INDEX.md` Application Context Mapping](../../research/industry-context-field-artifacts/INDEX.md#application-context-mapping) | [13](#feature-state-matrix-all-53-features) | Scheduling — Drag-Drop Gantt | `MBP-0047`, `MBP-0110`, `MBP-0128`, `MBP-0129` | High | Seed bay-aware planning constraints and lean flow semantics in scheduler interactions. | Move from interactive visual scheduling to constraint-informed execution reflecting real hangar flow. |
-| ICS-003 | `2023 leveling.pdf`, `Elevate MRO Capacity planning.xlsx`, `Tech capacity and training report BJC Jan 2023 1.2 (1).pdf` | [`INDEX.md` File Index](../../research/industry-context-field-artifacts/INDEX.md#file-index) | [14](#feature-state-matrix-all-53-features) | Scheduling — Auto-Schedule | `MBP-0114` | High | Seed auto-schedule constraints with PTO/training burden and coarse-leveling assumptions. | Move from baseline assignment logic to workforce-readiness and capacity-aware auto-allocation. |
-| ICS-004 | `Tech capacity and training report BJC Jan 2023 1.2 (1).pdf`, `Elevate MRO Capacity planning.xlsx` | [`INDEX.md` Application Context Mapping](../../research/industry-context-field-artifacts/INDEX.md#application-context-mapping) | [12](#feature-state-matrix-all-53-features) | Reports & Analytics Dashboard | `MBP-0056`, `MBP-0057`, `MBP-0058`, `MBP-0059`, `MBP-0103`, `MBP-0104` | High | Seed labor-utilization, throughput, and TAT measures with field-derived assumptions and caveats. | Move from chart parity to operationally credible KPIs tied to real workforce and shop dynamics. |
-| ICS-005 | `Tech capacity and training report BJC Jan 2023 1.2 (1).pdf`, `2023 leveling.pdf`, `Elevate MRO Capacity planning.xlsx` | [`INDEX.md` File Index](../../research/industry-context-field-artifacts/INDEX.md#file-index) | [26](#feature-state-matrix-all-53-features) | Dashboard KPIs | `MBP-0050`, `MBP-0051` | High | Seed KPI definitions with availability-loss factors and planning-vs-actual framing. | Move from basic KPI widgets to disciplined KPI contracts aligned to field planning reality. |
-| ICS-006 | `Tech capacity and training report BJC Jan 2023 1.2 (1).pdf` | [`INDEX.md` File Index](../../research/industry-context-field-artifacts/INDEX.md#file-index) | [21](#feature-state-matrix-all-53-features) | Overtime / Shift Management | `MBP-0134` | High | Seed shift/overtime policies with observed labor-loss and monthly capacity variance patterns. | Move from time-clock extensions to policy-aware shift controls grounded in field utilization data. |
-| ICS-007 | `AVEX-NS Aviation Hldgs Lean slide.pptx`, `Master OJT Logs AVEX BEN has ideas.xlsx`, `OJT Data Flow.pdf` | [`INDEX.md` Application Context Mapping](../../research/industry-context-field-artifacts/INDEX.md#application-context-mapping) | [44](#feature-state-matrix-all-53-features) | Work Order Routing Templates + Standard Minutes | `MBP-0136` | High | Seed routing templates with standardized task sequencing and signoff-aware execution structure. | Move from ad hoc WO execution to reusable operation templates with standard-minute baselines. |
-| ICS-008 | `Tech capacity and training report BJC Jan 2023 1.2 (1).pdf`, `Elevate MRO Capacity planning.xlsx`, `2023 leveling.pdf` | [`INDEX.md` File Index](../../research/industry-context-field-artifacts/INDEX.md#file-index) | [51](#feature-state-matrix-all-53-features) | Operational Report Builder + Scheduled Report Runs | `MBP-0137` | High | Seed scheduled reports with cadence and model assumptions used in recurring field planning cycles. | Move from static reporting to recurring operational intelligence runs with consistent planning semantics. |
-| ICS-009 | `Repair Station Contacts with Ratings (Download).xlsx` | [`INDEX.md` File Index](../../research/industry-context-field-artifacts/INDEX.md#file-index) | [17](#feature-state-matrix-all-53-features) | Multi-Location Cross-Site UI | `MBP-0030`, `MBP-0043` | High | Seed cross-site navigation with real repair-station location and contact metadata patterns. | Move from generic multi-site UI to field-informed site selection and location-scoped workflows. |
-| ICS-010 | `Repair Station Contacts with Ratings (Download).xlsx` | [`INDEX.md` File Index](../../research/industry-context-field-artifacts/INDEX.md#file-index) | [25](#feature-state-matrix-all-53-features) | Search — Global Search | `MBP-0135`, `MBP-0046` | High | Seed search/index strategy for large external entity catalogs and location-coded lookup flows. | Move from command-palette baseline to high-scale operational search tuned for field datasets. |
-| ICS-011 | `RSQC Skysource HSYR817E Revision 22_20-FEB-2025.pdf`, `Elevate MRO QCM CRS# K4LR032E.pdf`, `Elevate MRO RSM CRS# K4LR032E.pdf` | [`02-skysource-regulatory-audit.md` Exhaustive High-Signal File List](../../research/industry-context-field-artifacts/context-index/02-skysource-regulatory-audit.md#exhaustive-high-signal-file-list) | [20](#feature-state-matrix-all-53-features) | AD/SB Fleet Compliance Dashboard | `MBP-0011` | High | Seed AD/SB compliance logic with current repair-station manual authority and quality-control constraints. | Move from static AD/SB tracking to policy-grounded compliance surfaces aligned to authoritative manuals. |
-| ICS-012 | `EP_1_4_2_145F_AW_V21.PDF`, `audit-EP_1_4_2-findings-report.docx`, `audit-EP_4_7_4-findings-report.docx` | [`02-skysource-regulatory-audit.md` Exhaustive High-Signal File List](../../research/industry-context-field-artifacts/context-index/02-skysource-regulatory-audit.md#exhaustive-high-signal-file-list) | [30](#feature-state-matrix-all-53-features) | Conformity Inspection | `MBP-0117`, `MBP-0118` | High | Seed conformity workflows with DCT evidence structure and real audit finding patterns. | Move from generic conformity records to inspection evidence models aligned with FAA DCT/audit criteria. |
-| ICS-013 | `2013 Aircraft Maintenance Labor Rates.pdf`, `B200 Flate rates.xls`, `Miscellaneous Services Flat Rates.xls` | [`03-mayo-quote-pricing-retrofit.md` Exhaustive High-Signal File List](../../research/industry-context-field-artifacts/context-index/03-mayo-quote-pricing-retrofit.md#exhaustive-high-signal-file-list-non-image-documents) | [51](#feature-state-matrix-all-53-features) | Operational Report Builder + Scheduled Report Runs | `MBP-0137` | High | Seed recurring report templates with historical labor-rate and flat-rate benchmarking context. | Move from generic scheduled reports to historically anchored estimation and margin-intelligence reporting. |
-| ICS-014 | `Garmin.png`, `N2DB.jpg`, `Dual GTN-750.png` | [`05-photo-full-review-ledger.md` Ledger Entries](../../research/industry-context-field-artifacts/context-index/05-photo-full-review-ledger.md#ledger-entries) | [44](#feature-state-matrix-all-53-features) | Work Order Routing Templates + Standard Minutes | `MBP-0136` | High | Seed routing templates with visual retrofit baselines and panel-state evidence patterns. | Move from abstract template definitions to evidence-backed routing based on real retrofit baseline conditions. |
-| ICS-015 | `Screenshot 2025-10-31 111606.png`, `Screenshot 2025-10-31 113252.png`, `Screenshot 2025-10-31 120029.png` | [`05-photo-full-review-ledger.md` Ledger Entries](../../research/industry-context-field-artifacts/context-index/05-photo-full-review-ledger.md#ledger-entries) | [12](#feature-state-matrix-all-53-features) | Reports & Analytics Dashboard | `MBP-0056`, `MBP-0057`, `MBP-0058`, `MBP-0059`, `MBP-0103`, `MBP-0104` | High | Seed dashboard/report parity targets with real legacy operational telemetry screenshots. | Move from synthetic KPI views to workflows that reflect observed operational visibility and handoff states. |
-| ICS-016 | `IMG_20170527_134716236.jpg`, `IMG_20170527_142423595.jpg`, `IMG_20170527_150716179.jpg` | [`05-photo-full-review-ledger.md` Ledger Entries](../../research/industry-context-field-artifacts/context-index/05-photo-full-review-ledger.md#ledger-entries) | [52](#feature-state-matrix-all-53-features) | Part Lineage Drilldown Explorer | `MBP-0035`, `MBP-0036`, `MBP-0049`, `MBP-0122` | High | Seed part-lineage and receiving-inspection flows with real component-bay and avionics evidence patterns. | Move from document-only part lineage to image-linked evidence chains across install/remove/inspection states. |
+| ICS-001 | `OJT Data Flow.pdf`, `Master OJT Logs AVEX BEN has ideas.xlsx`, `Tech capacity and training report BJC Jan 2023 1.2 (1).pdf` | [`INDEX.md` File Index](../../research/industry-context-field-artifacts/INDEX.md#file-index) | [16](#feature-state-matrix-all-69-features) | Training & Qualifications Mgmt | `MBP-0001`, `MBP-0005`, `MBP-0025` | High | Seed trainer-signoff queues, step progression provenance, and readiness-driven qualification modeling. | Move from generic training CRUD to role-gated, auditable, progression-aware qualification workflows. |
+| ICS-002 | `2023 leveling.pdf`, `Elevate MRO Capacity planning.xlsx`, `AVEX-NS Aviation Hldgs Lean slide.pptx` | [`INDEX.md` Application Context Mapping](../../research/industry-context-field-artifacts/INDEX.md#application-context-mapping) | [13](#feature-state-matrix-all-69-features) | Scheduling — Drag-Drop Gantt | `MBP-0047`, `MBP-0110`, `MBP-0128`, `MBP-0129` | High | Seed bay-aware planning constraints and lean flow semantics in scheduler interactions. | Move from interactive visual scheduling to constraint-informed execution reflecting real hangar flow. |
+| ICS-003 | `2023 leveling.pdf`, `Elevate MRO Capacity planning.xlsx`, `Tech capacity and training report BJC Jan 2023 1.2 (1).pdf` | [`INDEX.md` File Index](../../research/industry-context-field-artifacts/INDEX.md#file-index) | [14](#feature-state-matrix-all-69-features) | Scheduling — Auto-Schedule | `MBP-0114` | High | Seed auto-schedule constraints with PTO/training burden and coarse-leveling assumptions. | Move from baseline assignment logic to workforce-readiness and capacity-aware auto-allocation. |
+| ICS-004 | `Tech capacity and training report BJC Jan 2023 1.2 (1).pdf`, `Elevate MRO Capacity planning.xlsx` | [`INDEX.md` Application Context Mapping](../../research/industry-context-field-artifacts/INDEX.md#application-context-mapping) | [12](#feature-state-matrix-all-69-features) | Reports & Analytics Dashboard | `MBP-0056`, `MBP-0057`, `MBP-0058`, `MBP-0059`, `MBP-0103`, `MBP-0104` | High | Seed labor-utilization, throughput, and TAT measures with field-derived assumptions and caveats. | Move from chart parity to operationally credible KPIs tied to real workforce and shop dynamics. |
+| ICS-005 | `Tech capacity and training report BJC Jan 2023 1.2 (1).pdf`, `2023 leveling.pdf`, `Elevate MRO Capacity planning.xlsx` | [`INDEX.md` File Index](../../research/industry-context-field-artifacts/INDEX.md#file-index) | [26](#feature-state-matrix-all-69-features) | Dashboard KPIs | `MBP-0050`, `MBP-0051` | High | Seed KPI definitions with availability-loss factors and planning-vs-actual framing. | Move from basic KPI widgets to disciplined KPI contracts aligned to field planning reality. |
+| ICS-006 | `Tech capacity and training report BJC Jan 2023 1.2 (1).pdf` | [`INDEX.md` File Index](../../research/industry-context-field-artifacts/INDEX.md#file-index) | [21](#feature-state-matrix-all-69-features) | Overtime / Shift Management | `MBP-0134` | High | Seed shift/overtime policies with observed labor-loss and monthly capacity variance patterns. | Move from time-clock extensions to policy-aware shift controls grounded in field utilization data. |
+| ICS-007 | `AVEX-NS Aviation Hldgs Lean slide.pptx`, `Master OJT Logs AVEX BEN has ideas.xlsx`, `OJT Data Flow.pdf` | [`INDEX.md` Application Context Mapping](../../research/industry-context-field-artifacts/INDEX.md#application-context-mapping) | [44](#feature-state-matrix-all-69-features) | Work Order Routing Templates + Standard Minutes | `MBP-0136` | High | Seed routing templates with standardized task sequencing and signoff-aware execution structure. | Move from ad hoc WO execution to reusable operation templates with standard-minute baselines. |
+| ICS-008 | `Tech capacity and training report BJC Jan 2023 1.2 (1).pdf`, `Elevate MRO Capacity planning.xlsx`, `2023 leveling.pdf` | [`INDEX.md` File Index](../../research/industry-context-field-artifacts/INDEX.md#file-index) | [51](#feature-state-matrix-all-69-features) | Operational Report Builder + Scheduled Report Runs | `MBP-0137` | High | Seed scheduled reports with cadence and model assumptions used in recurring field planning cycles. | Move from static reporting to recurring operational intelligence runs with consistent planning semantics. |
+| ICS-009 | `Repair Station Contacts with Ratings (Download).xlsx` | [`INDEX.md` File Index](../../research/industry-context-field-artifacts/INDEX.md#file-index) | [17](#feature-state-matrix-all-69-features) | Multi-Location Cross-Site UI | `MBP-0030`, `MBP-0043` | High | Seed cross-site navigation with real repair-station location and contact metadata patterns. | Move from generic multi-site UI to field-informed site selection and location-scoped workflows. |
+| ICS-010 | `Repair Station Contacts with Ratings (Download).xlsx` | [`INDEX.md` File Index](../../research/industry-context-field-artifacts/INDEX.md#file-index) | [25](#feature-state-matrix-all-69-features) | Search — Global Search | `MBP-0135`, `MBP-0046` | High | Seed search/index strategy for large external entity catalogs and location-coded lookup flows. | Move from command-palette baseline to high-scale operational search tuned for field datasets. |
+| ICS-011 | `RSQC Skysource HSYR817E Revision 22_20-FEB-2025.pdf`, `Elevate MRO QCM CRS# K4LR032E.pdf`, `Elevate MRO RSM CRS# K4LR032E.pdf` | [`02-skysource-regulatory-audit.md` Exhaustive High-Signal File List](../../research/industry-context-field-artifacts/context-index/02-skysource-regulatory-audit.md#exhaustive-high-signal-file-list) | [20](#feature-state-matrix-all-69-features) | AD/SB Fleet Compliance Dashboard | `MBP-0011` | High | Seed AD/SB compliance logic with current repair-station manual authority and quality-control constraints. | Move from static AD/SB tracking to policy-grounded compliance surfaces aligned to authoritative manuals. |
+| ICS-012 | `EP_1_4_2_145F_AW_V21.PDF`, `audit-EP_1_4_2-findings-report.docx`, `audit-EP_4_7_4-findings-report.docx` | [`02-skysource-regulatory-audit.md` Exhaustive High-Signal File List](../../research/industry-context-field-artifacts/context-index/02-skysource-regulatory-audit.md#exhaustive-high-signal-file-list) | [30](#feature-state-matrix-all-69-features) | Conformity Inspection | `MBP-0117`, `MBP-0118` | High | Seed conformity workflows with DCT evidence structure and real audit finding patterns. | Move from generic conformity records to inspection evidence models aligned with FAA DCT/audit criteria. |
+| ICS-013 | `2013 Aircraft Maintenance Labor Rates.pdf`, `B200 Flate rates.xls`, `Miscellaneous Services Flat Rates.xls` | [`03-mayo-quote-pricing-retrofit.md` Exhaustive High-Signal File List](../../research/industry-context-field-artifacts/context-index/03-mayo-quote-pricing-retrofit.md#exhaustive-high-signal-file-list-non-image-documents) | [51](#feature-state-matrix-all-69-features) | Operational Report Builder + Scheduled Report Runs | `MBP-0137` | High | Seed recurring report templates with historical labor-rate and flat-rate benchmarking context. | Move from generic scheduled reports to historically anchored estimation and margin-intelligence reporting. |
+| ICS-014 | `Garmin.png`, `N2DB.jpg`, `Dual GTN-750.png` | [`05-photo-full-review-ledger.md` Ledger Entries](../../research/industry-context-field-artifacts/context-index/05-photo-full-review-ledger.md#ledger-entries) | [44](#feature-state-matrix-all-69-features) | Work Order Routing Templates + Standard Minutes | `MBP-0136` | High | Seed routing templates with visual retrofit baselines and panel-state evidence patterns. | Move from abstract template definitions to evidence-backed routing based on real retrofit baseline conditions. |
+| ICS-015 | `Screenshot 2025-10-31 111606.png`, `Screenshot 2025-10-31 113252.png`, `Screenshot 2025-10-31 120029.png` | [`05-photo-full-review-ledger.md` Ledger Entries](../../research/industry-context-field-artifacts/context-index/05-photo-full-review-ledger.md#ledger-entries) | [12](#feature-state-matrix-all-69-features) | Reports & Analytics Dashboard | `MBP-0056`, `MBP-0057`, `MBP-0058`, `MBP-0059`, `MBP-0103`, `MBP-0104` | High | Seed dashboard/report parity targets with real legacy operational telemetry screenshots. | Move from synthetic KPI views to workflows that reflect observed operational visibility and handoff states. |
+| ICS-016 | `IMG_20170527_134716236.jpg`, `IMG_20170527_142423595.jpg`, `IMG_20170527_150716179.jpg` | [`05-photo-full-review-ledger.md` Ledger Entries](../../research/industry-context-field-artifacts/context-index/05-photo-full-review-ledger.md#ledger-entries) | [52](#feature-state-matrix-all-69-features) | Part Lineage Drilldown Explorer | `MBP-0035`, `MBP-0036`, `MBP-0049`, `MBP-0122` | High | Seed part-lineage and receiving-inspection flows with real component-bay and avionics evidence patterns. | Move from document-only part lineage to image-linked evidence chains across install/remove/inspection states. |
 
 ## Feature Interconnection Graph
 
@@ -1020,24 +2775,29 @@ Required fields for both FS and MBP records:
 
 ## Derived Artifact Export
 
-Run from `athelon-app/`:
+Run from repo root:
 
 ```bash
-npm run spec:export:derived
+pnpm --dir apps/athelon-app run spec:export:derived
 ```
 
-This command regenerates derived reference artifacts from Registry B:
+This command regenerates derived reference artifacts from Registry B, C, and D:
 1. `docs/plans/MASTER-FEATURE-REGISTRY.csv`
 2. `docs/plans/MASTER-FEATURE-CROSSWALK.md`
 3. `docs/plans/MASTER-BUILD-PLAN.md`
+4. `docs/plans/MASTER-ROUTE-CAPABILITY-REGISTRY.csv`
+5. `docs/plans/MASTER-ROUTE-CATEGORY-ROLLUP.md`
 
 ## Migration Parity Snapshot
 
-- Registry A rows: **53**
-- Registry B rows: **137**
+- Registry A rows: **69**
+- Registry B rows: **153**
+- Registry C rows: **101**
+- Registry D rows: **17**
+- Feature narrative entries: **69**
+- Route narrative entries: **101**
 - Unmapped MBP rows: **0**
+- Route rows without FS/MBP mapping: **0**
 - Alias rows: **670**
 - Interconnection edges: **42**
-
-
 

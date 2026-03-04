@@ -1,0 +1,1101 @@
+(0:02 - 1:09)
+We are at IDE 3.45 with Nate and Sam going over MVP for Athlon. So basically what I did was, okay, I had a bunch of research about like competitors and stuff, and I needed to do something with that. And so this is like the third time where I've just been like, make Corridor 2.0. But like, results vary. 
+
+And I didn't follow through with them. But now, if I go to my code... You just green-fielded each time? I did. In this time, I needed to solve for characters on the beat and keep this thing going. 
+
+And honestly, I think it helps. So what I did was basically... Let's look at our thing. Where's our research? There's so much stuff in here.
+
+(1:10 - 1:38)
+So I have the actual app right here. This is the Athlon app. Everything outside of this is research. 
+
+It needs to be a little bit fixed up. But the idea is that I gave it previous research about, hey, here are the different competitors and their products and their feature sets. I listed out every single feature in prior research that all of these had and compared them.
+
+(1:38 - 3:29)
+And then what I did was I gave it a job. And I said, hey, you're going to create an entire team of people who is going to build this software. And you're also going to embed a reporter inside of them who's completely independent and tells me what's going on. 
+
+And you track their simulated development of this software, given all of these attributes and our specific goal, which is to build Corridor, but solve for all the common user problems and Anibis and all these other ones, but focus on Corridor and Anibis into a minimum viable product. And so there's a build list that it basically started building of like, here are the features that we would need to do. And so it kind of gave me a couple different things. 
+
+But what I will do is go and find the Rafael Mendoza, I think. Wait, which one? This is the orchestrator log. This one just talks about the different phases and what happened. 
+
+I want to show you the reporting on it. It's hilarious. This is simulation state, phase 37. 
+
+Let's see here. No scripts. Okay, these are the actual people, reviews, alpha launch brief. 
+
+Let's see. That sounds good. Where is it? The alpha launch brief.
+
+(3:34 - 3:41)
+This is literally them talking to each other. Gary, this is what we built. They named it themselves? Oh, yeah. 
+
+Yeah. Oh, I love it. Yeah, yeah, yeah.
+
+(3:41 - 4:13)
+Linda, Gary, Troy. Okay, so this is like, they launched it and now they're like using it. Because basically, I built a software team that built the software. 
+
+And then we hired a bunch of technicians and other people into different roles to actually use it and then work with the software team to develop and test what they had built. So how many agents are running in a single? At this time, it was 32. Holy shit. 
+
+Okay. Okay. It's a much larger scale than what I've been doing.
+
+(4:14 - 4:24)
+I did it from my phone, with OpenClaw. Yeah. So it was able to build all this stuff. 
+
+And that's a whole process in and of itself. It kept breaking. And I kept getting it to work.
+
+(4:24 - 4:33)
+Did you see the meta exec that posted her OpenClaw chat and was like, OpenClaw deleted all of my emails. Oh, shit. This is a user error, not an OpenClaw error.
+
+(4:33 - 4:39)
+You're showing your incompetence to everyone on X. Yeah. And you got to be careful. It will.
+
+(4:39 - 4:52)
+I have actually, I just kept backing up everything to Git. And so at least I have that. Now, if it decides to nuke the Git, I don't know if I have recourse.
+
+(4:52 - 4:57)
+I think I do. But I have also periodically just downloaded the whole fucking thing. Yeah.
+
+(4:57 - 5:01)
+If you have a local repository as well. Let's see. Research.
+
+(5:02 - 5:27)
+Okay. So here's like, what is a software development life cycle? How do we, what are the architecture patterns of developing an ERP? What is a phase-based development guide? How do we model the different data? What is Corridor versus Athlon? What is Ibis versus Athlon? It gives like scaffolding for these guys to like go through. Yeah. 
+
+So here's what we have. Here's what we need. Bridge the gap.
+
+(5:27 - 5:29)
+Here's your context. Yeah. Okay.
+
+(5:29 - 5:32)
+So, oh, dispatches. Here we go. The hire.
+
+(5:32 - 5:36)
+The stack decision. The build. The end of the beginning.
+
+(5:36 - 5:43)
+The real users. The first session. Conditions. 
+
+The hire. All self-named by... Yeah. That's cool.
+
+(5:43 - 5:50)
+Let me just... Rafael Mendeza keeps a photo of his father on his desk. His father, LAX in 1987. 1987.
+
+(5:50 - 5:55)
+Safety wire in hand, head inside an engine to sell. The photo is small, black and white. You'd miss it if you weren't looking.
+
+(5:55 - 6:05)
+I noticed on the first day during onboarding, when Rafael was screen sharing his workplace and camera caught at the corner of his monitor shelf. I didn't say anything. You learn in this work, the most important things are the ones nobody announces.
+
+(6:06 - 6:15)
+This is interesting. I wanted a narrative, right? Yeah. I didn't just want a bunch of software geeks talking to each other.
+
+(6:16 - 6:42)
+I also wanted meat on the story. How does this connect in a human way? Yeah. So how do I simulate this guy, who has a picture of his dad in 1987 in LAX, using the software, right? Yeah. 
+
+Well, he's the guy developing it. So it's kind of meta, right? So it's like a couple layers down, all the way up. So this would be simulating you and I. Chloe Park arrives second, which is a surprise, people.
+
+(6:43 - 6:54)
+Who expected Rafael to want another aviation veteran? He didn't. He wanted someone who had never looked at Corridor and found it acceptable. Oh, she built UI systems at Linear.
+
+(6:54 - 6:59)
+Yeah. So this is hiring the team to make the app. This is hiring the team to make the app.
+
+(6:59 - 7:06)
+So Rafael Mendoza will be a mechanic that's doing this and then... No, no. These are software developers, but they might have backgrounds as mechanics or whatever. That's what I mean.
+
+(7:06 - 7:24)
+That's me. They're on the software team. And then Rachel... What was it? Rachel Rafael? No. 
+
+I'm mixing names. Anyway, so Chloe has a UI background. Okay. 
+
+Part 145 experience. Wow. Okay. 
+
+So this is a story. This is really cool. Yeah.
+
+(7:25 - 7:38)
+And then we've got Devraj. Look at this. Tanya Birch joined the call 10 minutes late because she was finishing a build test for a previous client, an offline-first app for oil rig technicians in the Gulf of Mexico.
+
+(7:39 - 7:53)
+She apologized once and moved on, which is very unbranded. Very unbranded, Tanya. I'm like, what the fuck is going on? Wow. 
+
+Interesting. Huh. Marcus Webb came in the room, recalibrated.
+
+(7:58 - 8:00)
+Okay. Completed. All right.
+
+(8:02 - 8:10)
+From my corner. This is, you know, about self. Ah, yeah. 
+
+This is the, uh... I was embedded with four startups before this. One went public. Two were acquihired.
+
+(8:11 - 8:24)
+The other autonomous vehicle company became the story I'm best known for, which is saying how something very smart falls in the most human way possible. Fails in the most human way possible. It's not competence.
+
+(8:24 - 8:38)
+Competence is table stakes for anyone who gets hired. What I look for is... Who are these people? And when they don't... Who are these people when they don't know anyone is watching? What does this photo on Rafael's desk mean? Okay, so human element. Okay, I understand.
+
+(8:39 - 8:44)
+I look for whether the friction when it surfaces during corrosion. Chloe and Tanya already in a productive tension. They're just carrying something quietly.
+
+(8:44 - 8:53)
+They don't need to come out. This is, uh... Okay. Then... Identifying some possible friction.
+
+(8:53 - 8:59)
+The end of the beginning. Blah, blah, blah. It talks about just some of the stuff.
+
+(9:00 - 9:07)
+What exists and what works. The convex scheme of a 1500 plus line. It starts like blending and like very like technical things with like what they did.
+
+(9:10 - 9:28)
+This is some of the thing like... It's just so funny how consistent and then also like dynamic the interactions are. So that we built the thing. And then we said, hey... This emulation gap had a gap.
+
+(9:28 - 9:34)
+I knew it was there. I think most of the team suspected it. And the way you most suspect problems you haven't yet been able to name.
+
+(9:35 - 9:41)
+We spent four phases building a hierarchy. Blah, blah, blah, blah, blah. What we did not have.
+
+(9:41 - 9:56)
+What no amount of careful research produces is texture. Texture is the person who has spent 13 years signing maintenance records. Texture of a quality control manager who runs her discrepancy log and red marker on a whiteboard and writes to an interview with a yellow legal pad full of her own questions.
+
+(9:57 - 10:23)
+Anyway, just a bunch of shit. This is a way to contextualize what using... Pretty much what using this software will be for... How do I phrase this? That's not right. So with this, this is contextualizing what it feels like to deal with the bullshit software that we have to deal with and creating a use case for making this thing.
+
+(10:23 - 10:32)
+Which also helps just with keeping the thing on track. Because when I tell Convex... Or, yeah. No.
+
+(10:33 - 10:37)
+Codex. God, all this seems good. Clerk, Convex, Codex.
+
+(10:38 - 10:44)
+Go fix this issue. But also from this perspective. You need to understand that who's using it.
+
+(10:44 - 10:51)
+Is not as creative as Claude. But is way the fuck more accurate. And so Claude built this framework and architecture.
+
+(10:51 - 10:57)
+It's very cohesive and interesting. And can go off on a bunch of different bunny trails. But then comes back and like, cool.
+
+(10:58 - 11:07)
+But it hasn't produced good code yet. Because it doesn't know how. And then what I did was I had it basically go through all these different phases.
+
+(11:08 - 11:14)
+Okay, I've been doing that too. Not up to phase 37. Like I said, you're doing this on a much larger scale.
+
+(11:14 - 11:25)
+So I said, use your software design skills from the frameworks. Which we said like, you know, Waterfall versus Agile. Versus, you know, your software development cycle.
+
+(11:25 - 11:30)
+All this stuff. And you guys are actually going to build the code. Because now we've simulated this stuff.
+
+(11:30 - 11:51)
+Now we're building the actual code, okay? And then you're going to test it with real fucking mechanics, right? And you get to draw from all the feature lists. And essentially what we've done is instead of defining every feature ourselves. I am finding a way to say enhance with the software.
+
+(11:51 - 12:01)
+Like if you have the Corridor list of features and the Evis list of features. I am just using this as a process to say enhance on each one of those. And so that becomes the seed.
+
+(12:01 - 12:09)
+And then we build with the correct principles. With the best practices. A scaffolding on top of that.
+
+(12:09 - 12:24)
+And then navigate and iterate with a simulated team of users and developers. So in doing so. I've gotten to the place where there's just like a ton of stuff here, right? It just gets so crazy.
+
+(12:25 - 12:38)
+It doesn't matter though. Because Myles Beaumont in his 15th dispatch. It doesn't matter what we did in version v1.4 versus v1.5. Because now we're just so much further.
+
+(12:38 - 12:53)
+But what I do get to do is say. Okay, given all this context. Now what we have to play with is integrated relationships.
+
+(12:53 - 13:04)
+Between all of these extremely complex things. Without me going through and screenshotting. And understanding the actual fucking back end of Evis.
+
+(13:04 - 13:13)
+Or of Corridor especially. Because Corridor has 1,300 tables. Corridor doesn't even know how Corridor works.
+
+(13:15 - 13:20)
+They're so far separated from the creators. Yeah, yeah. Because it's not well architected.
+
+(13:20 - 13:24)
+And even if it was. It's a lot of relationships. It takes a lot to be able to understand it.
+
+(13:24 - 13:34)
+You have to have an active relationship with the IT team. Which is hard to get a response from too. To even be able to use it correctly.
+
+(13:34 - 13:40)
+Yeah, so. Which I understand. There's different versions of an ERP when you buy it.
+
+(13:40 - 13:46)
+And you can turn on different things. And turn off others. And that requires involvement with the dev team.
+
+(13:46 - 13:53)
+Or an IT team. But man, it's painful. So I'm simulating that.
+
+(13:53 - 13:59)
+And just being able to move a lot faster. So I would just let it play its story. It would build context.
+
+(13:59 - 14:04)
+And then we started actually building code. And then when I could. I would get into the actual thing.
+
+(14:04 - 14:08)
+Hey, I see that you've built all this stuff. But I can't see any of it. Like fix that.
+
+(14:09 - 14:13)
+Yeah, that's something that I've noticed Claude does a lot of. He goes, hey, I built this thing. I go, cool.
+
+(14:13 - 14:20)
+How do I get to it? Yeah, and I think. So that's kind of the idea with building all that context. Before you're creating the use cases.
+
+(14:20 - 14:26)
+The edge cases. And then the actual users. Then with that narrative.
+
+(14:27 - 14:32)
+Has a corpus of information where it says. Oh, this is the intended use. And we've been down this road.
+
+(14:32 - 14:40)
+And I have a narrative. Where I can pull and search and say. Okay, when I'm actually re-looking at this.
+
+(14:40 - 14:44)
+I can re-evaluate this a couple of times. Come up with a couple of different answers. But the consistent thing.
+
+(14:45 - 14:54)
+Is that this module should behave in this manner. And not in this manner. Because Mr. Beaumont fucking hated that part of the software.
+
+(14:54 - 15:03)
+Yeah, you're making really, really detailed user stories. Yeah. With connections to real users.
+
+(15:04 - 15:11)
+Well, it's actually like a way of generating a user story. Because I don't know what the user story is. Because I could come in from my personal experience.
+
+(15:12 - 15:16)
+But I'm not going to remember. Be able to remember all of that context. Right.
+
+(15:16 - 15:21)
+And neither can you. Oh, and God forbid you forget. Or you try to remember how someone else's experience is.
+
+(15:21 - 15:24)
+Oh, yeah, yeah. And so it's so varied. And there's so many use cases.
+
+(15:24 - 15:36)
+How do we build enough context for all of the use cases. Before it gets in the hands of the customer. Because honestly, that's where Corridor has the balls of everybody.
+
+(15:36 - 15:41)
+Is it's built. They've already done 26. No, 30 years.
+
+(15:42 - 15:51)
+They've done 30 years of people saying that fucking sucks. Do this. They just don't have until now.
+
+(15:51 - 15:58)
+And they probably won't. Because they are slow. They have not had the zero cost of implementing change.
+
+(15:59 - 16:06)
+We do. And so we can come in and we can say, okay, based off of all these things. We can enhance the experience.
+
+(16:06 - 16:21)
+Make it more seamless. And integrate features that didn't exist in a way that's actually better than the current software. And we can combine all of the best architecture in a way that is more seamless.
+
+(16:21 - 16:41)
+And then creates a common bus of information and context back end and all these data labels that connect to each other when we start putting it into 135 as well. And so that management and that ability to connect the tissue and create the central nervous system essentially is the process we're going through. Oh, and the value proposition.
+
+(16:42 - 16:54)
+I think I have still, thinking about the different parts of this app, the training that I made for reparts people. From Cordora at Avex. Somewhere.
+
+(16:54 - 16:57)
+I know there's a physical copy. I would love that. That needs to go.
+
+(16:57 - 16:59)
+That needs to be something that we make. Because those are all the pain points. Yeah.
+
+(17:00 - 17:03)
+And how to get to them step by step. Because I don't remember that entire process. Just like you said.
+
+(17:03 - 17:09)
+You know, you forget one component. Well, I've done like a lot of standard work. And one of the interesting things is when I like went into work orders.
+
+(17:11 - 17:26)
+I was able to upload my specific steps and different components. Now, I haven't fucking tested any of this stuff yet. So it's definitely broken.
+
+(17:26 - 17:37)
+So we build task cards inside of this. Task cards, a bunch of different things. But ideally, you can like do all of the things that you need to do.
+
+(17:37 - 17:50)
+And I was able to just like enhance that system. Instead of just saying work orders and tasks, I gave it the entire form that I built that has instructions. And that's the interesting thing is that like you can go in and take the entire repair station form manual.
+
+(17:51 - 18:11)
+And you can put it in there and be like, okay, this isn't the best, but it's a starting point. How do we take this and integrate it in a meaningful way that satisfies the user journey? But once I did all that, then I had a problem. Corridor and Ebits and all these other guys don't have active scheduling.
+
+(18:12 - 18:18)
+And they don't have the other stuff that I built in that demo app. Right. The scheduler or MRO manager.
+
+(18:19 - 18:41)
+MRO manager. So what I did is I threw in every file, the entire repo of MRO manager into there. And then I had it through codecs go through and create a natural language description of every single one of the features by doing end to end and in browser testing from different perspectives.
+
+(18:41 - 18:45)
+Okay. From the perspectives that you created inside of the project already. Very similar.
+
+(18:45 - 18:58)
+Okay. It was technically separate, but it is now integrated. That process produced like a 600 line document that's like, here's the things that are in here.
+
+(18:58 - 19:11)
+And the workflows. And then screenshots of every single thing that it does currently. So I've got a save point, essentially, to interpret what code and provide that natural language layer over top of what I built before.
+
+(19:12 - 19:23)
+And now I am currently in the process of trying to integrate in a meaningful way, those items. So you'll see some remnants from this. Like the financial reports are all broken out.
+
+(19:23 - 19:44)
+But like, here is the type of things that I would see in the other one. Your forecasted revenue, your profitability, your runway, all this stuff that like I had in that app. Now, the thing is, I still want it in the manner which I made it.
+
+(19:44 - 19:53)
+But I want it wired up to all of the other components so that they will feed each other. And right now I'm in the process of like saying, okay, I know the user journey. I know all this stuff.
+
+(19:53 - 20:11)
+But like, I don't have what I'm looking for, which is like the data over top of a drag and drop thing. And I just have to go explicitly do that. But I have stepped it up to where now it has all of the context of that demo app and is now building the stage I'm in right now.
+
+(20:11 - 20:21)
+It's building the connective tissue. So that when I create a work order and indoc a customer, it then cross applies all that information into the organization appropriately. Yeah.
+
+(20:21 - 20:41)
+So when you say you schedule a customer to come in for a check, you're not only talking to the quote module, you're talking to counter sales, labor kits, loaners, billing, et cetera, et cetera, et cetera. And in some of these things like personnel, it added all these personnel. This is not the thing that I want, but it has the components.
+
+(20:41 - 20:53)
+That is pretty though. And I like and did a lot of work, like two months of work on the other demo. And I need to like take it in and be like, okay, actually explicitly here it is.
+
+(20:53 - 21:04)
+But once the convicts back end and their interconnected tissue, their nervous system data tables are documented. Data tables with arrows. Yeah.
+
+(21:07 - 21:25)
+Now we're getting somewhere that is unbelievably complex and unbelievably valuable because now I may have the equivalent of what was 1300 tables condensed down into 10, condensed down into 30 or 50 or something. Typically because they're able to communicate. Yeah.
+
+(21:25 - 21:39)
+But now they're much, much, much more robust. And I have a system for integrating new major features and user stories where we can check natural language wise. Here is what it should do.
+
+(21:40 - 21:51)
+Here's the description of this process. And now we have a specification to build against. Not just a single purity, but like a true living, breathing document of like, here is how it has worked.
+
+(21:51 - 22:21)
+And here is how it now works. And actually one of the interesting things I heard on a podcast is having your LLM be able to access all of your commits and watch the history and then troubleshoot where things went wrong is an emergent behavior that wasn't anticipated, but has saved people a bunch of time because it adds additional context where it can say, okay, this was here and now it's not there. And then this was built, but then this was built.
+
+(22:22 - 22:45)
+And it can look for the why in those and like string all that together. And with these higher reasoning models, you can actually get something that's then like, oh, you are a mechanic who's 32, who has this much income and is going to be doing these tasks and has this training. And therefore, you should be able to have your permission access automatically mapped to these specific items.
+
+(22:46 - 23:13)
+Yeah, we built a full profile. And now it's like, oh shit, it didn't know that unless it had all that additional context. So I'm bloating this thing, absolutely bloating this thing with like a bunch of information that is circular and basically trying to synthesize an environment where it can interact with and has enough resources to anticipate the needs of the customer and of the users and self heal.
+
+(23:13 - 23:35)
+And once we get to a place where, hey, now we run a simulation where it's like, okay, we've brought in this winning aircraft. We're doing these different things. And after it runs through its own self checks several hundred times, then we actually do the in-human testing where we say, oh, it's actually missing this component.
+
+(23:35 - 23:56)
+Or I actually like preferentially would like this thing or the view of this needs to be like this, but all the bones are there instead of trying to build it from that perspective at the beginning. Which we also record and add to make more robust the last stories. So what I've done now is I've seeded this application with data.
+
+(23:57 - 24:08)
+I didn't put any of this stuff in. This is all from Codex. But you can see like it assigned me as a person and I have different work that I can work on.
+
+(24:12 - 24:18)
+I can attach different services. Sick, cool. Touch service.
+
+(24:19 - 24:26)
+Oh, it's broken. I can sign off the card if I have a thing. Or here's my fleet view.
+
+(24:26 - 24:31)
+Here's all the aircraft in here. This is cool. There's some emergent behavior that like it just figured out.
+
+(24:31 - 24:45)
+And then I had to have it tell me how the fuck did you do that? I want to add a new airplane. The three-step wizard is good. Let's figure out a real N number.
+
+(24:57 - 25:09)
+N960MN? Is that a real one? It's not in the database. Hold up, hold up, hold up. I got some pictures.
+
+(25:09 - 25:20)
+I would use mine, but I already put it in there. Let me dig into the archives. Airplanes, collections.
+
+(25:39 - 25:50)
+N850SC. It scraped it from the FAA website. Live? Yeah.
+
+(25:51 - 25:56)
+Just now? Whoa, whoa. Is this my airplane? Yes. Cool.
+
+(25:57 - 26:03)
+Now you can modify all this stuff. Dude, we need to see the logic for that. I need to see the logic for that.
+
+(26:05 - 26:10)
+Okay, cool. And then I can associate a customer. Summit Corporate Aviation.
+
+(26:12 - 26:19)
+It said engine type is turboprop, but it didn't have the information. I think I need to build out the logic in that, but you know, cool. Let's review it.
+
+(26:20 - 26:29)
+Oh, I need a total airframe time. I'll say this is a part 91 aircraft. I just got one.
+
+(26:29 - 26:44)
+This is based in BJC. Oh, registered owner is not Sakata. That's weird.
+
+(26:44 - 26:54)
+I'll have to fix that. And then the total time, let's say 1200. Okay, next.
+
+(26:55 - 27:00)
+Cool. And we'll add an aircraft to the fleet. And then there it is.
+
+(27:01 - 27:12)
+Here's our airplane. Here's our times and cycles. I'm going to connect this with the ADS-P, open ADS-P, so that it then can pick up the landing cycle.
+
+(27:12 - 27:29)
+Knows the estimate of the additional time and cycles, does the math for you, and gives you a snapshot of that time right now. And what it will need. Then connects that to that aircraft specific chapter five reference and its schedule.
+
+(27:29 - 27:44)
+And then when you confirm the last type of inspection it had, and some other things, it will then automatically track all of the maintenance required for it, as far as chapter five is concerned, forever going forward. We could create a messaging system based off of that too. Yes.
+
+(27:44 - 27:57)
+And then it also provides a reminder for you as a repair station to schedule this guy's maintenance and automatically books them. It does Arlen's job. So every time it comes in, it's like, okay, the work scope is already calculated for you.
+
+(28:00 - 28:06)
+And then you can add options and add-ons for flavor kits. All right, we'll use the bathroom real quick. Yeah.
+
+(28:07 - 28:12)
+Oh, and AD tracking and surface bolt control. Sweet. Which, yeah, we could.
+
+(31:07 - 32:01)
+By the way, normally, it also can drive. Oh, there's a... Deadline and part of your... Does it still have that? Yeah. Yeah, I don't know if it works.
+
+(32:02 - 32:24)
+I don't know. It might need to be plugged in. My dad got one of those.
+
+(32:24 - 32:32)
+We've had organs like that my whole childhood. Really? And he got a really cool one recently and we turned it on and it caught on fire. Whoa.
+
+(32:32 - 32:43)
+We're like, oh shit. Anyway, we finally found a guy who like has the original drawings or whatever and like knows this shit. And there's like one guy, one guy in Denver who can do it.
+
+(32:43 - 32:48)
+And we found him and fixed it. That's cool. That's sweet.
+
+(32:48 - 32:52)
+Yeah. So my dad's got it at his house. You got to come over to my dad's later sometime.
+
+(32:53 - 33:00)
+Yeah, that'd be cool. Dude, I've been... Since Claude's been taking extra time. I'll like sit down and I'll watch it play and then I'll play guitar.
+
+(33:03 - 33:08)
+What a workflow. I know, I know. Honestly, it's incredible.
+
+(33:09 - 33:20)
+Yeah, I've learned more guitar this last week even than I have in a long time. Let's see. I'm just sitting at my desk watching the code.
+
+(33:20 - 33:30)
+And like not just running one, like several windows at a time. Crazy shit. I'm going to send a command here and then I want you to see some more stuff.
+
+(33:30 - 33:36)
+Okay. And then my 40-minute intro to what I built will be over. Don't do this.
+
+(33:40 - 34:15)
+I want for you to make a comprehensive list of how the scheduling app versus the Athlon app works and what features have been implemented and have not been implemented comparing Athlon to the scheduler. I specifically want to reproduce a lot of the user interface as well as functions of the scheduler app in Athlon and need to see your current understanding of what has been implemented and what has not. I'm hungry.
+
+(34:15 - 34:28)
+You want to finish up the demo and then do food? Yeah, sure. If we are going to be here all night, I'm going to have to go home at some point and let the dog out. We don't have to be.
+
+(34:28 - 34:31)
+Oh, I'd like to be. Okay. That's what we talked about.
+
+(34:32 - 34:34)
+Check that out, though. Look at the incense. Dude, that's cool.
+
+(34:34 - 34:38)
+That's cool as shit. Wow. Just hanging out.
+
+(34:42 - 34:51)
+Nope, it's dropping a little bit right there. I've never seen anything like that, really. Really? Not this still.
+
+(34:51 - 34:57)
+Oh, really? Yeah. It makes really fun photography. I wonder if we can capture that on the phone.
+
+(34:57 - 35:09)
+Okay, good. Oh, wow. It catches the dust particles really well.
+
+(35:09 - 35:15)
+Okay, that's one class distraction. Summary of notes. Nathan was distracted.
+
+(36:17 - 36:24)
+Okay. Okay, I don't know what just happened. My local host versus the hosted one is different.
+
+(36:25 - 36:33)
+It just, like, removed a lot of the stuff, but also made it cleaner. Is it not push to me? Probably not. Or was there a get committed there somewhere? Yeah.
+
+(36:35 - 36:43)
+But just a couple of the things that, like, we can build now, not later, which is crazy, as part of the MVP, which is fucking nuts. Fuck. Fucking crazy.
+
+(36:44 - 36:50)
+Predictions. Okay, here's what the fuck is going to come up on your already. Wow.
+
+(36:50 - 36:59)
+On each of the aircraft that we added. Now, the computation here is wrong, but it's kind of interesting. I can resolve it.
+
+(36:59 - 37:06)
+I can acknowledge it. Dismiss it. Where does it go when you do any of those? If I click resolve, I think it just keeps it there.
+
+(37:06 - 37:12)
+If I do acknowledge. Nope. Okay.
+
+(37:15 - 37:28)
+This is a little bit different workflow than I had before. What I wanted to do is have this on a per aircraft basis. And not just all aircraft.
+
+(37:28 - 37:56)
+So if I was like this one, boom, and it would give me a drop down list, and I would be able to access that from the fleet view. So this is kind of like the where does this belong? It probably belongs in every single aircraft fleet. And predictions, this is more of like a super, super, super small version of the let's predict from chapter five what's wrong.
+
+(37:57 - 38:20)
+And this is Arlen. This is basically building Arlen. And saying, okay, truly, by tracking your ADS-B data, regardless if you're here or not, we know and can, like, with a certain degree of certainty, if you keep doing your trend of use, this is when you're going to need to come in for your next maintenance.
+
+(38:20 - 38:33)
+Right. With a degree of, like, okay, you will or will not do this. And then when that happens, what ADs are due, what service bulletins are due, and just dynamically pull with every single variable instead of doing it by hand from a piece of paper like Arlen.
+
+(38:35 - 38:39)
+Which he did. And I reverse engineered that process. I have photos.
+
+(38:40 - 38:45)
+Which is fucking cool. Because I can pull that straight in here. I truly can download Arlen in here.
+
+(38:46 - 39:04)
+Which is a superpower. Whether something drops by cycles, by time, or by, like, life limit first, this should be able to dynamically every time you want to, like, make that prediction. You could run the whole database at the same time.
+
+(39:04 - 39:18)
+And just, like, have that on a regular schedule. So that your predictive thing always has an outlook for all of your customers. Which would be very, very cool.
+
+(39:18 - 39:38)
+Where does two things, Logbook scanning and Logbook entry sticker creation play into this? Okay. So Logbook scanning, no good answers for you on that. Logbook creation will live in the work order.
+
+(39:40 - 40:19)
+And so up here, instead of what it has right now, which is just, like, how much have you completed or not, which is the standard, like, corridor look, what we will have is a, you know, quote creation, predictive thing, quote creation, acceptance by the customer, in doc, inspection, repair, review, test flight, release, whatever. And along those steps, then it will generate your Logbook entries. And it will use the same logic that I made in my little Excel program that I built for part 91 that we use, but, like, just, like, actually usable.
+
+(40:21 - 40:36)
+Because, like, the logic is there. It's, like, if then this, and you add these types of specific things in the Logbook, and these types of references, and it's based off of, like, what your equipment list is, and what you're signing off, and the common squawks, and all that stuff. And then you can go in and check.
+
+(40:36 - 40:52)
+And this is where an agent would be very helpful, where they say, hi, here's all the common things that are on an aircraft inspection. And then we can narrow that down by, like, type. But given your Chapter 5 recommendations, it can take that and the FARs and whatever else.
+
+(40:52 - 41:27)
+And say, okay, based off of, like, this operator's profile, the FAA designation on this aircraft, its specific maintenance cycle, phase inspections, whatever. You can demystify the incredible levels of complexity within aviation that take 15 years to figure out, agentic level, and then provide you, the human, who's going to actually sign the goddamn fucking airplane off, a, hey, did you think about the fact that we didn't change the transponder battery and it's expired? Oh, you just forgot to put that on there? Okay, cool. Yeah, you should do that before you sign that off.
+
+(41:27 - 41:45)
+Yeah. And if you want to override it, you can. But you're going to, it will create a history in there, and it will assign the person in that, so that you can go back and say, okay, this person did override this, and for what reason? Oh, and they have to have a certain level of access to sign that off, I'd imagine.
+
+(41:45 - 42:21)
+Yeah, I'd like that. What about, let's say, work order assignment? So that's the My Work area, and so I haven't built it yet, but essentially, in the scheduling app, I have that, where you can assign different people to a work order, and then within that work order, you could assign them different tasks. And this one right here is like, okay, I have this many assigned, this many in progress, this many pending, I can go click in them, I can do the things I need to do, right now this doesn't have a clock in, but I'm going to take the clock in stuff from freelance, and just overlay that in there.
+
+(42:24 - 43:17)
+And then you'll have a dashboard that actually is effective, where you can see what work is in progress, what's your WIP for your team that's assigned to you, and you can switch leads, you can switch shifts, and do all that stuff. Yeah, I think having an element where you have assigned work, and then also additional work that you want to take on, so you finish your scheduled maintenance early, so let's say the lead assigns the work for the day, that all gets finished, request new work, or just go grab some stuff. And honestly, one of the things that is a white whale within the Corridor thing, is getting rid of percentage of billable hours, trying to effectively solve for a better KPI that actually grows the business, rather than disincentivizing people and fucking up the whole system.
+
+(43:17 - 43:42)
+I think that honestly is a discrete problem that is so pervasive, and nobody has solved it. Defining billability. Yeah, how do you measure the output of a technician when there's so many external factors that fuck up the measurement, and then you end up creating a system where people try to play a game, rather than actually produce one.
+
+(43:42 - 43:49)
+Which is exactly what happens every time. I have to, let me go put a few minutes here, let me go put a few minutes there. All right, I'm very billable.
+
+(43:49 - 44:06)
+I've gotten everything done within the amount of time, and actually before. The flat rate system from automotive has been brought up to me a lot by the guys I know that have worked in automotive, which would be interesting. I need to learn about it to see if that's even something we would consider in aviation maintenance.
+
+(44:06 - 44:30)
+Not for us, building this, but maybe for building this. Well, it's one of the core questions of, what are you supposed to do? How do you incentivize your guys? What I think, in the question I answered with Bob O'Connor, was, we don't give a fuck. We do not give a fuck whether or not we did the wing in two hours or ten.
+
+(44:30 - 44:54)
+We don't give a fuck if we did the install in 99 or 130. What we care about is, did the customer get what they paid for? Which is an aircraft delivered in the right condition, on time. And did we not spend more than we made? Yeah, and so there are other things that you can track that are non-technician specific or role specific that are good.
+
+(44:59 - 45:10)
+What things are you, what are your inputs and what are your outputs? What's your critical path? And you then, this is cool. I started playing with this. Take the PMBOK.
+
+(45:11 - 45:17)
+You ever heard of the PMBOK? It's the project manager's workbook guide or whatever. Oh, yeah. There's eight editions.
+
+(45:18 - 45:24)
+And guess what? You can synthesize them with AI. And I started to. That and lean principles.
+
+(45:25 - 45:39)
+I took the PMBOK and the lean principles and applied it to, like that test example of Cornerstone designs, the pulse reflexes we worked at. And it was like, do these things. I was like, yes, yeah, fucking yeah.
+
+(45:39 - 45:54)
+That's what we have to do. Absolutely. And that's the kind of thing where you can take external expertise and apply it in the industry that we work in, in a way that hasn't been done before.
+
+(45:55 - 46:02)
+Which is what Newstate was trying to do with fucking lean at our shop and wasn't able to. Exactly what they were trying to do. And that is where the delta is.
+
+(46:03 - 46:24)
+If you can 3x the shop because you have better productivity or even say you take low level benchmarks where you're like, we're only going to increase this by 10% this year. But overall, we're meeting everything on time and everything. That has a huge downstream effect because now you're not like bleeding customers.
+
+(46:25 - 46:39)
+And if you don't bleed your customers, then you cost to acquire a customer goes down and your LTV goes up. It's fucking out of this world. So you actually, you know, 5, 10x the business in the long run, which is huge enterprise value.
+
+(46:40 - 47:06)
+So that's the kind of thing that we can come in here and say, actually, we have all the data and we can enforce the right rules where it's not just like, well, evaluate your technician based off this. We say, no, actually, the thesis of this software isn't just recreating Corridor or Ebis. It is baking into principles that will make you more money in your business and will run your shop effectively.
+
+(47:06 - 47:16)
+And it solves the pain points of the hot face of the work from a mechanics perspective. And it starts with ease of use and predictive maintenance. Yes.
+
+(47:17 - 47:25)
+And things just like, holy shit, a two-bin Kanban system for your consumables. Oh my God. Dude, so this is funny.
+
+(47:25 - 47:37)
+I had a conversation with Carrie. She is the president of one of the, actually, I think she's the president of the Tulsa location. She called me for whatever reason and asked about inventory.
+
+(47:37 - 47:44)
+Cool. She's like, how are you guys doing inventory? Well, we have a tool crib manager. She goes, you have a what? I'm like, we have a tool crib manager.
+
+(47:44 - 47:54)
+Oh, we don't do that at all. Like, yeah. How do you guys manage your inventory? She goes, well, it's all in different places, like in the classrooms for the lab areas that need them.
+
+(47:54 - 48:00)
+I go, oh, so it's all just dispersed. There's no like central location or anything? She goes, no. Okay.
+
+(48:00 - 48:21)
+She was talking about some sort of, I guess there was, one of the students got in trouble with a weapons charge and he stole a bottle of MEK from the school and took a picture of the gun that he was cleaning or something, had the bottle of MEK in the picture, posted it on social media. So now... Oh, that's complicated. Yeah.
+
+(48:22 - 48:31)
+Yeah. So they're like, how do you keep track of that? I was like, well, as of right now, centralized location with some other bins and other places, but... Like you have stuff that's controlled behind a cage. Exactly.
+
+(48:31 - 48:45)
+We have one bin and then several extended bins outside of that. And then I told her like, what I wanted to do is set up a Kanban. She goes, what's that? Why do you not fucking know? Nobody here knows what a Kanban is.
+
+(48:45 - 48:50)
+And the, I mean, obviously the only reason I know what it is is because of the... Bullshit we did. The bullshit we did. That's the only reason.
+
+(48:51 - 49:01)
+She's like, that's a really good idea. I was like, yeah, I'd love to, that's like one of my next steps after this curriculum refresh is done in April is to get our inventory under control. Because where do we believe most of our money? Inventory.
+
+(49:01 - 49:03)
+Yeah. Big time. And churn.
+
+(49:03 - 49:15)
+Which has gotten way better recently in the last year or two. So I was like, okay, well, my job as a manager now of ops is to... Make that happen. Make that better.
+
+(49:15 - 49:24)
+Okay. Is to efficiently make an operation that works well. And that starts with managing our inventory.
+
+(49:24 - 49:41)
+Yeah. It starts with creating inventory sheets for each one of the classrooms, submitting them to the parts crib, reviewing them, standardizing them, making sure that there is now a time schedule for things to get reordered and push back into the classrooms every time we teach it. And now I have a... Now I make that digital.
+
+(49:41 - 49:49)
+So I have a tracking of how many consumables I've used for this class per year. Because I'm not going to have the same class every month. We're on a schedule.
+
+(49:50 - 49:57)
+I attach that to my schedule wheel. And now I have predictive forecasting of how much I'm going to have to spend on inventory this year. Yeah.
+
+(49:57 - 50:04)
+And that starts with a common bond. All I... Because again, ease of use. All I have to do is create a little card for my guys to give to you.
+
+(50:04 - 50:07)
+It's all paper. Yeah. You could scan it.
+
+(50:07 - 50:12)
+You don't have to scan it. And you just put in your little system. And now we've completely just destroyed a lot of the costs.
+
+(50:13 - 50:23)
+Now, the other side of that is as a manager of operations, I don't work in finance. I don't make the budget that I have. So I have to use all of that budget.
+
+(50:24 - 50:30)
+But so far it's been, hey, we need to use this budget. Let's just order a bunch of bullshit that we probably need. No, no, no, no, no, no.
+
+(50:30 - 50:40)
+Let's be strategic about this. Let's be strategic about it. What do we need for this class? What am I teaching this class? I need to have a place to... Hold on, I need to add this down to my feature list.
+
+(50:44 - 50:54)
+I need to have one place that I can order. Oh, I'm going to buy the Mac Whisperer. Do it right now.
+
+(50:54 - 51:21)
+Oh, well, one second. One place that I can order all of my consumables integrated into the scheduling label. And predict my deal slash consumable spend annually.
+
+(51:22 - 52:35)
+So we don't really go quarterly, we go annually, my business. With message alerts. Sam, what would your thoughts be on the marketplace app just being fully bootstrapped behind what we're doing with the ERP? Yeah, I think that's just separate.
+
+(52:39 - 52:57)
+If we take on any investment or something, the ERP is going to take that, but we own the other thing 100%. And we can then just indie the fuck out of it. We don't have to care about anybody's opinion.
+
+(52:58 - 53:09)
+And we've already taken care of our cash flow stuff personally. Well, and a lot of it would be good practice for everything else you do inside the ERP, I think. I was thinking about that the last couple of days while you were in Costa Rica.
+
+(53:10 - 53:33)
+I know we're going to pitch the ERP to Greg and have the marketplace in our back pocket, but bootstrapping the entire marketplace is a way to put something out quick, actually finish something, bring in a small amount of income. It pays for itself, we work on it when we can. And it doesn't take precedence over the big thing.
+
+(53:35 - 53:46)
+And we can learn a lot of things from that part. So doing the cold calls, the warm reach out, etc. That we wouldn't necessarily learn if we sat on your thing.
+
+(53:50 - 54:02)
+That we probably won't get from just talking to venture capital. Yeah, no, it's not interesting. I mean, if we wanted to, we could pitch that instead at some point.
+
+(54:02 - 54:05)
+But it's like... No, I don't think we should. We don't need to. No.
+
+(54:05 - 54:14)
+And the thing is that the advertising and stuff like that and the business component of it is not the point. No. The point is to get back to the mechanics.
+
+(54:14 - 54:21)
+Exactly. And that's what we want to do overall. And we get to build a bunch of skills while we do it, because it's fully ours.
+
+(54:22 - 54:31)
+Yeah. Yeah, and that's the thing. We don't have to worry about meeting margins or numbers.
+
+(54:32 - 54:37)
+We can just build the shit out of it. Well, and we don't lose sight of what we made it for. Uh-huh.
+
+(54:37 - 54:54)
+Which, like you said... And then we also fundamentally understand and have... The market. All of your business insights. Because part of this, I wrote it down on my website, and I will show you, is the open source intelligence and closed source intelligence.
+
+(54:57 - 55:07)
+Synthetic data that we can create that says... This is who needs people. This is what type of things they need. Here's the attributes people are looking for.
+
+(55:07 - 55:27)
+Here's the important things. Here's the unimportant things. But also... What are other... What are things we're missing that indicate the health of an organization? That we can then rate for people.
+
+(55:27 - 55:37)
+Yeah. Based off of our own algorithm, which we create. And then we give out and say, hey, matching is better.
+
+(55:38 - 55:53)
+This isn't a 60% likelihood. This is a really high likelihood that you're going to be well-matched to this specific job in this specific role. And we get a lot closer to the video game upgrade thing.
+
+(55:53 - 56:03)
+But it actually knows who you are. It may be able to inform your preferences rather than just record your preferences. No one guessed, right? A lot of people don't know what their preferences are.
+
+(56:04 - 56:16)
+And so if you contextualize it, this is the thing that we do, both in the software for ERP, as well as the marketplace. You contextualize people's experiences. And you set the standard for what looks good.
+
+(56:17 - 56:31)
+And with that, you really can grease the wheels in getting to match people in the right places, or even just increase their knowledge. The wiki itself. It makes for a better mechanic.
+
+(56:31 - 56:46)
+Fuck. If I had started my little college search and known what mechanic shit was, it would have really fucking helped. I had to take a leap of faith because I was like, I don't know what the fuck this is.
+
+(56:48 - 57:01)
+Okay, let's do it. Same, same. Because when I got out of, or when I was still in AMT school, going back into aircraft maintenance, coming out of the DOD, I was like, I have two opportunities.
+
+(57:03 - 57:08)
+Two main opportunities that I want to pursue. So that I can work in a small place. I didn't even know what a 145 was.
+
+(57:08 - 57:17)
+You don't leave school knowing what a 145 repair station is, unless you have a teacher that tells you about it. It's crazy. It's not required by the FAA for me to understand what a 145 is as a mechanic.
+
+(57:17 - 57:27)
+It's a fucking stupid thing. It's very stupid. But I was like, I'll go work at AVEX, work at a small local shop, stay in Colorado, be comfortable, possibly have more opportunities because it's a small business.
+
+(57:27 - 57:33)
+What I know from small businesses is that sometimes there's more opportunities. So that sounds good. And then I had another opportunity north of Grumman.
+
+(57:34 - 57:41)
+Was going back in the DOD, moving, making a bunch of money, climbing the corporate ladder, however I need to do that there. In the desert. In the desert, yeah.
+
+(57:42 - 57:54)
+Palmdale. But I had to make that decision based off of my intuition. I did research, obviously, but I just go with my gut feeling because I really still didn't know exactly what I wanted to know.
+
+(57:55 - 58:01)
+It was all based off of assumptions because I knew DOD. I understood small businesses. I had been working at small businesses.
+
+(58:01 - 58:10)
+Like, okay, I've had other opportunities instead of other small businesses I've worked for. I'll probably be what it's like working at a 145 that only has two locations. That ended up working out.
+
+(58:11 - 58:32)
+But if I could have gone into that and understood that those necessarily weren't my two main options, maybe there was a better option somewhere else. Just because I found something on a wiki that told me about my day-to-day and my opportunities and my way to proceed and progress, that would have been so much better. Or having a career services person that knows what the fuck you're talking about to tell me those things.
+
+(58:33 - 58:55)
+Or maybe it gives me the information to go to that career services person and want to talk to them about opportunities. I think that has such a fucking big, like, lever. It moves thousands of people's decisions.
+
+(58:55 - 59:09)
+Oh, the wiki, yeah, absolutely. And so, like, and one thing I was thinking about is, like, as white collar work is fucking obliterated in the next couple of years, because I think it will be... I think a large majority of it. I've thought about that a lot.
+
+(59:09 - 59:16)
+Because, you know, we still have guys that are working out of notepads. Say that again? We still have people that are working out of notebooks. Yeah, yeah.
+
+(59:16 - 59:27)
+Spiral, like, yeah. It's going to be a long time, I think, on the smaller side of things. Large scale, large businesses, absolutely, real quick.
+
+(59:27 - 59:45)
+There's always those edge cases where you've got Joe Schmo, who lives in the mountains, hasn't heard about this stuff because he's been reading the newspaper, maybe, instead of hopping on social media. That runs a business. All he knows how to do is make upholstery, right? He's going to be slow to adapt.
+
+(59:46 - 59:49)
+He has been. Has been. He's going to continue to be.
+
+(59:49 - 59:58)
+He's not been responding. Even if you lower the barrier to entry, it doesn't necessarily mean... It's percentages. It doesn't necessarily mean that people are going to adapt it quicker.
+
+(59:58 - 1:00:30)
+I think, though, there's an interesting new pool. There's a new pool of people. If you have a large number of people who, like, can't find an entry-level job in, like, infotech or, like, standard white-collar work, pitching this as, like, hey, get your feet in, like, this is a niche that you can do, and here's your path, bingo-bango, you actually could, like, unlock, like, a noticeable pipeline.
+
+(1:00:31 - 1:00:41)
+Yeah. And I think that, like, that might be an additional source to, like, relieve some of the technician problems. And if you could be part of that and be part of that value stream, a lot of fucking value there.
+
+(1:00:41 - 1:00:46)
+And you give back a lot. Yeah. I mean, the idea still is to make the world better.
+
+(1:00:47 - 1:00:55)
+To make the world better, but... Well, we need to make the world better for 140,000 people. For 140,000 people. Yeah.
+
+(1:00:57 - 1:01:02)
+That is so few people. It's a lot of people, but it is, like, comprehensible. Yeah.
+
+(1:01:03 - 1:01:09)
+You know? It's graspable. Yeah, like... Definable. My YouTube video has more views than that.
+
+(1:01:10 - 1:01:13)
+Yeah. You've already reached that many people. Okay.
+
+(1:01:15 - 1:01:17)
+Okay, man. Let's get some food. Let's get some food.
+
+(1:01:20 - 1:01:26)
+Um... Are you, do you pick, are you a picker? Yeah. You tell me I'm true. I sure, I sure am.
+
+(1:01:26 - 1:01:28)
+Look at this. Used to be a biter, I know. Here's the work orders.
+
+(1:01:30 - 1:01:34)
+Beautiful, absolutely beautiful. Pending inspection. What's the green one? Uh, complete.
+
+(1:01:35 - 1:01:39)
+Click into one of the chips. Oh, beautiful. Straight to the work order.
+
+(1:01:39 - 1:01:51)
+So this already... Parts, documents, notes, activity, squawks. This already works better than a quarter ago, so... I know. You can create new squawks, add new task cards.
+
+(1:01:52 - 1:02:00)
+Um... I don't like this. It's not the way I want it, but this is, like, what it pooped out, you know? Yeah. And some of the logic.
+
+(1:02:00 - 1:02:15)
+And so from here, we can form what the perfect interaction is. But this is the type of thing that, like, we will be... Put it in there! Okay, it did put it in there. Fuck yeah! Oh, I'm also gonna continue.
+
+(1:02:15 - 1:02:21)
+Oh, shit! It did it. Did it just do that? It did it, yep. Oh, beautiful.
+
+(1:02:23 - 1:02:35)
+This does not fucking exist. And this is correlated with the work orders. Holy shit, it is? Yeah, and... That are populated inside of this already? It has the... The scheduling.
+
+(1:02:37 - 1:02:43)
+It's got the money. Dude, I'm so glad that Google AI Studio is a tool that exists. Yeah.
+
+(1:02:43 - 1:02:50)
+Because this all started there. Like, you were like, I have an idea. I don't necessarily want to pay the tech debt to make it.
+
+(1:02:50 - 1:02:53)
+Just play around with it. Yeah. Like, it gives you a canvas.
+
+(1:02:53 - 1:02:56)
+Literally a canvas. I know! To build something. Like, that's so cool.
+
+(1:02:56 - 1:03:03)
+I put an AMT command into... Antigravity. Yeah. And I've been fucking with Gemini on it.
+
+(1:03:03 - 1:03:14)
+How's that going? It's shit, but... I'm gonna put Claude... I mean, I just use it... I'm gonna get rid of Antigravity. I'm gonna put it into another VS Code. Or I'll spool it up with VS Code and put Claude and Codex on it.
+
+(1:03:15 - 1:03:26)
+It's interesting because they've been, like, focused on deep research and also, like, games. And so I think, like, actually, it's slept on. Like, for you and me, we get to use all the tools.
+
+(1:03:26 - 1:03:29)
+We don't have biases coming in. We're just, like, what is useful. Yeah.
+
+(1:03:29 - 1:03:41)
+And so, like, this I built as a game, right? Yeah. And so it behaves very differently than it would... Yeah, exactly. Than just a ShadCN fucking app.
+
+(1:03:41 - 1:03:48)
+But I can now combine the two to make it into, like, good... Let's see. Autoschedule. Is this gonna work? Nope, that's not gonna work.
+
+(1:03:48 - 1:03:52)
+Yeah. Magic scheduler? Nope. Oh, shit, it does.
+
+(1:03:53 - 1:04:00)
+Okay. Okay, it's broken, but that's okay. You just need to do a convex... It did do that.
+
+(1:04:01 - 1:04:07)
+Push. Is this drag and drop? Yes, it is. Just need to refine it.
+
+(1:04:07 - 1:04:13)
+Yeah, wow. Okay, so here's the week, the month. Here's your capacity view.
+
+(1:04:15 - 1:04:23)
+That's broken because I don't have a back button. Financial planning, cool. Okay, so it's listening to me.
+
+(1:04:23 - 1:04:26)
+It's doing it. I can set up the different bays. Wow.
+
+(1:04:27 - 1:04:31)
+Here's my Gantt chart. We're in the Gantt chart. Anyway.
+
+(1:04:32 - 1:04:35)
+Yeah. Okay, okay, yeah. Tool crib.
+
+(1:04:35 - 1:04:46)
+Here's my fucking... What's checked out? What needs to be sent for Cal? Whoa, whoa, whoa, is that a real... Yeah. Let's see what it does. Holy shit.
+
+(1:04:50 - 1:04:56)
+Okay. Does it take you to the... Is there a vendor list you can build inside of this? Yes, I already did. Holy shit, Sam.
+
+(1:05:00 - 1:05:04)
+I need to quit my job. No useful data found. Okay, great.
+
+(1:05:04 - 1:05:16)
+Not a real QR code, but you put it like... So as someone that's going to be purchasing this or using this, I can go in, I can define who my vendor list is. Like who are my vendors, who I'll be using. That way I can generate the QR codes directly inside of... Oh my gosh.
+
+(1:05:17 - 1:05:21)
+Calibrations are due here. We can add tools. Let's look at our inventory.
+
+(1:05:22 - 1:05:26)
+Insert new account. We can do inventory counting. Okay, I didn't know it could do that.
+
+(1:05:27 - 1:05:36)
+Core tracking, shipping, receiving, rotables. Okay, I have put in some rotables. Let's see.
+
+(1:05:37 - 1:05:44)
+This specific rotable. Record actions against that rotable. I can... These are installs.
+
+(1:05:44 - 1:05:50)
+Things are serviceable in the shop at vendors. Should be able to make some plain language for those too. Yes.
+
+(1:05:50 - 1:05:57)
+That way I go in, I don't know what I need. I can find a phone number. Yeah, that should be everywhere.
+
+(1:05:57 - 1:06:12)
+It should just explain itself and not rely on a superhuman. Yep. Where's my parts? There's a loaner.
+
+(1:06:15 - 1:06:20)
+On loan, maintenance, retired. Those are aircraft loaners. Okay.
+
+(1:06:21 - 1:06:25)
+Yeah, for specific airplanes. Parts of your... Okay, there we go. Parts.
+
+(1:06:25 - 1:06:36)
+Okay. Fiber move, pending disposition. It is so cool because it put it in all the potential states with errors, which is nice.
+
+(1:06:36 - 1:06:40)
+Oh, okay. Okay, so self-locking nut. I'm going to inspect that.
+
+(1:06:40 - 1:06:42)
+Okay. It's approved. Move to inventory.
+
+(1:06:42 - 1:06:44)
+Approve. Boom. Move to inventory.
+
+(1:06:45 - 1:06:47)
+Sick. Okay. Tell us your inventory.
+
+(1:06:47 - 1:06:58)
+Where's inventory? That's a count though. Where's the actual inventory? I don't think I have inventory. Our schedule.
+
+(1:06:58 - 1:07:09)
+Our seat audit. This is what it built. So this is like... This is all the stuff that I populated this app with.
+
+(1:07:10 - 1:07:15)
+Oh, the repair station. Okay. So there's a seated data for an audit of the repair station.
+
+(1:07:15 - 1:07:18)
+Okay, so this is your dashboard. Yeah. Let's see.
+
+(1:07:18 - 1:07:20)
+Billing. High level. New invoices.
+
+(1:07:21 - 1:07:25)
+Labor kits. Prepare your first labor kit. Boom, boom, boom.
+
+(1:07:25 - 1:07:32)
+So I need to build my inventory tab. Warranty claims. I'm going to start a new warranty claim.
+
+(1:07:32 - 1:07:45)
+Okay. Part defective. What was the name of that app that Greg fucking bought or sold? It was Portside, which has like six or seven things in there.
+
+(1:07:50 - 1:07:55)
+No ADV compliance records checked. Portside. They updated it.
+
+(1:07:59 - 1:08:05)
+Oh, they really updated it. Remember we looked at this after they had just sold and it was blank. Pretty much.
+
+(1:08:06 - 1:08:18)
+Was it? Yeah. It looks different for sure, but I don't know. I think it's a bad design, to be honest.
+
+(1:08:20 - 1:08:26)
+Training. What did it build for training? Okay, cool. Nothing really.
+
+(1:08:27 - 1:08:33)
+Training requirements. He needs to have a hazmat cert. Okay.
+
+(1:08:34 - 1:08:36)
+Look at this though. Quickbooks. Look at this.
+
+(1:08:38 - 1:08:57)
+You can put Quickbooks in here. Oh, you're good. Okay.
+
+(1:08:57 - 1:09:14)
+Quickbooks. We can actually use Quickbooks to like push all this stuff around for small shops. And then we can look at like cash accrual or other like CFO shit.
+
+(1:09:14 - 1:09:30)
+And I would love to talk to Claude about that stuff and say, hey, what do we need? You'd like to see in RMROs because he's building an RMRO right now in Malaysia. And I'd love to get that one on here too. But, you know, okay.
+
+(1:09:30 - 1:09:38)
+Which ones do you want to sync? Could be cool. And then integrate other things. Like, I forgot the name.
+
+(1:09:38 - 1:09:48)
+Whatever he has other jobs. And then locations. You can set your different places that you work.
+
+(1:09:48 - 1:09:59)
+Multi-shop locations. Who would have access to this? Well, so and that's another thing is like. Because, I mean, this would be something where I can just see everything.
+
+(1:09:59 - 1:10:02)
+Everything. Yeah. Everything is in here all at once.
+
+(1:10:03 - 1:10:05)
+Yeah. Like the movie. Everything in here all at once? Yes.
+
+(1:10:05 - 1:10:12)
+It was a good movie. It was. But do I need to have counter sales for the AMP? No.
+
+(1:10:13 - 1:10:23)
+So we have to go in and create that user assigned privileges. Like Corridor has. But not fucking horrible.
+
+(1:10:24 - 1:10:31)
+Right. And their fucking horrible thing is that you get to make your own profiles with no validation. You don't know what are in them.
+
+(1:10:31 - 1:10:39)
+It doesn't describe there what that authorization actually does. And so it's very difficult. Well, and also the thing is.
+
+(1:10:40 - 1:10:52)
+Something I was doing with the, I am still doing with the Marketplace app is defining those things. I don't need to see an employer portal if I'm not an employer. Right.
+
+(1:10:52 - 1:11:06)
+If I already have those. So like for. It's a fake quotes, right? Obviously not quotes, but I shouldn't be able to see a button that says quotes if I'm logged in as a mechanic.
+
+(1:11:07 - 1:11:23)
+I shouldn't be able to click it and tell me that I don't have access. Which is something I'm pretty much done with on the Marketplace section. So yeah, it will build up.
+
+(1:11:24 - 1:11:35)
+Fully defining user journeys. Which is nice because with this narrative based spec development. We can just have them play the roles.
+
+(1:11:36 - 1:11:43)
+Yeah. With the best practices and then develop the thing in a way that is like I didn't. I've never seen this before.
+
+(1:11:44 - 1:11:49)
+Okay. But I'm doing an over-the-counter sale right now. It has applied the correct number to it.
+
+(1:11:49 - 1:11:59)
+I'm selling hydraulic fluid to somebody. Let's see if it works. It's kind of bad.
+
+(1:12:00 - 1:12:04)
+Still, it's there though. But done. Okay, I did a thing and it's in my sales history.
+
+(1:12:05 - 1:12:10)
+Cool. I can void the sale. Is there a customer history? There should be.
+
+(1:12:11 - 1:12:21)
+I've got a customer portal right now. So that you could like log in and see your specific aircraft and things that are going on with it. So that you can check out your dashboard, your work orders.
+
+(1:12:21 - 1:12:37)
+Like, hey, what stage are we in right now? What are your quotes? Where are your invoices? What is your fleet of airplanes? That does not fucking exist. Not in a meaningful way. No one actually uses the Cordra feature.
+
+(1:12:39 - 1:12:44)
+Because you have to pay so much money for it. And it sucks. I mean, that could be something as simple as doing a SendGrid implementation.
+
+(1:12:45 - 1:12:50)
+Just having emails sent out. If they don't want to be inside the app. Yeah, I mean, it could be both.
+
+(1:12:51 - 1:13:03)
+I think absolutely having a customer history, that would be awesome. Yeah, that's the whole idea. Is that like, you have a customer and you track absolutely everything against them.
+
+(1:13:04 - 1:13:11)
+All of the research you've done. All of their interactions. How stale are they? When's their next upcoming maintenance? All that stuff.
+
+(1:13:11 - 1:13:18)
+And it doesn't leave when your customer service representative leaves. Exactly. WSTAN doesn't have to sign.
+
+(1:13:18 - 1:13:24)
+Mm-hmm. No, you replace Stan. Or you at least give Stan the tools to do his job.
+
+(1:13:24 - 1:13:28)
+Yeah, give Stan the tools to do his job. We're not making one's life hell. Food! Dude.
+
+(1:13:29 - 1:13:29)
+Dude.
