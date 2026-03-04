@@ -1,5 +1,10 @@
 import { Link, useLocation } from "react-router-dom";
-import { OrganizationSwitcher, UserButton, useOrganization } from "@clerk/clerk-react";
+import {
+  OrganizationSwitcher,
+  UserButton,
+  useOrganization,
+  useUser,
+} from "@clerk/clerk-react";
 import {
   LayoutDashboard,
   PlaneTakeoff,
@@ -10,23 +15,17 @@ import {
   Users,
   Settings,
   Wrench,
-  GraduationCap,
   CalendarDays,
   Hammer,
   FileBarChart,
-  Upload,
-  ShoppingCart,
-  Calendar,
-  ClipboardCheck,
-  Boxes,
-  RotateCcw,
-  Link2,
-  MapPin,
-  TrendingUp,
   ChevronRight,
 } from "lucide-react";
-import { useUserRole } from "@/hooks/useUserRole";
-import { canAccessNav, type NavSection, type MRORole } from "@/lib/roles";
+import { useCurrentOrg } from "@/hooks/useCurrentOrg";
+import {
+  ROLE_BADGE_STYLES,
+  ROLE_LABELS,
+  type MroRole,
+} from "@/lib/mro-constants";
 import {
   Sidebar,
   SidebarContent,
@@ -52,6 +51,19 @@ import { LocationSwitcher } from "@/components/LocationSwitcher";
 
 import type React from "react";
 
+type NavSection =
+  | "dashboard"
+  | "fleet"
+  | "work-orders"
+  | "scheduling"
+  | "parts"
+  | "billing"
+  | "compliance"
+  | "personnel"
+  | "my-work"
+  | "reports"
+  | "settings";
+
 type NavItem = {
   title: string;
   href: string;
@@ -66,13 +78,16 @@ type NavGroup = {
   children: NavItem[];
 };
 
-type NavEntry = (NavItem & { section: NavSection; icon: React.ComponentType<{ className?: string }> }) | NavGroup;
+type NavEntry =
+  | (NavItem & {
+      section: NavSection;
+      icon: React.ComponentType<{ className?: string }>;
+    })
+  | NavGroup;
 
 function isGroup(entry: NavEntry): entry is NavGroup {
   return "children" in entry;
 }
-
-// --- Main navigation data ---
 
 const mainNav: NavEntry[] = [
   {
@@ -188,9 +203,7 @@ const bottomNav: NavEntry[] = [
     href: "/personnel",
     icon: Users,
     section: "personnel",
-    children: [
-      { title: "Training", href: "/personnel/training" },
-    ],
+    children: [{ title: "Training", href: "/personnel/training" }],
   },
   {
     title: "Settings",
@@ -206,7 +219,58 @@ const bottomNav: NavEntry[] = [
   },
 ];
 
-// --- Components ---
+const ROLE_SECTION_ACCESS: Partial<Record<MroRole, NavSection[]>> = {
+  admin: undefined,
+  shop_manager: [
+    "dashboard",
+    "my-work",
+    "fleet",
+    "work-orders",
+    "scheduling",
+    "parts",
+    "billing",
+    "compliance",
+    "reports",
+    "personnel",
+  ],
+  qcm_inspector: ["compliance", "fleet", "work-orders", "personnel", "reports"],
+  billing_manager: ["billing", "work-orders", "reports"],
+  lead_technician: ["work-orders", "scheduling", "fleet", "personnel", "parts"],
+  technician: ["my-work", "work-orders", "parts", "fleet"],
+  parts_clerk: ["parts", "billing"],
+  read_only: ["dashboard", "fleet", "reports"],
+};
+
+const ROLE_CHILD_ACCESS: Partial<Record<MroRole, Record<string, string[]>>> = {
+  qcm_inspector: {
+    "/personnel": ["/personnel/training"],
+  },
+  technician: {
+    "/parts": ["/parts/requests"],
+  },
+  parts_clerk: {
+    "/billing/invoices": ["/billing/purchase-orders"],
+  },
+};
+
+function canAccessSection(role: MroRole | null | undefined, section: NavSection) {
+  if (!role) return true;
+  const allowed = ROLE_SECTION_ACCESS[role];
+  if (!allowed) return true;
+  return allowed.includes(section);
+}
+
+function filterChildrenForRole(
+  role: MroRole | null | undefined,
+  groupHref: string,
+  children: NavItem[],
+) {
+  if (!role) return children;
+  const rules = ROLE_CHILD_ACCESS[role];
+  if (!rules || !rules[groupHref]) return children;
+  const allowedHrefs = new Set(rules[groupHref]);
+  return children.filter((child) => allowedHrefs.has(child.href));
+}
 
 function NavStandaloneItem({
   item,
@@ -246,8 +310,7 @@ function NavGroupItem({
   group: NavGroup;
   pathname: string;
 }) {
-  const isGroupActive =
-    pathname === group.href || pathname.startsWith(group.href);
+  const isGroupActive = pathname === group.href || pathname.startsWith(group.href);
   const isChildActive = group.children.some(
     (child) => pathname === child.href || pathname.startsWith(child.href),
   );
@@ -268,10 +331,7 @@ function NavGroupItem({
                 "bg-primary/10 text-primary hover:bg-primary/15",
             )}
           >
-            <Link
-              to={group.href}
-              className="flex w-full min-w-0 items-center gap-2.5"
-            >
+            <Link to={group.href} className="flex w-full min-w-0 items-center gap-2.5">
               <group.icon className="w-4 h-4 flex-shrink-0" />
               <span className="flex-1 min-w-0 truncate">{group.title}</span>
               <ChevronRight className="ml-auto w-4 h-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
@@ -281,22 +341,15 @@ function NavGroupItem({
         <CollapsibleContent>
           <SidebarMenuSub>
             {group.children.map((child) => {
-              const isActive =
-                pathname === child.href || pathname.startsWith(child.href);
+              const isActive = pathname === child.href || pathname.startsWith(child.href);
               return (
                 <SidebarMenuSubItem key={child.href}>
                   <SidebarMenuSubButton
                     asChild
                     isActive={isActive}
-                    className={cn(
-                      isActive &&
-                        "bg-primary/10 text-primary hover:bg-primary/15",
-                    )}
+                    className={cn(isActive && "bg-primary/10 text-primary hover:bg-primary/15")}
                   >
-                    <Link
-                      to={child.href}
-                      className="flex w-full min-w-0 items-center"
-                    >
+                    <Link to={child.href} className="flex w-full min-w-0 items-center">
                       <span className="min-w-0 truncate">{child.title}</span>
                     </Link>
                   </SidebarMenuSubButton>
@@ -317,23 +370,26 @@ function NavSection({
 }: {
   entries: NavEntry[];
   pathname: string;
-  role: MRORole | null | undefined;
+  role: MroRole | null | undefined;
 }) {
+  const filteredEntries: NavEntry[] = entries
+    .filter((entry) => canAccessSection(role, entry.section))
+    .map((entry) => {
+      if (!isGroup(entry)) return entry;
+      const children = filterChildrenForRole(role, entry.href, entry.children);
+      return { ...entry, children };
+    })
+    .filter((entry) => !isGroup(entry) || entry.children.length > 0);
+
   return (
     <>
-      {entries
-        .filter((entry) => canAccessNav(role ?? undefined, entry.section))
-        .map((entry) =>
-          isGroup(entry) ? (
-            <NavGroupItem key={entry.href} group={entry} pathname={pathname} />
-          ) : (
-            <NavStandaloneItem
-              key={entry.href}
-              item={entry}
-              pathname={pathname}
-            />
-          ),
-        )}
+      {filteredEntries.map((entry) =>
+        isGroup(entry) ? (
+          <NavGroupItem key={entry.href} group={entry} pathname={pathname} />
+        ) : (
+          <NavStandaloneItem key={entry.href} item={entry} pathname={pathname} />
+        ),
+      )}
     </>
   );
 }
@@ -341,11 +397,15 @@ function NavSection({
 export function AppSidebar() {
   const { pathname } = useLocation();
   const { organization } = useOrganization();
-  const { role } = useUserRole();
+  const { user } = useUser();
+  const { tech } = useCurrentOrg();
+  const role = (tech?.role as MroRole | null | undefined) ?? null;
+
+  const roleLabel = role ? ROLE_LABELS[role] ?? role : null;
+  const roleBadgeClass = role ? ROLE_BADGE_STYLES[role] : "";
 
   return (
     <Sidebar collapsible="icon" className="border-r border-border/50">
-      {/* Header — Logo + Org Name */}
       <SidebarHeader className="px-3 py-4">
         <div className="flex items-center gap-2.5 px-1">
           <div className="w-7 h-7 rounded-md bg-primary flex items-center justify-center flex-shrink-0">
@@ -367,7 +427,6 @@ export function AppSidebar() {
 
       <SidebarSeparator />
 
-      {/* Main Navigation */}
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupContent>
@@ -379,21 +438,15 @@ export function AppSidebar() {
 
         <SidebarSeparator />
 
-        {/* Bottom Nav */}
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              <NavSection
-                entries={bottomNav}
-                pathname={pathname}
-                role={role}
-              />
+              <NavSection entries={bottomNav} pathname={pathname} role={role} />
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
 
-      {/* Footer — User Menu */}
       <SidebarFooter className="p-3">
         <SidebarMenu>
           <SidebarMenuItem>
@@ -411,17 +464,35 @@ export function AppSidebar() {
             />
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <UserButton
-              showName
-              afterSignOutUrl="/sign-in"
-              appearance={{
-                elements: {
-                  userButtonTrigger:
-                    "peer/menu-button ring-sidebar-ring hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 flex h-10 w-full items-center justify-start gap-2.5 rounded-md px-2 text-left group-data-[collapsible=icon]:size-8 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-2",
-                  avatarBox: "w-6 h-6",
-                },
-              }}
-            />
+            <div className="flex items-center gap-2.5 px-2 py-1.5 rounded-md hover:bg-sidebar-accent">
+              <UserButton
+                afterSignOutUrl="/sign-in"
+                appearance={{
+                  elements: {
+                    userButtonTrigger:
+                      "ring-sidebar-ring focus-visible:ring-2 rounded-md group-data-[collapsible=icon]:size-8",
+                    avatarBox: "w-6 h-6",
+                  },
+                }}
+              />
+              <div className="min-w-0 flex-1 group-data-[collapsible=icon]:hidden">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="text-xs font-medium truncate text-foreground">
+                    {user?.fullName ?? user?.username ?? "User"}
+                  </span>
+                  {roleLabel ? (
+                    <span
+                      className={cn(
+                        "inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-medium whitespace-nowrap",
+                        roleBadgeClass,
+                      )}
+                    >
+                      {roleLabel}
+                    </span>
+                  ) : null}
+                </div>
+              </div>
+            </div>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>

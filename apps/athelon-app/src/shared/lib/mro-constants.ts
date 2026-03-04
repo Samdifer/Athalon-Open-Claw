@@ -46,6 +46,65 @@ export type TaskStatus =
   | "complete"
   | "voided";
 
+// ─── MRO role definitions ────────────────────────────────────────────────────
+
+export const MRO_ROLES = [
+  "admin",
+  "shop_manager",
+  "qcm_inspector",
+  "billing_manager",
+  "lead_technician",
+  "technician",
+  "parts_clerk",
+  "read_only",
+] as const;
+
+export type MroRole = typeof MRO_ROLES[number];
+
+export const ROLE_LABELS: Record<MroRole, string> = {
+  admin: "Administrator",
+  shop_manager: "Shop Manager",
+  qcm_inspector: "QCM Inspector",
+  billing_manager: "Billing Manager",
+  lead_technician: "Lead Technician",
+  technician: "Technician",
+  parts_clerk: "Parts Clerk",
+  read_only: "Read Only",
+};
+
+export const ROLE_DESCRIPTIONS: Record<MroRole, string> = {
+  admin: "Full system access across all modules and settings.",
+  shop_manager: "Oversees shop operations, staffing, and work order flow.",
+  qcm_inspector: "Manages quality control inspections and compliance signoff.",
+  billing_manager: "Handles quotes, invoicing, and billing workflows.",
+  lead_technician: "Leads execution teams and coordinates technical work.",
+  technician: "Performs assigned maintenance tasks and record sign-offs.",
+  parts_clerk: "Manages parts receiving, inventory, and issue control.",
+  read_only: "View-only access for oversight without edit permissions.",
+};
+
+export const ROLE_BADGE_STYLES: Record<MroRole, string> = {
+  admin: "bg-purple-500/15 text-purple-400 border-purple-500/30",
+  shop_manager: "bg-blue-500/15 text-blue-400 border-blue-500/30",
+  qcm_inspector: "bg-amber-500/15 text-amber-400 border-amber-500/30",
+  billing_manager: "bg-green-500/15 text-green-400 border-green-500/30",
+  lead_technician: "bg-indigo-500/15 text-indigo-400 border-indigo-500/30",
+  technician: "bg-sky-500/15 text-sky-400 border-sky-500/30",
+  parts_clerk: "bg-orange-500/15 text-orange-400 border-orange-500/30",
+  read_only: "bg-slate-500/15 text-slate-400 border-slate-500/30",
+};
+
+export const ROLE_HIERARCHY: Record<MroRole, number> = {
+  admin: 0,
+  shop_manager: 1,
+  qcm_inspector: 2,
+  billing_manager: 3,
+  lead_technician: 4,
+  technician: 5,
+  parts_clerk: 6,
+  read_only: 7,
+};
+
 // ─── Work Order status → display label ───────────────────────────────────────
 
 export const WO_STATUS_LABEL: Record<WoStatus, string> = {

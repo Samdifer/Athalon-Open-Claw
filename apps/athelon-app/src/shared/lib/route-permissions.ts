@@ -1,0 +1,45 @@
+import { matchPath } from "react-router-dom";
+import { MRO_ROLES, type MroRole } from "@/lib/mro-constants";
+
+export const ALL_ROLES: ReadonlyArray<MroRole> = [...MRO_ROLES];
+
+export const ROUTE_PERMISSION_MAP: ReadonlyArray<{
+  pattern: string;
+  allowedRoles: ReadonlyArray<MroRole>;
+}> = [
+  { pattern: "/settings/*", allowedRoles: ["admin"] },
+  {
+    pattern: "/billing/*",
+    allowedRoles: ["admin", "shop_manager", "billing_manager"],
+  },
+  {
+    pattern: "/compliance/*",
+    allowedRoles: ["admin", "shop_manager", "qcm_inspector"],
+  },
+  {
+    pattern: "/scheduling/*",
+    allowedRoles: ["admin", "shop_manager", "lead_technician"],
+  },
+  { pattern: "/personnel/*", allowedRoles: ["admin", "shop_manager"] },
+  {
+    pattern: "/parts/*",
+    allowedRoles: ["admin", "shop_manager", "parts_clerk", "lead_technician"],
+  },
+  { pattern: "/fleet/*", allowedRoles: ALL_ROLES },
+  { pattern: "/work-orders/*", allowedRoles: ALL_ROLES },
+  { pattern: "/dashboard", allowedRoles: ALL_ROLES },
+  {
+    pattern: "/reports/*",
+    allowedRoles: ["admin", "shop_manager", "billing_manager", "qcm_inspector"],
+  },
+];
+
+export function getAllowedRolesForPath(pathname: string): ReadonlyArray<MroRole> | undefined {
+  for (const entry of ROUTE_PERMISSION_MAP) {
+    if (matchPath({ path: entry.pattern, end: false }, pathname)) {
+      return entry.allowedRoles;
+    }
+  }
+
+  return undefined;
+}

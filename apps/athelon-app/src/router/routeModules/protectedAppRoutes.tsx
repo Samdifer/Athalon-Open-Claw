@@ -4,6 +4,7 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { OnboardingGate } from "@/components/OnboardingGate";
 import { OrgContextProvider } from "@/components/OrgContextProvider";
 import { AppLayout } from "@/app/(app)/layout";
+import { RouteGuard } from "@/components/RouteGuard";
 
 const DashboardPage = lazy(() => import("@/app/(app)/dashboard/page"));
 const OnboardingPage = lazy(() => import("@/app/(app)/onboarding/page"));
@@ -157,7 +158,13 @@ export function ProtectedAppRoutes() {
         <Route path="/onboarding" element={<OnboardingPage />} />
 
         <Route element={<OnboardingGate />}>
-          <Route element={<AppLayout />}>
+          <Route
+            element={(
+              <RouteGuard>
+                <AppLayout />
+              </RouteGuard>
+            )}
+          >
             <Route path="/dashboard" element={<DashboardPage />} />
 
             <Route path="/work-orders" element={<WorkOrdersPage />} />
