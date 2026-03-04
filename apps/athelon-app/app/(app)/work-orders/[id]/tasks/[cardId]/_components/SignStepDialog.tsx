@@ -154,11 +154,20 @@ export function SignStepDialog({
     iaDaysRemaining !== null && iaDaysRemaining > 0 && iaDaysRemaining <= 30;
   const certNumber = myExpiryEntry?.cert.certificateNumber ?? null;
 
+  const trainingRecords = useQuery(
+    api.training.listTrainingRecords,
+    techId ? { technicianId: techId } : "skip",
+  );
+  const expiredTraining = (trainingRecords ?? []).filter(
+    (r) => r.status === "expired" || (!!r.expiresAt && r.expiresAt <= Date.now()),
+  );
+  const [trainingWarningOpen, setTrainingWarningOpen] = useState(false);
+
   const createAuthEvent = useMutation(api.workOrders.createSignatureAuthEvent);
   const completeStep = useMutation(api.taskCards.completeStep);
   const saveDocument = useMutation(api.documents.saveDocument);
 
-  async function handleSign() {
+  async function handleSign(bypassTrainingWarning = false) {
     setError(null);
 
     // BUG-030: Validate that all parts in the list have a part number.
@@ -172,6 +181,11 @@ export function SignStepDialog({
         );
         return;
       }
+    }
+
+    if (!bypassTrainingWarning && expiredTraining.length > 0) {
+      setTrainingWarningOpen(true);
+      return;
     }
 
     setIsSubmitting(true);
@@ -605,6 +619,30 @@ export function SignStepDialog({
           </Button>
         </DialogFooter>
       </DialogContent>
+
+      <Dialog open={trainingWarningOpen} onOpenChange={setTrainingWarningOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-base">Expired Training Warning</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2 py-2">
+            <p className="text-sm text-muted-foreground">
+              Your training file contains expired required training. You can continue, but this sign-off will be flagged for compliance review.
+            </p>
+            <ul className="list-disc pl-5 text-xs text-amber-400 space-y-1">
+              {expiredTraining.slice(0, 5).map((r) => (
+                <li key={r._id}>{r.courseName}</li>
+              ))}
+            </ul>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" size="sm" onClick={() => setTrainingWarningOpen(false)}>Cancel</Button>
+            <Button size="sm" onClick={() => { setTrainingWarningOpen(false); void handleSign(true); }}>
+              Continue Sign-Off
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Part Barcode Scanner */}
       <BarcodeScanner

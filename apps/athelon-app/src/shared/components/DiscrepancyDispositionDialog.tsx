@@ -18,7 +18,7 @@
  * constructed. Safe to omit — MEL form still works, just no direct link.
  */
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -43,7 +43,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, ShieldAlert } from "lucide-react";
+import { Loader2, ShieldAlert, Clock } from "lucide-react";
 import type { Id } from "@/convex/_generated/dataModel";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -73,6 +73,13 @@ const DISPOSITION_OPTIONS: { value: Disposition; label: string }[] = [
 ];
 
 const MEL_CATEGORIES = ["A", "B", "C", "D"] as const;
+
+type FindingHistoryEntry = {
+  status: string;
+  actor: string;
+  timestamp: number;
+  note?: string;
+};
 
 // ─── Component ──────────────────────────────────────────────────────────────
 
@@ -114,8 +121,24 @@ export function DiscrepancyDispositionDialog({
 
   const [submitting, setSubmitting] = useState(false);
 
+  const historyKey = useMemo(() => `athelon:finding-history:${discrepancyId}`, [discrepancyId]);
+  const [history, setHistory] = useState<FindingHistoryEntry[]>(() => {
+    try {
+      const raw = localStorage.getItem(`athelon:finding-history:${discrepancyId}`);
+      return raw ? (JSON.parse(raw) as FindingHistoryEntry[]) : [];
+    } catch {
+      return [];
+    }
+  });
+
   const dispositionMutation = useMutation(api.discrepancies.dispositionDiscrepancy);
   const deferMutation = useMutation(api.discrepancies.deferDiscrepancy);
+
+  const appendHistory = (entry: FindingHistoryEntry) => {
+    const next = [entry, ...history];
+    setHistory(next);
+    localStorage.setItem(historyKey, JSON.stringify(next));
+  };
 
   const resetForm = () => {
     setDisposition("");
@@ -181,8 +204,20 @@ export function DiscrepancyDispositionDialog({
         toast.success(
           `Discrepancy ${discrepancyNumber} deferred under MEL ${melItemNumber} (Cat ${melCategory}).${expiryStr}`,
         );
+        appendHistory({
+          status: "deferred_mel",
+          actor: "Technician",
+          timestamp: Date.now(),
+          note: `MEL ${melItemNumber} (Category ${melCategory})`,
+        });
       } else {
         // ── Non-MEL dispositions ────────────────────────────────────────────
+        if (!correctiveAction.trim()) {
+          toast.error("Corrective Action is required before closing a finding.");
+          setSubmitting(false);
+          return;
+        }
+
         await dispositionMutation({
           discrepancyId,
           organizationId: orgId as Id<"organizations">,
@@ -204,6 +239,12 @@ export function DiscrepancyDispositionDialog({
         toast.success(
           `Discrepancy ${discrepancyNumber} dispositioned as "${disposition.replace(/_/g, " ")}"`,
         );
+        appendHistory({
+          status: disposition,
+          actor: "Technician",
+          timestamp: Date.now(),
+          note: correctiveAction.trim(),
+        });
       }
 
       resetForm();
@@ -218,7 +259,7 @@ export function DiscrepancyDispositionDialog({
 
   const isValid =
     disposition !== "" &&
-    (disposition !== "corrected" || correctiveAction.trim().length > 0) &&
+    (disposition === "deferred_mel" || correctiveAction.trim().length > 0) &&
     (disposition !== "deferred_grounded" || deferredReason.trim().length > 0) &&
     (disposition !== "deferred_mel" ||
       (melItemNumber.trim() !== "" &&
@@ -262,8 +303,8 @@ export function DiscrepancyDispositionDialog({
             </Select>
           </div>
 
-          {/* ── Corrected ────────────────────────────────────────────────── */}
-          {disposition === "corrected" && (
+          {/* ── Corrective action requirement ───────────────────────────── */}
+          {disposition !== "" && disposition !== "deferred_mel" && (
             <div className="space-y-1.5">
               <Label>
                 Corrective Action <span className="text-red-600 dark:text-red-400">*</span>
@@ -271,7 +312,7 @@ export function DiscrepancyDispositionDialog({
               <Textarea
                 value={correctiveAction}
                 onChange={(e) => setCorrectiveAction(e.target.value)}
-                placeholder="Describe the corrective action taken…"
+                placeholder="Describe corrective action/disposition notes before closing…"
                 rows={3}
               />
             </div>
@@ -401,6 +442,27 @@ export function DiscrepancyDispositionDialog({
                 placeholder="Describe findings and testing performed…"
                 rows={3}
               />
+            </div>
+          )}
+
+          {history.length > 0 && (
+            <div className="space-y-2 border-t border-border/50 pt-3">
+              <p className="text-xs font-medium text-foreground">Status History</p>
+              <div className="space-y-1.5">
+                {history.map((entry, idx) => (
+                  <div key={`${entry.timestamp}-${idx}`} className="text-[11px] text-muted-foreground flex items-start gap-2">
+                    <Clock className="w-3 h-3 mt-0.5" />
+                    <div>
+                      <p>
+                        <span className="text-foreground/90 font-medium">{entry.actor}</span>{" "}
+                        set status to <span className="text-foreground/90">{entry.status.replace(/_/g, " ")}</span>
+                        {" "}on {new Date(entry.timestamp).toLocaleString()}
+                      </p>
+                      {entry.note && <p className="text-muted-foreground/80">{entry.note}</p>}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>

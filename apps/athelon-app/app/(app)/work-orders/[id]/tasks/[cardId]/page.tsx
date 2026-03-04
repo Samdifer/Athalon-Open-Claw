@@ -34,6 +34,9 @@ import {
   Building2,
   Loader2,
   X,
+  Info,
+  Paperclip,
+  Download,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -55,11 +58,14 @@ import {
 } from "@/components/ui/select";
 import { VoiceNoteRecorder, type VoiceNoteRecorderSavePayload } from "@/components/VoiceNoteRecorder";
 import { VoiceNotesPanel } from "@/components/VoiceNotesPanel";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { SignStepDialog } from "./_components/SignStepDialog";
 import { SignCardDialog } from "./_components/SignCardDialog";
 import { RaiseFindingDialog } from "./_components/RaiseFindingDialog";
 import { MarkNaDialog } from "./_components/MarkNaDialog";
 import { TaskStepRow } from "./_components/TaskStepRow";
+import { VendorServicePanel } from "./_components/VendorServicePanel";
+import { StepReferences } from "./_components/StepReferences";
 import {
   VendorServicePickerModal,
   type AttachmentDetails,
@@ -206,6 +212,43 @@ function TaskCardSkeleton() {
   );
 }
 
+function TaskAttachmentRow({
+  doc,
+}: {
+  doc: {
+    _id: Id<"documents">;
+    storageId: Id<"_storage">;
+    fileName: string;
+    uploadedByUserId: string;
+    uploadedAt: number;
+    category: "compliance" | "reference" | "photo" | "general";
+  };
+}) {
+  const url = useQuery(api.documents.getDocumentUrl, { storageId: doc.storageId });
+
+  return (
+    <div className="flex items-center justify-between gap-2 p-2.5 rounded-md border border-border/50">
+      <div className="min-w-0">
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <p className="text-xs font-medium text-foreground truncate">{doc.fileName}</p>
+          <Badge variant="outline" className="text-[10px] capitalize">{doc.category}</Badge>
+        </div>
+        <p className="text-[11px] text-muted-foreground">
+          Uploaded by {doc.uploadedByUserId} · {formatDateTime(doc.uploadedAt)}
+        </p>
+      </div>
+      {url && (
+        <Button asChild variant="outline" size="sm" className="h-7 text-xs gap-1">
+          <a href={url} target="_blank" rel="noreferrer" download>
+            <Download className="w-3 h-3" />
+            Download
+          </a>
+        </Button>
+      )}
+    </div>
+  );
+}
+
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function TaskCardPage() {
@@ -243,6 +286,11 @@ export default function TaskCardPage() {
     api.timeClock.getActiveTimerForTechnician,
     orgId && techId ? { orgId, technicianId: techId } : "skip",
   );
+
+  const taskDocuments = useQuery(api.documents.listDocuments, {
+    attachedToTable: "taskCards",
+    attachedToId: cardId,
+  });
 
   // ── Compliance — Convex queries/mutations (AI-004) ────────────────────────
   const complianceItemsRaw = useQuery(
@@ -635,6 +683,18 @@ export default function TaskCardPage() {
   );
   const vendorServicesBlockSignOff = blockingVendorServices.length > 0;
 
+  const taskAttachments = (taskDocuments ?? []).map((doc) => ({
+    ...doc,
+    category:
+      doc.documentType === "photo"
+        ? "photo"
+        : ["ad_document", "approved_data", "parts_8130"].includes(doc.documentType)
+          ? "compliance"
+          : ["work_authorization", "vendor_invoice"].includes(doc.documentType)
+            ? "reference"
+            : "general",
+  }));
+
   return (
     <div className="max-w-2xl mx-auto space-y-5">
       {/* Back */}
@@ -826,6 +886,40 @@ export default function TaskCardPage() {
             ))}
         </CardContent>
       </Card>
+
+      <VendorServicePanel
+        workOrderId={workOrderId}
+        cardId={cardId}
+        readOnly={cardIsVoided || cardIsComplete}
+      />
+
+      <Card className="border-border/60">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
+            <Paperclip className="w-3.5 h-3.5" />
+            Attachments
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-0">
+          {taskDocuments === undefined ? (
+            <p className="text-xs text-muted-foreground">Loading attachments…</p>
+          ) : taskAttachments.length === 0 ? (
+            <p className="text-xs text-muted-foreground italic">No attachments for this task card.</p>
+          ) : (
+            <div className="space-y-2">
+              {taskAttachments.map((doc) => (
+                <TaskAttachmentRow key={doc._id} doc={doc} />
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <StepReferences
+        workOrderId={workOrderId}
+        taskCardId={cardId}
+        steps={taskCard.steps.map((s) => ({ _id: String(s._id), stepNumber: s.stepNumber, description: s.description }))}
+      />
 
       {/* Shift Handoff Notes (Gap 5) */}
       <Card className="border-border/60">
@@ -1718,6 +1812,19 @@ export default function TaskCardPage() {
                 >
                   <Lock className="w-3.5 h-3.5" />
                   Sign Card
+                  <Badge variant="outline" className="text-[9px] h-4 px-1 border-border/60">
+                    Requires: A&P
+                  </Badge>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Info className="w-3 h-3 text-muted-foreground" />
+                      </TooltipTrigger>
+                      <TooltipContent side="top" className="max-w-[240px]">
+                        <p>Capability matrix: A&P can sign card-level completion; IA required for IA-specific steps before card sign-off.</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 </Button>
               )}
             </div>

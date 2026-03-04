@@ -18,10 +18,12 @@ import {
   SlashSquare,
   Clock,
   Square,
+  Info,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import type { Id } from "@/convex/_generated/dataModel";
 import { formatDateTime } from "@/lib/format";
 
@@ -357,6 +359,19 @@ export function TaskStepRow({
               >
                 <PenLine className="w-3 h-3" />
                 Sign
+                <Badge variant="outline" className="text-[9px] h-4 px-1 border-border/60">
+                  Requires: {step.signOffRequiresIa ? "IA" : "A&P"}
+                </Badge>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info className="w-3 h-3 text-muted-foreground" />
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="max-w-[240px]">
+                      <p>Capability matrix: A&P may sign standard steps; IA required for inspection-item or IA-flagged steps.</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </Button>
             )}
         </div>

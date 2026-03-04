@@ -8,7 +8,7 @@
 
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { useMutation } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { Lock, Loader2, AlertCircle } from "lucide-react";
@@ -97,10 +97,24 @@ export function SignCardDialog({
     }
   }, [open]);
 
+  const trainingRecords = useQuery(
+    api.training.listTrainingRecords,
+    techId ? { technicianId: techId } : "skip",
+  );
+  const expiredTraining = (trainingRecords ?? []).filter(
+    (r) => r.status === "expired" || (!!r.expiresAt && r.expiresAt <= Date.now()),
+  );
+  const [trainingWarningOpen, setTrainingWarningOpen] = useState(false);
+
   const createAuthEvent = useMutation(api.workOrders.createSignatureAuthEvent);
   const signTaskCard = useMutation(api.taskCards.signTaskCard);
 
-  async function handleSign() {
+  async function handleSign(bypassTrainingWarning = false) {
+    if (!bypassTrainingWarning && expiredTraining.length > 0) {
+      setTrainingWarningOpen(true);
+      return;
+    }
+
     setIsSubmitting(true);
     setError(null);
     try {
@@ -283,6 +297,30 @@ export function SignCardDialog({
           </Button>
         </DialogFooter>
       </DialogContent>
+
+      <Dialog open={trainingWarningOpen} onOpenChange={setTrainingWarningOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-base">Expired Training Warning</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2 py-2">
+            <p className="text-sm text-muted-foreground">
+              Training records show expired required training. Continue only if administrative override is approved.
+            </p>
+            <ul className="list-disc pl-5 text-xs text-amber-400 space-y-1">
+              {expiredTraining.slice(0, 5).map((r) => (
+                <li key={r._id}>{r.courseName}</li>
+              ))}
+            </ul>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" size="sm" onClick={() => setTrainingWarningOpen(false)}>Cancel</Button>
+            <Button size="sm" onClick={() => { setTrainingWarningOpen(false); void handleSign(true); }}>
+              Continue Sign-Off
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 }

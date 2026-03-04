@@ -5,7 +5,7 @@
  * Gap 4: "Raise Finding" button inside task card execution.
  * Creates a discrepancy linked to the current work order.
  *
- * Phase D: OP-1003 alignment — adds classification, regulatory flags,
+ * Phase D: OP-1003 alignment - adds classification, regulatory flags,
  * and labor estimate fields per Elevate MRO Discrepancy Action Record.
  */
 
@@ -74,14 +74,14 @@ const SYSTEM_TYPE_OPTIONS = [
 
 type SystemTypeValue = (typeof SYSTEM_TYPE_OPTIONS)[number]["value"];
 
-const DISCOVERED_WHEN_OPTIONS = [
-  { value: "customer_report", label: "Customer Report" },
-  { value: "planning", label: "During Planning" },
-  { value: "inspection", label: "During Inspection" },
-  { value: "post_quote", label: "After Customer Quote" },
+const FINDING_CATEGORY_OPTIONS = [
+  { value: "planned", label: "Planned" },
+  { value: "inspection_found", label: "Inspection Found" },
+  { value: "customer_reported", label: "Customer Reported" },
+  { value: "rts_found", label: "RTS Found" },
 ] as const;
 
-type DiscoveredWhenValue = (typeof DISCOVERED_WHEN_OPTIONS)[number]["value"];
+type FindingCategoryValue = (typeof FINDING_CATEGORY_OPTIONS)[number]["value"];
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -118,7 +118,7 @@ export function RaiseFindingDialog({
   const [componentSerialNumber, setComponentSerialNumber] = useState("");
   const [notes, setNotes] = useState("");
 
-  // BUG-LT-010: Aircraft hours field — prefilled from prop but editable.
+  // BUG-LT-010: Aircraft hours field - prefilled from prop but editable.
   // When totalTimeAirframeHours is not set on the aircraft, the parent passes
   // aircraftHours=0. Silently logging a finding at 0 hours creates a false
   // maintenance record. Show the value to the tech so they can verify and
@@ -130,7 +130,8 @@ export function RaiseFindingDialog({
   // OP-1003 classification fields
   const [discrepancyType, setDiscrepancyType] = useState<DiscrepancyTypeValue | "">("");
   const [systemType, setSystemType] = useState<SystemTypeValue | "">("");
-  const [discoveredWhen, setDiscoveredWhen] = useState<DiscoveredWhenValue | "">("");
+  const [findingCategory, setFindingCategory] = useState<FindingCategoryValue | "">("");
+  const [correctiveAction, setCorrectiveAction] = useState("");
 
   // Regulatory flags
   const [riiRequired, setRiiRequired] = useState(false);
@@ -150,7 +151,7 @@ export function RaiseFindingDialog({
 
   function resetForm() {
     setDescription("");
-    // BUG-LT-HUNT-006: Reset foundDuring to its default — previously omitted,
+    // BUG-LT-HUNT-006: Reset foundDuring to its default - previously omitted,
     // so if a tech changed "Found During" to "Annual Inspection" then cancelled,
     // reopening the dialog for a new finding would pre-select "Annual Inspection"
     // even for a routine maintenance squawk. The "Found During" value is stored
@@ -163,7 +164,8 @@ export function RaiseFindingDialog({
     setNotes("");
     setDiscrepancyType("");
     setSystemType("");
-    setDiscoveredWhen("");
+    setFindingCategory("");
+    setCorrectiveAction("");
     setRiiRequired(false);
     setStcRelated(false);
     setStcNumber("");
@@ -181,7 +183,7 @@ export function RaiseFindingDialog({
   //      description permanently attached to the work order.
   //   2. Photos of Component A show up pre-loaded for Component B → wrong
   //      photographic evidence on the maintenance record.
-  //   3. "Mandatory — affects airworthiness" pre-selected from a prior finding
+  //   3. "Mandatory - affects airworthiness" pre-selected from a prior finding
   //      when the new finding is informational only → inflated severity in the
   //      discrepancy log, triggering unnecessary RII holds.
   // Under 14 CFR 43.9 discrepancy records are permanent; they cannot be
@@ -225,6 +227,23 @@ export function RaiseFindingDialog({
     setIsSubmitting(true);
     setError(null);
     try {
+      const discoveredWhen =
+        findingCategory === "planned"
+          ? "planning"
+          : findingCategory === "inspection_found"
+            ? "inspection"
+            : findingCategory === "customer_reported"
+              ? "customer_report"
+              : undefined;
+      const squawkOrigin =
+        findingCategory === "inspection_found"
+          ? "inspection_finding"
+          : findingCategory === "customer_reported"
+            ? "customer_reported"
+            : findingCategory === "rts_found"
+              ? "rts_finding"
+              : "routine_check";
+
       await openDiscrepancy({
         workOrderId,
         organizationId: orgId,
@@ -235,11 +254,14 @@ export function RaiseFindingDialog({
         componentAffected: componentAffected.trim() || undefined,
         componentPartNumber: componentPartNumber.trim() || undefined,
         componentSerialNumber: componentSerialNumber.trim() || undefined,
-        notes: notes.trim() || undefined,
+        notes: [notes.trim(), correctiveAction.trim() ? `Corrective Action (initial plan): ${correctiveAction.trim()}` : ""].filter(Boolean).join("\n\n") || undefined,
+        squawkOrigin,
+        foundDuringRts: findingCategory === "rts_found" ? true : undefined,
+        isCustomerReported: findingCategory === "customer_reported" ? true : undefined,
         // OP-1003 fields
         discrepancyType: discrepancyType || undefined,
         systemType: systemType || undefined,
-        discoveredWhen: discoveredWhen || undefined,
+        discoveredWhen,
         riiRequired: riiRequired || undefined,
         stcRelated: stcRelated || undefined,
         stcNumber: stcRelated && stcNumber.trim() ? stcNumber.trim() : undefined,
@@ -253,7 +275,7 @@ export function RaiseFindingDialog({
       // the dialog closes. If the WO discrepancy list is not visible in the
       // current scroll position, they may wonder if the finding was lost and
       // submit a duplicate. Findings are permanent maintenance records.
-      toast.success("Finding raised — discrepancy created");
+      toast.success("Finding raised - discrepancy created");
       onSuccess?.();
       onClose();
     } catch (err) {
@@ -266,7 +288,7 @@ export function RaiseFindingDialog({
   return (
     // BUG-LT-001: Guard against mid-submit dismissal. Without this, pressing
     // Escape or clicking outside while handleSubmit is in-flight closes the
-    // dialog. The finding may or may not have been created in Convex — the
+    // dialog. The finding may or may not have been created in Convex - the
     // tech assumes it was saved (they clicked "Raise Finding"), but if the
     // mutation was still awaiting auth, the finding is silently dropped.
     // Same pattern as SignStepDialog (BUG-LT2-007) and SignCardDialog.
@@ -320,7 +342,7 @@ export function RaiseFindingDialog({
             </p>
           </div>
 
-          {/* BUG-LT-010: Aircraft Hours at Finding — visible & editable */}
+          {/* BUG-LT-010: Aircraft Hours at Finding - visible & editable */}
           <div>
             <Label htmlFor="finding-aircraft-hours" className="text-xs font-medium mb-1.5 block">
               Aircraft Hours at Finding{" "}
@@ -339,7 +361,7 @@ export function RaiseFindingDialog({
             {(aircraftHoursEntry === "" || parseFloat(aircraftHoursEntry) === 0 || isNaN(parseFloat(aircraftHoursEntry))) && (
               <p className="text-[11px] text-amber-500 mt-1 flex items-center gap-1">
                 <AlertTriangle className="w-3 h-3 flex-shrink-0" />
-                Aircraft total time not on file — enter current hours manually for accurate records.
+                Aircraft total time not on file - enter current hours manually for accurate records.
               </p>
             )}
             {aircraftHoursEntry !== "" && parseFloat(aircraftHoursEntry) > 0 && !isNaN(parseFloat(aircraftHoursEntry)) && (
@@ -399,20 +421,20 @@ export function RaiseFindingDialog({
               </Select>
             </div>
 
-            {/* Discovered When */}
+            {/* Finding Category */}
             <div>
-              <Label htmlFor="finding-discovered-when" className="text-xs font-medium mb-1.5 block">
-                Discovered When
+              <Label htmlFor="finding-category" className="text-xs font-medium mb-1.5 block">
+                Finding Category
               </Label>
               <Select
-                value={discoveredWhen}
-                onValueChange={(v) => setDiscoveredWhen(v as DiscoveredWhenValue)}
+                value={findingCategory}
+                onValueChange={(v) => setFindingCategory(v as FindingCategoryValue)}
               >
-                <SelectTrigger id="finding-discovered-when" className="h-9 text-sm bg-muted/30 border-border/60">
-                  <SelectValue placeholder="Select..." />
+                <SelectTrigger id="finding-category" className="h-9 text-sm bg-muted/30 border-border/60">
+                  <SelectValue placeholder="Select category..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {DISCOVERED_WHEN_OPTIONS.map((opt) => (
+                  {FINDING_CATEGORY_OPTIONS.map((opt) => (
                     <SelectItem key={opt.value} value={opt.value}>
                       {opt.label}
                     </SelectItem>
@@ -589,10 +611,27 @@ export function RaiseFindingDialog({
             />
           </div>
 
+          {/* Corrective Action */}
+          <div>
+            <Label htmlFor="finding-corrective-action" className="text-xs font-medium mb-1.5 block">
+              Corrective Action
+              <span className="text-muted-foreground font-normal ml-1">(required before closing)</span>
+            </Label>
+            <Textarea
+              id="finding-corrective-action"
+              value={correctiveAction}
+              onChange={(e) => setCorrectiveAction(e.target.value.slice(0, 500))}
+              placeholder="Planned corrective action to resolve this finding..."
+              rows={2}
+              maxLength={500}
+              className="text-sm bg-muted/30 border-border/60 resize-none"
+            />
+          </div>
+
           {/* Notes */}
           <div>
             <Label htmlFor="finding-notes" className="text-xs font-medium mb-1.5 block">
-              Notes{" "}
+              Notes {" "}
               <span className="text-muted-foreground font-normal">(optional)</span>
             </Label>
             <Textarea
