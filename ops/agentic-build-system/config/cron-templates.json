@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "jobs": [
+    {
+      "name": "athelon-orchestrator-tick",
+      "enabled": true,
+      "schedule": { "kind": "every", "everyMs": 300000 },
+      "sessionTarget": "isolated",
+      "payload": {
+        "kind": "agentTurn",
+        "message": "Run orchestrator tick: `pnpm --dir apps/athelon-app run agentic:orchestrator:tick` and announce concise dispatch/block summary.",
+        "timeoutSeconds": 120
+      },
+      "delivery": { "mode": "announce" }
+    },
+    {
+      "name": "athelon-reviewer-quick",
+      "enabled": true,
+      "schedule": { "kind": "every", "everyMs": 3600000 },
+      "sessionTarget": "isolated",
+      "payload": {
+        "kind": "agentTurn",
+        "message": "Run reviewer quick proposal: `pnpm --dir apps/athelon-app run agentic:reviewer:quick` and announce concise summary.",
+        "timeoutSeconds": 180
+      },
+      "delivery": { "mode": "announce" }
+    },
+    {
+      "name": "athelon-reviewer-deep",
+      "enabled": true,
+      "schedule": { "kind": "every", "everyMs": 21600000 },
+      "sessionTarget": "isolated",
+      "payload": {
+        "kind": "agentTurn",
+        "message": "Run reviewer deep proposal: `pnpm --dir apps/athelon-app run agentic:reviewer:deep` and announce concise summary.",
+        "timeoutSeconds": 900
+      },
+      "delivery": { "mode": "announce" }
+    }
+  ]
+}

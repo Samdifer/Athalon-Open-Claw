@@ -20,7 +20,17 @@
     "test:e2e:wave:scheduler-stories": "pnpm run seed:e2e:scheduler-stories && pnpm exec playwright test tests/e2e/wave8-scheduler-seeded-user-stories.spec.ts tests/e2e/wave8-quote-conversion-regression.spec.ts tests/e2e/wave8-quote-labor-kits-user-stories.spec.ts --project=chromium-authenticated",
     "test:e2e:wave:gate": "pnpm exec playwright test tests/e2e/wave-first-user-bootstrap.spec.ts tests/e2e/wave-empty-org-internal-routes.spec.ts tests/e2e/wave-seeded-internal-routes.spec.ts tests/e2e/wave-empty-state-cta.spec.ts tests/e2e/wave-noop-action-regression.spec.ts --project=chromium-authenticated",
     "qa:first-user-gate": "pnpm run typecheck && pnpm run test:e2e:wave:gate",
-    "spec:export:derived": "node scripts/export-feature-spec-derived.mjs"
+    "spec:export:derived": "node scripts/export-feature-spec-derived.mjs",
+    "agentic:reviewer:quick": "node scripts/agentic/reviewer.mjs propose --mode quick",
+    "agentic:reviewer:deep": "node scripts/agentic/reviewer.mjs propose --mode deep",
+    "agentic:reviewer:apply": "node scripts/agentic/reviewer.mjs apply",
+    "agentic:orchestrator:start": "node scripts/agentic/orchestrator.mjs start",
+    "agentic:orchestrator:stop": "node scripts/agentic/orchestrator.mjs stop",
+    "agentic:orchestrator:tick": "node scripts/agentic/orchestrator.mjs tick",
+    "agentic:queue:add": "node scripts/agentic/queue.mjs add",
+    "agentic:queue:list": "node scripts/agentic/queue.mjs list",
+    "agentic:queue:complete": "node scripts/agentic/queue.mjs complete",
+    "test:agentic": "node --test scripts/agentic/tests/*.test.mjs"
   },
   "dependencies": {
     "@clerk/clerk-react": "^5.61.1",
