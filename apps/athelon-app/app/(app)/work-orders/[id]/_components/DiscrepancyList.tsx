@@ -31,6 +31,9 @@ interface Discrepancy {
   status: string;
   description: string;
   disposition?: string;
+  squawkOrigin?: string;
+  isCustomerReported?: boolean;
+  foundDuringRts?: boolean;
   // OP-1003 fields
   discrepancyType?: "mandatory" | "recommended" | "customer_information" | "ops_check";
   systemType?: "airframe" | "engine" | "propeller" | "appliance";
@@ -110,6 +113,31 @@ const APPROVAL_STATUS_BADGE: Record<string, { label: string; className: string }
   denied: { label: "Denied", className: "bg-red-500/15 text-red-400 border-red-500/30" },
 };
 
+function toStableSquawkId(rawNumber?: string, fallbackOrdinal = 1): string {
+  if (rawNumber) {
+    const matched = rawNumber.match(/(\d+)$/);
+    if (matched) return `SQ-${matched[1].padStart(3, "0")}`;
+  }
+  return `SQ-${String(fallbackOrdinal).padStart(3, "0")}`;
+}
+
+function getSquawkOriginTag(discrepancy: Discrepancy): string {
+  if (discrepancy.foundDuringRts) return "rts-found";
+  if (discrepancy.isCustomerReported) return "customer-reported";
+  const map: Record<string, string> = {
+    inspection_finding: "inspection-found",
+    customer_reported: "customer-reported",
+    rts_finding: "rts-found",
+    routine_check: "planned",
+    ad_compliance_check: "planned",
+    planning: "planned",
+    inspection: "inspection-found",
+    customer_report: "customer-reported",
+    post_quote: "post-release-found",
+  };
+  return map[discrepancy.squawkOrigin ?? ""] ?? "planned";
+}
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function DiscrepancyList({
@@ -163,10 +191,12 @@ export function DiscrepancyList({
           </CardContent>
         </Card>
       ) : (
-        discrepancies.map((sq) => {
+        discrepancies.map((sq, idx) => {
           const isDenied = sq.customerApprovalStatus === "denied";
           const typeBadge = sq.discrepancyType ? DISCREPANCY_TYPE_BADGE[sq.discrepancyType] : null;
           const approvalBadge = sq.customerApprovalStatus ? APPROVAL_STATUS_BADGE[sq.customerApprovalStatus] : null;
+          const stableSquawkId = toStableSquawkId(sq.discrepancyNumber, idx + 1);
+          const originTag = getSquawkOriginTag(sq);
 
           // BUG-QCM-C10: Previously all non-denied squawks used border-l-red-500
           // regardless of status. A QCM reviewing a WO with 5 dispositioned
@@ -194,6 +224,7 @@ export function DiscrepancyList({
           return (
             <Card
               key={sq._id}
+              id={`squawk-${sq._id}`}
               className={`border-l-4 border-border/60 ${borderColor}`}
             >
               <CardContent className="p-4">
@@ -203,13 +234,16 @@ export function DiscrepancyList({
                     {/* Row 1: Number + badges */}
                     <div className="flex items-center gap-2 mb-1 flex-wrap">
                       <span className="font-mono text-xs text-muted-foreground">
-                        {sq.discrepancyNumber ?? sq._id}
+                        {stableSquawkId}
                       </span>
                       {/* Status badge */}
                       <Badge
                         className={`border text-[10px] ${DISCREPANCY_STATUS_STYLE[sq.status] ?? "bg-muted text-muted-foreground border-border/60"}`}
                       >
                         {DISCREPANCY_STATUS_LABEL[sq.status] ?? sq.status}
+                      </Badge>
+                      <Badge variant="outline" className="text-[10px] border-border/60 lowercase">
+                        {originTag}
                       </Badge>
                       {/* Disposition badge */}
                       {sq.disposition && (

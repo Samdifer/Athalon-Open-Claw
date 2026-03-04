@@ -480,6 +480,12 @@ function TaskRow({
  * DiscrepancyDispositionDialog so a tech can act on the finding without
  * navigating away from the work order detail page.
  */
+function toStableSquawkId(raw: string): string {
+  const matched = raw.match(/(\d+)$/);
+  if (matched) return `SQ-${matched[1].padStart(3, "0")}`;
+  return raw.startsWith("SQ-") ? raw : `SQ-${raw.slice(-3).padStart(3, "0")}`;
+}
+
 function FindingRow({
   item,
   onDisposition,
@@ -526,7 +532,7 @@ function FindingRow({
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-0.5 flex-wrap">
           <span className="font-mono text-xs text-muted-foreground font-medium">
-            {item.number}
+            {toStableSquawkId(item.number)}
           </span>
           <Badge
             variant="outline"
@@ -534,6 +540,11 @@ function FindingRow({
           >
             SQUAWK
           </Badge>
+          {item.squawkOrigin && (
+            <Badge variant="outline" className="text-[10px] border-border/50 lowercase">
+              {ORIGIN_LABELS[item.squawkOrigin] ?? item.squawkOrigin}
+            </Badge>
+          )}
           {item.aircraftSystem && (
             <Badge
               variant="outline"

@@ -52,6 +52,10 @@ import { Download } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import {
+  QuoteLineDecision as QuoteLineDecisionCell,
+  type QuoteLineCategory as QuoteLineDecisionCategory,
+} from "@/src/shared/components/QuoteLineDecision";
 
 const STATUS_STYLES: Record<string, string> = {
   DRAFT: "bg-muted text-muted-foreground border-muted-foreground/30",
@@ -68,18 +72,12 @@ const LINE_TYPE_LABELS: Record<string, string> = {
 };
 
 type QuoteLineDecision = "approved" | "declined" | "deferred";
-type QuoteLineCategory = "airworthiness" | "recommended" | "customer_info" | "uncategorized";
-
-const DECISION_BADGE_STYLES: Record<QuoteLineDecision, string> = {
-  approved: "bg-green-500/15 text-green-600 dark:text-green-400 border-green-500/30",
-  declined: "bg-red-500/15 text-red-600 dark:text-red-400 border-red-500/30",
-  deferred: "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30",
-};
+type QuoteLineCategory = "airworthiness" | "recommended" | "customer_info_only" | "uncategorized";
 
 const CATEGORY_BADGE_STYLES: Record<QuoteLineCategory, string> = {
   airworthiness: "bg-red-500/15 text-red-600 dark:text-red-400 border-red-500/30",
   recommended: "bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/30",
-  customer_info: "bg-slate-500/15 text-slate-600 dark:text-slate-400 border-slate-500/30",
+  customer_info_only: "bg-slate-500/15 text-slate-600 dark:text-slate-400 border-slate-500/30",
   uncategorized: "bg-muted text-muted-foreground border-border/50",
 };
 
@@ -88,7 +86,7 @@ function mapDiscrepancyTypeToCategory(
 ): { key: QuoteLineCategory; label: string } {
   if (discrepancyType === "mandatory") return { key: "airworthiness", label: "Airworthiness" };
   if (discrepancyType === "recommended") return { key: "recommended", label: "Recommended" };
-  if (discrepancyType === "customer_information") return { key: "customer_info", label: "Customer Info" };
+  if (discrepancyType === "customer_information") return { key: "customer_info_only", label: "Customer Info" };
   if (discrepancyType === "ops_check") return { key: "recommended", label: "Operational Check" };
   return { key: "uncategorized", label: "Uncategorized" };
 }
@@ -102,6 +100,30 @@ function lineDecisionLabel(decision: QuoteLineDecision): string {
     case "deferred":
       return "Deferred";
   }
+}
+
+function toStableSquawkId(rawNumber?: string, fallbackOrdinal = 1): string {
+  if (rawNumber) {
+    const matched = rawNumber.match(/(\d+)$/);
+    if (matched) {
+      return `SQ-${matched[1].padStart(3, "0")}`;
+    }
+  }
+  return `SQ-${String(fallbackOrdinal).padStart(3, "0")}`;
+}
+
+function squawkOriginLabel(input?: string): string | null {
+  const map: Record<string, string> = {
+    planning: "planned",
+    inspection: "inspection-found",
+    inspection_finding: "inspection-found",
+    customer_report: "customer-reported",
+    customer_reported: "customer-reported",
+    rts_finding: "rts-found",
+    post_quote: "post-release-found",
+  };
+  if (!input) return null;
+  return map[input] ?? null;
 }
 
 type LineItemType = "labor" | "part" | "external_service";
@@ -1148,7 +1170,7 @@ export function QuoteDetailEditor({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {quote.lineItems.map((item) => (
+                {quote.lineItems.map((item, idx) => (
                   <TableRow key={item._id} className="border-border/40">
                     <TableCell className="text-sm">
                       <div>{item.description}</div>
@@ -1167,6 +1189,10 @@ export function QuoteDetailEditor({
                             | "ops_check"
                             | undefined,
                         );
+                        const stableSquawkId = toStableSquawkId(item.discrepancyNumber, idx + 1);
+                        const originLabel = squawkOriginLabel((item as { discoveredWhen?: string; squawkOrigin?: string }).discoveredWhen)
+                          ?? squawkOriginLabel((item as { discoveredWhen?: string; squawkOrigin?: string }).squawkOrigin);
+                        const discrepancyId = (item as { discrepancyId?: string }).discrepancyId;
                         return (
                           <div className="flex flex-col gap-1">
                             <Badge
@@ -1176,9 +1202,22 @@ export function QuoteDetailEditor({
                               {category.label}
                             </Badge>
                             {item.discrepancyNumber ? (
-                              <span className="text-[10px] text-muted-foreground font-mono">
-                                {item.discrepancyNumber}
-                              </span>
+                              <div className="flex items-center gap-1.5 flex-wrap text-[10px] text-muted-foreground font-mono">
+                                <span>{stableSquawkId}</span>
+                                {quote.workOrderId && discrepancyId ? (
+                                  <Link
+                                    className="underline underline-offset-2"
+                                    to={`/work-orders/${quote.workOrderId}#squawk-${discrepancyId}`}
+                                  >
+                                    linked squawk
+                                  </Link>
+                                ) : null}
+                              </div>
+                            ) : null}
+                            {originLabel ? (
+                              <Badge variant="outline" className="text-[10px] border-border/50 lowercase">
+                                {originLabel}
+                              </Badge>
                             ) : null}
                           </div>
                         );
@@ -1193,88 +1232,54 @@ export function QuoteDetailEditor({
                     <TableCell className="text-sm text-right tabular-nums">${item.unitPrice.toFixed(2)}</TableCell>
                     <TableCell className="text-sm font-medium text-right tabular-nums">${item.total.toFixed(2)}</TableCell>
                     <TableCell>
-                      <div className="space-y-1.5">
-                        {item.customerDecision ? (
-                          <Badge
-                            variant="outline"
-                            className={`text-[10px] border ${DECISION_BADGE_STYLES[item.customerDecision as QuoteLineDecision]}`}
-                          >
-                            {lineDecisionLabel(item.customerDecision as QuoteLineDecision)}
-                          </Badge>
-                        ) : (
-                          <Badge variant="outline" className="text-[10px] border-border/50 text-muted-foreground">
-                            Pending
-                          </Badge>
-                        )}
-                        {item.customerDecisionAt ? (
-                          <div className="text-[10px] text-muted-foreground">
-                            {formatDate(item.customerDecisionAt)}
-                          </div>
-                        ) : null}
-                        {item.customerDecisionByName ? (
-                          <div className="text-[10px] text-muted-foreground">
-                            by {item.customerDecisionByName}
-                          </div>
-                        ) : null}
-                        {canDecideLineItems && (
-                          <div className="flex flex-wrap gap-1">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="h-6 px-2 text-[10px]"
-                              onClick={() =>
-                                openLineDecisionDialog(
-                                  {
-                                    _id: item._id as Id<"quoteLineItems">,
-                                    description: item.description,
-                                    customerDecision: item.customerDecision as QuoteLineDecision | undefined,
-                                    customerDecisionNotes: item.customerDecisionNotes,
-                                  },
-                                  "approved",
-                                )
-                              }
-                            >
-                              Accept
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="h-6 px-2 text-[10px] border-amber-500/40 text-amber-600 dark:text-amber-400"
-                              onClick={() =>
-                                openLineDecisionDialog(
-                                  {
-                                    _id: item._id as Id<"quoteLineItems">,
-                                    description: item.description,
-                                    customerDecision: item.customerDecision as QuoteLineDecision | undefined,
-                                    customerDecisionNotes: item.customerDecisionNotes,
-                                  },
-                                  "deferred",
-                                )
-                              }
-                            >
-                              Defer
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="h-6 px-2 text-[10px] border-red-500/40 text-red-600 dark:text-red-400"
-                              onClick={() =>
-                                openLineDecisionDialog(
-                                  {
-                                    _id: item._id as Id<"quoteLineItems">,
-                                    description: item.description,
-                                    customerDecision: item.customerDecision as QuoteLineDecision | undefined,
-                                    customerDecisionNotes: item.customerDecisionNotes,
-                                  },
-                                  "declined",
-                                )
-                              }
-                            >
-                              Decline
-                            </Button>
-                          </div>
-                        )}
-                      </div>
+                      <QuoteLineDecisionCell
+                        category={
+                          (mapDiscrepancyTypeToCategory(
+                            item.discrepancyType as
+                              | "mandatory"
+                              | "recommended"
+                              | "customer_information"
+                              | "ops_check"
+                              | undefined,
+                          ).key === "uncategorized"
+                            ? "recommended"
+                            : mapDiscrepancyTypeToCategory(
+                                item.discrepancyType as
+                                  | "mandatory"
+                                  | "recommended"
+                                  | "customer_information"
+                                  | "ops_check"
+                                  | undefined,
+                              ).key) as QuoteLineDecisionCategory
+                        }
+                        decision={item.customerDecision as "approved" | "declined" | "deferred" | undefined}
+                        decidedAt={item.customerDecisionAt}
+                        decidedByName={item.customerDecisionByName}
+                        notes={item.customerDecisionNotes}
+                        canDecide={canDecideLineItems}
+                        onAccept={() =>
+                          openLineDecisionDialog(
+                            {
+                              _id: item._id as Id<"quoteLineItems">,
+                              description: item.description,
+                              customerDecision: item.customerDecision as QuoteLineDecision | undefined,
+                              customerDecisionNotes: item.customerDecisionNotes,
+                            },
+                            "approved",
+                          )
+                        }
+                        onDecline={() =>
+                          openLineDecisionDialog(
+                            {
+                              _id: item._id as Id<"quoteLineItems">,
+                              description: item.description,
+                              customerDecision: item.customerDecision as QuoteLineDecision | undefined,
+                              customerDecisionNotes: item.customerDecisionNotes,
+                            },
+                            "declined",
+                          )
+                        }
+                      />
                     </TableCell>
                     {isDraft && (
                       <TableCell className="text-right">
@@ -1391,7 +1396,6 @@ export function QuoteDetailEditor({
                 className="w-full h-9 rounded-md border border-border/60 bg-background px-3 text-sm"
               >
                 <option value="approved">Accepted</option>
-                <option value="deferred">Deferred</option>
                 <option value="declined">Declined</option>
               </select>
             </div>
