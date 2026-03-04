@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { useQuery, useMutation } from "convex/react";
@@ -58,12 +58,18 @@ import {
 } from "@/components/ui/select";
 import { VoiceNoteRecorder, type VoiceNoteRecorderSavePayload } from "@/components/VoiceNoteRecorder";
 import { VoiceNotesPanel } from "@/components/VoiceNotesPanel";
+import { TimeVarianceBar } from "@/src/shared/components/TimeVarianceBar";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { SignStepDialog } from "./_components/SignStepDialog";
 import { SignCardDialog } from "./_components/SignCardDialog";
 import { RaiseFindingDialog } from "./_components/RaiseFindingDialog";
 import { MarkNaDialog } from "./_components/MarkNaDialog";
 import { TaskStepRow } from "./_components/TaskStepRow";
+import {
+  STEP_AUTHORIZATION_META,
+  resolveStepAuthorizationType,
+  type StepAuthorizationType,
+} from "./_components/stepAuthorization";
 import { VendorServicePanel } from "./_components/VendorServicePanel";
 import { StepReferences } from "./_components/StepReferences";
 import { StepPartsTracker } from "./_components/StepPartsTracker";
@@ -264,6 +270,7 @@ export default function TaskCardPage() {
     stepNumber: number;
     description: string;
     requiresIa: boolean;
+    requiredAuthorizationType: StepAuthorizationType;
   } | null>(null);
   const [naTarget, setNaTarget] = useState<{
     stepId: Id<"taskCardSteps">;
@@ -353,6 +360,13 @@ export default function TaskCardPage() {
       : "skip",
   );
 
+  const workOrderTimeEntries = useQuery(
+    api.timeClock.getTimeEntriesForWorkOrder,
+    orgId && workOrderId
+      ? { orgId, workOrderId: workOrderId as Id<"workOrders"> }
+      : "skip",
+  );
+
   // Fetch work order (with aircraft join) so we can pass real aircraft hours to
   // RaiseFindingDialog. Every finding must record aircraft hours at time of
   // discovery per 14 CFR 43 — hardcoding 0 is a data integrity violation.
@@ -406,6 +420,18 @@ export default function TaskCardPage() {
 
   const currentTechName = tech?.legalName ?? selfData?.legalName ?? "Unknown Technician";
   const taskVoiceNotes = voiceNotes.filter((note) => note.taskCardId === cardId);
+
+  const estimatedHours = taskCard.estimatedHours ?? 0;
+  const actualHours = useMemo(() => {
+    const now = Date.now();
+    return (workOrderTimeEntries ?? [])
+      .filter((entry) => String(entry.taskCardId ?? "") === cardId)
+      .reduce((sum, entry) => {
+        if (typeof entry.durationMinutes === "number") return sum + entry.durationMinutes / 60;
+        if (entry.clockOutAt) return sum + Math.max(0, entry.clockOutAt - entry.clockInAt) / 3600000;
+        return sum + Math.max(0, now - entry.clockInAt) / 3600000;
+      }, 0);
+  }, [workOrderTimeEntries, cardId]);
 
   const handleSaveVoiceNote = async (payload: VoiceNoteRecorderSavePayload) => {
     if (!orgId || !techId) {
@@ -654,6 +680,7 @@ export default function TaskCardPage() {
     stepNumber: number;
     description: string;
     requiresIa: boolean;
+    requiredAuthorizationType: StepAuthorizationType;
   }) {
     if (activeTimerEntry && (activeTimerEntry.entryType ?? "work_order") === "step") {
       toast.error("Stop the active step timer before signing a step.");
@@ -830,6 +857,12 @@ export default function TaskCardPage() {
         </div>
       </div>
 
+      <Card className="border-border/60">
+        <CardContent className="p-3">
+          <TimeVarianceBar estimatedHours={estimatedHours} actualHours={actualHours} compact />
+        </CardContent>
+      </Card>
+
       {/* Voided banner */}
       {cardIsVoided && (
         <Card className="border-slate-500/30 bg-slate-500/5">
@@ -854,42 +887,56 @@ export default function TaskCardPage() {
           {taskCard.steps
             .slice()
             .sort((a, b) => a.stepNumber - b.stepNumber)
-            .map((step, idx) => (
-              <TaskStepRow
-                key={step._id}
-                step={step}
-                idx={idx}
-                cardIsVoided={cardIsVoided}
-                cardIsComplete={cardIsComplete}
-                orgId={orgId}
-                techId={techId}
-                onSignClick={handleSignStepIntent}
-                onStartClick={handleStartStep}
-                // BUG-LT-HUNT-081: isStarting now only flags THIS specific
-                // step's mutation (controls spinner). anyMutationPending covers
-                // ALL-step locking without erroneously spinning other rows.
-                isStarting={startingStepId === step._id}
-                anyMutationPending={isAnyStepStarting}
-                onNaClick={setNaTarget}
-                onStepTimerClick={handleStepTimerClick}
-                isStepTimerActive={
-                  !!activeTimerEntry &&
-                  (activeTimerEntry.entryType ?? "work_order") === "step" &&
-                  activeTimerEntry.taskStepId === step._id
-                }
-                isStepTimerBusy={
-                  timerActionLoading === "step-toggle" ||
-                  timerActionLoading === "stop"
-                }
-                stepTimerClockInAt={
-                  activeTimerEntry &&
-                  (activeTimerEntry.entryType ?? "work_order") === "step" &&
-                  activeTimerEntry.taskStepId === step._id
-                    ? (activeTimerEntry as { clockInAt?: number }).clockInAt
-                    : undefined
-                }
-              />
-            ))}
+            .map((step, idx) => {
+              const requiredAuthorizationType = resolveStepAuthorizationType({
+                description: step.description,
+                signOffRequiresIa: step.signOffRequiresIa,
+                specialToolReference: step.specialToolReference,
+                aircraftSystem: taskCard.aircraftSystem,
+              });
+
+              return (
+                <TaskStepRow
+                  key={step._id}
+                  step={{
+                    ...step,
+                    requiredAuthorizationType,
+                    requiredAuthorizationLabel:
+                      STEP_AUTHORIZATION_META[requiredAuthorizationType].badgeLabel,
+                  }}
+                  idx={idx}
+                  cardIsVoided={cardIsVoided}
+                  cardIsComplete={cardIsComplete}
+                  orgId={orgId}
+                  techId={techId}
+                  onSignClick={handleSignStepIntent}
+                  onStartClick={handleStartStep}
+                  // BUG-LT-HUNT-081: isStarting now only flags THIS specific
+                  // step's mutation (controls spinner). anyMutationPending covers
+                  // ALL-step locking without erroneously spinning other rows.
+                  isStarting={startingStepId === step._id}
+                  anyMutationPending={isAnyStepStarting}
+                  onNaClick={setNaTarget}
+                  onStepTimerClick={handleStepTimerClick}
+                  isStepTimerActive={
+                    !!activeTimerEntry &&
+                    (activeTimerEntry.entryType ?? "work_order") === "step" &&
+                    activeTimerEntry.taskStepId === step._id
+                  }
+                  isStepTimerBusy={
+                    timerActionLoading === "step-toggle" ||
+                    timerActionLoading === "stop"
+                  }
+                  stepTimerClockInAt={
+                    activeTimerEntry &&
+                    (activeTimerEntry.entryType ?? "work_order") === "step" &&
+                    activeTimerEntry.taskStepId === step._id
+                      ? (activeTimerEntry as { clockInAt?: number }).clockInAt
+                      : undefined
+                  }
+                />
+              );
+            })}
         </CardContent>
       </Card>
 
@@ -1875,8 +1922,10 @@ export default function TaskCardPage() {
           stepNumber={signStepTarget.stepNumber}
           stepDescription={signStepTarget.description}
           requiresIa={signStepTarget.requiresIa}
+          requiredAuthorizationType={signStepTarget.requiredAuthorizationType}
           orgId={orgId}
           techId={techId}
+          signerRole={tech?.role}
           taskCardId={taskCard._id as Id<"taskCards">}
           stepId={signStepTarget.stepId}
           onSuccess={() => setSignStepTarget(null)}

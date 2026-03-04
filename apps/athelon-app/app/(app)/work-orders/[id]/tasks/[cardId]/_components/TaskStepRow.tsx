@@ -26,6 +26,10 @@ import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import type { Id } from "@/convex/_generated/dataModel";
 import { formatDateTime } from "@/lib/format";
+import {
+  STEP_AUTHORIZATION_META,
+  type StepAuthorizationType,
+} from "./stepAuthorization";
 
 // ─── Utility: format elapsed milliseconds as H:MM:SS ─────────────────────────
 
@@ -47,6 +51,8 @@ export interface TaskStepRowProps {
     description: string;
     status: string;
     signOffRequiresIa: boolean;
+    requiredAuthorizationType: StepAuthorizationType;
+    requiredAuthorizationLabel: string;
     requiresSpecialTool: boolean;
     specialToolReference?: string | null;
     signerName?: string | null;
@@ -67,6 +73,7 @@ export interface TaskStepRowProps {
     stepNumber: number;
     description: string;
     requiresIa: boolean;
+    requiredAuthorizationType: StepAuthorizationType;
   }) => void;
   onStartClick?: (stepId: Id<"taskCardSteps">) => void;
   /** True only when THIS SPECIFIC STEP's start mutation is in-flight.
@@ -164,9 +171,14 @@ export function TaskStepRow({
                 In Progress
               </Badge>
             )}
+            <Badge
+              className={`border text-[9px] ${STEP_AUTHORIZATION_META[step.requiredAuthorizationType].badgeClassName}`}
+            >
+              Auth: {step.requiredAuthorizationLabel}
+            </Badge>
             {step.signOffRequiresIa && (
               <Badge className="bg-amber-500/15 text-amber-400 border border-amber-500/30 text-[9px]">
-                IA Required
+                Inspection
               </Badge>
             )}
             {step.requiresSpecialTool && step.specialToolReference && (
@@ -354,13 +366,14 @@ export function TaskStepRow({
                     stepNumber: step.stepNumber,
                     description: step.description,
                     requiresIa: step.signOffRequiresIa,
+                    requiredAuthorizationType: step.requiredAuthorizationType,
                   })
                 }
               >
                 <PenLine className="w-3 h-3" />
                 Sign
                 <Badge variant="outline" className="text-[9px] h-4 px-1 border-border/60">
-                  Requires: {step.signOffRequiresIa ? "IA" : "A&P"}
+                  Requires: {step.requiredAuthorizationLabel}
                 </Badge>
                 <TooltipProvider>
                   <Tooltip>
@@ -368,7 +381,7 @@ export function TaskStepRow({
                       <Info className="w-3 h-3 text-muted-foreground" />
                     </TooltipTrigger>
                     <TooltipContent side="top" className="max-w-[240px]">
-                      <p>Capability matrix: A&P may sign standard steps; IA required for inspection-item or IA-flagged steps.</p>
+                      <p>Sign-off requires {STEP_AUTHORIZATION_META[step.requiredAuthorizationType].requirementLabel}.</p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>

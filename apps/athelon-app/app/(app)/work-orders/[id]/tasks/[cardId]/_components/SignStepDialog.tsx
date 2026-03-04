@@ -6,7 +6,7 @@
  * The sign-off dialog for a single task card step.
  */
 
-import { useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -40,6 +40,11 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { FileUpload, type UploadedFile } from "@/components/FileUpload";
 import { PhotoGallery } from "@/components/PhotoGallery";
+import {
+  STEP_AUTHORIZATION_META,
+  buildAuthorizationMissingMessage,
+  type StepAuthorizationType,
+} from "./stepAuthorization";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -52,6 +57,31 @@ const RATING_OPTIONS: { value: RatingValue; label: string }[] = [
   { value: "none", label: "No rating required" },
 ];
 
+function defaultRatingForAuthorization(
+  requiredAuthorizationType: StepAuthorizationType,
+): RatingValue {
+  switch (requiredAuthorizationType) {
+    case "powerplant":
+      return "powerplant";
+    case "inspection":
+      return "ia";
+    default:
+      return "airframe";
+  }
+}
+
+function containsKeyword(value: string, keyword: "ndt" | "borescope"): boolean {
+  const normalized = value.toLowerCase();
+  if (keyword === "ndt") {
+    return (
+      normalized.includes("ndt") ||
+      normalized.includes("non-destructive") ||
+      normalized.includes("non destructive")
+    );
+  }
+  return normalized.includes("borescope") || normalized.includes("boroscope");
+}
+
 // ─── Props ────────────────────────────────────────────────────────────────────
 
 export interface SignStepDialogProps {
@@ -60,8 +90,10 @@ export interface SignStepDialogProps {
   stepNumber: number;
   stepDescription: string;
   requiresIa: boolean;
+  requiredAuthorizationType: StepAuthorizationType;
   orgId: Id<"organizations">;
   techId: Id<"technicians">;
+  signerRole?: string | null;
   taskCardId: Id<"taskCards">;
   stepId: Id<"taskCardSteps">;
   onSuccess: () => void;
@@ -75,15 +107,17 @@ export function SignStepDialog({
   stepNumber,
   stepDescription,
   requiresIa,
+  requiredAuthorizationType,
   orgId,
   techId,
+  signerRole,
   taskCardId,
   stepId,
   onSuccess,
 }: SignStepDialogProps) {
   const [pin, setPin] = useState("");
   const [rating, setRating] = useState<RatingValue>(
-    requiresIa ? "ia" : "airframe",
+    defaultRatingForAuthorization(requiredAuthorizationType),
   );
   const [notes, setNotes] = useState("");
   const [approvedDataRef, setApprovedDataRef] = useState("");
@@ -106,7 +140,7 @@ export function SignStepDialog({
   // broken before they've even typed anything.
   useEffect(() => {
     if (open) {
-      setRating(requiresIa ? "ia" : "airframe");
+      setRating(defaultRatingForAuthorization(requiredAuthorizationType));
       setPin("");
       setError(null);
       // BUG-LT-HUNT-003: Also clear photos, parts, notes, and approvedDataRef
@@ -121,38 +155,44 @@ export function SignStepDialog({
       setPartsInstalled([]);
       setNotes("");
       setApprovedDataRef("");
+      setOverrideReason("");
     }
-  }, [open, requiresIa]);
+  }, [open, requiredAuthorizationType]);
   const [photoStorageIds, setPhotoStorageIds] = useState<string[]>([]);
   const [partScannerOpen, setPartScannerOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [overrideReason, setOverrideReason] = useState("");
 
   // FEAT-018: Fetch IA cert status for the signing technician
   const expiringCerts = useQuery(
     api.technicians.listWithExpiringCerts,
-    orgId ? { organizationId: orgId, withinDays: 365 } : "skip",
+    orgId ? { organizationId: orgId, withinDays: 36500 } : "skip",
   );
-  // BUG-LT-HUNT-053: While expiringCerts is still loading (undefined), iaIsExpired
-  // is false — meaning an expired-IA tech can click Sign on an IA-required step
-  // before the cert query resolves. On a fast connection the user hits Sign and
-  // the backend rejects it (or worse: the timing window allows an invalid sign-off
-  // through before the check resolves). Fix: treat cert status as "loading" when
-  // expiringCerts is undefined and requiresIa is true — disable the Sign button
-  // until we know the cert is current.
-  const certQueryLoading = requiresIa && expiringCerts === undefined;
+  const technicianTraining = useQuery(
+    api.technicianTraining.listByTechnician,
+    techId ? { technicianId: techId } : "skip",
+  );
+  // BUG-LT-HUNT-053: While expiringCerts is still loading (undefined), IA status
+  // is unknown. Disable inspection sign-off until cert status resolves.
+  const certQueryLoading =
+    requiredAuthorizationType === "inspection" && expiringCerts === undefined;
   const myExpiryEntry = expiringCerts?.find(
     (e) => e.technician?._id === techId,
   );
+  const hasIaAuthorization = myExpiryEntry?.cert.hasIaAuthorization ?? false;
   const iaCertExpiry = myExpiryEntry?.cert.iaExpiryDate ?? null;
   const iaDaysRemaining =
     iaCertExpiry !== null
       ? Math.ceil((iaCertExpiry - Date.now()) / (1000 * 60 * 60 * 24))
       : null;
   const iaIsExpired = iaDaysRemaining !== null && iaDaysRemaining <= 0;
+  const iaIsCurrent = hasIaAuthorization && !iaIsExpired;
   const iaExpiringSoon =
     iaDaysRemaining !== null && iaDaysRemaining > 0 && iaDaysRemaining <= 30;
   const certNumber = myExpiryEntry?.cert.certificateNumber ?? null;
+  const certificateRatings = myExpiryEntry?.cert.ratings ?? [];
+  const isAdminSigner = signerRole === "admin";
 
   const trainingRecords = useQuery(
     api.training.listTrainingRecords,
@@ -161,6 +201,49 @@ export function SignStepDialog({
   const expiredTraining = (trainingRecords ?? []).filter(
     (r) => r.status === "expired" || (!!r.expiresAt && r.expiresAt <= Date.now()),
   );
+
+  const currentCapabilities = useMemo(() => {
+    const now = Date.now();
+    const capabilities = new Set<StepAuthorizationType>();
+
+    for (const certRating of certificateRatings) {
+      if (certRating === "airframe" || certRating === "powerplant") {
+        capabilities.add(certRating);
+      }
+    }
+    if (iaIsCurrent) {
+      capabilities.add("inspection");
+    }
+
+    if (rating === "airframe") capabilities.add("airframe");
+    if (rating === "powerplant") capabilities.add("powerplant");
+
+    for (const record of trainingRecords ?? []) {
+      if (record.status === "expired" || (!!record.expiresAt && record.expiresAt <= now)) {
+        continue;
+      }
+      if (containsKeyword(record.courseName, "ndt")) capabilities.add("ndt");
+      if (containsKeyword(record.courseName, "borescope")) capabilities.add("borescope");
+    }
+
+    for (const training of technicianTraining ?? []) {
+      if (!!training.expiresAt && training.expiresAt <= now) continue;
+      if (containsKeyword(training.trainingType, "ndt")) capabilities.add("ndt");
+      if (containsKeyword(training.trainingType, "borescope")) capabilities.add("borescope");
+    }
+
+    return capabilities;
+  }, [certificateRatings, iaIsCurrent, rating, trainingRecords, technicianTraining]);
+
+  const hasRequiredAuthorization = currentCapabilities.has(requiredAuthorizationType);
+  const currentRatingsDisplay = Array.from(currentCapabilities).map(
+    (capability) => STEP_AUTHORIZATION_META[capability].requirementLabel,
+  );
+  const authorizationErrorMessage = buildAuthorizationMissingMessage(
+    requiredAuthorizationType,
+    currentRatingsDisplay,
+  );
+
   const [trainingWarningOpen, setTrainingWarningOpen] = useState(false);
 
   const createAuthEvent = useMutation(api.workOrders.createSignatureAuthEvent);
@@ -183,6 +266,22 @@ export function SignStepDialog({
       }
     }
 
+    if (certQueryLoading) {
+      setError("Checking authorization status. Please wait a moment and try again.");
+      return;
+    }
+
+    if (!hasRequiredAuthorization) {
+      if (!isAdminSigner) {
+        setError(authorizationErrorMessage);
+        return;
+      }
+      if (!overrideReason.trim()) {
+        setError("Admin override reason is required.");
+        return;
+      }
+    }
+
     if (!bypassTrainingWarning && expiredTraining.length > 0) {
       setTrainingWarningOpen(true);
       return;
@@ -190,6 +289,14 @@ export function SignStepDialog({
 
     setIsSubmitting(true);
     try {
+      const overrideAuditNote =
+        !hasRequiredAuthorization && isAdminSigner
+          ? `[Admin override] Required ${STEP_AUTHORIZATION_META[requiredAuthorizationType].requirementLabel}. Reason: ${overrideReason.trim()}`
+          : null;
+      const combinedNotes = [overrideAuditNote, notes.trim() || null]
+        .filter(Boolean)
+        .join("\n");
+
       // Step 1: Create a 5-minute auth event (re-authentication)
       const { eventId } = await createAuthEvent({
         organizationId: orgId,
@@ -206,7 +313,7 @@ export function SignStepDialog({
         action: "complete",
         signatureAuthEventId: eventId,
         ratingsExercised: [rating],
-        notes: notes.trim() || undefined,
+        notes: combinedNotes || undefined,
         approvedDataReference: approvedDataRef.trim() || undefined,
         partsInstalled: partsInstalled.length > 0
           ? partsInstalled.map((p) => ({
@@ -244,11 +351,12 @@ export function SignStepDialog({
       // Under 14 CFR 43.9(a)(4), parts records are permanently linked to the step
       // they were submitted with — wrong parts on a step cannot be corrected after sign.
       setPin("");
-      setRating(requiresIa ? "ia" : "airframe");
+      setRating(defaultRatingForAuthorization(requiredAuthorizationType));
       setNotes("");
       setApprovedDataRef("");
       setPartsInstalled([]);
       setPhotoStorageIds([]);
+      setOverrideReason("");
       // BUG-QCM-SSD-001: No success toast after step sign-off. A technician
       // completing a safety-critical sign-off under 14 CFR 43.9 would see the
       // dialog silently close with zero confirmation. If the step list was
@@ -286,7 +394,7 @@ export function SignStepDialog({
         <div className="space-y-4 py-2">
           <p className="text-sm text-muted-foreground">{stepDescription}</p>
 
-          {requiresIa && (
+          {requiredAuthorizationType === "inspection" && (
             <div className="flex items-start gap-2 p-2.5 rounded-md bg-amber-500/10 border border-amber-500/30">
               <AlertTriangle className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
               <p className="text-xs text-amber-400">
@@ -297,7 +405,7 @@ export function SignStepDialog({
           )}
 
           {/* FEAT-018: IA currency enforcement */}
-          {requiresIa && iaIsExpired && (
+          {requiredAuthorizationType === "inspection" && iaIsExpired && (
             <div className="flex items-start gap-2 p-2.5 rounded-md bg-red-500/10 border border-red-500/40">
               <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
               <div className="space-y-1">
@@ -315,7 +423,7 @@ export function SignStepDialog({
             </div>
           )}
 
-          {requiresIa && iaExpiringSoon && (
+          {requiredAuthorizationType === "inspection" && iaExpiringSoon && (
             <div className="flex items-start gap-2 p-2.5 rounded-md bg-amber-500/10 border border-amber-500/40">
               <AlertTriangle className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
               <div className="space-y-1">
@@ -328,6 +436,13 @@ export function SignStepDialog({
                   renewal immediately per 14 CFR 65.93.
                 </p>
               </div>
+            </div>
+          )}
+
+          {!hasRequiredAuthorization && (
+            <div className="flex items-start gap-2 p-2.5 rounded-md bg-red-500/10 border border-red-500/40">
+              <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+              <p className="text-xs text-red-300">{authorizationErrorMessage}</p>
             </div>
           )}
 
@@ -352,6 +467,26 @@ export function SignStepDialog({
               </SelectContent>
             </Select>
           </div>
+
+          {!hasRequiredAuthorization && isAdminSigner && (
+            <div>
+              <Label htmlFor="sign-step-override-reason" className="text-xs font-medium mb-1.5 block">
+                Admin Override Reason <span className="text-red-400" aria-hidden="true">*</span>
+              </Label>
+              <Textarea
+                id="sign-step-override-reason"
+                value={overrideReason}
+                onChange={(e) => setOverrideReason(e.target.value.slice(0, 300))}
+                placeholder="Describe why this authorization requirement is being overridden."
+                rows={2}
+                maxLength={300}
+                className="text-sm bg-muted/30 border-border/60 resize-none"
+              />
+              <p className="text-[10px] text-muted-foreground mt-0.5">
+                Override reason is appended to this step&apos;s signed notes for audit review.
+              </p>
+            </div>
+          )}
 
           {/* Approved Data Reference (Gap 1) */}
           <div>
@@ -606,7 +741,13 @@ export function SignStepDialog({
           </Button>
           <Button
             onClick={handleSign}
-            disabled={isSubmitting || pin.length < 4 || (requiresIa && iaIsExpired) || certQueryLoading}
+            disabled={
+              isSubmitting ||
+              pin.length < 4 ||
+              certQueryLoading ||
+              (!hasRequiredAuthorization && !isAdminSigner) ||
+              (!hasRequiredAuthorization && isAdminSigner && !overrideReason.trim())
+            }
             className="gap-2"
             size="sm"
           >
@@ -615,7 +756,11 @@ export function SignStepDialog({
             ) : (
               <PenLine className="w-3.5 h-3.5" />
             )}
-            {certQueryLoading ? "Checking IA cert…" : "Sign Step"}
+            {certQueryLoading
+              ? "Checking IA cert…"
+              : !hasRequiredAuthorization && isAdminSigner
+                ? "Override & Sign Step"
+                : "Sign Step"}
           </Button>
         </DialogFooter>
       </DialogContent>
