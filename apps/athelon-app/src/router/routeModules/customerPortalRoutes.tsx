@@ -15,9 +15,9 @@ const CustomerInvoicesPage = lazy(() =>
 );
 const CustomerFleetPage = lazy(() => import("@/app/(customer)/portal/fleet/page"));
 
-export function CustomerPortalRoutes() {
+export function customerPortalRoutes() {
   return (
-    <Route element={<ProtectedRoute />}>
+    <Route key="portal" element={<ProtectedRoute />}>
       <Route element={<CustomerLayout />}>
         <Route path="/portal" element={<CustomerDashboardPage />} />
         <Route path="/portal/work-orders" element={<CustomerWorkOrdersPage />} />

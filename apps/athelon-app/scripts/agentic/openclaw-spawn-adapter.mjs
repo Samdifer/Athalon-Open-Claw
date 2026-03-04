@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 
 import { execSync } from "node:child_process";
+import fs from "node:fs";
+import path from "node:path";
 import { nowUtcIso } from "./state-io.mjs";
 
 function safeShellJson(payload) {
@@ -50,6 +52,59 @@ export function spawnTeamSession(assignment, options = {}) {
       error: "spawn mode is disabled",
       raw_output: "",
     };
+  }
+
+  if (mode === "local") {
+    try {
+      const runtimeRoot = resolveRuntimeRoot(options);
+      const localRoot = path.join(runtimeRoot, "local-session");
+      fs.mkdirSync(localRoot, { recursive: true });
+
+      const manifestPath = path.join(localRoot, `${assignment.assignment_id}.json`);
+      const manifest = {
+        mode,
+        spawned_at_utc: now,
+        assignment,
+        task: buildSpawnTaskPrompt(assignment),
+        next_steps: [
+          `git switch ${assignment.owner_branch}`,
+          "Implement against leased paths only.",
+          "Run relevant tests and collect evidence links.",
+          `Mark completion with: pnpm --dir apps/athelon-app run agentic:queue:complete -- --request-id ${assignment.request_id} --completed-by local-session --status completed --implementation-state implemented --verification-state qa_verified --validation-status pass --evidence-links \"local://<notes>\" --related-ids ${assignment.request_id}`,
+        ],
+      };
+      fs.writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, "utf8");
+
+      const logPath = path.join(localRoot, "dispatch-log.jsonl");
+      fs.appendFileSync(
+        logPath,
+        `${JSON.stringify({
+          assignment_id: assignment.assignment_id,
+          request_id: assignment.request_id,
+          owner_branch: assignment.owner_branch,
+          manifest_path: manifestPath,
+          spawned_at_utc: now,
+          mode,
+        })}\n`,
+        "utf8",
+      );
+
+      return {
+        ok: true,
+        mode,
+        spawned_at_utc: now,
+        session_id: "local-main-session",
+        raw_output: manifestPath,
+      };
+    } catch (error) {
+      return {
+        ok: false,
+        mode,
+        spawned_at_utc: now,
+        error: error.message,
+        raw_output: "",
+      };
+    }
   }
 
   const payload = {
@@ -125,6 +180,15 @@ function tryParseJson(value) {
 function extractSessionIdFromText(text) {
   const match = String(text || "").match(/session[_\s-]?id["'=:\s]+([A-Za-z0-9._:-]+)/i);
   return match ? match[1] : null;
+}
+
+function resolveRuntimeRoot(options = {}) {
+  if (options.paths?.runtimeRoot) return options.paths.runtimeRoot;
+  if (options.repo_root) {
+    return path.join(options.repo_root, "ops", "agentic-build-system", "runtime");
+  }
+  if (process.env.AGENTIC_RUNTIME_ROOT) return process.env.AGENTIC_RUNTIME_ROOT;
+  throw new Error("Unable to resolve runtime root for local spawn mode.");
 }
 
 export function spawnSummary(result) {

@@ -14,7 +14,7 @@ Canonical source of truth: `apps/athelon-app/docs/spec/MASTER-BUILD-LIST.md`
 
 - Total atomic features: **137**
 - Total master features (Registry A): **53**
-- Status counts: implemented=8, partial=41, missing=10, proposed=78
+- Status counts: implemented=22, partial=37, missing=7, proposed=71
 
 ## Source Coverage
 

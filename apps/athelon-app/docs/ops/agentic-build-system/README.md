@@ -122,11 +122,26 @@ Artifacts are written to:
 Supported modes:
 1. `mock` (default)
 2. `cli`
-3. `disabled`
+3. `local` (gateway bypass; writes local assignment manifests under runtime)
+4. `disabled`
 
 Optional environment variables:
 1. `OPENCLAW_SPAWN_MODE`
 2. `OPENCLAW_SPAWN_CMD` (default: `openclaw sessions spawn`)
+
+### Gateway Bypass (Local Session)
+
+If OpenClaw gateway is down, run local-session bypass:
+
+```bash
+pnpm --dir apps/athelon-app run agentic:session:bypass
+pnpm --dir apps/athelon-app run agentic:session:next
+```
+
+Artifacts written to:
+1. `ops/agentic-build-system/runtime/local-session/dispatch-log.jsonl`
+2. `ops/agentic-build-system/runtime/local-session/ACTIVE-ASSIGNMENTS.md`
+3. `ops/agentic-build-system/runtime/local-session/<assignment_id>.json`
 
 ## Cron Schedule
 
@@ -188,4 +203,3 @@ Defined jobs:
 3. Never bypass approval token requirement in automation.
 4. Monitor run artifacts for repeated lease conflicts or dependency blockers.
 5. Keep `path-ownership.yaml` updated when new feature groups or directories are introduced.
-

@@ -1,28 +1,77 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Activity, Plane, Tool, TrendingUp, AlertTriangle } from 'lucide-react';
+import { Activity, Plane, Wrench, TrendingUp, AlertTriangle, ChevronRight } from 'lucide-react';
+import { useQuery } from "convex/react";
+import { api } from "../../../athelon-app/convex/_generated/api";
+import { useOrgContext } from "../providers/OrgContextProvider";
 
 export default function BentoDashboard() {
+  const { orgId, isLoaded: orgLoaded } = useOrgContext();
+  
+  const fleet = useQuery(api.aircraft.list, orgLoaded && orgId ? { organizationId: orgId } : "skip");
+  const activeCount = useQuery(api.workOrders.countActive, orgLoaded && orgId ? { organizationId: orgId } : "skip");
+  const activeOrders = useQuery(api.workOrders.listActive, orgLoaded && orgId ? { organizationId: orgId, limit: 3 } : "skip");
+
+  if (!orgLoaded || fleet === undefined || activeCount === undefined) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="flex gap-2">
+           {[0, 1, 2].map(i => (
+             <motion.div 
+               key={i}
+               animate={{ y: [0, -10, 0] }}
+               transition={{ repeat: Infinity, duration: 1, delay: i * 0.2 }}
+               className="w-3 h-3 rounded-full bg-zinc-200" 
+             />
+           ))}
+        </div>
+      </div>
+    );
+  }
+
+  const aogCount = fleet.filter(ac => ac.openWorkOrderCount > 0).length;
+  const readyCount = fleet.length - aogCount;
+  const availability = fleet.length > 0 ? Math.round((readyCount / fleet.length) * 100) : 100;
+
   const container = {
     hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1
-      }
-    }
+    show: { opacity: 1, transition: { staggerChildren: 0.1, delayChildren: 0.2 } }
   };
 
   const item = {
-    hidden: { y: 20, opacity: 0 },
-    show: { y: 0, opacity: 1 }
+    hidden: { y: 30, opacity: 0 },
+    show: { y: 0, opacity: 1, transition: { type: "spring", stiffness: 100, damping: 20 } }
   };
 
   return (
-    <div className="space-y-12">
-      <header className="space-y-2">
-        <h1 className="text-4xl font-semibold tracking-tight">Welcome back, Sam.</h1>
-        <p className="text-zinc-500 text-lg">Your hangar is at 84% capacity today.</p>
+    <div className="space-y-12 pb-20">
+      <header className="flex justify-between items-end">
+        <div className="space-y-1">
+          <motion.h1 
+            initial={{ x: -20, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            className="text-5xl font-semibold tracking-tight"
+          >
+            Athalon Hub
+          </motion.h1>
+          <motion.p 
+            initial={{ x: -20, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ delay: 0.1 }}
+            className="text-zinc-500 text-lg font-medium"
+          >
+            {availability}% Mission Readiness
+          </motion.p>
+        </div>
+        
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="flex items-center gap-2 bg-white/50 backdrop-blur-md px-4 py-2 rounded-2xl border border-black/5 shadow-apple-sm"
+        >
+          <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+          <span className="text-xs font-bold text-zinc-600 uppercase tracking-widest">Live System</span>
+        </motion.div>
       </header>
 
       <motion.div 
@@ -31,120 +80,150 @@ export default function BentoDashboard() {
         animate="show"
         className="grid grid-cols-1 md:grid-cols-4 grid-rows-2 gap-6"
       >
-        {/* Fleet Health - Large 2x2 Bento */}
+        {/* Fleet Matrix - Large 2x2 Bento */}
         <motion.div 
           variants={item}
-          className="md:col-span-2 md:row-span-2 bento-card flex flex-col justify-between"
+          className="md:col-span-2 md:row-span-2 bento-card flex flex-col justify-between group"
         >
           <div className="flex justify-between items-start">
             <div className="space-y-1">
-              <h3 className="text-xl font-medium">Fleet Health</h3>
-              <p className="text-sm text-zinc-400">Current fleet status and upcoming ADs</p>
+              <h3 className="text-xl font-medium">Fleet Matrix</h3>
+              <p className="text-sm text-zinc-400">High-density health tracking</p>
             </div>
-            <Plane className="text-zinc-300 w-8 h-8" />
+            <Plane className="text-zinc-200 w-10 h-10 group-hover:text-[#0066cc] group-hover:scale-110 transition-all duration-500" />
           </div>
-          <div className="space-y-6 mt-12">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="p-4 rounded-2xl bg-zinc-50 space-y-2 border border-black/5">
-                <span className="text-zinc-400 text-xs uppercase tracking-wider font-semibold">Active</span>
-                <p className="text-3xl font-medium">12</p>
-              </div>
-              <div className="p-4 rounded-2xl bg-zinc-50 space-y-2 border border-black/5">
-                <span className="text-zinc-400 text-xs uppercase tracking-wider font-semibold">AOG</span>
-                <p className="text-3xl font-medium text-rose-500">2</p>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-zinc-500">Scheduled Inspections</span>
-                <span className="font-medium text-[#0066cc]">85% Compliant</span>
-              </div>
-              <div className="h-1.5 w-full bg-zinc-100 rounded-full overflow-hidden">
-                <motion.div 
-                  initial={{ width: 0 }}
-                  animate={{ width: "85%" }}
-                  transition={{ duration: 1, delay: 0.5 }}
-                  className="h-full bg-[#0066cc]"
-                />
-              </div>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Work Orders - 2x1 Bento */}
-        <motion.div 
-          variants={item}
-          className="md:col-span-2 bento-card flex justify-between items-center group cursor-pointer hover:shadow-xl transition-all"
-        >
-          <div className="space-y-4">
-            <div className="space-y-1">
-              <h3 className="text-xl font-medium">Active Work Orders</h3>
-              <p className="text-sm text-zinc-400">14 projects in progress</p>
-            </div>
-            <div className="flex -space-x-2">
-              {[1,2,3].map(i => (
-                <div key={i} className="w-8 h-8 rounded-full border-2 border-white bg-zinc-100 flex items-center justify-center text-[10px] font-bold">
-                  JS
+          
+          <div className="flex-1 flex items-center justify-center py-12">
+             <div className="relative">
+                {/* SVG Activity Rings */}
+                <svg className="w-48 h-48 -rotate-90">
+                   <circle cx="96" cy="96" r="80" stroke="currentColor" strokeWidth="12" fill="transparent" className="text-zinc-50" />
+                   <motion.circle 
+                     cx="96" cy="96" r="80" stroke="currentColor" strokeWidth="12" fill="transparent" 
+                     strokeDasharray={2 * Math.PI * 80}
+                     initial={{ strokeDashoffset: 2 * Math.PI * 80 }}
+                     animate={{ strokeDashoffset: (2 * Math.PI * 80) * (1 - availability/100) }}
+                     transition={{ duration: 1.5, ease: "easeOut", delay: 0.5 }}
+                     className="text-[#0066cc]" 
+                   />
+                   
+                   <circle cx="96" cy="96" r="64" stroke="currentColor" strokeWidth="12" fill="transparent" className="text-zinc-50" />
+                   <motion.circle 
+                     cx="96" cy="96" r="64" stroke="currentColor" strokeWidth="12" fill="transparent" 
+                     strokeDasharray={2 * Math.PI * 64}
+                     initial={{ strokeDashoffset: 2 * Math.PI * 64 }}
+                     animate={{ strokeDashoffset: (2 * Math.PI * 64) * (1 - (readyCount/fleet.length || 0)) }}
+                     transition={{ duration: 1.5, ease: "easeOut", delay: 0.7 }}
+                     className="text-emerald-500" 
+                   />
+                </svg>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                   <p className="text-4xl font-bold tracking-tight">{availability}%</p>
+                   <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Global</p>
                 </div>
-              ))}
-              <div className="w-8 h-8 rounded-full border-2 border-white bg-zinc-200 flex items-center justify-center text-[10px] font-bold">
-                +11
-              </div>
+             </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4 pt-6 border-t border-zinc-50">
+             <div className="space-y-1">
+               <p className="text-2xl font-semibold">{readyCount}</p>
+               <p className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">Airworthy</p>
+             </div>
+             <div className="space-y-1">
+               <p className="text-2xl font-semibold">{aogCount}</p>
+               <p className="text-[10px] font-bold text-rose-500 uppercase tracking-widest">Grounding</p>
+             </div>
+          </div>
+        </motion.div>
+
+        {/* Work Order Momentum - 2x1 Bento */}
+        <motion.div 
+          variants={item}
+          className="md:col-span-2 bento-card flex flex-col justify-between group cursor-pointer"
+        >
+          <div className="flex justify-between items-start">
+            <div className="space-y-1">
+              <h3 className="text-xl font-medium">Shop Momentum</h3>
+              <p className="text-sm text-zinc-400">{activeCount} active projects</p>
+            </div>
+            <div className="bg-zinc-50 p-2 rounded-xl group-hover:bg-[#0066cc] group-hover:text-white transition-colors">
+               <Wrench className="w-5 h-5" />
             </div>
           </div>
-          <div className="bg-[#f2f2f7] p-4 rounded-3xl group-hover:bg-[#0066cc] group-hover:text-white transition-colors">
-            <Tool className="w-6 h-6" />
+
+          <div className="flex items-center gap-1.5 h-12">
+             {activeOrders?.map((wo, i) => (
+                <motion.div 
+                  key={wo._id}
+                  whileHover={{ scale: 1.1, y: -5 }}
+                  className="h-full flex-1 bg-zinc-50 rounded-xl border border-black/5 flex items-center justify-center text-[10px] font-bold text-zinc-400 group-hover:border-[#0066cc]/20 transition-all"
+                >
+                   {wo.aircraft?.currentRegistration?.substring(0, 3)}
+                </motion.div>
+             ))}
+             <div className="h-full aspect-square bg-zinc-100 rounded-xl flex items-center justify-center text-[10px] font-bold text-zinc-500">
+                +{activeCount! - activeOrders?.length!}
+             </div>
           </div>
         </motion.div>
 
-        {/* Financials - 1x1 Bento */}
+        {/* Financial Pulse - 1x1 Bento */}
         <motion.div 
           variants={item}
-          className="bento-card flex flex-col justify-between"
+          className="bento-card flex flex-col justify-between overflow-hidden relative"
         >
-          <div className="flex justify-between items-start">
-            <TrendingUp className="text-emerald-500 w-5 h-5" />
+          <div className="absolute top-0 right-0 p-4">
+             <TrendingUp className="text-emerald-500 w-5 h-5" />
           </div>
-          <div className="space-y-1">
-            <p className="text-2xl font-semibold">$142.5k</p>
-            <p className="text-xs text-zinc-400">Monthly Revenue</p>
+          <div className="space-y-1 z-10">
+            <p className="text-2xl font-semibold">$124.8k</p>
+            <p className="text-xs text-zinc-400 font-medium">Monthly Revenue</p>
+          </div>
+          <div className="h-12 w-full flex items-end gap-1 px-1">
+             {[0.4, 0.6, 0.5, 0.8, 0.7, 0.9, 0.8].map((h, i) => (
+               <div 
+                 key={i} 
+                 style={{ height: `${h * 100}%` }} 
+                 className="flex-1 bg-emerald-100 rounded-t-sm" 
+               />
+             ))}
           </div>
         </motion.div>
 
-        {/* Warnings/Squawks - 1x1 Bento */}
+        {/* Priority Alerts - 1x1 Bento */}
         <motion.div 
           variants={item}
-          className="bento-card flex flex-col justify-between bg-[#fff2f2] border border-rose-100"
+          className={`bento-card flex flex-col justify-between transition-all ${aogCount > 0 ? 'bg-rose-500 text-white shadow-rose-200' : ''}`}
         >
           <div className="flex justify-between items-start">
-            <AlertTriangle className="text-rose-500 w-5 h-5" />
+            <AlertTriangle className={`${aogCount > 0 ? 'text-white' : 'text-zinc-300'} w-6 h-6`} />
+            <ChevronRight className={`w-4 h-4 ${aogCount > 0 ? 'text-white/60' : 'text-zinc-300'}`} />
           </div>
           <div className="space-y-1">
-            <p className="text-2xl font-semibold text-rose-600">4</p>
-            <p className="text-xs text-rose-400">Critical Squawks</p>
+            <p className="text-3xl font-bold">{aogCount}</p>
+            <p className={`text-[10px] font-bold uppercase tracking-widest ${aogCount > 0 ? 'text-white/80' : 'text-zinc-400'}`}>
+              Urgent Grounds
+            </p>
           </div>
         </motion.div>
       </motion.div>
 
-      {/* Secondary Row: Live Feed / Activity */}
+      {/* Activity Log */}
       <section className="space-y-6">
-        <h2 className="text-2xl font-medium tracking-tight">Recent Activity</h2>
+        <h2 className="text-2xl font-medium tracking-tight">System Logs</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {[1, 2, 3].map((i) => (
+          {activeOrders?.map((wo, i) => (
             <motion.div
-              key={i}
+              key={wo._id}
               variants={item}
-              initial="hidden"
-              animate="show"
-              transition={{ delay: 0.5 + (i * 0.1) }}
-              className="bg-white rounded-3xl p-6 shadow-sm border border-black/5 flex gap-4 items-center"
+              className="bg-white rounded-4xl p-6 shadow-apple-sm border border-black/[0.02] flex gap-4 items-center hover:shadow-apple-md transition-all cursor-pointer group"
             >
-              <div className="w-10 h-10 rounded-2xl bg-[#f2f2f7] flex items-center justify-center">
-                <Activity className="w-5 h-5 text-zinc-400" />
+              <div className="w-12 h-12 rounded-2xl bg-[#f2f2f7] flex items-center justify-center group-hover:bg-[#0066cc]/10 transition-colors">
+                <Activity className="w-5 h-5 text-zinc-400 group-hover:text-[#0066cc]" />
               </div>
-              <div className="space-y-0.5">
-                <p className="text-sm font-medium text-zinc-800">N123AB Inspection Signed</p>
-                <p className="text-xs text-zinc-400">2 hours ago • Technician Dave</p>
+              <div className="space-y-1 overflow-hidden">
+                <p className="text-sm font-semibold text-zinc-800 truncate">{wo.aircraft?.currentRegistration}</p>
+                <p className="text-xs text-zinc-400 font-medium truncate">{wo.description}</p>
               </div>
             </motion.div>
           ))}

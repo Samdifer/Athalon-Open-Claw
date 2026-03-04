@@ -1,0 +1,39 @@
+{
+  "run_id": "ORCH-20260304032150262-RQCT",
+  "timestamp_utc": "2026-03-04T03:21:50Z",
+  "run_mode": "ACTIVE",
+  "queue_count": 8,
+  "active_assignments": 8,
+  "dispatch_count": 0,
+  "blocked_count": 0,
+  "queue_summary": {
+    "queued": 0,
+    "blocked": 0,
+    "in_progress": 8,
+    "completed": 0,
+    "failed": 0,
+    "cancelled": 0
+  },
+  "released_leases_in_sync": 0,
+  "lease_snapshot": {
+    "stats": {
+      "total": 8,
+      "active": 8,
+      "released": 0,
+      "expired": 0
+    },
+    "active_assignments": [
+      "ASG-20260304001218434-DR8K",
+      "ASG-20260304001218435-FT98",
+      "ASG-20260304001218445-WY39",
+      "ASG-20260304001218471-HJ0B",
+      "ASG-20260304001218497-FD3I",
+      "ASG-20260304001218532-XPR2",
+      "ASG-20260304001218578-GNE6",
+      "ASG-20260304001218634-7URB"
+    ]
+  },
+  "dispatched": [],
+  "blocked": [],
+  "notes": []
+}

@@ -1,0 +1,41 @@
+{
+  "run_id": "ORCH-20260304033946538-XD7Y",
+  "timestamp_utc": "2026-03-04T03:39:46Z",
+  "run_mode": "ACTIVE",
+  "queue_count": 9,
+  "active_assignments": 8,
+  "dispatch_count": 1,
+  "blocked_count": 0,
+  "queue_summary": {
+    "queued": 0,
+    "blocked": 0,
+    "in_progress": 8,
+    "completed": 1,
+    "failed": 0,
+    "cancelled": 0
+  },
+  "released_leases_in_sync": 0,
+  "lease_snapshot": {
+    "stats": {
+      "total": 9,
+      "active": 1,
+      "released": 1,
+      "expired": 7
+    },
+    "active_assignments": [
+      "ASG-20260304033946539-TQWT"
+    ]
+  },
+  "dispatched": [
+    {
+      "request_id": "REQ-TEAM-09",
+      "assignment_id": "ASG-20260304033946539-TQWT",
+      "owner_session": "local-main-session",
+      "owner_branch": "agent/asg-20260304033946539-tqwt-req-team-09",
+      "lease_id": "LEASE-20260304033946539-J0PJ",
+      "spawn_summary": "spawned local-main-session (local)"
+    }
+  ],
+  "blocked": [],
+  "notes": []
+}

@@ -27,6 +27,8 @@
     "agentic:orchestrator:start": "node scripts/agentic/orchestrator.mjs start",
     "agentic:orchestrator:stop": "node scripts/agentic/orchestrator.mjs stop",
     "agentic:orchestrator:tick": "node scripts/agentic/orchestrator.mjs tick",
+    "agentic:session:bypass": "node scripts/agentic/local-session-bypass.mjs adopt",
+    "agentic:session:next": "node scripts/agentic/local-session-bypass.mjs next",
     "agentic:queue:add": "node scripts/agentic/queue.mjs add",
     "agentic:queue:list": "node scripts/agentic/queue.mjs list",
     "agentic:queue:complete": "node scripts/agentic/queue.mjs complete",

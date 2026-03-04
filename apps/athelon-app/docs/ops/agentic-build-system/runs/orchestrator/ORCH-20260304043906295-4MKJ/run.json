@@ -1,0 +1,41 @@
+{
+  "run_id": "ORCH-20260304043906295-4MKJ",
+  "timestamp_utc": "2026-03-04T04:39:06Z",
+  "run_mode": "ACTIVE",
+  "queue_count": 11,
+  "active_assignments": 1,
+  "dispatch_count": 1,
+  "blocked_count": 0,
+  "queue_summary": {
+    "queued": 0,
+    "blocked": 0,
+    "in_progress": 1,
+    "completed": 10,
+    "failed": 0,
+    "cancelled": 0
+  },
+  "released_leases_in_sync": 0,
+  "lease_snapshot": {
+    "stats": {
+      "total": 11,
+      "active": 1,
+      "released": 3,
+      "expired": 7
+    },
+    "active_assignments": [
+      "ASG-20260304043906296-ELAY"
+    ]
+  },
+  "dispatched": [
+    {
+      "request_id": "REQ-TEAM-10",
+      "assignment_id": "ASG-20260304043906296-ELAY",
+      "owner_session": "mock-asg-20260304043906296-elay",
+      "owner_branch": "agent/asg-20260304043906296-elay-req-team-10",
+      "lease_id": "LEASE-20260304043906296-KMR6",
+      "spawn_summary": "spawned mock-asg-20260304043906296-elay (mock)"
+    }
+  ],
+  "blocked": [],
+  "notes": []
+}
