@@ -14,6 +14,7 @@ const WorkOrdersDashboardPage = lazy(
   () => import("@/app/(app)/work-orders/dashboard/page"),
 );
 const WorkOrdersLeadPage = lazy(() => import("@/app/(app)/work-orders/lead/page"));
+const LeadDashboardPage = lazy(() => import("@/app/(app)/lead/page"));
 const WorkOrderDetailPage = lazy(() => import("@/app/(app)/work-orders/[id]/page"));
 const NewWorkOrderPage = lazy(() => import("@/app/(app)/work-orders/new/page"));
 const TaskCardPage = lazy(
@@ -140,6 +141,9 @@ const ImportPage = lazy(() => import("@/app/(app)/settings/import/page"));
 const EmailLogPage = lazy(() => import("@/app/(app)/settings/email-log/page"));
 const QuickBooksPage = lazy(() => import("@/app/(app)/settings/quickbooks/page"));
 const StationConfigPage = lazy(() => import("@/app/(app)/settings/station-config/page"));
+const RoutingTemplatesPage = lazy(
+  () => import("@/app/(app)/settings/routing-templates/page"),
+);
 
 const AppNotFoundPage = lazy(() => import("@/app/(app)/not-found/page"));
 
@@ -170,6 +174,7 @@ export function protectedAppRoutes() {
             <Route path="/work-orders" element={<WorkOrdersPage />} />
             <Route path="/work-orders/dashboard" element={<WorkOrdersDashboardPage />} />
             <Route path="/work-orders/lead" element={<WorkOrdersLeadPage />} />
+            <Route path="/lead" element={<LeadDashboardPage />} />
             <Route path="/work-orders/kanban" element={<KanbanPage />} />
             <Route path="/work-orders/new" element={<NewWorkOrderPage />} />
             <Route path="/work-orders/templates" element={<WorkOrderTemplatesPage />} />
@@ -274,6 +279,10 @@ export function protectedAppRoutes() {
             <Route path="/settings/email-log" element={<EmailLogPage />} />
             <Route path="/settings/quickbooks" element={<QuickBooksPage />} />
             <Route path="/settings/station-config" element={<StationConfigPage />} />
+            <Route
+              path="/settings/routing-templates"
+              element={<RoutingTemplatesPage />}
+            />
 
             <Route path="*" element={<AppNotFoundPage />} />
           </Route>

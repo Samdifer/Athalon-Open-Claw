@@ -134,6 +134,7 @@ const ROUTE_PERMISSION_MAP: Array<{ prefix: string; permission: Permission }> = 
   { prefix: "/my-work", permission: "work_orders.view" },
   { prefix: "/compliance", permission: "compliance.view" },
   { prefix: "/personnel", permission: "personnel.view" },
+  { prefix: "/lead", permission: "reports.view" },
   { prefix: "/scheduling", permission: "scheduling.view" },
   { prefix: "/settings", permission: "settings.view" },
   { prefix: "/reports", permission: "reports.view" },

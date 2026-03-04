@@ -203,7 +203,10 @@ const bottomNav: NavEntry[] = [
     href: "/personnel",
     icon: Users,
     section: "personnel",
-    children: [{ title: "Training", href: "/personnel/training" }],
+    children: [
+      { title: "Training", href: "/personnel/training" },
+      { title: "Lead Dashboard", href: "/lead" },
+    ],
   },
   {
     title: "Settings",
@@ -212,6 +215,7 @@ const bottomNav: NavEntry[] = [
     section: "settings",
     children: [
       { title: "Station Config", href: "/settings/station-config" },
+      { title: "Routing Templates", href: "/settings/routing-templates" },
       { title: "Import Data", href: "/settings/import" },
       { title: "QuickBooks", href: "/settings/quickbooks" },
       { title: "Locations", href: "/settings/locations" },
