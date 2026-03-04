@@ -208,7 +208,6 @@ export const receiveAgainstPO = mutation({
       unitCost: args.unitCost,
       lastPurchasePrice: args.unitCost,
       purchaseOrderId: args.purchaseOrderId,
-      lotId,
       lotNumber: args.lotNumber?.trim(),
       batchNumber: args.batchNumber?.trim(),
       binLocation: args.binLocation?.trim(),

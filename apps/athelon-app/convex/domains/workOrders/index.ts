@@ -2,13 +2,12 @@
 export * from "./carryForwardItems";
 export * from "./conformityInspections";
 export * from "./discrepancies";
-export * from "./index";
 export * from "./leadTurnover";
-export * from "./maintenanceRecords";
-export * from "./releaseCertificates";
 export * from "./returnToService";
-export * from "./taskAssignments";
 export * from "./taskCardVendorServices";
 export * from "./taskCards";
 export * from "./taskCompliance";
-export * from "./workOrders";
+// workOrders omitted — conflicts with carryForwardItems on listByAircraft; import directly
+// maintenanceRecords omitted — conflicts with carryForwardItems on listByAircraft; import directly
+// releaseCertificates omitted — conflicts with conformityInspections on listByWorkOrder; import directly
+// taskAssignments omitted — conflicts with conformityInspections on listByWorkOrder; import directly
