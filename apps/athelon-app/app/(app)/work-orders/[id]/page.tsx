@@ -27,6 +27,7 @@ import { formatDate } from "@/lib/format";
 import { toast } from "sonner";
 import { DownloadPDFButton } from "@/src/shared/components/pdf/DownloadPDFButton";
 import { WorkOrderPDF } from "@/src/shared/components/pdf/WorkOrderPDF";
+import { PrintButton } from "@/src/shared/components/PrintButton";
 import {
   WO_STATUS_LABEL,
   WO_STATUS_STYLES,
@@ -527,27 +528,30 @@ export default function WorkOrderDetailPage() {
               </Button>
             )}
 
-            <DownloadPDFButton
-              label="Download WO Pack"
-              fileName={`WO-${wo.workOrderNumber}.pdf`}
-              document={(
-                <WorkOrderPDF
-                  workOrder={wo}
-                  aircraft={aircraft}
-                  customer={null}
-                  taskCards={taskCards}
-                  steps={taskCards.flatMap((tc) => tc.steps ?? []).map((s) => ({
-                    taskCardId: String(s.taskCardId ?? ""),
-                    description: s.description,
-                    status: s.status,
-                    partsInstalled: s.partsInstalled,
-                  }))}
-                  discrepancies={discrepancies}
-                  timeLogs={timeLogs ?? []}
-                  parts={partsForThisWorkOrder}
-                />
-              )}
-            />
+            <div className="flex items-center gap-2">
+              <DownloadPDFButton
+                label="Download WO Pack"
+                fileName={`WO-${wo.workOrderNumber}.pdf`}
+                document={(
+                  <WorkOrderPDF
+                    workOrder={wo}
+                    aircraft={aircraft}
+                    customer={null}
+                    taskCards={taskCards}
+                    steps={taskCards.flatMap((tc) => tc.steps ?? []).map((s) => ({
+                      taskCardId: String(s.taskCardId ?? ""),
+                      description: s.description,
+                      status: s.status,
+                      partsInstalled: s.partsInstalled,
+                    }))}
+                    discrepancies={discrepancies}
+                    timeLogs={timeLogs ?? []}
+                    parts={partsForThisWorkOrder}
+                  />
+                )}
+              />
+              <PrintButton />
+            </div>
             <Button variant="outline" asChild className="gap-2">
               <Link to={`/work-orders/${workOrderId}/execution`}>
                 <Calendar className="w-4 h-4" />

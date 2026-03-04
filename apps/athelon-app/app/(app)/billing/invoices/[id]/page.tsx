@@ -12,7 +12,6 @@ import {
   Send,
   DollarSign,
   XCircle,
-  Printer,
   AlertCircle,
   Receipt,
   Pencil,
@@ -55,6 +54,7 @@ import { formatDate } from "@/lib/format";
 import { toast } from "sonner";
 import { DownloadPDFButton } from "@/src/shared/components/pdf/DownloadPDFButton";
 import { InvoicePDF } from "@/src/shared/components/pdf/InvoicePDF";
+import { PrintButton } from "@/src/shared/components/PrintButton";
 
 const STATUS_STYLES: Record<string, string> = {
   DRAFT: "bg-muted text-muted-foreground border-muted-foreground/30",
@@ -463,15 +463,7 @@ export default function InvoiceDetailPage() {
               fileName={`Invoice-${invoice.invoiceNumber}.pdf`}
               label="Download PDF"
             />
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => window.print()}
-              className="h-8 gap-1.5 text-xs"
-            >
-              <Printer className="w-3.5 h-3.5" />
-              Print
-            </Button>
+            <PrintButton />
             {canSend && (
               <Button size="sm" onClick={handleSend} disabled={actionLoading === "send"} className="h-8 gap-1.5 text-xs">
                 <Send className="w-3.5 h-3.5" />

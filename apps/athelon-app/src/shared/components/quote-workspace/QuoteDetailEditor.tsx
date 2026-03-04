@@ -22,7 +22,6 @@ import {
   Plus,
   Package,
   Wrench,
-  Printer,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -48,7 +47,6 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDate } from "@/lib/format";
-import { Download } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -56,6 +54,9 @@ import {
   QuoteLineDecision as QuoteLineDecisionCell,
   type QuoteLineCategory as QuoteLineDecisionCategory,
 } from "@/src/shared/components/QuoteLineDecision";
+import { DownloadPDFButton } from "@/src/shared/components/pdf/DownloadPDFButton";
+import { PrintButton } from "@/src/shared/components/PrintButton";
+import { QuotePDF } from "@/components/pdf/QuotePDF";
 
 const STATUS_STYLES: Record<string, string> = {
   DRAFT: "bg-muted text-muted-foreground border-muted-foreground/30",
@@ -320,52 +321,6 @@ export function QuoteDetailEditor({
     aircraft === undefined ||
     laborKits === undefined;
 
-  // PDF Download
-  const handleDownloadPDF = async () => {
-    setActionLoading("pdf");
-    setError(null);
-    try {
-      const { QuotePDF } = await import("@/components/pdf/QuotePDF");
-      const { downloadPDF } = await import("@/lib/pdf/download");
-      const el = QuotePDF({
-        orgName: org?.name ?? "Athelon Aviation",
-        quote: {
-          quoteNumber: quote!.quoteNumber,
-          createdAt: quote!.createdAt,
-          expiresAt: quote!.expiresAt ?? undefined,
-          status: quote!.status,
-          subtotal: quote!.subtotal,
-          tax: quote!.tax,
-          total: quote!.total,
-          currency: quote!.currency,
-        },
-        lineItems: quote!.lineItems.map((li) => ({
-          _id: String(li._id),
-          description: li.description,
-          qty: li.qty,
-          unitPrice: li.unitPrice,
-          total: li.total,
-          departmentSection: li.departmentSection,
-          customerDecision: li.customerDecision,
-        })),
-        departments: quote!.departments.map((dept) => ({
-          _id: String(dept._id),
-          sectionName: dept.sectionName,
-        })),
-        customer,
-      });
-      await downloadPDF(el, `Quote-${quote!.quoteNumber}.pdf`);
-      toast.success("Quote PDF downloaded");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to generate PDF.");
-    } finally {
-      setActionLoading(null);
-    }
-  };
-
-  const handlePrint = () => {
-    window.print();
-  };
 
   const handleSend = async () => {
     if (!orgId || !quoteId) return;
@@ -794,6 +749,36 @@ export function QuoteDetailEditor({
     quote.expiresAt - now < SEVEN_DAYS_MS &&
     quote.status === "SENT";
 
+  const quotePdfDocument = (
+    <QuotePDF
+      orgName={org?.name ?? "Athelon Aviation"}
+      quote={{
+        quoteNumber: quote.quoteNumber,
+        createdAt: quote.createdAt,
+        expiresAt: quote.expiresAt ?? undefined,
+        status: quote.status,
+        subtotal: quote.subtotal,
+        tax: quote.tax,
+        total: quote.total,
+        currency: quote.currency,
+      }}
+      lineItems={quote.lineItems.map((li) => ({
+        _id: String(li._id),
+        description: li.description,
+        qty: li.qty,
+        unitPrice: li.unitPrice,
+        total: li.total,
+        departmentSection: li.departmentSection,
+        customerDecision: li.customerDecision,
+      }))}
+      departments={quote.departments.map((dept) => ({
+        _id: String(dept._id),
+        sectionName: dept.sectionName,
+      }))}
+      customer={customer}
+    />
+  );
+
   return (
     <div
       className={cn("space-y-5", fullWidth ? "max-w-none" : "max-w-3xl")}
@@ -835,25 +820,12 @@ export function QuoteDetailEditor({
 
         {/* Actions */}
         <div className="flex items-center gap-2 flex-wrap justify-end">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleDownloadPDF}
-            disabled={actionLoading === "pdf"}
-            className="h-8 gap-1.5 text-xs"
-          >
-            <Download className="w-3.5 h-3.5" />
-            {actionLoading === "pdf" ? "Generating..." : "Download PDF"}
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handlePrint}
-            className="h-8 gap-1.5 text-xs"
-          >
-            <Printer className="w-3.5 h-3.5" />
-            Print
-          </Button>
+          <DownloadPDFButton
+            document={quotePdfDocument}
+            fileName={`Quote-${quote.quoteNumber}.pdf`}
+            label="Download PDF"
+          />
+          <PrintButton />
           {canSend && (
             <Button size="sm" onClick={handleSend} disabled={actionLoading === "send"} className="h-8 gap-1.5 text-xs">
               <Send className="w-3.5 h-3.5" />
