@@ -2,11 +2,12 @@
 
 import type { ReactElement } from "react";
 import { PDFDownloadLink } from "@react-pdf/renderer";
+import type { DocumentProps } from "@react-pdf/renderer";
 import { Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface DownloadPDFButtonProps {
-  document: ReactElement;
+  document: ReactElement<DocumentProps>;
   fileName: string;
   label?: string;
 }
