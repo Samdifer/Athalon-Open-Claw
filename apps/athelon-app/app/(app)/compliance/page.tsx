@@ -23,6 +23,7 @@ import {
   type AircraftRow,
 } from "./_components/AircraftComplianceCard";
 import { FleetComplianceStats } from "./_components/FleetComplianceStats";
+import { CapabilitiesOverview } from "./_components/CapabilitiesOverview";
 import { usePagePrereqs } from "@/hooks/usePagePrereqs";
 import { ActionableEmptyState } from "@/components/zero-state/ActionableEmptyState";
 
@@ -124,6 +125,8 @@ export default function CompliancePage() {
 
       {/* Fleet stats */}
       <FleetComplianceStats fleet={fleet} orgId={orgId} />
+
+      <CapabilitiesOverview orgId={orgId as Id<"organizations">} />
 
       {/* Regulatory notice */}
       <Card className="border-border/40 bg-amber-500/5 border-l-2 border-l-amber-500">
