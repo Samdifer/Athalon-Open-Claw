@@ -57,6 +57,10 @@ import { DiscrepancyList } from "@/app/(app)/work-orders/[id]/_components/Discre
 import { DeferredMaintenanceCaptureDialog } from "@/app/(app)/work-orders/[id]/_components/DeferredMaintenanceCaptureDialog";
 import { VoiceNotesPanel } from "@/components/VoiceNotesPanel";
 import { WOHeaderKPI } from "@/app/(app)/work-orders/[id]/_components/WOHeaderKPI";
+import { PartsLifecycleBoard } from "@/app/(app)/work-orders/[id]/_components/PartsLifecycleBoard";
+import { CostEstimationPanel } from "@/app/(app)/work-orders/[id]/_components/CostEstimationPanel";
+import type { PartsRequestRecord } from "@/app/(app)/parts/_components/PartsRequestForm";
+import { PartStatusBadge } from "@/src/shared/components/PartStatusBadge";
 import {
   readVoiceNotesForWorkOrder,
   writeVoiceNotesForWorkOrder,
@@ -80,6 +84,63 @@ type WorkOrderStageFlow = {
   label: string;
   statusMappings: string[];
 };
+type WorkOrderTab = "squawks" | "compliance" | "parts" | "cost" | "evidence" | "documents" | "notes";
+type PartsTabView = "list" | "board";
+type PartLifecycleStatus =
+  | "requested_not_ordered"
+  | "ordered_not_received"
+  | "received_not_installed"
+  | "installed"
+  | "returned_to_stock";
+type LinkedSquawk = { id: string; number: string };
+type PartLifecycleItem = {
+  id: string;
+  partNumber: string;
+  partName: string;
+  serialNumber?: string;
+  supplier?: string;
+  quantity?: number;
+  source: "request" | "inventory";
+  status: PartLifecycleStatus;
+  requestStatus?: PartsRequestRecord["status"];
+  location?: string;
+  linkedSquawks: LinkedSquawk[];
+};
+type WorkOrderPart = {
+  _id: Id<"parts">;
+  partNumber: string;
+  partName: string;
+  serialNumber?: string;
+  supplier?: string;
+  location: string;
+  quantity?: number;
+  quantityOnHand?: number;
+  receivingWorkOrderId?: Id<"workOrders">;
+  reservedForWorkOrderId?: Id<"workOrders">;
+  installedByWorkOrderId?: Id<"workOrders">;
+  installedOnWorkOrderId?: Id<"workOrders">;
+  removedByWorkOrderId?: Id<"workOrders">;
+};
+
+const PARTS_LIFECYCLE_ORDER: PartLifecycleStatus[] = [
+  "requested_not_ordered",
+  "ordered_not_received",
+  "received_not_installed",
+  "installed",
+  "returned_to_stock",
+];
+
+function getPartsRequestStorageKey(orgId: string) {
+  return `athelon:parts-requests:${orgId}`;
+}
+
+function normalizeRefToken(value?: string | null): string {
+  return (value ?? "").trim().toUpperCase();
+}
+
+function normalizePartToken(value?: string | null): string {
+  return (value ?? "").trim().toUpperCase();
+}
 
 const DEFAULT_WORK_ORDER_STAGE_FLOW: WorkOrderStageFlow[] = [
   { key: "quoting", label: "Quoting", statusMappings: ["draft"] },
@@ -123,28 +184,37 @@ function normalizeDiscrepancyStatus(
   return "corrected";
 }
 
-function partStatusLabel(location: string): string {
-  const map: Record<string, string> = {
-    pending_inspection: "Pending Inspection",
-    inventory: "Inventory",
-    installed: "Installed",
-    removed_pending_disposition: "Removed",
-    quarantine: "Quarantine",
-    scrapped: "Scrapped",
-    returned_to_vendor: "Returned",
-  };
-  return map[location] ?? location;
+function mapRequestStatusToLifecycle(status: PartsRequestRecord["status"]): PartLifecycleStatus {
+  if (status === "requested") return "requested_not_ordered";
+  if (status === "ordered" || status === "shipped") return "ordered_not_received";
+  return "received_not_installed";
 }
 
-function partStatusStyle(location: string): string {
-  const map: Record<string, string> = {
-    installed: "bg-green-500/15 text-green-400 border-green-500/30",
-    inventory: "bg-sky-500/15 text-sky-400 border-sky-500/30",
-    pending_inspection: "bg-amber-500/15 text-amber-400 border-amber-500/30",
-    quarantine: "bg-red-500/15 text-red-400 border-red-500/30",
-    removed_pending_disposition: "bg-orange-500/15 text-orange-400 border-orange-500/30",
-  };
-  return map[location] ?? "bg-slate-500/15 text-slate-400 border-slate-500/30";
+function mapPartToLifecycle(part: WorkOrderPart, workOrderId: Id<"workOrders">): PartLifecycleStatus {
+  const installedOnThisWorkOrder =
+    part.location === "installed" &&
+    (part.installedByWorkOrderId === workOrderId || part.installedOnWorkOrderId === workOrderId);
+  if (installedOnThisWorkOrder) return "installed";
+  if (part.location === "inventory" && part.removedByWorkOrderId === workOrderId) {
+    return "returned_to_stock";
+  }
+  return "received_not_installed";
+}
+
+function mapLifecycleToBadgeStatus(status: PartLifecycleStatus): string {
+  if (status === "requested_not_ordered") return "requested";
+  if (status === "ordered_not_received") return "ordered";
+  if (status === "received_not_installed") return "received";
+  if (status === "installed") return "installed";
+  return "returned";
+}
+
+function mapLifecycleToBoardStatus(status: PartLifecycleStatus): "requested" | "ordered" | "received" | "issued" | "installed" {
+  if (status === "requested_not_ordered") return "requested";
+  if (status === "ordered_not_received") return "ordered";
+  if (status === "received_not_installed") return "received";
+  if (status === "installed") return "installed";
+  return "issued";
 }
 
 function mapStatusToStageIndex(status: string, stageFlow: WorkOrderStageFlow[]): number {
@@ -172,9 +242,13 @@ export default function WorkOrderDetailPage() {
   const { id: routeRef = "" } = useParams<{ id: string }>();
   const { orgId, techId, isLoaded } = useCurrentOrg();
   const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState<WorkOrderTab>("squawks");
+  const [pendingSquawkId, setPendingSquawkId] = useState<string | null>(null);
   const [timerActionLoading, setTimerActionLoading] = useState<"start" | "stop" | null>(null);
   const [deferredCaptureOpen, setDeferredCaptureOpen] = useState(false);
   const [voiceNotes, setVoiceNotes] = useState<StoredVoiceNote[]>([]);
+  const [partsRequests, setPartsRequests] = useState<PartsRequestRecord[]>([]);
+  const [partsTabView, setPartsTabView] = useState<PartsTabView>("list");
 
   const legacyResolution = useQuery(
     api.workOrders.resolveWorkOrderRef,
@@ -191,12 +265,43 @@ export default function WorkOrderDetailPage() {
   }, [legacyResolution?.workOrderId, routeRef]);
 
   useEffect(() => {
+    setActiveTab("squawks");
+    setPendingSquawkId(null);
+    setPartsTabView("list");
+  }, [workOrderId]);
+
+  useEffect(() => {
+    if (!orgId) {
+      setPartsRequests([]);
+      return;
+    }
+    try {
+      const raw = window.localStorage.getItem(getPartsRequestStorageKey(orgId));
+      setPartsRequests(raw ? (JSON.parse(raw) as PartsRequestRecord[]) : []);
+    } catch {
+      setPartsRequests([]);
+    }
+  }, [orgId]);
+
+  useEffect(() => {
     if (!orgId || !workOrderId) {
       setVoiceNotes([]);
       return;
     }
     setVoiceNotes(readVoiceNotesForWorkOrder({ orgId, workOrderId: String(workOrderId) }));
   }, [orgId, workOrderId]);
+
+  useEffect(() => {
+    if (activeTab !== "squawks" || !pendingSquawkId) return;
+    const timeoutId = window.setTimeout(() => {
+      document.getElementById(`squawk-${pendingSquawkId}`)?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+      setPendingSquawkId(null);
+    }, 120);
+    return () => window.clearTimeout(timeoutId);
+  }, [activeTab, pendingSquawkId]);
 
   const data = useQuery(
     api.workOrders.getWorkOrder,
@@ -332,13 +437,199 @@ export default function WorkOrderDetailPage() {
     ),
   ];
 
-  const partsForThisWorkOrder = (allParts ?? []).filter(
+  const partsForThisWorkOrder = ((allParts ?? []) as WorkOrderPart[]).filter(
     (part) =>
       part.receivingWorkOrderId === workOrderId ||
       part.reservedForWorkOrderId === workOrderId ||
       part.installedByWorkOrderId === workOrderId ||
       part.installedOnWorkOrderId === workOrderId ||
       part.removedByWorkOrderId === workOrderId,
+  );
+
+  const requestsForThisWorkOrder = useMemo(() => {
+    const workOrderRefTokens = new Set(
+      [wo.workOrderNumber, String(workOrderId), routeRef]
+        .map((value) => normalizeRefToken(value))
+        .filter(Boolean),
+    );
+    return partsRequests.filter((request) =>
+      workOrderRefTokens.has(normalizeRefToken(request.workOrderRef)),
+    );
+  }, [partsRequests, routeRef, wo.workOrderNumber, workOrderId]);
+
+  const partLinkedSquawks = useMemo(() => {
+    const linkedByKey = new Map<string, Map<string, LinkedSquawk>>();
+    const discrepancyById = new Map(
+      discrepancies.map((discrepancy: any) => [String(discrepancy._id), discrepancy]),
+    );
+
+    const upsertSquawkLinks = (keys: string[], squawks: any[]) => {
+      for (const key of keys) {
+        if (!key) continue;
+        if (!linkedByKey.has(key)) {
+          linkedByKey.set(key, new Map<string, LinkedSquawk>());
+        }
+        const bucket = linkedByKey.get(key);
+        if (!bucket) continue;
+        for (const squawk of squawks) {
+          const squawkId = String(squawk._id);
+          bucket.set(squawkId, {
+            id: squawkId,
+            number: squawk.discrepancyNumber ?? squawkId,
+          });
+        }
+      }
+    };
+
+    for (const taskCard of taskCards as any[]) {
+      for (const step of (taskCard.steps ?? []) as any[]) {
+        const squawksForStep = ((step.discrepancyIds ?? []) as any[])
+          .map((discrepancyId) => discrepancyById.get(String(discrepancyId)))
+          .filter(Boolean);
+        if (squawksForStep.length === 0) continue;
+        const stepParts = [
+          ...((step.partsInstalled ?? []) as any[]),
+          ...((step.partsRemoved ?? []) as any[]),
+        ];
+        for (const stepPart of stepParts) {
+          const partNumber = normalizePartToken(stepPart.partNumber);
+          const serialNumber = normalizePartToken(stepPart.serialNumber);
+          upsertSquawkLinks(
+            [
+              stepPart.partId ? `id:${String(stepPart.partId)}` : "",
+              partNumber ? `pn:${partNumber}` : "",
+              partNumber && serialNumber ? `pn:${partNumber}|sn:${serialNumber}` : "",
+            ],
+            squawksForStep as any[],
+          );
+        }
+      }
+    }
+
+    for (const discrepancy of discrepancies as any[]) {
+      const componentPartNumber = normalizePartToken(discrepancy.componentPartNumber);
+      const componentSerialNumber = normalizePartToken(discrepancy.componentSerialNumber);
+      if (!componentPartNumber) continue;
+      upsertSquawkLinks(
+        [
+          `pn:${componentPartNumber}`,
+          componentSerialNumber ? `pn:${componentPartNumber}|sn:${componentSerialNumber}` : "",
+        ],
+        [discrepancy],
+      );
+    }
+
+    return linkedByKey;
+  }, [discrepancies, taskCards]);
+
+  const partsLifecycleItems = useMemo<PartLifecycleItem[]>(() => {
+    const resolveSquawks = (
+      partNumber?: string,
+      serialNumber?: string,
+      partId?: string,
+    ): LinkedSquawk[] => {
+      const links = new Map<string, LinkedSquawk>();
+      const normalizedPartNumber = normalizePartToken(partNumber);
+      const normalizedSerialNumber = normalizePartToken(serialNumber);
+      const keys = [
+        partId ? `id:${partId}` : "",
+        normalizedPartNumber ? `pn:${normalizedPartNumber}` : "",
+        normalizedPartNumber && normalizedSerialNumber
+          ? `pn:${normalizedPartNumber}|sn:${normalizedSerialNumber}`
+          : "",
+      ].filter(Boolean);
+      for (const key of keys) {
+        const bucket = partLinkedSquawks.get(key);
+        if (!bucket) continue;
+        for (const [squawkId, linked] of bucket) {
+          links.set(squawkId, linked);
+        }
+      }
+      return Array.from(links.values()).sort((a, b) =>
+        a.number.localeCompare(b.number, undefined, { numeric: true, sensitivity: "base" }),
+      );
+    };
+
+    const installedPartNumbers = new Set(
+      partsForThisWorkOrder
+        .filter((part) => mapPartToLifecycle(part, workOrderId) === "installed")
+        .map((part) => normalizePartToken(part.partNumber))
+        .filter(Boolean),
+    );
+
+    const requestItems = requestsForThisWorkOrder
+      .filter((request) => {
+        const requestLifecycle = mapRequestStatusToLifecycle(request.status);
+        if (requestLifecycle !== "received_not_installed") return true;
+        return !installedPartNumbers.has(normalizePartToken(request.partNumber));
+      })
+      .map(
+        (request): PartLifecycleItem => ({
+          id: `request:${request.id}`,
+          partNumber: request.partNumber,
+          partName: request.description,
+          supplier: request.manufacturer,
+          quantity: request.quantity,
+          source: "request",
+          status: mapRequestStatusToLifecycle(request.status),
+          requestStatus: request.status,
+          linkedSquawks: resolveSquawks(request.partNumber),
+        }),
+      );
+
+    const inventoryItems = partsForThisWorkOrder.map(
+      (part): PartLifecycleItem => ({
+        id: `inventory:${String(part._id)}`,
+        partNumber: part.partNumber,
+        partName: part.partName,
+        serialNumber: part.serialNumber,
+        supplier: part.supplier,
+        quantity:
+          typeof part.quantityOnHand === "number"
+            ? part.quantityOnHand
+            : typeof part.quantity === "number"
+              ? part.quantity
+              : undefined,
+        source: "inventory",
+        status: mapPartToLifecycle(part, workOrderId),
+        location: part.location,
+        linkedSquawks: resolveSquawks(part.partNumber, part.serialNumber, String(part._id)),
+      }),
+    );
+
+    return [...requestItems, ...inventoryItems].sort((a, b) =>
+      a.partNumber.localeCompare(b.partNumber, undefined, { sensitivity: "base" }),
+    );
+  }, [partLinkedSquawks, partsForThisWorkOrder, requestsForThisWorkOrder, workOrderId]);
+
+  const lifecycleItemsByStatus = useMemo(() => {
+    return PARTS_LIFECYCLE_ORDER.reduce<Record<PartLifecycleStatus, PartLifecycleItem[]>>(
+      (acc, status) => {
+        acc[status] = partsLifecycleItems.filter((item) => item.status === status);
+        return acc;
+      },
+      {
+        requested_not_ordered: [],
+        ordered_not_received: [],
+        received_not_installed: [],
+        installed: [],
+        returned_to_stock: [],
+      },
+    );
+  }, [partsLifecycleItems]);
+
+  const partsBoardItems = useMemo(
+    () =>
+      partsLifecycleItems.map((item) => ({
+        id: item.id,
+        partNumber: item.partNumber,
+        partName: item.partName,
+        serialNumber: item.serialNumber,
+        supplier: item.supplier,
+        quantity: item.quantity,
+        status: mapLifecycleToBoardStatus(item.status),
+      })),
+    [partsLifecycleItems],
   );
 
   const readinessBlockers = closeReadiness?.blockers ?? [];
@@ -404,6 +695,11 @@ export default function WorkOrderDetailPage() {
     } finally {
       setTimerActionLoading(null);
     }
+  };
+
+  const handleJumpToSquawk = (squawkId: string) => {
+    setActiveTab("squawks");
+    setPendingSquawkId(squawkId);
   };
 
   // AI-003: Compute live compliance indicator for the Compliance tab badge.
@@ -677,6 +973,7 @@ export default function WorkOrderDetailPage() {
               { value: "squawks", label: "Tasks & Findings", Icon: AlertTriangle, count: workItems.length, indicator: null as "red" | "amber" | "green" | null },
               { value: "compliance", label: "Compliance", Icon: ShieldCheck, count: null, indicator: complianceIndicator },
               { value: "parts", label: "Parts", Icon: Package, count: partsForThisWorkOrder.length, indicator: null as "red" | "amber" | "green" | null },
+              { value: "cost", label: "Cost Estimate", Icon: CheckCircle2, count: null, indicator: null as "red" | "amber" | "green" | null },
               { value: "evidence", label: "Evidence", Icon: Video, count: null, indicator: null as "red" | "amber" | "green" | null },
               { value: "documents", label: "Documents", Icon: Paperclip, count: null, indicator: null as "red" | "amber" | "green" | null },
               { value: "notes", label: "Notes & Activity", Icon: FileText, count: auditEvents.length + voiceNotes.length, indicator: null as "red" | "amber" | "green" | null },
@@ -731,63 +1028,95 @@ export default function WorkOrderDetailPage() {
         </TabsContent>
 
         <TabsContent value="parts" className="mt-0 space-y-3">
-          <div className="flex justify-end">
+          <div className="flex justify-between gap-2">
+            <div className="inline-flex items-center gap-1 rounded-md border border-border/60 p-1">
+              <Button
+                size="sm"
+                variant={partsTabView === "list" ? "default" : "ghost"}
+                className="h-7 px-2.5 text-xs"
+                onClick={() => setPartsTabView("list")}
+              >
+                List
+              </Button>
+              <Button
+                size="sm"
+                variant={partsTabView === "board" ? "default" : "ghost"}
+                className="h-7 px-2.5 text-xs"
+                onClick={() => setPartsTabView("board")}
+              >
+                Board
+              </Button>
+            </div>
             <Button asChild size="sm" className="h-8 text-xs">
               <Link to={`/parts?tab=parts_requests&q=${encodeURIComponent(wo.workOrderNumber)}`}>
                 Request Part
               </Link>
             </Button>
           </div>
-          {partsForThisWorkOrder.length === 0 ? (
+
+          {partsLifecycleItems.length === 0 ? (
             <Card className="border-border/60">
               <CardContent className="py-10 text-center text-sm text-muted-foreground">
                 No parts currently linked to this work order.
               </CardContent>
             </Card>
+          ) : partsTabView === "board" ? (
+            <PartsLifecycleBoard items={partsBoardItems} />
           ) : (
             <div className="space-y-2">
-              {partsForThisWorkOrder.map((part) => (
-                <Card key={String(part._id)} className="border-border/60">
-                  <CardContent className="p-4">
-                    <div className="flex items-start gap-3">
-                      <Package className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-0.5" />
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-0.5">
-                          <span className="font-mono text-xs font-semibold text-foreground">
-                            P/N: {part.partNumber}
-                          </span>
-                          <Badge
-                            variant="outline"
-                            className={`text-[10px] font-medium border ${partStatusStyle(part.location)}`}
-                          >
-                            {partStatusLabel(part.location)}
-                          </Badge>
-                        </div>
-                        <p className="text-sm text-muted-foreground">{part.partName}</p>
-                        <div className="flex items-center gap-3 mt-1 flex-wrap">
-                          {part.serialNumber && (
-                            <span className="text-[11px] font-mono text-muted-foreground">
-                              S/N: {part.serialNumber}
-                            </span>
-                          )}
-                          {part.supplier && (
-                            <span className="text-[11px] text-muted-foreground">
-                              Supplier: {part.supplier}
-                            </span>
-                          )}
-                          {part.eightOneThirtyId && (
-                            <span className="text-[11px] text-muted-foreground">
-                              8130-3 attached
-                            </span>
-                          )}
-                        </div>
-                      </div>
+              {PARTS_LIFECYCLE_ORDER.map((status) => {
+                const items = lifecycleItemsByStatus[status];
+                if (items.length === 0) return null;
+                return (
+                  <div key={status} className="space-y-2">
+                    <div className="flex items-center gap-2 px-1">
+                      <PartStatusBadge status={mapLifecycleToBadgeStatus(status)} />
+                      <span className="text-xs text-muted-foreground">{items.length}</span>
                     </div>
-                  </CardContent>
-                </Card>
-              ))}
+                    {items.map((item) => (
+                      <Card key={item.id} className="border-border/60">
+                        <CardContent className="p-4">
+                          <div className="flex items-start gap-3">
+                            <Package className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-0.5" />
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-0.5">
+                                <span className="font-mono text-xs font-semibold text-foreground">
+                                  P/N: {item.partNumber}
+                                </span>
+                                <PartStatusBadge status={mapLifecycleToBadgeStatus(item.status)} />
+                              </div>
+                              <p className="text-sm text-muted-foreground">{item.partName}</p>
+                              <div className="flex items-center gap-3 mt-1 flex-wrap">
+                                {item.serialNumber && (
+                                  <span className="text-[11px] font-mono text-muted-foreground">S/N: {item.serialNumber}</span>
+                                )}
+                                {item.supplier && (
+                                  <span className="text-[11px] text-muted-foreground">Supplier: {item.supplier}</span>
+                                )}
+                                {typeof item.quantity === "number" && (
+                                  <span className="text-[11px] text-muted-foreground">Qty: {item.quantity}</span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                );
+              })}
             </div>
           )}
+        </TabsContent>
+
+        <TabsContent value="cost" className="mt-0">
+          <CostEstimationPanel
+            orgId={orgId}
+            workOrderId={workOrderId}
+            workOrderNumber={wo.workOrderNumber}
+            timeEntries={(timeLogs ?? []) as any[]}
+            parts={partsForThisWorkOrder}
+          />
         </TabsContent>
 
         <TabsContent value="documents" className="mt-0">
