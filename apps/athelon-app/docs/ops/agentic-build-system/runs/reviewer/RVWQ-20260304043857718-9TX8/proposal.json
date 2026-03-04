@@ -1,0 +1,215 @@
+{
+  "run_id": "RVWQ-20260304043857718-9TX8",
+  "generated_at_utc": "2026-03-04T04:38:57Z",
+  "mode": "quick",
+  "candidate_updates_mbp": [
+    {
+      "mbp_id": "MBP-0018",
+      "previous": {
+        "implementation_state": "partially_implemented",
+        "verification_state": "doc_reviewed",
+        "legacy_status": "partial"
+      },
+      "proposed": {
+        "implementation_state": "implemented",
+        "verification_state": "qa_verified",
+        "legacy_status": "implemented",
+        "last_reviewed_at_utc": "2026-03-04T04:38:57Z",
+        "last_verified_in_app_at_utc": "2026-03-04T04:38:57Z",
+        "reviewed_by": "agentic-reviewer",
+        "evidence_links": "reports/transcript-intelligence/2026-03-03/athlon-leadership-report.md#RPT-018; local://commit/6fd3a02",
+        "related_ids": "MBP-0018; RPT-018; REQ-TEAM-11,MBP-0018,MBP-0054; REQ-TEAM-11"
+      },
+      "source_request_id": "REQ-TEAM-11",
+      "mode": "quick"
+    },
+    {
+      "mbp_id": "MBP-0054",
+      "previous": {
+        "implementation_state": "partially_implemented",
+        "verification_state": "doc_reviewed",
+        "legacy_status": "partial"
+      },
+      "proposed": {
+        "implementation_state": "implemented",
+        "verification_state": "qa_verified",
+        "legacy_status": "implemented",
+        "last_reviewed_at_utc": "2026-03-04T04:38:57Z",
+        "last_verified_in_app_at_utc": "2026-03-04T04:38:57Z",
+        "reviewed_by": "agentic-reviewer",
+        "evidence_links": "athelon-app/docs/plans/2026-03-03-feature-intake-wave-roadmap.md#FR-025; local://commit/6fd3a02",
+        "related_ids": "MBP-0054; FR-025; REQ-TEAM-11,MBP-0018,MBP-0054; REQ-TEAM-11"
+      },
+      "source_request_id": "REQ-TEAM-11",
+      "mode": "quick"
+    }
+  ],
+  "candidate_updates_fs": [
+    {
+      "fs_id": "FS-0042",
+      "previous": {
+        "implementation_state": "not_implemented",
+        "verification_state": "doc_reviewed",
+        "legacy_state_snapshot": "Not Implemented"
+      },
+      "proposed": {
+        "implementation_state": "partially_implemented",
+        "verification_state": "unreviewed",
+        "legacy_state_snapshot": "Partially Implemented",
+        "last_reviewed_at_utc": "2026-03-04T04:38:57Z",
+        "last_verified_in_app_at_utc": "null",
+        "reviewed_by": "agentic-reviewer",
+        "evidence_links": "BugHunter=None; QA=No new post-cycle evidence; derived_from=MBP-0018,MBP-0045,MBP-0054,MBP-0063,MBP-0064,MBP-0065,MBP-0066,MBP-0067,MBP-0068",
+        "related_ids": "Feature #42; FS-0042; MBP-0018,MBP-0045,MBP-0054,MBP-0063,MBP-0064,MBP-0065,MBP-0066,MBP-0067,MBP-0068"
+      },
+      "linked_mbp_ids": [
+        "MBP-0018",
+        "MBP-0045",
+        "MBP-0054",
+        "MBP-0063",
+        "MBP-0064",
+        "MBP-0065",
+        "MBP-0066",
+        "MBP-0067",
+        "MBP-0068"
+      ],
+      "mode": "quick"
+    }
+  ],
+  "gates_run": [],
+  "evidence": [
+    {
+      "request_id": "REQ-TEAM-01",
+      "completed_at_utc": "2026-03-04T03:50:50Z",
+      "validation_status": "pass",
+      "implementation_state": "implemented",
+      "verification_state": "qa_verified",
+      "evidence_links": "local://commit/a18385b",
+      "related_ids": "REQ-TEAM-01,MBP-0017",
+      "notes": "Added RoleGuard to shop settings route for admin/shop_manager RBAC gate.",
+      "mbp_ids": [
+        "MBP-0017"
+      ]
+    },
+    {
+      "request_id": "REQ-TEAM-02",
+      "completed_at_utc": "2026-03-04T03:53:16Z",
+      "validation_status": "pass",
+      "implementation_state": "implemented",
+      "verification_state": "qa_verified",
+      "evidence_links": "local://commit/ba485cc",
+      "related_ids": "REQ-TEAM-02,MBP-0105",
+      "notes": "Added canonical router role model and legacy normalization helpers in router index.",
+      "mbp_ids": [
+        "MBP-0105"
+      ]
+    },
+    {
+      "request_id": "REQ-TEAM-03",
+      "completed_at_utc": "2026-03-04T03:55:03Z",
+      "validation_status": "pass",
+      "implementation_state": "implemented",
+      "verification_state": "qa_verified",
+      "evidence_links": "local://commit/fd08a87",
+      "related_ids": "REQ-TEAM-03,MBP-0106",
+      "notes": "Implemented clerk org invite flow via new UserInvitePanel and wired into settings users page.",
+      "mbp_ids": [
+        "MBP-0106"
+      ]
+    },
+    {
+      "request_id": "REQ-TEAM-04",
+      "completed_at_utc": "2026-03-04T03:56:52Z",
+      "validation_status": "pass",
+      "implementation_state": "implemented",
+      "verification_state": "qa_verified",
+      "evidence_links": "local://commit/7e925b4",
+      "related_ids": "REQ-TEAM-04,MBP-0107",
+      "notes": "Applied role-based sidebar restrictions in AppSidebar (replacement for stale RoleSidebar path).",
+      "mbp_ids": [
+        "MBP-0107"
+      ]
+    },
+    {
+      "request_id": "REQ-TEAM-05",
+      "completed_at_utc": "2026-03-04T03:58:50Z",
+      "validation_status": "pass",
+      "implementation_state": "implemented",
+      "verification_state": "qa_verified",
+      "evidence_links": "local://commit/1a206bc",
+      "related_ids": "REQ-TEAM-05,MBP-0108",
+      "notes": "Added route-guards module with role/path policy and reusable RouteAuthorizationGuard component.",
+      "mbp_ids": [
+        "MBP-0108"
+      ]
+    },
+    {
+      "request_id": "REQ-TEAM-06",
+      "completed_at_utc": "2026-03-04T03:39:38Z",
+      "validation_status": "pass",
+      "implementation_state": "implemented",
+      "verification_state": "qa_verified",
+      "evidence_links": "local://commit/d104430",
+      "related_ids": "REQ-TEAM-06,MBP-0109",
+      "notes": "Added active role banner to personnel page entry.",
+      "mbp_ids": [
+        "MBP-0109"
+      ]
+    },
+    {
+      "request_id": "REQ-TEAM-07",
+      "completed_at_utc": "2026-03-04T04:03:03Z",
+      "validation_status": "pass",
+      "implementation_state": "implemented",
+      "verification_state": "qa_verified",
+      "evidence_links": "local://commit/1fb138a",
+      "related_ids": "REQ-TEAM-07,MBP-0003",
+      "notes": "Added Playwright coverage for transcript capture/editability and 500-char enforcement in work-order handoff notes.",
+      "mbp_ids": [
+        "MBP-0003"
+      ]
+    },
+    {
+      "request_id": "REQ-TEAM-08",
+      "completed_at_utc": "2026-03-04T04:04:07Z",
+      "validation_status": "pass",
+      "implementation_state": "implemented",
+      "verification_state": "qa_verified",
+      "evidence_links": "local://commit/dd99293",
+      "related_ids": "REQ-TEAM-08,MBP-0004",
+      "notes": "Added accessibility spellcheck policy module with technical-term safeguards and DOM attribute resolver.",
+      "mbp_ids": [
+        "MBP-0004"
+      ]
+    },
+    {
+      "request_id": "REQ-TEAM-09",
+      "completed_at_utc": "2026-03-04T03:48:52Z",
+      "validation_status": "pass",
+      "implementation_state": "implemented",
+      "verification_state": "qa_verified",
+      "evidence_links": "local://commit/fa3a514",
+      "related_ids": "REQ-TEAM-09,MBP-0011",
+      "notes": "Implemented dynamic due-state hardening in checkAdDueForAircraft/getFleetAdSummary.",
+      "mbp_ids": [
+        "MBP-0011"
+      ]
+    },
+    {
+      "request_id": "REQ-TEAM-11",
+      "completed_at_utc": "2026-03-04T04:38:49Z",
+      "validation_status": "pass",
+      "implementation_state": "implemented",
+      "verification_state": "qa_verified",
+      "evidence_links": "local://commit/6fd3a02",
+      "related_ids": "REQ-TEAM-11,MBP-0018,MBP-0054",
+      "notes": "Added mandatory override reasons for approved time-entry edit/delete overrides and surfaced normalized origin taxonomy badges/filtering across task and finding rows.",
+      "mbp_ids": [
+        "MBP-0018",
+        "MBP-0054"
+      ]
+    }
+  ],
+  "warnings": [],
+  "apply_command": "pnpm run agentic:reviewer:apply -- --proposal docs/ops/agentic-build-system/runs/reviewer/RVWQ-20260304043857718-9TX8/proposal.json --approve-token YES-APPLY"
+}

@@ -1,9 +1,9 @@
 import { Suspense } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AuthRoutes } from "@/src/router/routeModules/authRoutes";
-import { CustomerPortalRoutes } from "@/src/router/routeModules/customerPortalRoutes";
-import { ProtectedAppRoutes } from "@/src/router/routeModules/protectedAppRoutes";
+import { authRoutes } from "@/src/router/routeModules/authRoutes";
+import { customerPortalRoutes } from "@/src/router/routeModules/customerPortalRoutes";
+import { protectedAppRoutes } from "@/src/router/routeModules/protectedAppRoutes";
 
 function LoadingFallback() {
   return (
@@ -22,9 +22,9 @@ export default function AppRouter() {
     <Suspense fallback={<LoadingFallback />}>
       <Routes>
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        <AuthRoutes />
-        <CustomerPortalRoutes />
-        <ProtectedAppRoutes />
+        {authRoutes()}
+        {customerPortalRoutes()}
+        {protectedAppRoutes()}
       </Routes>
     </Suspense>
   );

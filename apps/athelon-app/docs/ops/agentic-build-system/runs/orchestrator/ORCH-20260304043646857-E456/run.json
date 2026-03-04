@@ -1,0 +1,46 @@
+{
+  "run_id": "ORCH-20260304043646857-E456",
+  "timestamp_utc": "2026-03-04T04:36:46Z",
+  "run_mode": "ACTIVE",
+  "queue_count": 11,
+  "active_assignments": 1,
+  "dispatch_count": 1,
+  "blocked_count": 1,
+  "queue_summary": {
+    "queued": 0,
+    "blocked": 1,
+    "in_progress": 1,
+    "completed": 9,
+    "failed": 0,
+    "cancelled": 0
+  },
+  "released_leases_in_sync": 0,
+  "lease_snapshot": {
+    "stats": {
+      "total": 10,
+      "active": 1,
+      "released": 2,
+      "expired": 7
+    },
+    "active_assignments": [
+      "ASG-20260304043646858-BU23"
+    ]
+  },
+  "dispatched": [
+    {
+      "request_id": "REQ-TEAM-11",
+      "assignment_id": "ASG-20260304043646858-BU23",
+      "owner_session": "mock-asg-20260304043646858-bu23",
+      "owner_branch": "agent/asg-20260304043646858-bu23-req-team-11",
+      "lease_id": "LEASE-20260304043646858-I1YB",
+      "spawn_summary": "spawned mock-asg-20260304043646858-bu23 (mock)"
+    }
+  ],
+  "blocked": [
+    {
+      "request_id": "REQ-TEAM-10",
+      "reason": "dependency_not_ready:MBP-0014:GRP-002;dependency_not_ready:MBP-0015:GRP-002"
+    }
+  ],
+  "notes": []
+}

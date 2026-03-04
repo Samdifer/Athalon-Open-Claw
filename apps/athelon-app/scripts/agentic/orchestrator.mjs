@@ -364,6 +364,7 @@ export function runOrchestratorTick(options = {}) {
 
       const spawn = spawnTeamSession(assignment, {
         spawn_mode: options.spawn_mode,
+        paths,
       });
 
       if (!spawn.ok) {
@@ -449,7 +450,7 @@ function usage() {
       "Commands:",
       "  start [--max-parallel 8]",
       "  stop",
-      "  tick [--spawn-mode mock|cli|disabled] [--max-parallel 8] [--lease-ttl-minutes 120]",
+      "  tick [--spawn-mode mock|cli|local|disabled] [--max-parallel 8] [--lease-ttl-minutes 120]",
     ].join("\n"),
   );
 }

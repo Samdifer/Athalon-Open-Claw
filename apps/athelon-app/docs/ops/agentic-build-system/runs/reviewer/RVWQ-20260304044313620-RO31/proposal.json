@@ -1,0 +1,298 @@
+{
+  "run_id": "RVWQ-20260304044313620-RO31",
+  "generated_at_utc": "2026-03-04T04:43:13Z",
+  "mode": "quick",
+  "candidate_updates_mbp": [
+    {
+      "mbp_id": "MBP-0014",
+      "previous": {
+        "implementation_state": "not_implemented",
+        "verification_state": "unreviewed",
+        "legacy_status": "missing"
+      },
+      "proposed": {
+        "implementation_state": "implemented",
+        "verification_state": "qa_verified",
+        "legacy_status": "implemented",
+        "last_reviewed_at_utc": "2026-03-04T04:43:13Z",
+        "last_verified_in_app_at_utc": "2026-03-04T04:43:13Z",
+        "reviewed_by": "agentic-reviewer",
+        "evidence_links": "reports/transcript-intelligence/2026-03-03/athlon-leadership-report.md#RPT-014; local://commit/9a9347b",
+        "related_ids": "MBP-0014; RPT-014; REQ-TEAM-10,MBP-0014,MBP-0015; REQ-TEAM-10"
+      },
+      "source_request_id": "REQ-TEAM-10",
+      "mode": "quick"
+    },
+    {
+      "mbp_id": "MBP-0015",
+      "previous": {
+        "implementation_state": "not_implemented",
+        "verification_state": "unreviewed",
+        "legacy_status": "missing"
+      },
+      "proposed": {
+        "implementation_state": "implemented",
+        "verification_state": "qa_verified",
+        "legacy_status": "implemented",
+        "last_reviewed_at_utc": "2026-03-04T04:43:13Z",
+        "last_verified_in_app_at_utc": "2026-03-04T04:43:13Z",
+        "reviewed_by": "agentic-reviewer",
+        "evidence_links": "reports/transcript-intelligence/2026-03-03/athlon-leadership-report.md#RPT-015; local://commit/9a9347b",
+        "related_ids": "MBP-0015; RPT-015; REQ-TEAM-10,MBP-0014,MBP-0015; REQ-TEAM-10"
+      },
+      "source_request_id": "REQ-TEAM-10",
+      "mode": "quick"
+    },
+    {
+      "mbp_id": "MBP-0123",
+      "previous": {
+        "implementation_state": "partially_implemented",
+        "verification_state": "doc_reviewed",
+        "legacy_status": "partial"
+      },
+      "proposed": {
+        "implementation_state": "implemented",
+        "verification_state": "qa_verified",
+        "legacy_status": "implemented",
+        "last_reviewed_at_utc": "2026-03-04T04:43:13Z",
+        "last_verified_in_app_at_utc": "2026-03-04T04:43:13Z",
+        "reviewed_by": "agentic-reviewer",
+        "evidence_links": "athelon-app/TECH-MVP-BUILD-PLAN.md#GAP-003; local://commit/3da181f",
+        "related_ids": "MBP-0123; GAP-003; REQ-TEAM-12,MBP-0123; REQ-TEAM-12"
+      },
+      "source_request_id": "REQ-TEAM-12",
+      "mode": "quick"
+    }
+  ],
+  "candidate_updates_fs": [
+    {
+      "fs_id": "FS-0044",
+      "previous": {
+        "implementation_state": "backend_needed",
+        "verification_state": "qa_verified",
+        "legacy_state_snapshot": "Backend Needed"
+      },
+      "proposed": {
+        "implementation_state": "partially_implemented",
+        "verification_state": "unreviewed",
+        "legacy_state_snapshot": "Partially Implemented",
+        "last_reviewed_at_utc": "2026-03-04T04:43:13Z",
+        "last_verified_in_app_at_utc": "null",
+        "reviewed_by": "agentic-reviewer",
+        "evidence_links": "BugHunter=BACKEND-NEEDED-BH-01; QA=GAP-06, GAP-08, TD-001, TD-005, TD-009 +…; derived_from=MBP-0014,MBP-0015,MBP-0016,MBP-0039,MBP-0052,MBP-0053,MBP-0123,MBP-0124,MBP-0127,MBP-0132,MBP-0133,MBP-0136",
+        "related_ids": "Feature #44; FS-0044; MBP-0014,MBP-0015,MBP-0016,MBP-0039,MBP-0052,MBP-0053,MBP-0123,MBP-0124,MBP-0127,MBP-0132,MBP-0133,MBP-0136"
+      },
+      "linked_mbp_ids": [
+        "MBP-0014",
+        "MBP-0015",
+        "MBP-0016",
+        "MBP-0039",
+        "MBP-0052",
+        "MBP-0053",
+        "MBP-0123",
+        "MBP-0124",
+        "MBP-0127",
+        "MBP-0132",
+        "MBP-0133",
+        "MBP-0136"
+      ],
+      "mode": "quick"
+    },
+    {
+      "fs_id": "FS-0023",
+      "previous": {
+        "implementation_state": "partially_implemented",
+        "verification_state": "qa_verified",
+        "legacy_state_snapshot": "Partially Implemented"
+      },
+      "proposed": {
+        "implementation_state": "partially_implemented",
+        "verification_state": "unreviewed",
+        "legacy_state_snapshot": "Partially Implemented",
+        "last_reviewed_at_utc": "2026-03-04T04:43:13Z",
+        "last_verified_in_app_at_utc": "null",
+        "reviewed_by": "agentic-reviewer",
+        "evidence_links": "BugHunter=BH-LT3-001, BH-LT3-002, BUG-001, BUG-002, BUG-031 +…; QA=FEAT-LARGE-001, GAP-06, GAP-09, GAP-10, GAP-11 +…; derived_from=MBP-0014,MBP-0015,MBP-0039,MBP-0040,MBP-0041,MBP-0042,MBP-0123,MBP-0124,MBP-0125,MBP-0127,MBP-0134,MBP-0136",
+        "related_ids": "Feature #23; FS-0023; MBP-0014,MBP-0015,MBP-0039,MBP-0040,MBP-0041,MBP-0042,MBP-0123,MBP-0124,MBP-0125,MBP-0127,MBP-0134,MBP-0136"
+      },
+      "linked_mbp_ids": [
+        "MBP-0014",
+        "MBP-0015",
+        "MBP-0039",
+        "MBP-0040",
+        "MBP-0041",
+        "MBP-0042",
+        "MBP-0123",
+        "MBP-0124",
+        "MBP-0125",
+        "MBP-0127",
+        "MBP-0134",
+        "MBP-0136"
+      ],
+      "mode": "quick"
+    }
+  ],
+  "gates_run": [],
+  "evidence": [
+    {
+      "request_id": "REQ-TEAM-10",
+      "completed_at_utc": "2026-03-04T04:41:16Z",
+      "validation_status": "pass",
+      "implementation_state": "implemented",
+      "verification_state": "qa_verified",
+      "evidence_links": "local://commit/9a9347b",
+      "related_ids": "REQ-TEAM-10,MBP-0014,MBP-0015",
+      "notes": "Added My Work Log Time CTA and query-param prefilled Clock In dialog in Time Clock for direct task labor capture handoff.",
+      "mbp_ids": [
+        "MBP-0014",
+        "MBP-0015"
+      ]
+    },
+    {
+      "request_id": "REQ-TEAM-01",
+      "completed_at_utc": "2026-03-04T03:50:50Z",
+      "validation_status": "pass",
+      "implementation_state": "implemented",
+      "verification_state": "qa_verified",
+      "evidence_links": "local://commit/a18385b",
+      "related_ids": "REQ-TEAM-01,MBP-0017",
+      "notes": "Added RoleGuard to shop settings route for admin/shop_manager RBAC gate.",
+      "mbp_ids": [
+        "MBP-0017"
+      ]
+    },
+    {
+      "request_id": "REQ-TEAM-02",
+      "completed_at_utc": "2026-03-04T03:53:16Z",
+      "validation_status": "pass",
+      "implementation_state": "implemented",
+      "verification_state": "qa_verified",
+      "evidence_links": "local://commit/ba485cc",
+      "related_ids": "REQ-TEAM-02,MBP-0105",
+      "notes": "Added canonical router role model and legacy normalization helpers in router index.",
+      "mbp_ids": [
+        "MBP-0105"
+      ]
+    },
+    {
+      "request_id": "REQ-TEAM-03",
+      "completed_at_utc": "2026-03-04T03:55:03Z",
+      "validation_status": "pass",
+      "implementation_state": "implemented",
+      "verification_state": "qa_verified",
+      "evidence_links": "local://commit/fd08a87",
+      "related_ids": "REQ-TEAM-03,MBP-0106",
+      "notes": "Implemented clerk org invite flow via new UserInvitePanel and wired into settings users page.",
+      "mbp_ids": [
+        "MBP-0106"
+      ]
+    },
+    {
+      "request_id": "REQ-TEAM-04",
+      "completed_at_utc": "2026-03-04T03:56:52Z",
+      "validation_status": "pass",
+      "implementation_state": "implemented",
+      "verification_state": "qa_verified",
+      "evidence_links": "local://commit/7e925b4",
+      "related_ids": "REQ-TEAM-04,MBP-0107",
+      "notes": "Applied role-based sidebar restrictions in AppSidebar (replacement for stale RoleSidebar path).",
+      "mbp_ids": [
+        "MBP-0107"
+      ]
+    },
+    {
+      "request_id": "REQ-TEAM-05",
+      "completed_at_utc": "2026-03-04T03:58:50Z",
+      "validation_status": "pass",
+      "implementation_state": "implemented",
+      "verification_state": "qa_verified",
+      "evidence_links": "local://commit/1a206bc",
+      "related_ids": "REQ-TEAM-05,MBP-0108",
+      "notes": "Added route-guards module with role/path policy and reusable RouteAuthorizationGuard component.",
+      "mbp_ids": [
+        "MBP-0108"
+      ]
+    },
+    {
+      "request_id": "REQ-TEAM-06",
+      "completed_at_utc": "2026-03-04T03:39:38Z",
+      "validation_status": "pass",
+      "implementation_state": "implemented",
+      "verification_state": "qa_verified",
+      "evidence_links": "local://commit/d104430",
+      "related_ids": "REQ-TEAM-06,MBP-0109",
+      "notes": "Added active role banner to personnel page entry.",
+      "mbp_ids": [
+        "MBP-0109"
+      ]
+    },
+    {
+      "request_id": "REQ-TEAM-07",
+      "completed_at_utc": "2026-03-04T04:03:03Z",
+      "validation_status": "pass",
+      "implementation_state": "implemented",
+      "verification_state": "qa_verified",
+      "evidence_links": "local://commit/1fb138a",
+      "related_ids": "REQ-TEAM-07,MBP-0003",
+      "notes": "Added Playwright coverage for transcript capture/editability and 500-char enforcement in work-order handoff notes.",
+      "mbp_ids": [
+        "MBP-0003"
+      ]
+    },
+    {
+      "request_id": "REQ-TEAM-08",
+      "completed_at_utc": "2026-03-04T04:04:07Z",
+      "validation_status": "pass",
+      "implementation_state": "implemented",
+      "verification_state": "qa_verified",
+      "evidence_links": "local://commit/dd99293",
+      "related_ids": "REQ-TEAM-08,MBP-0004",
+      "notes": "Added accessibility spellcheck policy module with technical-term safeguards and DOM attribute resolver.",
+      "mbp_ids": [
+        "MBP-0004"
+      ]
+    },
+    {
+      "request_id": "REQ-TEAM-09",
+      "completed_at_utc": "2026-03-04T03:48:52Z",
+      "validation_status": "pass",
+      "implementation_state": "implemented",
+      "verification_state": "qa_verified",
+      "evidence_links": "local://commit/fa3a514",
+      "related_ids": "REQ-TEAM-09,MBP-0011",
+      "notes": "Implemented dynamic due-state hardening in checkAdDueForAircraft/getFleetAdSummary.",
+      "mbp_ids": [
+        "MBP-0011"
+      ]
+    },
+    {
+      "request_id": "REQ-TEAM-11",
+      "completed_at_utc": "2026-03-04T04:38:49Z",
+      "validation_status": "pass",
+      "implementation_state": "implemented",
+      "verification_state": "qa_verified",
+      "evidence_links": "local://commit/6fd3a02",
+      "related_ids": "REQ-TEAM-11,MBP-0018,MBP-0054",
+      "notes": "Added mandatory override reasons for approved time-entry edit/delete overrides and surfaced normalized origin taxonomy badges/filtering across task and finding rows.",
+      "mbp_ids": [
+        "MBP-0018",
+        "MBP-0054"
+      ]
+    },
+    {
+      "request_id": "REQ-TEAM-12",
+      "completed_at_utc": "2026-03-04T04:43:06Z",
+      "validation_status": "pass",
+      "implementation_state": "implemented",
+      "verification_state": "qa_verified",
+      "evidence_links": "local://commit/3da181f",
+      "related_ids": "REQ-TEAM-12,MBP-0123",
+      "notes": "Added e2e coverage for My Work active-filter interaction and Log Time CTA prefilled Clock In handoff.",
+      "mbp_ids": [
+        "MBP-0123"
+      ]
+    }
+  ],
+  "warnings": [],
+  "apply_command": "pnpm run agentic:reviewer:apply -- --proposal docs/ops/agentic-build-system/runs/reviewer/RVWQ-20260304044313620-RO31/proposal.json --approve-token YES-APPLY"
+}

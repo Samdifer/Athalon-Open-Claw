@@ -151,9 +151,9 @@ function ProtectedAppContext() {
   );
 }
 
-export function ProtectedAppRoutes() {
+export function protectedAppRoutes() {
   return (
-    <Route element={<ProtectedRoute />}>
+    <Route key="app" element={<ProtectedRoute />}>
       <Route element={<ProtectedAppContext />}>
         <Route path="/onboarding" element={<OnboardingPage />} />
 

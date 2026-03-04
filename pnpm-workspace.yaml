@@ -1,6 +1,7 @@
 packages:
   - apps/athelon-app
   - apps/athelon-demo
+  - apps/athelon-ios-demo
   - apps/scheduler
   - apps/marketing/video/sixty-second-pitch
   - apps/marketing/video/sixty-second-pitch/my-video

@@ -16,6 +16,8 @@ import {
   Phone,
   Mail,
   MapPin,
+  Smartphone,
+  LayoutGrid,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -428,6 +430,61 @@ export default function ShopSettingsPage() {
               </Link>
             </Button>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Demo Apps */}
+      <Card className="border-border/60">
+        <CardHeader>
+          <CardTitle className="text-sm flex items-center gap-2">
+            <Palette className="w-4 h-4 text-muted-foreground" />
+            Demo Apps
+          </CardTitle>
+          <CardDescription className="text-xs">
+            Preview alternative UI skins of the Athalon platform
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <a
+            href="http://localhost:3002"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-3 p-3 rounded-lg border border-border/60 hover:bg-muted/50 transition-colors group"
+          >
+            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center">
+              <Smartphone className="w-5 h-5 text-white" />
+            </div>
+            <div className="flex-1">
+              <div className="text-sm font-medium flex items-center gap-1.5">
+                iOS Demo
+                <ExternalLink className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+              </div>
+              <div className="text-xs text-muted-foreground">
+                Native iOS design language — tab bar, grouped lists, large titles
+              </div>
+            </div>
+            <span className="text-[10px] text-muted-foreground font-mono">:3002</span>
+          </a>
+          <a
+            href="http://localhost:3001"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-3 p-3 rounded-lg border border-border/60 hover:bg-muted/50 transition-colors group"
+          >
+            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-violet-500 to-purple-400 flex items-center justify-center">
+              <LayoutGrid className="w-5 h-5 text-white" />
+            </div>
+            <div className="flex-1">
+              <div className="text-sm font-medium flex items-center gap-1.5">
+                Bento Demo
+                <ExternalLink className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+              </div>
+              <div className="text-xs text-muted-foreground">
+                Apple-inspired bento grid — glassmorphism, activity rings, animated dock
+              </div>
+            </div>
+            <span className="text-[10px] text-muted-foreground font-mono">:3001</span>
+          </a>
         </CardContent>
       </Card>
 

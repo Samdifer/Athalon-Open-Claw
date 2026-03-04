@@ -1,14 +1,14 @@
 # Master Feature Crosswalk (Derived)
 
-Derived from `docs/spec/MASTER-BUILD-LIST.md` Registry B on 2026-03-03. Do not edit manually; regenerate via `pnpm run spec:export:derived`.
+Derived from `docs/spec/MASTER-BUILD-LIST.md` Registry B on 2026-03-04. Do not edit manually; regenerate via `pnpm run spec:export:derived`.
 
 ## Group Rollup
 
 | Group ID | Group Name | Target Wave | Rollup Status | Atomic Count | Merged Source IDs |
 |---|---|---|---|---:|---|
-| GRP-001 | Identity and RBAC Control Plane | Wave0 | missing | 6 | ROLE-001, ROLE-002, ROLE-003, ROLE-004, ROLE-005, RPT-017 |
-| GRP-002 | Audit, Event Ledger, and Taxonomy | Wave0 | partial | 2 | FR-025, RPT-018 |
-| GRP-003 | Work Order Core Execution | Wave1 | missing | 7 | FR-010, GAP-003, GAP-004, GAP-007, MBL-044, RPT-014, RPT-015 |
+| GRP-001 | Identity and RBAC Control Plane | Wave0 | implemented | 6 | ROLE-001, ROLE-002, ROLE-003, ROLE-004, ROLE-005, RPT-017 |
+| GRP-002 | Audit, Event Ledger, and Taxonomy | Wave0 | implemented | 2 | FR-025, RPT-018 |
+| GRP-003 | Work Order Core Execution | Wave1 | partial | 7 | FR-010, GAP-003, GAP-004, GAP-007, MBL-044, RPT-014, RPT-015 |
 | GRP-004 | Quote Governance and Commercial Controls | Wave1 | partial | 3 | FR-023, FR-024, SCH-A5 |
 | GRP-005 | Signoff Authority and Inspection Controls | Wave1 | partial | 2 | AUTH-001, FR-004 |
 | GRP-006 | Parts Traceability and Receiving | Wave2 | missing | 8 | FR-006, FR-007, FR-008, FR-009, FR-019, FR-020, GAP-002, RPT-022 |
@@ -26,7 +26,7 @@ Derived from `docs/spec/MASTER-BUILD-LIST.md` Registry B on 2026-03-03. Do not e
 | GRP-018 | Financial Planning and P&L Intelligence | Wave3 | partial | 6 | LABOR-001, LABOR-002, RPT-024, SCH-A4, TAX-001, TAX-002 |
 | GRP-019 | Marketplace and Talent Matching | Wave6 | proposed | 1 | RPT-028 |
 | GRP-020 | Industry Benchmarking and Quote Book | Wave6 | proposed | 1 | RPT-027 |
-| GRP-021 | Reliability and Hardening Program | Wave0 | partial | 3 | RPT-003, RPT-004, RPT-011 |
+| GRP-021 | Reliability and Hardening Program | Wave0 | implemented | 3 | RPT-003, RPT-004, RPT-011 |
 | GRP-022 | PDF/Document Export and Report Artifacts | Wave1 | proposed | 8 | EXPORT-001, EXPORT-002, PDF-001, PDF-002, PDF-003, PDF-004, PDF-005, PDF-006 |
 | GRP-023 | Notifications and Alerting | Wave3 | proposed | 6 | NOTIF-001, NOTIF-002, NOTIF-003, NOTIF-004, NOTIF-005, NOTIF-006 |
 | GRP-024 | UX Polish and Finishing Layer | Wave4 | proposed | 13 | POLISH-001, POLISH-002, POLISH-003, POLISH-004, POLISH-005, POLISH-006, POLISH-007, POLISH-008, POLISH-009, POLISH-010, POLISH-011, POLISH-012, POLISH-013 |
@@ -37,22 +37,22 @@ Derived from `docs/spec/MASTER-BUILD-LIST.md` Registry B on 2026-03-03. Do not e
 |---|---|---|---|---|---|---|
 | MBP-0001 | REPORT | RPT-001 | GRP-016 | implemented | Wave3 | OJT task progression scoring |
 | MBP-0002 | REPORT | RPT-002 | GRP-016 | proposed | Wave3 | Multi-aircraft shared OJT tasks |
-| MBP-0003 | REPORT | RPT-003 | GRP-021 | proposed | Wave0 | Voice notes + transcript capture |
-| MBP-0004 | REPORT | RPT-004 | GRP-021 | proposed | Wave0 | Spell-check accessibility layer |
+| MBP-0003 | REPORT | RPT-003 | GRP-021 | implemented | Wave0 | Voice notes + transcript capture |
+| MBP-0004 | REPORT | RPT-004 | GRP-021 | implemented | Wave0 | Spell-check accessibility layer |
 | MBP-0005 | REPORT | RPT-005 | GRP-016 | partial | Wave3 | Trainer sign-off queue |
 | MBP-0006 | REPORT | RPT-006 | GRP-009 | partial | Wave3 | Efficiency baseline by experience |
 | MBP-0007 | REPORT | RPT-007 | GRP-009 | partial | Wave3 | Growth curve dashboard |
 | MBP-0008 | REPORT | RPT-008 | GRP-012 | partial | Wave5 | Team composition warnings |
 | MBP-0009 | REPORT | RPT-009 | GRP-013 | partial | Wave5 | Predictive maintenance (Chapter 5) |
 | MBP-0010 | REPORT | RPT-010 | GRP-013 | partial | Wave5 | ADS-B usage integration |
-| MBP-0011 | REPORT | RPT-011 | GRP-021 | partial | Wave0 | AD/SB dynamic due logic |
+| MBP-0011 | REPORT | RPT-011 | GRP-021 | implemented | Wave0 | AD/SB dynamic due logic |
 | MBP-0012 | REPORT | RPT-012 | GRP-017 | partial | Wave1 | Logbook entry generation |
 | MBP-0013 | REPORT | RPT-013 | GRP-017 | missing | Wave1 | Logbook scanning + OCR ingestion |
-| MBP-0014 | REPORT | RPT-014 | GRP-003 | missing | Wave1 | Work order assignment (My Work) |
-| MBP-0015 | REPORT | RPT-015 | GRP-003 | missing | Wave1 | Clock-in / labor tracking |
+| MBP-0014 | REPORT | RPT-014 | GRP-003 | implemented | Wave1 | Work order assignment (My Work) |
+| MBP-0015 | REPORT | RPT-015 | GRP-003 | implemented | Wave1 | Clock-in / labor tracking |
 | MBP-0016 | REPORT | RPT-016 | GRP-014 | partial | Wave5 | Cross-module data bus |
-| MBP-0017 | REPORT | RPT-017 | GRP-001 | missing | Wave0 | Role-based access control (RBAC) |
-| MBP-0018 | REPORT | RPT-018 | GRP-002 | partial | Wave0 | Override reason logging |
+| MBP-0017 | REPORT | RPT-017 | GRP-001 | implemented | Wave0 | Role-based access control (RBAC) |
+| MBP-0018 | REPORT | RPT-018 | GRP-002 | implemented | Wave0 | Override reason logging |
 | MBP-0019 | REPORT | RPT-019 | GRP-015 | partial | Wave4 | Customer portal & history |
 | MBP-0020 | REPORT | RPT-020 | GRP-007 | partial | Wave2 | Inventory control + Kanban |
 | MBP-0021 | REPORT | RPT-021 | GRP-007 | missing | Wave2 | Inventory master tab |
@@ -88,7 +88,7 @@ Derived from `docs/spec/MASTER-BUILD-LIST.md` Registry B on 2026-03-03. Do not e
 | MBP-0051 | FR | FR-022 | GRP-009 | partial | Wave1 | WO header KPI + date commitments: Per-WO KPI summary at top (WIP/estimated/applied), prominent committed |
 | MBP-0052 | FR | FR-023 | GRP-004 | implemented | Wave1 | Quote decision granularity: Pre-in-dock quote must allow accept/decline per line item with categor |
 | MBP-0053 | FR | FR-024 | GRP-004 | partial | Wave1 | Secondary quote + squawk identity: Post-inspection repair quote supports same accept/decline model; each |
-| MBP-0054 | FR | FR-025 | GRP-002 | partial | Wave0 | Finding origin taxonomy: Every task/squawk tagged by origin: planned, inspection-found, custome |
+| MBP-0054 | FR | FR-025 | GRP-002 | implemented | Wave0 | Finding origin taxonomy: Every task/squawk tagged by origin: planned, inspection-found, custome |
 | MBP-0055 | WATERFALL | AUTH-001 | GRP-005 | proposed | Wave1 | `completeStep` rating-to-step authorization — validate airframe/powerplant cert |
 | MBP-0056 | WATERFALL | CHART-001 | GRP-009 | proposed | Wave3 | Dashboard: WO status distribution (pie/donut chart) |
 | MBP-0057 | WATERFALL | CHART-002 | GRP-009 | proposed | Wave3 | Dashboard: Revenue trend (line chart, last 12 months) |
@@ -139,11 +139,11 @@ Derived from `docs/spec/MASTER-BUILD-LIST.md` Registry B on 2026-03-03. Do not e
 | MBP-0102 | WATERFALL | PORTAL-007 | GRP-015 | proposed | Wave4 | Message/request submission to shop |
 | MBP-0103 | WATERFALL | REPORT-001 | GRP-009 | proposed | Wave3 | Monthly revenue report page |
 | MBP-0104 | WATERFALL | REPORT-002 | GRP-009 | proposed | Wave3 | WO throughput report |
-| MBP-0105 | WATERFALL | ROLE-001 | GRP-001 | proposed | Wave0 | Define MRO roles: admin, shop_manager, qcm_inspector, lead_technician, technician, bill... |
-| MBP-0106 | WATERFALL | ROLE-002 | GRP-001 | proposed | Wave0 | Admin settings page: invite user, assign role, deactivate |
-| MBP-0107 | WATERFALL | ROLE-003 | GRP-001 | proposed | Wave0 | Role-based sidebar nav (hide billing from technicians, hide WO execution from billing) |
-| MBP-0108 | WATERFALL | ROLE-004 | GRP-001 | proposed | Wave0 | Role-based route guards (redirect unauthorized) |
-| MBP-0109 | WATERFALL | ROLE-005 | GRP-001 | proposed | Wave0 | Role display in personnel page |
+| MBP-0105 | WATERFALL | ROLE-001 | GRP-001 | implemented | Wave0 | Define MRO roles: admin, shop_manager, qcm_inspector, lead_technician, technician, bill... |
+| MBP-0106 | WATERFALL | ROLE-002 | GRP-001 | implemented | Wave0 | Admin settings page: invite user, assign role, deactivate |
+| MBP-0107 | WATERFALL | ROLE-003 | GRP-001 | implemented | Wave0 | Role-based sidebar nav (hide billing from technicians, hide WO execution from billing) |
+| MBP-0108 | WATERFALL | ROLE-004 | GRP-001 | implemented | Wave0 | Role-based route guards (redirect unauthorized) |
+| MBP-0109 | WATERFALL | ROLE-005 | GRP-001 | implemented | Wave0 | Role display in personnel page |
 | MBP-0110 | WATERFALL | SCHED-001 | GRP-012 | proposed | Wave5 | Interactive Gantt chart with drag-drop (resize, move WO bars) |
 | MBP-0111 | WATERFALL | SCHED-002 | GRP-012 | proposed | Wave5 | Technician skill matching in drag-drop (warn if unqualified) |
 | MBP-0112 | WATERFALL | SCHED-003 | GRP-012 | proposed | Wave5 | Hangar bay allocation view (which aircraft in which bay) |
@@ -157,7 +157,7 @@ Derived from `docs/spec/MASTER-BUILD-LIST.md` Registry B on 2026-03-03. Do not e
 | MBP-0120 | WATERFALL | TAX-002 | GRP-018 | proposed | Wave3 | `computeTaxForInvoice` in billingV4 — wire it into invoice creation flow |
 | MBP-0121 | TECH_MVP | GAP-001 | GRP-017 | partial | Wave1 | Approved data ref on task step |
 | MBP-0122 | TECH_MVP | GAP-002 | GRP-006 | partial | Wave2 | Parts installation in step sign-off |
-| MBP-0123 | TECH_MVP | GAP-003 | GRP-003 | partial | Wave1 | "My Work" tech view |
+| MBP-0123 | TECH_MVP | GAP-003 | GRP-003 | implemented | Wave1 | "My Work" tech view |
 | MBP-0124 | TECH_MVP | GAP-004 | GRP-003 | partial | Wave1 | Raise Finding from task card |
 | MBP-0125 | TECH_MVP | GAP-005 | GRP-008 | missing | Wave3 | Shift handoff notes on task cards |
 | MBP-0126 | TECH_MVP | GAP-006 | GRP-017 | partial | Wave1 | Aircraft maintenance logbook view |

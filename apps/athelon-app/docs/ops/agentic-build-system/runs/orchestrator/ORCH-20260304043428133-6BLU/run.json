@@ -1,0 +1,35 @@
+{
+  "run_id": "ORCH-20260304043428133-6BLU",
+  "timestamp_utc": "2026-03-04T04:34:28Z",
+  "run_mode": "ACTIVE",
+  "queue_count": 10,
+  "active_assignments": 0,
+  "dispatch_count": 0,
+  "blocked_count": 1,
+  "queue_summary": {
+    "queued": 0,
+    "blocked": 1,
+    "in_progress": 0,
+    "completed": 9,
+    "failed": 0,
+    "cancelled": 0
+  },
+  "released_leases_in_sync": 0,
+  "lease_snapshot": {
+    "stats": {
+      "total": 9,
+      "active": 0,
+      "released": 2,
+      "expired": 7
+    },
+    "active_assignments": []
+  },
+  "dispatched": [],
+  "blocked": [
+    {
+      "request_id": "REQ-TEAM-10",
+      "reason": "dependency_not_ready:MBP-0014:GRP-001;dependency_not_ready:MBP-0014:GRP-002;dependency_not_ready:MBP-0015:GRP-001;dependency_not_ready:MBP-0015:GRP-002"
+    }
+  ],
+  "notes": []
+}
