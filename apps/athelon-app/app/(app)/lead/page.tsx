@@ -25,7 +25,7 @@ import {
   ReferenceLine,
 } from "recharts";
 
-const ALLOWED_ROLES = new Set(["lead_technician", "admin"]);
+const ALLOWED_ROLES = new Set(["lead_technician", "shop_manager", "admin"]);
 
 function todayIso(): string {
   const d = new Date();
@@ -197,7 +197,7 @@ export default function LeadTechnicianWorkspacePage() {
       <Card className="border-border/60">
         <CardContent className="py-10 text-center space-y-2">
           <p className="font-medium">Lead Dashboard Access Required</p>
-          <p className="text-xs text-muted-foreground">Only lead technicians and admins can access this workspace.</p>
+          <p className="text-xs text-muted-foreground">Only lead technicians, shop managers, and admins can access this workspace.</p>
           <Button asChild variant="outline" size="sm"><Link to="/dashboard">Back to dashboard</Link></Button>
         </CardContent>
       </Card>
@@ -279,18 +279,24 @@ export default function LeadTechnicianWorkspacePage() {
 
       <Card className="border-border/60">
         <CardHeader><CardTitle className="text-sm">Active WO Summary</CardTitle></CardHeader>
-        <CardContent className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
-          {activeWorkOrders.map((wo) => (
-            <div key={wo.id} className="rounded-md border border-border/60 p-3 space-y-2">
-              <p className="text-sm font-mono font-semibold">{wo.number}</p>
-              <p className="text-xs text-muted-foreground">Aircraft: {wo.aircraft}</p>
-              <div className="space-y-1">
-                <p className="text-xs">Progress {wo.progress}%</p>
-                <Progress value={wo.progress} className="h-1.5" />
-              </div>
-              <p className="text-xs text-muted-foreground">{wo.tasksRemaining} tasks remaining</p>
+        <CardContent>
+          {activeWorkOrders.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No active work orders with task cards.</p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
+              {activeWorkOrders.map((wo) => (
+                <div key={wo.id} className="rounded-md border border-border/60 p-3 space-y-2">
+                  <p className="text-sm font-mono font-semibold">{wo.number}</p>
+                  <p className="text-xs text-muted-foreground">Aircraft: {wo.aircraft}</p>
+                  <div className="space-y-1">
+                    <p className="text-xs">Progress {wo.progress}%</p>
+                    <Progress value={wo.progress} className="h-1.5" />
+                  </div>
+                  <p className="text-xs text-muted-foreground">{wo.tasksRemaining} tasks remaining</p>
+                </div>
+              ))}
             </div>
-          ))}
+          )}
         </CardContent>
       </Card>
 

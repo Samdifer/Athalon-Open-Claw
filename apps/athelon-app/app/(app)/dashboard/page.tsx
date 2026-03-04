@@ -100,10 +100,10 @@ function LiveKPICards({
       ["open", "in_progress", "open_discrepancies"].includes(wo.status),
     );
     const aog = active.filter((wo) => wo.priority === "aog");
-    const openDisc = workOrders.reduce(
-      (acc, wo) => acc + (wo.openDiscrepancyCount ?? 0),
-      0,
-    );
+    const openDisc = workOrders.reduce((acc, wo) => {
+      if (["closed", "voided", "cancelled"].includes(wo.status)) return acc;
+      return acc + (wo.openDiscrepancyCount ?? 0);
+    }, 0);
     const overdueAds = fleetAd?.fleetTotals?.overdueAds ?? 0;
 
     return {
@@ -580,6 +580,7 @@ function LiveFleetStatus({ workOrders }: { workOrders: WorkOrdersWithRisk | unde
       const reg = ac.currentRegistration ?? ac.serialNumber;
       const isAog = ac.currentRegistration ? aogRegs.has(ac.currentRegistration) : false;
       const openWos = (ac as typeof ac & { openWorkOrderCount?: number }).openWorkOrderCount ?? 0;
+      const fleetHref = reg ? `/fleet/${encodeURIComponent(reg)}` : "/fleet";
 
       let statusLabel: string;
       let statusColor: string;
@@ -615,7 +616,7 @@ function LiveFleetStatus({ workOrders }: { workOrders: WorkOrdersWithRisk | unde
         statusLabel,
         statusColor,
         statusDot,
-        href: `/fleet/${encodeURIComponent(reg ?? "")}`,
+        href: fleetHref,
       };
     });
   }, [fleet, workOrders]);
@@ -683,13 +684,20 @@ function getStatusBadge(status: string, label: string, priority?: string) {
       </Badge>
     );
   const map: Record<string, string> = {
+    open: "bg-blue-500/15 text-blue-400 border border-blue-500/30",
     in_progress:
       "bg-sky-500/15 text-sky-400 border border-sky-500/30",
+    pending_inspection:
+      "bg-amber-500/15 text-amber-400 border border-amber-500/30",
     pending_signoff:
       "bg-amber-500/15 text-amber-400 border border-amber-500/30",
+    open_discrepancies:
+      "bg-red-500/15 text-red-400 border border-red-500/30",
     on_hold: "bg-orange-500/15 text-orange-400 border border-orange-500/30",
     draft: "bg-slate-500/15 text-slate-400 border border-slate-500/30",
     closed: "bg-green-500/15 text-green-400 border border-green-500/30",
+    cancelled: "bg-slate-500/15 text-slate-400 border border-slate-500/30",
+    voided: "bg-slate-500/15 text-slate-400 border border-slate-500/30",
   };
   return (
     <Badge

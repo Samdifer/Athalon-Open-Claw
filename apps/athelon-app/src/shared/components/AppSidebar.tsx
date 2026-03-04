@@ -257,6 +257,12 @@ const ROLE_CHILD_ACCESS: Partial<Record<MroRole, Record<string, string[]>>> = {
   },
 };
 
+const LEAD_WORKSPACE_ROLES = new Set<MroRole>([
+  "lead_technician",
+  "shop_manager",
+  "admin",
+]);
+
 function canAccessSection(role: MroRole | null | undefined, section: NavSection) {
   if (!role) return true;
   const allowed = ROLE_SECTION_ACCESS[role];
@@ -270,10 +276,22 @@ function filterChildrenForRole(
   children: NavItem[],
 ) {
   if (!role) return children;
+
+  let scoped = children;
+
+  // Keep sidebar route visibility aligned with page RBAC for lead workspaces.
+  // Without this, non-lead roles saw links that immediately rendered
+  // "access required" pages.
+  if (!LEAD_WORKSPACE_ROLES.has(role)) {
+    scoped = scoped.filter(
+      (child) => child.href !== "/work-orders/lead" && child.href !== "/lead",
+    );
+  }
+
   const rules = ROLE_CHILD_ACCESS[role];
-  if (!rules || !rules[groupHref]) return children;
+  if (!rules || !rules[groupHref]) return scoped;
   const allowedHrefs = new Set(rules[groupHref]);
-  return children.filter((child) => allowedHrefs.has(child.href));
+  return scoped.filter((child) => allowedHrefs.has(child.href));
 }
 
 function NavStandaloneItem({
