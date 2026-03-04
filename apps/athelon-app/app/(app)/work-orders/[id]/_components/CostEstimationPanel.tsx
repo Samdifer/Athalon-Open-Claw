@@ -40,6 +40,17 @@ function estimateStorageKey(orgId: string, workOrderId: string) {
   return `athelon:wo-estimate-to-quote:${orgId}:${workOrderId}`;
 }
 
+function asFiniteNumber(value: unknown): number | null {
+  if (typeof value !== "number" || !Number.isFinite(value)) return null;
+  return value;
+}
+
+function parseFiniteRate(value: string): number {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed < 0) return 0;
+  return parsed;
+}
+
 export function CostEstimationPanel({
   orgId,
   workOrderId,
@@ -76,48 +87,46 @@ export function CostEstimationPanel({
 
   const partsLines = useMemo<CostLine[]>(() => {
     return parts.map((part) => {
-      const qty =
-        typeof part.quantity === "number"
-          ? part.quantity
-          : typeof part.quantityOnHand === "number"
-            ? part.quantityOnHand
-            : 1;
-      const fallbackCost =
-        typeof part.unitCost === "number"
-          ? part.unitCost
-          : typeof part.cost === "number"
-            ? part.cost
-            : 0;
-      const override = parseFloat(partsOverrides[String(part._id)] ?? "");
+      // Use requested WO quantity; quantityOnHand is inventory stock, not billable usage.
+      const requestedQty = asFiniteNumber(part.quantity);
+      const qty = requestedQty != null && requestedQty > 0 ? requestedQty : 1;
+      const fallbackCostRaw = asFiniteNumber(part.unitCost) ?? asFiniteNumber(part.cost) ?? 0;
+      const fallbackCost = fallbackCostRaw >= 0 ? fallbackCostRaw : 0;
+      const override = Number(partsOverrides[String(part._id)] ?? "");
       return {
         id: String(part._id),
         label: `${part.partNumber} ${part.serialNumber ? `(S/N ${part.serialNumber})` : ""}`,
         qty,
-        unitCost: Number.isFinite(override) ? override : fallbackCost,
+        unitCost: Number.isFinite(override) && override >= 0 ? override : fallbackCost,
       };
     });
   }, [parts, partsOverrides]);
 
   const vendorLines = useMemo<CostLine[]>(() => {
     return (vendorServices ?? []).map((svc) => {
-      const defaultCost = typeof svc.actualCost === "number" ? svc.actualCost : svc.estimatedCost ?? 0;
-      const override = parseFloat(vendorOverrides[String(svc._id)] ?? "");
+      const defaultCostRaw = asFiniteNumber(svc.actualCost) ?? asFiniteNumber(svc.estimatedCost) ?? 0;
+      const defaultCost = defaultCostRaw >= 0 ? defaultCostRaw : 0;
+      const override = Number(vendorOverrides[String(svc._id)] ?? "");
       return {
         id: String(svc._id),
         label: `${svc.vendorName} · ${svc.serviceName}`,
         qty: 1,
-        unitCost: Number.isFinite(override) ? override : defaultCost,
+        unitCost: Number.isFinite(override) && override >= 0 ? override : defaultCost,
       };
     });
   }, [vendorOverrides, vendorServices]);
 
-  const laborCost = laborHours * (parseFloat(laborRate) || 0);
+  const safeLaborRate = parseFiniteRate(laborRate);
+  const safeTaxRate = parseFiniteRate(taxRate);
+  const safeMarkupRate = parseFiniteRate(markupRate);
+
+  const laborCost = laborHours * safeLaborRate;
   const partsCost = partsLines.reduce((sum, line) => sum + line.qty * line.unitCost, 0);
   const vendorCost = vendorLines.reduce((sum, line) => sum + line.qty * line.unitCost, 0);
   const subtotal = laborCost + partsCost + vendorCost;
-  const markup = subtotal * ((parseFloat(markupRate) || 0) / 100);
+  const markup = subtotal * (safeMarkupRate / 100);
   const taxableBase = subtotal + markup;
-  const tax = taxableBase * ((parseFloat(taxRate) || 0) / 100);
+  const tax = taxableBase * (safeTaxRate / 100);
   const totalEstimated = taxableBase + tax;
 
   const money = (value: number) =>
@@ -125,34 +134,35 @@ export function CostEstimationPanel({
 
   const generateQuoteFromEstimate = () => {
     try {
+      const roundedLaborHours = Number(laborHours.toFixed(2));
       const payload = {
         generatedAt: Date.now(),
         workOrderId: String(workOrderId),
         workOrderNumber,
-        laborRate: parseFloat(laborRate) || 0,
-        taxRate: parseFloat(taxRate) || 0,
-        markupRate: parseFloat(markupRate) || 0,
+        laborRate: safeLaborRate,
+        taxRate: safeTaxRate,
+        markupRate: safeMarkupRate,
         lineItems: [
-          {
-            type: "labor",
-            description: `WO ${workOrderNumber} labor estimate (${laborHours.toFixed(2)}h @ $${(
-              parseFloat(laborRate) || 0
-            ).toFixed(2)}/hr)`,
-            qty: Math.max(1, Number(laborHours.toFixed(2))),
-            unitPrice: parseFloat(laborRate) || 0,
-          },
+          ...(roundedLaborHours > 0
+            ? [{
+                type: "labor" as const,
+                description: `WO ${workOrderNumber} labor estimate (${laborHours.toFixed(2)}h @ $${safeLaborRate.toFixed(2)}/hr)`,
+                qty: roundedLaborHours,
+                unitPrice: safeLaborRate,
+              }]
+            : []),
           ...partsLines
-            .filter((line) => line.qty > 0)
+            .filter((line) => Number.isFinite(line.qty) && line.qty > 0 && Number.isFinite(line.unitCost) && line.unitCost >= 0)
             .map((line) => ({
-              type: "part",
+              type: "part" as const,
               description: `WO ${workOrderNumber} part: ${line.label}`,
               qty: line.qty,
               unitPrice: line.unitCost,
             })),
           ...vendorLines
-            .filter((line) => line.unitCost > 0)
+            .filter((line) => Number.isFinite(line.qty) && line.qty > 0 && Number.isFinite(line.unitCost) && line.unitCost > 0)
             .map((line) => ({
-              type: "external_service",
+              type: "external_service" as const,
               description: `WO ${workOrderNumber} vendor service: ${line.label}`,
               qty: line.qty,
               unitPrice: line.unitCost,
@@ -167,6 +177,11 @@ export function CostEstimationPanel({
           totalEstimated,
         },
       };
+
+      if (payload.lineItems.length === 0) {
+        toast.error("Estimate has no billable lines. Add labor, parts, or vendor costs before generating a quote.");
+        return;
+      }
 
       window.localStorage.setItem(estimateStorageKey(String(orgId), String(workOrderId)), JSON.stringify(payload));
       toast.success("Estimate staged. Opening quote builder...");

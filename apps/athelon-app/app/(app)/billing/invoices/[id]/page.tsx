@@ -85,6 +85,12 @@ function fromDateInputValue(val: string): number {
   return new Date(val).getTime();
 }
 
+function parseFiniteNumber(value: string): number | null {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return null;
+  return parsed;
+}
+
 export default function InvoiceDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -160,11 +166,11 @@ export default function InvoiceDetailPage() {
 
   const handleAddLine = async () => {
     if (!orgId) return;
-    const qty = parseFloat(addLineQty);
-    const unitPrice = parseFloat(addLineUnitPrice);
+    const qty = parseFiniteNumber(addLineQty);
+    const unitPrice = parseFiniteNumber(addLineUnitPrice);
     if (!addLineDesc.trim()) { setAddLineError("Description is required."); return; }
-    if (isNaN(qty) || qty === 0) { setAddLineError("Quantity must be non-zero."); return; }
-    if (isNaN(unitPrice) || unitPrice < 0) { setAddLineError("Enter a valid unit price."); return; }
+    if (qty == null || qty <= 0) { setAddLineError("Quantity must be a finite number greater than zero."); return; }
+    if (unitPrice == null || unitPrice < 0) { setAddLineError("Enter a valid finite unit price."); return; }
     setAddLineLoading(true); setAddLineError(null);
     try {
       await addInvoiceLineItem({ orgId, invoiceId, type: addLineType, description: addLineDesc.trim(), qty, unitPrice });
@@ -197,8 +203,8 @@ export default function InvoiceDetailPage() {
       setError("A technician profile is required to record payments. Go to Personnel and create your profile first.");
       return;
     }
-    const amount = parseFloat(payAmount);
-    if (isNaN(amount) || amount <= 0) { setError("Enter a valid payment amount."); return; }
+    const amount = parseFiniteNumber(payAmount);
+    if (amount == null || amount <= 0) { setError("Enter a valid finite payment amount."); return; }
     // Guard against overpayment — prevent recording more than the outstanding balance
     if (amount > invoice.balance + 0.005) {
       setError(
@@ -244,12 +250,17 @@ export default function InvoiceDetailPage() {
   // GAP-04: Set due date
   const handleSetDueDate = async () => {
     if (!orgId || !dueDateValue) return;
+    const dueDateTs = fromDateInputValue(dueDateValue);
+    if (!Number.isFinite(dueDateTs)) {
+      setError("Enter a valid due date.");
+      return;
+    }
     setActionLoading("dueDate"); setError(null);
     try {
       await setInvoiceDueDateMutation({
         orgId,
         invoiceId,
-        dueDate: fromDateInputValue(dueDateValue),
+        dueDate: dueDateTs,
         paymentTerms: paymentTermsValue.trim() || undefined,
       });
       setDueDateDialog(false);
@@ -279,18 +290,18 @@ export default function InvoiceDetailPage() {
   const handleEditItem = async () => {
     if (!orgId || !editItemId) return;
     // Validate numeric fields before firing mutation
-    const parsedQty = editQty !== "" ? parseFloat(editQty) : undefined;
-    const parsedPrice = editUnitPrice !== "" ? parseFloat(editUnitPrice) : undefined;
-    const parsedDiscount = editDiscountPct !== "" ? parseFloat(editDiscountPct) : undefined;
-    if (parsedQty !== undefined && (isNaN(parsedQty) || parsedQty <= 0)) {
-      setError("Quantity must be a number greater than zero.");
+    const parsedQty = editQty !== "" ? parseFiniteNumber(editQty) : undefined;
+    const parsedPrice = editUnitPrice !== "" ? parseFiniteNumber(editUnitPrice) : undefined;
+    const parsedDiscount = editDiscountPct !== "" ? parseFiniteNumber(editDiscountPct) : undefined;
+    if (parsedQty !== undefined && (parsedQty == null || parsedQty <= 0)) {
+      setError("Quantity must be a finite number greater than zero.");
       return;
     }
-    if (parsedPrice !== undefined && (isNaN(parsedPrice) || parsedPrice < 0)) {
-      setError("Unit price must be a valid non-negative number.");
+    if (parsedPrice !== undefined && (parsedPrice == null || parsedPrice < 0)) {
+      setError("Unit price must be a finite non-negative number.");
       return;
     }
-    if (parsedDiscount !== undefined && (isNaN(parsedDiscount) || parsedDiscount < 0 || parsedDiscount > 100)) {
+    if (parsedDiscount !== undefined && (parsedDiscount == null || parsedDiscount < 0 || parsedDiscount > 100)) {
       setError("Discount must be between 0 and 100.");
       return;
     }
@@ -1001,9 +1012,9 @@ export default function InvoiceDetailPage() {
                 </div>
               </div>
               {addLineDesc && addLineQty && addLineUnitPrice && (() => {
-                const qty = parseFloat(addLineQty || "0");
-                const unitPrice = parseFloat(addLineUnitPrice || "0");
-                const lineTotal = Number.isFinite(qty) && Number.isFinite(unitPrice)
+                const qty = parseFiniteNumber(addLineQty || "0");
+                const unitPrice = parseFiniteNumber(addLineUnitPrice || "0");
+                const lineTotal = qty != null && unitPrice != null
                   ? qty * unitPrice
                   : 0;
                 return (

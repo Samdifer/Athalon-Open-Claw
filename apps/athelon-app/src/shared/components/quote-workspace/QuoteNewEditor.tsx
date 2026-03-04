@@ -78,10 +78,16 @@ const LINE_TYPE_LABELS: Record<LineItemType, string> = {
   external_service: "External Service",
 };
 
+function parseFiniteNumber(value: string): number | null {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return null;
+  return parsed;
+}
+
 function calcTotal(qty: string, unitPrice: string): number {
-  const q = parseFloat(qty);
-  const p = parseFloat(unitPrice);
-  if (isNaN(q) || isNaN(p)) return 0;
+  const q = parseFiniteNumber(qty);
+  const p = parseFiniteNumber(unitPrice);
+  if (q == null || p == null) return 0;
   return Math.round(q * p * 100) / 100;
 }
 
@@ -237,13 +243,13 @@ export function QuoteNewEditor({
     const item = lineItems.find((li) => li.id === itemId);
     if (!item) return;
 
-    const qty = parseFloat(item.qty);
-    const baseCost = parseFloat(item.unitPrice);
-    if (Number.isNaN(qty) || qty <= 0) {
+    const qty = parseFiniteNumber(item.qty);
+    const baseCost = parseFiniteNumber(item.unitPrice);
+    if (qty == null || qty <= 0) {
       setError("Quantity must be greater than zero before applying pricing rules.");
       return;
     }
-    if (Number.isNaN(baseCost) || baseCost < 0) {
+    if (baseCost == null || baseCost < 0) {
       setError("Unit price must be zero or higher before applying pricing rules.");
       return;
     }
@@ -273,9 +279,9 @@ export function QuoteNewEditor({
     if (!orgId) return;
 
     const invalidRow = lineItems.find((item) => {
-      const qty = parseFloat(item.qty);
-      const baseCost = parseFloat(item.unitPrice);
-      return Number.isNaN(qty) || qty <= 0 || Number.isNaN(baseCost) || baseCost < 0;
+      const qty = parseFiniteNumber(item.qty);
+      const baseCost = parseFiniteNumber(item.unitPrice);
+      return qty == null || qty <= 0 || baseCost == null || baseCost < 0;
     });
     if (invalidRow) {
       setError("Fix invalid quantity/unit price values before applying pricing rules to all lines.");
@@ -287,12 +293,15 @@ export function QuoteNewEditor({
       const updated = await Promise.all(
         lineItems.map(async (item) => {
           try {
+            const qty = parseFiniteNumber(item.qty);
+            const baseCost = parseFiniteNumber(item.unitPrice);
+            if (qty == null || baseCost == null) return item;
             const result = await computePrice({
               orgId,
               customerId: customerId ? (customerId as Id<"customers">) : undefined,
               itemType: item.type,
-              qty: parseFloat(item.qty),
-              baseCost: parseFloat(item.unitPrice),
+              qty,
+              baseCost,
             });
             return { ...item, unitPrice: result.unitPrice.toString() };
           } catch {
@@ -405,11 +414,13 @@ export function QuoteNewEditor({
 
     for (const item of lineItems) {
       if (!item.description.trim()) { setError("All line items require a description."); return; }
-      if (isNaN(parseFloat(item.qty)) || parseFloat(item.qty) <= 0) {
-        setError("All quantities must be positive numbers."); return;
+      const qty = parseFiniteNumber(item.qty);
+      const unitPrice = parseFiniteNumber(item.unitPrice);
+      if (qty == null || qty <= 0) {
+        setError("All quantities must be finite positive numbers."); return;
       }
-      if (isNaN(parseFloat(item.unitPrice)) || parseFloat(item.unitPrice) < 0) {
-        setError("All unit prices must be non-negative."); return;
+      if (unitPrice == null || unitPrice < 0) {
+        setError("All unit prices must be finite non-negative numbers."); return;
       }
     }
 
@@ -425,13 +436,16 @@ export function QuoteNewEditor({
       });
 
       for (const item of lineItems) {
+        const qty = parseFiniteNumber(item.qty);
+        const unitPrice = parseFiniteNumber(item.unitPrice);
+        if (qty == null || unitPrice == null) continue;
         await addQuoteLineItem({
           orgId,
           quoteId,
           type: item.type,
           description: item.description.trim(),
-          qty: parseFloat(item.qty),
-          unitPrice: parseFloat(item.unitPrice),
+          qty,
+          unitPrice,
         });
       }
 

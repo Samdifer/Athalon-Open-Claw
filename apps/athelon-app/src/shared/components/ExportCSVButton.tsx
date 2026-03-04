@@ -27,7 +27,8 @@ function toUtcString(value: unknown): string {
 
   // Keep numeric values (currency totals, quantities, counters) as-is.
   // Converting every number to ISO timestamps corrupts CSV exports.
-  if (typeof value === "number") return String(value);
+  // But avoid serializing NaN/Infinity into CSV output.
+  if (typeof value === "number") return Number.isFinite(value) ? String(value) : "";
 
   if (value instanceof Date) return value.toISOString();
 
@@ -59,7 +60,13 @@ function rowDateMs(row: Record<string, any>, dateFieldKey?: string): number | nu
   for (const key of keys) {
     const value = row[key];
     if (value == null) continue;
-    if (typeof value === "number") return value;
+
+    if (typeof value === "number") {
+      if (!Number.isFinite(value)) continue;
+      // Normalize epoch seconds to ms for consistent date filtering.
+      return value > 0 && value < 1_000_000_000_000 ? value * 1000 : value;
+    }
+
     const parsed = new Date(String(value)).getTime();
     if (!Number.isNaN(parsed)) return parsed;
   }

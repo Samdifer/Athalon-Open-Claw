@@ -166,6 +166,12 @@ interface LaborKitForQuote {
   isActive: boolean;
 }
 
+function parseFiniteNumber(value: string): number | null {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return null;
+  return parsed;
+}
+
 function numberToInputString(value: number | undefined): string {
   if (value === undefined || Number.isNaN(value)) return "0";
   return String(Math.round(value * 100) / 100);
@@ -404,7 +410,20 @@ export function QuoteDetailEditor({
   };
 
   const handleConvert = async () => {
-    if (!orgId || !quoteId) return;
+    if (!orgId || !quoteId || !quote) return;
+
+    // Guardrail: prevent creating a WO from a quote that has no actionable, billable lines.
+    const actionableLines = quote.lineItems.filter((line) => {
+      const isBillable = Number.isFinite(line.qty) && Number.isFinite(line.unitPrice) && line.qty > 0 && line.unitPrice >= 0;
+      const decision = line.customerDecision as QuoteLineDecision | undefined;
+      const acceptedOrUnspecified = decision === undefined || decision === "approved";
+      return isBillable && acceptedOrUnspecified;
+    });
+    if (actionableLines.length === 0) {
+      setError("Cannot convert quote to work order: no accepted billable lines remain.");
+      return;
+    }
+
     setActionLoading("convert"); setError(null);
     try {
       const newWoId = await convertQuote({
@@ -412,7 +431,7 @@ export function QuoteDetailEditor({
         quoteId,
         workOrderType: woType,
         priority: woPriority,
-        description: woDescription.trim() || `Work order from quote ${quote?.quoteNumber ?? ""}`,
+        description: woDescription.trim() || `Work order from quote ${quote.quoteNumber}`,
       });
       setConvertDialog(false);
       router.push(`/work-orders/${newWoId}`);
@@ -485,23 +504,24 @@ export function QuoteDetailEditor({
 
   const handleEditItem = async () => {
     if (!orgId || !editItemId) return;
+    const parsedQty = editQty !== "" ? parseFiniteNumber(editQty) : undefined;
+    const parsedUnitPrice = editUnitPrice !== "" ? parseFiniteNumber(editUnitPrice) : undefined;
+    const parsedDiscount = editDiscountPct !== "" ? parseFiniteNumber(editDiscountPct) : undefined;
+
     // Validate qty > 0 — zero-qty line items are zombie entries on the quote
-    if (editQty !== "" && parseFloat(editQty) <= 0) {
-      setError("Quantity must be greater than zero.");
+    if (parsedQty !== undefined && (parsedQty == null || parsedQty <= 0)) {
+      setError("Quantity must be a finite number greater than zero.");
       return;
     }
     // Validate unitPrice >= 0
-    if (editUnitPrice !== "" && parseFloat(editUnitPrice) < 0) {
-      setError("Unit price cannot be negative.");
+    if (parsedUnitPrice !== undefined && (parsedUnitPrice == null || parsedUnitPrice < 0)) {
+      setError("Unit price must be a finite non-negative number.");
       return;
     }
     // Validate discount 0–100%
-    if (editDiscountPct !== "") {
-      const disc = parseFloat(editDiscountPct);
-      if (disc < 0 || disc > 100) {
-        setError("Discount must be between 0 and 100%.");
-        return;
-      }
+    if (parsedDiscount !== undefined && (parsedDiscount == null || parsedDiscount < 0 || parsedDiscount > 100)) {
+      setError("Discount must be between 0 and 100%.");
+      return;
     }
     setActionLoading("editItem"); setError(null);
     try {
@@ -509,9 +529,9 @@ export function QuoteDetailEditor({
         orgId,
         lineItemId: editItemId,
         description: editDesc.trim() || undefined,
-        qty: editQty !== "" ? parseFloat(editQty) : undefined,
-        unitPrice: editUnitPrice !== "" ? parseFloat(editUnitPrice) : undefined,
-        discountPercent: editDiscountPct !== "" ? parseFloat(editDiscountPct) : undefined,
+        qty: parsedQty,
+        unitPrice: parsedUnitPrice,
+        discountPercent: parsedDiscount,
       });
       setEditItemDialog(false);
     } catch (err) {
@@ -541,14 +561,14 @@ export function QuoteDetailEditor({
 
   const handleComputeDraftPrice = async () => {
     if (!orgId) return;
-    const qty = parseFloat(addLineItemDraft.qty);
-    const baseCost = parseFloat(addLineItemDraft.unitPrice);
-    if (Number.isNaN(qty) || qty <= 0) {
-      setError("Draft line quantity must be greater than zero before pricing.");
+    const qty = parseFiniteNumber(addLineItemDraft.qty);
+    const baseCost = parseFiniteNumber(addLineItemDraft.unitPrice);
+    if (qty == null || qty <= 0) {
+      setError("Draft line quantity must be a finite value greater than zero before pricing.");
       return;
     }
-    if (Number.isNaN(baseCost) || baseCost < 0) {
-      setError("Draft line base unit price must be zero or higher.");
+    if (baseCost == null || baseCost < 0) {
+      setError("Draft line base unit price must be a finite value zero or higher.");
       return;
     }
 
@@ -580,18 +600,18 @@ export function QuoteDetailEditor({
       return;
     }
 
-    const qty = parseFloat(addLineItemDraft.qty);
-    const unitPrice = parseFloat(addLineItemDraft.unitPrice);
+    const qty = parseFiniteNumber(addLineItemDraft.qty);
+    const unitPrice = parseFiniteNumber(addLineItemDraft.unitPrice);
     if (!addLineItemDraft.description.trim()) {
       setError("Line item description is required.");
       return;
     }
-    if (Number.isNaN(qty) || qty <= 0) {
-      setError("Line item quantity must be greater than zero.");
+    if (qty == null || qty <= 0) {
+      setError("Line item quantity must be a finite value greater than zero.");
       return;
     }
-    if (Number.isNaN(unitPrice) || unitPrice < 0) {
-      setError("Line item unit price must be zero or higher.");
+    if (unitPrice == null || unitPrice < 0) {
+      setError("Line item unit price must be a finite value zero or higher.");
       return;
     }
 
@@ -637,13 +657,16 @@ export function QuoteDetailEditor({
     setError(null);
     try {
       for (const line of generatedLines) {
+        const qty = parseFiniteNumber(line.qty);
+        const unitPrice = parseFiniteNumber(line.unitPrice);
+        if (qty == null || qty <= 0 || unitPrice == null || unitPrice < 0) continue;
         await addQuoteLineItem({
           orgId,
           quoteId,
           type: line.type,
           description: line.description,
-          qty: parseFloat(line.qty),
-          unitPrice: parseFloat(line.unitPrice),
+          qty,
+          unitPrice,
         });
       }
       toast.success(`Added ${generatedLines.length} line items from ${kit.name}`);
@@ -730,7 +753,12 @@ export function QuoteDetailEditor({
   const canSend = quote.status === "DRAFT";
   const canApprove = quote.status === "SENT";
   const canDecline = quote.status === "SENT";
-  const canConvert = quote.status === "APPROVED";
+  const convertibleLineCount = quote.lineItems.filter((line) => {
+    const isBillable = Number.isFinite(line.qty) && Number.isFinite(line.unitPrice) && line.qty > 0 && line.unitPrice >= 0;
+    const decision = line.customerDecision as QuoteLineDecision | undefined;
+    return isBillable && (decision === undefined || decision === "approved");
+  }).length;
+  const canConvert = quote.status === "APPROVED" && convertibleLineCount > 0;
   // GAP-08: Revision allowed on SENT or DECLINED quotes
   const canRevise = quote.status === "SENT" || quote.status === "DECLINED";
   // GAP-13: Create invoice on APPROVED quotes
@@ -1000,8 +1028,8 @@ export function QuoteDetailEditor({
                   <p className="text-[11px] text-muted-foreground">
                     Extended: $
                     {(
-                      (parseFloat(addLineItemDraft.qty) || 0) *
-                      (parseFloat(addLineItemDraft.unitPrice) || 0)
+                      (parseFiniteNumber(addLineItemDraft.qty) ?? 0) *
+                      (parseFiniteNumber(addLineItemDraft.unitPrice) ?? 0)
                     ).toLocaleString("en-US", { minimumFractionDigits: 2 })}
                   </p>
                   <div className="flex items-center gap-2">
