@@ -18,10 +18,10 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import { formatCurrency, formatDateUTC } from "@/src/shared/lib/format";
+import { TimeVarianceBar } from "@/src/shared/components/TimeVarianceBar";
 import { toast } from "sonner";
 
 type WorkOrderLike = {
@@ -166,7 +166,7 @@ export function WOHeaderKPI({
     }
   };
 
-  const hoursProgress = estimatedHours > 0 ? Math.min(100, (actualHours / estimatedHours) * 100) : 0;
+  const efficiencyPercent = actualHours > 0 ? (estimatedHours / actualHours) * 100 : 0;
 
   return (
     <div className="space-y-3">
@@ -242,14 +242,24 @@ export function WOHeaderKPI({
       </Card>
 
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-        <Card className="border-border/60">
-          <CardContent className="p-3">
-            <p className="text-[11px] text-muted-foreground mb-1">Estimated vs Actual Hours</p>
-            <div className="flex items-baseline gap-1.5">
-              <span className="text-lg font-bold text-foreground">{actualHours.toFixed(1)}h</span>
-              <span className="text-xs text-muted-foreground">/ {estimatedHours.toFixed(1)}h est.</span>
+        <Card className="border-border/60 col-span-2 lg:col-span-2">
+          <CardContent className="p-3 space-y-2">
+            <p className="text-[11px] text-muted-foreground">Time Summary</p>
+            <div className="grid grid-cols-3 gap-2 text-xs">
+              <div>
+                <p className="text-muted-foreground">Estimated</p>
+                <p className="text-sm font-semibold text-foreground">{estimatedHours.toFixed(1)}h</p>
+              </div>
+              <div>
+                <p className="text-muted-foreground">Actual</p>
+                <p className="text-sm font-semibold text-foreground">{actualHours.toFixed(1)}h</p>
+              </div>
+              <div>
+                <p className="text-muted-foreground">Efficiency</p>
+                <p className="text-sm font-semibold text-foreground">{efficiencyPercent.toFixed(0)}%</p>
+              </div>
             </div>
-            <Progress value={hoursProgress} className="h-1.5 mt-2" />
+            <TimeVarianceBar estimatedHours={estimatedHours} actualHours={actualHours} compact />
           </CardContent>
         </Card>
 
