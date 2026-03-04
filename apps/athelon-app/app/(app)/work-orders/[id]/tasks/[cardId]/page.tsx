@@ -66,6 +66,7 @@ import { MarkNaDialog } from "./_components/MarkNaDialog";
 import { TaskStepRow } from "./_components/TaskStepRow";
 import { VendorServicePanel } from "./_components/VendorServicePanel";
 import { StepReferences } from "./_components/StepReferences";
+import { StepPartsTracker } from "./_components/StepPartsTracker";
 import {
   VendorServicePickerModal,
   type AttachmentDetails,
@@ -291,6 +292,11 @@ export default function TaskCardPage() {
     attachedToTable: "taskCards",
     attachedToId: cardId,
   });
+
+  const partsInventory = useQuery(
+    api.parts.listParts,
+    orgId ? { organizationId: orgId, location: "inventory" } : "skip",
+  );
 
   // ── Compliance — Convex queries/mutations (AI-004) ────────────────────────
   const complianceItemsRaw = useQuery(
@@ -884,6 +890,35 @@ export default function TaskCardPage() {
                 }
               />
             ))}
+        </CardContent>
+      </Card>
+
+      <Card className="border-border/60">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
+            <ArrowLeft className="w-3.5 h-3.5 rotate-180" />
+            Step Parts Traceability
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-0">
+          <StepPartsTracker
+            orgId={orgId}
+            steps={taskCard.steps.map((s) => ({
+              _id: String(s._id),
+              stepNumber: s.stepNumber,
+              description: s.description,
+              partsInstalled: s.partsInstalled,
+              partsRemoved: s.partsRemoved,
+            }))}
+            inventoryParts={(partsInventory ?? []).map((part) => ({
+              _id: String(part._id),
+              partNumber: part.partNumber,
+              partName: part.partName,
+              description: part.description,
+              serialNumber: part.serialNumber,
+              condition: part.condition,
+            }))}
+          />
         </CardContent>
       </Card>
 
