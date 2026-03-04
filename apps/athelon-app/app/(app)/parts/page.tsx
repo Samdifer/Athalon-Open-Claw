@@ -28,8 +28,10 @@ import { printBarcodeLabel } from "@/lib/barcode";
 import { PartsRequestForm, type PartsRequestRecord } from "@/app/(app)/parts/_components/PartsRequestForm";
 import { PartsRequestQueue } from "@/app/(app)/parts/_components/PartsRequestQueue";
 import { QRCodeBadge } from "@/components/QRCodeBadge";
+import { PartStatusBadge } from "@/src/shared/components/PartStatusBadge";
 import { QRScannerDialog } from "@/components/QRScannerDialog";
 import { InventoryMasterTab } from "./_components/InventoryMasterTab";
+import { InventoryKanban } from "./_components/InventoryKanban";
 import { QrCode } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -73,6 +75,7 @@ type LocationFilter =
   | "removed_pending_disposition"
   | "low_stock"
   | "inventory_master"
+  | "kanban"
   | "parts_requests";
 
 type InspectionResult = "approved" | "rejected";
@@ -538,12 +541,7 @@ function PartDetailSheet({ part, onClose }: PartDetailSheetProps) {
                   {CONDITION_LABEL[part.condition] ?? part.condition}
                 </Badge>,
               )}
-              {row(
-                "Location",
-                <Badge variant="outline" className="text-[10px] border-border/40 text-muted-foreground">
-                  {LOCATION_LABEL[part.location] ?? part.location}
-                </Badge>,
-              )}
+              {row("Location", <PartStatusBadge status={part.location} />)}
               {part.installPosition && row("Install Position", part.installPosition)}
             </div>
           </div>
@@ -895,6 +893,7 @@ export default function PartsPage() {
       quarantine,
       removed_pending_disposition: removed,
       low_stock: lowStock,
+      kanban: parts.length,
       inventory_master: parts.length,
       parts_requests: partsRequests.length,
     };
@@ -1007,6 +1006,7 @@ export default function PartsPage() {
                 ["quarantine", "Quarantine"],
                 ["removed_pending_disposition", "Disposition"],
                 ["low_stock", "Low Stock"],
+                ["kanban", "Kanban"],
                 ["inventory_master", "Inventory Master"],
                 ["parts_requests", "Parts Requests"],
               ] as const
@@ -1171,8 +1171,26 @@ export default function PartsPage() {
 
       {activeTab === "inventory_master" && <InventoryMasterTab />}
 
+      {activeTab === "kanban" && (
+        <InventoryKanban
+          parts={parts.map((part) => ({
+            _id: String(part._id),
+            partNumber: part.partNumber,
+            partName: part.partName,
+            description: part.description,
+            condition: part.condition,
+            location: part.location,
+            quantity: part.quantity,
+            quantityOnHand: part.quantityOnHand,
+            supplier: part.supplier,
+            reservedForWorkOrderId: part.reservedForWorkOrderId ? String(part.reservedForWorkOrderId) : undefined,
+            serialNumber: part.serialNumber,
+          }))}
+        />
+      )}
+
       {/* Parts list (all other tabs) */}
-      {activeTab !== "pending_inspection" && activeTab !== "parts_requests" && activeTab !== "inventory_master" && (
+      {activeTab !== "pending_inspection" && activeTab !== "parts_requests" && activeTab !== "inventory_master" && activeTab !== "kanban" && (
         <>
           {isLoading ? (
             <div className="space-y-2">
@@ -1238,12 +1256,7 @@ export default function PartsPage() {
                             >
                               {CONDITION_LABEL[part.condition] ?? part.condition}
                             </Badge>
-                            <Badge
-                              variant="outline"
-                              className="text-[10px] border-border/40 text-muted-foreground"
-                            >
-                              {LOCATION_LABEL[part.location] ?? part.location}
-                            </Badge>
+                            <PartStatusBadge status={part.location} />
                             {isLifeLimited && (
                               <Badge className="text-[10px] bg-purple-500/15 text-purple-600 dark:text-purple-400 border border-purple-500/30">
                                 Life Limited

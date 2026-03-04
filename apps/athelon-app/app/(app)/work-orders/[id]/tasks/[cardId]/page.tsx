@@ -379,6 +379,10 @@ export default function TaskCardPage() {
       ? { workOrderId: workOrderId as Id<"workOrders">, organizationId: orgId }
       : "skip",
   );
+  const discrepancies = useQuery(
+    api.discrepancies.listDiscrepancies,
+    orgId ? { organizationId: orgId } : "skip",
+  );
   const currentAircraftHours =
     workOrderResult?.aircraft?.totalTimeAirframeHours ?? 0;
 
@@ -423,6 +427,9 @@ export default function TaskCardPage() {
 
   const currentTechName = tech?.legalName ?? selfData?.legalName ?? "Unknown Technician";
   const taskVoiceNotes = voiceNotes.filter((note) => note.taskCardId === cardId);
+  const findingCount = (discrepancies ?? []).filter(
+    (d) => String(d.workOrderId ?? "") === workOrderId,
+  ).length;
 
   const estimatedHours = taskCard.estimatedHours ?? 0;
   const actualHours = useMemo(() => {
@@ -767,9 +774,15 @@ export default function TaskCardPage() {
                 : TASK_STATUS_LABEL[taskCard.status as TaskStatus] ?? taskCard.status}
             </Badge>
           </div>
-          <h1 className="text-lg sm:text-xl md:text-2xl font-semibold text-foreground">
-            {taskCard.title}
-          </h1>
+          <div className="flex items-center gap-2 flex-wrap">
+            <h1 className="text-lg sm:text-xl md:text-2xl font-semibold text-foreground">
+              {taskCard.title}
+            </h1>
+            <Badge variant="outline" className="text-[10px] border-amber-500/40 text-amber-600 dark:text-amber-400">
+              <AlertTriangle className="w-3 h-3 mr-1" />
+              Findings {findingCount}
+            </Badge>
+          </div>
           <p className="text-xs text-muted-foreground mt-0.5">
             Approved Data: {taskCard.approvedDataSource}
             {taskCard.approvedDataRevision && (

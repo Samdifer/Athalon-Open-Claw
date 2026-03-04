@@ -18,9 +18,8 @@ import {
   AlertTriangle,
   Loader2,
   AlertCircle,
+  Camera,
 } from "lucide-react";
-import { FileUpload, type UploadedFile } from "@/components/FileUpload";
-import { PhotoGallery } from "@/components/PhotoGallery";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -56,14 +55,13 @@ const FOUND_DURING_OPTIONS = [
 
 type FoundDuringValue = (typeof FOUND_DURING_OPTIONS)[number]["value"];
 
-const DISCREPANCY_TYPE_OPTIONS = [
-  { value: "mandatory", label: "Mandatory \u2014 affects airworthiness" },
-  { value: "recommended", label: "Recommended \u2014 does not affect airworthiness" },
-  { value: "customer_information", label: "Customer Information only" },
-  { value: "ops_check", label: "Ops Check required" },
+const SEVERITY_OPTIONS = [
+  { value: "minor", label: "Minor" },
+  { value: "major", label: "Major" },
+  { value: "critical", label: "Critical" },
 ] as const;
 
-type DiscrepancyTypeValue = (typeof DISCREPANCY_TYPE_OPTIONS)[number]["value"];
+type SeverityValue = (typeof SEVERITY_OPTIONS)[number]["value"];
 
 const SYSTEM_TYPE_OPTIONS = [
   { value: "airframe", label: "Airframe" },
@@ -128,8 +126,9 @@ export function RaiseFindingDialog({
   );
 
   // OP-1003 classification fields
-  const [discrepancyType, setDiscrepancyType] = useState<DiscrepancyTypeValue | "">("");
+  const [severity, setSeverity] = useState<SeverityValue | "">("");
   const [systemType, setSystemType] = useState<SystemTypeValue | "">("");
+  const [originStep, setOriginStep] = useState(stepDescription ?? "");
   const [findingCategory, setFindingCategory] = useState<FindingCategoryValue | "">("");
   const [correctiveAction, setCorrectiveAction] = useState("");
 
@@ -140,9 +139,6 @@ export function RaiseFindingDialog({
 
   // Labor estimate
   const [mhEstimate, setMhEstimate] = useState("");
-
-  // Photos
-  const [photoStorageIds, setPhotoStorageIds] = useState<string[]>([]);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -162,15 +158,15 @@ export function RaiseFindingDialog({
     setComponentPartNumber("");
     setComponentSerialNumber("");
     setNotes("");
-    setDiscrepancyType("");
+    setSeverity("");
     setSystemType("");
+    setOriginStep(stepDescription ?? "");
     setFindingCategory("");
     setCorrectiveAction("");
     setRiiRequired(false);
     setStcRelated(false);
     setStcNumber("");
     setMhEstimate("");
-    setPhotoStorageIds([]);
     setAircraftHoursEntry(aircraftHours > 0 ? String(aircraftHours) : "");
   }
 
@@ -201,8 +197,8 @@ export function RaiseFindingDialog({
       setError("Description is required.");
       return;
     }
-    if (!discrepancyType) {
-      setError("Discrepancy type is required.");
+    if (!severity) {
+      setError("Severity is required.");
       return;
     }
     if (!systemType) {
@@ -244,6 +240,13 @@ export function RaiseFindingDialog({
               ? "rts_finding"
               : "routine_check";
 
+      const discrepancyType =
+        severity === "critical"
+          ? "mandatory"
+          : severity === "major"
+            ? "recommended"
+            : "customer_information";
+
       await openDiscrepancy({
         workOrderId,
         organizationId: orgId,
@@ -254,12 +257,18 @@ export function RaiseFindingDialog({
         componentAffected: componentAffected.trim() || undefined,
         componentPartNumber: componentPartNumber.trim() || undefined,
         componentSerialNumber: componentSerialNumber.trim() || undefined,
-        notes: [notes.trim(), correctiveAction.trim() ? `Corrective Action (initial plan): ${correctiveAction.trim()}` : ""].filter(Boolean).join("\n\n") || undefined,
+        notes: [
+          originStep.trim() ? `Origin Step: ${originStep.trim()}` : "",
+          notes.trim(),
+          correctiveAction.trim() ? `Corrective Action (initial plan): ${correctiveAction.trim()}` : "",
+        ]
+          .filter(Boolean)
+          .join("\n\n") || undefined,
         squawkOrigin,
         foundDuringRts: findingCategory === "rts_found" ? true : undefined,
         isCustomerReported: findingCategory === "customer_reported" ? true : undefined,
         // OP-1003 fields
-        discrepancyType: discrepancyType || undefined,
+        discrepancyType,
         systemType: systemType || undefined,
         discoveredWhen,
         riiRequired: riiRequired || undefined,
@@ -342,6 +351,20 @@ export function RaiseFindingDialog({
             </p>
           </div>
 
+          <div>
+            <Label htmlFor="finding-origin-step" className="text-xs font-medium mb-1.5 block">
+              Origin Step
+            </Label>
+            <Input
+              id="finding-origin-step"
+              value={originStep}
+              onChange={(e) => setOriginStep(e.target.value.slice(0, 200))}
+              placeholder="Which step triggered this finding?"
+              maxLength={200}
+              className="h-9 text-sm bg-muted/30 border-border/60"
+            />
+          </div>
+
           {/* BUG-LT-010: Aircraft Hours at Finding - visible & editable */}
           <div>
             <Label htmlFor="finding-aircraft-hours" className="text-xs font-medium mb-1.5 block">
@@ -377,20 +400,17 @@ export function RaiseFindingDialog({
               Classification
             </p>
 
-            {/* Discrepancy Type */}
+            {/* Severity */}
             <div>
-              <Label htmlFor="finding-disc-type" className="text-xs font-medium mb-1.5 block">
-                Discrepancy Type <span className="text-red-400" aria-hidden="true">*</span>
+              <Label htmlFor="finding-severity" className="text-xs font-medium mb-1.5 block">
+                Severity <span className="text-red-400" aria-hidden="true">*</span>
               </Label>
-              <Select
-                value={discrepancyType}
-                onValueChange={(v) => setDiscrepancyType(v as DiscrepancyTypeValue)}
-              >
-                <SelectTrigger id="finding-disc-type" className="h-9 text-sm bg-muted/30 border-border/60" aria-required="true">
-                  <SelectValue placeholder="Select type..." />
+              <Select value={severity} onValueChange={(v) => setSeverity(v as SeverityValue)}>
+                <SelectTrigger id="finding-severity" className="h-9 text-sm bg-muted/30 border-border/60" aria-required="true">
+                  <SelectValue placeholder="Select severity..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {DISCREPANCY_TYPE_OPTIONS.map((opt) => (
+                  {SEVERITY_OPTIONS.map((opt) => (
                     <SelectItem key={opt.value} value={opt.value}>
                       {opt.label}
                     </SelectItem>
@@ -582,33 +602,20 @@ export function RaiseFindingDialog({
             />
           </div>
 
-          {/* Photos */}
+          {/* Photo attachment placeholder */}
           <div>
-            <Label className="text-xs font-medium mb-1.5 block">
-              Photos{" "}
-              <span className="text-muted-foreground font-normal">(optional)</span>
-            </Label>
-            {photoStorageIds.length > 0 && (
-              <div className="mb-2">
-                <PhotoGallery
-                  storageIds={photoStorageIds}
-                  onDelete={(id) =>
-                    setPhotoStorageIds((prev) => prev.filter((s) => s !== id))
-                  }
-                  confirmDelete={false}
-                />
-              </div>
-            )}
-            <FileUpload
-              accept="images"
-              multiple
-              compact
-              maxSizeMB={10}
-              onUpload={(file) =>
-                setPhotoStorageIds((prev) => [...prev, file.storageId])
-              }
+            <Label className="text-xs font-medium mb-1.5 block">Photo Attachment</Label>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={() => toast.info("Coming soon")}
               disabled={isSubmitting}
-            />
+            >
+              <Camera className="w-3.5 h-3.5" />
+              Attach Photo
+            </Button>
           </div>
 
           {/* Corrective Action */}
@@ -667,7 +674,7 @@ export function RaiseFindingDialog({
           </Button>
           <Button
             onClick={handleSubmit}
-            disabled={isSubmitting || !description.trim() || !discrepancyType || !systemType}
+            disabled={isSubmitting || !description.trim() || !severity || !systemType}
             className="gap-2"
             size="sm"
             variant="destructive"
