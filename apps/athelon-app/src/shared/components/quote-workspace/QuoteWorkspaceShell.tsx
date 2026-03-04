@@ -38,6 +38,7 @@ import {
   Target,
   Warehouse,
 } from "lucide-react";
+import { ExportCSVButton } from "@/src/shared/components/ExportCSVButton";
 
 type QuoteStatusFilter = "all" | "DRAFT" | "SENT" | "APPROVED" | "CONVERTED" | "DECLINED";
 type LinkageFilter = "all" | "linked" | "unlinked";
@@ -275,6 +276,18 @@ export function QuoteWorkspaceShell({
   const sentCount = useMemo(
     () => workOrders.filter((wo) => wo.quoteStatus === "SENT").length,
     [workOrders],
+  );
+
+  const exportRows = useMemo(
+    () =>
+      filteredWorkOrders.map((wo) => ({
+        quoteNumber: wo.quoteNumber ?? "",
+        workOrder: wo.workOrderNumber,
+        aircraft: wo.aircraft?.currentRegistration ?? "",
+        status: wo.quoteStatus ?? "UNLINKED",
+        priority: wo.priority,
+      })),
+    [filteredWorkOrders],
   );
 
   const linkedQuoteId = forceMode === "new" ? undefined : selectedWorkOrder?.sourceQuoteId;
@@ -549,6 +562,18 @@ export function QuoteWorkspaceShell({
               <Target className="mr-1 h-3 w-3" />
               {mode.toUpperCase()}
             </Badge>
+            <ExportCSVButton
+              data={exportRows}
+              columns={[
+                { key: "quoteNumber", header: "Quote #" },
+                { key: "workOrder", header: "Work Order" },
+                { key: "aircraft", header: "Aircraft" },
+                { key: "status", header: "Status" },
+                { key: "priority", header: "Priority" },
+              ]}
+              fileName="quotes.csv"
+              className="h-8 text-xs"
+            />
             <Button
               type="button"
               size="sm"

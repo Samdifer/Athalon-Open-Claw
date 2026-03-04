@@ -6,7 +6,6 @@ import {
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
-  Download,
   Grid3X3,
   Image as ImageIcon,
   List,
@@ -25,8 +24,8 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { downloadCSV } from "@/lib/export";
 import { toast } from "sonner";
+import { ExportCSVButton } from "@/src/shared/components/ExportCSVButton";
 import { FaaLookupButton } from "@/components/faa/FaaLookupButton";
 import { AddAircraftWizard } from "./_components/AddAircraftWizard";
 import {
@@ -559,6 +558,19 @@ export default function FleetPage() {
       });
   }, [classFilter, customerMap, fleet, makeFilter, modelFilter, scheduleFilter, searchTerm, sortKey]);
 
+  const exportRows = useMemo(
+    () =>
+      filtered.map((ac) => ({
+        registration: ac.currentRegistration ?? "",
+        make: ac.make ?? "",
+        model: ac.model ?? "",
+        status: getStatusStyle(ac.status).label,
+        totalTime: ac.currentTt != null ? String(ac.currentTt) : "",
+        nextScheduled: ac.nextScheduledStartDate ? new Date(ac.nextScheduledStartDate).toISOString() : "",
+      })),
+    [filtered],
+  );
+
   const totalCount = fleet?.length ?? 0;
   const filteredCount = filtered.length;
   const isFiltering =
@@ -620,36 +632,21 @@ export default function FleetPage() {
           </p>
         </div>
         <div className="flex gap-2 w-full sm:w-auto">
-          <Button
-            variant="outline"
-            size="sm"
+          <ExportCSVButton
+            data={exportRows}
+            columns={[
+              { key: "registration", header: "Registration" },
+              { key: "make", header: "Make" },
+              { key: "model", header: "Model" },
+              { key: "status", header: "Status" },
+              { key: "totalTime", header: "Total Time" },
+              { key: "nextScheduled", header: "Next Scheduled" },
+            ]}
+            fileName="fleet.csv"
+            showDateFilter
+            dateFieldKey="nextScheduled"
             className="gap-1.5 text-xs"
-            onClick={() => {
-              if (!filtered || filtered.length === 0) {
-                toast.error("No aircraft to export. Clear your filters and try again.");
-                return;
-              }
-              downloadCSV(
-                filtered.map((ac) => ({
-                  Registration: ac.currentRegistration ?? "",
-                  Make: ac.make ?? "",
-                  Model: ac.model ?? "",
-                  "Serial Number": ac.serialNumber ?? "",
-                  Status: ac.status ?? "",
-                  "Open Work Orders": ac.openWorkOrderCount ?? 0,
-                  "Next Scheduled": ac.nextScheduledStartDate
-                    ? new Date(ac.nextScheduledStartDate).toLocaleDateString("en-US", { timeZone: "UTC" })
-                    : "",
-                  "Aircraft Class": classifyAircraftStyle(ac.make, ac.model),
-                })),
-                "fleet.csv",
-              );
-              toast.success(`Exported ${filtered.length} aircraft to fleet.csv`);
-            }}
-          >
-            <Download className="w-3.5 h-3.5" />
-            Export CSV
-          </Button>
+          />
           <FaaLookupDialog />
           <Button size="sm" className="flex-1 sm:flex-initial" onClick={() => setAddAircraftOpen(true)}>
             <Plus className="w-3.5 h-3.5 mr-1.5" />

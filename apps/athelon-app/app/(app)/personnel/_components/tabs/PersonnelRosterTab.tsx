@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
   Users,
@@ -38,6 +38,7 @@ import {
 } from "../shared/rosterConstants";
 import type { WorkloadEntry } from "../shared/rosterConstants";
 import { ShiftEditor } from "../shared/ShiftEditor";
+import { ExportCSVButton } from "@/src/shared/components/ExportCSVButton";
 
 // ─── Props ──────────────────────────────────────────────────────────────────
 
@@ -115,6 +116,17 @@ export function PersonnelRosterTab({
     }
     return true;
   });
+
+  const exportRows = useMemo(
+    () =>
+      filtered.map((tech) => ({
+        name: tech.legalName,
+        role: tech.role ?? "",
+        status: tech.status,
+        certifications: expiringCertMap.get(tech._id)?.certNumber ?? "",
+      })),
+    [filtered, expiringCertMap],
+  );
 
   return (
     <div className="space-y-4">
@@ -249,6 +261,17 @@ export function PersonnelRosterTab({
         <span className="text-xs text-muted-foreground">
           {filtered.length} technician{filtered.length !== 1 ? "s" : ""}
         </span>
+        <ExportCSVButton
+          data={exportRows}
+          columns={[
+            { key: "name", header: "Name" },
+            { key: "role", header: "Role" },
+            { key: "status", header: "Status" },
+            { key: "certifications", header: "Certifications" },
+          ]}
+          fileName="personnel.csv"
+          className="h-8 text-xs"
+        />
       </div>
 
       {/* ── Technician Card List ───────────────────────────────────────────── */}

@@ -16,7 +16,6 @@ import {
   Calendar,
   TrendingDown,
   TrendingUp,
-  Download,
   LayoutGrid,
   Users,
   Grid3X3,
@@ -38,8 +37,7 @@ import {
 } from "@/lib/mro-constants";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import { usePagePrereqs } from "@/hooks/usePagePrereqs";
-import { downloadCSV } from "@/lib/export";
-import { toast } from "sonner";
+import { ExportCSVButton } from "@/src/shared/components/ExportCSVButton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -251,6 +249,20 @@ export default function WorkOrdersPage() {
     (filterType ? 1 : 0) +
     (filterLocationId !== "all" ? 1 : 0);
 
+  const exportRows = useMemo(
+    () =>
+      filtered.map((wo) => ({
+        woNumber: wo.number,
+        aircraft: wo.aircraft ?? "",
+        customer: wo.customer,
+        status: wo.statusLabel,
+        priority: wo.priority,
+        created: new Date(wo.openedAt).toISOString(),
+        promiseDate: wo.promisedDeliveryDate ? new Date(wo.promisedDeliveryDate).toISOString() : "",
+      })),
+    [filtered],
+  );
+
   // Single-pass counter — O(n) instead of the previous O(6n) from 6 separate
   // filterWorkOrders() calls each iterating the full array.
   const counts = useMemo(() => {
@@ -342,50 +354,22 @@ export default function WorkOrdersPage() {
               Kanban
             </Link>
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
+          <ExportCSVButton
+            data={exportRows}
+            columns={[
+              { key: "woNumber", header: "WO#" },
+              { key: "aircraft", header: "Aircraft" },
+              { key: "customer", header: "Customer" },
+              { key: "status", header: "Status" },
+              { key: "priority", header: "Priority" },
+              { key: "created", header: "Created" },
+              { key: "promiseDate", header: "Promise Date" },
+            ]}
+            fileName="work-orders.csv"
+            showDateFilter
+            dateFieldKey="created"
             className="gap-1.5 text-xs"
-            onClick={() => {
-              if (!filtered.length) {
-                // Silent failure is confusing — the button appeared clickable
-                // so the user expected something to happen.
-                toast.error(
-                  workOrders.length === 0
-                    ? "No work orders to export"
-                    : "No work orders match the current filter — clear filters or switch tabs to export",
-                );
-                return;
-              }
-              downloadCSV(
-                filtered.map((wo) => ({
-                  "WO Number": wo.number,
-                  Status: wo.statusLabel,
-                  Type: wo.typeLabel,
-                  Priority: wo.priority,
-                  Customer: wo.customer,
-                  Aircraft: wo.aircraft ?? "",
-                  Description: wo.description,
-                  // BUG-QCM-TZ-004: toLocaleDateString() without timeZone option uses
-                  // the browser's local offset for the CSV export. A Billing Manager
-                  // exporting WOs at 11:30pm UTC-5 would see all WOs opened at midnight
-                  // UTC listed as the prior day — wrong dates in the billing spreadsheet.
-                  // Promise dates are also stored as UTC midnight and would similarly shift.
-                  Created: new Date(wo.openedAt).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric", timeZone: "UTC" }),
-                  "Promise Date": wo.promisedDeliveryDate
-                    ? new Date(wo.promisedDeliveryDate).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric", timeZone: "UTC" })
-                    : "",
-                  "Tasks Done": `${wo.tasksComplete}/${wo.tasksTotal}`,
-                  "Open Squawks": wo.openSquawks,
-                })),
-                "work-orders.csv",
-              );
-              toast.success(`Exported ${filtered.length} work order${filtered.length !== 1 ? "s" : ""}`);
-            }}
-          >
-            <Download className="w-3.5 h-3.5" />
-            Export CSV
-          </Button>
+          />
           <Button asChild size="sm" className="flex-1 sm:flex-initial">
             <Link to="/work-orders/new">
               <Plus className="w-3.5 h-3.5 mr-1.5" />

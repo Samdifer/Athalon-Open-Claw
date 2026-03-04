@@ -19,11 +19,10 @@ import {
   Lock,
   Unlock,
   ClipboardCheck,
-  Download,
   ScanLine,
   Printer,
 } from "lucide-react";
-import { downloadCSV } from "@/lib/export";
+import { ExportCSVButton } from "@/src/shared/components/ExportCSVButton";
 import { BarcodeScanner } from "@/components/BarcodeScanner";
 import { printBarcodeLabel } from "@/lib/barcode";
 import { QRCodeBadge } from "@/components/QRCodeBadge";
@@ -859,6 +858,20 @@ export default function PartsPage() {
     };
   }, [parts, pendingInspectionParts]);
 
+  const exportRows = useMemo(
+    () =>
+      filtered.map((p) => ({
+        partNumber: p.partNumber ?? "",
+        description: p.partName ?? p.description ?? "",
+        quantity: p.quantityOnHand ?? p.quantity ?? "",
+        location: LOCATION_LABEL[p.location] ?? p.location ?? "",
+        condition: CONDITION_LABEL[p.condition] ?? p.condition ?? "",
+        cost: "",
+        createdAt: p._creationTime ? new Date(p._creationTime).toISOString() : "",
+      })),
+    [filtered],
+  );
+
   async function handleRelease(part: PartDoc) {
     try {
       await releasePart({ partId: part._id });
@@ -911,33 +924,21 @@ export default function PartsPage() {
               )}
             </Link>
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
+          <ExportCSVButton
+            data={exportRows}
+            columns={[
+              { key: "partNumber", header: "P/N" },
+              { key: "description", header: "Description" },
+              { key: "quantity", header: "Quantity" },
+              { key: "location", header: "Location" },
+              { key: "condition", header: "Condition" },
+              { key: "cost", header: "Cost" },
+            ]}
+            fileName="parts-inventory.csv"
+            showDateFilter
+            dateFieldKey="createdAt"
             className="h-8 gap-1.5 text-xs"
-            onClick={() => {
-              if (filtered.length) {
-                downloadCSV(
-                  filtered.map((p: any) => ({
-                    "Part Number": p.partNumber ?? "",
-                    "Part Name": p.partName ?? "",
-                    Description: p.description ?? "",
-                    Condition: CONDITION_LABEL[p.condition] ?? p.condition ?? "",
-                    Location: LOCATION_LABEL[p.location] ?? p.location ?? "",
-                    "Serial Number": p.serialNumber ?? "",
-                    Quantity: p.quantityOnHand ?? p.quantity ?? "",
-                    Supplier: p.supplier ?? "",
-                    "PO Number": p.purchaseOrderNumber ?? "",
-                  })),
-                  "parts-inventory.csv",
-                );
-                toast.success("Parts exported to CSV");
-              }
-            }}
-          >
-            <Download className="w-3.5 h-3.5" />
-            Export CSV
-          </Button>
+          />
           <Button asChild size="sm" className="h-8 text-xs w-full sm:w-auto">
             <Link to="/parts/new">
               <Plus className="w-3.5 h-3.5 mr-1.5" />

@@ -7,6 +7,7 @@ import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import { Plus, Search, ShoppingCart, ChevronRight, Building2 } from "lucide-react";
+import { ExportCSVButton } from "@/src/shared/components/ExportCSVButton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -95,6 +96,21 @@ export default function PurchaseOrdersPage() {
 
   const all = pos ?? [];
 
+  const exportRows = useMemo(
+    () =>
+      filtered.map((po) => {
+        const poWithVendor = po as unknown as { vendorId: Id<"vendors"> };
+        return {
+          poNumber: po.poNumber,
+          vendor: vendorMap[poWithVendor.vendorId] ?? "",
+          status: po.status,
+          total: po.total,
+          date: po.createdAt ? new Date(po.createdAt).toISOString() : "",
+        };
+      }),
+    [filtered, vendorMap],
+  );
+
   // Memoized single-pass counter — only recomputes when Convex data changes,
   // not on every search keystroke or tab selection
   const counts = useMemo<Record<POStatus, number>>(() => {
@@ -119,12 +135,28 @@ export default function PurchaseOrdersPage() {
             <p className="text-sm text-muted-foreground mt-0.5">{all.length} total · {counts.SUBMITTED} submitted</p>
           )}
         </div>
-        <Button asChild size="sm">
-          <Link to="/billing/purchase-orders/new">
-            <Plus className="w-3.5 h-3.5 mr-1.5" />
-            New PO
-          </Link>
-        </Button>
+        <div className="flex items-center gap-2">
+          <ExportCSVButton
+            data={exportRows}
+            columns={[
+              { key: "poNumber", header: "PO#" },
+              { key: "vendor", header: "Vendor" },
+              { key: "status", header: "Status" },
+              { key: "total", header: "Total" },
+              { key: "date", header: "Date" },
+            ]}
+            fileName="purchase-orders.csv"
+            showDateFilter
+            dateFieldKey="date"
+            className="gap-1.5 text-xs"
+          />
+          <Button asChild size="sm">
+            <Link to="/billing/purchase-orders/new">
+              <Plus className="w-3.5 h-3.5 mr-1.5" />
+              New PO
+            </Link>
+          </Button>
+        </div>
       </div>
 
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">

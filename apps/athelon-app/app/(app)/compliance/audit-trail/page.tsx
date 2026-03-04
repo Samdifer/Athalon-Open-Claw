@@ -32,6 +32,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ActionableEmptyState } from "@/components/zero-state/ActionableEmptyState";
+import { ExportCSVButton } from "@/src/shared/components/ExportCSVButton";
 
 // ─── Status Badge ────────────────────────────────────────────────────────────
 
@@ -603,6 +604,17 @@ export default function AuditTrailPage() {
     });
   }, [aircraft, fleetAdSummary]);
 
+  const exportRows = useMemo(
+    () =>
+      (fleetAdSummary?.aircraftSummaries ?? []).map((summary) => ({
+        event: "AD Compliance Snapshot",
+        user: "System",
+        timestamp: new Date().toISOString(),
+        details: `${summary.registration}: ${summary.overdueCount} overdue, ${summary.dueSoonCount} due soon, ${summary.total} total ADs`,
+      })),
+    [fleetAdSummary],
+  );
+
   // BUG-QCM-048: Guard against missing org context (see comment above on isLoaded).
   if (!orgLoaded) {
     return (
@@ -646,6 +658,19 @@ export default function AuditTrailPage() {
           </p>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0 flex-wrap">
+          <ExportCSVButton
+            data={exportRows}
+            columns={[
+              { key: "event", header: "Event" },
+              { key: "user", header: "User" },
+              { key: "timestamp", header: "Timestamp" },
+              { key: "details", header: "Details" },
+            ]}
+            fileName="audit-trail.csv"
+            showDateFilter
+            dateFieldKey="timestamp"
+            className="h-8 text-xs"
+          />
           <Button
             asChild
             variant="ghost"
