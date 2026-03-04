@@ -166,10 +166,16 @@ export function StepPartsTracker({
     );
   }, [inventoryParts, search]);
 
-  function persist(next: Record<string, StepLocalState>) {
-    if (!orgId) return;
-    for (const [stepId, value] of Object.entries(next)) {
-      localStorage.setItem(stepStorageKey(orgId, stepId), JSON.stringify(value));
+  function persist(next: Record<string, StepLocalState>): boolean {
+    if (!orgId) return false;
+    try {
+      for (const [stepId, value] of Object.entries(next)) {
+        localStorage.setItem(stepStorageKey(orgId, stepId), JSON.stringify(value));
+      }
+      return true;
+    } catch {
+      toast.error("Unable to save parts traceability locally.");
+      return false;
     }
   }
 
@@ -190,6 +196,7 @@ export function StepPartsTracker({
       return;
     }
 
+    let didSave = true;
     setStepState((prev) => {
       const current = prev[dialog.stepId] ?? { installed: [], removed: [] };
       const next = { ...prev };
@@ -224,10 +231,13 @@ export function StepPartsTracker({
           ],
         };
       }
-      persist(next);
+      const persisted = persist(next);
+      didSave = persisted;
+      if (!persisted) return prev;
       return next;
     });
 
+    if (!didSave) return;
     toast.success("Part added to step trace.");
     setDialog(null);
   }

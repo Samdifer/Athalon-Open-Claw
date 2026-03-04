@@ -23,6 +23,8 @@ type VoiceNoteRecorderProps = {
 
 type RecorderMode = "idle" | "recording" | "processing" | "ready";
 
+const MAX_RECORDING_MS = 3 * 60 * 1000;
+
 export function VoiceNoteRecorder({ onSave, disabled = false, className }: VoiceNoteRecorderProps) {
   const [mode, setMode] = useState<RecorderMode>("idle");
   const [elapsedMs, setElapsedMs] = useState(0);
@@ -192,6 +194,14 @@ export function VoiceNoteRecorder({ onSave, disabled = false, className }: Voice
       setIsSaving(false);
     }
   };
+
+  useEffect(() => {
+    if (mode !== "recording") return;
+    if (elapsedMs < MAX_RECORDING_MS) return;
+
+    toast.info("Max recording length reached (3 minutes). Stopping recording.");
+    stopRecording();
+  }, [elapsedMs, mode]);
 
   useEffect(() => {
     return () => {

@@ -22,6 +22,13 @@ function storageKey(workOrderId: string, taskCardId: string) {
   return `athelon:turnover-notes:${workOrderId}:${taskCardId}`;
 }
 
+function createTurnoverEntryId() {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  return `turnover-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
 const SUGGESTIONS = [
   "Shift turnover: Last completed step [#]. Open discrepancies: [none/list]. Parts status: [installed/awaiting]. Next shift priority: [next action]. Safety/quality notes: [critical checks].",
   "Turnover summary: Work accomplished [brief]. Current aircraft/configuration status [state]. Blocking items [vendor/parts/tools]. Required sign-offs remaining [A&P/IA/QA].",
@@ -47,12 +54,14 @@ export function TurnoverNotes({ workOrderId, taskCardId, readOnly = false }: Pro
     }
   }, [key]);
 
-  function persist(next: TurnoverEntry[]) {
-    setEntries(next);
+  function persist(next: TurnoverEntry[]): boolean {
     try {
       localStorage.setItem(key, JSON.stringify(next));
+      setEntries(next);
+      return true;
     } catch {
       toast.error("Unable to save turnover note locally.");
+      return false;
     }
   }
 
@@ -61,17 +70,20 @@ export function TurnoverNotes({ workOrderId, taskCardId, readOnly = false }: Pro
     if (!note) return;
 
     const next: TurnoverEntry[] = [
-      { id: crypto.randomUUID(), note, createdAt: Date.now() },
+      { id: createTurnoverEntryId(), note, createdAt: Date.now() },
       ...entries,
     ];
-    persist(next);
+    const saved = persist(next);
+    if (!saved) return;
+
     setDraft("");
     toast.success("Turnover note added");
   }
 
   function handleDelete(id: string) {
     const next = entries.filter((entry) => entry.id !== id);
-    persist(next);
+    const saved = persist(next);
+    if (!saved) return;
     toast.success("Turnover note removed");
   }
 

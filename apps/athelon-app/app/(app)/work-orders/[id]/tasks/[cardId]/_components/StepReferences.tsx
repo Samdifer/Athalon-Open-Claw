@@ -28,6 +28,13 @@ type Step = {
   description: string;
 };
 
+function createStepReferenceId() {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  return `step-ref-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
 export function StepReferences({ workOrderId, taskCardId, steps }: { workOrderId: string; taskCardId: string; steps: Step[] }) {
   const storageKey = useMemo(() => `step-references:${workOrderId}:${taskCardId}`, [workOrderId, taskCardId]);
   const [refs, setRefs] = useState<StepRef[]>([]);
@@ -45,7 +52,7 @@ export function StepReferences({ workOrderId, taskCardId, steps }: { workOrderId
     try {
       localStorage.setItem(storageKey, JSON.stringify(refs));
     } catch {
-      // Ignore storage write failures (quota/private mode).
+      toast.error("Unable to save step references locally.");
     }
   }, [refs, storageKey]);
 
@@ -53,7 +60,7 @@ export function StepReferences({ workOrderId, taskCardId, steps }: { workOrderId
     setRefs((prev) => [
       {
         ...ref,
-        id: crypto.randomUUID(),
+        id: createStepReferenceId(),
         createdAt: Date.now(),
       },
       ...prev,

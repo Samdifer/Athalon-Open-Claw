@@ -741,17 +741,21 @@ export default function TaskCardPage() {
   );
   const vendorServicesBlockSignOff = blockingVendorServices.length > 0;
 
-  const taskAttachments = (taskDocuments ?? []).map((doc) => ({
-    ...doc,
-    category:
+  const taskAttachments = (taskDocuments ?? []).map((doc) => {
+    const category: "photo" | "compliance" | "reference" | "general" =
       doc.documentType === "photo"
         ? "photo"
         : ["ad_document", "approved_data", "parts_8130"].includes(doc.documentType)
           ? "compliance"
           : ["work_authorization", "vendor_invoice"].includes(doc.documentType)
             ? "reference"
-            : "general",
-  }));
+            : "general";
+
+    return {
+      ...doc,
+      category,
+    };
+  });
 
   return (
     <div className="max-w-2xl mx-auto space-y-5">
