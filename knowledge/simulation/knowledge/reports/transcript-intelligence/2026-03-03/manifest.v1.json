@@ -1,0 +1,585 @@
+{
+  "schema": "manifest.v1",
+  "generated_at": "2026-03-03T19:23:17.256122+00:00",
+  "run_date": "2026-03-03",
+  "scope_patterns": [
+    "dispatches/*.md",
+    "phase-*/dispatches/*.md",
+    "phase-5-repair-station/**/*.md"
+  ],
+  "file_count": 57,
+  "primary_file_count": 41,
+  "total_words": 122682,
+  "files": [
+    {
+      "path": "dispatches/dispatch-01-the-hire.md",
+      "sha256": "3bb93bf4b5b566213ffe35a17c799f56a16e3be7de41557d1bd4edc5a3a4d75e",
+      "words": 2571,
+      "lines": 144,
+      "doc_type": "dispatch",
+      "phase": null,
+      "date_normalized": null,
+      "primary_source": true
+    },
+    {
+      "path": "dispatches/dispatch-02-the-stack-decision.md",
+      "sha256": "586da281e7709633e5e6abd7db9c27f948ddbbbf702437fc513018817c174c41",
+      "words": 2194,
+      "lines": 245,
+      "doc_type": "dispatch",
+      "phase": "Phase 1",
+      "date_normalized": null,
+      "primary_source": true
+    },
+    {
+      "path": "dispatches/dispatch-03-the-build.md",
+      "sha256": "8e0b2266a36c572e5f3cc24ccd24c2c9d1f83afd14440df4da73dbfaa9567320",
+      "words": 2564,
+      "lines": 147,
+      "doc_type": "dispatch",
+      "phase": "Phase 2",
+      "date_normalized": null,
+      "primary_source": true
+    },
+    {
+      "path": "dispatches/dispatch-04-the-end-of-the-beginning.md",
+      "sha256": "599a68c4c7c2757a34403ea8694ad36d25e2ae56bcfe77c9386ea4899b47d1bd",
+      "words": 2814,
+      "lines": 112,
+      "doc_type": "dispatch",
+      "phase": "Phase 4",
+      "date_normalized": null,
+      "primary_source": true
+    },
+    {
+      "path": "dispatches/dispatch-05-the-real-users.md",
+      "sha256": "4d9999e55c5a65d3be912c219218c3a75804a80e4477db1e908a07050ec02482",
+      "words": 2660,
+      "lines": 146,
+      "doc_type": "dispatch",
+      "phase": "Phase 5",
+      "date_normalized": null,
+      "primary_source": true
+    },
+    {
+      "path": "dispatches/dispatch-06-the-first-session.md",
+      "sha256": "f3fe624eab50b43abc190d15a01d7ae19035d252fb5f99ee872f85365a0ad486",
+      "words": 2586,
+      "lines": 157,
+      "doc_type": "dispatch",
+      "phase": "Phase 4",
+      "date_normalized": null,
+      "primary_source": true
+    },
+    {
+      "path": "dispatches/dispatch-07-the-thursday-gate.md",
+      "sha256": "651feccd83e22f387a414aab515fbd9d12e967a08114d0b69516a9f3b256d15d",
+      "words": 2128,
+      "lines": 232,
+      "doc_type": "dispatch",
+      "phase": "Phase 5",
+      "date_normalized": null,
+      "primary_source": true
+    },
+    {
+      "path": "dispatches/dispatch-08-the-conditions.md",
+      "sha256": "16da84e4527b65a5e17c6cc3cf9940193bd70c01c7ad2c2b9bb7d69b49ea2875",
+      "words": 2322,
+      "lines": 201,
+      "doc_type": "dispatch",
+      "phase": "Phase 7",
+      "date_normalized": null,
+      "primary_source": true
+    },
+    {
+      "path": "dispatches/dispatch-09-the-amber-line.md",
+      "sha256": "b745323f7f3a88dbf76a4751cb63f0a03fb87b6a518ddd7ff4cee80b44270c8b",
+      "words": 2216,
+      "lines": 238,
+      "doc_type": "dispatch",
+      "phase": "Phase 9",
+      "date_normalized": null,
+      "primary_source": true
+    },
+    {
+      "path": "dispatches/dispatch-13-the-reentry-line.md",
+      "sha256": "71160585bc05303be68557f894cbf4c6b089b1575e8ac8bb02eaeac10bb964e3",
+      "words": 2479,
+      "lines": 274,
+      "doc_type": "dispatch",
+      "phase": "Phase 13",
+      "date_normalized": null,
+      "primary_source": true
+    },
+    {
+      "path": "dispatches/dispatch-14-the-greenline-test.md",
+      "sha256": "3f25dc2d6bc15330f8126673cc122110a10c419f586ba8941b734aee449212b4",
+      "words": 2208,
+      "lines": 284,
+      "doc_type": "dispatch",
+      "phase": "Phase 14",
+      "date_normalized": null,
+      "primary_source": true
+    },
+    {
+      "path": "dispatches/dispatch-19-the-first-work-order.md",
+      "sha256": "68afd63a818cbbf6f838204297a897cf8e9c627c804ff8e463c28dcaa2b8ac73",
+      "words": 4530,
+      "lines": 345,
+      "doc_type": "dispatch",
+      "phase": "Phase 5",
+      "date_normalized": "2026-02-23",
+      "primary_source": true
+    },
+    {
+      "path": "dispatches/dispatch-23-v12.md",
+      "sha256": "06b73922a24a8b688e7eb234f6d7ff29555697b3fbcd03191d82bade6ed8555c",
+      "words": 793,
+      "lines": 50,
+      "doc_type": "dispatch",
+      "phase": null,
+      "date_normalized": null,
+      "primary_source": true
+    },
+    {
+      "path": "phase-20-scale/dispatches/dispatch-20-the-second-shop.md",
+      "sha256": "bb36d25cfe11e8652fe0c76f5c3cb357a74f7fe9286c7cce0c259a02275e5735",
+      "words": 1207,
+      "lines": 73,
+      "doc_type": "dispatch",
+      "phase": "Phase 20",
+      "date_normalized": "2026-02-23",
+      "primary_source": true
+    },
+    {
+      "path": "phase-21-expansion/dispatches/dispatch-21-two-shops.md",
+      "sha256": "7a23a91e0f6847ebd2a77142453ad66502cc275b104cbe0bdcf3e1678653730a",
+      "words": 1846,
+      "lines": 106,
+      "doc_type": "dispatch",
+      "phase": "Phase 21",
+      "date_normalized": "2026-03-01",
+      "primary_source": true
+    },
+    {
+      "path": "phase-22-v12/dispatches/dispatch-22-priya.md",
+      "sha256": "af0774867fe957531b34dd04144142e0afcb6f325c392c7224847e6271fb9685",
+      "words": 1522,
+      "lines": 92,
+      "doc_type": "dispatch",
+      "phase": "Phase 22",
+      "date_normalized": null,
+      "primary_source": true
+    },
+    {
+      "path": "phase-24-v20/dispatches/dispatch-24-frank.md",
+      "sha256": "3239b12aea41631699ef3a0882e0c0815a9557d22f8beb87e4da1585557147b3",
+      "words": 1299,
+      "lines": 73,
+      "doc_type": "dispatch",
+      "phase": "Phase 24",
+      "date_normalized": "2026-02-23",
+      "primary_source": true
+    },
+    {
+      "path": "phase-25-v20b/dispatches/dispatch-25-part135.md",
+      "sha256": "0643e63b3a3d5171e140b9d24d7f1a343ba31e47caa210969a9282d899741393",
+      "words": 959,
+      "lines": 55,
+      "doc_type": "dispatch",
+      "phase": "Phase 25",
+      "date_normalized": "2026-02-23",
+      "primary_source": true
+    },
+    {
+      "path": "phase-26-v20c/dispatches/dispatch-26-als-vs-ad.md",
+      "sha256": "5977af7052e244887b23c4381631899bdb76faf3d4c09626e884e9e16b6b3f92",
+      "words": 2302,
+      "lines": 150,
+      "doc_type": "dispatch",
+      "phase": "Phase 26",
+      "date_normalized": "2026-02-01",
+      "primary_source": true
+    },
+    {
+      "path": "phase-27-v20d/dispatches/dispatch-27.md",
+      "sha256": "f7eee8d5c9a395b0012e5e9abd1945360b00a398e56fe7414a055af4fad7abca",
+      "words": 2792,
+      "lines": 143,
+      "doc_type": "dispatch",
+      "phase": "Phase 27",
+      "date_normalized": "2026-02-01",
+      "primary_source": true
+    },
+    {
+      "path": "phase-28-v13/dispatches/dispatch-28.md",
+      "sha256": "078d1f2883bebeb082b667458cd3214b5e34a1842ee2073337f084ce3bfbd7b2",
+      "words": 1493,
+      "lines": 79,
+      "doc_type": "dispatch",
+      "phase": "Phase 28",
+      "date_normalized": "2026-04-09",
+      "primary_source": true
+    },
+    {
+      "path": "phase-29-v14/dispatches/dispatch-29.md",
+      "sha256": "06a9c0e3b7c9f270b9ab9f1ab82ab212c81ce9613b29789063abc6cb9cf58a4a",
+      "words": 1633,
+      "lines": 99,
+      "doc_type": "dispatch",
+      "phase": "Phase 29",
+      "date_normalized": "2026-04-16",
+      "primary_source": true
+    },
+    {
+      "path": "phase-30-v14/dispatches/dispatch-30.md",
+      "sha256": "b6fff1f6cecb5f4b79752f7678866d6a6244c723a205d0f3dded1dd3552f0dcf",
+      "words": 1155,
+      "lines": 80,
+      "doc_type": "dispatch",
+      "phase": "Phase 30",
+      "date_normalized": "2026-05-08",
+      "primary_source": true
+    },
+    {
+      "path": "phase-31-v14/dispatches/dispatch-31.md",
+      "sha256": "6fc6bdc48ec430d2c1c4d8ab0863ab884b14e1915dad209f2498fcee65d8bd57",
+      "words": 1838,
+      "lines": 106,
+      "doc_type": "dispatch",
+      "phase": "Phase 31",
+      "date_normalized": null,
+      "primary_source": true
+    },
+    {
+      "path": "phase-32-v14/dispatches/dispatch-32.md",
+      "sha256": "578dacbff5dc40ef3cbd81602c20783fad3bab1eb89cbe8ae512902dcf7a4024",
+      "words": 1552,
+      "lines": 79,
+      "doc_type": "dispatch",
+      "phase": "Phase 32",
+      "date_normalized": "2026-07-10",
+      "primary_source": true
+    },
+    {
+      "path": "phase-33-v15/dispatches/dispatch-33.md",
+      "sha256": "7dd1aa0f6ef829c8865d98731a79e513f2634d92230830e4e0c7458a50913f41",
+      "words": 2013,
+      "lines": 114,
+      "doc_type": "dispatch",
+      "phase": "Phase 33",
+      "date_normalized": "2026-08-15",
+      "primary_source": true
+    },
+    {
+      "path": "phase-34-v15/dispatches/dispatch-34.md",
+      "sha256": "64a77eb5063f830d22468517d7afa8178b5a33010182a7f2a8738871fc0377c2",
+      "words": 2100,
+      "lines": 105,
+      "doc_type": "dispatch",
+      "phase": "Phase 34",
+      "date_normalized": "2026-09-20",
+      "primary_source": true
+    },
+    {
+      "path": "phase-35-v15/dispatches/dispatch-35.md",
+      "sha256": "08a2de7f48c1404e651b12393a963042e722be9ecd0fe5f97460df3a0eb2fc50",
+      "words": 796,
+      "lines": 76,
+      "doc_type": "dispatch",
+      "phase": "Phase 35",
+      "date_normalized": "2026-10-25",
+      "primary_source": true
+    },
+    {
+      "path": "phase-36-v15/dispatches/dispatch-36.md",
+      "sha256": "5ba70f352bb41c574a2976697b683cdf45d04c5a0fc650b9085456eb90492a61",
+      "words": 385,
+      "lines": 35,
+      "doc_type": "dispatch",
+      "phase": "Phase 36",
+      "date_normalized": "2026-11-25",
+      "primary_source": true
+    },
+    {
+      "path": "phase-37-v15/dispatches/dispatch-37.md",
+      "sha256": "93d6b113031452bb151b4e31f18c1cd31b66edfd3b6a1668daad1e137b5a1124",
+      "words": 1417,
+      "lines": 83,
+      "doc_type": "dispatch",
+      "phase": "Phase 37",
+      "date_normalized": "2026-12-22",
+      "primary_source": true
+    },
+    {
+      "path": "phase-5-repair-station/avionics/dale-purcell-interview.md",
+      "sha256": "68e95e5e23604bbd3fa564b9e1acda7f213a4718c2f87c6a71f6ba9417dcb2e5",
+      "words": 2520,
+      "lines": 110,
+      "doc_type": "interview",
+      "phase": "Phase 5",
+      "date_normalized": "2026-02-22",
+      "primary_source": true
+    },
+    {
+      "path": "phase-5-repair-station/avionics/dale-purcell-profile.md",
+      "sha256": "1fe762fcd58ecaa22c5ad0bd919f65511da067b8bc028e795fd6920f1b133f1f",
+      "words": 1478,
+      "lines": 87,
+      "doc_type": "profile",
+      "phase": "Phase 5",
+      "date_normalized": "2026-02-22",
+      "primary_source": false
+    },
+    {
+      "path": "phase-5-repair-station/dom/dom-profile.md",
+      "sha256": "abbd3f7c457e4ed5573af093fd0d7dfb372747f7d04ed9bf05e596ef2a26bcfe",
+      "words": 4055,
+      "lines": 201,
+      "doc_type": "profile",
+      "phase": "Phase 5",
+      "date_normalized": "2026-02-22",
+      "primary_source": false
+    },
+    {
+      "path": "phase-5-repair-station/dom/gary-hutchins-interview.md",
+      "sha256": "2cc2a2073fbb674b413b0826c15155a4d54e9ee3a3b9868b2d41f6bb7e34f2df",
+      "words": 2397,
+      "lines": 133,
+      "doc_type": "interview",
+      "phase": "Phase 5",
+      "date_normalized": "2026-02-22",
+      "primary_source": true
+    },
+    {
+      "path": "phase-5-repair-station/dom/gary-hutchins.md",
+      "sha256": "97bdbd890e894c2939c5e9407657e901e41096fd271a9e9c3b04a77abe2531fd",
+      "words": 1950,
+      "lines": 146,
+      "doc_type": "other",
+      "phase": "Phase 5",
+      "date_normalized": "2017-04-06",
+      "primary_source": false
+    },
+    {
+      "path": "phase-5-repair-station/ia/ia-profile.md",
+      "sha256": "1ddf49bb26dcb77ef3cd897d8b7491668e624439cb916ca261a5bf02ecb218b6",
+      "words": 4920,
+      "lines": 200,
+      "doc_type": "profile",
+      "phase": "Phase 5",
+      "date_normalized": "2026-02-22",
+      "primary_source": false
+    },
+    {
+      "path": "phase-5-repair-station/ia/pat-deluca-interview.md",
+      "sha256": "61220299c4c8ff911d244dfafe4da56f07eb48edf80b82f56a6a90b0e1fd1ed9",
+      "words": 2062,
+      "lines": 153,
+      "doc_type": "interview",
+      "phase": "Phase 5",
+      "date_normalized": "2026-02-22",
+      "primary_source": true
+    },
+    {
+      "path": "phase-5-repair-station/ia/pat-deluca-profile.md",
+      "sha256": "b289e750a975c31c72a6770c403665ff6daffc1a3893acc90b8ea6304abd4ff3",
+      "words": 1338,
+      "lines": 85,
+      "doc_type": "profile",
+      "phase": "Phase 5",
+      "date_normalized": "2026-02-22",
+      "primary_source": false
+    },
+    {
+      "path": "phase-5-repair-station/mechanics/erik-holmberg-interview.md",
+      "sha256": "0be426e8b29b370c2245322f5e65b3458f3d76136fbc12c9166d24794954b560",
+      "words": 1960,
+      "lines": 130,
+      "doc_type": "interview",
+      "phase": "Phase 5",
+      "date_normalized": "2026-02-22",
+      "primary_source": true
+    },
+    {
+      "path": "phase-5-repair-station/mechanics/erik-holmberg-profile.md",
+      "sha256": "1c35df6082b17964fb9f3709cabbe1f3107fb4379c2809471d52c469b0cab33c",
+      "words": 1223,
+      "lines": 78,
+      "doc_type": "profile",
+      "phase": "Phase 5",
+      "date_normalized": "2026-02-22",
+      "primary_source": false
+    },
+    {
+      "path": "phase-5-repair-station/mechanics/troy-weaver-interview.md",
+      "sha256": "e6c51c375dd87debabded7343de0113b51e59ccbba1b1c6ab2aff5fb62ad6aa2",
+      "words": 1705,
+      "lines": 112,
+      "doc_type": "interview",
+      "phase": "Phase 5",
+      "date_normalized": "2026-02-22",
+      "primary_source": true
+    },
+    {
+      "path": "phase-5-repair-station/mechanics/troy-weaver-profile.md",
+      "sha256": "bd4339c52047e1fe5c5697931af69c37203809182d8582d8ce73a501aea3b505",
+      "words": 1034,
+      "lines": 72,
+      "doc_type": "profile",
+      "phase": "Phase 5",
+      "date_normalized": "2026-02-22",
+      "primary_source": false
+    },
+    {
+      "path": "phase-5-repair-station/parts-mgr/interview-teresa-varga.md",
+      "sha256": "c36f74a2c446047a126294f27f2d55f8fd6a12c67b992608fe921654a1d1f5e5",
+      "words": 2209,
+      "lines": 114,
+      "doc_type": "interview",
+      "phase": "Phase 5",
+      "date_normalized": "2026-02-22",
+      "primary_source": true
+    },
+    {
+      "path": "phase-5-repair-station/parts-mgr/profile-teresa-varga.md",
+      "sha256": "38689097e4a9130571e42da660a5bda34acaf49670833c3e2fb9d00ae04660d0",
+      "words": 808,
+      "lines": 70,
+      "doc_type": "profile",
+      "phase": "Phase 5",
+      "date_normalized": "2026-02-22",
+      "primary_source": false
+    },
+    {
+      "path": "phase-5-repair-station/powerplant/powerplant-profile.md",
+      "sha256": "2bc864d1ca51f1a662502fc5d4f4fae8419c24f2568dbbc591764ca7eb7ba7ac",
+      "words": 4892,
+      "lines": 204,
+      "doc_type": "profile",
+      "phase": "Phase 5",
+      "date_normalized": "2026-02-22",
+      "primary_source": false
+    },
+    {
+      "path": "phase-5-repair-station/powerplant/rosario-tafoya-interview.md",
+      "sha256": "cd7bdb2e0b31d102b98989aaa367096e29dc34c52b0b39f905193b91f791d1b2",
+      "words": 2688,
+      "lines": 112,
+      "doc_type": "interview",
+      "phase": "Phase 5",
+      "date_normalized": "2026-02-22",
+      "primary_source": true
+    },
+    {
+      "path": "phase-5-repair-station/powerplant/rosario-tafoya-profile.md",
+      "sha256": "a789174a18bf729387356fe53fd837ead9c13d0beeed4f8c263d68f816b7d48e",
+      "words": 1588,
+      "lines": 94,
+      "doc_type": "profile",
+      "phase": "Phase 5",
+      "date_normalized": "2026-02-22",
+      "primary_source": false
+    },
+    {
+      "path": "phase-5-repair-station/qcm/linda-paredes-interview.md",
+      "sha256": "663c91892cb90b22fccc28566a0b0143b78c79a29326a99f0563a7b06607feb4",
+      "words": 2799,
+      "lines": 158,
+      "doc_type": "interview",
+      "phase": "Phase 5",
+      "date_normalized": "2026-02-22",
+      "primary_source": true
+    },
+    {
+      "path": "phase-5-repair-station/qcm/linda-paredes.md",
+      "sha256": "d9cc2cd84f318cc1598d621609b66967d0b686f70e0f5b8d01d0fed7141651ac",
+      "words": 2294,
+      "lines": 143,
+      "doc_type": "other",
+      "phase": "Phase 5",
+      "date_normalized": "2023-10-01",
+      "primary_source": false
+    },
+    {
+      "path": "phase-5-repair-station/qcm/qcm-profile.md",
+      "sha256": "e1e2088cdba6dd8a9f425d220f701f5638f98daa3f3977371a07628c4267d6b5",
+      "words": 4923,
+      "lines": 202,
+      "doc_type": "profile",
+      "phase": "Phase 5",
+      "date_normalized": "2026-02-22",
+      "primary_source": false
+    },
+    {
+      "path": "phase-5-repair-station/sheetmetal/felix-okafor-interview.md",
+      "sha256": "22e1be25d5af6045a5c2544ea97df4371e8a1039e36770648d3925f3ff50d6bc",
+      "words": 2912,
+      "lines": 137,
+      "doc_type": "interview",
+      "phase": "Phase 5",
+      "date_normalized": "2026-02-22",
+      "primary_source": true
+    },
+    {
+      "path": "phase-5-repair-station/sheetmetal/felix-okafor-profile.md",
+      "sha256": "1717f8c24dd0913c9bba49b59e73f2146b4408b7c06dd0326c076853e68b26c6",
+      "words": 1741,
+      "lines": 92,
+      "doc_type": "profile",
+      "phase": "Phase 5",
+      "date_normalized": "2026-02-22",
+      "primary_source": false
+    },
+    {
+      "path": "phase-5-repair-station/sheetmetal/sheetmetal-profile.md",
+      "sha256": "73503b92f0169e5bac6c016b562363ec5c0507872f5faf327443e046a99c826d",
+      "words": 5278,
+      "lines": 206,
+      "doc_type": "profile",
+      "phase": "Phase 5",
+      "date_normalized": "2026-02-22",
+      "primary_source": false
+    },
+    {
+      "path": "phase-5-repair-station/techpubs/interview-rachel-kwon.md",
+      "sha256": "426ddc40f7c968c60f7fb8d72163a7afd8d4fcd6a5714214adb38e46e78b6334",
+      "words": 1299,
+      "lines": 75,
+      "doc_type": "interview",
+      "phase": "Phase 5",
+      "date_normalized": "2026-02-22",
+      "primary_source": true
+    },
+    {
+      "path": "phase-5-repair-station/techpubs/profile-rachel-kwon.md",
+      "sha256": "6d4cb1aa0a6da408ff95185d262e75c020b76f0b12a8d887ad028113068013d5",
+      "words": 1064,
+      "lines": 75,
+      "doc_type": "profile",
+      "phase": "Phase 5",
+      "date_normalized": "2026-02-22",
+      "primary_source": false
+    },
+    {
+      "path": "phase-5-repair-station/wo-coord/interview-danny-osei.md",
+      "sha256": "ac1c96e57b06811426e4dfc54a0e184c87b0f3090ba2c54e457590eb9acee4fc",
+      "words": 2211,
+      "lines": 100,
+      "doc_type": "interview",
+      "phase": "Phase 5",
+      "date_normalized": "2026-02-22",
+      "primary_source": true
+    },
+    {
+      "path": "phase-5-repair-station/wo-coord/profile-danny-osei.md",
+      "sha256": "79daf3def568bbe2607f7e107283857f123993e44c4797e3f180af526dbfe951",
+      "words": 960,
+      "lines": 75,
+      "doc_type": "profile",
+      "phase": "Phase 5",
+      "date_normalized": "2026-02-22",
+      "primary_source": false
+    }
+  ]
+}

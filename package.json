@@ -1,0 +1,20 @@
+{
+  "name": "athalon-open-claw-workspace",
+  "private": true,
+  "packageManager": "pnpm@10.18.0",
+  "scripts": {
+    "dev": "turbo run dev --parallel",
+    "build": "turbo run build",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "dev:athelon": "pnpm --dir apps/athelon-app dev",
+    "dev:demo": "pnpm --dir apps/athelon-demo dev",
+    "build:athelon": "pnpm --dir apps/athelon-app build",
+    "build:demo": "pnpm --dir apps/athelon-demo build",
+    "typecheck:athelon": "pnpm --dir apps/athelon-app typecheck",
+    "typecheck:demo": "pnpm --dir apps/athelon-demo typecheck"
+  },
+  "devDependencies": {
+    "turbo": "^2.5.6"
+  }
+}

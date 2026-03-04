@@ -1,0 +1,104 @@
+{
+  "run_id": "ORCH-20260304001218434-LTZH",
+  "timestamp_utc": "2026-03-04T00:12:18Z",
+  "run_mode": "ACTIVE",
+  "queue_count": 8,
+  "active_assignments": 8,
+  "dispatch_count": 8,
+  "blocked_count": 0,
+  "queue_summary": {
+    "queued": 0,
+    "blocked": 0,
+    "in_progress": 8,
+    "completed": 0,
+    "failed": 0,
+    "cancelled": 0
+  },
+  "released_leases_in_sync": 0,
+  "lease_snapshot": {
+    "stats": {
+      "total": 8,
+      "active": 8,
+      "released": 0,
+      "expired": 0
+    },
+    "active_assignments": [
+      "ASG-20260304001218434-DR8K",
+      "ASG-20260304001218435-FT98",
+      "ASG-20260304001218445-WY39",
+      "ASG-20260304001218471-HJ0B",
+      "ASG-20260304001218497-FD3I",
+      "ASG-20260304001218532-XPR2",
+      "ASG-20260304001218578-GNE6",
+      "ASG-20260304001218634-7URB"
+    ]
+  },
+  "dispatched": [
+    {
+      "request_id": "REQ-TEAM-01",
+      "assignment_id": "ASG-20260304001218434-DR8K",
+      "owner_session": "mock-asg-20260304001218434-dr8k",
+      "owner_branch": "agent/asg-20260304001218434-dr8k-req-team-01",
+      "lease_id": "LEASE-20260304001218435-51DO",
+      "spawn_summary": "spawned mock-asg-20260304001218434-dr8k (mock)"
+    },
+    {
+      "request_id": "REQ-TEAM-02",
+      "assignment_id": "ASG-20260304001218435-FT98",
+      "owner_session": "mock-asg-20260304001218435-ft98",
+      "owner_branch": "agent/asg-20260304001218435-ft98-req-team-02",
+      "lease_id": "LEASE-20260304001218445-L31G",
+      "spawn_summary": "spawned mock-asg-20260304001218435-ft98 (mock)"
+    },
+    {
+      "request_id": "REQ-TEAM-03",
+      "assignment_id": "ASG-20260304001218445-WY39",
+      "owner_session": "mock-asg-20260304001218445-wy39",
+      "owner_branch": "agent/asg-20260304001218445-wy39-req-team-03",
+      "lease_id": "LEASE-20260304001218470-I981",
+      "spawn_summary": "spawned mock-asg-20260304001218445-wy39 (mock)"
+    },
+    {
+      "request_id": "REQ-TEAM-04",
+      "assignment_id": "ASG-20260304001218471-HJ0B",
+      "owner_session": "mock-asg-20260304001218471-hj0b",
+      "owner_branch": "agent/asg-20260304001218471-hj0b-req-team-04",
+      "lease_id": "LEASE-20260304001218497-SX3G",
+      "spawn_summary": "spawned mock-asg-20260304001218471-hj0b (mock)"
+    },
+    {
+      "request_id": "REQ-TEAM-05",
+      "assignment_id": "ASG-20260304001218497-FD3I",
+      "owner_session": "mock-asg-20260304001218497-fd3i",
+      "owner_branch": "agent/asg-20260304001218497-fd3i-req-team-05",
+      "lease_id": "LEASE-20260304001218532-T0YW",
+      "spawn_summary": "spawned mock-asg-20260304001218497-fd3i (mock)"
+    },
+    {
+      "request_id": "REQ-TEAM-06",
+      "assignment_id": "ASG-20260304001218532-XPR2",
+      "owner_session": "mock-asg-20260304001218532-xpr2",
+      "owner_branch": "agent/asg-20260304001218532-xpr2-req-team-06",
+      "lease_id": "LEASE-20260304001218578-XW1K",
+      "spawn_summary": "spawned mock-asg-20260304001218532-xpr2 (mock)"
+    },
+    {
+      "request_id": "REQ-TEAM-07",
+      "assignment_id": "ASG-20260304001218578-GNE6",
+      "owner_session": "mock-asg-20260304001218578-gne6",
+      "owner_branch": "agent/asg-20260304001218578-gne6-req-team-07",
+      "lease_id": "LEASE-20260304001218633-DFIM",
+      "spawn_summary": "spawned mock-asg-20260304001218578-gne6 (mock)"
+    },
+    {
+      "request_id": "REQ-TEAM-08",
+      "assignment_id": "ASG-20260304001218634-7URB",
+      "owner_session": "mock-asg-20260304001218634-7urb",
+      "owner_branch": "agent/asg-20260304001218634-7urb-req-team-08",
+      "lease_id": "LEASE-20260304001218698-2KTU",
+      "spawn_summary": "spawned mock-asg-20260304001218634-7urb (mock)"
+    }
+  ],
+  "blocked": [],
+  "notes": []
+}

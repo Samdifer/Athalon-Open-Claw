@@ -4,157 +4,143 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What This Repository Is
 
-A **phase-based simulation project** documenting the full product development lifecycle of **Athelon**, an FAA Part 145-compliant aircraft maintenance MRO SaaS platform. The 35+ numbered `phase-NN-*/` directories are documentation artifacts (specs, test matrices, gate reviews) — they are not the deployable application.
+A monorepo for Athelon, an FAA Part 145-compliant aircraft maintenance MRO SaaS platform. The live application lives in `apps/athelon-app/`. Historical simulation artifacts live in `archive/` and `knowledge/` — do not modify those directories for feature work.
 
-**The live application lives exclusively in `athelon-app/`.**
-
-## Tech Stack (athelon-app)
+## Tech Stack (`apps/athelon-app`)
 
 | Layer | Technology |
 |---|---|
 | Language | TypeScript (strict mode — no `any`) |
 | Build | Vite 6 + `@vitejs/plugin-react` |
-| Frontend | React 19 + React Router v6 |
+| Frontend | React 19 + React Router v6 (`react-router-dom`) |
 | Backend | Convex 1.32+ (serverless functions, schema-driven DB) |
-| Auth | `@clerk/clerk-react` — **do NOT use `@clerk/react` or `@clerk/nextjs`** |
-| Styling | Tailwind CSS v4 |
-| Deployment | Vercel SPA via `athelon-app/vercel.json` rewrites |
+| Auth | `@clerk/clerk-react` + `convex/react-clerk` |
+| UI | shadcn/ui primitives (Radix) + Tailwind CSS v4 |
+| Deployment | Vercel SPA via `apps/athelon-app/vercel.json` rewrites |
 
-## Commands (run from `athelon-app/`)
+**Important:** Use `@clerk/clerk-react` (not `@clerk/react`) — the latter has a broken build at v5.54.0.
+
+## Commands (run from `apps/athelon-app/`)
 
 ```bash
-cd athelon-app
+cd apps/athelon-app
 
-npm run dev          # Dev server at http://localhost:3000 (strictPort)
-npm run build        # tsc + vite build → dist/
-npm run typecheck    # tsc --noEmit only
-npm run preview      # Preview the built SPA at port 3000
-
-# E2E tests (requires dev server running or auto-starts via webServer config)
-npx playwright test                        # All tests
-npx playwright test e2e/smoke.spec.ts      # Single test file
-npx playwright test e2e/smoke-full.spec.ts # Full smoke suite (chromium)
-npx playwright test --project=chromium-authenticated  # Authenticated tests
-npx playwright test -g "test name"         # Run by test name pattern
-npx playwright show-report                 # View last HTML report
+pnpm dev              # Vite dev server on port 3000
+pnpm build            # tsc + vite build
+pnpm typecheck        # tsc --noEmit (excludes convex/)
+pnpm preview          # Serve production build on port 3000
 
 # Convex backend (separate terminal)
-npx convex dev       # Sync schema + functions to Convex cloud
+pnpm exec convex dev
+
+# E2E tests
+pnpm exec playwright test                                    # all tests
+pnpm exec playwright test tests/e2e/smoke.spec.ts            # single file
+pnpm exec playwright test --project=chromium-authenticated   # authenticated only
+pnpm exec playwright show-report
+
+# Pre-defined test suites (see package.json for full list)
+pnpm run qa:first-user-gate    # typecheck + core E2E gate tests
 ```
 
-**Note:** The `eslint.config.mjs` still references `next/core-web-vitals` and `next/typescript` from the pre-Vite migration. There is no `npm run lint` script. TypeScript checking via `npm run typecheck` is the primary static analysis tool.
+## Monorepo Layout
 
-## Application Structure
+pnpm workspace with packages defined in `pnpm-workspace.yaml`:
+- `apps/athelon-app` — the main application
+- `apps/scheduler` — scheduler service
+- `apps/marketing/video/*` — marketing videos (Remotion)
 
+## Application Architecture
+
+### Entry & Provider Stack
+
+`main.tsx` → `src/bootstrap/main.tsx` renders the provider tree:
 ```
-athelon-app/
-  main.tsx                    — Entry: ClerkProvider → BrowserRouter → ConvexClientProvider → App
-  App.tsx                     — All React Router v6 route definitions (~100+ routes)
-  app/
-    (app)/
-      layout.tsx              — AppLayout: OrgContextProvider + AppSidebar + TopBar + <Outlet />
-      dashboard/, fleet/, work-orders/, parts/, compliance/, billing/, scheduling/, ...
-    (customer)/portal/        — Customer portal (separate CustomerLayout, own ProtectedRoute)
-    (auth)/sign-in/, sign-up/ — Clerk-hosted auth pages
-    globals.css               — Tailwind v4 base (@import "tailwindcss" + shadcn theme)
-  components/
-    AppSidebar.tsx            — Main nav sidebar
-    ProtectedRoute.tsx        — Clerk isSignedIn guard using <Outlet />
-    ConvexClientProvider.tsx  — ConvexProviderWithClerk wiring
-    OrgContextProvider.tsx    — Active org context
-    ThemeProvider.tsx          — Dark/light theme (localStorage: 'athelon-theme')
-    ui/                       — shadcn/ui component library
-  convex/
-    schema.ts                 — SOURCE OF TRUTH for all DB tables (Schema v3, ~183 KB — read strategically)
-    workOrders.ts, taskCards.ts, discrepancies.ts, adCompliance.ts, ...
-    documents.ts, taskCompliance.ts, taskCardVendorServices.ts, vendors.ts
-    seed.ts, seedGroundAero.ts, seedPartsServices.ts — Demo data seeding
-    _generated/               — Auto-generated by `npx convex dev` (do not edit)
-  e2e/                        — Playwright tests
-  hooks/                      — Shared React hooks
-  lib/                        — Utilities
+ThemeProvider → ClerkProvider → BrowserRouter → ConvexProviderWithClerk → AppRouter
 ```
 
-### Two Layout Systems
+`ConvexClientProvider` (`src/shared/components/ConvexClientProvider.tsx`) uses `ConvexProviderWithClerk` to integrate Clerk auth with Convex.
 
-The app has two independent protected route trees in `App.tsx`:
+### Routing
 
-1. **Main app** (`/dashboard`, `/work-orders`, etc.) → `ProtectedRoute` → `AppLayout` (sidebar + topbar)
-2. **Customer portal** (`/portal/*`) → `ProtectedRoute` → `CustomerLayout` (simplified portal chrome)
+`App.tsx` re-exports `src/router/AppRouter.tsx`, which defines three route groups via `<Routes>`:
 
-Both are behind Clerk auth but have different layouts and navigation.
+| Module | File | Scope |
+|---|---|---|
+| `AuthRoutes` | `src/router/routeModules/authRoutes.tsx` | `/sign-in`, `/sign-up` |
+| `CustomerPortalRoutes` | `src/router/routeModules/customerPortalRoutes.tsx` | `/portal/*` |
+| `ProtectedAppRoutes` | `src/router/routeModules/protectedAppRoutes.tsx` | Everything else (auth-gated) |
 
-## Path Aliases & TypeScript
+Protected routes wrap: `ProtectedRoute` → `OrgContextProvider` → `OnboardingGate` → `AppLayout`.
 
-`@/` maps to `athelon-app/` root (configured in `vite.config.ts` and `tsconfig.json`).
+All page components are lazy-loaded via `React.lazy()`.
+
+### Source Organization (`apps/athelon-app/`)
+
+```
+src/
+  bootstrap/main.tsx          # React root + provider stack
+  router/
+    AppRouter.tsx              # Top-level <Routes>
+    routeModules/              # Route group definitions
+  shared/
+    components/                # Reusable components (ProtectedRoute, AppSidebar, TopBar, etc.)
+    components/ui/             # shadcn/ui primitives (button, dialog, table, etc.)
+    hooks/                     # useCurrentOrg, useUserRole, usePortalCustomerId, etc.
+    lib/                       # Utilities, PDF generators, scheduling engine, roles
+app/
+  (app)/                       # Internal app pages (work-orders, fleet, billing, etc.)
+  (auth)/                      # Sign-in/sign-up pages
+  (customer)/                  # Customer portal pages
+convex/
+  schema.ts                    # Canonical database schema
+  *.ts                         # ~60+ backend function files (queries, mutations, actions)
+tests/e2e/                     # Playwright E2E tests
+```
+
+### Path Alias
+
+`@/` maps to `apps/athelon-app/` root (configured in `vite.config.ts` and `tsconfig.json`).
 
 ```ts
 import { AppLayout } from "@/app/(app)/layout";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 ```
 
-The main `tsconfig.json` **excludes `convex/`** — Convex has its own TypeScript compilation (`convex/_generated/` provides types). When running `npm run typecheck`, only frontend code is checked. Convex function type errors surface during `npx convex dev`.
+Note: `@/components/X` and `@/src/shared/components/X` may both resolve — the legacy `components/` path still works as a compatibility alias. Prefer `@/components/X` for consistency.
+
+### TypeScript
+
+The main `tsconfig.json` excludes `convex/`, `tests/e2e/`, and `dist/`. Convex function type errors surface during `pnpm exec convex dev`, not `pnpm typecheck`.
+
+## Convex Backend Rules (Required)
+
+Canonical Convex implementation rules live in `apps/athelon-app/convex/CONVEX_RULES.md`. When editing any file in `convex/`, follow that document. Key rules:
+
+- Always use the new function syntax (`query({args: {}, handler: ...})`)
+- Always include argument validators for all functions
+- Use `internalQuery`/`internalMutation`/`internalAction` for private functions
+- Do NOT use `filter` in queries — define indexes and use `withIndex`
+- Actions cannot use `ctx.db` — use `ctx.runQuery`/`ctx.runMutation` instead
+- Never put `"use node"` in a file that exports queries/mutations
+
+## E2E Testing
+
+- Config: `apps/athelon-app/playwright.config.ts`
+- Tests: `apps/athelon-app/tests/e2e/` (NOT `e2e/` at app root)
+- Global setup: `tests/e2e/global-setup.ts` (handles Clerk auth)
+- Two Playwright projects: `chromium` (unauthenticated smoke tests) and `chromium-authenticated`
+- Auth storage state saved to `playwright/.auth/user.json`
+- Requires `PLAYWRIGHT_TEST_EMAIL` and `PLAYWRIGHT_TEST_PASSWORD` in `.env.local`
 
 ## Environment Variables
 
-Required in `athelon-app/.env.local`:
+Required in `apps/athelon-app/.env.local`:
 
-```
+```bash
 VITE_CONVEX_URL=...
 VITE_CLERK_PUBLISHABLE_KEY=...
+# For E2E tests:
+PLAYWRIGHT_TEST_EMAIL=...
+PLAYWRIGHT_TEST_PASSWORD=...
 ```
-
-Auth redirect URLs (`/sign-in`, `/sign-up`, `/dashboard`) are configured as `ClerkProvider` props in `main.tsx` — not via env vars.
-
-## Frontend Data State
-
-Many page-level UI components currently use **local `useState` with demo/mock data** rather than live Convex queries. The Convex backend mutations and queries are written and deployed, but frontend wiring is incomplete. When modifying a page component, check whether its data comes from `useQuery(api.xxx)` (live) or `useState([...])` (mock). The wiring of mock → live Convex is an ongoing integration effort.
-
-## Core Architecture
-
-### Data Integrity Model
-
-Three immutability classes enforced by Convex mutations:
-
-- **Immutable records** (`maintenanceRecords`, `inspectionRecords`, `returnToService`, `auditLog`) — never modified after creation.
-- **Append-only history** (`adCompliance`, `discrepancies`) — changes create new records, not updates.
-- **Signature binding** — every sign-off creates a `signatureAuthEvent` (5-min TTL, one-time use) consumed atomically by the domain mutation + audit log write.
-
-### Key Invariants (enforced in Convex mutations)
-
-- **INV-01**: Work order status transitions are unidirectional — no backtracking.
-- **INV-05**: `signatureAuthEvent` consumed exactly once; sets `consumedByTable` + `consumedByRecordId` atomically.
-- **INV-06/INV-19**: WO closure requires aircraft hours ≥ at-open hours, all task cards signed, zero open discrepancies, valid RTS record.
-- **INV-16**: `"corrected"` discrepancy status requires `correctiveAction` text + linked signed `maintenanceRecord`.
-- **INV-17**: MEL expiry computed server-side from category interval — never accepted from the caller.
-
-### Sign-Off Ceremony (3-phase)
-
-1. User initiates → PIN authentication challenge
-2. Successful PIN auth → creates `signatureAuthEvent` (5-min TTL)
-3. Domain mutation consumes auth event + writes domain record + writes audit log (single Convex transaction)
-
-### Convex Schema (canonical — `athelon-app/convex/schema.ts`)
-
-Key tables: `aircraft`, `workOrders`, `taskCards`, `taskCardSteps`, `adCompliance`, `parts`, `discrepancies`, `maintenanceRecords`, `inspectionRecords`, `returnToService`, `technicians`, `certificates`, `auditLog`, `signatureAuthEvents`, `engines`, `documents`, `taskComplianceItems`, `vendorServices`, `taskCardVendorServices`, `qcmReviews`, `testEquipment`
-
-Schema v3 is the frozen source of truth. Any schema change requires a corresponding change log entry and regulatory/QA sign-off (see the file header for the process).
-
-## Regulatory Context
-
-This platform targets **FAA 14 CFR Part 145** repair station certification. AD (Airworthiness Directive) compliance, MEL (Minimum Equipment List) deferral logic, and Part 8130-3 parts traceability are first-class domain concepts. The guiding principle: *"The defensible path must be the default path."*
-
-## E2E Test Notes
-
-- Playwright config in `athelon-app/playwright.config.ts`; tests in `athelon-app/e2e/`
-- `chromium` project: unauthenticated smoke tests matching `smoke*.spec.ts`
-- `chromium-authenticated` project: all other tests, uses stored auth state from `playwright/.auth/user.json`
-- `e2e/global-setup.ts` performs Clerk sign-in and saves storage state
-- Tests requiring live Convex auth are `test.skip()`-ed with explanatory comments
-- Dev server auto-starts on port 3000 when running `npx playwright test` (reuses existing if running)
-- Authenticated tests need `PLAYWRIGHT_TEST_EMAIL` and `PLAYWRIGHT_TEST_PASSWORD` env vars
-- Trace capture: on-first-retry; screenshots: only-on-failure
-
-## Repository Structure Note
-
-The 28+ `phase-NN-*/` directories at the repo root are **documentation artifacts** (specs, test matrices, gate reviews) from the waterfall simulation. They are not code and are not part of the build. Other root-level files like `SIMULATION-STATE.md`, `WATERFALL-PLAN.md`, and `ORCHESTRATOR-LOG.md` are simulation records. All deployable code is in `athelon-app/`.

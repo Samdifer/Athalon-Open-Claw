@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "protected_paths": [
+    "apps/athelon-app/docs/spec/MASTER-BUILD-LIST.md",
+    "apps/athelon-app/docs/plans/MASTER-FEATURE-REGISTRY.csv",
+    "apps/athelon-app/docs/plans/MASTER-FEATURE-CROSSWALK.md",
+    "apps/athelon-app/docs/plans/MASTER-BUILD-PLAN.md",
+    "apps/athelon-app/scripts/bug-hunter-sync-master-build.mjs",
+    "apps/athelon-app/scripts/export-feature-spec-derived.mjs"
+  ],
+  "group_paths": {
+    "GRP-001": ["apps/athelon-app/app/(app)/settings/**", "apps/athelon-app/src/router/**", "apps/athelon-app/convex/**"],
+    "GRP-002": ["apps/athelon-app/convex/**", "apps/athelon-app/docs/**"],
+    "GRP-003": ["apps/athelon-app/app/(app)/work-orders/**", "apps/athelon-app/convex/workOrders*", "apps/athelon-app/convex/taskCards*", "apps/athelon-app/tests/e2e/wave11-*.spec.ts"],
+    "GRP-004": ["apps/athelon-app/app/(app)/billing/quotes/**", "apps/athelon-app/components/quote-workspace/**", "apps/athelon-app/convex/billing*"],
+    "GRP-005": ["apps/athelon-app/app/(app)/work-orders/**", "apps/athelon-app/convex/taskCards*", "apps/athelon-app/convex/personnel*"],
+    "GRP-006": ["apps/athelon-app/app/(app)/parts/**", "apps/athelon-app/convex/parts*", "apps/athelon-app/tests/e2e/wave5-parts-*.spec.ts"],
+    "GRP-007": ["apps/athelon-app/app/(app)/parts/**", "apps/athelon-app/convex/parts*"],
+    "GRP-008": ["apps/athelon-app/app/(app)/work-orders/lead/**", "apps/athelon-app/convex/leadTurnover*", "apps/athelon-app/lib/pdf/TurnoverReportPDF.tsx"],
+    "GRP-009": ["apps/athelon-app/app/(app)/dashboard/**", "apps/athelon-app/app/(app)/work-orders/dashboard/**", "apps/athelon-app/app/(app)/reports/**", "apps/athelon-app/convex/billing*"],
+    "GRP-010": ["apps/athelon-app/app/(app)/fleet/**", "apps/athelon-app/app/(app)/work-orders/**", "apps/athelon-app/components/**"],
+    "GRP-011": ["apps/athelon-app/app/(app)/work-orders/**", "apps/athelon-app/app/(app)/parts/**", "apps/athelon-app/convex/documents*"],
+    "GRP-012": ["apps/athelon-app/app/(app)/scheduling/**", "apps/athelon-app/src/shared/lib/scheduling-engine/**", "apps/athelon-app/tests/e2e/wave8-*.spec.ts"],
+    "GRP-013": ["apps/athelon-app/src/shared/lib/scheduling-engine/**", "apps/athelon-app/convex/**", "apps/athelon-app/research/**"],
+    "GRP-014": ["apps/athelon-app/src/router/**", "apps/athelon-app/convex/**", "apps/athelon-app/app/(app)/**"],
+    "GRP-015": ["apps/athelon-app/app/(app)/portal/**", "apps/athelon-app/app/(app)/billing/**", "apps/athelon-app/convex/billing*"],
+    "GRP-016": ["apps/athelon-app/app/(app)/personnel/**", "apps/athelon-app/convex/personnel*"],
+    "GRP-017": ["apps/athelon-app/app/(app)/compliance/**", "apps/athelon-app/convex/conformityInspections*", "apps/athelon-app/convex/domains/work-orders/conformityInspections.ts"],
+    "GRP-018": ["apps/athelon-app/app/(app)/billing/**", "apps/athelon-app/convex/billing*"],
+    "GRP-019": ["apps/athelon-app/app/(app)/**", "apps/athelon-app/convex/**"],
+    "GRP-020": ["apps/athelon-app/app/(app)/**", "apps/athelon-app/convex/**"],
+    "GRP-021": ["apps/athelon-app/app/(app)/**", "apps/athelon-app/tests/e2e/**", "apps/athelon-app/src/**"],
+    "GRP-022": ["apps/athelon-app/lib/pdf/**", "apps/athelon-app/app/(app)/billing/**", "apps/athelon-app/app/(app)/work-orders/**"],
+    "GRP-023": ["apps/athelon-app/app/(app)/**", "apps/athelon-app/convex/**"],
+    "GRP-024": ["apps/athelon-app/app/(app)/**", "apps/athelon-app/components/**", "apps/athelon-app/tests/e2e/**"]
+  },
+  "defaults": {
+    "fallback_paths": [
+      "apps/athelon-app/**"
+    ]
+  }
+}

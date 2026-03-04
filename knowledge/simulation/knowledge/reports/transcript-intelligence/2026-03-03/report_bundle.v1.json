@@ -1,0 +1,1566 @@
+{
+  "meta": {
+    "schema": "ReportBundleV1",
+    "run_date": "2026-03-03",
+    "generated_at": "2026-03-03T19:23:17.257323+00:00",
+    "corpus_scope": [
+      "dispatches/*.md",
+      "phase-*/dispatches/*.md",
+      "phase-5-repair-station/**/*.md"
+    ],
+    "counts": {
+      "files": 57,
+      "evidence_records": 2057,
+      "themes": 10,
+      "problems": 24,
+      "features": 24,
+      "entities": 50,
+      "open_questions": 11
+    },
+    "qa_gates": [
+      {
+        "id": "G1",
+        "name": "Corpus inclusion",
+        "pass": true,
+        "detail": "57 files in manifest."
+      },
+      {
+        "id": "G2",
+        "name": "Metadata extraction",
+        "pass": true,
+        "detail": "phase=55, date=43"
+      },
+      {
+        "id": "G3",
+        "name": "Requirement extraction",
+        "pass": true,
+        "detail": "requirement-like evidence records=89"
+      },
+      {
+        "id": "G4",
+        "name": "Evidence attribution",
+        "pass": true,
+        "detail": "evidence_count=2057"
+      },
+      {
+        "id": "G5",
+        "name": "Theme assignment",
+        "pass": true,
+        "detail": "all records carry primary theme"
+      },
+      {
+        "id": "G6",
+        "name": "Confidence rules",
+        "pass": true,
+        "detail": "confidence enum is valid"
+      },
+      {
+        "id": "G7",
+        "name": "Excerpt depth",
+        "pass": true,
+        "detail": "theme evidence depth validated"
+      },
+      {
+        "id": "G8",
+        "name": "Prioritization completeness",
+        "pass": true,
+        "detail": "problems/features scored"
+      },
+      {
+        "id": "G9",
+        "name": "Output contract",
+        "pass": true,
+        "detail": "ReportBundleV1 keys present"
+      },
+      {
+        "id": "G10",
+        "name": "Leadership readability",
+        "pass": true,
+        "detail": "brief sections present"
+      }
+    ],
+    "qa_pass": true
+  },
+  "themes": [
+    {
+      "theme_id": "T01",
+      "title": "Market/backstory and mission origin",
+      "summary": "Market/backstory and mission origin is supported by 8 curated excerpts across 5 source files, with dominant signals around general.",
+      "current_state": "Current-state evidence emphasizes general. 0 priority problem(s) and 1 feature signal(s) were linked to this theme.",
+      "future_state": "Forward-state direction is anchored in recurring requirement language and phase progression cues, with leadership leverage in converting repeated asks into controlled delivery.",
+      "discussion_attributes": [
+        "narrative context"
+      ],
+      "takeaways": [
+        "Top delivery signal: Nadia Solis should reference Rosa's validation explicitly.",
+        "Confidence posture for this theme is Medium."
+      ],
+      "conclusions": [
+        "Market/backstory and mission origin is materially represented in the corpus and should remain a standing leadership lane.",
+        "Traceable evidence IDs make this theme audit-ready for strategic decision review."
+      ],
+      "confidence": "Medium",
+      "evidence_ids": [
+        "E0002",
+        "E0008",
+        "E0011",
+        "E0027",
+        "E0077",
+        "E0138",
+        "E0331",
+        "E0344"
+      ],
+      "low_evidence": false
+    },
+    {
+      "theme_id": "T02",
+      "title": "Compliance defensibility and audit posture",
+      "summary": "Compliance defensibility and audit posture is supported by 8 curated excerpts across 4 source files, with dominant signals around compliance, workflow_friction, governance.",
+      "current_state": "Current-state evidence emphasizes compliance, workflow_friction. 3 priority problem(s) and 3 feature signal(s) were linked to this theme.",
+      "future_state": "Forward-state direction is anchored in recurring requirement language and phase progression cues, with leadership leverage in converting repeated asks into controlled delivery.",
+      "discussion_attributes": [
+        "regulatory defensibility",
+        "manual-process elimination",
+        "gate and owner discipline",
+        "immutable cryptographic records",
+        "feature readiness progression"
+      ],
+      "takeaways": [
+        "Top risk pressure: REQ-GH-01: Hard Block on AD-Open Work Order Close Work orders with associated ADs that have no compliance record (or no documented inapplicability determination) must be blocked from closure.",
+        "Top delivery signal: The signature action must be atomic and immediately confirmed. When he completes the authentication step, the system must display the completed record within two seconds.",
+        "Confidence posture for this theme is High."
+      ],
+      "conclusions": [
+        "Compliance defensibility and audit posture is materially represented in the corpus and should remain a standing leadership lane.",
+        "Traceable evidence IDs make this theme audit-ready for strategic decision review."
+      ],
+      "confidence": "High",
+      "evidence_ids": [
+        "E0022",
+        "E0071",
+        "E0084",
+        "E0105",
+        "E0112",
+        "E0121",
+        "E0124",
+        "E0141"
+      ],
+      "low_evidence": false
+    },
+    {
+      "theme_id": "T03",
+      "title": "Data integrity and traceability architecture",
+      "summary": "Data integrity and traceability architecture is supported by 8 curated excerpts across 3 source files, with dominant signals around records_integrity, workflow_friction, roadmap.",
+      "current_state": "Current-state evidence emphasizes records_integrity, workflow_friction. 3 priority problem(s) and 3 feature signal(s) were linked to this theme.",
+      "future_state": "Forward-state direction is anchored in recurring requirement language and phase progression cues, with leadership leverage in converting repeated asks into controlled delivery.",
+      "discussion_attributes": [
+        "immutable cryptographic records",
+        "manual-process elimination",
+        "forward roadmap alignment",
+        "life-limited part continuity",
+        "regulatory defensibility"
+      ],
+      "takeaways": [
+        "Top risk pressure: He cannot run a report across all PW535E LLPs in inventory sorted by remaining cycles.",
+        "Top delivery signal: RTS authorization screen must display full documentation chain before sign is enabled: N-number, serial, WO#, repair description, repair classification (stated explicitly), 337 reference, 337 preparer name",
+        "Confidence posture for this theme is High."
+      ],
+      "conclusions": [
+        "Data integrity and traceability architecture is materially represented in the corpus and should remain a standing leadership lane.",
+        "Traceable evidence IDs make this theme audit-ready for strategic decision review."
+      ],
+      "confidence": "High",
+      "evidence_ids": [
+        "E0032",
+        "E0067",
+        "E0069",
+        "E0072",
+        "E0075",
+        "E0093",
+        "E0094",
+        "E0104"
+      ],
+      "low_evidence": false
+    },
+    {
+      "theme_id": "T04",
+      "title": "Field workflow realities (mobile/offline/hangar constraints)",
+      "summary": "Field workflow realities (mobile/offline/hangar constraints) is supported by 8 curated excerpts across 5 source files, with dominant signals around mobile_offline, workflow_friction, feature_delivery.",
+      "current_state": "Current-state evidence emphasizes mobile_offline, workflow_friction. 2 priority problem(s) and 0 feature signal(s) were linked to this theme.",
+      "future_state": "Forward-state direction is anchored in recurring requirement language and phase progression cues, with leadership leverage in converting repeated asks into controlled delivery.",
+      "discussion_attributes": [
+        "offline-safe field execution",
+        "manual-process elimination",
+        "feature readiness progression",
+        "trust transfer and usage behavior",
+        "forward roadmap alignment"
+      ],
+      "takeaways": [
+        "Top risk pressure: The distinction being: task card steps can queue, RTS cannot.",
+        "Confidence posture for this theme is High."
+      ],
+      "conclusions": [
+        "Field workflow realities (mobile/offline/hangar constraints) is materially represented in the corpus and should remain a standing leadership lane.",
+        "Traceable evidence IDs make this theme audit-ready for strategic decision review."
+      ],
+      "confidence": "High",
+      "evidence_ids": [
+        "E0528",
+        "E0620",
+        "E0627",
+        "E0633",
+        "E0634",
+        "E1045",
+        "E1124",
+        "E1126"
+      ],
+      "low_evidence": false
+    },
+    {
+      "theme_id": "T05",
+      "title": "Adoption signals and trust transfer dynamics",
+      "summary": "Adoption signals and trust transfer dynamics is supported by 8 curated excerpts across 5 source files, with dominant signals around adoption, workflow_friction, records_integrity.",
+      "current_state": "Current-state evidence emphasizes adoption, workflow_friction. 1 priority problem(s) and 0 feature signal(s) were linked to this theme.",
+      "future_state": "Forward-state direction is anchored in recurring requirement language and phase progression cues, with leadership leverage in converting repeated asks into controlled delivery.",
+      "discussion_attributes": [
+        "trust transfer and usage behavior",
+        "manual-process elimination",
+        "immutable cryptographic records",
+        "life-limited part continuity",
+        "gate and owner discipline"
+      ],
+      "takeaways": [
+        "Top risk pressure: Things I do in spreadsheets because the software can't do them, or can't do them in a way I trust.",
+        "Confidence posture for this theme is High."
+      ],
+      "conclusions": [
+        "Adoption signals and trust transfer dynamics is materially represented in the corpus and should remain a standing leadership lane.",
+        "Traceable evidence IDs make this theme audit-ready for strategic decision review."
+      ],
+      "confidence": "High",
+      "evidence_ids": [
+        "E0218",
+        "E0356",
+        "E1041",
+        "E1071",
+        "E1109",
+        "E1139",
+        "E1215",
+        "E1239"
+      ],
+      "low_evidence": false
+    },
+    {
+      "theme_id": "T06",
+      "title": "Product capability maturity (current state)",
+      "summary": "Product capability maturity (current state) is supported by 8 curated excerpts across 6 source files, with dominant signals around feature_delivery, workflow_friction, llp_tracking.",
+      "current_state": "Current-state evidence emphasizes feature_delivery, workflow_friction. 3 priority problem(s) and 0 feature signal(s) were linked to this theme.",
+      "future_state": "Forward-state direction is anchored in recurring requirement language and phase progression cues, with leadership leverage in converting repeated asks into controlled delivery.",
+      "discussion_attributes": [
+        "feature readiness progression",
+        "manual-process elimination",
+        "life-limited part continuity",
+        "gate and owner discipline",
+        "forward roadmap alignment"
+      ],
+      "takeaways": [
+        "Top risk pressure: Within 48 hours of expiry, the discrepancy must appear as a priority alert in the QCM dashboard that cannot be dismissed without an action (extend with documentation, or mark resolved).",
+        "Confidence posture for this theme is High."
+      ],
+      "conclusions": [
+        "Product capability maturity (current state) is materially represented in the corpus and should remain a standing leadership lane.",
+        "Traceable evidence IDs make this theme audit-ready for strategic decision review."
+      ],
+      "confidence": "High",
+      "evidence_ids": [
+        "E0024",
+        "E0081",
+        "E0164",
+        "E0177",
+        "E0210",
+        "E0302",
+        "E0313",
+        "E0345"
+      ],
+      "low_evidence": false
+    },
+    {
+      "theme_id": "T07",
+      "title": "Future-state roadmap and expansion vectors",
+      "summary": "Future-state roadmap and expansion vectors is supported by 8 curated excerpts across 5 source files, with dominant signals around roadmap, governance, feature_delivery.",
+      "current_state": "Current-state evidence emphasizes roadmap, governance. 0 priority problem(s) and 1 feature signal(s) were linked to this theme.",
+      "future_state": "Forward-state direction is anchored in recurring requirement language and phase progression cues, with leadership leverage in converting repeated asks into controlled delivery.",
+      "discussion_attributes": [
+        "forward roadmap alignment",
+        "gate and owner discipline",
+        "feature readiness progression",
+        "manual-process elimination",
+        "immutable cryptographic records"
+      ],
+      "takeaways": [
+        "Top delivery signal: Incoming parts receipt must require 8130-3 documentation before the part can be moved to \"available\" status",
+        "Confidence posture for this theme is High."
+      ],
+      "conclusions": [
+        "Future-state roadmap and expansion vectors is materially represented in the corpus and should remain a standing leadership lane.",
+        "Traceable evidence IDs make this theme audit-ready for strategic decision review."
+      ],
+      "confidence": "High",
+      "evidence_ids": [
+        "E0082",
+        "E0145",
+        "E0150",
+        "E0160",
+        "E0171",
+        "E0175",
+        "E0320",
+        "E0569"
+      ],
+      "low_evidence": false
+    },
+    {
+      "theme_id": "T08",
+      "title": "Operational/governance discipline and controls",
+      "summary": "Operational/governance discipline and controls is supported by 8 curated excerpts across 7 source files, with dominant signals around governance, workflow_friction, compliance.",
+      "current_state": "Current-state evidence emphasizes governance, workflow_friction. 0 priority problem(s) and 0 feature signal(s) were linked to this theme.",
+      "future_state": "Forward-state direction is anchored in recurring requirement language and phase progression cues, with leadership leverage in converting repeated asks into controlled delivery.",
+      "discussion_attributes": [
+        "gate and owner discipline",
+        "manual-process elimination",
+        "regulatory defensibility",
+        "cross-record traceability",
+        "forward roadmap alignment"
+      ],
+      "takeaways": [
+        "Confidence posture for this theme is High."
+      ],
+      "conclusions": [
+        "Operational/governance discipline and controls is materially represented in the corpus and should remain a standing leadership lane.",
+        "Traceable evidence IDs make this theme audit-ready for strategic decision review."
+      ],
+      "confidence": "High",
+      "evidence_ids": [
+        "E0048",
+        "E0074",
+        "E0102",
+        "E0129",
+        "E0203",
+        "E0213",
+        "E0260",
+        "E0480"
+      ],
+      "low_evidence": false
+    },
+    {
+      "theme_id": "T09",
+      "title": "Risk landscape and failure modes",
+      "summary": "Risk landscape and failure modes is supported by 8 curated excerpts across 6 source files, with dominant signals around workflow_friction, risk, compliance.",
+      "current_state": "Current-state evidence emphasizes workflow_friction, risk. 3 priority problem(s) and 1 feature signal(s) were linked to this theme.",
+      "future_state": "Forward-state direction is anchored in recurring requirement language and phase progression cues, with leadership leverage in converting repeated asks into controlled delivery.",
+      "discussion_attributes": [
+        "manual-process elimination",
+        "explicit failure mode framing",
+        "regulatory defensibility",
+        "gate and owner discipline",
+        "forward roadmap alignment"
+      ],
+      "takeaways": [
+        "Top risk pressure: When I update the RSM and publish a new revision, I want confirmation from every mechanic in the system \u2014 a required read-and-acknowledge that they can't dismiss without reading the affected sections.",
+        "Top delivery signal: The work order should not be closeable if any AD compliance record is unresolved. Hard block.",
+        "Confidence posture for this theme is High."
+      ],
+      "conclusions": [
+        "Risk landscape and failure modes is materially represented in the corpus and should remain a standing leadership lane.",
+        "Traceable evidence IDs make this theme audit-ready for strategic decision review."
+      ],
+      "confidence": "High",
+      "evidence_ids": [
+        "E0096",
+        "E0109",
+        "E0123",
+        "E0144",
+        "E0180",
+        "E0240",
+        "E0242",
+        "E0397"
+      ],
+      "low_evidence": false
+    },
+    {
+      "theme_id": "T10",
+      "title": "Strategic differentiation vs legacy incumbents",
+      "summary": "Strategic differentiation vs legacy incumbents is supported by 8 curated excerpts across 5 source files, with dominant signals around competitive, workflow_friction, llp_tracking.",
+      "current_state": "Current-state evidence emphasizes competitive, workflow_friction. 1 priority problem(s) and 1 feature signal(s) were linked to this theme.",
+      "future_state": "Forward-state direction is anchored in recurring requirement language and phase progression cues, with leadership leverage in converting repeated asks into controlled delivery.",
+      "discussion_attributes": [
+        "incumbent displacement positioning",
+        "manual-process elimination",
+        "life-limited part continuity",
+        "feature readiness progression",
+        "gate and owner discipline"
+      ],
+      "takeaways": [
+        "Top risk pressure: I can't see what the current task is, I can't see parts status, I can't see notes without clicking into each job.",
+        "Top delivery signal: REQ-GH-05: Active-First Default Dashboard The work order dashboard must default to showing \"Active\" work orders on first load and on each morning session.",
+        "Confidence posture for this theme is High."
+      ],
+      "conclusions": [
+        "Strategic differentiation vs legacy incumbents is materially represented in the corpus and should remain a standing leadership lane.",
+        "Traceable evidence IDs make this theme audit-ready for strategic decision review."
+      ],
+      "confidence": "High",
+      "evidence_ids": [
+        "E0168",
+        "E0649",
+        "E0674",
+        "E0848",
+        "E1278",
+        "E1307",
+        "E1518",
+        "E1529"
+      ],
+      "low_evidence": false
+    }
+  ],
+  "problems": [
+    {
+      "id": "PRB-033",
+      "statement": "When I update the RSM and publish a new revision, I want confirmation from every mechanic in the system \u2014 a required read-and-acknowledge that they can't dismiss without reading the affected sections.",
+      "impact_score": 4,
+      "urgency_score": 4,
+      "priority_bucket": "P0",
+      "rationale": "Observed in 1 source(s) with dominant linkage to T09.",
+      "evidence_ids": [
+        "E1976"
+      ],
+      "theme_primary": "T09"
+    },
+    {
+      "id": "PRB-003",
+      "statement": "REQ-GH-01: Hard Block on AD-Open Work Order Close Work orders with associated ADs that have no compliance record (or no documented inapplicability determination) must be blocked from closure.",
+      "impact_score": 4,
+      "urgency_score": 3,
+      "priority_bucket": "P1",
+      "rationale": "Observed in 1 source(s) with dominant linkage to T02.",
+      "evidence_ids": [
+        "E0844"
+      ],
+      "theme_primary": "T02"
+    },
+    {
+      "id": "PRB-009",
+      "statement": "The distinction being: task card steps can queue, RTS cannot.",
+      "impact_score": 4,
+      "urgency_score": 3,
+      "priority_bucket": "P1",
+      "rationale": "Observed in 1 source(s) with dominant linkage to T04.",
+      "evidence_ids": [
+        "E1033"
+      ],
+      "theme_primary": "T04"
+    },
+    {
+      "id": "PRB-015",
+      "statement": "He cannot run a report across all PW535E LLPs in inventory sorted by remaining cycles.",
+      "impact_score": 4,
+      "urgency_score": 3,
+      "priority_bucket": "P1",
+      "rationale": "Observed in 1 source(s) with dominant linkage to T03.",
+      "evidence_ids": [
+        "E1385"
+      ],
+      "theme_primary": "T03"
+    },
+    {
+      "id": "PRB-016",
+      "statement": "The cycle counter gap is a launch blocker for turbine LLP work \u2014 not a Phase 3 item; a turbine MRO system that cannot verify cycle status is not a turbine MRO system",
+      "impact_score": 4,
+      "urgency_score": 3,
+      "priority_bucket": "P1",
+      "rationale": "Observed in 1 source(s) with dominant linkage to T09.",
+      "evidence_ids": [
+        "E1420"
+      ],
+      "theme_primary": "T09"
+    },
+    {
+      "id": "PRB-020",
+      "statement": "Things I do in spreadsheets because the software can't do them, or can't do them in a way I trust.",
+      "impact_score": 4,
+      "urgency_score": 3,
+      "priority_bucket": "P1",
+      "rationale": "Observed in 1 source(s) with dominant linkage to T05.",
+      "evidence_ids": [
+        "E1539"
+      ],
+      "theme_primary": "T05"
+    },
+    {
+      "id": "PRB-025",
+      "statement": "Return-to-service must hard-block on any open discrepancy, unsigned card, or parts-traceability gap \u2014 no warning-only path",
+      "impact_score": 4,
+      "urgency_score": 3,
+      "priority_bucket": "P1",
+      "rationale": "Observed in 1 source(s) with dominant linkage to T09.",
+      "evidence_ids": [
+        "E1718"
+      ],
+      "theme_primary": "T09"
+    },
+    {
+      "id": "PRB-028",
+      "statement": "RTS authorization block on missing `form_337_ref` must produce a clear, specific error message \u2014 not a generic validation failure \u2014 naming the field and directing the tech to where it must be populated",
+      "impact_score": 4,
+      "urgency_score": 3,
+      "priority_bucket": "P1",
+      "rationale": "Observed in 1 source(s) with dominant linkage to T09.",
+      "evidence_ids": [
+        "E1905"
+      ],
+      "theme_primary": "T09"
+    },
+    {
+      "id": "PRB-034",
+      "statement": "I can't see what the current task is, I can't see parts status, I can't see notes without clicking into each job.",
+      "impact_score": 4,
+      "urgency_score": 3,
+      "priority_bucket": "P1",
+      "rationale": "Observed in 1 source(s) with dominant linkage to T10.",
+      "evidence_ids": [
+        "E1982"
+      ],
+      "theme_primary": "T10"
+    },
+    {
+      "id": "PRB-030",
+      "statement": "If every sign-off requires a specific, correct, verifiable approved data reference \u2014 document, revision, section \u2014 then the traceability problem mostly solves itself.",
+      "impact_score": 3,
+      "urgency_score": 2,
+      "priority_bucket": "P2",
+      "rationale": "Observed in 1 source(s) with dominant linkage to T02.",
+      "evidence_ids": [
+        "E1928"
+      ],
+      "theme_primary": "T02"
+    },
+    {
+      "id": "PRB-011",
+      "statement": "Right now, I can't do that in any system I've ever used.",
+      "impact_score": 2,
+      "urgency_score": 3,
+      "priority_bucket": "P2",
+      "rationale": "Observed in 1 source(s) with dominant linkage to T03.",
+      "evidence_ids": [
+        "E1131"
+      ],
+      "theme_primary": "T03"
+    },
+    {
+      "id": "PRB-012",
+      "statement": "I can't assess it at all if I don't know it was there.",
+      "impact_score": 2,
+      "urgency_score": 3,
+      "priority_bucket": "P2",
+      "rationale": "Observed in 1 source(s) with dominant linkage to T09.",
+      "evidence_ids": [
+        "E1189"
+      ],
+      "theme_primary": "T09"
+    },
+    {
+      "id": "PRB-021",
+      "statement": "Within 48 hours of expiry, the discrepancy must appear as a priority alert in the QCM dashboard that cannot be dismissed without an action (extend with documentation, or mark resolved).",
+      "impact_score": 2,
+      "urgency_score": 3,
+      "priority_bucket": "P2",
+      "rationale": "Observed in 1 source(s) with dominant linkage to T06.",
+      "evidence_ids": [
+        "E1554"
+      ],
+      "theme_primary": "T06"
+    },
+    {
+      "id": "PRB-002",
+      "statement": "Maintenance release must be system-blocked \u2014 not warned \u2014 until all work order steps are closed; any override must generate a logged audit entry",
+      "impact_score": 2,
+      "urgency_score": 2,
+      "priority_bucket": "P2",
+      "rationale": "Observed in 1 source(s) with dominant linkage to T02.",
+      "evidence_ids": [
+        "E0799"
+      ],
+      "theme_primary": "T02"
+    },
+    {
+      "id": "PRB-004",
+      "statement": "Any amendment to the association requires an explicit action with a documented reason, a separate audit log entry, and cannot be performed by the user who created the original entry without supervisor approval.",
+      "impact_score": 2,
+      "urgency_score": 2,
+      "priority_bucket": "P2",
+      "rationale": "Observed in 1 source(s) with dominant linkage to T02.",
+      "evidence_ids": [
+        "E0845"
+      ],
+      "theme_primary": "T02"
+    },
+    {
+      "id": "PRB-005",
+      "statement": "Closure must be blocked until all items are green.",
+      "impact_score": 2,
+      "urgency_score": 2,
+      "priority_bucket": "P2",
+      "rationale": "Observed in 1 source(s) with dominant linkage to T06.",
+      "evidence_ids": [
+        "E0846"
+      ],
+      "theme_primary": "T06"
+    },
+    {
+      "id": "PRB-006",
+      "statement": "The completed IA entry must be immutable. He cannot sign off an annual and have the record be editable afterward without a documented amendment trail.",
+      "impact_score": 2,
+      "urgency_score": 2,
+      "priority_bucket": "P2",
+      "rationale": "Observed in 1 source(s) with dominant linkage to T02.",
+      "evidence_ids": [
+        "E0955"
+      ],
+      "theme_primary": "T02"
+    },
+    {
+      "id": "PRB-008",
+      "statement": "If I can't explain it, I can't defend it.",
+      "impact_score": 2,
+      "urgency_score": 2,
+      "priority_bucket": "P2",
+      "rationale": "Observed in 1 source(s) with dominant linkage to T02.",
+      "evidence_ids": [
+        "E1021"
+      ],
+      "theme_primary": "T02"
+    },
+    {
+      "id": "PRB-010",
+      "statement": "The part cannot be available to issue to a work order until the queue syncs and the server validates it.",
+      "impact_score": 2,
+      "urgency_score": 2,
+      "priority_bucket": "P2",
+      "rationale": "Observed in 1 source(s) with dominant linkage to T04.",
+      "evidence_ids": [
+        "E1127"
+      ],
+      "theme_primary": "T04"
+    },
+    {
+      "id": "PRB-014",
+      "statement": "It's not a maintenance item \u2014 it can't be inspected back to serviceable.",
+      "impact_score": 2,
+      "urgency_score": 2,
+      "priority_bucket": "P2",
+      "rationale": "Observed in 1 source(s) with dominant linkage to T03.",
+      "evidence_ids": [
+        "E1286"
+      ],
+      "theme_primary": "T03"
+    },
+    {
+      "id": "PRB-017",
+      "statement": "You can't auto-generate a regulatory narrative.",
+      "impact_score": 2,
+      "urgency_score": 2,
+      "priority_bucket": "P2",
+      "rationale": "Observed in 1 source(s) with dominant linkage to T03.",
+      "evidence_ids": [
+        "E1431"
+      ],
+      "theme_primary": "T03"
+    },
+    {
+      "id": "PRB-018",
+      "statement": "So you can't rely on the audit log being complete.",
+      "impact_score": 2,
+      "urgency_score": 2,
+      "priority_bucket": "P2",
+      "rationale": "Observed in 1 source(s) with dominant linkage to T02.",
+      "evidence_ids": [
+        "E1517"
+      ],
+      "theme_primary": "T02"
+    },
+    {
+      "id": "PRB-019",
+      "statement": "Not an email I might miss \u2014 something in the dashboard that I can't ignore.",
+      "impact_score": 2,
+      "urgency_score": 2,
+      "priority_bucket": "P2",
+      "rationale": "Observed in 1 source(s) with dominant linkage to T06.",
+      "evidence_ids": [
+        "E1531"
+      ],
+      "theme_primary": "T06"
+    },
+    {
+      "id": "PRB-022",
+      "statement": "Submitting a maintenance record that fails any minimum-content check must be blocked with a specific error message identifying the missing element.",
+      "impact_score": 2,
+      "urgency_score": 2,
+      "priority_bucket": "P2",
+      "rationale": "Observed in 1 source(s) with dominant linkage to T09.",
+      "evidence_ids": [
+        "E1556"
+      ],
+      "theme_primary": "T09"
+    }
+  ],
+  "features": [
+    {
+      "id": "FTR-030",
+      "statement": "The work order should not be closeable if any AD compliance record is unresolved. Hard block.",
+      "impact_score": 4,
+      "urgency_score": 3,
+      "priority_bucket": "P1",
+      "rationale": "Observed in 1 source(s) with dominant linkage to T09.",
+      "evidence_ids": [
+        "E0907"
+      ],
+      "theme_primary": "T09"
+    },
+    {
+      "id": "FTR-036",
+      "statement": "The signature action must be atomic and immediately confirmed. When he completes the authentication step, the system must display the completed record within two seconds.",
+      "impact_score": 3,
+      "urgency_score": 3,
+      "priority_bucket": "P1",
+      "rationale": "Observed in 1 source(s) with dominant linkage to T02.",
+      "evidence_ids": [
+        "E0953"
+      ],
+      "theme_primary": "T02"
+    },
+    {
+      "id": "FTR-060",
+      "statement": "RTS sign-off screen must show complete summary: what was done, on what aircraft, on what date, by whom, against what reference \u2014 before authentication",
+      "impact_score": 3,
+      "urgency_score": 3,
+      "priority_bucket": "P1",
+      "rationale": "Observed in 1 source(s) with dominant linkage to T02.",
+      "evidence_ids": [
+        "E1101"
+      ],
+      "theme_primary": "T02"
+    },
+    {
+      "id": "FTR-071",
+      "statement": "Incoming parts receipt must require 8130-3 documentation before the part can be moved to \"available\" status",
+      "impact_score": 3,
+      "urgency_score": 3,
+      "priority_bucket": "P1",
+      "rationale": "Observed in 1 source(s) with dominant linkage to T07.",
+      "evidence_ids": [
+        "E1183"
+      ],
+      "theme_primary": "T07"
+    },
+    {
+      "id": "FTR-142",
+      "statement": "RTS authorization screen must display full documentation chain before sign is enabled: N-number, serial, WO#, repair description, repair classification (stated explicitly), 337 reference, 337 preparer name",
+      "impact_score": 3,
+      "urgency_score": 3,
+      "priority_bucket": "P1",
+      "rationale": "Observed in 1 source(s) with dominant linkage to T03.",
+      "evidence_ids": [
+        "E1908"
+      ],
+      "theme_primary": "T03"
+    },
+    {
+      "id": "FTR-146",
+      "statement": "Manages FAA-approved revision process \u2014 every RSM change must go through her and receive DOM sign-off before distribution.",
+      "impact_score": 3,
+      "urgency_score": 3,
+      "priority_bucket": "P1",
+      "rationale": "Observed in 1 source(s) with dominant linkage to T02.",
+      "evidence_ids": [
+        "E1957"
+      ],
+      "theme_primary": "T02"
+    },
+    {
+      "id": "FTR-004",
+      "statement": "Both should be in the record, separately, so an inspector can pull either one without reading a paragraph of my handwriting.",
+      "impact_score": 3,
+      "urgency_score": 2,
+      "priority_bucket": "P2",
+      "rationale": "Observed in 1 source(s) with dominant linkage to T02.",
+      "evidence_ids": [
+        "E0659"
+      ],
+      "theme_primary": "T02"
+    },
+    {
+      "id": "FTR-006",
+      "statement": "The signature must be uniquely linked to the signer's certificate number, not their employee record, not their user account, not their email address.",
+      "impact_score": 3,
+      "urgency_score": 2,
+      "priority_bucket": "P2",
+      "rationale": "Observed in 1 source(s) with dominant linkage to T03.",
+      "evidence_ids": [
+        "E0764"
+      ],
+      "theme_primary": "T03"
+    },
+    {
+      "id": "FTR-007",
+      "statement": "The A&P or IA certificate number must appear in the signature record.",
+      "impact_score": 3,
+      "urgency_score": 2,
+      "priority_bucket": "P2",
+      "rationale": "Observed in 1 source(s) with dominant linkage to T03.",
+      "evidence_ids": [
+        "E0764"
+      ],
+      "theme_primary": "T03"
+    },
+    {
+      "id": "FTR-008",
+      "statement": "The signature must be timestamped to the action, not to the session.",
+      "impact_score": 3,
+      "urgency_score": 2,
+      "priority_bucket": "P2",
+      "rationale": "Observed in 1 source(s) with dominant linkage to T02.",
+      "evidence_ids": [
+        "E0765"
+      ],
+      "theme_primary": "T02"
+    },
+    {
+      "id": "FTR-011",
+      "statement": "Certificate number (not username, not employee ID) must appear on every signature record in the live system and in all exports",
+      "impact_score": 3,
+      "urgency_score": 2,
+      "priority_bucket": "P2",
+      "rationale": "Observed in 1 source(s) with dominant linkage to T03.",
+      "evidence_ids": [
+        "E0798"
+      ],
+      "theme_primary": "T03"
+    },
+    {
+      "id": "FTR-012",
+      "statement": "Exported / printed work order must be fully self-contained and inspector-readable without database access",
+      "impact_score": 3,
+      "urgency_score": 2,
+      "priority_bucket": "P2",
+      "rationale": "Observed in 1 source(s) with dominant linkage to T02.",
+      "evidence_ids": [
+        "E0800"
+      ],
+      "theme_primary": "T02"
+    },
+    {
+      "id": "FTR-015",
+      "statement": "Signature timestamps must reflect the time of the action, not the time of session start or sync",
+      "impact_score": 3,
+      "urgency_score": 2,
+      "priority_bucket": "P2",
+      "rationale": "Observed in 1 source(s) with dominant linkage to T03.",
+      "evidence_ids": [
+        "E0803"
+      ],
+      "theme_primary": "T03"
+    },
+    {
+      "id": "FTR-016",
+      "statement": "Voiding or reversing a signed step must create a permanent, visible audit entry \u2014 original record must remain readable, not deleted",
+      "impact_score": 3,
+      "urgency_score": 2,
+      "priority_bucket": "P2",
+      "rationale": "Observed in 1 source(s) with dominant linkage to T02.",
+      "evidence_ids": [
+        "E0804"
+      ],
+      "theme_primary": "T02"
+    },
+    {
+      "id": "FTR-017",
+      "statement": "If an AD compliance action happened in work order number X, it should be bound to work order X for the life of the record.",
+      "impact_score": 3,
+      "urgency_score": 2,
+      "priority_bucket": "P2",
+      "rationale": "Observed in 1 source(s) with dominant linkage to T02.",
+      "evidence_ids": [
+        "E0826",
+        "E0845"
+      ],
+      "theme_primary": "T02"
+    },
+    {
+      "id": "FTR-019",
+      "statement": "The signature should be an event, not a field.",
+      "impact_score": 3,
+      "urgency_score": 2,
+      "priority_bucket": "P2",
+      "rationale": "Observed in 1 source(s) with dominant linkage to T03.",
+      "evidence_ids": [
+        "E0832"
+      ],
+      "theme_primary": "T03"
+    },
+    {
+      "id": "FTR-021",
+      "statement": "Error message must name the specific AD(s) and provide a direct action path to the AD compliance record.",
+      "impact_score": 3,
+      "urgency_score": 2,
+      "priority_bucket": "P2",
+      "rationale": "Observed in 1 source(s) with dominant linkage to T02.",
+      "evidence_ids": [
+        "E0844"
+      ],
+      "theme_primary": "T02"
+    },
+    {
+      "id": "FTR-022",
+      "statement": "REQ-GH-02: Immutable AD-to-Work-Order Binding Once an AD compliance record is associated with a work order, that association must be permanent and audited.",
+      "impact_score": 3,
+      "urgency_score": 2,
+      "priority_bucket": "P2",
+      "rationale": "Observed in 1 source(s) with dominant linkage to T02.",
+      "evidence_ids": [
+        "E0845"
+      ],
+      "theme_primary": "T02"
+    },
+    {
+      "id": "FTR-026",
+      "statement": "The system must be able to demonstrate, to an FAA inspector, that the person who signed was authenticated at the moment of signing.",
+      "impact_score": 3,
+      "urgency_score": 2,
+      "priority_bucket": "P2",
+      "rationale": "Observed in 1 source(s) with dominant linkage to T02.",
+      "evidence_ids": [
+        "E0847"
+      ],
+      "theme_primary": "T02"
+    },
+    {
+      "id": "FTR-027",
+      "statement": "REQ-GH-05: Active-First Default Dashboard The work order dashboard must default to showing \"Active\" work orders on first load and on each morning session.",
+      "impact_score": 3,
+      "urgency_score": 2,
+      "priority_bucket": "P2",
+      "rationale": "Observed in 1 source(s) with dominant linkage to T10.",
+      "evidence_ids": [
+        "E0848"
+      ],
+      "theme_primary": "T10"
+    },
+    {
+      "id": "FTR-028",
+      "statement": "Every AD compliance action must link immutably to the work order it was performed in. Not by reference, not by user entry \u2014 by the system.",
+      "impact_score": 3,
+      "urgency_score": 2,
+      "priority_bucket": "P2",
+      "rationale": "Observed in 1 source(s) with dominant linkage to T02.",
+      "evidence_ids": [
+        "E0906"
+      ],
+      "theme_primary": "T02"
+    },
+    {
+      "id": "FTR-035",
+      "statement": "Nadia Solis should reference Rosa's validation explicitly.",
+      "impact_score": 3,
+      "urgency_score": 2,
+      "priority_bucket": "P2",
+      "rationale": "Observed in 1 source(s) with dominant linkage to T01.",
+      "evidence_ids": [
+        "E0923"
+      ],
+      "theme_primary": "T01"
+    },
+    {
+      "id": "FTR-038",
+      "statement": "If someone changes a field after his signature, there must be an audit record, a re-signing requirement, and a notification to him.",
+      "impact_score": 3,
+      "urgency_score": 2,
+      "priority_bucket": "P2",
+      "rationale": "Observed in 1 source(s) with dominant linkage to T02.",
+      "evidence_ids": [
+        "E0955"
+      ],
+      "theme_primary": "T02"
+    },
+    {
+      "id": "FTR-039",
+      "statement": "He must be able to export a printed record at any time that looks like a traditional maintenance log entry \u2014 plain language, his identifying information, the work described, the signature indicator.",
+      "impact_score": 3,
+      "urgency_score": 2,
+      "priority_bucket": "P2",
+      "rationale": "Observed in 1 source(s) with dominant linkage to T02.",
+      "evidence_ids": [
+        "E0956"
+      ],
+      "theme_primary": "T02"
+    }
+  ],
+  "timeline": [
+    {
+      "phase": "Phase 1",
+      "date_normalized": null,
+      "source_file": "dispatches/dispatch-02-the-stack-decision.md",
+      "event": "Dispatch 02 \u2014 The Stack Decision",
+      "shift": "---..."
+    },
+    {
+      "phase": "Phase 2",
+      "date_normalized": null,
+      "source_file": "dispatches/dispatch-03-the-build.md",
+      "event": "Dispatch 03 \u2014 The Build",
+      "shift": "---..."
+    },
+    {
+      "phase": "Phase 4",
+      "date_normalized": null,
+      "source_file": "dispatches/dispatch-04-the-end-of-the-beginning.md",
+      "event": "Dispatch 04 \u2014 The End of the Beginning",
+      "shift": "---..."
+    },
+    {
+      "phase": "Phase 4",
+      "date_normalized": null,
+      "source_file": "dispatches/dispatch-06-the-first-session.md",
+      "event": "Dispatch 06 \u2014 The First Session",
+      "shift": "---..."
+    },
+    {
+      "phase": "Phase 5",
+      "date_normalized": "2026-02-23",
+      "source_file": "dispatches/dispatch-19-the-first-work-order.md",
+      "event": "Dispatch 19 \u2014 The First Work Order",
+      "shift": "---..."
+    },
+    {
+      "phase": "Phase 5",
+      "date_normalized": null,
+      "source_file": "dispatches/dispatch-05-the-real-users.md",
+      "event": "Dispatch 05 \u2014 The Real Users",
+      "shift": "---..."
+    },
+    {
+      "phase": "Phase 5",
+      "date_normalized": null,
+      "source_file": "dispatches/dispatch-07-the-thursday-gate.md",
+      "event": "Dispatch 07 \u2014 The Thursday Gate",
+      "shift": "---..."
+    },
+    {
+      "phase": "Phase 7",
+      "date_normalized": null,
+      "source_file": "dispatches/dispatch-08-the-conditions.md",
+      "event": "Dispatch 08 \u2014 The Conditions",
+      "shift": "---..."
+    },
+    {
+      "phase": "Phase 9",
+      "date_normalized": null,
+      "source_file": "dispatches/dispatch-09-the-amber-line.md",
+      "event": "Dispatch 09 \u2014 The Amber Line",
+      "shift": "---..."
+    },
+    {
+      "phase": "Phase 13",
+      "date_normalized": null,
+      "source_file": "dispatches/dispatch-13-the-reentry-line.md",
+      "event": "Dispatch 13 \u2014 The Re-entry Line",
+      "shift": "---..."
+    },
+    {
+      "phase": "Phase 14",
+      "date_normalized": null,
+      "source_file": "dispatches/dispatch-14-the-greenline-test.md",
+      "event": "Dispatch 14 \u2014 The Greenline Test",
+      "shift": "---..."
+    },
+    {
+      "phase": "Phase 20",
+      "date_normalized": "2026-02-23",
+      "source_file": "phase-20-scale/dispatches/dispatch-20-the-second-shop.md",
+      "event": "Dispatch #20 \u2014 The Second Shop",
+      "shift": "---..."
+    },
+    {
+      "phase": "Phase 21",
+      "date_normalized": "2026-03-01",
+      "source_file": "phase-21-expansion/dispatches/dispatch-21-two-shops.md",
+      "event": "Dispatch #21 \u2014 Two Shops",
+      "shift": "---..."
+    },
+    {
+      "phase": "Phase 22",
+      "date_normalized": null,
+      "source_file": "phase-22-v12/dispatches/dispatch-22-priya.md",
+      "event": "Dispatch No. 22: The One Nobody Called",
+      "shift": "---..."
+    },
+    {
+      "phase": "Phase 24",
+      "date_normalized": "2026-02-23",
+      "source_file": "phase-24-v20/dispatches/dispatch-24-frank.md",
+      "event": "Dispatch No. 24 \u2014 The DER",
+      "shift": "---..."
+    },
+    {
+      "phase": "Phase 25",
+      "date_normalized": "2026-02-23",
+      "source_file": "phase-25-v20b/dispatches/dispatch-25-part135.md",
+      "event": "Dispatch No. 25 \u2014 The Portal Link",
+      "shift": "---..."
+    },
+    {
+      "phase": "Phase 26",
+      "date_normalized": "2026-02-01",
+      "source_file": "phase-26-v20c/dispatches/dispatch-26-als-vs-ad.md",
+      "event": "Dispatch No. 8 \u2014 The Database Returns Nothing. That's the Wrong Answer.",
+      "shift": "---..."
+    },
+    {
+      "phase": "Phase 27",
+      "date_normalized": "2026-02-01",
+      "source_file": "phase-27-v20d/dispatches/dispatch-27.md",
+      "event": "Dispatch No. 9 \u2014 The Shop",
+      "shift": "---..."
+    },
+    {
+      "phase": "Phase 28",
+      "date_normalized": "2026-04-09",
+      "source_file": "phase-28-v13/dispatches/dispatch-28.md",
+      "event": "Dispatch No. 10 \u2014 What It Means to Track a Life",
+      "shift": "---..."
+    },
+    {
+      "phase": "Phase 29",
+      "date_normalized": "2026-04-16",
+      "source_file": "phase-29-v14/dispatches/dispatch-29.md",
+      "event": "Dispatch No. 11",
+      "shift": "---..."
+    },
+    {
+      "phase": "Phase 30",
+      "date_normalized": "2026-05-08",
+      "source_file": "phase-30-v14/dispatches/dispatch-30.md",
+      "event": "Athelon Field Dispatch \u2014 No. 12",
+      "shift": "---..."
+    },
+    {
+      "phase": "Phase 31",
+      "date_normalized": null,
+      "source_file": "phase-31-v14/dispatches/dispatch-31.md",
+      "event": "Dispatch No. 13 \u2014 The Loop",
+      "shift": "---..."
+    },
+    {
+      "phase": "Phase 32",
+      "date_normalized": "2026-07-10",
+      "source_file": "phase-32-v14/dispatches/dispatch-32.md",
+      "event": "Dispatch \u2014 Miles Beaumont, Fourteenth",
+      "shift": "---..."
+    },
+    {
+      "phase": "Phase 33",
+      "date_normalized": "2026-08-15",
+      "source_file": "phase-33-v15/dispatches/dispatch-33.md",
+      "event": "Dispatch No. 15 \u2014 From Depth to Breadth",
+      "shift": "---..."
+    },
+    {
+      "phase": "Phase 34",
+      "date_normalized": "2026-09-20",
+      "source_file": "phase-34-v15/dispatches/dispatch-34.md",
+      "event": "Athelon Dispatch #16: The First Close",
+      "shift": "---..."
+    },
+    {
+      "phase": "Phase 35",
+      "date_normalized": "2026-10-25",
+      "source_file": "phase-35-v15/dispatches/dispatch-35.md",
+      "event": "Athelon Dispatch #17: The Long Loop",
+      "shift": "---..."
+    },
+    {
+      "phase": "Phase 36",
+      "date_normalized": "2026-11-25",
+      "source_file": "phase-36-v15/dispatches/dispatch-36.md",
+      "event": "Dispatch 36 \u2014 The Month After the Win",
+      "shift": "A milestone always feels definitive on the day it closes."
+    },
+    {
+      "phase": "Phase 37",
+      "date_normalized": "2026-12-22",
+      "source_file": "phase-37-v15/dispatches/dispatch-37.md",
+      "event": "Dispatch #19 \u2014 The Month That Executed",
+      "shift": "---..."
+    },
+    {
+      "phase": null,
+      "date_normalized": null,
+      "source_file": "dispatches/dispatch-01-the-hire.md",
+      "event": "Dispatch 01 \u2014 The Hire",
+      "shift": "---..."
+    },
+    {
+      "phase": null,
+      "date_normalized": null,
+      "source_file": "dispatches/dispatch-23-v12.md",
+      "event": "Dispatch No. 23: The Version They Asked For",
+      "shift": "---..."
+    }
+  ],
+  "entities": [
+    {
+      "entity_id": "ENT-041",
+      "name": "Athelon",
+      "type": "system",
+      "mention_count": 299
+    },
+    {
+      "entity_id": "ENT-049",
+      "name": "Compliance",
+      "type": "team",
+      "mention_count": 245
+    },
+    {
+      "entity_id": "ENT-050",
+      "name": "Product",
+      "type": "team",
+      "mention_count": 149
+    },
+    {
+      "entity_id": "ENT-042",
+      "name": "Corridor",
+      "type": "system",
+      "mention_count": 148
+    },
+    {
+      "entity_id": "ENT-011",
+      "name": "Miles Beaumont",
+      "type": "person",
+      "mention_count": 62
+    },
+    {
+      "entity_id": "ENT-043",
+      "name": "EBIS 5",
+      "type": "system",
+      "mention_count": 48
+    },
+    {
+      "entity_id": "ENT-005",
+      "name": "Marcus Webb",
+      "type": "person",
+      "mention_count": 37
+    },
+    {
+      "entity_id": "ENT-008",
+      "name": "Nadia Solis",
+      "type": "person",
+      "mention_count": 34
+    },
+    {
+      "entity_id": "ENT-044",
+      "name": "Convex",
+      "type": "system",
+      "mention_count": 25
+    },
+    {
+      "entity_id": "ENT-047",
+      "name": "Athelon team",
+      "type": "team",
+      "mention_count": 19
+    },
+    {
+      "entity_id": "ENT-048",
+      "name": "QA",
+      "type": "team",
+      "mention_count": 19
+    },
+    {
+      "entity_id": "ENT-012",
+      "name": "Gary Hutchins",
+      "type": "person",
+      "mention_count": 16
+    },
+    {
+      "entity_id": "ENT-010",
+      "name": "Rosa Eaton",
+      "type": "person",
+      "mention_count": 15
+    },
+    {
+      "entity_id": "ENT-027",
+      "name": "Sandra Okafor",
+      "type": "person",
+      "mention_count": 15
+    },
+    {
+      "entity_id": "ENT-032",
+      "name": "Skyline Turbine Services",
+      "type": "shop",
+      "mention_count": 13
+    },
+    {
+      "entity_id": "ENT-045",
+      "name": "Clerk",
+      "type": "system",
+      "mention_count": 12
+    },
+    {
+      "entity_id": "ENT-009",
+      "name": "Finn Calloway",
+      "type": "person",
+      "mention_count": 11
+    },
+    {
+      "entity_id": "ENT-013",
+      "name": "Linda Paredes",
+      "type": "person",
+      "mention_count": 10
+    },
+    {
+      "entity_id": "ENT-023",
+      "name": "Carla Ostrowski",
+      "type": "person",
+      "mention_count": 9
+    },
+    {
+      "entity_id": "ENT-037",
+      "name": "Lone Star Rotorcraft",
+      "type": "shop",
+      "mention_count": 9
+    },
+    {
+      "entity_id": "ENT-016",
+      "name": "Troy Weaver",
+      "type": "person",
+      "mention_count": 8
+    },
+    {
+      "entity_id": "ENT-024",
+      "name": "Bill Reardon",
+      "type": "person",
+      "mention_count": 7
+    },
+    {
+      "entity_id": "ENT-006",
+      "name": "Cilla Oduya",
+      "type": "person",
+      "mention_count": 7
+    },
+    {
+      "entity_id": "ENT-030",
+      "name": "Curtis Pallant",
+      "type": "person",
+      "mention_count": 7
+    },
+    {
+      "entity_id": "ENT-003",
+      "name": "Devraj Anand",
+      "type": "person",
+      "mention_count": 7
+    },
+    {
+      "entity_id": "ENT-025",
+      "name": "Frank Nguyen",
+      "type": "person",
+      "mention_count": 7
+    },
+    {
+      "entity_id": "ENT-017",
+      "name": "Teresa Varga",
+      "type": "person",
+      "mention_count": 7
+    },
+    {
+      "entity_id": "ENT-018",
+      "name": "Danny Osei",
+      "type": "person",
+      "mention_count": 6
+    },
+    {
+      "entity_id": "ENT-007",
+      "name": "Jonas Harker",
+      "type": "person",
+      "mention_count": 6
+    },
+    {
+      "entity_id": "ENT-004",
+      "name": "Tanya Birch",
+      "type": "person",
+      "mention_count": 6
+    },
+    {
+      "entity_id": "ENT-031",
+      "name": "Tobias Ferreira",
+      "type": "person",
+      "mention_count": 6
+    },
+    {
+      "entity_id": "ENT-046",
+      "name": "Vercel",
+      "type": "system",
+      "mention_count": 6
+    },
+    {
+      "entity_id": "ENT-002",
+      "name": "Chloe Park",
+      "type": "person",
+      "mention_count": 5
+    },
+    {
+      "entity_id": "ENT-028",
+      "name": "Lorena V\u00e1squez",
+      "type": "person",
+      "mention_count": 5
+    },
+    {
+      "entity_id": "ENT-014",
+      "name": "Pat Deluca",
+      "type": "person",
+      "mention_count": 5
+    },
+    {
+      "entity_id": "ENT-001",
+      "name": "Rafael Mendoza",
+      "type": "person",
+      "mention_count": 5
+    },
+    {
+      "entity_id": "ENT-034",
+      "name": "Rocky Mountain Turbine Service",
+      "type": "shop",
+      "mention_count": 5
+    },
+    {
+      "entity_id": "ENT-022",
+      "name": "Dale Purcell",
+      "type": "person",
+      "mention_count": 4
+    },
+    {
+      "entity_id": "ENT-029",
+      "name": "Paul Kaminski",
+      "type": "person",
+      "mention_count": 4
+    },
+    {
+      "entity_id": "ENT-026",
+      "name": "Priya Sharma",
+      "type": "person",
+      "mention_count": 4
+    },
+    {
+      "entity_id": "ENT-020",
+      "name": "Rachel Kwon",
+      "type": "person",
+      "mention_count": 4
+    },
+    {
+      "entity_id": "ENT-035",
+      "name": "Ridgeline Air Maintenance",
+      "type": "shop",
+      "mention_count": 4
+    },
+    {
+      "entity_id": "ENT-019",
+      "name": "Felix Okafor",
+      "type": "person",
+      "mention_count": 3
+    },
+    {
+      "entity_id": "ENT-033",
+      "name": "High Desert MRO",
+      "type": "shop",
+      "mention_count": 3
+    },
+    {
+      "entity_id": "ENT-039",
+      "name": "TriState Aviation Services",
+      "type": "shop",
+      "mention_count": 3
+    },
+    {
+      "entity_id": "ENT-040",
+      "name": "Cascade Air Maintenance",
+      "type": "shop",
+      "mention_count": 2
+    },
+    {
+      "entity_id": "ENT-038",
+      "name": "Desert Sky Turbine",
+      "type": "shop",
+      "mention_count": 2
+    },
+    {
+      "entity_id": "ENT-015",
+      "name": "Erik Holmberg",
+      "type": "person",
+      "mention_count": 2
+    },
+    {
+      "entity_id": "ENT-036",
+      "name": "High Plains Aero",
+      "type": "shop",
+      "mention_count": 2
+    },
+    {
+      "entity_id": "ENT-021",
+      "name": "Rosario Tafoya",
+      "type": "person",
+      "mention_count": 2
+    }
+  ],
+  "open_questions": [
+    {
+      "question": "How does that flow through your current process?",
+      "evidence_id": "E0657"
+    },
+    {
+      "question": "And how does Corridor fit into that reconciliation?",
+      "evidence_id": "E0815"
+    },
+    {
+      "question": "How do your techs work through a 100-hour today?",
+      "evidence_id": "E0827"
+    },
+    {
+      "question": "How do you feel about PIN-based re-authentication for signing?",
+      "evidence_id": "E0829"
+    },
+    {
+      "question": "What happens in the last hour before an aircraft goes back to an owner?",
+      "evidence_id": "E0833"
+    },
+    {
+      "question": "How do you want the system to handle that?",
+      "evidence_id": "E1035"
+    },
+    {
+      "question": "How do you manage discrepancy tracking today, and what breaks in the current workflow?",
+      "evidence_id": "E1528"
+    },
+    {
+      "question": "How do you manage QC review of closed work orders?",
+      "evidence_id": "E1536"
+    },
+    {
+      "question": "When a mechanic at Summit does a task, how does the approved data reference end up in the maintenance record?",
+      "evidence_id": "E1917"
+    },
+    {
+      "question": "What happens to those when an FAA inspector sees them?",
+      "evidence_id": "E1919"
+    },
+    {
+      "question": "How do you handle a situation where something on an aircraft turns out to be much more urgent?",
+      "evidence_id": "E1992"
+    }
+  ]
+}
