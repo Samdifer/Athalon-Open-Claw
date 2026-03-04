@@ -51,6 +51,7 @@ const MaintenanceProgramDetailPage = lazy(() => import("@/app/(app)/fleet/mainte
 const AircraftDetailPage = lazy(() => import("@/app/(app)/fleet/[tail]/page"));
 const AircraftLLPDetailPage = lazy(() => import("@/app/(app)/fleet/[tail]/llp/page"));
 const AircraftLogbookPage = lazy(() => import("@/app/(app)/fleet/[tail]/logbook/page"));
+const AircraftAdsbPage = lazy(() => import("@/app/(app)/fleet/[tail]/adsb/page"));
 
 const PartsPage = lazy(() => import("@/app/(app)/parts/page"));
 const NewPartPage = lazy(() => import("@/app/(app)/parts/new/page"));
@@ -80,6 +81,8 @@ const CompliancePage = lazy(() => import("@/app/(app)/compliance/page"));
 const QcmReviewPage = lazy(() => import("@/app/(app)/compliance/qcm-review/page"));
 const AuditTrailPage = lazy(() => import("@/app/(app)/compliance/audit-trail/page"));
 const AdSbCompliancePage = lazy(() => import("@/app/(app)/compliance/ad-sb/page"));
+const AuditReadinessPage = lazy(() => import("@/app/(app)/compliance/audit-readiness/page"));
+const DiamondAwardPage = lazy(() => import("@/app/(app)/compliance/diamond-award/page"));
 
 const CustomersPage = lazy(() => import("@/app/(app)/billing/customers/page"));
 const CustomerDetailPage = lazy(
@@ -155,6 +158,8 @@ const StationConfigPage = lazy(() => import("@/app/(app)/settings/station-config
 const RoutingTemplatesPage = lazy(
   () => import("@/app/(app)/settings/routing-templates/page"),
 );
+const CapabilitiesListPage = lazy(() => import("@/app/(app)/settings/capabilities/page"));
+const AdsbSettingsPage = lazy(() => import("@/app/(app)/settings/adsb/page"));
 
 const AppNotFoundPage = lazy(() => import("@/app/(app)/not-found/page"));
 
@@ -208,6 +213,7 @@ export function protectedAppRoutes() {
             <Route path="/fleet/:tail" element={<AircraftDetailPage />} />
             <Route path="/fleet/:tail/llp" element={<AircraftLLPDetailPage />} />
             <Route path="/fleet/:tail/logbook" element={<AircraftLogbookPage />} />
+            <Route path="/fleet/:tail/adsb" element={<AircraftAdsbPage />} />
 
             <Route path="/parts" element={<PartsPage />} />
             <Route path="/parts/new" element={<NewPartPage />} />
@@ -235,6 +241,8 @@ export function protectedAppRoutes() {
             <Route path="/compliance/qcm-review" element={<QcmReviewPage />} />
             <Route path="/compliance/audit-trail" element={<AuditTrailPage />} />
             <Route path="/compliance/ad-sb" element={<AdSbCompliancePage />} />
+            <Route path="/compliance/audit-readiness" element={<AuditReadinessPage />} />
+            <Route path="/compliance/diamond-award" element={<DiamondAwardPage />} />
             <Route
               path="/compliance/certificates"
               element={<Navigate to="/compliance/audit-trail" replace />}
@@ -305,6 +313,8 @@ export function protectedAppRoutes() {
               path="/settings/routing-templates"
               element={<RoutingTemplatesPage />}
             />
+            <Route path="/settings/capabilities" element={<CapabilitiesListPage />} />
+            <Route path="/settings/adsb" element={<AdsbSettingsPage />} />
 
             <Route path="*" element={<AppNotFoundPage />} />
           </Route>

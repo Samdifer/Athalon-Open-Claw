@@ -8,6 +8,7 @@ import {
 import {
   LayoutDashboard,
   PlaneTakeoff,
+  Plane,
   ClipboardList,
   Package,
   ReceiptText,
@@ -21,6 +22,10 @@ import {
   GraduationCap,
   ChevronRight,
   Shield,
+  Award,
+  TrendingUp,
+  ClipboardCheck,
+  Trophy,
 } from "lucide-react";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import {
@@ -60,6 +65,7 @@ type NavSection =
   | "scheduling"
   | "parts"
   | "billing"
+  | "crm"
   | "compliance"
   | "personnel"
   | "my-work"
@@ -114,6 +120,7 @@ const mainNav: NavEntry[] = [
       { title: "Predictions", href: "/fleet/predictions" },
       { title: "Maintenance Programs", href: "/fleet/maintenance-programs", icon: CalendarDays },
       { title: "Life-Limited Parts", href: "/fleet/llp", icon: Shield },
+      { title: "ADS-B Tracking", href: "/settings/adsb", icon: Plane },
     ],
   },
   {
@@ -180,11 +187,20 @@ const mainNav: NavEntry[] = [
     ],
   },
   {
+    title: "CRM",
+    href: "/crm/pipeline",
+    icon: TrendingUp,
+    section: "crm",
+    children: [{ title: "Sales Pipeline", href: "/crm/pipeline", icon: TrendingUp }],
+  },
+  {
     title: "Compliance",
     href: "/compliance",
     icon: ShieldCheck,
     section: "compliance",
     children: [
+      { title: "Audit Readiness", href: "/compliance/audit-readiness", icon: ClipboardCheck },
+      { title: "Diamond Award", href: "/compliance/diamond-award", icon: Trophy },
       { title: "AD/SB Tracking", href: "/compliance/ad-sb" },
       { title: "Audit Trail", href: "/compliance/audit-trail" },
       { title: "QCM Review", href: "/compliance/qcm-review" },
@@ -229,6 +245,7 @@ const bottomNav: NavEntry[] = [
     section: "settings",
     children: [
       { title: "Station Config", href: "/settings/station-config" },
+      { title: "Capabilities List", href: "/settings/capabilities", icon: Award },
       { title: "Routing Templates", href: "/settings/routing-templates" },
       { title: "Import Data", href: "/settings/import" },
       { title: "QuickBooks", href: "/settings/quickbooks" },
@@ -247,12 +264,13 @@ const ROLE_SECTION_ACCESS: Partial<Record<MroRole, NavSection[]>> = {
     "scheduling",
     "parts",
     "billing",
+    "crm",
     "compliance",
     "reports",
     "personnel",
   ],
   qcm_inspector: ["compliance", "fleet", "work-orders", "personnel", "reports"],
-  billing_manager: ["billing", "work-orders", "reports"],
+  billing_manager: ["billing", "crm", "work-orders", "reports"],
   lead_technician: ["work-orders", "scheduling", "fleet", "personnel", "parts"],
   technician: ["my-work", "work-orders", "parts", "fleet"],
   parts_clerk: ["parts", "billing"],
