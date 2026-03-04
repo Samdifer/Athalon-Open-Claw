@@ -48,7 +48,7 @@ import {
 } from "@/app/(app)/work-orders/[id]/_components/WorkItemsList";
 import { WOComplianceTab } from "@/app/(app)/work-orders/[id]/_components/WOComplianceTab";
 import { DocumentsPanel } from "@/app/(app)/work-orders/[id]/_components/DocumentsPanel";
-import { InDockRtsEvidenceTab } from "@/app/(app)/work-orders/[id]/_components/InDockRtsEvidenceTab";
+import { InDockEvidenceHub } from "@/app/(app)/work-orders/[id]/_components/InDockEvidenceHub";
 import { CloseReadinessPanel } from "@/components/CloseReadinessPanel";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import { ActivityTimeline } from "@/app/(app)/work-orders/[id]/_components/ActivityTimeline";
@@ -673,7 +673,7 @@ export default function WorkOrderDetailPage() {
               { value: "squawks", label: "Tasks & Findings", Icon: AlertTriangle, count: workItems.length, indicator: null as "red" | "amber" | "green" | null },
               { value: "compliance", label: "Compliance", Icon: ShieldCheck, count: null, indicator: complianceIndicator },
               { value: "parts", label: "Parts", Icon: Package, count: partsForThisWorkOrder.length, indicator: null as "red" | "amber" | "green" | null },
-              { value: "evidence", label: "In-dock & RTS", Icon: Video, count: null, indicator: null as "red" | "amber" | "green" | null },
+              { value: "evidence", label: "Evidence", Icon: Video, count: null, indicator: null as "red" | "amber" | "green" | null },
               { value: "documents", label: "Documents", Icon: Paperclip, count: null, indicator: null as "red" | "amber" | "green" | null },
               { value: "notes", label: "Notes & Activity", Icon: FileText, count: auditEvents.length + voiceNotes.length, indicator: null as "red" | "amber" | "green" | null },
             ]
@@ -791,11 +791,7 @@ export default function WorkOrderDetailPage() {
         </TabsContent>
 
         <TabsContent value="evidence" className="mt-0">
-          <InDockRtsEvidenceTab
-            organizationId={orgId}
-            workOrderId={String(workOrderId)}
-            aircraftRegistration={aircraft?.currentRegistration ?? "AIRCRAFT"}
-          />
+          <InDockEvidenceHub workOrderId={String(workOrderId)} />
         </TabsContent>
 
         <TabsContent value="notes" className="mt-0">
