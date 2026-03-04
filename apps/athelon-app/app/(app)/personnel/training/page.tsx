@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { useQuery, useMutation } from "convex/react";
+import { useUser } from "@clerk/clerk-react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
@@ -55,6 +56,10 @@ import { TrainerSignOffQueue } from "./_components/TrainerSignOffQueue";
 import { EfficiencyBaseline } from "./_components/EfficiencyBaseline";
 import { GrowthCurveDashboard } from "./_components/GrowthCurveDashboard";
 import { ComplianceRecords } from "./_components/ComplianceRecords";
+import { OKRProgressCard } from "./_components/OKRProgressCard";
+import { TrainerRecords } from "./_components/TrainerRecords";
+import { BalancedKPIPanel } from "./_components/BalancedKPIPanel";
+import { RunTaxiQualifications } from "./_components/RunTaxiQualifications";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -90,6 +95,7 @@ function statusBadge(status: string) {
 // ─── Page ────────────────────────────────────────────────────────────────────
 
 export default function TrainingPage() {
+  const { user } = useUser();
   const { orgId } = useCurrentOrg();
   const [search, setSearch] = useState("");
   const [selectedTechId, setSelectedTechId] = useState<Id<"technicians"> | null>(null);
@@ -98,6 +104,14 @@ export default function TrainingPage() {
   const [activeTab, setActiveTab] = useState("records");
   const [isAddingRecord, setIsAddingRecord] = useState(false);
   const [isCreatingReq, setIsCreatingReq] = useState(false);
+  const [showGoalDialog, setShowGoalDialog] = useState(false);
+  const [isCreatingGoal, setIsCreatingGoal] = useState(false);
+  const [goalTechId, setGoalTechId] = useState<string>("");
+  const [goalPeriod, setGoalPeriod] = useState<"weekly" | "monthly" | "quarterly" | "yearly">("monthly");
+  const [goalTargetType, setGoalTargetType] = useState<"stages_completed" | "tasks_completed" | "hours_trained">("stages_completed");
+  const [goalTargetValue, setGoalTargetValue] = useState("");
+  const [goalPeriodStart, setGoalPeriodStart] = useState("");
+  const [goalPeriodEnd, setGoalPeriodEnd] = useState("");
 
   // Queries
   const technicians = useQuery(
@@ -120,10 +134,15 @@ export default function TrainingPage() {
     api.training.listQualificationRequirements,
     orgId ? { orgId } : "skip"
   );
+  const goals = useQuery(
+    api.ojt.listGoals,
+    goalTechId ? { technicianId: goalTechId as Id<"technicians"> } : "skip",
+  );
 
   // Mutations
   const addRecord = useMutation(api.training.addTrainingRecord);
   const createReq = useMutation(api.training.createQualificationRequirement);
+  const createGoal = useMutation(api.ojt.createGoal);
 
   // ─── Add Training Dialog State ───────────────────────────────────────────
   const [formTechId, setFormTechId] = useState<string>("");
@@ -150,6 +169,11 @@ export default function TrainingPage() {
     }
     return m;
   }, [technicians]);
+
+  const currentTech = useMemo(
+    () => (technicians ?? []).find((t) => t.userId && user?.id && t.userId === user.id),
+    [technicians, user?.id],
+  );
 
   // Compliance map: tech -> { current, expiringSoon, expired }
   const complianceMap = useMemo(() => {
@@ -270,6 +294,50 @@ export default function TrainingPage() {
     }
   }
 
+  async function handleCreateGoal() {
+    if (!orgId || !currentTech) {
+      toast.error("Unable to resolve organization or your technician profile");
+      return;
+    }
+    if (!goalTechId || !goalTargetValue || !goalPeriodStart || !goalPeriodEnd) {
+      toast.error("All goal fields are required");
+      return;
+    }
+
+    const targetValue = Number(goalTargetValue);
+    if (Number.isNaN(targetValue) || targetValue <= 0) {
+      toast.error("Target value must be greater than 0");
+      return;
+    }
+    if (goalPeriodEnd <= goalPeriodStart) {
+      toast.error("Period end must be after period start");
+      return;
+    }
+
+    setIsCreatingGoal(true);
+    try {
+      await createGoal({
+        organizationId: orgId,
+        technicianId: goalTechId as Id<"technicians">,
+        setByTechnicianId: currentTech._id,
+        period: goalPeriod,
+        periodStart: new Date(goalPeriodStart).getTime(),
+        periodEnd: new Date(goalPeriodEnd).getTime(),
+        targetType: goalTargetType,
+        targetValue,
+      });
+      toast.success("Goal created");
+      setShowGoalDialog(false);
+      setGoalTargetValue("");
+      setGoalPeriodStart("");
+      setGoalPeriodEnd("");
+    } catch (e: any) {
+      toast.error(e?.message ?? "Failed to create goal");
+    } finally {
+      setIsCreatingGoal(false);
+    }
+  }
+
   if (!orgId) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3">
@@ -371,8 +439,12 @@ export default function TrainingPage() {
           <TabsTrigger value="requirements">Qualification Requirements</TabsTrigger>
           <TabsTrigger value="constraints">Scheduling Constraints</TabsTrigger>
           <TabsTrigger value="signoff">Sign-Off Queue</TabsTrigger>
+          <TabsTrigger value="okr">OKR Tracking</TabsTrigger>
+          <TabsTrigger value="trainer-records">Trainer Records</TabsTrigger>
           <TabsTrigger value="efficiency">Efficiency</TabsTrigger>
           <TabsTrigger value="growth">Growth</TabsTrigger>
+          <TabsTrigger value="kpi">Balanced KPI</TabsTrigger>
+          <TabsTrigger value="runTaxi">Run/Taxi Quals</TabsTrigger>
         </TabsList>
 
         <TabsContent value="records" className="space-y-3 mt-3">
@@ -653,12 +725,65 @@ export default function TrainingPage() {
           <TrainerSignOffQueue orgId={orgId} />
         </TabsContent>
 
+        <TabsContent value="okr" className="space-y-3 mt-3">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+            <div className="w-full sm:max-w-sm">
+              <Label className="mb-1.5 block">Technician</Label>
+              <Select value={goalTechId} onValueChange={setGoalTechId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select technician" />
+                </SelectTrigger>
+                <SelectContent>
+                  {(technicians ?? []).map((t) => (
+                    <SelectItem key={t._id} value={t._id}>{t.legalName}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <Button className="sm:mt-6" onClick={() => setShowGoalDialog(true)} disabled={!goalTechId}>
+              <Plus className="w-4 h-4 mr-1" /> Set New Goal
+            </Button>
+          </div>
+
+          {!goalTechId ? (
+            <p className="text-sm text-muted-foreground">Select a technician to view active goals.</p>
+          ) : !goals ? (
+            <Skeleton className="h-24 w-full" />
+          ) : goals.filter((g) => g.status === "active").length === 0 ? (
+            <p className="text-sm text-muted-foreground">No active goals found for this technician.</p>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+              {goals
+                .filter((g) => g.status === "active")
+                .map((goal) => (
+                  <OKRProgressCard
+                    key={goal._id}
+                    goal={goal}
+                    technicianName={techMap.get(goal.technicianId) ?? "Unknown"}
+                  />
+                ))}
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="trainer-records" className="space-y-3 mt-3">
+          <TrainerRecords orgId={orgId} />
+        </TabsContent>
+
         <TabsContent value="efficiency" className="space-y-3 mt-3">
           <EfficiencyBaseline orgId={orgId} />
         </TabsContent>
 
         <TabsContent value="growth" className="space-y-3 mt-3">
           <GrowthCurveDashboard orgId={orgId} />
+        </TabsContent>
+
+        <TabsContent value="kpi" className="space-y-3 mt-3">
+          <BalancedKPIPanel orgId={orgId} />
+        </TabsContent>
+
+        <TabsContent value="runTaxi" className="space-y-3 mt-3">
+          <RunTaxiQualifications orgId={orgId} />
         </TabsContent>
       </Tabs>
 
@@ -764,6 +889,75 @@ export default function TrainingPage() {
               ) : (
                 "Add Record"
               )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Set New Goal Dialog */}
+      <Dialog open={showGoalDialog} onOpenChange={(v) => { if (!isCreatingGoal) setShowGoalDialog(v); }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Set New Goal</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Technician *</Label>
+              <Select value={goalTechId} onValueChange={setGoalTechId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select technician" />
+                </SelectTrigger>
+                <SelectContent>
+                  {(technicians ?? []).map((t) => (
+                    <SelectItem key={t._id} value={t._id}>{t.legalName}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Period *</Label>
+                <Select value={goalPeriod} onValueChange={(v) => setGoalPeriod(v as "weekly" | "monthly" | "quarterly" | "yearly")}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="weekly">Weekly</SelectItem>
+                    <SelectItem value="monthly">Monthly</SelectItem>
+                    <SelectItem value="quarterly">Quarterly</SelectItem>
+                    <SelectItem value="yearly">Yearly</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Target Type *</Label>
+                <Select value={goalTargetType} onValueChange={(v) => setGoalTargetType(v as "stages_completed" | "tasks_completed" | "hours_trained")}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="stages_completed">Stages Completed</SelectItem>
+                    <SelectItem value="tasks_completed">Tasks Completed</SelectItem>
+                    <SelectItem value="hours_trained">Hours Trained</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div>
+              <Label>Target Value *</Label>
+              <Input type="number" min={1} value={goalTargetValue} onChange={(e) => setGoalTargetValue(e.target.value)} />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Period Start *</Label>
+                <Input type="date" value={goalPeriodStart} onChange={(e) => setGoalPeriodStart(e.target.value)} />
+              </div>
+              <div>
+                <Label>Period End *</Label>
+                <Input type="date" value={goalPeriodEnd} onChange={(e) => setGoalPeriodEnd(e.target.value)} />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowGoalDialog(false)} disabled={isCreatingGoal}>Cancel</Button>
+            <Button onClick={handleCreateGoal} disabled={isCreatingGoal}>
+              {isCreatingGoal ? <><Loader2 className="w-4 h-4 animate-spin" /> Creating…</> : "Create Goal"}
             </Button>
           </DialogFooter>
         </DialogContent>

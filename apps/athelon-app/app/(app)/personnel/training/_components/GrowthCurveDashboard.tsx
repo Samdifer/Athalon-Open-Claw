@@ -1,8 +1,9 @@
-import { useMemo } from "react";
-import { useQuery } from "convex/react";
+import { useEffect, useMemo, useState } from "react";
+import { useConvex, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import {
   CartesianGrid,
   Legend,
@@ -19,7 +20,8 @@ type Props = {
 };
 
 type Point = {
-  date: string;
+  month: string;
+  target: number | null;
   [key: string]: string | number | null;
 };
 
@@ -32,96 +34,214 @@ function shortName(full: string): string {
   return `${parts[0]} ${parts[parts.length - 1][0]}.`;
 }
 
-function dayKey(timestamp: number): string {
-  return new Date(timestamp).toISOString().slice(0, 10);
+function monthKey(timestamp: number): string {
+  const d = new Date(timestamp);
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
 }
 
-function formatDay(day: string): string {
-  const d = new Date(`${day}T00:00:00.000Z`);
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
+function formatMonth(month: string): string {
+  const [year, m] = month.split("-").map(Number);
+  const d = new Date(Date.UTC(year, (m ?? 1) - 1, 1));
+  return d.toLocaleDateString("en-US", { month: "short", year: "2-digit", timeZone: "UTC" });
 }
 
 export function GrowthCurveDashboard({ orgId }: Props) {
+  const convex = useConvex();
   const technicians = useQuery(api.technicians.list, { organizationId: orgId });
-  const training = useQuery(api.training.listOrgTraining, { orgId });
+  const timeEntries = useQuery(api.timeClock.listTimeEntries, {
+    orgId,
+    entryType: "work_order",
+  });
+  const workOrders = useQuery(api.workOrders.getWorkOrdersWithScheduleRisk, {
+    organizationId: orgId,
+    shopLocationId: "all",
+  });
 
-  const { chartData, series } = useMemo(() => {
-    if (!technicians || !training) return { chartData: [] as Point[], series: [] as Array<{ key: string; label: string }> };
+  const [selectedTechIds, setSelectedTechIds] = useState<string[]>([]);
+  const [targetByTech, setTargetByTech] = useState<Map<string, number>>(new Map());
 
-    const trainingByTech = new Map<string, typeof training>();
-    for (const rec of training) {
-      const list = trainingByTech.get(rec.technicianId) ?? [];
-      list.push(rec);
-      trainingByTech.set(rec.technicianId, list);
-    }
+  useEffect(() => {
+    if (!technicians) return;
+    setSelectedTechIds((prev) => {
+      if (prev.length > 0) return prev.filter((id) => technicians.some((t) => t._id === id));
+      return technicians.slice(0, 3).map((t) => t._id as string);
+    });
+  }, [technicians]);
 
-    const allDays = new Set<string>();
-    const techCurves = new Map<string, Map<string, number>>();
+  useEffect(() => {
+    let cancelled = false;
 
-    for (const tech of technicians) {
-      const records = (trainingByTech.get(tech._id) ?? []).slice().sort((a, b) => a.completedAt - b.completedAt);
-      let compliantRunning = 0;
-      let totalRunning = 0;
-      const curve = new Map<string, number>();
-
-      for (const rec of records) {
-        totalRunning += 1;
-        if (rec.status !== "expired") compliantRunning += 1;
-        const score = Number(((compliantRunning / totalRunning) * 100).toFixed(1));
-        const day = dayKey(rec.completedAt);
-        curve.set(day, score);
-        allDays.add(day);
+    async function loadTargets() {
+      if (!technicians || technicians.length === 0) {
+        setTargetByTech(new Map());
+        return;
       }
 
-      techCurves.set(tech._id, curve);
+      const goalRows = await Promise.all(
+        technicians.map((tech) => convex.query(api.ojt.listGoals, { technicianId: tech._id })),
+      );
+
+      const next = new Map<string, number>();
+      technicians.forEach((tech, idx) => {
+        const active = goalRows[idx]
+          .filter((g) => g.status === "active")
+          .sort((a, b) => b.periodEnd - a.periodEnd)[0];
+        if (!active) return;
+
+        if (active.targetType === "hours_trained") {
+          next.set(tech._id, Math.max(0, Math.min(100, active.targetValue)));
+          return;
+        }
+
+        next.set(tech._id, Math.max(0, Math.min(100, active.targetValue * 10)));
+      });
+
+      if (!cancelled) setTargetByTech(next);
     }
 
-    const sortedDays = Array.from(allDays).sort();
-    const rows: Point[] = sortedDays.map((day) => {
-      const row: Point = { date: day };
-      for (const tech of technicians) {
-        row[tech._id] = techCurves.get(tech._id)?.get(day) ?? null;
+    void loadTargets();
+    return () => {
+      cancelled = true;
+    };
+  }, [convex, technicians]);
+
+  const { chartData, series } = useMemo(() => {
+    if (!technicians || !timeEntries || !workOrders) {
+      return { chartData: [] as Point[], series: [] as Array<{ key: string; label: string }> };
+    }
+
+    const selected =
+      selectedTechIds.length === 0
+        ? technicians.slice(0, 1)
+        : technicians.filter((t) => selectedTechIds.includes(t._id as string));
+
+    const selectedSet = new Set(selected.map((s) => s._id as string));
+
+    const woEstimateById = new Map<string, number>();
+    for (const wo of workOrders) {
+      woEstimateById.set(String(wo._id), Math.max(0, wo.effectiveEstimatedHours ?? 0));
+    }
+
+    const now = Date.now();
+    const woActualByMonth = new Map<string, Map<string, number>>();
+    const techActualByMonth = new Map<string, Map<string, number>>();
+
+    for (const entry of timeEntries) {
+      if (!entry.workOrderId || !selectedSet.has(entry.technicianId as string)) continue;
+      const month = monthKey(entry.clockInAt);
+      const woId = String(entry.workOrderId);
+      const minutes = entry.durationMinutes ?? Math.max(0, Math.round((now - entry.clockInAt) / 60_000));
+      const hours = minutes / 60;
+      if (hours <= 0) continue;
+
+      const woMonthMap = woActualByMonth.get(month) ?? new Map<string, number>();
+      woMonthMap.set(woId, (woMonthMap.get(woId) ?? 0) + hours);
+      woActualByMonth.set(month, woMonthMap);
+
+      const techMonthMap = techActualByMonth.get(month) ?? new Map<string, number>();
+      techMonthMap.set(entry.technicianId as string, (techMonthMap.get(entry.technicianId as string) ?? 0) + hours);
+      techActualByMonth.set(month, techMonthMap);
+    }
+
+    const techEstimateByMonth = new Map<string, Map<string, number>>();
+
+    for (const entry of timeEntries) {
+      const techId = entry.technicianId as string;
+      if (!entry.workOrderId || !selectedSet.has(techId)) continue;
+
+      const month = monthKey(entry.clockInAt);
+      const woId = String(entry.workOrderId);
+      const woEstimated = woEstimateById.get(woId) ?? 0;
+      const woActual = woActualByMonth.get(month)?.get(woId) ?? 0;
+      if (woEstimated <= 0 || woActual <= 0) continue;
+
+      const minutes = entry.durationMinutes ?? Math.max(0, Math.round((now - entry.clockInAt) / 60_000));
+      const hours = minutes / 60;
+      if (hours <= 0) continue;
+
+      const apportionedEstimate = (hours / woActual) * woEstimated;
+      const techMonthMap = techEstimateByMonth.get(month) ?? new Map<string, number>();
+      techMonthMap.set(techId, (techMonthMap.get(techId) ?? 0) + apportionedEstimate);
+      techEstimateByMonth.set(month, techMonthMap);
+    }
+
+    const allMonths = new Set<string>([
+      ...Array.from(techActualByMonth.keys()),
+      ...Array.from(techEstimateByMonth.keys()),
+    ]);
+
+    const sortedMonths = Array.from(allMonths).sort();
+
+    const avgTarget =
+      selected.length > 0
+        ? selected.reduce((sum, t) => sum + (targetByTech.get(t._id as string) ?? 0), 0) / selected.length
+        : null;
+
+    const rows: Point[] = sortedMonths.map((month) => {
+      const row: Point = {
+        month,
+        target: avgTarget !== null ? Number(avgTarget.toFixed(1)) : null,
+      };
+
+      for (const tech of selected) {
+        const key = tech._id as string;
+        const actual = techActualByMonth.get(month)?.get(key) ?? 0;
+        const estimated = techEstimateByMonth.get(month)?.get(key) ?? 0;
+        row[key] = actual > 0 ? Number(((estimated / actual) * 100).toFixed(1)) : null;
       }
       return row;
     });
 
-    const activeSeries = technicians
-      .filter((t) => (trainingByTech.get(t._id) ?? []).length > 0)
-      .map((t) => ({ key: t._id as string, label: shortName(t.legalName) }));
+    return {
+      chartData: rows,
+      series: selected.map((t) => ({ key: t._id as string, label: shortName(t.legalName) })),
+    };
+  }, [technicians, timeEntries, workOrders, selectedTechIds, targetByTech]);
 
-    return { chartData: rows, series: activeSeries };
-  }, [technicians, training]);
+  const loading = technicians === undefined || timeEntries === undefined || workOrders === undefined;
 
-  const loading = technicians === undefined || training === undefined;
+  function toggleTech(id: string) {
+    setSelectedTechIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id].slice(-4),
+    );
+  }
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="space-y-3">
         <CardTitle className="text-base">Growth Curve Dashboard</CardTitle>
+        <div className="flex flex-wrap gap-2">
+          {(technicians ?? []).map((tech) => {
+            const selected = selectedTechIds.includes(tech._id as string);
+            return (
+              <Button
+                key={tech._id}
+                type="button"
+                variant={selected ? "default" : "outline"}
+                size="sm"
+                className="h-7 text-xs"
+                onClick={() => toggleTech(tech._id as string)}
+              >
+                {shortName(tech.legalName)}
+              </Button>
+            );
+          })}
+        </div>
       </CardHeader>
       <CardContent className="h-80">
         {loading ? (
           <p className="text-sm text-muted-foreground">Loading growth curves…</p>
         ) : chartData.length === 0 || series.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No training history yet. Add training records to visualize growth.</p>
+          <p className="text-sm text-muted-foreground">No completed labor history yet.</p>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={chartData} margin={{ top: 12, right: 16, left: 4, bottom: 8 }}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis
-                dataKey="date"
-                tick={{ fontSize: 12 }}
-                tickFormatter={formatDay}
-                minTickGap={20}
-              />
-              <YAxis
-                domain={[0, 100]}
-                tick={{ fontSize: 12 }}
-                tickFormatter={(v) => `${v}%`}
-              />
+              <XAxis dataKey="month" tick={{ fontSize: 12 }} tickFormatter={formatMonth} minTickGap={20} />
+              <YAxis domain={[0, 200]} tick={{ fontSize: 12 }} tickFormatter={(v) => `${v}%`} />
               <Tooltip
                 formatter={(value: number | string) => `${Number(value).toFixed(1)}%`}
-                labelFormatter={(label: string) => formatDay(label)}
+                labelFormatter={(label: string) => formatMonth(label)}
               />
               <Legend />
               {series.map((s, idx) => (
@@ -136,6 +256,16 @@ export function GrowthCurveDashboard({ orgId }: Props) {
                   connectNulls
                 />
               ))}
+              <Line
+                type="linear"
+                dataKey="target"
+                name="OJT Target"
+                stroke="#9ca3af"
+                strokeDasharray="5 5"
+                strokeWidth={2}
+                dot={false}
+                connectNulls
+              />
             </LineChart>
           </ResponsiveContainer>
         )}

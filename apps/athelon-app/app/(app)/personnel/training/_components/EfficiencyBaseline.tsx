@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
   CartesianGrid,
+  Line,
   ResponsiveContainer,
   Scatter,
   ScatterChart,
@@ -21,10 +22,10 @@ type Props = {
 type Row = {
   technicianId: Id<"technicians">;
   technician: string;
-  experienceYears: number;
-  avgTaskCompletionHours: number;
+  experienceMonths: number;
   estimatedHours: number;
   actualHours: number;
+  avgTaskCompletionHours: number;
   efficiencyScore: number;
 };
 
@@ -36,50 +37,106 @@ function efficiencyTone(score: number) {
 
 export function EfficiencyBaseline({ orgId }: Props) {
   const technicians = useQuery(api.technicians.list, { organizationId: orgId });
-  const training = useQuery(api.technicianTraining.listByOrg, { organizationId: orgId });
+  const training = useQuery(api.training.listOrgTraining, { orgId });
+  const timeEntries = useQuery(api.timeClock.listTimeEntries, {
+    orgId,
+    entryType: "work_order",
+  });
+  const workOrders = useQuery(api.workOrders.getWorkOrdersWithScheduleRisk, {
+    organizationId: orgId,
+    shopLocationId: "all",
+  });
 
   const rows: Row[] = useMemo(() => {
-    if (!technicians || !training) return [];
+    if (!technicians || !training || !timeEntries || !workOrders) return [];
 
-    const trainingByTech = new Map<string, typeof training>();
-    for (const item of training) {
-      const bucket = trainingByTech.get(item.technicianId) ?? [];
-      bucket.push(item);
-      trainingByTech.set(item.technicianId, bucket);
+    const now = Date.now();
+    const woEstimateById = new Map<string, number>();
+    for (const wo of workOrders) {
+      woEstimateById.set(String(wo._id), Math.max(0, wo.effectiveEstimatedHours ?? 0));
     }
 
-    return technicians.map((tech) => {
-      const records = trainingByTech.get(tech._id) ?? [];
+    const woActualHoursById = new Map<string, number>();
+    const actualHoursByTech = new Map<string, number>();
+    const estimatedHoursByTech = new Map<string, number>();
+    const entryCountByTech = new Map<string, number>();
+    const firstClockInByTech = new Map<string, number>();
 
-      const earliest = records.length > 0 ? Math.min(...records.map((r) => r.completedAt)) : null;
-      const experienceYears = earliest
-        ? Math.max(0, (Date.now() - earliest) / (1000 * 60 * 60 * 24 * 365.25))
-        : 0;
+    for (const entry of timeEntries) {
+      if (!entry.workOrderId) continue;
+      const durationMinutes =
+        entry.durationMinutes ?? Math.max(0, Math.round((now - entry.clockInAt) / 60_000));
+      const durationHours = durationMinutes / 60;
+      if (durationHours <= 0) continue;
 
-      // Baseline approximation from available data (no task-level org query exists):
-      // Use count and recency of training completions to estimate expected and actual effort.
-      const trainingCount = records.length;
-      const estimatedHours = Math.max(2, trainingCount * 4 + experienceYears * 1.5);
-      const actualHours = Math.max(1, trainingCount * 4.2 - experienceYears * 1.2 + 2);
-      const avgTaskCompletionHours = actualHours / Math.max(trainingCount, 1);
-      const efficiencyScore = (estimatedHours / actualHours) * 100;
+      const woId = String(entry.workOrderId);
+      woActualHoursById.set(woId, (woActualHoursById.get(woId) ?? 0) + durationHours);
 
-      return {
-        technicianId: tech._id,
-        technician: tech.legalName,
-        experienceYears,
-        avgTaskCompletionHours,
-        estimatedHours,
-        actualHours,
-        efficiencyScore,
-      };
-    });
-  }, [technicians, training]);
+      const techId = String(entry.technicianId);
+      actualHoursByTech.set(techId, (actualHoursByTech.get(techId) ?? 0) + durationHours);
+      entryCountByTech.set(techId, (entryCountByTech.get(techId) ?? 0) + 1);
+      const earliest = firstClockInByTech.get(techId);
+      if (!earliest || entry.clockInAt < earliest) firstClockInByTech.set(techId, entry.clockInAt);
+    }
+
+    for (const entry of timeEntries) {
+      if (!entry.workOrderId) continue;
+      const woId = String(entry.workOrderId);
+      const woEstimated = woEstimateById.get(woId) ?? 0;
+      const woActual = woActualHoursById.get(woId) ?? 0;
+      if (woEstimated <= 0 || woActual <= 0) continue;
+
+      const durationMinutes =
+        entry.durationMinutes ?? Math.max(0, Math.round((now - entry.clockInAt) / 60_000));
+      const durationHours = durationMinutes / 60;
+      if (durationHours <= 0) continue;
+
+      const apportionedEstimate = (durationHours / woActual) * woEstimated;
+      const techId = String(entry.technicianId);
+      estimatedHoursByTech.set(techId, (estimatedHoursByTech.get(techId) ?? 0) + apportionedEstimate);
+    }
+
+    const firstTrainingByTech = new Map<string, number>();
+    for (const rec of training) {
+      const existing = firstTrainingByTech.get(rec.technicianId);
+      if (!existing || rec.completedAt < existing) firstTrainingByTech.set(rec.technicianId, rec.completedAt);
+    }
+
+    return technicians
+      .map((tech) => {
+        const techId = String(tech._id);
+        const actualHours = actualHoursByTech.get(techId) ?? 0;
+        const estimatedHours = estimatedHoursByTech.get(techId) ?? 0;
+        const entries = entryCountByTech.get(techId) ?? 0;
+
+        const earliestSignal = Math.min(
+          firstClockInByTech.get(techId) ?? Number.POSITIVE_INFINITY,
+          firstTrainingByTech.get(techId) ?? Number.POSITIVE_INFINITY,
+          tech._creationTime,
+        );
+        const baseTs = Number.isFinite(earliestSignal) ? earliestSignal : now;
+        const experienceMonths = Math.max(0, (now - baseTs) / (1000 * 60 * 60 * 24 * 30.4375));
+
+        const efficiencyScore = actualHours > 0 ? (estimatedHours / actualHours) * 100 : 0;
+
+        return {
+          technicianId: tech._id,
+          technician: tech.legalName,
+          experienceMonths,
+          estimatedHours,
+          actualHours,
+          avgTaskCompletionHours: entries > 0 ? actualHours / entries : 0,
+          efficiencyScore,
+        };
+      })
+      .filter((r) => r.actualHours > 0)
+      .sort((a, b) => b.efficiencyScore - a.efficiencyScore);
+  }, [technicians, training, timeEntries, workOrders]);
 
   const chartData = useMemo(
     () =>
       rows.map((r) => ({
-        x: Number(r.experienceYears.toFixed(2)),
+        x: Number(r.experienceMonths.toFixed(1)),
         y: Number(r.efficiencyScore.toFixed(1)),
         technician: r.technician,
       })),
@@ -103,12 +160,16 @@ export function EfficiencyBaseline({ orgId }: Props) {
     const maxX = Math.max(...chartData.map((p) => p.x));
 
     return [
-      { x: minX, y: slope * minX + intercept },
-      { x: maxX, y: slope * maxX + intercept },
+      { x: minX, y: Number((slope * minX + intercept).toFixed(1)) },
+      { x: maxX, y: Number((slope * maxX + intercept).toFixed(1)) },
     ];
   }, [chartData]);
 
-  const loading = technicians === undefined || training === undefined;
+  const loading =
+    technicians === undefined ||
+    training === undefined ||
+    timeEntries === undefined ||
+    workOrders === undefined;
 
   return (
     <div className="space-y-4">
@@ -120,38 +181,35 @@ export function EfficiencyBaseline({ orgId }: Props) {
           {loading ? (
             <p className="text-sm text-muted-foreground">Loading efficiency baseline…</p>
           ) : rows.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No technician data available yet.</p>
+            <p className="text-sm text-muted-foreground">No completed labor entries available yet.</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b text-left text-muted-foreground">
                     <th className="py-2 pr-3">Technician</th>
-                    <th className="py-2 pr-3">Experience (yrs)</th>
+                    <th className="py-2 pr-3">Experience (mo)</th>
                     <th className="py-2 pr-3">Avg Task Completion</th>
                     <th className="py-2 pr-3">Est. Hours</th>
                     <th className="py-2 pr-3">Actual Hours</th>
-                    <th className="py-2">Efficiency Score</th>
+                    <th className="py-2">Efficiency</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {rows
-                    .slice()
-                    .sort((a, b) => b.efficiencyScore - a.efficiencyScore)
-                    .map((row) => (
-                      <tr key={row.technicianId} className="border-b last:border-0">
-                        <td className="py-2 pr-3 font-medium">{row.technician}</td>
-                        <td className="py-2 pr-3">{row.experienceYears.toFixed(1)}</td>
-                        <td className="py-2 pr-3">{row.avgTaskCompletionHours.toFixed(1)}h</td>
-                        <td className="py-2 pr-3">{row.estimatedHours.toFixed(1)}h</td>
-                        <td className="py-2 pr-3">{row.actualHours.toFixed(1)}h</td>
-                        <td className="py-2">
-                          <Badge variant="outline" className={efficiencyTone(row.efficiencyScore)}>
-                            {row.efficiencyScore.toFixed(1)}%
-                          </Badge>
-                        </td>
-                      </tr>
-                    ))}
+                  {rows.map((row) => (
+                    <tr key={row.technicianId} className="border-b last:border-0">
+                      <td className="py-2 pr-3 font-medium">{row.technician}</td>
+                      <td className="py-2 pr-3">{row.experienceMonths.toFixed(1)}</td>
+                      <td className="py-2 pr-3">{row.avgTaskCompletionHours.toFixed(2)}h</td>
+                      <td className="py-2 pr-3">{row.estimatedHours.toFixed(2)}h</td>
+                      <td className="py-2 pr-3">{row.actualHours.toFixed(2)}h</td>
+                      <td className="py-2">
+                        <Badge variant="outline" className={efficiencyTone(row.efficiencyScore)}>
+                          {row.efficiencyScore.toFixed(1)}%
+                        </Badge>
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
@@ -170,29 +228,22 @@ export function EfficiencyBaseline({ orgId }: Props) {
             <ResponsiveContainer width="100%" height="100%">
               <ScatterChart margin={{ top: 12, right: 16, left: 0, bottom: 8 }}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis
-                  type="number"
-                  dataKey="x"
-                  name="Experience"
-                  unit=" yrs"
-                  tick={{ fontSize: 12 }}
+                <XAxis type="number" dataKey="x" name="Experience" unit=" mo" tick={{ fontSize: 12 }} />
+                <YAxis type="number" dataKey="y" name="Efficiency" unit="%" tick={{ fontSize: 12 }} />
+                <Tooltip
+                  cursor={{ strokeDasharray: "3 3" }}
+                  formatter={(value: number | string) => `${Number(value).toFixed(1)}%`}
                 />
-                <YAxis
-                  type="number"
-                  dataKey="y"
-                  name="Efficiency"
-                  unit="%"
-                  tick={{ fontSize: 12 }}
-                />
-                <Tooltip cursor={{ strokeDasharray: "3 3" }} formatter={(value: any) => `${Number(value).toFixed(1)}%`} />
                 <Scatter name="Technicians" data={chartData} fill="#3b82f6" />
                 {trendlineData.length === 2 && (
-                  <Scatter
-                    name="Trendline"
+                  <Line
+                    type="linear"
                     data={trendlineData}
-                    fill="transparent"
-                    line={{ stroke: "#f59e0b", strokeWidth: 2 }}
-                    shape={() => null}
+                    dataKey="y"
+                    stroke="#f59e0b"
+                    strokeWidth={2}
+                    dot={false}
+                    isAnimationActive={false}
                   />
                 )}
               </ScatterChart>
