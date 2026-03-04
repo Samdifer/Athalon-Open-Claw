@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 import { useQuery, useMutation } from "convex/react";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
@@ -22,8 +22,10 @@ import { NotFoundCard } from "@/components/NotFoundCard";
 import { RtsChecklist } from "./_components/RtsChecklist";
 import { RtsSignoffForm } from "./_components/RtsSignoffForm";
 import { derivePreconditions } from "./_components/derivePreconditions";
+import { RTSEvidenceSummary } from "../_components/RTSEvidenceSummary";
 import { DownloadPDFButton } from "@/src/shared/components/pdf/DownloadPDFButton";
 import { RtsDocumentPDF } from "@/src/shared/components/pdf/RtsDocumentPDF";
+import { PrintButton } from "@/src/shared/components/PrintButton";
 
 export default function RtsPage() {
   const params = useParams<{ id: string }>();
@@ -57,6 +59,30 @@ export default function RtsPage() {
     api.parts.listParts,
     orgId ? { organizationId: orgId } : "skip",
   );
+
+  const partsForThisWorkOrder = useMemo(
+    () =>
+      (allParts ?? []).filter(
+        (part) =>
+          part.receivingWorkOrderId === workOrderId ||
+          part.reservedForWorkOrderId === workOrderId ||
+          part.installedByWorkOrderId === workOrderId ||
+          part.installedOnWorkOrderId === workOrderId ||
+          part.removedByWorkOrderId === workOrderId,
+      ),
+    [allParts, workOrderId],
+  );
+
+  const inDockEvidence = useMemo(() => {
+    if (typeof window === "undefined") return null;
+    try {
+      return JSON.parse(localStorage.getItem(`wo:${workOrderId}:in-dock-evidence`) ?? "null") as
+        | { photos?: unknown[]; compliance?: Array<{ checked?: boolean }> }
+        | null;
+    } catch {
+      return null;
+    }
+  }, [workOrderId]);
 
   // Mutation
   const authorizeRts = useMutation(
@@ -137,26 +163,29 @@ export default function RtsPage() {
                   limitations, and authorization date. The pre-auth "Download" button
                   generated a blank/incomplete document. */}
               {report && (
-                <DownloadPDFButton
-                  label="Download RTS PDF"
-                  fileName={`RTS-${report.workOrderNumber}.pdf`}
-                  document={(
-                    <RtsDocumentPDF
-                      workOrder={{ workOrderNumber: report.workOrderNumber, _id: String(workOrderId) }}
-                      aircraft={{
-                        currentRegistration: report.aircraftRegistration,
-                        make: report.aircraftMake,
-                        model: report.aircraftModel,
-                        serialNumber: undefined,
-                        totalTimeAirframeHours: Number(aircraftHoursAtRts || report.aircraftCurrentHours || 0),
-                      }}
-                      taskCards={report.taskCards ?? []}
-                      discrepancies={report.discrepancies ?? []}
-                      parts={partsForThisWorkOrder}
-                      rtsData={{ statement: rtsStatement.trim() || undefined, date: Date.now() }}
-                    />
-                  )}
-                />
+                <>
+                  <DownloadPDFButton
+                    label="Download RTS PDF"
+                    fileName={`RTS-${report.workOrderNumber}.pdf`}
+                    document={(
+                      <RtsDocumentPDF
+                        workOrder={{ workOrderNumber: report.workOrderNumber, _id: String(workOrderId) }}
+                        aircraft={{
+                          currentRegistration: report.aircraftRegistration,
+                          make: report.aircraftMake,
+                          model: report.aircraftModel,
+                          serialNumber: undefined,
+                          totalTimeAirframeHours: Number(aircraftHoursAtRts || report.aircraftCurrentHours || 0),
+                        }}
+                        taskCards={report.taskCards ?? []}
+                        discrepancies={report.discrepancies ?? []}
+                        parts={partsForThisWorkOrder}
+                        rtsData={{ statement: rtsStatement.trim() || undefined, date: Date.now() }}
+                      />
+                    )}
+                  />
+                  <PrintButton />
+                </>
               )}
             </div>
           </CardContent>
@@ -252,15 +281,6 @@ export default function RtsPage() {
   const allPass = preconditions.every((p) => p.status === "PASS");
   const anyFail = preconditions.some((p) => p.status === "FAIL");
 
-  const partsForThisWorkOrder = (allParts ?? []).filter(
-    (part) =>
-      part.receivingWorkOrderId === workOrderId ||
-      part.reservedForWorkOrderId === workOrderId ||
-      part.installedByWorkOrderId === workOrderId ||
-      part.installedOnWorkOrderId === workOrderId ||
-      part.removedByWorkOrderId === workOrderId,
-  );
-
   return (
     <div className="space-y-5">
       {/* Back */}
@@ -310,6 +330,23 @@ export default function RtsPage() {
           </Badge>
         </div>
       </div>
+
+      <RTSEvidenceSummary
+        workOrderId={String(workOrderId)}
+        taskCardsComplete={report.taskCards.every((tc) => !tc.isBlocking)}
+        discrepanciesResolved={report.discrepancies.every((d) => !d.isBlocking)}
+        requiredInspectionsDone={report.inspectionRecordSummary ? !report.inspectionRecordSummary.isBlocking : true}
+        partsTraceabilityComplete={partsForThisWorkOrder.every(
+          (part) => (!part.isSerialized || Boolean(part.serialNumber?.trim())) && (!part.isOwnerSupplied || Boolean(part.eightOneThirtyId)),
+        )}
+        requiredDocsUploaded={
+          report.maintenanceRecords.length > 0 &&
+          ((inDockEvidence?.photos?.length ?? 0) > 0 || (inDockEvidence?.compliance?.some((item) => item.checked) ?? false))
+        }
+        customerAuthorizationOnFile={
+          report.workOrderStatus === "pending_signoff" || report.workOrderStatus === "closed"
+        }
+      />
 
       {/* 9 Preconditions */}
       <RtsChecklist preconditions={preconditions} />
