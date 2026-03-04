@@ -1000,13 +1000,18 @@ export default function InvoiceDetailPage() {
                   />
                 </div>
               </div>
-              {addLineDesc && addLineQty && addLineUnitPrice && (
-                <p className="text-xs text-muted-foreground">
-                  Line total: <span className="font-semibold text-foreground">
-                    ${(parseFloat(addLineQty || "0") * parseFloat(addLineUnitPrice || "0")).toFixed(2)}
-                  </span>
-                </p>
-              )}
+              {addLineDesc && addLineQty && addLineUnitPrice && (() => {
+                const qty = parseFloat(addLineQty || "0");
+                const unitPrice = parseFloat(addLineUnitPrice || "0");
+                const lineTotal = Number.isFinite(qty) && Number.isFinite(unitPrice)
+                  ? qty * unitPrice
+                  : 0;
+                return (
+                  <p className="text-xs text-muted-foreground">
+                    Line total: <span className="font-semibold text-foreground">${lineTotal.toFixed(2)}</span>
+                  </p>
+                );
+              })()}
               {addLineError && <p className="text-xs text-red-600 dark:text-red-400">{addLineError}</p>}
             </div>
             <DialogFooter>

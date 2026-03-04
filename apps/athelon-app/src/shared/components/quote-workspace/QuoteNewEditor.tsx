@@ -236,14 +236,26 @@ export function QuoteNewEditor({
     if (!orgId) return;
     const item = lineItems.find((li) => li.id === itemId);
     if (!item) return;
+
+    const qty = parseFloat(item.qty);
+    const baseCost = parseFloat(item.unitPrice);
+    if (Number.isNaN(qty) || qty <= 0) {
+      setError("Quantity must be greater than zero before applying pricing rules.");
+      return;
+    }
+    if (Number.isNaN(baseCost) || baseCost < 0) {
+      setError("Unit price must be zero or higher before applying pricing rules.");
+      return;
+    }
+
     setPricingLoading(itemId);
     try {
       const result = await computePrice({
         orgId,
         customerId: customerId ? (customerId as Id<"customers">) : undefined,
         itemType: item.type,
-        qty: parseFloat(item.qty) || 1,
-        baseCost: parseFloat(item.unitPrice) || 0,
+        qty,
+        baseCost,
       });
       setLineItems((prev) =>
         prev.map((li) =>
@@ -259,6 +271,17 @@ export function QuoteNewEditor({
 
   const lookupAllPrices = useCallback(async () => {
     if (!orgId) return;
+
+    const invalidRow = lineItems.find((item) => {
+      const qty = parseFloat(item.qty);
+      const baseCost = parseFloat(item.unitPrice);
+      return Number.isNaN(qty) || qty <= 0 || Number.isNaN(baseCost) || baseCost < 0;
+    });
+    if (invalidRow) {
+      setError("Fix invalid quantity/unit price values before applying pricing rules to all lines.");
+      return;
+    }
+
     setPricingLoading("all");
     try {
       const updated = await Promise.all(
@@ -268,8 +291,8 @@ export function QuoteNewEditor({
               orgId,
               customerId: customerId ? (customerId as Id<"customers">) : undefined,
               itemType: item.type,
-              qty: parseFloat(item.qty) || 1,
-              baseCost: parseFloat(item.unitPrice) || 0,
+              qty: parseFloat(item.qty),
+              baseCost: parseFloat(item.unitPrice),
             });
             return { ...item, unitPrice: result.unitPrice.toString() };
           } catch {

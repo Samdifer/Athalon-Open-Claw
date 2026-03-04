@@ -1435,9 +1435,6 @@ export function QuoteDetailEditor({
                 >
                   <option value="routine">Routine</option>
                   <option value="unscheduled">Unscheduled</option>
-                  <option value="annual_inspection">Annual Inspection</option>
-                  <option value="100hr_inspection">100hr Inspection</option>
-                  <option value="major_repair">Major Repair</option>
                 </select>
               </div>
               <div className="space-y-1.5">

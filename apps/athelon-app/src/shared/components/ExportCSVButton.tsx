@@ -24,10 +24,24 @@ export type ExportCSVButtonProps = {
 
 function toUtcString(value: unknown): string {
   if (value == null) return "";
-  if (typeof value === "number") return new Date(value).toISOString();
+
+  // Keep numeric values (currency totals, quantities, counters) as-is.
+  // Converting every number to ISO timestamps corrupts CSV exports.
+  if (typeof value === "number") return String(value);
+
   if (value instanceof Date) return value.toISOString();
-  const maybeDate = new Date(String(value));
-  if (!Number.isNaN(maybeDate.getTime())) return maybeDate.toISOString();
+
+  // Only coerce obvious date-like strings into UTC ISO form.
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    const looksDateLike = /^\d{4}-\d{2}-\d{2}/.test(trimmed) || /[tT].*[zZ]|[+-]\d{2}:?\d{2}$/.test(trimmed);
+    if (looksDateLike) {
+      const maybeDate = new Date(trimmed);
+      if (!Number.isNaN(maybeDate.getTime())) return maybeDate.toISOString();
+    }
+    return value;
+  }
+
   return String(value);
 }
 

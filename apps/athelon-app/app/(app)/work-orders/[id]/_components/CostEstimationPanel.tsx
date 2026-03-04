@@ -77,10 +77,10 @@ export function CostEstimationPanel({
   const partsLines = useMemo<CostLine[]>(() => {
     return parts.map((part) => {
       const qty =
-        typeof part.quantityOnHand === "number"
-          ? part.quantityOnHand
-          : typeof part.quantity === "number"
-            ? part.quantity
+        typeof part.quantity === "number"
+          ? part.quantity
+          : typeof part.quantityOnHand === "number"
+            ? part.quantityOnHand
             : 1;
       const fallbackCost =
         typeof part.unitCost === "number"
