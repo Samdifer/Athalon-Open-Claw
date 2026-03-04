@@ -147,7 +147,7 @@ export function VoiceNotesPanel({
                 <Button
                   variant="outline"
                   size="icon-xs"
-                  className="h-6 w-6"
+                  className="h-10 w-10 sm:h-6 sm:w-6"
                   onClick={() => void handleTogglePlay(note.id)}
                   title={playingId === note.id ? "Stop playback" : "Play voice note"}
                 >
@@ -176,7 +176,7 @@ export function VoiceNotesPanel({
                     <Button
                       variant="ghost"
                       size="icon-xs"
-                      className="h-6 w-6"
+                      className="h-10 w-10 sm:h-6 sm:w-6"
                       onClick={() => void handleSaveEdit()}
                       disabled={isSavingEdit}
                       title="Save transcript"
@@ -186,7 +186,7 @@ export function VoiceNotesPanel({
                     <Button
                       variant="ghost"
                       size="icon-xs"
-                      className="h-6 w-6"
+                      className="h-10 w-10 sm:h-6 sm:w-6"
                       onClick={() => {
                         setEditingId(null);
                         setDraftTranscript("");
@@ -201,7 +201,7 @@ export function VoiceNotesPanel({
                   <Button
                     variant="ghost"
                     size="icon-xs"
-                    className="h-6 w-6"
+                    className="h-10 w-10 sm:h-6 sm:w-6"
                     onClick={() => handleStartEdit(note.id, note.transcript)}
                     title="Edit transcript"
                   >
@@ -211,7 +211,7 @@ export function VoiceNotesPanel({
                 <Button
                   variant="ghost"
                   size="icon-xs"
-                  className="h-6 w-6 text-destructive hover:text-destructive"
+                  className="h-10 w-10 sm:h-6 sm:w-6 text-destructive hover:text-destructive"
                   onClick={() => setDeleteTargetId(note.id)}
                   title="Delete voice note"
                 >

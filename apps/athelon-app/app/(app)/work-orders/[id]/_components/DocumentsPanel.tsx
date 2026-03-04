@@ -53,11 +53,16 @@ export function DocumentsPanel({ workOrderId }: DocumentsPanelProps) {
     <div className="space-y-3">
       <div className="flex items-center justify-between gap-2">
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "all" | DocumentCategory)}>
+          {/* BUG-DOM-109: Documents categorized as "general" (work authorizations,
+              misc uploads, etc.) were only visible under the "All" tab — there was no way
+              to isolate them. A DOM reviewing WO documentation for an FAA audit needs to
+              filter to general/uncategorized docs to verify nothing was misfiled. */}
           <TabsList>
             <TabsTrigger value="all">All</TabsTrigger>
             <TabsTrigger value="compliance">Compliance</TabsTrigger>
             <TabsTrigger value="reference">Reference</TabsTrigger>
             <TabsTrigger value="photo">Photos</TabsTrigger>
+            <TabsTrigger value="general">General</TabsTrigger>
           </TabsList>
         </Tabs>
 

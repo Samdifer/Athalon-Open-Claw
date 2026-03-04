@@ -78,11 +78,17 @@ const SEVERITY_CONFIG: Record<
   },
 };
 
+// BUG-DOM-106: formatDate was missing timeZone:"UTC". Prediction dates are stored
+// as UTC-midnight timestamps. Without pinning UTC, a shop in UTC-5 would see
+// "Dec 31" instead of "Jan 1" for a Jan 1 prediction — the DOM would plan for the
+// wrong day. Every other date formatter in the app (fleet detail, WO history) already
+// pins UTC; this was the only holdout.
 function formatDate(ts: number) {
   return new Date(ts).toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
     year: "numeric",
+    timeZone: "UTC",
   });
 }
 

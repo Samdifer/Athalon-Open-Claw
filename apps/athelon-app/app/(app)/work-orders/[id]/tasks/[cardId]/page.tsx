@@ -465,17 +465,24 @@ export default function TaskCardPage() {
       updatedAt: now,
     };
 
+    let persisted = true;
     setVoiceNotes((prev) => {
       const next = [note, ...prev];
-      writeVoiceNotesForWorkOrder({ orgId, workOrderId }, next);
+      persisted = writeVoiceNotesForWorkOrder({ orgId, workOrderId }, next);
+      if (!persisted) return prev;
       return next;
     });
+
+    if (!persisted) {
+      throw new Error("Local voice note storage is full. Delete older notes and try again.");
+    }
 
     toast.success("Voice note saved.");
   };
 
   const handleUpdateVoiceNoteTranscript = async (noteId: string, transcript: string) => {
     if (!orgId) return;
+    let persisted = true;
     setVoiceNotes((prev) => {
       const next = prev.map((note) =>
         note.id === noteId
@@ -486,18 +493,27 @@ export default function TaskCardPage() {
             }
           : note,
       );
-      writeVoiceNotesForWorkOrder({ orgId, workOrderId }, next);
-      return next;
+      persisted = writeVoiceNotesForWorkOrder({ orgId, workOrderId }, next);
+      return persisted ? next : prev;
     });
+
+    if (!persisted) {
+      throw new Error("Unable to update transcript: local storage is unavailable.");
+    }
   };
 
   const handleDeleteVoiceNote = async (noteId: string) => {
     if (!orgId) return;
+    let persisted = true;
     setVoiceNotes((prev) => {
       const next = prev.filter((note) => note.id !== noteId);
-      writeVoiceNotesForWorkOrder({ orgId, workOrderId }, next);
-      return next;
+      persisted = writeVoiceNotesForWorkOrder({ orgId, workOrderId }, next);
+      return persisted ? next : prev;
     });
+
+    if (!persisted) {
+      throw new Error("Unable to delete voice note: local storage is unavailable.");
+    }
   };
 
   // BUG-LT2-006: Include "in_progress" steps in the "remaining steps" count.
@@ -899,65 +915,71 @@ export default function TaskCardPage() {
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-0 space-y-0" aria-live="polite" aria-label="Task steps">
-          {taskCard.steps
-            .slice()
-            .sort((a, b) => a.stepNumber - b.stepNumber)
-            .map((step, idx) => {
-              const requiredAuthorizationType = resolveStepAuthorizationType({
-                description: step.description,
-                signOffRequiresIa: step.signOffRequiresIa,
-                specialToolReference: step.specialToolReference,
-                aircraftSystem: taskCard.aircraftSystem,
-              });
+          {taskCard.steps.length === 0 ? (
+            <p className="text-xs text-muted-foreground italic py-1">
+              No itemized steps on this task card. Use card-level sign-off when work is complete.
+            </p>
+          ) : (
+            taskCard.steps
+              .slice()
+              .sort((a, b) => a.stepNumber - b.stepNumber)
+              .map((step, idx) => {
+                const requiredAuthorizationType = resolveStepAuthorizationType({
+                  description: step.description,
+                  signOffRequiresIa: step.signOffRequiresIa,
+                  specialToolReference: step.specialToolReference,
+                  aircraftSystem: taskCard.aircraftSystem,
+                });
 
-              return (
-                <div key={step._id}>
-                  <TaskStepRow
-                    step={{
-                      ...step,
-                      requiredAuthorizationType,
-                      requiredAuthorizationLabel:
-                        STEP_AUTHORIZATION_META[requiredAuthorizationType].badgeLabel,
-                    }}
-                    idx={idx}
-                    cardIsVoided={cardIsVoided}
-                    cardIsComplete={cardIsComplete}
-                    orgId={orgId}
-                    techId={techId}
-                    onSignClick={handleSignStepIntent}
-                    onStartClick={handleStartStep}
-                    // BUG-LT-HUNT-081: isStarting now only flags THIS specific
-                    // step's mutation (controls spinner). anyMutationPending covers
-                    // ALL-step locking without erroneously spinning other rows.
-                    isStarting={startingStepId === step._id}
-                    anyMutationPending={isAnyStepStarting}
-                    onNaClick={setNaTarget}
-                    onStepTimerClick={handleStepTimerClick}
-                    isStepTimerActive={
-                      !!activeTimerEntry &&
-                      (activeTimerEntry.entryType ?? "work_order") === "step" &&
-                      activeTimerEntry.taskStepId === step._id
-                    }
-                    isStepTimerBusy={
-                      timerActionLoading === "step-toggle" ||
-                      timerActionLoading === "stop"
-                    }
-                    stepTimerClockInAt={
-                      activeTimerEntry &&
-                      (activeTimerEntry.entryType ?? "work_order") === "step" &&
-                      activeTimerEntry.taskStepId === step._id
-                        ? (activeTimerEntry as { clockInAt?: number }).clockInAt
-                        : undefined
-                    }
-                  />
-                  <ApprovedDataRef
-                    workOrderId={workOrderId}
-                    cardId={cardId}
-                    stepId={String(step._id)}
-                  />
-                </div>
-              );
-            })}
+                return (
+                  <div key={step._id}>
+                    <TaskStepRow
+                      step={{
+                        ...step,
+                        requiredAuthorizationType,
+                        requiredAuthorizationLabel:
+                          STEP_AUTHORIZATION_META[requiredAuthorizationType].badgeLabel,
+                      }}
+                      idx={idx}
+                      cardIsVoided={cardIsVoided}
+                      cardIsComplete={cardIsComplete}
+                      orgId={orgId}
+                      techId={techId}
+                      onSignClick={handleSignStepIntent}
+                      onStartClick={handleStartStep}
+                      // BUG-LT-HUNT-081: isStarting now only flags THIS specific
+                      // step's mutation (controls spinner). anyMutationPending covers
+                      // ALL-step locking without erroneously spinning other rows.
+                      isStarting={startingStepId === step._id}
+                      anyMutationPending={isAnyStepStarting}
+                      onNaClick={setNaTarget}
+                      onStepTimerClick={handleStepTimerClick}
+                      isStepTimerActive={
+                        !!activeTimerEntry &&
+                        (activeTimerEntry.entryType ?? "work_order") === "step" &&
+                        activeTimerEntry.taskStepId === step._id
+                      }
+                      isStepTimerBusy={
+                        timerActionLoading === "step-toggle" ||
+                        timerActionLoading === "stop"
+                      }
+                      stepTimerClockInAt={
+                        activeTimerEntry &&
+                        (activeTimerEntry.entryType ?? "work_order") === "step" &&
+                        activeTimerEntry.taskStepId === step._id
+                          ? (activeTimerEntry as { clockInAt?: number }).clockInAt
+                          : undefined
+                      }
+                    />
+                    <ApprovedDataRef
+                      workOrderId={workOrderId}
+                      cardId={cardId}
+                      stepId={String(step._id)}
+                    />
+                  </div>
+                );
+              })
+          )}
         </CardContent>
       </Card>
 

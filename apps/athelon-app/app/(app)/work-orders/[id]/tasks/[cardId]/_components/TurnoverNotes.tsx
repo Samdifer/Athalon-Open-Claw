@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
+import { formatDateTime } from "@/lib/format";
 
 type TurnoverEntry = {
   id: string;
@@ -97,7 +98,7 @@ export function TurnoverNotes({ workOrderId, taskCardId, readOnly = false }: Pro
               <div key={entry.id} className="rounded-md border border-blue-500/20 bg-blue-500/5 p-2.5">
                 <div className="flex items-center justify-between gap-2">
                   <p className="text-[10px] text-muted-foreground">
-                    {new Date(entry.createdAt).toLocaleString("en-US", { timeZone: "UTC" })}
+                    {formatDateTime(entry.createdAt)}
                   </p>
                   {!readOnly && (
                     <Button

@@ -56,9 +56,23 @@ export function readVoiceNotesForWorkOrder(scope: VoiceNotesScope): StoredVoiceN
   }
 }
 
-export function writeVoiceNotesForWorkOrder(scope: VoiceNotesScope, notes: StoredVoiceNote[]): void {
-  if (typeof window === "undefined") return;
-  window.localStorage.setItem(keyForScope(scope), JSON.stringify(notes));
+export function writeVoiceNotesForWorkOrder(scope: VoiceNotesScope, notes: StoredVoiceNote[]): boolean {
+  if (typeof window === "undefined") return false;
+
+  const key = keyForScope(scope);
+  const normalized = [...notes].sort((a, b) => b.recordedAt - a.recordedAt);
+
+  // BUG-HUNTER-VOICE-001:
+  // localStorage quotas are small and base64 audio expands quickly. If we
+  // exceed quota, fail safely instead of throwing inside a React state update.
+  // Callers can keep in-memory state unchanged and prompt the tech to delete
+  // older notes before recording new ones.
+  try {
+    window.localStorage.setItem(key, JSON.stringify(normalized));
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export function createVoiceNoteId(): string {

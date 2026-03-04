@@ -69,48 +69,54 @@ export function StepReferences({ workOrderId, taskCardId, steps }: { workOrderId
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-0 space-y-3">
-        {steps
-          .slice()
-          .sort((a, b) => a.stepNumber - b.stepNumber)
-          .map((step) => {
-            const stepRefs = refs.filter((r) => r.stepId === step._id);
-            return (
-              <div key={step._id} className="rounded-md border border-border/50 p-3 space-y-2">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="min-w-0">
-                    <p className="text-xs font-medium text-foreground">Step {step.stepNumber}</p>
-                    <p className="text-xs text-muted-foreground truncate">{step.description}</p>
+        {steps.length === 0 ? (
+          <p className="text-xs text-muted-foreground italic">
+            No steps available for reference attachments on this task card.
+          </p>
+        ) : (
+          steps
+            .slice()
+            .sort((a, b) => a.stepNumber - b.stepNumber)
+            .map((step) => {
+              const stepRefs = refs.filter((r) => r.stepId === step._id);
+              return (
+                <div key={step._id} className="rounded-md border border-border/50 p-3 space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="text-xs font-medium text-foreground">Step {step.stepNumber}</p>
+                      <p className="text-xs text-muted-foreground truncate">{step.description}</p>
+                    </div>
+                    <AddReferenceDialog
+                      stepId={step._id}
+                      stepNumber={step.stepNumber}
+                      onSave={addReference}
+                    />
                   </div>
-                  <AddReferenceDialog
-                    stepId={step._id}
-                    stepNumber={step.stepNumber}
-                    onSave={addReference}
-                  />
-                </div>
-                {stepRefs.length === 0 ? (
-                  <p className="text-[11px] text-muted-foreground italic">No references added.</p>
-                ) : (
-                  <div className="space-y-1.5">
-                    {stepRefs.map((ref) => (
-                      <div key={ref.id} className="flex items-center justify-between gap-2 text-xs">
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-1.5">
-                            <span className="font-medium text-foreground truncate">{ref.title}</span>
-                            <Badge variant="outline" className="text-[10px] uppercase">{ref.type}</Badge>
+                  {stepRefs.length === 0 ? (
+                    <p className="text-[11px] text-muted-foreground italic">No references added.</p>
+                  ) : (
+                    <div className="space-y-1.5">
+                      {stepRefs.map((ref) => (
+                        <div key={ref.id} className="flex items-center justify-between gap-2 text-xs">
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-medium text-foreground truncate">{ref.title}</span>
+                              <Badge variant="outline" className="text-[10px] uppercase">{ref.type}</Badge>
+                            </div>
+                            <a href={ref.url} target="_blank" rel="noreferrer" className="text-sky-400 hover:underline truncate block">
+                              {ref.url}
+                            </a>
+                            {ref.notes && <p className="text-[11px] text-muted-foreground">{ref.notes}</p>}
+                            <p className="text-[10px] text-muted-foreground">{formatDateTime(ref.createdAt)}</p>
                           </div>
-                          <a href={ref.url} target="_blank" rel="noreferrer" className="text-sky-400 hover:underline truncate block">
-                            {ref.url}
-                          </a>
-                          {ref.notes && <p className="text-[11px] text-muted-foreground">{ref.notes}</p>}
-                          <p className="text-[10px] text-muted-foreground">{formatDateTime(ref.createdAt)}</p>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            );
-          })}
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })
+        )}
       </CardContent>
     </Card>
   );

@@ -266,6 +266,9 @@ export default function TimeClockPage() {
     for (const entry of entries ?? []) {
       if (entry.clockInAt < todayMs) continue;
 
+      // BUG-BM-HUNT-007: rejected entries should not inflate labor totals shown to billing.
+      if (normalizeApprovalStatus(entry) === "rejected") continue;
+
       const key = entry.technicianId as string;
       if (!byTech.has(key)) {
         byTech.set(key, { techId: entry.technicianId, totalMinutes: 0 });
@@ -680,7 +683,18 @@ export default function TimeClockPage() {
       </div>
 
       {/* Clock In Dialog */}
-      <Dialog open={startDialogOpen} onOpenChange={setStartDialogOpen}>
+      <Dialog
+        open={startDialogOpen}
+        onOpenChange={(open) => {
+          setStartDialogOpen(open);
+          if (!open) {
+            // BUG-BM-HUNT-003: Clear stale validation/errors when reopening Clock In dialog.
+            setError(null);
+            setActionLoading(null);
+            resetStartDialogState();
+          }
+        }}
+      >
         <DialogContent className="max-w-[95vw] sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Clock In</DialogTitle>

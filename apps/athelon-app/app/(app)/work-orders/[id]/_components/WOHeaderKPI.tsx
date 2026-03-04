@@ -166,7 +166,11 @@ export function WOHeaderKPI({
     }
   };
 
-  const efficiencyPercent = actualHours > 0 ? (estimatedHours / actualHours) * 100 : 0;
+  // BUG-DOM-107: Efficiency showed "0%" when no time entries existed yet. That reads
+  // as "catastrophically inefficient" to a DOM scanning WO KPIs, when the reality is
+  // simply "no work started". A null sentinel lets the UI render "—" instead of a
+  // misleading number. Once any clock time is recorded, the real ratio appears.
+  const efficiencyPercent = actualHours > 0 ? (estimatedHours / actualHours) * 100 : null;
 
   return (
     <div className="space-y-3">
@@ -256,7 +260,9 @@ export function WOHeaderKPI({
               </div>
               <div>
                 <p className="text-muted-foreground">Efficiency</p>
-                <p className="text-sm font-semibold text-foreground">{efficiencyPercent.toFixed(0)}%</p>
+                <p className="text-sm font-semibold text-foreground">
+                  {efficiencyPercent !== null ? `${efficiencyPercent.toFixed(0)}%` : "—"}
+                </p>
               </div>
             </div>
             <TimeVarianceBar estimatedHours={estimatedHours} actualHours={actualHours} compact />

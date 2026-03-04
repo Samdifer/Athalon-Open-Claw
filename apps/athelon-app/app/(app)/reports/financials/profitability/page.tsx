@@ -150,9 +150,12 @@ export default function WOProfitabilityPage() {
       const woId = inv.workOrderId as string | undefined;
       const actualParts = woId ? (poCostByWO.get(woId) ?? inv.partsTotal * 0.7) : inv.partsTotal * 0.7;
       const actualLabor = inv.laborTotal;
+      // BUG-BM-HUNT-002: For PARTIAL invoices, profitability should use collected revenue
+      // (amountPaid), not full invoice total, otherwise margin is overstated.
+      const realizedRevenue = inv.status === "PARTIAL" ? (inv.amountPaid ?? inv.total) : inv.total;
       const totalCost = actualParts + actualLabor;
-      const margin = inv.total - totalCost;
-      const marginPct = inv.total > 0 ? (margin / inv.total) * 100 : 0;
+      const margin = realizedRevenue - totalCost;
+      const marginPct = realizedRevenue > 0 ? (margin / realizedRevenue) * 100 : 0;
       const cust = customers.find((c) => c._id === inv.customerId);
 
       return {
@@ -162,7 +165,7 @@ export default function WOProfitabilityPage() {
         quoted: inv.total,
         actualParts,
         actualLabor,
-        total: inv.total,
+        total: realizedRevenue,
         margin,
         marginPct,
       };

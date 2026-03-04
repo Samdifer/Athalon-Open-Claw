@@ -4,6 +4,43 @@
 
 This file is the markdown-authoritative source of truth for feature status, implementation level, review timestamps, and feature interconnections across the application.
 
+## Bug Hunter Fixes
+
+- **BUG-BM-HUNT-005** — Invoice CSV export used local timezone date rendering for due dates, causing off-by-one day exports for UTC-stored date-only fields.  
+  **File:** `app/(app)/billing/invoices/page.tsx`  
+  **Fix:** Export due dates with `formatDateUTC()` and keep creation dates consistent with shared formatter usage.  
+  **Why it matters:** Billing exports now match promised due dates exactly, preventing collection errors and customer disputes.
+
+- **BUG-BM-HUNT-006** — Batch payment dialog allowed over-balance payment entries, leading to submit-time failures and frustrating rework.  
+  **File:** `app/(app)/billing/invoices/page.tsx`  
+  **Fix:** Added client-side validation to block over-balance payment amounts before submit (plus numeric guardrails).  
+  **Why it matters:** Billing managers can complete batch payment entry in one pass instead of trial-and-error correction cycles.
+
+- **BUG-BM-HUNT-007** — Time Clock daily summary included rejected labor entries, inflating billable labor visibility for management.  
+  **File:** `app/(app)/billing/time-clock/page.tsx`  
+  **Fix:** Exclude entries with rejected approval status from daily summary rollups.  
+  **Why it matters:** Financial oversight reflects approved labor only, improving trust in payroll and billing dashboards.
+
+- **BUG-BM-HUNT-001** — Forecast used non-collected invoice totals (`status !== VOID`) as revenue, overstating cash outlook.  
+  **File:** `app/(app)/reports/financials/forecast/page.tsx`  
+  **Fix:** Limit baseline revenue to `PAID`/`PARTIAL` and use `amountPaid` for partial invoices.  
+  **Why it matters:** Billing managers get realistic forward cash forecasts instead of inflated projections.
+
+- **BUG-BM-HUNT-002** — WO profitability margins for partial invoices used full invoice total rather than collected amount.  
+  **File:** `app/(app)/reports/financials/profitability/page.tsx`  
+  **Fix:** Use realized revenue (`amountPaid` for `PARTIAL`) when computing margin and margin %.  
+  **Why it matters:** Prevents false-positive profitability on partially collected jobs.
+
+- **BUG-BM-HUNT-003** — Time Clock “Clock In” dialog preserved stale validation/errors when reopened.  
+  **File:** `app/(app)/billing/time-clock/page.tsx`  
+  **Fix:** Added dialog close reset for error/loading/context state via `onOpenChange`.  
+  **Why it matters:** Lead/billing users can restart clock-in workflow cleanly after a failed attempt.
+
+- **BUG-BM-HUNT-004** — Batch payment dialog lost “Recorded By” prefill after close, forcing repeated re-selection.  
+  **File:** `app/(app)/billing/invoices/page.tsx`  
+  **Fix:** Reset tech selection back to current user instead of blank on close.  
+  **Why it matters:** Speeds recurring payment entry and reduces accidental mis-attribution.
+
 ## Canonical Governance
 
 1. `MASTER-BUILD-LIST.md` is the only write-authoritative feature specification artifact.

@@ -95,10 +95,17 @@ export default function CashFlowForecastPage() {
     const now = new Date();
     const threeMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 3, 1).getTime();
 
-    const recentInvoices = invoices.filter((i) => i.status !== "VOID" && i.createdAt >= threeMonthsAgo);
+    // BUG-BM-HUNT-001: Forecast revenue must only include collected cash.
+    // Draft/sent invoices are not realized revenue yet and inflate projections.
+    const recentInvoices = invoices.filter(
+      (i) => (i.status === "PAID" || i.status === "PARTIAL") && i.createdAt >= threeMonthsAgo,
+    );
     const recentPOs = purchaseOrders.filter((po) => po.status !== "DRAFT" && po.createdAt >= threeMonthsAgo);
 
-    const totalRevenue = recentInvoices.reduce((s, i) => s + i.total, 0);
+    const totalRevenue = recentInvoices.reduce(
+      (s, i) => s + (i.status === "PARTIAL" ? (i.amountPaid ?? i.total) : i.total),
+      0,
+    );
     const totalLabor = recentInvoices.reduce((s, i) => s + i.laborTotal, 0);
     const totalParts = recentPOs.reduce((s, po) => s + po.total, 0);
 

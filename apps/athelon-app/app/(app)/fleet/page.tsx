@@ -928,11 +928,19 @@ export default function FleetPage() {
         <div className="border border-border/60 rounded-md divide-y divide-border/40" data-testid="fleet-view-truncated-container">
           {filtered.map((ac) => (
             <div key={String(ac._id)} className="px-3 py-2.5 flex items-center justify-between gap-3">
+              {/* BUG-DOM-108: Truncated view omitted the status badge. A DOM scanning
+                  the fleet in compact mode couldn't tell which aircraft were airworthy vs
+                  in-maintenance vs out-of-service without switching to full list view.
+                  Status is the single most important field for dispatch readiness. */}
               <div className="min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="font-mono text-sm font-semibold">
                     {ac.currentRegistration ?? "Unregistered"}
                   </span>
+                  <Badge className={`border text-[10px] ${getStatusStyle(ac.status).color}`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${getStatusStyle(ac.status).dot} mr-1`} />
+                    {getStatusStyle(ac.status).label}
+                  </Badge>
                   <Badge variant="outline" className="text-[10px] border-border/60">
                     {classifyAircraftStyle(ac.make, ac.model)}
                   </Badge>

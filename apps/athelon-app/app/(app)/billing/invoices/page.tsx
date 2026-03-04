@@ -42,7 +42,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { formatDate } from "@/lib/format";
+import { formatDate, formatDateUTC } from "@/lib/format";
 import { downloadCSV } from "@/lib/export";
 import { toast } from "sonner";
 
@@ -246,15 +246,28 @@ function BatchPaymentDialog({
 
   const handleSubmit = async () => {
     if (!techId) { setError("Please select the technician recording these payments."); return; }
+
+    const validationErrors: string[] = [];
     const payments = invoices
-      .map((inv) => ({
-        invoiceId: inv._id,
-        amount: parseFloat(amounts[inv._id] ?? "0"),
-        method: (methods[inv._id] ?? "cash") as PaymentMethod,
-      }))
-      .filter((p) => p.amount > 0);
+      .map((inv) => {
+        const amountRaw = amounts[inv._id] ?? "0";
+        const amount = Number.parseFloat(amountRaw);
+
+        if (!Number.isFinite(amount) || amount <= 0) return null;
+        if (amount > inv.balance) {
+          validationErrors.push(`${inv.invoiceNumber}: payment exceeds balance ($${inv.balance.toFixed(2)}).`);
+        }
+
+        return {
+          invoiceId: inv._id,
+          amount,
+          method: (methods[inv._id] ?? "cash") as PaymentMethod,
+        };
+      })
+      .filter((p): p is { invoiceId: Id<"invoices">; amount: number; method: PaymentMethod } => p !== null);
 
     if (payments.length === 0) { setError("Enter at least one payment amount."); return; }
+    if (validationErrors.length > 0) { setError(validationErrors[0]); return; }
 
     setLoading(true); setError(null);
     try {
@@ -274,7 +287,8 @@ function BatchPaymentDialog({
   const handleClose = () => {
     setAmounts({});
     setMethods({});
-    setTechId("");
+    // BUG-BM-HUNT-004: Preserve current user prefill when closing/reopening dialog.
+    setTechId(currentTechId ?? "");
     setError(null);
     setResult(null);
     onClose();
@@ -361,6 +375,7 @@ function BatchPaymentDialog({
                   <Input
                     type="number"
                     min="0"
+                    max={inv.balance}
                     step="0.01"
                     placeholder="0.00"
                     value={amounts[inv._id] ?? ""}
@@ -597,8 +612,9 @@ export default function InvoicesPage() {
                     "Invoice #": inv.invoiceNumber ?? "",
                     Status: inv.status,
                     Total: inv.total,
-                    "Due Date": inv.dueDate ? new Date(inv.dueDate).toLocaleDateString() : "",
-                    Created: new Date(inv._creationTime).toLocaleDateString(),
+                    // BUG-BM-HUNT-005: dueDate is a date-only field (UTC-midnight); format in UTC to avoid off-by-one exports.
+                    "Due Date": inv.dueDate ? formatDateUTC(inv.dueDate) : "",
+                    Created: formatDate(inv._creationTime),
                   })),
                   "invoices.csv",
                 );

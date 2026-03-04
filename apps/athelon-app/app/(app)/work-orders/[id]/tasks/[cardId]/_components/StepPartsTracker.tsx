@@ -113,8 +113,17 @@ export function StepPartsTracker({
       const fromStorage = localStorage.getItem(key);
       if (fromStorage) {
         try {
-          seeded[step._id] = JSON.parse(fromStorage) as StepLocalState;
-          continue;
+          const parsed = JSON.parse(fromStorage) as Partial<StepLocalState>;
+          // BUG-HUNTER-TRACE-001: Guard against malformed localStorage payloads.
+          // A bad payload (manual edits/old schema) previously flowed straight
+          // into render paths that expect arrays, causing .map runtime crashes.
+          if (Array.isArray(parsed.installed) && Array.isArray(parsed.removed)) {
+            seeded[step._id] = {
+              installed: parsed.installed,
+              removed: parsed.removed,
+            };
+            continue;
+          }
         } catch {
           // fall through to backend seed
         }
@@ -221,6 +230,14 @@ export function StepPartsTracker({
 
     toast.success("Part added to step trace.");
     setDialog(null);
+  }
+
+  if (steps.length === 0) {
+    return (
+      <p className="text-xs text-muted-foreground italic">
+        No step-level parts traceability required on this card.
+      </p>
+    );
   }
 
   return (
