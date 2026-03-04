@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, type ReactNode } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -491,7 +491,7 @@ function PartDetailSheet({ part, onClose }: PartDetailSheetProps) {
     : null;
   const shelfExpired = shelfExpiry ? shelfExpiry < new Date() : false;
 
-  function row(label: string, value: React.ReactNode, highlight?: "warn" | "err") {
+  function row(label: string, value: ReactNode, highlight?: "warn" | "err") {
     if (!value && value !== 0) return null;
     return (
       <div className="flex justify-between items-start gap-4 py-1.5">

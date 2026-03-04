@@ -40,7 +40,14 @@ const CONDITION_STYLES: Record<string, string> = {
 };
 
 function toStage(part: PartItem): KanbanStage {
-  if (part.location === "scrapped" || part.condition === "scrapped") return "scrapped";
+  if (
+    part.location === "scrapped" ||
+    part.location === "quarantine" ||
+    part.location === "returned_to_vendor" ||
+    part.condition === "scrapped"
+  ) {
+    return "scrapped";
+  }
   if (part.location === "installed") return "installed";
   if (part.location === "removed_pending_disposition") return "issued";
   if (part.reservedForWorkOrderId) return "reserved";

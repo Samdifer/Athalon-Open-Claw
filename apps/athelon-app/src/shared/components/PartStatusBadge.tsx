@@ -5,10 +5,12 @@ type PartStatus =
   | "ordered"
   | "shipped"
   | "received"
-  | "inspected"
+  | "pending_inspection"
   | "issued"
   | "installed"
-  | "returned";
+  | "returned"
+  | "quarantine"
+  | "scrapped";
 
 const STATUS_META: Record<PartStatus, { label: string; className: string }> = {
   requested: {
@@ -27,9 +29,9 @@ const STATUS_META: Record<PartStatus, { label: string; className: string }> = {
     label: "Received",
     className: "bg-purple-500/15 text-purple-600 dark:text-purple-400 border-purple-500/30",
   },
-  inspected: {
-    label: "Inspected",
-    className: "bg-teal-500/15 text-teal-600 dark:text-teal-400 border-teal-500/30",
+  pending_inspection: {
+    label: "Pending Inspection",
+    className: "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30",
   },
   issued: {
     label: "Issued",
@@ -43,18 +45,28 @@ const STATUS_META: Record<PartStatus, { label: string; className: string }> = {
     label: "Returned",
     className: "bg-slate-500/15 text-slate-600 dark:text-slate-400 border-slate-500/30",
   },
+  quarantine: {
+    label: "Quarantine",
+    className: "bg-orange-500/15 text-orange-600 dark:text-orange-400 border-orange-500/30",
+  },
+  scrapped: {
+    label: "Scrapped",
+    className: "bg-zinc-500/15 text-zinc-600 dark:text-zinc-400 border-zinc-500/30",
+  },
 };
 
 function mapRawStatus(status: string): PartStatus {
   if (status === "requested" || status === "ordered" || status === "shipped" || status === "received") {
     return status;
   }
-  if (status === "issued") return "issued";
+  if (status === "issued" || status === "removed_pending_disposition") return "issued";
   if (status === "installed") return "installed";
-  if (status === "pending_inspection") return "inspected";
+  if (status === "pending_inspection") return "pending_inspection";
   if (status === "inventory") return "received";
+  if (status === "quarantine") return "quarantine";
+  if (status === "scrapped") return "scrapped";
   if (status === "returned_to_stock" || status === "returned_to_vendor") return "returned";
-  return "received";
+  return "requested";
 }
 
 export function getPartStatusColor(status: string): string {

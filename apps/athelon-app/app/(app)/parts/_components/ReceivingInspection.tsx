@@ -60,6 +60,7 @@ export function ReceivingInspection() {
     orgId ? { organizationId: orgId } : "skip",
   ) as PendingPart[] | undefined;
   const completeInspection = useMutation(api.gapFixes.completeReceivingInspection);
+  const isLoadingPending = pendingParts === undefined;
 
   const [selectedPart, setSelectedPart] = useState<PendingPart | null>(null);
   const [visualCondition, setVisualCondition] = useState<VisualCondition>("acceptable");
@@ -166,7 +167,13 @@ export function ReceivingInspection() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {(pendingParts ?? []).length === 0 ? (
+            {isLoadingPending ? (
+              <TableRow>
+                <TableCell colSpan={4} className="text-center text-sm text-muted-foreground py-10">
+                  Loading receiving queue…
+                </TableCell>
+              </TableRow>
+            ) : (pendingParts ?? []).length === 0 ? (
               <TableRow>
                 <TableCell colSpan={4} className="text-center text-sm text-muted-foreground py-10">
                   No incoming parts awaiting inspection.

@@ -19,7 +19,7 @@ function urgencyClass(urgency: PartsRequestRecord["urgency"]) {
   return "bg-muted text-muted-foreground border-border/40";
 }
 
-const pendingStatuses: PartsRequestStatus[] = ["requested", "shipped"];
+const pendingStatuses: PartsRequestStatus[] = ["requested", "ordered", "shipped"];
 
 export function PartsRequestQueue({ requests, onRequestsChange }: PartsRequestQueueProps) {
   const [tab, setTab] = useState<"all" | "pending" | "ordered" | "received">("all");

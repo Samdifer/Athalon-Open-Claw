@@ -108,13 +108,14 @@ export function PartsRequestForm({
       return;
     }
     const qty = Math.max(1, Number(quantity || "1"));
+    const parsedUnitCost = unitCost.trim() ? Number(unitCost) : undefined;
     const now = Date.now();
     const next: PartsRequestRecord = {
       id: `pr_${now}_${Math.random().toString(36).slice(2, 8)}`,
       partNumber: partNumber.trim().toUpperCase(),
       description: description.trim(),
       manufacturer: manufacturer.trim(),
-      unitCost: unitCost.trim() ? Number(unitCost) : undefined,
+      unitCost: Number.isFinite(parsedUnitCost) ? parsedUnitCost : undefined,
       quantity: Number.isFinite(qty) ? qty : 1,
       urgency,
       requestingTechnician: requestingTechnician.trim(),
