@@ -436,6 +436,16 @@ export function PersonnelRosterTab({
                             size="sm"
                             variant="ghost"
                             className="h-6 text-[11px] px-2 text-muted-foreground hover:text-foreground"
+                            asChild
+                          >
+                            <Link to={`/personnel/${tech._id}/career`}>
+                              Career
+                            </Link>
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-6 text-[11px] px-2 text-muted-foreground hover:text-foreground"
                             onClick={() =>
                               setEditingTechId(isEditing ? null : tech._id)
                             }
