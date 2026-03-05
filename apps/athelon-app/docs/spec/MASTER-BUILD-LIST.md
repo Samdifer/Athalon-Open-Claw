@@ -336,6 +336,31 @@ This file is the markdown-authoritative source of truth for feature status, impl
   **Fix:** Replaced the plain div with a Card-based empty state including the page header, contextual guidance, and a "Complete Setup" link to onboarding.
   **Why it matters:** DOM landing on the calendar without org context gets a professional recovery path instead of a dead-end sentence.
 
+- **BUG-BM-HUNT-111** — Warranty Claims page stats cards (Total Claims, Pending Amount, Approved Amount, Recovery Rate) were computed from the tab-filtered `claims` query. Switching to the "Denied" tab made stats show 0 pending/$0 approved — completely misleading summary for a billing manager trying to get an at-a-glance warranty recovery picture.
+  **File:** `app/(app)/billing/warranty/page.tsx`
+  **Fix:** Added a separate `allClaims` query (no status filter) for stats computation, keeping the filtered query for the table rows.
+  **Why it matters:** Summary cards now always reflect global truth regardless of which status tab is active.
+
+- **BUG-BM-HUNT-112** — Warranty Claim Detail dialog "Approve" action sent `parseFloat(approvedAmount)` directly to the backend. If the user typed non-numeric text (e.g., "N/A", "TBD"), `parseFloat` returned `NaN`, which silently corrupted the claim record with a NaN approved amount.
+  **File:** `app/(app)/billing/warranty/page.tsx`
+  **Fix:** Added `Number.isFinite()` + non-negative guard before the approve mutation, with a user-facing toast error.
+  **Why it matters:** Billing managers can't accidentally save corrupted financial data on warranty claims.
+
+- **BUG-BM-HUNT-113** — OTC Counter Sales page tax rate `<SelectItem value="">` used an empty string, which is invalid for Radix UI's Select component. This caused console warnings and could prevent the "No tax" option from being selectable on some browsers.
+  **File:** `app/(app)/billing/otc/page.tsx`
+  **Fix:** Changed the sentinel value to `"_none"` with proper bidirectional mapping in the `onValueChange` handler and the `selectedTaxRate` memo.
+  **Why it matters:** Counter sales tax selection now works reliably across all browsers without console errors.
+
+- **BUG-BM-HUNT-114** — Time Clock daily summary memoized the "today" midnight threshold once on mount. If the page stayed open past midnight (common in 24/7 MRO shops), the "Today's Hours" section continued showing yesterday's data and missed actual today's entries.
+  **File:** `app/(app)/billing/time-clock/page.tsx`
+  **Fix:** Extracted `todayMs` into its own `useMemo` keyed off `entries`, so each live-query update re-evaluates the current date. Added `todayMs` to `dailySummary`'s dependency array.
+  **Why it matters:** Night shift billing staff now see accurate daily labor summaries without needing to refresh the page after midnight.
+
+- **BUG-BM-HUNT-115** — WO Profitability page used `customers.find()` inside the invoice mapping loop — O(n·m) complexity. On shops with hundreds of invoices and dozens of customers, this caused visible frame drops when switching date range filters.
+  **File:** `app/(app)/reports/financials/profitability/page.tsx`
+  **Fix:** Pre-built a `customerMap` using `useMemo` with O(1) lookups, matching the pattern already used in the analytics and financial dashboard pages.
+  **Why it matters:** Profitability reports load instantly on larger datasets instead of stuttering during date range changes.
+
 ## Canonical Governance
 
 1. `MASTER-BUILD-LIST.md` is the only write-authoritative feature specification artifact.
