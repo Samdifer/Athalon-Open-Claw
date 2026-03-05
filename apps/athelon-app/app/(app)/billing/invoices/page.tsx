@@ -16,7 +16,6 @@ import {
   Ban,
   CreditCard,
   CheckSquare2,
-  Download,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -43,7 +42,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { formatDate, formatDateUTC } from "@/lib/format";
-import { downloadCSV } from "@/lib/export";
 import { ExportCSVButton } from "@/src/shared/components/ExportCSVButton";
 import {
   INVOICE_CSV_COLUMNS,
