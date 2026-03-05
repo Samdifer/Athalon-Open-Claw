@@ -35,8 +35,14 @@ function createStepReferenceId() {
   return `step-ref-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
-export function StepReferences({ workOrderId, taskCardId, steps }: { workOrderId: string; taskCardId: string; steps: Step[] }) {
-  const storageKey = useMemo(() => `step-references:${workOrderId}:${taskCardId}`, [workOrderId, taskCardId]);
+// BUG-LT-HUNT-146: Include orgId in localStorage key for StepReferences.
+// Same cross-org data bleed pattern as BUG-LT-HUNT-102 (TurnoverNotes),
+// BUG-LT-HUNT-115 (VendorServicePanel), and BUG-LT-HUNT-141 (ApprovedDataRef).
+// A user at multiple shops could see reference documents from Shop A's task
+// card appearing on Shop B's task card if WO/card IDs collide. Reference docs
+// linked to step-level work are part of the maintenance record chain.
+export function StepReferences({ orgId, workOrderId, taskCardId, steps }: { orgId?: string; workOrderId: string; taskCardId: string; steps: Step[] }) {
+  const storageKey = useMemo(() => `step-references:${orgId ?? "no-org"}:${workOrderId}:${taskCardId}`, [orgId, workOrderId, taskCardId]);
   const [refs, setRefs] = useState<StepRef[]>([]);
 
   useEffect(() => {

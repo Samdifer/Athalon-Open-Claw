@@ -648,6 +648,15 @@ export default function TaskCardPage() {
     }
   }
 
+  // BUG-LT-HUNT-143: The original guard blocked signing ANY step when ANY step
+  // timer was active — even if the timer was on a completely different step. A
+  // lead tech clocked on Step 5 couldn't sign off Step 2 (which was already
+  // in_progress and work-complete) without first stopping their Step 5 timer.
+  // This is unnecessarily restrictive: signing Step 2 has no relationship to
+  // Step 5's timer. The guard now only blocks signing the specific step whose
+  // timer is running. If you're timed on Step 5 and try to sign Step 5, you
+  // must stop the timer first (prevents orphaned billing). Signing Step 2
+  // while Step 5's timer runs is allowed.
   function handleSignStepIntent(target: {
     stepId: Id<"taskCardSteps">;
     stepNumber: number;
@@ -655,8 +664,14 @@ export default function TaskCardPage() {
     requiresIa: boolean;
     requiredAuthorizationType: StepAuthorizationType;
   }) {
-    if (activeTimerEntry && (activeTimerEntry.entryType ?? "work_order") === "step") {
-      toast.error("Stop the active step timer before signing a step.");
+    if (
+      activeTimerEntry &&
+      (activeTimerEntry.entryType ?? "work_order") === "step" &&
+      activeTimerEntry.taskStepId === target.stepId
+    ) {
+      toast.error("Stop the step timer before signing this step.", {
+        description: "Your timer is still running on this step. Stop it to finalize billing before sign-off.",
+      });
       return;
     }
     setSignStepTarget(target);
@@ -741,14 +756,29 @@ export default function TaskCardPage() {
                 : TASK_STATUS_LABEL[taskCard.status as TaskStatus] ?? taskCard.status}
             </Badge>
           </div>
+          {/* BUG-LT-HUNT-144: The findings badge previously said "Findings 7"
+              with no scope qualifier. The count includes ALL active discrepancies
+              for the work order — not just ones from this task card. A tech
+              with 2 findings on their card and 5 from other cards saw "Findings 7"
+              and assumed their card had 7 problems, triggering unnecessary alarm
+              and hold-up conversations with the QCM. Added "WO" qualifier and
+              linked to the WO page so the tech can see the full list. */}
           <div className="flex items-center gap-2 flex-wrap">
             <h1 className="text-lg sm:text-xl md:text-2xl font-semibold text-foreground">
               {taskCard.title}
             </h1>
-            <Badge variant="outline" className="text-[10px] border-amber-500/40 text-amber-600 dark:text-amber-400">
-              <AlertTriangle className="w-3 h-3 mr-1" />
-              Findings {findingCount}
-            </Badge>
+            {findingCount > 0 ? (
+              <Link to={`/work-orders/${workOrderId}`}>
+                <Badge variant="outline" className="text-[10px] border-amber-500/40 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 cursor-pointer transition-colors">
+                  <AlertTriangle className="w-3 h-3 mr-1" />
+                  {findingCount} WO Finding{findingCount !== 1 ? "s" : ""}
+                </Badge>
+              </Link>
+            ) : (
+              <Badge variant="outline" className="text-[10px] border-border/40 text-muted-foreground">
+                No Findings
+              </Badge>
+            )}
           </div>
           <p className="text-xs text-muted-foreground mt-0.5">
             Approved Data: {taskCard.approvedDataSource}
@@ -924,9 +954,11 @@ export default function TaskCardPage() {
                       }
                     />
                     <ApprovedDataRef
+                      orgId={orgId}
                       workOrderId={workOrderId}
                       cardId={cardId}
                       stepId={String(step._id)}
+                      readOnly={cardIsComplete || cardIsVoided || step.status === "completed" || step.status === "na"}
                     />
                   </div>
                 );
@@ -1000,6 +1032,7 @@ export default function TaskCardPage() {
       </Card>
 
       <StepReferences
+        orgId={orgId}
         workOrderId={workOrderId}
         taskCardId={cardId}
         steps={taskCard.steps.map((s) => ({ _id: String(s._id), stepNumber: s.stepNumber, description: s.description }))}

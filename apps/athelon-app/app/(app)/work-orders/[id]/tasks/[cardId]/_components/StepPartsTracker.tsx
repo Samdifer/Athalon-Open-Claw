@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { ArrowRightLeft, Plus, Search } from "lucide-react";
+import { ArrowRightLeft, Plus, Search, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -77,12 +77,44 @@ function stepStorageKey(orgId: string, stepId: string) {
   return `step-parts-trace:${orgId}:${stepId}`;
 }
 
-function PartCard({ title, detail, meta }: { title: string; detail?: string; meta?: string }) {
+function PartCard({
+  title,
+  detail,
+  meta,
+  onRemove,
+}: {
+  title: string;
+  detail?: string;
+  meta?: string;
+  onRemove?: () => void;
+}) {
   return (
     <div className="rounded-md border border-border/60 bg-muted/20 p-2.5">
-      <p className="text-xs font-mono text-foreground">{title}</p>
-      {detail ? <p className="text-xs text-muted-foreground mt-0.5">{detail}</p> : null}
-      {meta ? <p className="text-[11px] text-muted-foreground mt-1">{meta}</p> : null}
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <p className="text-xs font-mono text-foreground">{title}</p>
+          {detail ? <p className="text-xs text-muted-foreground mt-0.5">{detail}</p> : null}
+          {meta ? <p className="text-[11px] text-muted-foreground mt-1">{meta}</p> : null}
+        </div>
+        {/* BUG-LT-HUNT-145: StepPartsTracker had no way to remove accidentally
+            added parts. A tech who added the wrong part to "Installed" or
+            "Removed" was stuck with incorrect parts traceability data on their
+            step — a maintenance records integrity issue. Under 14 CFR 43.9
+            each part installation/removal must be accurately recorded. Without
+            a remove button, the tech would need to clear localStorage manually
+            or void the entire task card to fix a simple data entry mistake. */}
+        {onRemove && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6 text-muted-foreground hover:text-destructive flex-shrink-0"
+            onClick={onRemove}
+            aria-label="Remove part from trace"
+          >
+            <Trash2 className="w-3 h-3" />
+          </Button>
+        )}
+      </div>
     </div>
   );
 }
@@ -188,6 +220,29 @@ export function StepPartsTracker({
     setRemoveCondition("serviceable");
   }
 
+  function removePart(stepId: string, type: "installed" | "removed", index: number) {
+    setStepState((prev) => {
+      const current = prev[stepId];
+      if (!current) return prev;
+      const next = { ...prev };
+      if (type === "installed") {
+        next[stepId] = {
+          ...current,
+          installed: current.installed.filter((_, i) => i !== index),
+        };
+      } else {
+        next[stepId] = {
+          ...current,
+          removed: current.removed.filter((_, i) => i !== index),
+        };
+      }
+      const persisted = persist(next);
+      if (!persisted) return prev;
+      return next;
+    });
+    toast.success("Part removed from step trace.");
+  }
+
   function addPart() {
     if (!dialog) return;
     const selected = inventoryParts.find((p) => p._id === selectedPartId);
@@ -282,6 +337,7 @@ export function StepPartsTracker({
                         <PartCard
                           title={`${part.partNumber}${part.serialNumber ? ` · S/N ${part.serialNumber}` : ""}`}
                           detail={part.description}
+                          onRemove={() => removePart(step._id, "removed", idx)}
                         />
                         <Badge variant="outline" className="text-[10px] capitalize">
                           {part.conditionAtRemoval}
@@ -319,6 +375,7 @@ export function StepPartsTracker({
                         title={`${part.partNumber}${part.serialNumber ? ` · S/N ${part.serialNumber}` : ""}`}
                         detail={part.description}
                         meta={`Qty ${part.quantity}${part.eightOneThirtyReference ? ` · 8130-3 ${part.eightOneThirtyReference}` : ""}`}
+                        onRemove={() => removePart(step._id, "installed", idx)}
                       />
                     ))
                   )}
