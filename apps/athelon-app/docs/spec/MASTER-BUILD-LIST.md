@@ -131,6 +131,31 @@ This file is the markdown-authoritative source of truth for feature status, impl
   **Fix:** Added a purple "QCM" badge on cards with `pending_signoff` status.
   **Why it matters:** Shop managers can instantly identify which WOs in the inspection column are ready for QCM release vs. still awaiting initial inspection.
 
+- **BUG-SM-HUNT-021** — Twelve dashboard and page-level component files contained `"use client"` directives — a Next.js App Router convention that is dead code in this Vite + React Router app. Signals architectural confusion and could mislead developers into assuming Next.js patterns apply.
+  **Files:** `app/(app)/dashboard/_components/RevenueTrendChart.tsx`, `TATChart.tsx`, `TechUtilizationChart.tsx`, `ScheduleHealthWidget.tsx`, `WOStatusChart.tsx`, `app/(app)/work-orders/page.tsx`, `kanban/page.tsx`, `dashboard/page.tsx`, `app/(app)/scheduling/page.tsx`, `app/(app)/reports/page.tsx`
+  **Fix:** Removed all `"use client"` directives from affected files.
+  **Why it matters:** Developer clarity — no one should assume RSC/server component patterns exist in this codebase.
+
+- **BUG-SM-HUNT-022** — Three dashboard sub-components (`StatCards.tsx`, `QuickActions.tsx`, `RecentActivity.tsx`) were never imported by any file in the application. The main dashboard page uses its own inline `LiveKPICards`, `LiveActiveWorkOrders`, and `LiveFleetStatus` components. These dead files added 630+ lines of stale code that diverged from the live implementation.
+  **Files:** `app/(app)/dashboard/_components/StatCards.tsx`, `QuickActions.tsx`, `RecentActivity.tsx`
+  **Fix:** Deleted all three files.
+  **Why it matters:** Eliminates developer confusion — contributors modifying these files would see zero effect, wasting hours debugging phantom changes.
+
+- **BUG-SM-HUNT-023** — Kanban board draft WO cards displayed "Xd open" using `openedAt` timestamp, but draft WOs haven't been formally opened. A WO created 42 days ago as a draft (never moved to "Open") would misleadingly show "42d open", implying it's been in active work that long.
+  **File:** `app/(app)/work-orders/kanban/page.tsx`
+  **Fix:** Cards with `status === "draft"` now display "Draft" instead of the days-open counter.
+  **Why it matters:** Shop managers scanning the kanban board get accurate aging data — drafts are clearly identified as pre-work, not stale active WOs.
+
+- **BUG-SM-HUNT-024** — WO Dashboard page passed raw `orgId` (string) to `timeClock.listTimeEntries` which expects `Id<"organizations">`. Missing `Id` type import meant no compile-time safety on this query parameter, risking runtime type errors.
+  **File:** `app/(app)/work-orders/dashboard/page.tsx`
+  **Fix:** Added `Id` import from `@/convex/_generated/dataModel` and cast `orgId as Id<"organizations">`.
+  **Why it matters:** Type-safe Convex query parameters prevent silent runtime failures when the backend validates argument types.
+
+- **BUG-SM-HUNT-025** — Reports page WO throughput chart fell back to `_creationTime` when `closedAt` was missing, misattributing closed WOs to their creation month. A WO created in January but closed in March would inflate January's throughput count and undercount March.
+  **File:** `app/(app)/reports/page.tsx`
+  **Fix:** Added `completedAt` as intermediate fallback between `closedAt` and `_creationTime`. `completedAt` is set when work finishes and is a much better proxy for the close month than creation time.
+  **Why it matters:** Shop managers reviewing monthly throughput reports now see accurate close-month attribution, especially for legacy WOs migrated without `closedAt`.
+
 - **BUG-QCM-HUNT-006** — Compliance card skipped AD/SB status query when `currentRegistration` was blank, showing “Not Configured” even when AD records existed for the aircraft.
   **File:** `app/(app)/compliance/_components/AircraftComplianceCard.tsx`
   **Fix:** Removed tail-number gate and always queried compliance by `aircraftId` + `organizationId`.
