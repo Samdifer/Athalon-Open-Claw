@@ -26,6 +26,7 @@
 
 import { mutation, query, action } from "./_generated/server";
 import { v } from "convex/values";
+import type { Id } from "./_generated/dataModel";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // INTERNAL UTILITY: REQUIRE AUTHENTICATED USER
@@ -41,6 +42,11 @@ async function requireAuth(ctx: {
     );
   }
   return identity.subject;
+}
+
+function workOrderIdFromEvidenceAttachment(attachedToId: string): Id<"workOrders"> | null {
+  const [workOrderId] = attachedToId.split(":");
+  return workOrderId ? (workOrderId as Id<"workOrders">) : null;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -142,6 +148,7 @@ export const listDocuments = query({
     attachedToId: v.string(),
   },
   handler: async (ctx, args) => {
+    await requireAuth(ctx);
     return await ctx.db
       .query("documents")
       .withIndex("by_attachment", (q) =>
@@ -167,6 +174,7 @@ export const getDocumentUrl = query({
     storageId: v.id("_storage"),
   },
   handler: async (ctx, args): Promise<string | null> => {
+    await requireAuth(ctx);
     return await ctx.storage.getUrl(args.storageId);
   },
 });
@@ -199,6 +207,37 @@ export const deleteDocument = mutation({
       throw new Error(
         `Document ${args.documentId} does not belong to organization ${args.organizationId}.`,
       );
+    }
+
+    if (doc.attachedToTable === "taskCards") {
+      const taskCard = await ctx.db.get(doc.attachedToId as Id<"taskCards">);
+      if (taskCard && (taskCard.status === "complete" || taskCard.status === "voided" || !!taskCard.signedAt)) {
+        throw new Error("Task card is signed/locked. Attached documents are immutable.");
+      }
+    }
+
+    if (doc.attachedToTable === "taskCardSteps") {
+      const step = await ctx.db.get(doc.attachedToId as Id<"taskCardSteps">);
+      if (step) {
+        const taskCard = await ctx.db.get(step.taskCardId);
+        if (taskCard && (taskCard.status === "complete" || taskCard.status === "voided" || !!taskCard.signedAt)) {
+          throw new Error("Parent task card is signed/locked. Step documents are immutable.");
+        }
+      }
+    }
+
+    const isWorkOrderAttachment = doc.attachedToTable === "workOrders";
+    const isWorkOrderEvidenceAttachment = doc.attachedToTable === "workOrderEvidence";
+    if (isWorkOrderAttachment || isWorkOrderEvidenceAttachment) {
+      const workOrderId = isWorkOrderAttachment
+        ? (doc.attachedToId as Id<"workOrders">)
+        : workOrderIdFromEvidenceAttachment(doc.attachedToId);
+      if (workOrderId) {
+        const workOrder = await ctx.db.get(workOrderId);
+        if (workOrder && (workOrder.status === "closed" || workOrder.status === "voided")) {
+          throw new Error("Work order is closed/voided. Evidence documents are immutable.");
+        }
+      }
     }
 
     // Delete file bytes from Convex storage
@@ -292,6 +331,7 @@ export const getDocumentCount = query({
     attachedToId: v.string(),
   },
   handler: async (ctx, args): Promise<number> => {
+    await requireAuth(ctx);
     const docs = await ctx.db
       .query("documents")
       .withIndex("by_attachment", (q) =>

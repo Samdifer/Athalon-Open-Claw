@@ -77,6 +77,7 @@ function safeParseAuditValue(raw: string | undefined): string | null {
 const CUSTOMER_REQUEST_SUBJECT_MAX = 120;
 const CUSTOMER_REQUEST_MESSAGE_MAX = 2000;
 const CUSTOMER_DECLINE_REASON_MAX = 1000;
+const CUSTOMER_DECISION_NOTES_MAX = 2000;
 const STAFF_INTERNAL_RESPONSE_MAX = 2000;
 
 export const getCustomerByEmail = query({
@@ -405,7 +406,19 @@ export const listCustomerQuotes = query({
             .collect();
 
           return {
-            ...lineItem,
+            _id: lineItem._id,
+            quoteId: lineItem.quoteId,
+            type: lineItem.type,
+            description: lineItem.description,
+            qty: lineItem.qty,
+            unitPrice: lineItem.unitPrice,
+            total: lineItem.total,
+            discrepancyId: lineItem.discrepancyId,
+            departmentSection: lineItem.departmentSection,
+            customerDecision: lineItem.customerDecision,
+            customerDecisionNotes: lineItem.customerDecisionNotes,
+            customerDecisionAt: lineItem.customerDecisionAt,
+            customerDecisionByName: lineItem.customerDecisionByName,
             decisionHistory: events
               .sort((a: any, b: any) => b.decidedAt - a.decidedAt)
               .map((event: any) => ({
@@ -419,10 +432,23 @@ export const listCustomerQuotes = query({
       );
 
       results.push({
-        ...quote,
+        _id: quote._id,
+        quoteNumber: quote.quoteNumber,
+        status: quote.status,
+        createdAt: quote.createdAt,
+        expiresAt: quote.expiresAt,
+        subtotal: quote.subtotal,
+        laborTotal: quote.laborTotal,
+        partsTotal: quote.partsTotal,
+        tax: quote.tax,
+        total: quote.total,
+        currency: quote.currency,
         aircraftRegistration: aircraft?.currentRegistration ?? "Unknown",
         lineItems: enrichedLineItems,
-        departments,
+        departments: departments.map((department: any) => ({
+          _id: department._id,
+          sectionName: department.sectionName,
+        })),
       });
     }
 
@@ -562,8 +588,8 @@ export const customerDecideQuoteLineItem = mutation({
     }
 
     const trimmedDecisionNotes = args.decisionNotes?.trim();
-    if (trimmedDecisionNotes && trimmedDecisionNotes.length > 2000) {
-      throw new Error("Decision notes must be 2000 characters or less.");
+    if (trimmedDecisionNotes && trimmedDecisionNotes.length > CUSTOMER_DECISION_NOTES_MAX) {
+      throw new Error(`Decision notes must be ${CUSTOMER_DECISION_NOTES_MAX} characters or less.`);
     }
 
     await ctx.db.patch(args.lineItemId, {
@@ -572,6 +598,20 @@ export const customerDecideQuoteLineItem = mutation({
       customerDecisionAt: now,
       customerDecisionByUserId: userId,
       customerDecisionByName: "Customer Portal",
+      updatedAt: now,
+    });
+
+    await ctx.db.insert("quoteLineItemDecisionEvents", {
+      orgId: quote.orgId,
+      quoteId: quote._id,
+      lineItemId: args.lineItemId,
+      discrepancyId: lineItem.discrepancyId,
+      decision: args.decision,
+      decisionNotes: trimmedDecisionNotes,
+      actorUserId: userId,
+      actorName: "Customer Portal",
+      decidedAt: now,
+      createdAt: now,
     });
 
     await ctx.db.insert("auditLog", {
