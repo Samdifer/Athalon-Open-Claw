@@ -222,7 +222,7 @@ export default function CrmPipelinePage() {
           customerName,
           maintenanceType: p.description,
           dueDate: p.predictedDate,
-          estimatedLaborHours: estLaborHours,
+          estimatedLaborHours,
           estimatedValue: estimatedRevenue,
           status: deriveStatus(p.status, hasOpenWo),
         };

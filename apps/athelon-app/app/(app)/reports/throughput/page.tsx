@@ -169,10 +169,11 @@ export default function ThroughputReportPage() {
   if (prereq.state === "missing_context") {
     return (
       <ActionableEmptyState
-        icon={BarChart2}
         title="Organization Required"
-        description="Complete onboarding before viewing throughput reports."
         missingInfo="Complete onboarding before viewing throughput reports."
+        primaryActionLabel="Go to Dashboard"
+        primaryActionType="link"
+        primaryActionTarget="/"
       />
     );
   }
@@ -343,9 +344,11 @@ export default function ThroughputReportPage() {
 
       {monthlyData.length === 0 && (
         <ActionableEmptyState
-          icon={BarChart2}
           title="No Throughput Data"
-          description="No closed work orders found in the selected date range."
+          missingInfo="No closed work orders found in the selected date range."
+          primaryActionLabel="Adjust Dates"
+          primaryActionType="button"
+          primaryActionTarget={() => {}}
         />
       )}
     </div>

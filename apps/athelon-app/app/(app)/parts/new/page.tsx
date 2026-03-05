@@ -34,6 +34,7 @@ import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { toast } from "sonner";
+import { BinLocationPicker } from "@/app/(app)/parts/_components/BinLocationPicker";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -115,6 +116,9 @@ export default function NewPartPage() {
     return `${y}-${m}-${day}`;
   });
   const [notes, setNotes] = useState("");
+
+  // ── Warehouse bin location ──────────────────────────────────────────────
+  const [binLocationId, setBinLocationId] = useState<Id<"warehouseBins"> | undefined>(undefined);
 
   // ── Life-limited section ──────────────────────────────────────────────────
   const [showLifeLimited, setShowLifeLimited] = useState(false);
@@ -277,6 +281,7 @@ export default function NewPartPage() {
             : undefined,
         eightOneThirtyData,
         notes: notes.trim() || undefined,
+        binLocationId,
       });
 
       toast.success(
@@ -298,6 +303,7 @@ export default function NewPartPage() {
       setIsOwnerSupplied(false);
       setReceivingDate((() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; })());
       setNotes("");
+      setBinLocationId(undefined);
       setShowLifeLimited(false);
       setIsLifeLimited(false);
       setLifeLimitHours("");
@@ -877,6 +883,21 @@ export default function NewPartPage() {
                 disabled={isSubmitting}
               />
             </div>
+          </CardContent>
+        </Card>
+
+        {/* ── Warehouse Bin Location ──────────────────────────────────────────── */}
+        <Card className="border-border/60">
+          <CardContent className="p-4 space-y-2">
+            <Label className="text-xs font-medium">
+              Warehouse Location{" "}
+              <span className="text-muted-foreground font-normal">(optional)</span>
+            </Label>
+            <BinLocationPicker
+              value={binLocationId ? String(binLocationId) : undefined}
+              onChange={(id) => setBinLocationId(id ? (id as Id<"warehouseBins">) : undefined)}
+              disabled={isSubmitting}
+            />
           </CardContent>
         </Card>
 

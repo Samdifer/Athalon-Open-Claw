@@ -5,7 +5,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import { toast } from "sonner";
-import { Settings, Building2, FileText, FileCheck, ShieldCheck, Save, DollarSign, Plus, Trash2, Mail } from "lucide-react";
+import { Settings, Building2, FileText, FileCheck, ShieldCheck, Save, DollarSign, Plus, Trash2, Mail, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -99,6 +99,13 @@ export default function BillingSettingsPage() {
   const upsertRate = useMutation(api.currency.upsertRate);
   const deleteRate = useMutation(api.currency.deleteRate);
 
+  // Shop Settings
+  const shopSettings = useQuery(
+    api.shopSettings.getShopSettings,
+    orgId ? { orgId } : "skip",
+  );
+  const upsertShopSettings = useMutation(api.shopSettings.upsertShopSettings);
+
   const [form, setForm] = useState<BillingSettingsForm>(DEFAULT_FORM);
   const [poThreshold, setPoThreshold] = useState("5000");
   const [saving, setSaving] = useState(false);
@@ -111,6 +118,17 @@ export default function BillingSettingsPage() {
   const [rateValue, setRateValue] = useState("");
   const [savingRate, setSavingRate] = useState(false);
   const [savingCurrency, setSavingCurrency] = useState(false);
+
+  // Shop settings state
+  const [shopRate, setShopRate] = useState("");
+  const [averageHourlyCost, setAverageHourlyCost] = useState("");
+  const [partMarkupTiers, setPartMarkupTiers] = useState<
+    Array<{ maxCostThreshold: string; markupMultiplier: string }>
+  >([]);
+  const [serviceMarkupTiers, setServiceMarkupTiers] = useState<
+    Array<{ maxCostThreshold: string; markupMultiplier: string }>
+  >([]);
+  const [savingShopSettings, setSavingShopSettings] = useState(false);
 
   // Pre-fill form when settings load
   useEffect(() => {
@@ -137,6 +155,26 @@ export default function BillingSettingsPage() {
       }
     }
   }, [settings]);
+
+  // Pre-fill shop settings
+  useEffect(() => {
+    if (shopSettings) {
+      setShopRate(String(shopSettings.shopRate ?? ""));
+      setAverageHourlyCost(String(shopSettings.averageHourlyCost ?? ""));
+      setPartMarkupTiers(
+        (shopSettings.partMarkupTiers ?? []).map((t) => ({
+          maxCostThreshold: String(t.maxCostThreshold),
+          markupMultiplier: String(t.markupMultiplier),
+        })),
+      );
+      setServiceMarkupTiers(
+        (shopSettings.serviceMarkupTiers ?? []).map((t) => ({
+          maxCostThreshold: String(t.maxCostThreshold),
+          markupMultiplier: String(t.markupMultiplier),
+        })),
+      );
+    }
+  }, [shopSettings]);
 
   function setField<K extends keyof BillingSettingsForm>(key: K, value: string) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -194,6 +232,53 @@ export default function BillingSettingsPage() {
       });
     } finally {
       setSavingThreshold(false);
+    }
+  }
+
+  async function handleSaveShopSettings() {
+    if (!orgId) return;
+    const rate = parseFloat(shopRate);
+    const cost = parseFloat(averageHourlyCost);
+    if (isNaN(rate) || rate < 0) {
+      toast.error("Shop rate must be a non-negative number.");
+      return;
+    }
+    if (isNaN(cost) || cost < 0) {
+      toast.error("Average hourly cost must be a non-negative number.");
+      return;
+    }
+    const parsedPartTiers = partMarkupTiers.map((t) => ({
+      maxCostThreshold: parseFloat(t.maxCostThreshold),
+      markupMultiplier: parseFloat(t.markupMultiplier),
+    }));
+    const parsedServiceTiers = serviceMarkupTiers.map((t) => ({
+      maxCostThreshold: parseFloat(t.maxCostThreshold),
+      markupMultiplier: parseFloat(t.markupMultiplier),
+    }));
+    if (parsedPartTiers.some((t) => isNaN(t.maxCostThreshold) || isNaN(t.markupMultiplier))) {
+      toast.error("All part markup tier values must be valid numbers.");
+      return;
+    }
+    if (parsedServiceTiers.some((t) => isNaN(t.maxCostThreshold) || isNaN(t.markupMultiplier))) {
+      toast.error("All service markup tier values must be valid numbers.");
+      return;
+    }
+    setSavingShopSettings(true);
+    try {
+      await upsertShopSettings({
+        orgId,
+        shopRate: rate,
+        averageHourlyCost: cost,
+        partMarkupTiers: parsedPartTiers,
+        serviceMarkupTiers: parsedServiceTiers,
+      });
+      toast.success("Shop rate & markup tiers saved.");
+    } catch (err: unknown) {
+      toast.error("Failed to save shop settings", {
+        description: err instanceof Error ? err.message : "Unknown error",
+      });
+    } finally {
+      setSavingShopSettings(false);
     }
   }
 
@@ -389,6 +474,234 @@ export default function BillingSettingsPage() {
               value={form.quoteNotes}
               onChange={(e) => setField("quoteNotes", e.target.value)}
             />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Shop Rate & Markup Tiers — separate save action */}
+      <Card className="border-border/60">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm font-medium flex items-center gap-2">
+            <TrendingUp className="w-4 h-4 text-muted-foreground" />
+            Shop Rate &amp; Markup Tiers
+          </CardTitle>
+        </CardHeader>
+        <Separator className="mb-0" />
+        <CardContent className="pt-5 space-y-5">
+          {/* Rate inputs */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label className="text-xs">Shop Rate ($/hr)</Label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
+                <Input
+                  className="pl-7 text-sm"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  placeholder="125.00"
+                  value={shopRate}
+                  onChange={(e) => setShopRate(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Average Hourly Cost</Label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
+                <Input
+                  className="pl-7 text-sm"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  placeholder="65.00"
+                  value={averageHourlyCost}
+                  onChange={(e) => setAverageHourlyCost(e.target.value)}
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Internal labor cost for margin calculations
+              </p>
+            </div>
+          </div>
+
+          {/* Part Markup Tiers */}
+          <div className="space-y-2">
+            <Label className="text-xs font-medium">Part Markup Tiers</Label>
+            {partMarkupTiers.length > 0 ? (
+              <div className="rounded-lg border border-border/60 overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/20">
+                      <TableHead className="text-xs">Up to $</TableHead>
+                      <TableHead className="text-xs">Markup</TableHead>
+                      <TableHead className="text-xs text-right">Action</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {partMarkupTiers.map((tier, idx) => (
+                      <TableRow key={idx}>
+                        <TableCell>
+                          <Input
+                            className="text-sm h-8 w-28 font-mono"
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            placeholder="500"
+                            value={tier.maxCostThreshold}
+                            onChange={(e) => {
+                              const updated = [...partMarkupTiers];
+                              updated[idx] = { ...updated[idx], maxCostThreshold: e.target.value };
+                              setPartMarkupTiers(updated);
+                            }}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            className="text-sm h-8 w-24 font-mono"
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            placeholder="1.30"
+                            value={tier.markupMultiplier}
+                            onChange={(e) => {
+                              const updated = [...partMarkupTiers];
+                              updated[idx] = { ...updated[idx], markupMultiplier: e.target.value };
+                              setPartMarkupTiers(updated);
+                            }}
+                          />
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 w-7 p-0 text-muted-foreground hover:text-red-400"
+                            onClick={() =>
+                              setPartMarkupTiers(partMarkupTiers.filter((_, i) => i !== idx))
+                            }
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground py-3 text-center border border-dashed border-border/50 rounded-lg">
+                No part markup tiers configured.
+              </p>
+            )}
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-7 text-xs gap-1"
+              onClick={() =>
+                setPartMarkupTiers([...partMarkupTiers, { maxCostThreshold: "", markupMultiplier: "" }])
+              }
+            >
+              <Plus className="w-3 h-3" />
+              Add Tier
+            </Button>
+          </div>
+
+          {/* Service Markup Tiers */}
+          <div className="space-y-2">
+            <Label className="text-xs font-medium">Service Markup Tiers</Label>
+            {serviceMarkupTiers.length > 0 ? (
+              <div className="rounded-lg border border-border/60 overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/20">
+                      <TableHead className="text-xs">Up to $</TableHead>
+                      <TableHead className="text-xs">Markup</TableHead>
+                      <TableHead className="text-xs text-right">Action</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {serviceMarkupTiers.map((tier, idx) => (
+                      <TableRow key={idx}>
+                        <TableCell>
+                          <Input
+                            className="text-sm h-8 w-28 font-mono"
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            placeholder="500"
+                            value={tier.maxCostThreshold}
+                            onChange={(e) => {
+                              const updated = [...serviceMarkupTiers];
+                              updated[idx] = { ...updated[idx], maxCostThreshold: e.target.value };
+                              setServiceMarkupTiers(updated);
+                            }}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            className="text-sm h-8 w-24 font-mono"
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            placeholder="1.30"
+                            value={tier.markupMultiplier}
+                            onChange={(e) => {
+                              const updated = [...serviceMarkupTiers];
+                              updated[idx] = { ...updated[idx], markupMultiplier: e.target.value };
+                              setServiceMarkupTiers(updated);
+                            }}
+                          />
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 w-7 p-0 text-muted-foreground hover:text-red-400"
+                            onClick={() =>
+                              setServiceMarkupTiers(serviceMarkupTiers.filter((_, i) => i !== idx))
+                            }
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground py-3 text-center border border-dashed border-border/50 rounded-lg">
+                No service markup tiers configured.
+              </p>
+            )}
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-7 text-xs gap-1"
+              onClick={() =>
+                setServiceMarkupTiers([...serviceMarkupTiers, { maxCostThreshold: "", markupMultiplier: "" }])
+              }
+            >
+              <Plus className="w-3 h-3" />
+              Add Tier
+            </Button>
+          </div>
+
+          {/* Save button */}
+          <div className="flex justify-end pt-1">
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              disabled={savingShopSettings}
+              onClick={handleSaveShopSettings}
+            >
+              {savingShopSettings ? "Saving…" : "Save Shop Settings"}
+            </Button>
           </div>
         </CardContent>
       </Card>

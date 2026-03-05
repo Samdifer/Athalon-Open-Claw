@@ -33,6 +33,9 @@ import { PartStatusBadge } from "@/src/shared/components/PartStatusBadge";
 import { QRScannerDialog } from "@/components/QRScannerDialog";
 import { InventoryMasterTab } from "./_components/InventoryMasterTab";
 import { InventoryKanban } from "./_components/InventoryKanban";
+import { PartTagBadges } from "./_components/PartTagBadges";
+import { PartLocationCell } from "./_components/PartLocationCell";
+import { TagFilterDropdown } from "./_components/TagFilterDropdown";
 import { QrCode } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -124,6 +127,7 @@ interface PartDoc {
   partCategory?: string;
   lotNumber?: string;
   binLocation?: string;
+  binLocationId?: Id<"warehouseBins">;
   unitCost?: number;
 }
 
@@ -577,12 +581,20 @@ function PartDetailSheet({ part, onClose }: PartDetailSheetProps) {
                 </Badge>,
               )}
               {part.lotNumber && row("Lot Number", <span className="font-mono">{part.lotNumber}</span>)}
-              {part.binLocation && row("Bin Location", <span className="font-mono">{part.binLocation}</span>)}
+              {row("Bin Location", <PartLocationCell binLocationId={part.binLocationId ? String(part.binLocationId) : undefined} legacyBinLocation={part.binLocation} />)}
               {part.unitCost != null && row(
                 "Unit Cost",
                 `$${part.unitCost.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
               )}
             </div>
+          </div>
+
+          {/* Tags */}
+          <div>
+            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+              Tags
+            </p>
+            <PartTagBadges partId={String(part._id)} maxVisible={10} />
           </div>
 
           <Separator className="opacity-30" />
@@ -783,6 +795,7 @@ function PartSkeleton() {
 export default function PartsPage() {
   const [activeTab, setActiveTab] = useState<LocationFilter>("all");
   const [categoryFilter, setCategoryFilter] = useState<PartCategory>("all");
+  const [tagFilter, setTagFilter] = useState<{ tagId?: string; subtagId?: string } | null>(null);
   const [searchParams] = useSearchParams();
   const [search, setSearch] = useState(() => searchParams.get("q") ?? "");
   const { role } = useUserRole();
@@ -828,6 +841,22 @@ export default function PartsPage() {
     api.gapFixes.listPartsPendingInspection,
     orgId ? { organizationId: orgId } : "skip",
   );
+
+  // Tag filter: get part IDs matching the selected tag
+  const tagFilteredParts = useQuery(
+    api.partTags.getPartsByTag,
+    orgId && tagFilter?.tagId
+      ? {
+          organizationId: orgId,
+          tagId: tagFilter.tagId as Id<"tags">,
+          subtagId: tagFilter.subtagId as Id<"subtags"> | undefined,
+        }
+      : "skip",
+  );
+  const tagFilterPartIds = useMemo(() => {
+    if (!tagFilter?.tagId || tagFilteredParts === undefined) return null;
+    return new Set(tagFilteredParts);
+  }, [tagFilter, tagFilteredParts]);
 
   // Load self technician for inspections / reservations
   const selfTech = useQuery(
@@ -910,8 +939,13 @@ export default function PartsPage() {
       );
     }
 
+    // Tag filter — restrict to parts that have the selected tag
+    if (tagFilterPartIds) {
+      result = result.filter((p) => tagFilterPartIds.has(p._id));
+    }
+
     return result;
-  }, [parts, pendingInspectionParts, activeTab, categoryFilter, search, selectedShopLocationId]);
+  }, [parts, pendingInspectionParts, activeTab, categoryFilter, search, selectedShopLocationId, tagFilterPartIds]);
 
   // Count per tab — memoized so badge counts don't recompute on dialog state changes or search keystrokes
   const counts = useMemo<Record<LocationFilter, number>>(() => {
@@ -1107,6 +1141,7 @@ export default function PartsPage() {
               <SelectItem value="repairable">Repairable</SelectItem>
             </SelectContent>
           </Select>
+          <TagFilterDropdown onFilterChange={setTagFilter} />
           <div className="relative">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
             <Input
@@ -1358,6 +1393,7 @@ export default function PartsPage() {
                                 {CATEGORY_LABEL[part.partCategory] ?? part.partCategory}
                               </Badge>
                             )}
+                            <PartTagBadges partId={String(part._id)} maxVisible={2} />
                           </div>
 
                           {/* Row 2: Name */}
@@ -1406,9 +1442,12 @@ export default function PartsPage() {
                                 Lot: <span className="font-mono">{part.lotNumber}</span>
                               </span>
                             )}
-                            {part.binLocation && (
+                            {(part.binLocationId || part.binLocation) && (
                               <span className="text-[11px] text-muted-foreground">
-                                Bin: <span className="font-mono">{part.binLocation}</span>
+                                <PartLocationCell
+                                  binLocationId={part.binLocationId ? String(part.binLocationId) : undefined}
+                                  legacyBinLocation={part.binLocation}
+                                />
                               </span>
                             )}
                             {canViewCost && part.unitCost != null && (

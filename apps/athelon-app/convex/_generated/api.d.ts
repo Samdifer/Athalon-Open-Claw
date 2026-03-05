@@ -170,6 +170,7 @@ import type * as shared_helpers_rosterHelpers from "../shared/helpers/rosterHelp
 import type * as shared_helpers_workOrderNumber from "../shared/helpers/workOrderNumber.js";
 import type * as shipping from "../shipping.js";
 import type * as shopLocations from "../shopLocations.js";
+import type * as shopSettings from "../shopSettings.js";
 import type * as simHelper from "../simHelper.js";
 import type * as simPartsRunner from "../simPartsRunner.js";
 import type * as simRunner from "../simRunner.js";
@@ -360,6 +361,7 @@ declare const fullApi: ApiFromModules<{
   "shared/helpers/workOrderNumber": typeof shared_helpers_workOrderNumber;
   shipping: typeof shipping;
   shopLocations: typeof shopLocations;
+  shopSettings: typeof shopSettings;
   simHelper: typeof simHelper;
   simPartsRunner: typeof simPartsRunner;
   simRunner: typeof simRunner;

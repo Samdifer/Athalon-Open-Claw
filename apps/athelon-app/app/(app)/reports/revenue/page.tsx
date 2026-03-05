@@ -70,7 +70,7 @@ export default function RevenueReportPage() {
 
   const customers = useQuery(
     api.customers.listCustomers,
-    orgId ? { organizationId: orgId } : "skip",
+    orgId ? { orgId } : "skip",
   );
 
   const prereq = usePagePrereqs({
@@ -193,10 +193,11 @@ export default function RevenueReportPage() {
   if (prereq.state === "missing_context") {
     return (
       <ActionableEmptyState
-        icon={DollarSign}
         title="Organization Required"
-        description="Complete onboarding before viewing revenue reports."
         missingInfo="Complete onboarding before viewing revenue reports."
+        primaryActionLabel="Go to Dashboard"
+        primaryActionType="link"
+        primaryActionTarget="/"
       />
     );
   }
@@ -292,7 +293,7 @@ export default function RevenueReportPage() {
                 <XAxis dataKey="month" tick={{ fontSize: 11 }} />
                 <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
                 <Tooltip
-                  formatter={(value: number) => [`$${fmtUsd(value)}`, undefined]}
+                  formatter={(value) => [`$${fmtUsd(value as number)}`, undefined]}
                   contentStyle={{ fontSize: 12, borderRadius: 8 }}
                 />
                 <Legend wrapperStyle={{ fontSize: 11 }} />
@@ -349,7 +350,7 @@ export default function RevenueReportPage() {
                   <XAxis type="number" tick={{ fontSize: 11 }} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
                   <YAxis dataKey="type" type="category" tick={{ fontSize: 11 }} width={60} />
                   <Tooltip
-                    formatter={(value: number) => [`$${fmtUsd(value)}`, undefined]}
+                    formatter={(value) => [`$${fmtUsd(value as number)}`, undefined]}
                     contentStyle={{ fontSize: 12, borderRadius: 8 }}
                   />
                   <Bar dataKey="revenue" name="Revenue" fill="hsl(var(--chart-3))" radius={[0, 4, 4, 0]} />
@@ -378,9 +379,11 @@ export default function RevenueReportPage() {
 
       {monthlyData.length === 0 && (
         <ActionableEmptyState
-          icon={DollarSign}
           title="No Revenue Data"
-          description="No paid invoices found in the selected date range."
+          missingInfo="No paid invoices found in the selected date range."
+          primaryActionLabel="Adjust Dates"
+          primaryActionType="button"
+          primaryActionTarget={() => {}}
         />
       )}
     </div>
