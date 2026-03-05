@@ -6,6 +6,26 @@ This file is the markdown-authoritative source of truth for feature status, impl
 
 ## Bug Hunter Fixes
 
+- **BUG-DOM-122** — Fleet Calendar query range and grid layout used local-timezone Date constructors while events use UTC timestamps. Shops west of UTC (e.g. UTC-5) would miss events on the first/last day of the month and render grid cells with incorrect day offsets. Fixed getDaysInMonth/getFirstDayOfWeek to use Date.UTC and rangeStart/rangeEnd to use Date.UTC boundaries.
+  **File:** `app/(app)/fleet/calendar/page.tsx`
+  **Impact:** DOM sees wrong or missing events on fleet calendar near month boundaries.
+
+- **BUG-DOM-123** — Fleet Calendar initial state and "Today" button used local-tz getMonth()/getFullYear() while the isToday highlight used UTC accessors. Near midnight in non-UTC timezones, the "Today" button could navigate to the wrong month or disagree with the grid highlight. Fixed to use getUTCMonth()/getUTCFullYear() consistently.
+  **File:** `app/(app)/fleet/calendar/page.tsx`
+  **Impact:** "Today" button and day highlight inconsistency in non-UTC shops.
+
+- **BUG-DOM-124** — Logbook tab displayed entry dates in raw ISO format (YYYY-MM-DD) while every other date in the app uses locale format pinned to UTC (e.g. "Mar 5, 2026"). A DOM switching between the logbook tab and full logbook page would see inconsistent date formatting. Fixed to use toLocaleDateString with timeZone:"UTC".
+  **File:** `app/(app)/fleet/[tail]/_components/LogbookTab.tsx`
+  **Impact:** Visual inconsistency in logbook date display.
+
+- **BUG-DOM-125** — DeferredMaintenanceSection had a `"use client"` directive — a Next.js-specific directive that is dead code in this Vite+React app. Signals architectural confusion and could mislead developers into assuming Next.js patterns (RSC, server components) are in play.
+  **File:** `app/(app)/fleet/[tail]/_components/DeferredMaintenanceSection.tsx`
+  **Impact:** Developer confusion; no runtime effect.
+
+- **BUG-DOM-126** — Propellers section on aircraft detail page was gated on `engineCount > 0`, causing (1) jet aircraft to show an empty "No propellers registered" card and (2) aircraft with 0 engineCount but real propeller records to hide propeller data. Fixed to gate on actual propeller query results.
+  **File:** `app/(app)/fleet/[tail]/page.tsx`
+  **Impact:** DOM sees irrelevant propeller section on jets; propeller data hidden when engineCount is 0.
+
 - **BUG-QCM-HUNT-121** — RTSEvidenceSummary rendered both a Lucide icon (CheckCircle2/CircleOff) AND a Unicode emoji (✅/❌) for each readiness check — duplicate visual indicators. The emoji renders inconsistently across platforms (Windows vs macOS vs mobile) and clutters the row.
   **File:** `app/(app)/work-orders/[id]/_components/RTSEvidenceSummary.tsx`
   **Fix:** Removed redundant emoji, keeping only the Lucide icon — consistent with every other status indicator in the compliance section.
