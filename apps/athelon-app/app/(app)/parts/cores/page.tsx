@@ -50,6 +50,10 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDate, formatCurrency } from "@/lib/format";
 import { ActionableEmptyState } from "@/components/zero-state/ActionableEmptyState";
+import {
+  PartNumberCombobox,
+  type PartSelection,
+} from "@/src/shared/components/PartNumberCombobox";
 
 type CoreStatus = "awaiting_return" | "received" | "inspected" | "credit_issued" | "scrapped" | "overdue";
 
@@ -88,6 +92,7 @@ function CreateCoreDialog({
   orgId: Id<"organizations">;
 }) {
   const create = useMutation(api.cores.createCoreReturn);
+  const [corePartSelection, setCorePartSelection] = useState<PartSelection | null>(null);
   const [partNumber, setPartNumber] = useState("");
   const [description, setDescription] = useState("");
   const [serialNumber, setSerialNumber] = useState("");
@@ -97,6 +102,7 @@ function CreateCoreDialog({
   const [saving, setSaving] = useState(false);
 
   const reset = () => {
+    setCorePartSelection(null);
     setPartNumber("");
     setDescription("");
     setSerialNumber("");
@@ -149,7 +155,16 @@ function CreateCoreDialog({
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label>Part Number *</Label>
-              <Input value={partNumber} onChange={(e) => setPartNumber(e.target.value.slice(0, 50))} maxLength={50} />
+              <PartNumberCombobox
+                organizationId={orgId}
+                onSelect={(sel) => {
+                  setCorePartSelection(sel);
+                  setPartNumber(sel.partNumber);
+                  if (!description) setDescription(sel.partName);
+                }}
+                value={corePartSelection}
+                sourceContext="core_return"
+              />
             </div>
             <div>
               <Label>Serial Number</Label>

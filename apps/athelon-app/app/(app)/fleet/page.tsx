@@ -7,7 +7,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Grid3X3,
-  Image as ImageIcon,
   List,
   ListCollapse,
   PlaneTakeoff,
@@ -27,6 +26,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { ExportCSVButton } from "@/src/shared/components/ExportCSVButton";
 import { FaaLookupButton } from "@/components/faa/FaaLookupButton";
+import { resolveAircraftThumbnailUrl } from "@/src/shared/lib/demo-thumbnails";
 import { AddAircraftWizard } from "./_components/AddAircraftWizard";
 import { LLPAlertBanner } from "./_components/LLPAlertBanner";
 import {
@@ -856,15 +856,17 @@ export default function FleetPage() {
               <CardContent className="p-4">
                 <div className="flex gap-4">
                   <div className="w-28 h-20 rounded-md border border-border/60 bg-muted/20 overflow-hidden flex items-center justify-center flex-shrink-0">
-                    {ac.featuredImageUrl ? (
-                      <img
-                        src={ac.featuredImageUrl}
-                        alt={`${ac.currentRegistration ?? ac.serialNumber} thumbnail`}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <ImageIcon className="w-5 h-5 text-muted-foreground/50" />
-                    )}
+                    <img
+                      src={resolveAircraftThumbnailUrl({
+                        imageUrl: ac.featuredImageUrl,
+                        registration: ac.currentRegistration,
+                        make: ac.make,
+                        model: ac.model,
+                        series: ac.series,
+                      })}
+                      alt={`${ac.currentRegistration ?? ac.serialNumber} thumbnail`}
+                      className="w-full h-full object-cover"
+                    />
                   </div>
                   <div className="flex-1 min-w-0 space-y-1">
                     {renderTitle(ac)}
@@ -901,15 +903,17 @@ export default function FleetPage() {
             <Card key={String(ac._id)} className="border-border/60 hover:border-primary/30 transition-all">
               <CardContent className="p-3">
                 <div className="w-full h-40 rounded-md border border-border/60 bg-muted/20 overflow-hidden flex items-center justify-center mb-2.5">
-                  {ac.featuredImageUrl ? (
-                    <img
-                      src={ac.featuredImageUrl}
-                      alt={`${ac.currentRegistration ?? ac.serialNumber} thumbnail`}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <ImageIcon className="w-6 h-6 text-muted-foreground/50" />
-                  )}
+                  <img
+                    src={resolveAircraftThumbnailUrl({
+                      imageUrl: ac.featuredImageUrl,
+                      registration: ac.currentRegistration,
+                      make: ac.make,
+                      model: ac.model,
+                      series: ac.series,
+                    })}
+                    alt={`${ac.currentRegistration ?? ac.serialNumber} thumbnail`}
+                    className="w-full h-full object-cover"
+                  />
                 </div>
                 <div className="space-y-1.5">
                   {renderTitle(ac)}

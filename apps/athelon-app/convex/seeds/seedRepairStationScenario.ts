@@ -22,6 +22,7 @@ const REQUIRED_COUNTS = {
   rotables: 8,
   loanerItems: 4,
   quotes: 10,
+  maintenancePrograms: 12,
 };
 
 const LOCATION_SEED = [
@@ -245,6 +246,169 @@ const AVIONICS_CATALOG = [
   ["KA-TBM-AVX-007", "Emergency Battery Pack", "Emergency avionics battery module"],
   ["KA-TBM-AVX-008", "Static Inverter", "Static inverter electrical supply unit"],
 ] as const;
+
+type MaintenanceProgramSeedTemplate = {
+  taskName: string;
+  aircraftType: string;
+  ataChapter: string;
+  approvedDataRef: string;
+  calendarIntervalDays?: number;
+  hourInterval?: number;
+  cycleInterval?: number;
+  triggerLogic: "first" | "greater";
+  isPhaseInspection: boolean;
+  phaseNumber?: number;
+  requiredPartsTemplate?: string[];
+  estimatedLaborHours: number;
+};
+
+const MAINTENANCE_PROGRAM_SEED: MaintenanceProgramSeedTemplate[] = [
+  // --- King Air B200: 4-phase inspection program (Textron Chapter 5, 200-hr phases) ---
+  {
+    taskName: "Phase 1 Inspection",
+    aircraftType: "Beechcraft King Air B200",
+    ataChapter: "05-10",
+    approvedDataRef: "Textron SB B200-05-0041",
+    calendarIntervalDays: 365,
+    hourInterval: 200,
+    triggerLogic: "first",
+    isPhaseInspection: true,
+    phaseNumber: 1,
+    requiredPartsTemplate: ["CH48110-1 Oil Filter Element", "CH48108-1 Fuel Filter Element", "Safety Wire .032 Stainless"],
+    estimatedLaborHours: 32,
+  },
+  {
+    taskName: "Phase 2 Inspection",
+    aircraftType: "Beechcraft King Air B200",
+    ataChapter: "05-20",
+    approvedDataRef: "Textron SB B200-05-0041",
+    calendarIntervalDays: 365,
+    hourInterval: 400,
+    triggerLogic: "first",
+    isPhaseInspection: true,
+    phaseNumber: 2,
+    requiredPartsTemplate: ["CH48110-1 Oil Filter Element", "CH48108-1 Fuel Filter Element", "Safety Wire .032 Stainless"],
+    estimatedLaborHours: 36,
+  },
+  {
+    taskName: "Phase 3 Inspection",
+    aircraftType: "Beechcraft King Air B200",
+    ataChapter: "05-30",
+    approvedDataRef: "Textron SB B200-05-0041",
+    calendarIntervalDays: 365,
+    hourInterval: 600,
+    triggerLogic: "first",
+    isPhaseInspection: true,
+    phaseNumber: 3,
+    requiredPartsTemplate: ["CH48110-1 Oil Filter Element", "CH48108-1 Fuel Filter Element", "Safety Wire .032 Stainless"],
+    estimatedLaborHours: 40,
+  },
+  {
+    taskName: "Phase 4 Inspection",
+    aircraftType: "Beechcraft King Air B200",
+    ataChapter: "05-40",
+    approvedDataRef: "Textron SB B200-05-0041",
+    calendarIntervalDays: 730,
+    hourInterval: 800,
+    triggerLogic: "first",
+    isPhaseInspection: true,
+    phaseNumber: 4,
+    requiredPartsTemplate: ["CH48110-1 Oil Filter Element", "CH48108-1 Fuel Filter Element", "Safety Wire .032 Stainless"],
+    estimatedLaborHours: 48,
+  },
+  // --- King Air B200: Engine, landing gear, propeller, avionics ---
+  {
+    taskName: "PT6A Hot Section Inspection",
+    aircraftType: "Beechcraft King Air B200",
+    ataChapter: "72-00",
+    approvedDataRef: "P&WC SB 1802R3",
+    hourInterval: 1800,
+    triggerLogic: "first",
+    isPhaseInspection: false,
+    requiredPartsTemplate: ["PT6A Fuel Nozzle", "PT6A Igniter Plug", "PT6A Compressor Turbine Blade", "AeroShell Turbine Oil 560"],
+    estimatedLaborHours: 120,
+  },
+  {
+    taskName: "Landing Gear Overhaul",
+    aircraftType: "Beechcraft King Air B200",
+    ataChapter: "32-00",
+    approvedDataRef: "Textron AMM 32-20-00",
+    calendarIntervalDays: 2190,
+    hourInterval: 8000,
+    triggerLogic: "first",
+    isPhaseInspection: false,
+    requiredPartsTemplate: ["Main Gear Actuator Seal Kit", "MS29513-012 O-Ring", "Cleveland Brake Lining Set", "Hydraulic Fluid MIL-PRF-5606"],
+    estimatedLaborHours: 80,
+  },
+  {
+    taskName: "Propeller Overhaul",
+    aircraftType: "Beechcraft King Air B200",
+    ataChapter: "61-00",
+    approvedDataRef: "Hartzell SB HC-SB-61-329",
+    calendarIntervalDays: 2190,
+    hourInterval: 3000,
+    triggerLogic: "first",
+    isPhaseInspection: false,
+    requiredPartsTemplate: ["Safety Wire .041 Stainless", "Corrosion Inhibitor Compound"],
+    estimatedLaborHours: 24,
+  },
+  {
+    taskName: "Pitot-Static / Transponder Test",
+    aircraftType: "Beechcraft King Air B200",
+    ataChapter: "34-00",
+    approvedDataRef: "FAR 91.411 / 91.413",
+    calendarIntervalDays: 730,
+    triggerLogic: "first",
+    isPhaseInspection: false,
+    estimatedLaborHours: 6,
+  },
+  // --- TBM 940: Annual, engine, propeller, avionics ---
+  {
+    taskName: "300-Hour / Annual Inspection",
+    aircraftType: "Daher TBM 940",
+    ataChapter: "05-10",
+    approvedDataRef: "Daher AMM 05-10-00 Rev 22",
+    calendarIntervalDays: 365,
+    hourInterval: 300,
+    triggerLogic: "first",
+    isPhaseInspection: false,
+    requiredPartsTemplate: ["CH48110-1 Oil Filter Element", "CH48108-1 Fuel Filter Element", "Safety Wire .032 Stainless"],
+    estimatedLaborHours: 28,
+  },
+  {
+    taskName: "PT6A-64 Hot Section Inspection",
+    aircraftType: "Daher TBM 940",
+    ataChapter: "72-00",
+    approvedDataRef: "P&WC SB 1802R3",
+    hourInterval: 1750,
+    triggerLogic: "first",
+    isPhaseInspection: false,
+    requiredPartsTemplate: ["PT6A Fuel Nozzle", "PT6A Igniter Plug", "PT6A Compressor Turbine Blade", "AeroShell Turbine Oil 560"],
+    estimatedLaborHours: 100,
+  },
+  {
+    taskName: "MT Propeller Overhaul",
+    aircraftType: "Daher TBM 940",
+    ataChapter: "61-00",
+    approvedDataRef: "MT SB-E-029 Rev 4",
+    calendarIntervalDays: 2190,
+    hourInterval: 2500,
+    triggerLogic: "first",
+    isPhaseInspection: false,
+    requiredPartsTemplate: ["Safety Wire .041 Stainless", "Corrosion Inhibitor Compound"],
+    estimatedLaborHours: 20,
+  },
+  {
+    taskName: "Pitot-Static / Transponder Test",
+    aircraftType: "Daher TBM 940",
+    ataChapter: "34-00",
+    approvedDataRef: "FAR 91.411 / 91.413",
+    calendarIntervalDays: 730,
+    triggerLogic: "first",
+    isPhaseInspection: false,
+    estimatedLaborHours: 5,
+  },
+];
 
 function keyWithSerial(partNumber: string, serialNumber?: string) {
   return `${partNumber}::${serialNumber ?? ""}`;
@@ -817,6 +981,14 @@ export const seedKingAirTbmRepairStation = mutation({
       .collect();
     const loanerByKey = new Map<string, any>(
       loanerRows.map((row) => [keyWithSerial(row.partNumber, row.serialNumber), row]),
+    );
+
+    const maintenanceProgramRows = await ctx.db
+      .query("maintenancePrograms")
+      .withIndex("by_org", (q) => q.eq("organizationId", orgId))
+      .collect();
+    const maintenanceProgramByKey = new Map<string, any>(
+      maintenanceProgramRows.map((row) => [`${row.taskName}::${row.aircraftType}`, row]),
     );
 
     const engineRows = await ctx.db
@@ -1702,6 +1874,39 @@ export const seedKingAirTbmRepairStation = mutation({
       }
     }
 
+    // --- Maintenance Programs ---
+    for (const template of MAINTENANCE_PROGRAM_SEED) {
+      const mpKey = `${template.taskName}::${template.aircraftType}`;
+      const existing = maintenanceProgramByKey.get(mpKey);
+      const payload = {
+        organizationId: orgId,
+        aircraftType: template.aircraftType,
+        serialNumberScope: "all" as const,
+        taskName: template.taskName,
+        ataChapter: template.ataChapter,
+        approvedDataRef: template.approvedDataRef,
+        calendarIntervalDays: template.calendarIntervalDays,
+        hourInterval: template.hourInterval,
+        cycleInterval: template.cycleInterval,
+        triggerLogic: template.triggerLogic,
+        isPhaseInspection: template.isPhaseInspection,
+        phaseNumber: template.phaseNumber,
+        requiredPartsTemplate: template.requiredPartsTemplate,
+        estimatedLaborHours: template.estimatedLaborHours,
+        isActive: true,
+        updatedAt: now,
+      };
+
+      if (existing) {
+        await ctx.db.patch(existing._id, payload);
+      } else {
+        await ctx.db.insert("maintenancePrograms", {
+          ...payload,
+          createdAt: now,
+        });
+      }
+    }
+
     if (targetOrgMode === "dedicated") {
       const expectedAircraftTails = new Set<string>(
         AIRCRAFT_SEED.map((aircraft) => aircraft.tail),
@@ -1765,6 +1970,7 @@ export const seedKingAirTbmRepairStation = mutation({
       rotables,
       loaners,
       quotes,
+      mxPrograms,
     ] =
       await Promise.all([
         ctx.db.query("shopLocations").withIndex("by_organization", (q) => q.eq("organizationId", orgId)).collect(),
@@ -1782,6 +1988,7 @@ export const seedKingAirTbmRepairStation = mutation({
         ctx.db.query("rotables").withIndex("by_organization", (q) => q.eq("organizationId", orgId)).collect(),
         ctx.db.query("loanerItems").withIndex("by_organization", (q) => q.eq("organizationId", orgId)).collect(),
         ctx.db.query("quotes").withIndex("by_org", (q) => q.eq("orgId", orgId)).collect(),
+        ctx.db.query("maintenancePrograms").withIndex("by_org", (q) => q.eq("organizationId", orgId)).collect(),
       ]);
 
     const perLocationScheduledCounts = LOCATION_SEED.map((location) => ({
@@ -1840,6 +2047,7 @@ export const seedKingAirTbmRepairStation = mutation({
       rotables: rotables.length,
       loanerItems: loaners.length,
       quotes: quotes.length,
+      maintenancePrograms: mxPrograms.length,
     };
 
     return {

@@ -32,6 +32,10 @@ import { toast } from "sonner";
 import { downloadPDF } from "@/lib/pdf/download";
 import { Form8130PDF } from "@/lib/pdf/Form8130PDF";
 import { EASAForm1PDF } from "@/lib/pdf/EASAForm1PDF";
+import {
+  PartNumberCombobox,
+  type PartSelection,
+} from "@/src/shared/components/PartNumberCombobox";
 
 export default function CertificatesPage() {
   const { id } = useParams<{ id: string }>();
@@ -55,6 +59,7 @@ export default function CertificatesPage() {
     setDialogOpen(open);
   };
   const [formType, setFormType] = useState<"faa_8130" | "easa_form1">("faa_8130");
+  const [partSelection, setPartSelection] = useState<PartSelection | null>(null);
   const [partDescription, setPartDescription] = useState("");
   const [partNumber, setPartNumber] = useState("");
   const [serialNumber, setSerialNumber] = useState("");
@@ -74,6 +79,7 @@ export default function CertificatesPage() {
     // for Part A, cancelled, then opened a new 8130 for Part B would see Part
     // A's description, P/N, and serial pre-filled — and might not notice before
     // submitting, producing a regulatory document with wrong part information.
+    setPartSelection(null);
     setPartDescription("");
     setPartNumber("");
     setSerialNumber("");
@@ -145,6 +151,7 @@ export default function CertificatesPage() {
       );
       setDialogOpen(false);
       // Reset form
+      setPartSelection(null);
       setPartDescription("");
       setPartNumber("");
       setSerialNumber("");
@@ -347,7 +354,22 @@ export default function CertificatesPage() {
               </div>
               <div>
                 <Label>Part Number *</Label>
-                <Input value={partNumber} onChange={(e) => setPartNumber(e.target.value.slice(0, 50))} placeholder="e.g. 2524409-1" maxLength={50} />
+                {orgId ? (
+                  <PartNumberCombobox
+                    organizationId={orgId}
+                    onSelect={(sel) => {
+                      setPartSelection(sel);
+                      setPartNumber(sel.partNumber);
+                      if (!partDescription) setPartDescription(sel.partName);
+                    }}
+                    value={partSelection}
+                    sourceContext="release_certificate"
+                    sourceReferenceId={workOrderId}
+                    placeholder="Search part number..."
+                  />
+                ) : (
+                  <Input value={partNumber} onChange={(e) => setPartNumber(e.target.value.slice(0, 50))} placeholder="e.g. 2524409-1" maxLength={50} />
+                )}
               </div>
             </div>
             <div className="grid grid-cols-3 gap-4">

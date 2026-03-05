@@ -2328,7 +2328,41 @@ export default defineSchema({
     .index("by_shelf_life", ["hasShelfLifeLimit", "shelfLifeLimitDate"])
     .index("by_org_category", ["organizationId", "partCategory"])
     .index("by_org_lot", ["organizationId", "lotId"])
-    .index("by_org_bin", ["organizationId", "binLocationId"]),
+    .index("by_org_bin", ["organizationId", "binLocationId"])
+    .searchIndex("search_partNumber", {
+      searchField: "partNumber",
+      filterFields: ["organizationId"],
+    })
+    .searchIndex("search_partName", {
+      searchField: "partName",
+      filterFields: ["organizationId"],
+    }),
+
+  provisionalParts: defineTable({
+    organizationId: v.id("organizations"),
+    partNumber: v.string(),
+    partName: v.string(),
+    description: v.optional(v.string()),
+    createdByUserId: v.string(),
+    sourceContext: v.union(
+      v.literal("work_order_request"),
+      v.literal("purchase_order"),
+      v.literal("rotable_create"),
+      v.literal("loaner_create"),
+      v.literal("core_return"),
+      v.literal("warranty_claim"),
+      v.literal("release_certificate"),
+      v.literal("parts_request"),
+    ),
+    sourceReferenceId: v.optional(v.string()),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("approved"),
+      v.literal("rejected"),
+    ),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_org_and_partNumber", ["organizationId", "partNumber"]),
 
   // ═══════════════════════════════════════════════════════════════════════════
   // 8130-3 RECORDS  (FAA Airworthiness Approval Tag)

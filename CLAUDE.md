@@ -25,7 +25,7 @@ A monorepo for Athelon, an FAA Part 145-compliant aircraft maintenance MRO SaaS 
 ```bash
 cd apps/athelon-app
 
-pnpm dev              # Vite dev server on port 3000
+pnpm dev              # Vite dev server on port 3000 (run convex dev in a separate terminal)
 pnpm build            # tsc + vite build
 pnpm typecheck        # tsc --noEmit (excludes convex/)
 pnpm preview          # Serve production build on port 3000
@@ -46,9 +46,11 @@ pnpm run qa:first-user-gate    # typecheck + core E2E gate tests
 ## Monorepo Layout
 
 pnpm workspace with packages defined in `pnpm-workspace.yaml`:
-- `apps/athelon-app` — the main application
+- `apps/athelon-app` — the main application (where all feature work happens)
 - `apps/scheduler` — scheduler service
+- `apps/athelon-demo`, `apps/athelon-ios-demo` — demo apps
 - `apps/marketing/video/*` — marketing videos (Remotion)
+- `archive/`, `knowledge/` — historical simulation artifacts (read-only, do not modify)
 
 ## Application Architecture
 
@@ -123,6 +125,23 @@ Canonical Convex implementation rules live in `apps/athelon-app/convex/CONVEX_RU
 - Do NOT use `filter` in queries — define indexes and use `withIndex`
 - Actions cannot use `ctx.db` — use `ctx.runQuery`/`ctx.runMutation` instead
 - Never put `"use node"` in a file that exports queries/mutations
+
+## RBAC (Role-Based Access Control)
+
+The app has 8 MRO roles defined in `src/shared/lib/roles.ts`: `admin`, `shop_manager`, `qcm_inspector`, `billing_manager`, `lead_technician`, `technician`, `parts_clerk`, `read_only`. Each role has a numeric level and controls sidebar nav visibility via `ROLE_NAV_ACCESS`.
+
+Key hooks:
+- `useCurrentOrg()` — resolves current user's org, technician record, and IDs (reads from `OrgContextProvider`)
+- `useRbac()` — returns `role`, `hasPermission()`, `canAccess()`, `isAdmin`, `isManager`, `isInspector`
+- `useUserRole()` — lower-level role resolution
+
+## Agentic Workflow Scripts
+
+`package.json` includes `agentic:*` scripts for automated code review and orchestration:
+- `pnpm run agentic:reviewer:quick` / `agentic:reviewer:deep` — propose code review changes
+- `pnpm run agentic:reviewer:apply` — apply proposed changes
+- `pnpm run agentic:orchestrator:start` / `stop` / `tick` — orchestration lifecycle
+- `pnpm run agentic:queue:add` / `list` / `complete` — task queue management
 
 ## E2E Testing
 

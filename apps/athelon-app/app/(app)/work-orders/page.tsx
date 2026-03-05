@@ -19,7 +19,6 @@ import {
   Grid3X3,
   List,
   ListCollapse,
-  Image as ImageIcon,
 } from "lucide-react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -50,6 +49,7 @@ import {
 } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
 import { QRCodeBadge } from "@/components/QRCodeBadge";
+import { resolveAircraftThumbnailUrl } from "@/src/shared/lib/demo-thumbnails";
 import {
   Select,
   SelectContent,
@@ -91,6 +91,8 @@ type WorkOrderRow = {
   customer: string;
   aircraft: string;
   aircraftType: string;
+  aircraftMake: string | null;
+  aircraftModel: string | null;
   aircraftImageUrl: string | null;
   promisedDeliveryDate: number | null;
   tasksComplete: number;
@@ -189,6 +191,8 @@ export default function WorkOrdersPage() {
       aircraftType: wo.aircraft
         ? `${wo.aircraft.make} ${wo.aircraft.model}`.trim()
         : "Aircraft unavailable",
+      aircraftMake: wo.aircraft?.make ?? null,
+      aircraftModel: wo.aircraft?.model ?? null,
       aircraftImageUrl: wo.aircraft?.featuredImageUrl ?? null,
       promisedDeliveryDate: wo.promisedDeliveryDate ?? null,
       tasksComplete: wo.completedTaskCardCount ?? 0,
@@ -621,16 +625,17 @@ export default function WorkOrdersPage() {
               >
                 <CardContent className="p-3 space-y-2.5">
                   <div className="w-full h-32 rounded border border-border/60 bg-muted/30 overflow-hidden flex items-center justify-center">
-                    {wo.aircraftImageUrl ? (
-                      <img
-                        src={wo.aircraftImageUrl}
-                        alt={`${wo.aircraft} thumbnail`}
-                        className="w-full h-full object-cover"
-                        loading="lazy"
-                      />
-                    ) : (
-                      <ImageIcon className="w-6 h-6 text-muted-foreground/50" />
-                    )}
+                    <img
+                      src={resolveAircraftThumbnailUrl({
+                        imageUrl: wo.aircraftImageUrl,
+                        registration: wo.aircraft,
+                        make: wo.aircraftMake,
+                        model: wo.aircraftModel,
+                      })}
+                      alt={`${wo.aircraft} thumbnail`}
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                    />
                   </div>
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-mono text-xs text-muted-foreground font-medium">
@@ -701,16 +706,17 @@ export default function WorkOrdersPage() {
               <div className="px-3 py-2.5 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2.5 min-w-0">
                   <div className="w-12 h-9 rounded border border-border/60 bg-muted/30 overflow-hidden flex items-center justify-center flex-shrink-0">
-                    {wo.aircraftImageUrl ? (
-                      <img
-                        src={wo.aircraftImageUrl}
-                        alt={`${wo.aircraft} thumbnail`}
-                        className="w-full h-full object-cover"
-                        loading="lazy"
-                      />
-                    ) : (
-                      <ImageIcon className="w-3.5 h-3.5 text-muted-foreground/50" />
-                    )}
+                    <img
+                      src={resolveAircraftThumbnailUrl({
+                        imageUrl: wo.aircraftImageUrl,
+                        registration: wo.aircraft,
+                        make: wo.aircraftMake,
+                        model: wo.aircraftModel,
+                      })}
+                      alt={`${wo.aircraft} thumbnail`}
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                    />
                   </div>
                   <div className="min-w-0">
                     <div className="flex items-center gap-1.5 flex-wrap">
@@ -768,16 +774,17 @@ export default function WorkOrdersPage() {
                 <CardContent className="p-4">
                   <div className="flex items-start gap-3">
                     <div className="w-16 h-12 rounded border border-border/60 bg-muted/30 overflow-hidden flex items-center justify-center flex-shrink-0">
-                      {wo.aircraftImageUrl ? (
-                        <img
-                          src={wo.aircraftImageUrl}
-                          alt={`${wo.aircraft} thumbnail`}
-                          className="w-full h-full object-cover"
-                          loading="lazy"
-                        />
-                      ) : (
-                        <ImageIcon className="w-4 h-4 text-muted-foreground/50" />
-                      )}
+                      <img
+                        src={resolveAircraftThumbnailUrl({
+                          imageUrl: wo.aircraftImageUrl,
+                          registration: wo.aircraft,
+                          make: wo.aircraftMake,
+                          model: wo.aircraftModel,
+                        })}
+                        alt={`${wo.aircraft} thumbnail`}
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                      />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1 flex-wrap">

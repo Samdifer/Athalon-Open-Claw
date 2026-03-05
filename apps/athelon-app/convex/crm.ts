@@ -715,7 +715,7 @@ export const getAccountSummary = query({
     // Invoices
     const invoices = await ctx.db
       .query("invoices")
-      .withIndex("by_org", (q: any) => q.eq("organizationId", args.organizationId))
+      .withIndex("by_org", (q: any) => q.eq("orgId", args.organizationId))
       .collect();
     const customerInvoices = invoices.filter((inv: any) => inv.customerId === args.customerId);
     const totalRevenue = customerInvoices.reduce(
@@ -797,7 +797,7 @@ export const listAccountsWithMetrics = query({
     // Batch load related data
     const allAircraft = await ctx.db
       .query("aircraft")
-      .withIndex("by_organization", (q: any) => q.eq("organizationId", args.organizationId))
+      .withIndex("by_organization", (q: any) => q.eq("operatingOrganizationId", args.organizationId))
       .collect();
 
     const allWOs = await ctx.db
@@ -807,7 +807,7 @@ export const listAccountsWithMetrics = query({
 
     const allInvoices = await ctx.db
       .query("invoices")
-      .withIndex("by_org", (q: any) => q.eq("organizationId", args.organizationId))
+      .withIndex("by_org", (q: any) => q.eq("orgId", args.organizationId))
       .collect();
 
     const allInteractions = await ctx.db
@@ -900,7 +900,7 @@ export const getCrmDashboardData = query({
 
     const invoices = await ctx.db
       .query("invoices")
-      .withIndex("by_org", (q: any) => q.eq("organizationId", args.organizationId))
+      .withIndex("by_org", (q: any) => q.eq("orgId", args.organizationId))
       .collect();
 
     // Monthly revenue (last 30 days)
@@ -1029,7 +1029,7 @@ export const getAnalyticsSummary = query({
     // Revenue by customer type (for segment analysis)
     const invoices = await ctx.db
       .query("invoices")
-      .withIndex("by_org", (q: any) => q.eq("organizationId", args.organizationId))
+      .withIndex("by_org", (q: any) => q.eq("orgId", args.organizationId))
       .collect();
 
     const customerTypeMap = new Map<string, string>();

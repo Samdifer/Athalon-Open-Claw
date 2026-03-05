@@ -50,6 +50,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { formatDate, formatCurrency } from "@/lib/format";
 import { toast } from "sonner";
 import { ActionableEmptyState } from "@/components/zero-state/ActionableEmptyState";
+import {
+  PartNumberCombobox,
+  type PartSelection,
+} from "@/src/shared/components/PartNumberCombobox";
 
 type ClaimStatus = "draft" | "submitted" | "under_review" | "approved" | "denied" | "paid" | "closed";
 type ClaimType = "part_defect" | "workmanship" | "oem_warranty" | "vendor_warranty";
@@ -98,6 +102,7 @@ function CreateClaimDialog({
   orgId: Id<"organizations">;
 }) {
   const create = useMutation(api.warranty.createWarrantyClaim);
+  const [warrantyPartSelection, setWarrantyPartSelection] = useState<PartSelection | null>(null);
   const [claimType, setClaimType] = useState<ClaimType>("part_defect");
   const [description, setDescription] = useState("");
   const [partNumber, setPartNumber] = useState("");
@@ -107,6 +112,7 @@ function CreateClaimDialog({
   const [saving, setSaving] = useState(false);
 
   const reset = () => {
+    setWarrantyPartSelection(null);
     setClaimType("part_defect");
     setDescription("");
     setPartNumber("");
@@ -163,7 +169,15 @@ function CreateClaimDialog({
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label>Part Number</Label>
-              <Input value={partNumber} onChange={(e) => setPartNumber(e.target.value)} />
+              <PartNumberCombobox
+                organizationId={orgId}
+                onSelect={(sel) => {
+                  setWarrantyPartSelection(sel);
+                  setPartNumber(sel.partNumber);
+                }}
+                value={warrantyPartSelection}
+                sourceContext="warranty_claim"
+              />
             </div>
             <div>
               <Label>Serial Number</Label>

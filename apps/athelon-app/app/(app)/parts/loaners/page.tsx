@@ -28,6 +28,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { formatDate, formatCurrency } from "@/lib/format";
 import { ActionableEmptyState } from "@/components/zero-state/ActionableEmptyState";
+import {
+  PartNumberCombobox,
+  type PartSelection,
+} from "@/src/shared/components/PartNumberCombobox";
 
 type LoanerFilter = "all" | "available" | "loaned_out" | "maintenance" | "retired";
 
@@ -110,6 +114,7 @@ export default function LoanersPage() {
   const loanOut = useMutation(api.loaners.loanOut);
   const returnItem = useMutation(api.loaners.returnItem);
 
+  const [loanerPartSelection, setLoanerPartSelection] = useState<PartSelection | null>(null);
   const [createForm, setCreateForm] = useState({ partNumber: "", serialNumber: "", description: "", dailyRate: "", notes: "" });
   const [loanForm, setLoanForm] = useState({ customerId: "", expectedReturnDate: "", conditionOut: "", notes: "" });
   const [returnForm, setReturnForm] = useState({ conditionIn: "", notes: "" });
@@ -171,6 +176,7 @@ export default function LoanersPage() {
         notes: createForm.notes || undefined,
       });
       setCreateOpen(false);
+      setLoanerPartSelection(null);
       setCreateForm({ partNumber: "", serialNumber: "", description: "", dailyRate: "", notes: "" });
       toast.success("Loaner item created");
     } catch (err) {
@@ -285,7 +291,19 @@ export default function LoanersPage() {
                     Previously uncapped — pasting a long part number, serial number,
                     or description would exceed backend schema limits and silently fail
                     on submit with a cryptic validation error. */}
-                <div className="space-y-2"><Label>Part Number *</Label><Input value={createForm.partNumber} onChange={(e) => setCreateForm({ ...createForm, partNumber: e.target.value.slice(0, 50) })} maxLength={50} required /></div>
+                <div className="space-y-2"><Label>Part Number *</Label>{orgId ? (
+                  <PartNumberCombobox
+                    organizationId={orgId}
+                    onSelect={(sel) => {
+                      setLoanerPartSelection(sel);
+                      setCreateForm({ ...createForm, partNumber: sel.partNumber, description: createForm.description || sel.partName });
+                    }}
+                    value={loanerPartSelection}
+                    sourceContext="loaner_create"
+                  />
+                ) : (
+                  <Input value={createForm.partNumber} onChange={(e) => setCreateForm({ ...createForm, partNumber: e.target.value.slice(0, 50) })} maxLength={50} required />
+                )}</div>
                 <div className="space-y-2"><Label>Serial Number</Label><Input value={createForm.serialNumber} onChange={(e) => setCreateForm({ ...createForm, serialNumber: e.target.value.slice(0, 50) })} maxLength={50} /></div>
               </div>
               <div className="space-y-2"><Label>Description *</Label><Input value={createForm.description} onChange={(e) => setCreateForm({ ...createForm, description: e.target.value.slice(0, 200) })} maxLength={200} required /></div>

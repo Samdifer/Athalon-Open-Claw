@@ -1,13 +1,13 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import type { Id } from "@/convex/_generated/dataModel";
 import { Search, Send } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { PartStatusBadge } from "@/src/shared/components/PartStatusBadge";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -17,6 +17,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  PartNumberCombobox,
+  type PartSelection,
+} from "@/src/shared/components/PartNumberCombobox";
 
 export type PartsRequestStatus = "requested" | "ordered" | "shipped" | "received" | "issued";
 export type PartsRequestUrgency = "normal" | "urgent" | "aog";
@@ -46,6 +50,7 @@ interface CatalogPart {
 }
 
 interface PartsRequestFormProps {
+  organizationId?: Id<"organizations">;
   partsCatalog: CatalogPart[];
   requests: PartsRequestRecord[];
   onRequestsChange: (next: PartsRequestRecord[]) => void;
@@ -55,11 +60,13 @@ interface PartsRequestFormProps {
 const statusOptions: PartsRequestStatus[] = ["requested", "ordered", "shipped", "received", "issued"];
 
 export function PartsRequestForm({
+  organizationId,
   partsCatalog,
   requests,
   onRequestsChange,
   initialWorkOrderRef,
 }: PartsRequestFormProps) {
+  const [partSelection, setPartSelection] = useState<PartSelection | null>(null);
   const [partNumber, setPartNumber] = useState("");
   const [description, setDescription] = useState("");
   const [manufacturer, setManufacturer] = useState("");
@@ -91,6 +98,7 @@ export function PartsRequestForm({
   }
 
   function resetForm() {
+    setPartSelection(null);
     setPartNumber("");
     setDescription("");
     setManufacturer("");
@@ -144,23 +152,32 @@ export function PartsRequestForm({
           <div className="grid gap-3 md:grid-cols-2">
             <div className="space-y-1.5">
               <Label className="text-xs">Part Number</Label>
-              <Input
-                list="parts-catalog"
-                value={partNumber}
-                onChange={(e) => {
-                  setPartNumber(e.target.value);
-                  prefillFromCatalog(e.target.value);
-                }}
-                placeholder="Search / enter P/N"
-                className="h-8 text-xs"
-              />
-              <datalist id="parts-catalog">
-                {partsCatalog.map((part) => (
-                  <option key={part._id} value={part.partNumber}>
-                    {part.partName}
-                  </option>
-                ))}
-              </datalist>
+              {organizationId ? (
+                <PartNumberCombobox
+                  organizationId={organizationId}
+                  onSelect={(sel) => {
+                    setPartSelection(sel);
+                    setPartNumber(sel.partNumber);
+                    setDescription(sel.partName);
+                    // Also try to prefill manufacturer from catalog
+                    prefillFromCatalog(sel.partNumber);
+                  }}
+                  value={partSelection}
+                  sourceContext="parts_request"
+                  placeholder="Search / enter P/N"
+                />
+              ) : (
+                <Input
+                  list="parts-catalog"
+                  value={partNumber}
+                  onChange={(e) => {
+                    setPartNumber(e.target.value);
+                    prefillFromCatalog(e.target.value);
+                  }}
+                  placeholder="Search / enter P/N"
+                  className="h-8 text-xs"
+                />
+              )}
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs">Description</Label>

@@ -33,10 +33,13 @@ import { PartStatusBadge } from "@/src/shared/components/PartStatusBadge";
 import { QRScannerDialog } from "@/components/QRScannerDialog";
 import { InventoryMasterTab } from "./_components/InventoryMasterTab";
 import { InventoryKanban } from "./_components/InventoryKanban";
+import { PartsTileView } from "./_components/PartsTileView";
+import { PartsCompactList } from "./_components/PartsCompactList";
 import { PartTagBadges } from "./_components/PartTagBadges";
 import { PartLocationCell } from "./_components/PartLocationCell";
 import { TagFilterDropdown } from "./_components/TagFilterDropdown";
-import { QrCode } from "lucide-react";
+import { DocumentAttachmentPanel } from "@/app/(app)/work-orders/[id]/_components/DocumentAttachmentPanel";
+import { QrCode, Grid3X3, LayoutList, Rows3 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -500,10 +503,11 @@ function ReservePartDialog({
 
 interface PartDetailSheetProps {
   part: PartDoc | null;
+  organizationId: Id<"organizations"> | null;
   onClose: () => void;
 }
 
-function PartDetailSheet({ part, onClose }: PartDetailSheetProps) {
+function PartDetailSheet({ part, organizationId, onClose }: PartDetailSheetProps) {
   const open = !!part;
 
   if (!part) {
@@ -762,6 +766,25 @@ function PartDetailSheet({ part, onClose }: PartDetailSheetProps) {
               </div>
             </>
           )}
+
+          {/* Photos & Documents */}
+          {organizationId && (
+            <>
+              <Separator className="opacity-30" />
+              <div>
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                  Photos &amp; Documents
+                </p>
+                <DocumentAttachmentPanel
+                  organizationId={organizationId}
+                  attachedToTable="parts"
+                  attachedToId={String(part._id)}
+                  allowedTypes={["photo", "parts_8130", "vendor_invoice", "other"]}
+                  canDelete
+                />
+              </div>
+            </>
+          )}
         </div>
       </SheetContent>
     </Sheet>
@@ -794,6 +817,7 @@ function PartSkeleton() {
 
 export default function PartsPage() {
   const [activeTab, setActiveTab] = useState<LocationFilter>("all");
+  const [viewMode, setViewMode] = useState<"cards" | "tiles" | "list">("cards");
   const [categoryFilter, setCategoryFilter] = useState<PartCategory>("all");
   const [tagFilter, setTagFilter] = useState<{ tagId?: string; subtagId?: string } | null>(null);
   const [searchParams] = useSearchParams();
@@ -871,6 +895,16 @@ export default function PartsPage() {
   );
 
   const releasePart = useMutation(api.gapFixes.releasePartReservation);
+
+  // Thumbnail URLs for tile view (only fetched when tile view is active)
+  const allPartIds = useMemo(
+    () => (allParts ?? []).map((p: { _id: Id<"parts"> }) => String(p._id)),
+    [allParts],
+  );
+  const thumbnails = useQuery(
+    api.documents.getPhotoThumbnailsForParts,
+    viewMode === "tiles" ? { partIds: allPartIds } : "skip",
+  );
 
   const isLoading = !isLoaded || allParts === undefined;
   const parts = (allParts ?? []) as PartDoc[];
@@ -1127,6 +1161,36 @@ export default function PartsPage() {
         </Tabs>
 
         <div className="flex items-center gap-2 ml-auto">
+          {/* View toggle */}
+          <div className="flex items-center gap-0.5 border border-border/60 rounded-md p-0.5">
+            <Button
+              variant={viewMode === "cards" ? "default" : "ghost"}
+              size="icon"
+              className="h-7 w-7"
+              onClick={() => setViewMode("cards")}
+              title="Card view"
+            >
+              <LayoutList className="w-3.5 h-3.5" />
+            </Button>
+            <Button
+              variant={viewMode === "tiles" ? "default" : "ghost"}
+              size="icon"
+              className="h-7 w-7"
+              onClick={() => setViewMode("tiles")}
+              title="Tile view"
+            >
+              <Grid3X3 className="w-3.5 h-3.5" />
+            </Button>
+            <Button
+              variant={viewMode === "list" ? "default" : "ghost"}
+              size="icon"
+              className="h-7 w-7"
+              onClick={() => setViewMode("list")}
+              title="Compact list"
+            >
+              <Rows3 className="w-3.5 h-3.5" />
+            </Button>
+          </div>
           {/* Category filter — Phase 8 */}
           <Select value={categoryFilter} onValueChange={(v) => setCategoryFilter(v as PartCategory)}>
             <SelectTrigger className="h-8 w-[130px] text-xs bg-muted/30 border-border/60">
@@ -1262,6 +1326,7 @@ export default function PartsPage() {
       {activeTab === "parts_requests" && (
         <div className="grid gap-4 lg:grid-cols-2">
           <PartsRequestForm
+            organizationId={orgId ?? undefined}
             partsCatalog={parts.map((p) => ({
               _id: String(p._id),
               partNumber: p.partNumber,
@@ -1327,6 +1392,19 @@ export default function PartsPage() {
                 )}
               </CardContent>
             </Card>
+          ) : viewMode === "tiles" ? (
+            <PartsTileView
+              parts={filtered as PartDoc[]}
+              thumbnails={thumbnails ?? undefined}
+              onPartClick={setDetailPart}
+              canViewCost={canViewCost}
+            />
+          ) : viewMode === "list" ? (
+            <PartsCompactList
+              parts={filtered as PartDoc[]}
+              onPartClick={setDetailPart}
+              canViewCost={canViewCost}
+            />
           ) : (
             <div className="space-y-2">
               {filtered.map((part) => {
@@ -1589,6 +1667,7 @@ export default function PartsPage() {
       {/* Part Detail Sheet */}
       <PartDetailSheet
         part={detailPart}
+        organizationId={orgId ?? null}
         onClose={() => setDetailPart(null)}
       />
     </div>
