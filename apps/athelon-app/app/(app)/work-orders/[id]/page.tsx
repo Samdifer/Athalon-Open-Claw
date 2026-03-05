@@ -50,7 +50,7 @@ import {
 } from "@/app/(app)/work-orders/[id]/_components/WorkItemsList";
 import { WOComplianceTab } from "@/app/(app)/work-orders/[id]/_components/WOComplianceTab";
 import { DocumentsPanel } from "@/app/(app)/work-orders/[id]/_components/DocumentsPanel";
-import { InDockEvidenceHub } from "@/app/(app)/work-orders/[id]/_components/InDockEvidenceHub";
+import { InDockRtsEvidenceTab } from "@/app/(app)/work-orders/[id]/_components/InDockRtsEvidenceTab";
 import { CloseReadinessPanel } from "@/components/CloseReadinessPanel";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import { ActivityTimeline } from "@/app/(app)/work-orders/[id]/_components/ActivityTimeline";
@@ -1246,7 +1246,11 @@ export default function WorkOrderDetailPage() {
         </TabsContent>
 
         <TabsContent value="evidence" className="mt-0">
-          <InDockEvidenceHub workOrderId={String(workOrderId)} />
+          <InDockRtsEvidenceTab
+            organizationId={orgId}
+            workOrderId={String(workOrderId)}
+            aircraftRegistration={aircraft?.currentRegistration ?? "N-UNKNOWN"}
+          />
         </TabsContent>
 
         <TabsContent value="notes" className="mt-0">

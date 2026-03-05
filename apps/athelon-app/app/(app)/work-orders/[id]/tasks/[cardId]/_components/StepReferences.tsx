@@ -21,7 +21,7 @@ type Step = {
   description: string;
 };
 
-export function StepReferences({ orgId, workOrderId, taskCardId, steps }: { orgId?: string; workOrderId: string; taskCardId: string; steps: Step[] }) {
+export function StepReferences({ orgId, workOrderId, taskCardId, steps, readOnly = false }: { orgId?: string; workOrderId: string; taskCardId: string; steps: Step[]; readOnly?: boolean }) {
   const refs = useQuery(api.taskStepReferences.listForTaskCard, {
     taskCardId: taskCardId as Id<"taskCards">,
   });
@@ -51,13 +51,15 @@ export function StepReferences({ orgId, workOrderId, taskCardId, steps }: { orgI
                       <p className="text-xs font-medium text-foreground">Step {step.stepNumber}</p>
                       <p className="text-xs text-muted-foreground truncate">{step.description}</p>
                     </div>
-                    <AddReferenceDialog
-                      orgId={orgId}
-                      workOrderId={workOrderId}
-                      taskCardId={taskCardId}
-                      stepId={step._id}
-                      stepNumber={step.stepNumber}
-                    />
+                    {!readOnly ? (
+                      <AddReferenceDialog
+                        orgId={orgId}
+                        workOrderId={workOrderId}
+                        taskCardId={taskCardId}
+                        stepId={step._id}
+                        stepNumber={step.stepNumber}
+                      />
+                    ) : null}
                   </div>
                   {stepRefs.length === 0 ? (
                     <p className="text-[11px] text-muted-foreground italic">No references added.</p>

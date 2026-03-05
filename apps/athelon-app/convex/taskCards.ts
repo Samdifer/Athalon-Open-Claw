@@ -1009,6 +1009,43 @@ export const signTaskCard = mutation({
       );
     }
 
+    const blockingComplianceItems = await ctx.db
+      .query("taskComplianceItems")
+      .withIndex("by_task_card", (q) => q.eq("taskCardId", args.taskCardId))
+      .filter((q) =>
+        q.or(
+          q.eq(q.field("complianceStatus"), "pending"),
+          q.eq(q.field("complianceStatus"), "non_compliant"),
+        ),
+      )
+      .collect();
+
+    if (blockingComplianceItems.length > 0) {
+      throw new Error(
+        `Cannot sign task card while ${blockingComplianceItems.length} compliance item(s) are pending/non-compliant. ` +
+          `Resolve regulatory references before final sign-off.`,
+      );
+    }
+
+    const openVendorServices = await ctx.db
+      .query("taskCardVendorServices")
+      .withIndex("by_task_card", (q) => q.eq("taskCardId", args.taskCardId))
+      .filter((q) =>
+        q.or(
+          q.eq(q.field("status"), "planned"),
+          q.eq(q.field("status"), "sent_for_work"),
+          q.eq(q.field("status"), "in_progress"),
+        ),
+      )
+      .collect();
+
+    if (openVendorServices.length > 0) {
+      throw new Error(
+        `Cannot sign task card while ${openVendorServices.length} vendor service(s) are still open. ` +
+          `Complete or cancel outsourced work first.`,
+      );
+    }
+
     // ── Validate calling technician ──────────────────────────────────────────
     const callerTech = await ctx.db.get(args.callerTechnicianId);
     if (!callerTech || callerTech.status !== "active" || !callerTech.userId) {

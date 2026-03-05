@@ -1246,54 +1246,68 @@ export function QuoteDetailEditor({
                     <TableCell className="text-sm text-right tabular-nums">${item.unitPrice.toFixed(2)}</TableCell>
                     <TableCell className="text-sm font-medium text-right tabular-nums">${item.total.toFixed(2)}</TableCell>
                     <TableCell>
-                      <QuoteLineDecisionCell
-                        category={
-                          (mapDiscrepancyTypeToCategory(
-                            item.discrepancyType as
-                              | "mandatory"
-                              | "recommended"
-                              | "customer_information"
-                              | "ops_check"
-                              | undefined,
-                          ).key === "uncategorized"
-                            ? "recommended"
-                            : mapDiscrepancyTypeToCategory(
-                                item.discrepancyType as
-                                  | "mandatory"
-                                  | "recommended"
-                                  | "customer_information"
-                                  | "ops_check"
-                                  | undefined,
-                              ).key) as QuoteLineDecisionCategory
-                        }
-                        decision={item.customerDecision as "approved" | "declined" | "deferred" | undefined}
-                        decidedAt={item.customerDecisionAt}
-                        decidedByName={item.customerDecisionByName}
-                        notes={item.customerDecisionNotes}
-                        canDecide={canDecideLineItems}
-                        onAccept={() =>
-                          openLineDecisionDialog(
-                            {
-                              _id: item._id as Id<"quoteLineItems">,
-                              description: item.description,
-                              customerDecision: item.customerDecision as QuoteLineDecision | undefined,
-                              customerDecisionNotes: item.customerDecisionNotes,
-                            },
-                            "approved",
-                          )
-                        }
-                        onDecline={() =>
-                          openLineDecisionDialog(
-                            {
-                              _id: item._id as Id<"quoteLineItems">,
-                              description: item.description,
-                              customerDecision: item.customerDecision as QuoteLineDecision | undefined,
-                              customerDecisionNotes: item.customerDecisionNotes,
-                            },
-                            "declined",
-                          )
-                        }
-                      />
+                      <div className="space-y-1.5">
+                        <QuoteLineDecisionCell
+                          category={
+                            (mapDiscrepancyTypeToCategory(
+                              item.discrepancyType as
+                                | "mandatory"
+                                | "recommended"
+                                | "customer_information"
+                                | "ops_check"
+                                | undefined,
+                            ).key === "uncategorized"
+                              ? "recommended"
+                              : mapDiscrepancyTypeToCategory(
+                                  item.discrepancyType as
+                                    | "mandatory"
+                                    | "recommended"
+                                    | "customer_information"
+                                    | "ops_check"
+                                    | undefined,
+                                ).key) as QuoteLineDecisionCategory
+                          }
+                          decision={item.customerDecision as "approved" | "declined" | "deferred" | undefined}
+                          decidedAt={item.customerDecisionAt}
+                          decidedByName={item.customerDecisionByName}
+                          notes={item.customerDecisionNotes}
+                          canDecide={canDecideLineItems}
+                          onAccept={() =>
+                            openLineDecisionDialog(
+                              {
+                                _id: item._id as Id<"quoteLineItems">,
+                                description: item.description,
+                                customerDecision: item.customerDecision as QuoteLineDecision | undefined,
+                                customerDecisionNotes: item.customerDecisionNotes,
+                              },
+                              "approved",
+                            )
+                          }
+                          onDecline={() =>
+                            openLineDecisionDialog(
+                              {
+                                _id: item._id as Id<"quoteLineItems">,
+                                description: item.description,
+                                customerDecision: item.customerDecision as QuoteLineDecision | undefined,
+                                customerDecisionNotes: item.customerDecisionNotes,
+                              },
+                              "declined",
+                            )
+                          }
+                        />
+                        {Array.isArray((item as { decisionHistory?: unknown[] }).decisionHistory) &&
+                          (item as { decisionHistory?: Array<{ _id?: string; decision: QuoteLineDecision; actorName?: string; decidedAt: number }> }).decisionHistory!.length > 0 && (
+                            <div className="text-[10px] text-muted-foreground space-y-0.5">
+                              {(item as { decisionHistory: Array<{ _id?: string; decision: QuoteLineDecision; actorName?: string; decidedAt: number }> }).decisionHistory
+                                .slice(0, 3)
+                                .map((event, eventIdx) => (
+                                  <p key={event._id ?? `${item._id}-decision-${eventIdx}`}>
+                                    {lineDecisionLabel(event.decision)} · {event.actorName ?? "Unknown"} · {formatDate(event.decidedAt)}
+                                  </p>
+                                ))}
+                            </div>
+                          )}
+                      </div>
                     </TableCell>
                     {isDraft && (
                       <TableCell className="text-right">

@@ -8,6 +8,8 @@ import { ArrowLeft, Check, X } from "lucide-react";
 import { toast } from "sonner";
 import { usePortalCustomerId } from "@/hooks/usePortalCustomerId";
 import type { Id } from "@/convex/_generated/dataModel";
+import { DownloadPDFButton } from "@/src/shared/components/pdf/DownloadPDFButton";
+import { QuotePDF } from "@/src/shared/components/pdf/QuotePDF";
 
 const STATUS_COLORS: Record<string, string> = {
   SENT: "bg-blue-100 text-blue-700",
@@ -84,7 +86,22 @@ function QuoteDetail({
         <CardHeader>
           <div className="flex items-center justify-between flex-wrap gap-2">
             <CardTitle className="text-lg">{quote.quoteNumber}</CardTitle>
-            <Badge className={STATUS_COLORS[quote.status] ?? ""}>{quote.status}</Badge>
+            <div className="flex items-center gap-2">
+              <DownloadPDFButton
+                label="PDF"
+                fileName={`${quote.quoteNumber || "quote"}.pdf`}
+                document={(
+                  <QuotePDF
+                    orgName="Athelon MRO"
+                    quote={quote}
+                    lineItems={quote.lineItems ?? []}
+                    departments={quote.departments ?? []}
+                    customer={null}
+                  />
+                )}
+              />
+              <Badge className={STATUS_COLORS[quote.status] ?? ""}>{quote.status}</Badge>
+            </div>
           </div>
           <p className="text-sm text-gray-500">
             {quote.aircraftRegistration} · Created {new Date(quote.createdAt).toLocaleDateString()}

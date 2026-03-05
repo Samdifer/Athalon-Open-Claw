@@ -32,6 +32,30 @@ const vendorServiceStatusValidator = v.union(
   v.literal("cancelled"),
 );
 
+type VendorStatus = "planned" | "sent_for_work" | "in_progress" | "completed" | "cancelled";
+
+const ALLOWED_STATUS_TRANSITIONS: Record<VendorStatus, VendorStatus[]> = {
+  planned: ["sent_for_work", "cancelled"],
+  sent_for_work: ["in_progress", "completed", "cancelled"],
+  in_progress: ["completed", "cancelled"],
+  completed: [],
+  cancelled: [],
+};
+
+async function assertMutableTaskCard(ctx: { db: { get: (id: Id<"taskCards">) => Promise<any> } }, taskCardId: Id<"taskCards">, organizationId?: Id<"organizations">) {
+  const taskCard = await ctx.db.get(taskCardId);
+  if (!taskCard) {
+    throw new Error(`Task card ${taskCardId} not found.`);
+  }
+  if (organizationId && taskCard.organizationId !== organizationId) {
+    throw new Error("Task card does not belong to this organization.");
+  }
+  if (taskCard.status === "complete" || taskCard.status === "voided" || !!taskCard.signedAt) {
+    throw new Error("Task card is signed/locked. Vendor service records are immutable after sign-off.");
+  }
+  return taskCard;
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // MUTATION: addVendorServiceToTask
 //
@@ -58,18 +82,29 @@ export const addVendorServiceToTask = mutation({
     const now = Date.now();
     const userId = await requireAuth(ctx);
 
+    const taskCard = await assertMutableTaskCard(ctx, args.taskCardId, args.organizationId);
+    if (taskCard.workOrderId !== args.workOrderId) {
+      throw new Error("Task card/work order mismatch for vendor service attachment.");
+    }
+
+    const vendorName = args.vendorName.trim();
+    const serviceName = args.serviceName.trim();
+    if (!vendorName || !serviceName) {
+      throw new Error("Vendor name and service name are required.");
+    }
+
     const id = await ctx.db.insert("taskCardVendorServices", {
       taskCardId: args.taskCardId,
       workOrderId: args.workOrderId,
       organizationId: args.organizationId,
       vendorId: args.vendorId,
       vendorServiceId: args.vendorServiceId,
-      vendorName: args.vendorName,
-      serviceName: args.serviceName,
-      serviceType: args.serviceType,
+      vendorName,
+      serviceName,
+      serviceType: args.serviceType?.trim() || undefined,
       status: "planned",
       estimatedCost: args.estimatedCost,
-      notes: args.notes,
+      notes: args.notes?.trim() || undefined,
       createdAt: now,
       updatedAt: now,
     });
@@ -115,13 +150,24 @@ export const updateVendorServiceStatus = mutation({
       throw new Error(`Task card vendor service ${args.id} not found.`);
     }
 
+    await assertMutableTaskCard(ctx, record.taskCardId, record.organizationId);
+
+    const allowedNext = ALLOWED_STATUS_TRANSITIONS[record.status as VendorStatus] ?? [];
+    if (record.status !== args.status && !allowedNext.includes(args.status as VendorStatus)) {
+      throw new Error(`Invalid vendor service status transition: ${record.status} → ${args.status}.`);
+    }
+
+    if (args.actualCost !== undefined && args.actualCost < 0) {
+      throw new Error("Actual cost cannot be negative.");
+    }
+
     const patch: Record<string, string | number> = {
       status: args.status,
       updatedAt: now,
     };
 
     if (args.actualCost !== undefined) patch.actualCost = args.actualCost;
-    if (args.notes !== undefined) patch.notes = args.notes;
+    if (args.notes !== undefined) patch.notes = args.notes.trim();
 
     await ctx.db.patch(args.id, patch);
 
@@ -162,6 +208,12 @@ export const removeVendorServiceFromTask = mutation({
       throw new Error(`Task card vendor service ${args.id} not found.`);
     }
 
+    await assertMutableTaskCard(ctx, record.taskCardId, record.organizationId);
+
+    if (record.status === "completed") {
+      throw new Error("Completed vendor services cannot be cancelled.");
+    }
+
     await ctx.db.patch(args.id, {
       status: "cancelled",
       updatedAt: now,
@@ -193,6 +245,7 @@ export const getVendorServicesForTask = query({
   },
 
   handler: async (ctx, args) => {
+    await requireAuth(ctx);
     const records = await ctx.db
       .query("taskCardVendorServices")
       .withIndex("by_task_card", (q) => q.eq("taskCardId", args.taskCardId))
@@ -215,6 +268,7 @@ export const getVendorServicesForWorkOrder = query({
   },
 
   handler: async (ctx, args) => {
+    await requireAuth(ctx);
     const records = await ctx.db
       .query("taskCardVendorServices")
       .withIndex("by_work_order", (q) => q.eq("workOrderId", args.workOrderId))
@@ -229,6 +283,7 @@ export const listStatusHistoryForTask = query({
     taskCardId: v.id("taskCards"),
   },
   handler: async (ctx, args) => {
+    await requireAuth(ctx);
     const rows = await ctx.db
       .query("taskCardVendorServiceStatusHistory")
       .withIndex("by_task_card", (q) => q.eq("taskCardId", args.taskCardId))

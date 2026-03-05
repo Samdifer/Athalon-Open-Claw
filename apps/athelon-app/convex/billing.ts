@@ -446,6 +446,19 @@ export const getQuote = query({
       if (tech?._id) decisionTechById.set(String(tech._id), tech);
     }
 
+    const decisionEvents = await ctx.db
+      .query("quoteLineItemDecisionEvents")
+      .withIndex("by_quote", (q) => q.eq("quoteId", args.quoteId))
+      .collect();
+
+    const decisionHistoryByLineItem = new Map<string, typeof decisionEvents>();
+    for (const event of decisionEvents) {
+      const key = String(event.lineItemId);
+      const rows = decisionHistoryByLineItem.get(key) ?? [];
+      rows.push(event);
+      decisionHistoryByLineItem.set(key, rows);
+    }
+
     const lineItems = lineItemsRaw.map((item) => {
       const linkedDiscrepancy = item.discrepancyId
         ? discrepancyById.get(String(item.discrepancyId))
@@ -453,6 +466,9 @@ export const getQuote = query({
       const decisionTech = item.customerDecisionByTechnicianId
         ? decisionTechById.get(String(item.customerDecisionByTechnicianId))
         : undefined;
+      const history = (decisionHistoryByLineItem.get(String(item._id)) ?? [])
+        .slice()
+        .sort((a, b) => b.decidedAt - a.decidedAt);
 
       return {
         ...item,
@@ -460,6 +476,7 @@ export const getQuote = query({
         discrepancyNumber: linkedDiscrepancy?.discrepancyNumber,
         customerDecisionByNameResolved:
           item.customerDecisionByName ?? decisionTech?.legalName ?? undefined,
+        decisionHistory: history,
       };
     });
 

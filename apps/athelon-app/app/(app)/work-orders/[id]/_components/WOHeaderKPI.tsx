@@ -82,7 +82,9 @@ export function WOHeaderKPI({
   const [reason, setReason] = useState("");
   const [saving, setSaving] = useState(false);
 
-  const isManagerOrAdmin = tech?.role === "admin" || tech?.role === "shop_manager";
+  const canAdjustCommitDate = new Set(["admin", "shop_manager", "lead_technician", "qcm_inspector"]).has(
+    tech?.role ?? "",
+  );
 
   // BUG-LT-HUNT-117: Reset RTS date dialog fields when it (re-)opens.
   // Previously, if a shop manager opened the dialog, typed a date and reason,
@@ -212,7 +214,7 @@ export function WOHeaderKPI({
             )}
           </div>
 
-          {isManagerOrAdmin && (
+          {canAdjustCommitDate && (
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
               <DialogTrigger asChild>
                 <Button variant="outline" size="sm" className="shrink-0">

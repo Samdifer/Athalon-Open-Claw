@@ -24,7 +24,7 @@
 
 ### Wave 5 — Customer Portal (2 agents)
 - [ ] TEAM-I: MBP-0096 (customer login), MBP-0097 (customer dashboard), MBP-0098 (WO tracking), MBP-0099 (quote approve/decline)
-- [ ] TEAM-J: MBP-0100 (invoice view), MBP-0101 (download PDFs), MBP-0102 (message submission), MBP-0055 (completeStep auth)
+- [x] TEAM-J: MBP-0100 (invoice view), MBP-0101 (download PDFs), MBP-0102 (message submission), MBP-0055 (completeStep auth) ✅ 50e2f80
 
 ### Wave 6 — P0 Partial Completion (2 agents)
 - [x] TEAM-K: MBP-0032 (WO docs completion), MBP-0033 (task execution completion), MBP-0035 (parts traceability), MBP-0045 (evidence hub) ✅ e4e601a

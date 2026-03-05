@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import {
   AlertCircle,
@@ -18,6 +18,7 @@ import type { Id } from "@/convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { formatDateTime } from "@/lib/format";
 import {
@@ -212,13 +213,24 @@ function EvidenceBucketCard({
     attachedToTable: EVIDENCE_TABLE,
     attachedToId,
   });
+  const checklistItems = useQuery(
+    api.evidenceChecklists.listWorkOrderItems,
+    {
+      workOrderId: workOrderId as Id<"workOrders">,
+      bucketKey: bucket.key,
+    },
+  );
 
   const generateUploadUrl = useMutation(api.documents.generateUploadUrl);
   const saveDocument = useMutation(api.documents.saveDocument);
   const deleteDocument = useMutation(api.documents.deleteDocument);
+  const ensureDefaultChecklistItems = useMutation(api.evidenceChecklists.ensureDefaultChecklistItems);
+  const toggleChecklistItem = useMutation(api.evidenceChecklists.toggleWorkOrderItem);
 
   const [isUploading, setIsUploading] = useState(false);
+  const [isSeedingChecklist, setIsSeedingChecklist] = useState(false);
   const [deletingId, setDeletingId] = useState<Id<"documents"> | null>(null);
+  const [togglingItemId, setTogglingItemId] = useState<Id<"workOrderEvidenceChecklistItems"> | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [previewDoc, setPreviewDoc] = useState<{
     _id: Id<"documents">;
@@ -230,6 +242,30 @@ function EvidenceBucketCard({
     api.documents.getDocumentUrl,
     previewDoc ? { storageId: previewDoc.storageId } : "skip",
   );
+
+  useEffect(() => {
+    if (bucket.key !== "in_dock_checklist" && bucket.key !== "rts_checklist") return;
+    if (checklistItems === undefined) return;
+    if (checklistItems.length > 0 || isSeedingChecklist) return;
+
+    setIsSeedingChecklist(true);
+    void ensureDefaultChecklistItems({
+      organizationId,
+      workOrderId: workOrderId as Id<"workOrders">,
+      bucketKey: bucket.key,
+    })
+      .catch(() => {
+        toast.error("Failed to initialize default checklist items.");
+      })
+      .finally(() => setIsSeedingChecklist(false));
+  }, [
+    bucket.key,
+    checklistItems,
+    ensureDefaultChecklistItems,
+    isSeedingChecklist,
+    organizationId,
+    workOrderId,
+  ]);
 
   const orderedDocs = useMemo(
     () => [...(documents ?? [])].sort((a, b) => b.uploadedAt - a.uploadedAt),
@@ -328,6 +364,19 @@ function EvidenceBucketCard({
     }
   }
 
+  async function handleToggleChecklistItem(itemId: Id<"workOrderEvidenceChecklistItems">, completed: boolean) {
+    if (togglingItemId) return;
+    setTogglingItemId(itemId);
+    try {
+      await toggleChecklistItem({ itemId, completed });
+      toast.success(completed ? "Checklist item completed." : "Checklist item unchecked.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to update checklist item.");
+    } finally {
+      setTogglingItemId(null);
+    }
+  }
+
   return (
     <Card className="border-border/60">
       <CardHeader className="pb-2">
@@ -369,6 +418,39 @@ function EvidenceBucketCard({
             <p className="text-[11px] text-sky-300">
               Mobile upload is supported. Recommended clip duration is 10-20 minutes per file.
             </p>
+          </div>
+        )}
+
+        {(bucket.key === "in_dock_checklist" || bucket.key === "rts_checklist") && (
+          <div className="rounded-md border border-border/40 p-2.5 space-y-2">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-[11px] font-medium text-foreground">Persistent checklist</p>
+              <Badge variant="outline" className="text-[10px] border-border/60">
+                {(checklistItems ?? []).filter((item) => item.completed).length}/{checklistItems?.length ?? 0}
+              </Badge>
+            </div>
+            {checklistItems === undefined || isSeedingChecklist ? (
+              <div className="text-[11px] text-muted-foreground flex items-center gap-1.5">
+                <Loader2 className="w-3 h-3 animate-spin" /> Loading checklist…
+              </div>
+            ) : checklistItems.length === 0 ? (
+              <div className="text-[11px] text-muted-foreground">No checklist items configured.</div>
+            ) : (
+              <div className="space-y-1.5">
+                {checklistItems.map((item) => (
+                  <label key={String(item._id)} className="flex items-center gap-2 text-xs text-foreground">
+                    <Checkbox
+                      checked={item.completed}
+                      disabled={togglingItemId === item._id}
+                      onCheckedChange={(checked) => {
+                        void handleToggleChecklistItem(item._id, Boolean(checked));
+                      }}
+                    />
+                    <span className={item.completed ? "line-through text-muted-foreground" : ""}>{item.label}</span>
+                  </label>
+                ))}
+              </div>
+            )}
           </div>
         )}
 

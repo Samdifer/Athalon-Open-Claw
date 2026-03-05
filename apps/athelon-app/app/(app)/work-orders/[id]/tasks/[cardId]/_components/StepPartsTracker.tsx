@@ -91,6 +91,7 @@ export function StepPartsTracker({
   techId,
   steps,
   inventoryParts,
+  readOnly = false,
 }: {
   orgId?: string;
   workOrderId: string;
@@ -98,6 +99,7 @@ export function StepPartsTracker({
   techId?: string;
   steps: StepModel[];
   inventoryParts: InventoryPart[];
+  readOnly?: boolean;
 }) {
   const events = useQuery(
     api.taskStepPartTrace.listForTaskCard,
@@ -223,9 +225,11 @@ export function StepPartsTracker({
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Parts Removed</h4>
-                    <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => openAddPart(step._id, "removed")}>
-                      <Plus className="w-3 h-3 mr-1" /> Add Part
-                    </Button>
+                    {!readOnly ? (
+                      <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => openAddPart(step._id, "removed")}>
+                        <Plus className="w-3 h-3 mr-1" /> Add Part
+                      </Button>
+                    ) : null}
                   </div>
                   {removed.length === 0 ? (
                     <p className="text-xs text-muted-foreground italic">No removed parts tracked.</p>
@@ -237,7 +241,7 @@ export function StepPartsTracker({
                           detail={event.description}
                           meta={`Cond ${event.conditionAtRemoval ?? "serviceable"}${event.lotNumber ? ` · Lot ${event.lotNumber}` : ""}`}
                           timeline={`${event.fromCustody ?? "Unknown"} → ${event.toCustody ?? "Unknown"} · ${formatDateTime(event.createdAt)}`}
-                          onVoid={() => void voidEvent(event._id)}
+                          onVoid={readOnly ? undefined : () => void voidEvent(event._id)}
                         />
                         <Badge variant="outline" className="text-[10px] capitalize">{event.conditionAtRemoval ?? "serviceable"}</Badge>
                       </div>
@@ -258,9 +262,11 @@ export function StepPartsTracker({
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Parts Installed</h4>
-                    <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => openAddPart(step._id, "installed")}>
-                      <Plus className="w-3 h-3 mr-1" /> Add Part
-                    </Button>
+                    {!readOnly ? (
+                      <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => openAddPart(step._id, "installed")}>
+                        <Plus className="w-3 h-3 mr-1" /> Add Part
+                      </Button>
+                    ) : null}
                   </div>
                   {installed.length === 0 ? (
                     <p className="text-xs text-muted-foreground italic">No installed parts tracked.</p>
@@ -272,7 +278,7 @@ export function StepPartsTracker({
                         detail={event.description}
                         meta={`Qty ${event.quantity ?? 1}${event.eightOneThirtyReference ? ` · 8130-3 ${event.eightOneThirtyReference}` : ""}${event.batchNumber ? ` · Batch ${event.batchNumber}` : ""}`}
                         timeline={`${event.fromCustody ?? "Unknown"} → ${event.toCustody ?? "Unknown"} · ${formatDateTime(event.createdAt)}`}
-                        onVoid={() => void voidEvent(event._id)}
+                        onVoid={readOnly ? undefined : () => void voidEvent(event._id)}
                       />
                     ))
                   )}

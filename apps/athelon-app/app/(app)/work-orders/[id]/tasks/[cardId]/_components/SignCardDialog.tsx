@@ -53,6 +53,8 @@ export interface SignCardDialogProps {
   techId: Id<"technicians">;
   taskCardId: Id<"taskCards">;
   onSuccess: () => void;
+  requiresInspectorSignoff?: boolean;
+  inspectorAlreadySigned?: boolean;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -65,6 +67,8 @@ export function SignCardDialog({
   techId,
   taskCardId,
   onSuccess,
+  requiresInspectorSignoff = false,
+  inspectorAlreadySigned = false,
 }: SignCardDialogProps) {
   const [pin, setPin] = useState("");
   const [rating, setRating] = useState<RatingValue>("airframe");
@@ -118,6 +122,11 @@ export function SignCardDialog({
 
     if (!bypassTrainingWarning && expiredTraining.length > 0) {
       setTrainingWarningOpen(true);
+      return;
+    }
+
+    if (requiresInspectorSignoff && !inspectorAlreadySigned) {
+      setError("Inspector sign-off is required before final card sign-off for IA/RIII cards.");
       return;
     }
 
@@ -215,6 +224,15 @@ export function SignCardDialog({
             </p>
           </div>
 
+          {requiresInspectorSignoff && !inspectorAlreadySigned && (
+            <div className="flex items-start gap-2 p-2.5 rounded-md bg-amber-500/10 border border-amber-500/30">
+              <AlertCircle className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
+              <p className="text-xs text-amber-400">
+                IA/RIII work detected. Inspector sign-off is required before final card sign-off.
+              </p>
+            </div>
+          )}
+
           {/* Rating */}
           <div>
             <Label htmlFor="sign-card-rating" className="text-xs font-medium mb-1.5 block">
@@ -310,22 +328,24 @@ export function SignCardDialog({
           >
             Cancel
           </Button>
-          <Button
-            variant="outline"
-            onClick={() => {
-              void handleInspectorSign();
-            }}
-            disabled={isSubmitting || pin.length < 4}
-            className="gap-2"
-            size="sm"
-          >
-            {isSubmitting ? (
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-            ) : (
-              <AlertCircle className="w-3.5 h-3.5" />
-            )}
-            Inspector Sign-Off
-          </Button>
+          {requiresInspectorSignoff && !inspectorAlreadySigned && (
+            <Button
+              variant="outline"
+              onClick={() => {
+                void handleInspectorSign();
+              }}
+              disabled={isSubmitting || pin.length < 4}
+              className="gap-2"
+              size="sm"
+            >
+              {isSubmitting ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <AlertCircle className="w-3.5 h-3.5" />
+              )}
+              Inspector Sign-Off
+            </Button>
+          )}
           <Button
             onClick={() => {
               void handleSign();
@@ -334,7 +354,8 @@ export function SignCardDialog({
               isSubmitting ||
               pin.length < 4 ||
               statement.trim().length < 50 ||
-              rating === "none"
+              rating === "none" ||
+              (requiresInspectorSignoff && !inspectorAlreadySigned)
             }
             className="gap-2"
             size="sm"

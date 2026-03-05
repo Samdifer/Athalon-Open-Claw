@@ -77,6 +77,7 @@ interface LineItemReceivingData {
   lifeLimitCycles: string;
   binLocation: string;
   notes: string;
+  conformityDocumentIdsRaw: string;
   // Track if user wants to receive this item
   isSelected: boolean;
 }
@@ -110,6 +111,20 @@ const CATEGORY_OPTIONS: { value: PartCategory; label: string }[] = [
   { value: "expendable", label: "Expendable" },
   { value: "repairable", label: "Repairable" },
 ];
+
+function parseDateInputToUtcMs(dateInput: string): number | undefined {
+  if (!dateInput) return undefined;
+  const [y, m, d] = dateInput.split("-").map(Number);
+  if (!Number.isFinite(y) || !Number.isFinite(m) || !Number.isFinite(d)) return undefined;
+  return Date.UTC(y, m - 1, d);
+}
+
+function parseDocumentIdList(raw: string): string[] {
+  return raw
+    .split(",")
+    .map((token) => token.trim())
+    .filter((token) => token.length > 0);
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Step Progress Indicator
@@ -656,6 +671,19 @@ function Step2EnterData({
                       />
                     </div>
                   </div>
+
+                  {/* Row 6: Conformity Evidence */}
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Conformity Document IDs</Label>
+                    <Input
+                      value={item.conformityDocumentIdsRaw}
+                      onChange={(e) =>
+                        onUpdateLineItem(index, { conformityDocumentIdsRaw: e.target.value })
+                      }
+                      placeholder="Optional: comma-separated Convex document IDs"
+                      className="h-8 text-sm"
+                    />
+                  </div>
                 </CardContent>
               )}
             </Card>
@@ -829,6 +857,12 @@ function Step3Review({
                     {item.notes}
                   </div>
                 )}
+                {item.conformityDocumentIdsRaw && (
+                  <div className="col-span-2 sm:col-span-4">
+                    <span className="font-medium text-foreground">Conformity Docs:</span>{" "}
+                    {parseDocumentIdList(item.conformityDocumentIdsRaw).length}
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -958,6 +992,7 @@ export default function POReceivingPage() {
         lifeLimitCycles: "",
         binLocation: "",
         notes: "",
+        conformityDocumentIdsRaw: "",
         isSelected: true,
       }));
     setLineItemsData(items);
@@ -1025,9 +1060,10 @@ export default function POReceivingPage() {
           batchNumber: item.batchNumber || undefined,
           unitCost: item.unitCost,
           hasShelfLifeLimit: item.hasShelfLifeLimit,
-          shelfLifeLimitDate: item.hasShelfLifeLimit && item.shelfLifeLimitDate
-            ? new Date(item.shelfLifeLimitDate).getTime()
-            : undefined,
+          shelfLifeLimitDate:
+            item.hasShelfLifeLimit && item.shelfLifeLimitDate
+              ? parseDateInputToUtcMs(item.shelfLifeLimitDate)
+              : undefined,
           isLifeLimited: item.isLifeLimited,
           lifeLimitHours: item.isLifeLimited && item.lifeLimitHours
             ? parseFloat(item.lifeLimitHours)
@@ -1037,6 +1073,10 @@ export default function POReceivingPage() {
             : undefined,
           binLocation: item.binLocation || undefined,
           notes: item.notes || undefined,
+          conformityDocumentIds: (() => {
+            const ids = parseDocumentIdList(item.conformityDocumentIdsRaw);
+            return ids.length > 0 ? (ids as Id<"documents">[]) : undefined;
+          })(),
           receivedByUserId: user.id,
         });
 

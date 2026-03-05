@@ -19,6 +19,7 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
+import { requireAuth } from "./shared/helpers/authHelpers";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SHARED VALIDATORS
@@ -42,6 +43,17 @@ const complianceStatusValidator = v.union(
   v.literal("na"),
 );
 
+async function assertMutableTaskCard(ctx: { db: { get: (id: Id<"taskCards">) => Promise<any> } }, taskCardId: Id<"taskCards">) {
+  const taskCard = await ctx.db.get(taskCardId);
+  if (!taskCard) {
+    throw new Error(`Task card ${taskCardId} not found.`);
+  }
+  if (taskCard.status === "complete" || taskCard.status === "voided" || !!taskCard.signedAt) {
+    throw new Error("Task card is signed/locked. Compliance records are immutable after sign-off.");
+  }
+  return taskCard;
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // MUTATION: addComplianceItem
 //
@@ -60,15 +72,29 @@ export const addComplianceItem = mutation({
     description: v.optional(v.string()),
   },
   handler: async (ctx, args): Promise<Id<"taskComplianceItems">> => {
+    await requireAuth(ctx);
     const now = Date.now();
+
+    const taskCard = await assertMutableTaskCard(ctx, args.taskCardId);
+    if (
+      taskCard.workOrderId !== args.workOrderId ||
+      taskCard.organizationId !== args.organizationId ||
+      taskCard.aircraftId !== args.aircraftId
+    ) {
+      throw new Error("Task compliance target does not match task card/work-order/aircraft context.");
+    }
+
+    const reference = args.reference.trim();
+    if (!reference) throw new Error("Compliance reference is required.");
+
     const id = await ctx.db.insert("taskComplianceItems", {
       taskCardId: args.taskCardId,
       workOrderId: args.workOrderId,
       aircraftId: args.aircraftId,
       organizationId: args.organizationId,
       referenceType: args.referenceType,
-      reference: args.reference,
-      description: args.description,
+      reference,
+      description: args.description?.trim() || undefined,
       complianceStatus: "pending",
       history: [],
       createdAt: now,
@@ -94,6 +120,7 @@ export const updateComplianceStatus = mutation({
     technicianName: v.string(),
   },
   handler: async (ctx, args): Promise<void> => {
+    await requireAuth(ctx);
     const existing = await ctx.db.get(args.itemId);
     if (!existing) {
       throw new Error(
@@ -101,11 +128,17 @@ export const updateComplianceStatus = mutation({
       );
     }
 
+    await assertMutableTaskCard(ctx, existing.taskCardId);
+
+    if (existing.complianceStatus === args.status) {
+      return;
+    }
+
     const historyEntry = {
       status: existing.complianceStatus,
-      notes: args.notes,
+      notes: args.notes?.trim() || undefined,
       changedByTechnicianId: args.technicianId,
-      changedByName: args.technicianName,
+      changedByName: args.technicianName.trim() || "Unknown",
       changedAt: Date.now(),
     };
 
@@ -129,12 +162,15 @@ export const removeComplianceItem = mutation({
     itemId: v.id("taskComplianceItems"),
   },
   handler: async (ctx, args): Promise<void> => {
+    await requireAuth(ctx);
     const existing = await ctx.db.get(args.itemId);
     if (!existing) {
       throw new Error(
         `Compliance item ${args.itemId as string} not found.`,
       );
     }
+
+    await assertMutableTaskCard(ctx, existing.taskCardId);
 
     if (existing.history.length > 0) {
       throw new Error(
@@ -158,6 +194,7 @@ export const getComplianceItemsForTask = query({
     taskCardId: v.id("taskCards"),
   },
   handler: async (ctx, args) => {
+    await requireAuth(ctx);
     const items = await ctx.db
       .query("taskComplianceItems")
       .withIndex("by_task_card", (q) => q.eq("taskCardId", args.taskCardId))
@@ -228,6 +265,7 @@ export const getComplianceItemsForWorkOrder = query({
     workOrderId: v.id("workOrders"),
   },
   handler: async (ctx, args): Promise<TaskComplianceGroup[]> => {
+    await requireAuth(ctx);
     const allItems = await ctx.db
       .query("taskComplianceItems")
       .withIndex("by_work_order", (q) => q.eq("workOrderId", args.workOrderId))

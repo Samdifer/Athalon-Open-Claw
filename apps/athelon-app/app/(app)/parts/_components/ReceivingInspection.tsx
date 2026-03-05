@@ -81,10 +81,20 @@ export function ReceivingInspection() {
     return `${y}-${m}-${day}`;
   });
   const [notes, setNotes] = useState("");
+  const [conformityDocumentIdsRaw, setConformityDocumentIdsRaw] = useState("");
   const [log, setLog] = useState<LogItem[]>([]);
   const [saving, setSaving] = useState(false);
 
   const quantityMatches = Number(expectedQty || 0) === Number(receivedQty || 0);
+
+  const conformityDocumentIds = useMemo(
+    () =>
+      conformityDocumentIdsRaw
+        .split(",")
+        .map((token) => token.trim())
+        .filter((token) => token.length > 0) as Id<"documents">[],
+    [conformityDocumentIdsRaw],
+  );
 
   const checklistPass =
     visualCondition === "acceptable" &&
@@ -127,6 +137,7 @@ export function ReceivingInspection() {
       return `${y}-${m}-${day}`;
     })());
     setNotes("");
+    setConformityDocumentIdsRaw("");
   }
 
   async function submitDecision(decision: Decision) {
@@ -168,6 +179,7 @@ export function ReceivingInspection() {
         rejectionReason: isRejected
           ? notes.trim() || "Rejected during receiving inspection"
           : undefined,
+        conformityDocumentIds: conformityDocumentIds.length > 0 ? conformityDocumentIds : undefined,
       });
 
       setLog((prev) => [
@@ -348,6 +360,16 @@ export function ReceivingInspection() {
             <div>
               <Label className="text-xs">Notes / deviation</Label>
               <Input value={notes} onChange={(e) => setNotes(e.target.value)} className="h-8 text-xs" placeholder="Add details or rejection reason" />
+            </div>
+
+            <div>
+              <Label className="text-xs">Conformity document IDs</Label>
+              <Input
+                value={conformityDocumentIdsRaw}
+                onChange={(e) => setConformityDocumentIdsRaw(e.target.value)}
+                className="h-8 text-xs"
+                placeholder="Optional: comma-separated Convex document IDs"
+              />
             </div>
 
             <div className="text-[11px] text-muted-foreground">

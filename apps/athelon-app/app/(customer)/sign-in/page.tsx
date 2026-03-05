@@ -17,7 +17,7 @@ export default function CustomerSignInPage() {
         </div>
 
         <div className="flex justify-center md:justify-end">
-          <SignIn />
+          <SignIn forceRedirectUrl="/portal" fallbackRedirectUrl="/portal" />
         </div>
       </div>
     </div>

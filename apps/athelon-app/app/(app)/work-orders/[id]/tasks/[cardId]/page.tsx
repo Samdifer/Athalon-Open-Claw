@@ -974,17 +974,19 @@ export default function TaskCardPage() {
               <ArrowLeft className="w-3.5 h-3.5 rotate-180" />
               Step Parts Traceability
             </CardTitle>
-            <ReturnPartDialog
-              orgId={orgId}
-              workOrderId={workOrderId}
-              taskCardId={cardId}
-              steps={taskCard.steps.map((s) => ({
-                _id: String(s._id),
-                stepNumber: s.stepNumber,
-                description: s.description,
-                partsInstalled: s.partsInstalled,
-              }))}
-            />
+            {!cardIsComplete && !cardIsVoided ? (
+              <ReturnPartDialog
+                orgId={orgId}
+                workOrderId={workOrderId}
+                taskCardId={cardId}
+                steps={taskCard.steps.map((s) => ({
+                  _id: String(s._id),
+                  stepNumber: s.stepNumber,
+                  description: s.description,
+                  partsInstalled: s.partsInstalled,
+                }))}
+              />
+            ) : null}
           </div>
         </CardHeader>
         <CardContent className="pt-0">
@@ -993,6 +995,7 @@ export default function TaskCardPage() {
             workOrderId={workOrderId}
             taskCardId={cardId}
             techId={techId}
+            readOnly={cardIsComplete || cardIsVoided}
             steps={taskCard.steps.map((s) => ({
               _id: String(s._id),
               stepNumber: s.stepNumber,
@@ -1041,6 +1044,7 @@ export default function TaskCardPage() {
         orgId={orgId}
         workOrderId={workOrderId}
         taskCardId={cardId}
+        readOnly={cardIsComplete || cardIsVoided}
         steps={taskCard.steps.map((s) => ({ _id: String(s._id), stepNumber: s.stepNumber, description: s.description }))}
       />
 
@@ -2030,6 +2034,8 @@ export default function TaskCardPage() {
           orgId={orgId}
           techId={techId}
           taskCardId={taskCard._id as Id<"taskCards">}
+          requiresInspectorSignoff={taskCard.steps.some((step) => step.signOffRequiresIa)}
+          inspectorAlreadySigned={Boolean(taskCard.inspectorSignedAt)}
           onSuccess={() => setSignCardOpen(false)}
         />
       )}

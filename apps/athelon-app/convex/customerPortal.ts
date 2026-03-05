@@ -33,8 +33,45 @@ async function verifyCustomerAccess(
   return customer;
 }
 
+async function requireStaffOrgAccess(
+  ctx: any,
+  organizationId: Id<"organizations">,
+): Promise<string> {
+  const userId = await requireAuth(ctx);
+
+  const membership = await ctx.db
+    .query("technicians")
+    .withIndex("by_organization", (q: any) => q.eq("organizationId", organizationId))
+    .filter((q: any) => q.eq(q.field("userId"), userId))
+    .first();
+
+  if (!membership) {
+    throw new Error(
+      `FORBIDDEN_ORG_ACCESS: user ${userId} is not a member of organization ${organizationId}.`,
+    );
+  }
+
+  if (membership.status !== "active") {
+    throw new Error(
+      `FORBIDDEN_ORG_ACCESS: technician membership is ${membership.status}.`,
+    );
+  }
+
+  return userId;
+}
+
 function isWorkOrderCustomerOwned(wo: any, customerId: Id<"customers">, aircraft: any | null): boolean {
   return wo.customerId === customerId || aircraft?.customerId === customerId;
+}
+
+function safeParseAuditValue(raw: string | undefined): string | null {
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw);
+    return typeof parsed === "string" ? parsed : String(parsed);
+  } catch {
+    return null;
+  }
 }
 
 export const getCustomerByEmail = query({
@@ -112,9 +149,13 @@ export const getCustomerDashboard = query({
         .collect();
       for (const log of logs) {
         if (log.eventType === "status_changed") {
+          const oldStatus = safeParseAuditValue(log.oldValue);
+          const newStatus = safeParseAuditValue(log.newValue);
+          const statusDelta = oldStatus && newStatus ? ` from ${oldStatus} to ${newStatus}` : "";
+
           recentActivity.push({
             type: "work_order",
-            description: `Work order status changed${log.oldValue && log.newValue ? ` from ${JSON.parse(log.oldValue)} to ${JSON.parse(log.newValue)}` : ""}`,
+            description: `Work order status changed${statusDelta}`,
             timestamp: log.timestamp,
             recordId: wo._id,
           });
@@ -285,8 +326,8 @@ export const getCustomerWorkOrderTimeline = query({
         entry.eventType === "record_updated",
       )
       .map((entry: any) => {
-        const oldStatus = entry.oldValue ? JSON.parse(entry.oldValue) : null;
-        const newStatus = entry.newValue ? JSON.parse(entry.newValue) : null;
+        const oldStatus = safeParseAuditValue(entry.oldValue);
+        const newStatus = safeParseAuditValue(entry.newValue);
 
         if (entry.eventType === "status_changed" && oldStatus && newStatus) {
           return {
@@ -294,7 +335,7 @@ export const getCustomerWorkOrderTimeline = query({
             timestamp: entry.timestamp,
             type: "status_changed",
             title: "Status updated",
-            description: `${String(oldStatus).replace(/_/g, " ")} → ${String(newStatus).replace(/_/g, " ")}`,
+            description: `${oldStatus.replace(/_/g, " ")} → ${newStatus.replace(/_/g, " ")}`,
           };
         }
 
@@ -483,15 +524,18 @@ export const customerDecideQuoteLineItem = mutation({
     decisionNotes: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    const customer = await verifyCustomerAccess(ctx, args.customerId);
     const userId = await requireAuth(ctx);
     const now = Date.now();
 
     const quote = await ctx.db.get(args.quoteId);
     if (!quote) throw new Error("Quote not found.");
 
-    await verifyCustomerAccess(ctx, args.customerId);
-    if (quote.customerId !== args.customerId) {
+    if (quote.customerId !== args.customerId || quote.orgId !== customer.organizationId) {
       throw new Error("ACCESS_DENIED: Quote not found for this customer.");
+    }
+    if (quote.status !== "SENT") {
+      throw new Error(`Line item decisions are only allowed when quote status is SENT. Current: ${quote.status}`);
     }
 
     const lineItem = await ctx.db.get(args.lineItemId);
@@ -499,9 +543,14 @@ export const customerDecideQuoteLineItem = mutation({
       throw new Error("Line item not found on this quote.");
     }
 
+    const trimmedDecisionNotes = args.decisionNotes?.trim();
+    if (trimmedDecisionNotes && trimmedDecisionNotes.length > 2000) {
+      throw new Error("Decision notes must be 2000 characters or less.");
+    }
+
     await ctx.db.patch(args.lineItemId, {
       customerDecision: args.decision,
-      customerDecisionNotes: args.decisionNotes?.trim() || undefined,
+      customerDecisionNotes: trimmedDecisionNotes || undefined,
       customerDecisionAt: now,
       customerDecisionByUserId: userId,
       customerDecisionByName: "Customer Portal",
@@ -727,7 +776,7 @@ export const listInboundCustomerRequests = query({
     ),
   },
   handler: async (ctx, args) => {
-    await requireAuth(ctx);
+    await requireStaffOrgAccess(ctx, args.organizationId);
 
     if (args.status) {
       const scoped = await ctx.db
@@ -757,7 +806,7 @@ export const updateInboundCustomerRequest = mutation({
     internalResponse: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const userId = await requireAuth(ctx);
+    const userId = await requireStaffOrgAccess(ctx, args.organizationId);
     const now = Date.now();
 
     const request = await ctx.db.get(args.requestId);

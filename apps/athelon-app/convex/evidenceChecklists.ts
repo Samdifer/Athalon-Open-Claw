@@ -11,9 +11,25 @@ const bucketKeyValidator = v.union(
   v.literal("rts_video"),
 );
 
+const DEFAULT_BUCKET_ITEMS: Record<"in_dock_checklist" | "rts_checklist", string[]> = {
+  in_dock_checklist: [
+    "Incoming visual inspection completed",
+    "Damage map captured and linked",
+    "Logbook/records reviewed",
+    "Customer squawks reconciled",
+  ],
+  rts_checklist: [
+    "All task cards signed and complete",
+    "All deferred discrepancies dispositioned",
+    "RTS statement reviewed for 14 CFR 43.9",
+    "Final QA release checklist attached",
+  ],
+};
+
 export const listTemplates = query({
   args: { organizationId: v.id("organizations"), evidenceType: evidenceTypeValidator },
   handler: async (ctx, args) => {
+    await requireAuth(ctx);
     return await ctx.db
       .query("evidenceChecklistTemplates")
       .withIndex("by_org_type", (q) => q.eq("organizationId", args.organizationId).eq("evidenceType", args.evidenceType))
@@ -103,12 +119,61 @@ export const applyTemplateToWorkOrder = mutation({
   },
 });
 
+export const ensureDefaultChecklistItems = mutation({
+  args: {
+    organizationId: v.id("organizations"),
+    workOrderId: v.id("workOrders"),
+    bucketKey: v.union(v.literal("in_dock_checklist"), v.literal("rts_checklist")),
+  },
+  handler: async (ctx, args): Promise<number> => {
+    await requireAuth(ctx);
+
+    const existing = await ctx.db
+      .query("workOrderEvidenceChecklistItems")
+      .withIndex("by_work_order_bucket", (q) => q.eq("workOrderId", args.workOrderId).eq("bucketKey", args.bucketKey))
+      .collect();
+
+    if (existing.length > 0) return existing.length;
+
+    const evidenceType = args.bucketKey === "in_dock_checklist" ? "in_dock" : "rts";
+
+    const defaultTemplate = await ctx.db
+      .query("evidenceChecklistTemplates")
+      .withIndex("by_org_type", (q) => q.eq("organizationId", args.organizationId).eq("evidenceType", evidenceType))
+      .filter((q) => q.and(q.eq(q.field("isDefault"), true), q.eq(q.field("isActive"), true)))
+      .first();
+
+    const labels =
+      defaultTemplate?.items?.map((i) => i.trim()).filter(Boolean) ??
+      DEFAULT_BUCKET_ITEMS[args.bucketKey];
+
+    const now = Date.now();
+    for (let i = 0; i < labels.length; i++) {
+      await ctx.db.insert("workOrderEvidenceChecklistItems", {
+        organizationId: args.organizationId,
+        workOrderId: args.workOrderId,
+        templateId: defaultTemplate?._id,
+        evidenceType,
+        bucketKey: args.bucketKey,
+        label: labels[i],
+        order: i,
+        completed: false,
+        createdAt: now,
+        updatedAt: now,
+      });
+    }
+
+    return labels.length;
+  },
+});
+
 export const listWorkOrderItems = query({
   args: {
     workOrderId: v.id("workOrders"),
     bucketKey: bucketKeyValidator,
   },
   handler: async (ctx, args) => {
+    await requireAuth(ctx);
     const items = await ctx.db
       .query("workOrderEvidenceChecklistItems")
       .withIndex("by_work_order_bucket", (q) => q.eq("workOrderId", args.workOrderId).eq("bucketKey", args.bucketKey))
@@ -127,6 +192,13 @@ export const toggleWorkOrderItem = mutation({
     const userId = await requireAuth(ctx);
     const item = await ctx.db.get(args.itemId);
     if (!item) throw new Error("Checklist item not found.");
+
+    const workOrder = await ctx.db.get(item.workOrderId);
+    if (!workOrder) throw new Error("Work order not found for checklist item.");
+    if (workOrder.status === "closed" || workOrder.status === "voided") {
+      throw new Error("Evidence checklist is locked after work order close/void.");
+    }
+
     const now = Date.now();
     await ctx.db.patch(args.itemId, {
       completed: args.completed,
