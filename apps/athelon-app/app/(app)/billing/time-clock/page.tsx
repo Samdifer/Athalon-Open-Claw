@@ -240,7 +240,7 @@ export default function TimeClockPage() {
     }
 
     if (filterWO !== "all") {
-      result = result.filter((entry) => entry.workOrderId === filterWO);
+      result = result.filter((entry) => String(entry.workOrderId ?? "") === filterWO);
     }
 
     if (searchTech.trim()) {

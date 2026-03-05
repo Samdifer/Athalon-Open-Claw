@@ -121,6 +121,7 @@ const BillingSettingsPage = lazy(() => import("@/app/(app)/billing/settings/page
 const OTCSalesPage = lazy(() => import("@/app/(app)/billing/otc/page"));
 const WarrantyPage = lazy(() => import("@/app/(app)/billing/warranty/page"));
 const LaborKitsPage = lazy(() => import("@/app/(app)/billing/labor-kits/page"));
+const QuoteTemplatesPage = lazy(() => import("@/app/(app)/billing/quotes/templates/page"));
 
 const SchedulingPage = lazy(() => import("@/app/(app)/scheduling/page"));
 const CapacityPage = lazy(() => import("@/app/(app)/scheduling/capacity/page"));
@@ -256,6 +257,7 @@ export function protectedAppRoutes() {
             <Route path="/billing/invoices/:id" element={<InvoiceDetailPage />} />
             <Route path="/billing/quotes" element={<QuotesPage />} />
             <Route path="/billing/quotes/new" element={<NewQuotePage />} />
+            <Route path="/billing/quotes/templates" element={<QuoteTemplatesPage />} />
             <Route path="/billing/quotes/:id" element={<QuoteDetailPage />} />
             <Route path="/billing/purchase-orders" element={<PurchaseOrdersPage />} />
             <Route path="/billing/purchase-orders/new" element={<NewPOPage />} />

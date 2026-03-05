@@ -764,6 +764,32 @@ export const applyCreditMemoToInvoice = mutation({
   },
 });
 
+// BUG-BM-HUNT-104: Void an ISSUED credit memo (e.g. issued in error, customer dispute resolved).
+// Only ISSUED credit memos can be voided — DRAFT can simply be deleted, and APPLIED
+// credit memos have already affected invoice balances and cannot be reversed here.
+export const voidCreditMemo = mutation({
+  args: {
+    orgId: v.id("organizations"),
+    creditMemoId: v.id("creditMemos"),
+    voidReason: v.string(),
+  },
+  handler: async (ctx, args) => {
+    await requireAuth(ctx);
+    const cm = await ctx.db.get(args.creditMemoId);
+    if (!cm) throw new Error("Credit memo not found.");
+    if (cm.orgId !== args.orgId) throw new Error("ORG_MISMATCH.");
+    if (cm.status !== "ISSUED") {
+      throw new Error(`Only ISSUED credit memos can be voided. Current status: ${cm.status}`);
+    }
+    await ctx.db.patch(args.creditMemoId, {
+      status: "VOID",
+      voidReason: args.voidReason,
+      updatedAt: Date.now(),
+    });
+    return { success: true };
+  },
+});
+
 export const listCreditMemos = query({
   args: { orgId: v.id("organizations") },
   handler: async (ctx, args) => {

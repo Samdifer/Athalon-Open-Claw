@@ -1,4 +1,6 @@
-"use client";
+// BUG-DOM-120: Removed "use client" Next.js directive — this is a Vite+React app
+// and the directive is a no-op that misleads contributors into thinking the project
+// uses Next.js conventions.
 
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";

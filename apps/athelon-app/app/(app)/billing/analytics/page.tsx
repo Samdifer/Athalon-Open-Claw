@@ -161,13 +161,19 @@ export default function AnalyticsPage() {
 
     const total = quotes.length;
     const totalValue = quotes.reduce((sum, q) => sum + q.total, 0);
-    const sentCount = byStatus.SENT?.count ?? 0;
     const convertedCount = byStatus.CONVERTED?.count ?? 0;
-    const conversionRate = sentCount > 0
-      ? Math.round((convertedCount / sentCount) * 100)
-      : total > 0
-        ? Math.round((convertedCount / total) * 100)
-        : 0;
+    // BUG-BM-HUNT-102: Conversion rate should use all quotes that left DRAFT as the
+    // denominator — SENT, APPROVED, CONVERTED, DECLINED. Using only current SENT count
+    // was wrong because quotes transition out of SENT into other terminal states; the
+    // denominator shrank as quotes converted, artificially inflating the rate.
+    const actionedCount =
+      (byStatus.SENT?.count ?? 0) +
+      (byStatus.APPROVED?.count ?? 0) +
+      (byStatus.CONVERTED?.count ?? 0) +
+      (byStatus.DECLINED?.count ?? 0);
+    const conversionRate = actionedCount > 0
+      ? Math.round((convertedCount / actionedCount) * 100)
+      : 0;
 
     return { byStatus, total, totalValue, conversionRate };
   }, [quotes]);

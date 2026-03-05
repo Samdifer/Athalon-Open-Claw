@@ -218,9 +218,16 @@ function toDateInputValue(ts: number): string {
   return new Date(ts).toISOString().split("T")[0];
 }
 
-/** Convert a date input value (YYYY-MM-DD) to a Unix ms timestamp. */
+/** Convert a date input value (YYYY-MM-DD) to a Unix ms timestamp at UTC midnight. */
 function fromDateInputValue(val: string): number {
-  return new Date(val).getTime();
+  const [yearRaw, monthRaw, dayRaw] = val.split("-");
+  const year = Number(yearRaw);
+  const month = Number(monthRaw);
+  const day = Number(dayRaw);
+  if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day)) {
+    return Number.NaN;
+  }
+  return Date.UTC(year, month - 1, day);
 }
 
 const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
@@ -467,13 +474,20 @@ export function QuoteDetailEditor({
   // GAP-13: Create invoice from quote
   const handleCreateInvoice = async () => {
     if (!orgId || !techId || !quoteId) return;
+
+    const parsedDueDate = invoiceDueDate ? fromDateInputValue(invoiceDueDate) : undefined;
+    if (invoiceDueDate && !Number.isFinite(parsedDueDate)) {
+      setError("Invoice due date is invalid. Use YYYY-MM-DD.");
+      return;
+    }
+
     setActionLoading("createInvoice"); setError(null);
     try {
       const newInvoiceId = await createInvoiceFromQuote({
         orgId,
         quoteId,
         createdByTechId: techId as Id<"technicians">,
-        dueDate: invoiceDueDate ? fromDateInputValue(invoiceDueDate) : undefined,
+        dueDate: parsedDueDate,
         paymentTerms: invoicePaymentTerms.trim() || undefined,
       });
       setCreateInvoiceDialog(false);
@@ -1341,7 +1355,15 @@ export function QuoteDetailEditor({
       )}
 
       {/* Decline Dialog */}
-      <Dialog open={declineDialog} onOpenChange={setDeclineDialog}>
+      <Dialog
+        open={declineDialog}
+        onOpenChange={(open) => {
+          setDeclineDialog(open);
+          if (!open) {
+            setDeclineReason("");
+          }
+        }}
+      >
         <DialogContent className="max-w-[95vw] sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Decline Quote</DialogTitle>
@@ -1494,7 +1516,16 @@ export function QuoteDetailEditor({
       </Dialog>
 
       {/* GAP-13: Create Invoice from Quote Dialog */}
-      <Dialog open={createInvoiceDialog} onOpenChange={setCreateInvoiceDialog}>
+      <Dialog
+        open={createInvoiceDialog}
+        onOpenChange={(open) => {
+          setCreateInvoiceDialog(open);
+          if (!open) {
+            setInvoiceDueDate("");
+            setInvoicePaymentTerms("");
+          }
+        }}
+      >
         <DialogContent className="max-w-[95vw] sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Create Invoice from Quote</DialogTitle>

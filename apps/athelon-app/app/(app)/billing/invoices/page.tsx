@@ -548,11 +548,17 @@ export default function InvoicesPage() {
 
   // Selected invoice objects + draft-only subset — memoized so batch action buttons
   // don't trigger O(n) passes on every checkbox toggle or search keystroke.
-  const { selectedInvoices, selectedDraftIds } = useMemo(() => {
+  const { selectedInvoices, selectedDraftIds, selectedVoidableIds } = useMemo(() => {
     // BUG-BH-013: Batch actions must operate on all selected invoices, even when search/filter hides some rows.
     const selected = all.filter((inv) => selectedIds.has(inv._id));
     const drafts = selected.filter((inv) => inv.status === "DRAFT").map((inv) => inv._id);
-    return { selectedInvoices: selected, selectedDraftIds: drafts };
+    // BUG-BM-HUNT-105: Only DRAFT, SENT, and PARTIAL invoices can be voided.
+    // PAID and already-VOID invoices must be excluded from the void batch to prevent
+    // confusing error messages or accidental data corruption.
+    const voidable = selected
+      .filter((inv) => inv.status === "DRAFT" || inv.status === "SENT" || inv.status === "PARTIAL")
+      .map((inv) => inv._id);
+    return { selectedInvoices: selected, selectedDraftIds: drafts, selectedVoidableIds: voidable };
   }, [all, selectedIds]);
 
   // Overdue check helper
@@ -576,14 +582,15 @@ export default function InvoicesPage() {
     }
   };
 
-  // Batch void
+  // Batch void — only voidable invoices (DRAFT, SENT, PARTIAL)
   const handleBatchVoid = async (reason: string) => {
-    if (!orgId) return;
+    if (!orgId || selectedVoidableIds.length === 0) return;
     await batchVoidInvoices({
       orgId,
-      invoiceIds: Array.from(selectedIds) as Id<"invoices">[],
+      invoiceIds: selectedVoidableIds as Id<"invoices">[],
       voidReason: reason,
     });
+    toast.success(`${selectedVoidableIds.length} invoice${selectedVoidableIds.length !== 1 ? "s" : ""} voided.`);
     setSelectedIds(new Set());
   };
 
@@ -814,7 +821,7 @@ export default function InvoicesPage() {
                             )}
                             {inv.dueDate && (
                               <span className={`text-xs ${overdue ? "text-red-600 dark:text-red-400 font-medium" : "text-muted-foreground"}`}>
-                                · Due {formatDate(inv.dueDate)}
+                                · Due {formatDateUTC(inv.dueDate)}
                               </span>
                             )}
                           </div>
@@ -870,16 +877,18 @@ export default function InvoicesPage() {
             </Button>
           )}
 
-          {/* Void */}
-          <Button
-            size="sm"
-            variant="outline"
-            className="h-7 text-xs gap-1.5 text-red-600 dark:text-red-400 border-red-500/30 hover:bg-red-500/10"
-            onClick={() => setVoidDialogOpen(true)}
-          >
-            <Ban className="w-3 h-3" />
-            Void ({selectedIds.size})
-          </Button>
+          {/* Void — only voidable invoices (DRAFT/SENT/PARTIAL) */}
+          {selectedVoidableIds.length > 0 && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-7 text-xs gap-1.5 text-red-600 dark:text-red-400 border-red-500/30 hover:bg-red-500/10"
+              onClick={() => setVoidDialogOpen(true)}
+            >
+              <Ban className="w-3 h-3" />
+              Void ({selectedVoidableIds.length})
+            </Button>
+          )}
 
           {/* Record Payments */}
           <Button
@@ -906,7 +915,7 @@ export default function InvoicesPage() {
       {/* Void Dialog */}
       <VoidBatchDialog
         open={voidDialogOpen}
-        count={selectedIds.size}
+        count={selectedVoidableIds.length}
         onClose={() => setVoidDialogOpen(false)}
         onConfirm={handleBatchVoid}
       />

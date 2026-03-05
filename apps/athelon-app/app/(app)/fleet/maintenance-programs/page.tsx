@@ -174,9 +174,15 @@ export default function MaintenanceProgramsPage() {
     }
   }
 
-  async function onDelete(id: Id<"maintenancePrograms">) {
+  // BUG-DOM-119: The "Deactivate" button called removeProgram (permanent delete)
+  // but showed a "Program deactivated" toast. The DOM thought they were toggling
+  // the program off (reversible), but the record was actually deleted (irreversible).
+  // If they wanted to reactivate later, the data was gone. The inline Switch
+  // already handles activation/deactivation correctly. Replace the destructive
+  // delete with the same toggle-off behavior for consistency and data safety.
+  async function onDeactivate(id: Id<"maintenancePrograms">) {
     try {
-      await removeProgram({ id });
+      await updateProgram({ id, isActive: false });
       toast.success("Program deactivated.");
     } catch {
       toast.error("Failed to deactivate program.");
@@ -258,7 +264,7 @@ export default function MaintenanceProgramsPage() {
                   <TableCell className="text-right space-x-1">
                     <Button asChild variant="ghost" size="sm"><Link to={`/fleet/maintenance-programs/${row._id}`}><Eye className="w-4 h-4" /></Link></Button>
                     <Button variant="ghost" size="sm" onClick={() => openEdit(row)}><Pencil className="w-4 h-4" /></Button>
-                    <Button variant="ghost" size="sm" onClick={() => onDelete(row._id)}>Deactivate</Button>
+                    <Button variant="ghost" size="sm" onClick={() => onDeactivate(row._id)} disabled={!row.isActive}>Deactivate</Button>
                   </TableCell>
                 </TableRow>
               ))}
@@ -268,7 +274,15 @@ export default function MaintenanceProgramsPage() {
         </CardContent>
       </Card>
 
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      {/* BUG-DOM-117: Dialog onOpenChange didn't reset form state on close.
+          If a DOM edits a program, closes via backdrop/X without saving, then
+          clicks "Add Program", the previous program's fields are still populated.
+          This is the same stale-dialog pattern found in billing (BUG-BM-HUNT-010).
+          Reset form state on close so the next interaction starts clean. */}
+      <Dialog open={dialogOpen} onOpenChange={(open) => {
+        setDialogOpen(open);
+        if (!open) resetForm();
+      }}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editingId ? "Edit" : "Add"} Maintenance Program</DialogTitle>

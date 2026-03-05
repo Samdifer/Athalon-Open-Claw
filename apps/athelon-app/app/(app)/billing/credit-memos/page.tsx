@@ -6,7 +6,7 @@ import { api } from "@/convex/_generated/api";
 import { type Id } from "@/convex/_generated/dataModel";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import { toast } from "sonner";
-import { FileX, Plus, Check, X, Loader2 } from "lucide-react";
+import { FileX, Plus, Check, X, Loader2, AlertCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -321,8 +321,13 @@ export default function CreditMemosPage() {
     customerId: Id<"customers">;
   } | null>(null);
   const [issuingId, setIssuingId] = useState<string | null>(null);
+  // BUG-BM-HUNT-104: Void credit memo dialog state
+  const [voidTarget, setVoidTarget] = useState<Id<"creditMemos"> | null>(null);
+  const [voidReason, setVoidReason] = useState("");
+  const [voiding, setVoiding] = useState(false);
 
   const issueMutation = useMutation(api.billingV4.issueCreditMemo);
+  const voidMutation = useMutation(api.billingV4.voidCreditMemo);
 
   const creditMemos = useQuery(
     api.billingV4.listCreditMemos,
@@ -363,6 +368,22 @@ export default function CreditMemosPage() {
       toast.error(err instanceof Error ? err.message : "Failed to issue credit memo");
     } finally {
       setIssuingId(null);
+    }
+  }
+
+  // BUG-BM-HUNT-104: Handle voiding a credit memo
+  async function handleVoid() {
+    if (!orgId || !voidTarget || !voidReason.trim()) return;
+    setVoiding(true);
+    try {
+      await voidMutation({ orgId, creditMemoId: voidTarget, voidReason: voidReason.trim() });
+      toast.success("Credit memo voided.");
+      setVoidTarget(null);
+      setVoidReason("");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to void credit memo.");
+    } finally {
+      setVoiding(false);
     }
   }
 
@@ -482,9 +503,8 @@ export default function CreditMemosPage() {
                             <Button
                               size="sm"
                               variant="ghost"
-                              className="h-7 text-xs text-muted-foreground"
-                              disabled
-                              title="Void not yet available"
+                              className="h-7 text-xs text-red-600 dark:text-red-400 hover:bg-red-500/10"
+                              onClick={() => { setVoidTarget(cm._id); setVoidReason(""); }}
                             >
                               <X className="w-3 h-3 mr-1" />
                               Void
@@ -513,6 +533,46 @@ export default function CreditMemosPage() {
           invoices={(invoices ?? []) as Array<{ _id: Id<"invoices">; invoiceNumber: string; status: string; customerId: Id<"customers"> }>}
         />
       )}
+
+      {/* BUG-BM-HUNT-104: Void Credit Memo Dialog */}
+      <Dialog open={voidTarget !== null} onOpenChange={(v) => { if (!v) { setVoidTarget(null); setVoidReason(""); } }}>
+        <DialogContent className="max-w-[95vw] sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 text-red-400" />
+              Void Credit Memo
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <p className="text-sm text-muted-foreground">
+              This will void the credit memo. It cannot be undone.
+            </p>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Void Reason *</Label>
+              <Textarea
+                placeholder="Reason for voiding (e.g. issued in error)…"
+                value={voidReason}
+                onChange={(e) => setVoidReason(e.target.value)}
+                rows={3}
+                className="text-sm resize-none"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" size="sm" onClick={() => { setVoidTarget(null); setVoidReason(""); }} disabled={voiding}>
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              variant="destructive"
+              onClick={handleVoid}
+              disabled={voiding || !voidReason.trim()}
+            >
+              {voiding ? "Voiding…" : "Void Credit Memo"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {orgId && applyTarget && (
         <ApplyInvoiceDialog

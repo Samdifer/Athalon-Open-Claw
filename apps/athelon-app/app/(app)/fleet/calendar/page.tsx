@@ -110,8 +110,32 @@ export default function FleetCalendarPage() {
     else setMonth(month - 1);
   };
 
+  // BUG-DOM-121: Missing org context showed a plain unstyled div — inconsistent
+  // with the rest of the app which uses Card-based empty states with recovery actions.
+  // A DOM landing here without org context gets no guidance on what to do next.
   if (!orgId) {
-    return <div className="p-6 text-muted-foreground">Select an organization first.</div>;
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center gap-2">
+          <CalendarDays className="w-5 h-5 text-primary" />
+          <h1 className="text-lg font-semibold">Fleet Calendar</h1>
+        </div>
+        <Card className="border-border/60">
+          <CardContent className="py-16 text-center">
+            <CalendarDays className="w-8 h-8 text-muted-foreground/40 mx-auto mb-3" />
+            <p className="text-sm font-medium text-muted-foreground">
+              No organization context available
+            </p>
+            <p className="text-xs text-muted-foreground/60 mt-1">
+              Complete onboarding or ask your administrator to link your account.
+            </p>
+            <Button asChild variant="outline" size="sm" className="mt-3">
+              <Link to="/onboarding">Complete Setup</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   return (
@@ -177,10 +201,15 @@ export default function FleetCalendarPage() {
                   ? `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`
                   : "";
                 const dayEvents = day ? eventsByDate.get(dateStr) ?? [] : [];
+                // BUG-DOM-118: isToday used local-timezone accessors (getDate, getMonth)
+                // while event placement uses UTC accessors (getUTCDate, getUTCMonth).
+                // A shop in UTC-5 at 11 PM local (4 AM UTC next day) would see the
+                // "today" highlight on a different day than where today's events appear.
+                // Use UTC accessors for consistency with the event date logic.
                 const isToday =
-                  day === now.getDate() &&
-                  month === now.getMonth() &&
-                  year === now.getFullYear();
+                  day === now.getUTCDate() &&
+                  month === now.getUTCMonth() &&
+                  year === now.getUTCFullYear();
 
                 return (
                   <div

@@ -3392,6 +3392,7 @@ export default defineSchema({
     appliedAt: v.optional(v.number()),
     issuedByTechId: v.id("technicians"),
     notes: v.optional(v.string()),
+    voidReason: v.optional(v.string()),          // BUG-BM-HUNT-104: reason when credit memo is voided
     createdAt: v.number(),
     updatedAt: v.number(),
   })
