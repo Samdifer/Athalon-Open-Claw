@@ -47,11 +47,19 @@ function fmtTs(ts: number | undefined | null): string {
   return new Date(ts).toLocaleString();
 }
 
-function fmtDuration(clockIn: number, clockOut: number | undefined | null): string {
+function fmtDuration(
+  clockIn: number,
+  clockOut: number | undefined | null,
+  totalPausedMinutes?: number,
+): string {
   if (!clockOut) return "—";
-  const totalMin = Math.round((clockOut - clockIn) / 60000);
-  const h = Math.floor(totalMin / 60);
-  const m = totalMin % 60;
+  // BUG-BM-HUNT-150: Subtract paused time from duration. Without this,
+  // a tech who paused for 2h during an 8h entry showed 8h — billing manager
+  // would approve inflated labor hours, leading to overbilling.
+  const rawMin = Math.round((clockOut - clockIn) / 60000);
+  const activeMin = Math.max(0, rawMin - (totalPausedMinutes ?? 0));
+  const h = Math.floor(activeMin / 60);
+  const m = activeMin % 60;
   return h > 0 ? `${h}h ${m}m` : `${m}m`;
 }
 
@@ -185,11 +193,15 @@ export default function TimeApprovalPage() {
   // BUG-BM-HUNT-124: Total pending hours summary so billing manager can assess
   // labor cost impact before approving. Without this, they'd have to mentally sum
   // 20+ entries to understand total labor exposure.
+  // BUG-BM-HUNT-151: Subtract paused minutes from pending total so billing
+  // manager sees accurate labor exposure before bulk-approving.
   const pendingTotalMinutes = useMemo(() => {
     let total = 0;
     for (const entry of filteredPending) {
       if (entry.clockOutAt) {
-        total += Math.round((entry.clockOutAt - entry.clockInAt) / 60000);
+        const rawMin = Math.round((entry.clockOutAt - entry.clockInAt) / 60000);
+        const pausedMin = (entry as { totalPausedMinutes?: number }).totalPausedMinutes ?? 0;
+        total += Math.max(0, rawMin - pausedMin);
       }
     }
     return total;
@@ -405,7 +417,7 @@ export default function TimeApprovalPage() {
                         </TableCell>
                         <TableCell className="text-xs text-muted-foreground">{fmtTs(entry.clockInAt)}</TableCell>
                         <TableCell className="text-xs text-muted-foreground">{fmtTs(entry.clockOutAt)}</TableCell>
-                        <TableCell className="text-xs text-muted-foreground">{fmtDuration(entry.clockInAt, entry.clockOutAt)}</TableCell>
+                        <TableCell className="text-xs text-muted-foreground">{fmtDuration(entry.clockInAt, entry.clockOutAt, (entry as { totalPausedMinutes?: number }).totalPausedMinutes)}</TableCell>
                         <TableCell className="text-xs text-muted-foreground max-w-[160px] truncate">{entry.notes ?? "—"}</TableCell>
                         <TableCell className="text-right">
                           <div className="flex items-center justify-end gap-1.5">
@@ -476,7 +488,7 @@ export default function TimeApprovalPage() {
                         </TableCell>
                         <TableCell className="text-xs text-muted-foreground">{fmtTs(entry.clockInAt)}</TableCell>
                         <TableCell className="text-xs text-muted-foreground">{fmtTs(entry.clockOutAt)}</TableCell>
-                        <TableCell className="text-xs text-muted-foreground">{fmtDuration(entry.clockInAt, entry.clockOutAt)}</TableCell>
+                        <TableCell className="text-xs text-muted-foreground">{fmtDuration(entry.clockInAt, entry.clockOutAt, (entry as { totalPausedMinutes?: number }).totalPausedMinutes)}</TableCell>
                         <TableCell className="text-xs text-muted-foreground">{fmtTs((entry as { approvedAt?: number }).approvedAt)}</TableCell>
                         <TableCell className="text-xs font-medium text-foreground truncate max-w-[120px]">
                           {(entry as { approvedByTechId?: string }).approvedByTechId
@@ -529,7 +541,7 @@ export default function TimeApprovalPage() {
                         </TableCell>
                         <TableCell className="text-xs text-muted-foreground">{fmtTs(entry.clockInAt)}</TableCell>
                         <TableCell className="text-xs text-muted-foreground">{fmtTs(entry.clockOutAt)}</TableCell>
-                        <TableCell className="text-xs text-muted-foreground">{fmtDuration(entry.clockInAt, entry.clockOutAt)}</TableCell>
+                        <TableCell className="text-xs text-muted-foreground">{fmtDuration(entry.clockInAt, entry.clockOutAt, (entry as { totalPausedMinutes?: number }).totalPausedMinutes)}</TableCell>
                         <TableCell className="text-xs text-muted-foreground max-w-[160px] truncate">
                           {(entry as { rejectionReason?: string }).rejectionReason ?? "—"}
                         </TableCell>

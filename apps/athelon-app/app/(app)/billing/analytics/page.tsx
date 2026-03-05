@@ -205,10 +205,22 @@ export default function AnalyticsPage() {
       // "Collected" is attributed to the month cash was RECEIVED (paidAt),
       // NOT when the invoice was created. An invoice created in November
       // but paid in January belongs in January's collected column.
+      // BUG-BM-HUNT-152: Only use paidAt when it actually exists. For PARTIAL
+      // invoices, paidAt is undefined (only set on full payment). Falling back
+      // to createdAt was wrong — it attributed partial payments to the invoice
+      // creation month instead of the current period. When paidAt is missing
+      // and the invoice has partial payments, attribute to invoice creation as
+      // a conservative fallback (individual payment timestamps aren't available
+      // in the summary query).
       if (inv.amountPaid > 0) {
-        const paidKey = getMonthKey((inv as { paidAt?: number }).paidAt ?? inv.createdAt);
-        if (byMonth[paidKey]) {
-          byMonth[paidKey].collected += inv.amountPaid;
+        const paidTs = (inv as { paidAt?: number }).paidAt;
+        // For fully paid invoices, use paidAt. For partial, use sentAt (closer
+        // to when payments started flowing) with createdAt as final fallback.
+        const collectedKey = getMonthKey(
+          paidTs ?? (inv as { sentAt?: number }).sentAt ?? inv.createdAt,
+        );
+        if (byMonth[collectedKey]) {
+          byMonth[collectedKey].collected += inv.amountPaid;
         }
       }
 

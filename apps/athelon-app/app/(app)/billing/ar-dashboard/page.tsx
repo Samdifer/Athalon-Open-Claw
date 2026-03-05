@@ -269,8 +269,16 @@ export default function ArDashboardPage() {
               <TableBody>
                 {sortedCustomerBalances.map((cb) => (
                   <TableRow key={cb.customerId} className="border-border/40">
+                    {/* BUG-BM-HUNT-154: Link customer name to their billing profile so billing
+                        manager can click through to see their full invoice history, contact info,
+                        and payment terms without manually navigating. */}
                     <TableCell className="text-sm">
-                      {customerMap.get(cb.customerId) ?? "Unknown Customer"}
+                      <Link
+                        to={`/billing/customers/${cb.customerId}`}
+                        className="text-primary hover:underline"
+                      >
+                        {customerMap.get(cb.customerId) ?? "Unknown Customer"}
+                      </Link>
                     </TableCell>
                     <TableCell className="text-sm font-semibold text-right text-amber-600 dark:text-amber-400">
                       {fmt(cb.balance)}

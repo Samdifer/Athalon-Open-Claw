@@ -30,7 +30,11 @@ export function downloadCSV(data: Record<string, unknown>[], filename: string): 
   }
 
   const csvString = csvRows.join("\n");
-  const blob = new Blob([csvString], { type: "text/csv;charset=utf-8;" });
+  // BUG-BM-HUNT-153: Prepend UTF-8 BOM (\uFEFF) so Excel correctly interprets
+  // special characters in customer names, part numbers, and descriptions.
+  // Without BOM, Excel on Windows defaults to ANSI encoding and mangles
+  // characters like accented letters, em-dashes, and currency symbols.
+  const blob = new Blob(["\uFEFF" + csvString], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
 
   const link = document.createElement("a");
