@@ -589,6 +589,31 @@ This file is the markdown-authoritative source of truth for feature status, impl
   **Fix:** Pre-built a `customerMap` using `useMemo` with O(1) lookups, matching the pattern already used in the analytics and financial dashboard pages.
   **Why it matters:** Profitability reports load instantly on larger datasets instead of stuttering during date range changes.
 
+- **BUG-PC-HUNT-141** — PartDetailSheet shelf life expiry date displayed using local timezone (`toLocaleDateString` without `timeZone: "UTC"`), while the stored timestamp is UTC midnight. A parts clerk in UTC-5 after 7pm would see the expiry date shifted one day forward — causing confusion when matching against physical shelf-life labels.
+  **File:** `app/(app)/parts/page.tsx`
+  **Fix:** Added `timeZone: "UTC"` to the `toLocaleDateString` options, consistent with all other UTC-midnight date displays in the app.
+  **Why it matters:** Prevents shelf-life compliance confusion and matches the date format used everywhere else.
+
+- **BUG-PC-HUNT-142** — CoreDetailDialog `creditAmount` state persisted when switching between cores without closing the dialog. If a clerk opened Core A (inspected), typed $500 credit, closed, then opened Core B (also inspected), the $500 was pre-filled — risk of issuing the wrong credit amount.
+  **File:** `app/(app)/parts/cores/page.tsx`
+  **Fix:** Added `useEffect` that resets `creditAmount` and `scrapAlertOpen` whenever `coreId` changes.
+  **Why it matters:** Prevents accidental credit issuance at the wrong amount — a direct financial error.
+
+- **BUG-PC-HUNT-143** — Rotables create form accepted negative values for TSN, TSO, TBO hours and price fields. HTML `type="number"` allows negative input. A clerk entering `-500` TSN hours would create a nonsensical record that corrupts TBO remaining calculations.
+  **File:** `app/(app)/parts/rotables/page.tsx`
+  **Fix:** Added pre-submit validation loop checking all numeric fields are ≥ 0, with toast error identifying the specific field.
+  **Why it matters:** Prevents invalid rotable records that would corrupt the TBO progress bar and mislead maintenance planning.
+
+- **BUG-PC-HUNT-144** — Shipping page allowed creating shipments with no carrier AND no tracking number. A shipment entry with only a type (inbound/outbound) is unidentifiable — the clerk has no way to trace the physical package.
+  **File:** `app/(app)/parts/shipping/page.tsx`
+  **Fix:** Added validation requiring at least one of carrier or tracking number before create submission.
+  **Why it matters:** Prevents orphaned shipment records that can't be matched to physical packages — a common data quality issue in busy shops.
+
+- **BUG-PC-HUNT-145** — Shipping search only matched shipment number, tracking number, and carrier. Searching "inbound" or an origin/destination name returned zero results — the clerk had to visually scan the entire list.
+  **File:** `app/(app)/parts/shipping/page.tsx`
+  **Fix:** Extended filter to also match `type`, `originName`, and `destinationName`.
+  **Why it matters:** Parts clerks frequently filter by type ("show me all inbound") or by origin/destination — critical for shops receiving from multiple vendors.
+
 ## Canonical Governance
 
 1. `MASTER-BUILD-LIST.md` is the only write-authoritative feature specification artifact.
