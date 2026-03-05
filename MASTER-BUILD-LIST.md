@@ -65,3 +65,35 @@
 - **What was broken:** The pending tab showed individual time entries but provided no total hours summary. A billing manager reviewing 20+ entries had no quick way to assess total labor cost exposure before approving. They'd have to mentally sum every row.
 - **Fix:** Added a pending hours summary badge (e.g., "12h 30m pending") with entry count, displayed prominently above the approval table.
 - **Impact:** Billing manager can immediately assess labor cost impact before bulk-approving time entries.
+
+### Bug Hunter Opus — QCM Inspector (2026-03-05)
+
+**BUG-QCM-HUNT-130: Audit Readiness AD score ignores notCompliedAds — inflated readiness score**
+- **File:** `app/(app)/compliance/audit-readiness/page.tsx`
+- **What was broken:** `problematicAds` only summed `overdueAds + pendingAds`, completely missing `notCompliedAds` (ADs that were never performed). An org with 4 never-performed ADs but 0 date-overrun ADs showed an AD Compliance readiness score of 100% — grossly misleading for a QCM preparing for an FAA audit.
+- **Fix:** Added `notCompliedAds` to the `problematicAds` calculation using the same defensive type-cast pattern used throughout the compliance section.
+- **Impact:** Audit readiness score now accurately reflects the true AD compliance posture; never-performed ADs properly penalize the score.
+
+**BUG-QCM-HUNT-131: AuditChecklistGenerator uses emoji (✅/❌) instead of Lucide icons**
+- **File:** `app/(app)/compliance/_components/AuditChecklistGenerator.tsx`
+- **What was broken:** Pre-audit checklist used Unicode emoji for pass/fail indicators while every other compliance component uses Lucide `CheckCircle2`/`XCircle` icons. Emoji renders inconsistently across Windows, macOS, and mobile — and was already fixed in RTSEvidenceSummary (BUG-QCM-HUNT-121).
+- **Fix:** Replaced emoji with `CheckCircle2` (green) / `XCircle` (red) icons matching the established pattern.
+- **Impact:** Consistent visual language across all compliance tools; no more platform-dependent rendering.
+
+**BUG-QCM-HUNT-132: Diamond Award page missing cross-navigation links**
+- **File:** `app/(app)/compliance/diamond-award/page.tsx`
+- **What was broken:** Every compliance subpage (ad-sb, audit-trail, qcm-review, audit-readiness) has "← Compliance" and sibling page shortcuts. Diamond Award had none — a QCM inspector was trapped without using the sidebar or browser back button.
+- **Fix:** Added "← Compliance", "AD/SB Tracking", "Audit Trail", and "QCM Review" buttons matching the established cross-nav pattern.
+- **Impact:** Full cross-linking across all 6 compliance pages; QCM can cycle through the compliance workflow without losing context.
+
+**BUG-QCM-HUNT-133: Audit Readiness page missing cross-navigation links**
+- **File:** `app/(app)/compliance/audit-readiness/page.tsx`
+- **What was broken:** Same gap as Diamond Award — no "← Compliance" or sibling page shortcuts. QCM landing from the compliance dashboard had no quick way to reach AD/SB Tracking or QCM Review.
+- **Fix:** Added consistent cross-nav links in the page header.
+- **Impact:** Complete navigation consistency across all compliance subpages.
+
+**BUG-QCM-HUNT-134: ComplianceTimeline "future" badge shows no day count — can't prioritize**
+- **File:** `app/(app)/compliance/_components/ComplianceTimeline.tsx`
+- **What was broken:** Items due more than 30 days out showed only "future" with a green badge but no actual day count. An AD due in 31 days looked identical to one due in 365 days — impossible for the QCM to prioritize upcoming deadlines or plan audit prep timing.
+- **Fix:** Changed "future" badge to show the actual day count (e.g., "45d", "180d") so deadlines are immediately comparable.
+- **Impact:** QCM inspector can now visually prioritize all timeline items by their actual urgency, not just a binary near/far classification.
