@@ -6,6 +6,36 @@ This file is the markdown-authoritative source of truth for feature status, impl
 
 ## Bug Hunter Fixes
 
+- **BUG-BM-HUNT-115** — Billing sidebar missing 5 critical pages (Time Clock, Pricing, Vendors, Tax Config, Settings). A billing manager had no way to navigate to these pages without manually typing URLs. Routes existed in `protectedAppRoutes.tsx` but were never added to the sidebar nav.
+  **File:** `components/AppSidebar.tsx`
+  **Fix:** Added sidebar links for Time Clock, Pricing, Tax Config, Vendors, and Settings under the Billing section.
+  **Why it matters:** Billing managers can now access all billing features from navigation instead of guessing URLs.
+
+- **BUG-BM-HUNT-116** — Pricing profile "Org-wide" customer select used `value=""` which is invalid for Radix Select. Selecting "Org-wide" caused the Select to revert to placeholder text, making it look like no selection was made. The profile was created correctly but the UX was broken.
+  **File:** `app/(app)/billing/pricing/page.tsx`
+  **Fix:** Changed empty-string value to `"_org_wide"` sentinel with bidirectional mapping in onValueChange.
+  **Why it matters:** Billing managers can now clearly see when "Org-wide" is selected vs unselected.
+
+- **BUG-BM-HUNT-117** — Creating a pricing profile showed zero user feedback on success — no toast, no confirmation. The dialog closed silently. Combined with the Select bug above, users couldn't tell if their profile was actually created.
+  **File:** `app/(app)/billing/pricing/page.tsx`
+  **Fix:** Added `toast.success()` call after successful profile creation, plus imported `sonner`.
+  **Why it matters:** Users now get confirmation that their pricing profile was saved.
+
+- **BUG-BM-HUNT-118** — Pricing dialog error state persisted across open/close cycles. If a user hit a validation error, closed the dialog, and reopened it, the stale error message was still displayed.
+  **File:** `app/(app)/billing/pricing/page.tsx`
+  **Fix:** Clear `error` state when "New Profile" button is clicked (both header and empty-state buttons).
+  **Why it matters:** Stale errors no longer confuse billing managers when re-entering the create flow.
+
+- **BUG-BM-HUNT-119** — Warranty Claims stats cards used `grid-cols-4` without responsive breakpoint. On mobile/tablet, the 4 KPI cards (Total Claims, Pending, Approved, Recovery Rate) were squished to ~25% width each, making the numbers unreadable.
+  **File:** `app/(app)/billing/warranty/page.tsx`
+  **Fix:** Changed to `grid-cols-2 sm:grid-cols-4` for proper responsive stacking.
+  **Why it matters:** Billing managers on tablets/phones can actually read warranty claim statistics.
+
+- **BUG-BM-HUNT-120** — Warranty Claims page used inconsistent padding (`p-6`) and heading sizing (`text-2xl`) compared to every other billing page (`space-y-5`, `text-lg sm:text-xl`). Also, `ClaimDetailDialog` returned `undefined` instead of `null` when no claim was selected, which is a React anti-pattern.
+  **File:** `app/(app)/billing/warranty/page.tsx`
+  **Fix:** Aligned padding, heading size, and icon size with billing page conventions. Changed `return;` to `return null;` in dialog guard.
+  **Why it matters:** Visual consistency across billing section; proper React component contract.
+
 - **BUG-PC-HUNT-106** — Receiving Inspection checklist `inspectionDate` defaulted to `new Date().toISOString().slice(0, 10)` (UTC date). A parts clerk in UTC-5 working after 7pm local would see tomorrow's UTC date pre-filled, creating a compliance mismatch between the 8130-3 tag date and the inspection record.
   **File:** `app/(app)/parts/_components/ReceivingInspection.tsx`
   **Fix:** Replaced with local calendar date using `getFullYear()/getMonth()/getDate()` pattern (same as BUG-PC-088).
