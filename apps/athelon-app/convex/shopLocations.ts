@@ -48,6 +48,7 @@ export const create = mutation({
     phone: v.optional(v.string()),
     email: v.optional(v.string()),
     certificateNumber: v.optional(v.string()),
+    repairStationCertificateNumber: v.optional(v.string()),
     certificateType: v.optional(v.union(v.literal("part_145"), v.literal("part_135"), v.literal("part_121"), v.literal("part_91"))),
     capabilities: v.optional(v.array(v.string())),
     timezone: v.optional(v.string()),
@@ -61,9 +62,12 @@ export const create = mutation({
       .withIndex("by_organization", (q) => q.eq("organizationId", args.organizationId))
       .collect();
     const shouldBePrimary = (args.isPrimary ?? false) || existing.length === 0;
+    const repairStationCertificateNumber =
+      args.repairStationCertificateNumber ?? args.certificateNumber;
 
     const id = await ctx.db.insert("shopLocations", {
       ...args,
+      repairStationCertificateNumber,
       isPrimary: shouldBePrimary,
       isActive: true,
       createdAt: now,
@@ -91,6 +95,7 @@ export const update = mutation({
     phone: v.optional(v.string()),
     email: v.optional(v.string()),
     certificateNumber: v.optional(v.string()),
+    repairStationCertificateNumber: v.optional(v.string()),
     certificateType: v.optional(
       v.union(
         v.literal("part_145"),
@@ -110,7 +115,17 @@ export const update = mutation({
     const location = await ctx.db.get(id);
     if (!location) throw new Error("Location not found");
 
-    await ctx.db.patch(id, { ...fields, updatedAt: Date.now() });
+    const patch = {
+      ...fields,
+      repairStationCertificateNumber:
+        fields.repairStationCertificateNumber ??
+        (fields.certificateNumber !== undefined
+          ? fields.certificateNumber
+          : location.repairStationCertificateNumber),
+      updatedAt: Date.now(),
+    };
+
+    await ctx.db.patch(id, patch);
 
     if (fields.isPrimary === true) {
       await enforceSinglePrimary(ctx, location.organizationId, id);

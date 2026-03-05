@@ -4530,6 +4530,7 @@ export default defineSchema({
     phone: v.optional(v.string()),
     email: v.optional(v.string()),
     certificateNumber: v.optional(v.string()),
+    repairStationCertificateNumber: v.optional(v.string()),
     certificateType: v.optional(v.union(v.literal("part_145"), v.literal("part_135"), v.literal("part_121"), v.literal("part_91"))),
     capabilities: v.optional(v.array(v.string())),
     isActive: v.boolean(),

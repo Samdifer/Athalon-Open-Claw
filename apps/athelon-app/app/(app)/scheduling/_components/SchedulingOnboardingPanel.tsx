@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -96,17 +96,36 @@ type OnboardingDefaults = {
   defaultShopRate: number;
 };
 
+type OnboardingLocationOption = {
+  id: string;
+  name: string;
+  code: string;
+  certificateNumber?: string;
+  repairStationCertificateNumber?: string;
+};
+
 interface SchedulingOnboardingPanelProps {
   visible: boolean;
   setupOpen: boolean;
   onSetupOpenChange: (open: boolean) => void;
   defaults: OnboardingDefaults;
   defaultsAppliedAt?: number;
-  onApplyDefaults: (next: OnboardingDefaults) => Promise<void>;
+  onApplyDefaults: (
+    next: OnboardingDefaults,
+    options?: { selectedLocationIds: string[] },
+  ) => Promise<void>;
   onSkip: () => void;
   onComplete: () => void;
   /** Used to open backlog from step 4 */
   onOpenBacklog?: () => void;
+  locationOptions?: OnboardingLocationOption[];
+  selectedLocationIds?: string[];
+  onSelectedLocationIdsChange?: (ids: string[]) => void;
+  onCreateLocation?: (input: {
+    name: string;
+    code: string;
+    repairStationCertificateNumber?: string;
+  }) => Promise<void>;
   /** Unique key for localStorage scoping (orgId:techId) */
   storageKey?: string;
 }
@@ -129,6 +148,10 @@ export function SchedulingOnboardingPanel({
   onSkip,
   onComplete,
   onOpenBacklog,
+  locationOptions = [],
+  selectedLocationIds = [],
+  onSelectedLocationIdsChange,
+  onCreateLocation,
   storageKey = "default",
 }: SchedulingOnboardingPanelProps) {
   // ── Step completion state ──────────────────────────────────────────────
@@ -208,7 +231,20 @@ export function SchedulingOnboardingPanel({
   const [defaultShopRate, setDefaultShopRate] = useState(
     String(defaults.defaultShopRate),
   );
+  const [newLocationName, setNewLocationName] = useState("");
+  const [newLocationCode, setNewLocationCode] = useState("");
+  const [newLocationCert, setNewLocationCert] = useState("");
+  const [addingLocation, setAddingLocation] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  const activeLocationIds = useMemo(
+    () => locationOptions.map((location) => location.id),
+    [locationOptions],
+  );
+  const normalizedSelectedLocationIds = useMemo(
+    () => selectedLocationIds.filter((id) => activeLocationIds.includes(id)),
+    [selectedLocationIds, activeLocationIds],
+  );
 
   useEffect(() => {
     if (!setupOpen) return;
@@ -217,7 +253,59 @@ export function SchedulingOnboardingPanel({
     setDefaultEndHour(String(defaults.defaultEndHour));
     setDefaultEfficiencyMultiplier(String(defaults.defaultEfficiencyMultiplier));
     setDefaultShopRate(String(defaults.defaultShopRate));
-  }, [setupOpen, defaults]);
+    setNewLocationName("");
+    setNewLocationCode("");
+    setNewLocationCert("");
+
+    if (onSelectedLocationIdsChange && locationOptions.length > 0 && selectedLocationIds.length === 0) {
+      onSelectedLocationIdsChange(activeLocationIds);
+    }
+  }, [
+    setupOpen,
+    defaults,
+    onSelectedLocationIdsChange,
+    locationOptions.length,
+    selectedLocationIds.length,
+    activeLocationIds,
+  ]);
+
+  function toggleLocationSelection(locationId: string) {
+    if (!onSelectedLocationIdsChange) return;
+
+    const next = normalizedSelectedLocationIds.includes(locationId)
+      ? normalizedSelectedLocationIds.filter((id) => id !== locationId)
+      : [...normalizedSelectedLocationIds, locationId];
+
+    onSelectedLocationIdsChange(next);
+  }
+
+  async function handleCreateLocation() {
+    if (!onCreateLocation) return;
+
+    const trimmedName = newLocationName.trim();
+    const trimmedCode = newLocationCode.trim().toUpperCase();
+    if (!trimmedName || !trimmedCode) {
+      toast.error("Location name and code are required");
+      return;
+    }
+
+    setAddingLocation(true);
+    try {
+      await onCreateLocation({
+        name: trimmedName,
+        code: trimmedCode,
+        repairStationCertificateNumber: newLocationCert.trim() || undefined,
+      });
+      setNewLocationName("");
+      setNewLocationCode("");
+      setNewLocationCert("");
+      toast.success("Location added to scheduling onboarding");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to create location");
+    } finally {
+      setAddingLocation(false);
+    }
+  }
 
   async function handleApplyDefaults() {
     setSaving(true);
@@ -249,6 +337,11 @@ export function SchedulingOnboardingPanel({
           0,
           10000,
         ),
+      }, {
+        selectedLocationIds:
+          normalizedSelectedLocationIds.length > 0
+            ? normalizedSelectedLocationIds
+            : activeLocationIds,
       });
       toast.success("Scheduling onboarding defaults applied");
     } catch (err) {
@@ -432,6 +525,82 @@ export function SchedulingOnboardingPanel({
               planning surface.
             </DialogDescription>
           </DialogHeader>
+
+          {locationOptions.length > 0 && (
+            <div className="space-y-2 rounded-md border border-border/50 p-3">
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-semibold">Scheduling locations</p>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 text-[11px]"
+                  onClick={() => onSelectedLocationIdsChange?.(activeLocationIds)}
+                >
+                  Select all
+                </Button>
+              </div>
+              <p className="text-[11px] text-muted-foreground">
+                Choose one or more locations for onboarding context.
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {locationOptions.map((location) => {
+                  const selected = normalizedSelectedLocationIds.includes(location.id);
+                  const cert =
+                    location.repairStationCertificateNumber ?? location.certificateNumber;
+                  return (
+                    <Button
+                      key={location.id}
+                      type="button"
+                      variant={selected ? "secondary" : "outline"}
+                      size="sm"
+                      className="h-7 text-[11px]"
+                      onClick={() => toggleLocationSelection(location.id)}
+                    >
+                      {location.name}
+                      <span className="text-[10px] text-muted-foreground">{location.code}</span>
+                      {cert && (
+                        <span className="hidden sm:inline text-[10px] text-muted-foreground">
+                          • {cert}
+                        </span>
+                      )}
+                    </Button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          <div className="space-y-2 rounded-md border border-border/50 p-3">
+            <p className="text-xs font-semibold">Add location</p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <Input
+                placeholder="Location name"
+                value={newLocationName}
+                onChange={(event) => setNewLocationName(event.target.value)}
+              />
+              <Input
+                placeholder="Code"
+                value={newLocationCode}
+                onChange={(event) => setNewLocationCode(event.target.value)}
+              />
+              <Input
+                placeholder="Repair cert # (optional)"
+                value={newLocationCert}
+                onChange={(event) => setNewLocationCert(event.target.value)}
+              />
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-7 text-xs"
+              onClick={handleCreateLocation}
+              disabled={!onCreateLocation || addingLocation}
+            >
+              {addingLocation ? "Adding..." : "Add Location"}
+            </Button>
+          </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">

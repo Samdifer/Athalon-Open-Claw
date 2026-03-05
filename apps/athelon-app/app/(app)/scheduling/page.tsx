@@ -144,6 +144,8 @@ type SchedulingOnboardingRecord = {
   skippedAt?: number;
   completedAt?: number;
   defaultsAppliedAt?: number;
+  selectedLocationIds?: string[];
+  activeLocationId?: string;
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -153,7 +155,7 @@ type SchedulingOnboardingRecord = {
 export default function SchedulingPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { orgId, techId, isLoaded } = useCurrentOrg();
-  const { selectedLocationId } = useSelectedLocation(orgId);
+  const { selectedLocationId, setSelectedLocationId } = useSelectedLocation(orgId);
   const selectedShopLocationFilter = useMemo(
     () =>
       selectedLocationId === "all"
@@ -296,6 +298,14 @@ export default function SchedulingPage() {
     api.stationConfig.getTimelineCursorConfig,
     orgId ? { organizationId: orgId } : "skip",
   );
+  const shopLocations = useQuery(
+    api.shopLocations.list,
+    orgId ? { organizationId: orgId } : "skip",
+  );
+  const myRole = useQuery(
+    api.roles.getMyRole,
+    orgId ? { organizationId: orgId } : "skip",
+  );
 
   const upsertScheduleAssignment = useMutation(api.schedulerPlanning.upsertScheduleAssignment);
   const reorderBays = useMutation(api.hangarBays.reorderBays);
@@ -310,6 +320,8 @@ export default function SchedulingPage() {
     api.schedulerPlanning.upsertPlanningFinancialSettings,
   );
   const upsertSchedulingSettings = useMutation(api.capacity.upsertSchedulingSettings);
+  const upsertTechnicianShift = useMutation(api.capacity.upsertTechnicianShift);
+  const createShopLocation = useMutation(api.shopLocations.create);
   // ── Undo stack ──────────────────────────────────────────────────────────
   const undoExecutor = useCallback(
     async (action: UndoAction) => {
@@ -356,10 +368,34 @@ export default function SchedulingPage() {
       planningFinancialSettings === undefined ||
       schedulingSettings === undefined ||
       timelineHolidays === undefined ||
-      timelineCursorConfig === undefined,
+      timelineCursorConfig === undefined ||
+      shopLocations === undefined,
   });
 
   const workOrders = data ?? [];
+  const activeShopLocations = useMemo(
+    () => (shopLocations ?? []).filter((location) => location.isActive !== false),
+    [shopLocations],
+  );
+  const selectedShopLocation = useMemo(
+    () =>
+      selectedLocationId === "all"
+        ? null
+        : activeShopLocations.find((location) => String(location._id) === selectedLocationId) ?? null,
+    [activeShopLocations, selectedLocationId],
+  );
+  const selectedLocationCertificate =
+    selectedShopLocation?.repairStationCertificateNumber ??
+    selectedShopLocation?.certificateNumber ??
+    null;
+  const allLocationCertificatesCount = useMemo(
+    () =>
+      activeShopLocations.filter(
+        (location) =>
+          !!(location.repairStationCertificateNumber ?? location.certificateNumber),
+      ).length,
+    [activeShopLocations],
+  );
   const allPlannerProjects = plannerProjects ?? [];
   const scheduledProjects = useMemo(
     () => allPlannerProjects.filter((project) => project.archivedAt === undefined),
@@ -565,6 +601,23 @@ export default function SchedulingPage() {
       setOnboardingSetupOpen(false);
     }
   }, [onboardingRecord]);
+
+  useEffect(() => {
+    if (!onboardingRecord?.activeLocationId) return;
+    if (selectedLocationId === onboardingRecord.activeLocationId) return;
+
+    if (onboardingRecord.activeLocationId === "all") {
+      setSelectedLocationId("all");
+      return;
+    }
+
+    const exists = (shopLocations ?? []).some(
+      (location) => String(location._id) === onboardingRecord.activeLocationId,
+    );
+    if (exists) {
+      setSelectedLocationId(onboardingRecord.activeLocationId);
+    }
+  }, [onboardingRecord, selectedLocationId, setSelectedLocationId, shopLocations]);
 
   // Map bay ID → human-readable bay name (used in conflict detection & Magic Scheduler results)
   // BUG-SM-HUNT-011: bayNameMap was defined AFTER the conflicts useMemo that
@@ -930,6 +983,7 @@ export default function SchedulingPage() {
         startHour: tech.startHour,
         endHour: tech.endHour,
         efficiencyMultiplier: tech.efficiencyMultiplier,
+        shiftSource: tech.shiftSource,
         usingDefaultShift: tech.usingDefaultShift,
         assignedActiveCards: tech.assignedActiveCards,
         estimatedRemainingHours: tech.estimatedRemainingHours,
@@ -950,6 +1004,9 @@ export default function SchedulingPage() {
   );
 
   const rosterWorkspaceEnabled = schedulingSettings?.rosterWorkspaceEnabled ?? false;
+
+  const canManageSchedulingCommandCenter =
+    myRole === "admin" || myRole === "shop_manager" || myRole === "lead_technician";
 
   const commandCenterRosterSummary = useMemo(
     () => {
@@ -1013,7 +1070,6 @@ export default function SchedulingPage() {
     }),
     [schedulingSettings],
   );
-
   const onboardingDefaults = useMemo(
     () => ({
       capacityBufferPercent: schedulingSettings?.capacityBufferPercent ?? 15,
@@ -1343,14 +1399,38 @@ export default function SchedulingPage() {
     [orgId, upsertSchedulingSettings],
   );
 
-  const handleApplyOnboardingDefaults = useCallback(
+  const handleSaveCommandCenterTechnicianShift = useCallback(
     async (next: {
-      capacityBufferPercent: number;
-      defaultStartHour: number;
-      defaultEndHour: number;
-      defaultEfficiencyMultiplier: number;
-      defaultShopRate: number;
+      technicianId: string;
+      daysOfWeek: number[];
+      startHour: number;
+      endHour: number;
+      efficiencyMultiplier: number;
     }) => {
+      if (!orgId) throw new Error("Missing organization context");
+      await upsertTechnicianShift({
+        organizationId: orgId,
+        technicianId: next.technicianId as Id<"technicians">,
+        daysOfWeek: next.daysOfWeek,
+        startHour: next.startHour,
+        endHour: next.endHour,
+        efficiencyMultiplier: next.efficiencyMultiplier,
+      });
+    },
+    [orgId, upsertTechnicianShift],
+  );
+
+  const handleApplyOnboardingDefaults = useCallback(
+    async (
+      next: {
+        capacityBufferPercent: number;
+        defaultStartHour: number;
+        defaultEndHour: number;
+        defaultEfficiencyMultiplier: number;
+        defaultShopRate: number;
+      },
+      options?: { selectedLocationIds: string[] },
+    ) => {
       if (!orgId) throw new Error("Missing organization context");
 
       await Promise.all([
@@ -1371,8 +1451,20 @@ export default function SchedulingPage() {
         }),
       ]);
 
+      const candidateIds = options?.selectedLocationIds ?? [];
+      const activeIds = new Set(activeShopLocations.map((location) => String(location._id)));
+      const selectedLocationIds = candidateIds.filter((id) => activeIds.has(id));
+      const fallbackLocationIds = Array.from(activeIds);
+      const normalizedLocationIds =
+        selectedLocationIds.length > 0 ? selectedLocationIds : fallbackLocationIds;
+      const nextActiveLocationId =
+        normalizedLocationIds.length === 1 ? normalizedLocationIds[0] : "all";
+
+      setSelectedLocationId(nextActiveLocationId);
       persistOnboardingRecord({
         defaultsAppliedAt: Date.now(),
+        selectedLocationIds: normalizedLocationIds,
+        activeLocationId: nextActiveLocationId,
       });
     },
     [
@@ -1381,10 +1473,37 @@ export default function SchedulingPage() {
       planningRates.monthlyFixedOverhead,
       planningRates.monthlyVariableOverhead,
       planningRates.annualCapexAssumption,
+      activeShopLocations,
       persistOnboardingRecord,
+      setSelectedLocationId,
       upsertPlanningFinancialSettings,
       upsertSchedulingSettings,
     ],
+  );
+
+  const handleOnboardingSelectedLocationsChange = useCallback(
+    (ids: string[]) => {
+      persistOnboardingRecord({ selectedLocationIds: ids });
+    },
+    [persistOnboardingRecord],
+  );
+
+  const handleCreateOnboardingLocation = useCallback(
+    async (input: {
+      name: string;
+      code: string;
+      repairStationCertificateNumber?: string;
+    }) => {
+      if (!orgId) throw new Error("Missing organization context");
+      await createShopLocation({
+        organizationId: orgId,
+        name: input.name,
+        code: input.code,
+        certificateNumber: input.repairStationCertificateNumber,
+        repairStationCertificateNumber: input.repairStationCertificateNumber,
+      });
+    },
+    [createShopLocation, orgId],
   );
 
   function openMagicScheduler() {
@@ -1556,7 +1675,8 @@ export default function SchedulingPage() {
     !plannerProjects ||
     !technicianWorkload ||
     !planningFinancialSettings ||
-    !schedulingSettings
+    !schedulingSettings ||
+    !shopLocations
   ) {
     return (
       <ActionableEmptyState
@@ -1620,6 +1740,19 @@ export default function SchedulingPage() {
         </Button>
 
         <div className="flex-1" />
+
+        <div className="hidden lg:flex items-center gap-1">
+          <Badge variant="outline" className="h-6 text-[10px]">
+            {selectedShopLocation
+              ? `Location: ${selectedShopLocation.name}`
+              : `Locations: ${activeShopLocations.length}`}
+          </Badge>
+          <Badge variant="secondary" className="h-6 text-[10px] font-mono">
+            {selectedShopLocation
+              ? selectedLocationCertificate ?? "Cert pending"
+              : `${allLocationCertificatesCount}/${activeShopLocations.length} certs`}
+          </Badge>
+        </div>
 
         <Button
           variant="outline"
@@ -1812,6 +1945,16 @@ export default function SchedulingPage() {
           setGraveyardOpen(false);
           setBacklogOpen(true);
         }}
+        locationOptions={activeShopLocations.map((location) => ({
+          id: String(location._id),
+          name: location.name,
+          code: location.code,
+          certificateNumber: location.certificateNumber,
+          repairStationCertificateNumber: location.repairStationCertificateNumber,
+        }))}
+        selectedLocationIds={onboardingRecord?.selectedLocationIds ?? []}
+        onSelectedLocationIdsChange={handleOnboardingSelectedLocationsChange}
+        onCreateLocation={handleCreateOnboardingLocation}
         storageKey={onboardingStorageKey ?? "default"}
       />
 
@@ -2108,8 +2251,11 @@ export default function SchedulingPage() {
         configSummary={commandCenterConfigSummary}
         financialSummary={commandCenterFinancialSummary}
         schedulingSettingsSummary={commandCenterSchedulingSettings}
+        technicians={rosterTechnicians}
+        canManageScheduling={canManageSchedulingCommandCenter}
         onSaveFinancialSummary={handleSaveCommandCenterFinancial}
         onSaveSchedulingSettings={handleSaveCommandCenterScheduling}
+        onSaveTechnicianShift={handleSaveCommandCenterTechnicianShift}
       />
 
       <Dialog open={magicOpen} onOpenChange={setMagicOpen}>
