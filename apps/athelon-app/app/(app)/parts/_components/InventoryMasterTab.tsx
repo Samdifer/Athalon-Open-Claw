@@ -42,6 +42,9 @@ type PartRow = {
   reorderPoint?: number;
   receivingDate?: number;
   removedAt?: number;
+  // BUG-PC-HUNT-121: Include unitCost from the parts data model so the
+  // Inventory Master tab can display real cost data instead of $0.00.
+  unitCost?: number;
 };
 
 function getStatus(part: PartRow): Exclude<StatusFilter, "all"> {
@@ -94,7 +97,10 @@ export function InventoryMasterTab() {
     return all
       .map((part) => {
         const qty = part.quantityOnHand ?? part.quantity ?? 0;
-        const unitCost = 0;
+        // BUG-PC-HUNT-121: Use actual unitCost from the part record instead of
+        // hardcoded 0. Previously every row showed $0.00 for Unit Cost and
+        // Total Value — a parts clerk reviewing stock value got wrong data.
+        const unitCost = part.unitCost ?? 0;
         const category = part.condition || "general";
         const manufacturer = part.supplier || "Unknown";
         const status = getStatus(part);

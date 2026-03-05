@@ -22,12 +22,17 @@ function urgencyClass(urgency: PartsRequestRecord["urgency"]) {
 const pendingStatuses: PartsRequestStatus[] = ["requested", "ordered", "shipped"];
 
 export function PartsRequestQueue({ requests, onRequestsChange }: PartsRequestQueueProps) {
-  const [tab, setTab] = useState<"all" | "pending" | "ordered" | "received">("all");
+  // BUG-PC-HUNT-123: Added "shipped" tab. Previously shipped requests were
+  // only visible under "All" or "Pending" — a parts clerk tracking inbound
+  // shipments couldn't quickly filter to just the shipped items to know
+  // what's en route.
+  const [tab, setTab] = useState<"all" | "pending" | "ordered" | "shipped" | "received">("all");
 
   const filtered = useMemo(() => {
     if (tab === "all") return requests;
     if (tab === "pending") return requests.filter((r) => pendingStatuses.includes(r.status));
     if (tab === "ordered") return requests.filter((r) => r.status === "ordered");
+    if (tab === "shipped") return requests.filter((r) => r.status === "shipped");
     return requests.filter((r) => r.status === "received");
   }, [requests, tab]);
 
@@ -47,6 +52,7 @@ export function PartsRequestQueue({ requests, onRequestsChange }: PartsRequestQu
               <TabsTrigger value="all" className="h-7 text-xs">All</TabsTrigger>
               <TabsTrigger value="pending" className="h-7 text-xs">Pending</TabsTrigger>
               <TabsTrigger value="ordered" className="h-7 text-xs">Ordered</TabsTrigger>
+              <TabsTrigger value="shipped" className="h-7 text-xs">Shipped</TabsTrigger>
               <TabsTrigger value="received" className="h-7 text-xs">Received</TabsTrigger>
             </TabsList>
           </Tabs>
@@ -77,6 +83,11 @@ export function PartsRequestQueue({ requests, onRequestsChange }: PartsRequestQu
                 {r.status === "requested" && (
                   <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => setStatus(r.id, "ordered")}>
                     Mark Ordered
+                  </Button>
+                )}
+                {r.status === "ordered" && (
+                  <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => setStatus(r.id, "shipped")}>
+                    Mark Shipped
                   </Button>
                 )}
                 {(r.status === "ordered" || r.status === "shipped") && (

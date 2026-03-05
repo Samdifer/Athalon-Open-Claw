@@ -5,7 +5,10 @@ import { ChevronDown } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-type KanbanStage = "in_stock" | "reserved" | "issued" | "installed" | "scrapped";
+// BUG-PC-HUNT-122: Added "pending_inspection" stage. Previously parts in
+// pending_inspection silently fell into "in_stock", making the Kanban view
+// misleading for a parts clerk tracking the receiving → inspection → stock flow.
+type KanbanStage = "pending_inspection" | "in_stock" | "reserved" | "issued" | "installed" | "scrapped";
 
 type PartItem = {
   _id: string;
@@ -22,6 +25,7 @@ type PartItem = {
 };
 
 const COLUMNS: Array<{ key: KanbanStage; label: string }> = [
+  { key: "pending_inspection", label: "Pending Inspection" },
   { key: "in_stock", label: "In Stock" },
   { key: "reserved", label: "Reserved" },
   { key: "issued", label: "Issued" },
@@ -48,6 +52,7 @@ function toStage(part: PartItem): KanbanStage {
   ) {
     return "scrapped";
   }
+  if (part.location === "pending_inspection") return "pending_inspection";
   if (part.location === "installed") return "installed";
   if (part.location === "removed_pending_disposition") return "issued";
   if (part.reservedForWorkOrderId) return "reserved";
@@ -90,6 +95,7 @@ export function InventoryKanban({ parts }: { parts: PartItem[] }) {
 
   const grouped = useMemo(() => {
     const map: Record<KanbanStage, PartItem[]> = {
+      pending_inspection: [],
       in_stock: [],
       reserved: [],
       issued: [],
@@ -131,7 +137,7 @@ export function InventoryKanban({ parts }: { parts: PartItem[] }) {
         </Select>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-5 gap-3">
+      <div className="grid grid-cols-1 xl:grid-cols-6 gap-3">
         {COLUMNS.map((column) => (
           <div key={column.key} className="rounded-lg border border-border/60 bg-muted/20">
             <div className="px-3 py-2 border-b border-border/50 flex items-center justify-between">

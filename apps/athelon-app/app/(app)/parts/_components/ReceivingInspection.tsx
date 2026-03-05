@@ -115,7 +115,17 @@ export function ReceivingInspection() {
     setExpectedQty("1");
     setReceivedQty("1");
     setInspectorName("");
-    setInspectionDate(new Date().toISOString().slice(0, 10));
+    // BUG-PC-HUNT-120: Use local calendar date (not UTC) consistently.
+    // resetDialogState was using UTC .toISOString() while the initial state
+    // used local date — after completing one inspection the next dialog
+    // would show the wrong date for clerks in negative UTC offsets.
+    setInspectionDate((() => {
+      const d = new Date();
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${y}-${m}-${day}`;
+    })());
     setNotes("");
   }
 
