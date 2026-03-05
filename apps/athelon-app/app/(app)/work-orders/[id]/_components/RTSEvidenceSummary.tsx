@@ -11,6 +11,12 @@ type ReadinessCheck = {
   passed: boolean;
 };
 
+// BUG-QCM-HUNT-125: Added `hideRtsLink` prop. This component is rendered on
+// the RTS page itself (/work-orders/:id/rts) where the "Generate RTS Document"
+// button at the bottom links to... the same page. The QCM inspector sees a
+// link to navigate to the page they're already on — confusing and wastes
+// vertical space. When rendered from within the RTS page, pass hideRtsLink
+// to suppress the redundant navigation button.
 export function RTSEvidenceSummary({
   workOrderId,
   taskCardsComplete,
@@ -19,6 +25,7 @@ export function RTSEvidenceSummary({
   partsTraceabilityComplete,
   requiredDocsUploaded,
   customerAuthorizationOnFile,
+  hideRtsLink = false,
 }: {
   workOrderId: string;
   taskCardsComplete: boolean;
@@ -27,6 +34,7 @@ export function RTSEvidenceSummary({
   partsTraceabilityComplete: boolean;
   requiredDocsUploaded: boolean;
   customerAuthorizationOnFile: boolean;
+  hideRtsLink?: boolean;
 }) {
   const checks: ReadinessCheck[] = [
     { label: "All task cards complete", passed: taskCardsComplete },
@@ -55,10 +63,16 @@ export function RTSEvidenceSummary({
           {checks.map((check) => (
             <div key={check.label} className="rounded-md border border-border/60 p-2 text-xs flex items-center justify-between gap-2">
               <span>{check.label}</span>
+              {/* BUG-QCM-HUNT-121: Previously rendered BOTH a Lucide icon AND a
+                  Unicode emoji (✅/❌) for each check — double visual indicator
+                  for the same state. The emoji renders inconsistently across
+                  platforms (Windows vs macOS vs mobile) and clutters the row.
+                  Keeping the icon-only pattern consistent with every other
+                  status indicator in the compliance section. */}
               {check.passed ? (
-                <span className="inline-flex items-center gap-1 text-green-500"><CheckCircle2 className="w-3.5 h-3.5" />✅</span>
+                <span className="inline-flex items-center gap-1 text-green-500"><CheckCircle2 className="w-3.5 h-3.5" /></span>
               ) : (
-                <span className="inline-flex items-center gap-1 text-red-500"><CircleOff className="w-3.5 h-3.5" />❌</span>
+                <span className="inline-flex items-center gap-1 text-red-500"><CircleOff className="w-3.5 h-3.5" /></span>
               )}
             </div>
           ))}
@@ -75,11 +89,13 @@ export function RTSEvidenceSummary({
           </div>
         )}
 
-        <div className="flex justify-end">
-          <Button asChild size="sm" className="h-8 text-xs">
-            <Link to={`/work-orders/${workOrderId}/rts`}>Generate RTS Document</Link>
-          </Button>
-        </div>
+        {!hideRtsLink && (
+          <div className="flex justify-end">
+            <Button asChild size="sm" className="h-8 text-xs">
+              <Link to={`/work-orders/${workOrderId}/rts`}>Generate RTS Document</Link>
+            </Button>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

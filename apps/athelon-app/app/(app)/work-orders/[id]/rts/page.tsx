@@ -385,6 +385,7 @@ export default function RtsPage() {
         )}
         requiredDocsUploaded={hasComplianceDocument}
         customerAuthorizationOnFile={hasCustomerAuthorizationDocument}
+        hideRtsLink
       />
 
       {/* 9 Preconditions */}

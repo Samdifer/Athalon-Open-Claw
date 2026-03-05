@@ -167,11 +167,17 @@ export default function ReleaseAircraftPage() {
       setError("Organization or technician not loaded.");
       return;
     }
-    if (!aircraftTotalTime || isNaN(parseFloat(aircraftTotalTime))) {
-      setError("Aircraft total time at release is required.");
+    // BUG-QCM-HUNT-123: parseFloat("123abc") silently accepts malformed input
+    // and returns 123 — the same class of bug fixed on the RTS page
+    // (BUG-QCM-HUNT-004). A shop manager typing "1234.5h" or "~2000" would
+    // pass validation and create a maintenance record with truncated hours.
+    // Use Number() + Number.isFinite() for strict parsing (rejects NaN,
+    // Infinity, and trailing non-numeric characters).
+    const enteredHours = Number(aircraftTotalTime.trim());
+    if (!aircraftTotalTime.trim() || !Number.isFinite(enteredHours)) {
+      setError("Aircraft total time at release is required. Enter a valid number.");
       return;
     }
-    const enteredHours = parseFloat(aircraftTotalTime);
     if (enteredHours <= 0) {
       setError("Aircraft total time must be greater than zero.");
       return;
@@ -197,7 +203,7 @@ export default function ReleaseAircraftPage() {
       await releaseAircraft({
         workOrderId: id as Id<"workOrders">,
         releasedByTechnicianId: techId as Id<"technicians">,
-        aircraftTotalTimeAtRelease: parseFloat(aircraftTotalTime),
+        aircraftTotalTimeAtRelease: enteredHours,
         pickupNotes: pickupNotes || undefined,
         customerSignature: customerSignature || undefined,
       });

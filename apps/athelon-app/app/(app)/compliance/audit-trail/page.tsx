@@ -627,19 +627,30 @@ export default function AuditTrailPage() {
     });
   }, [aircraft, fleetAdSummary]);
 
-  const exportRows = useMemo(
-    () =>
-      (fleetAdSummary?.aircraftSummaries ?? []).map((summary) => ({
+  // BUG-QCM-HUNT-124: Export rows previously used `new Date().toISOString()`
+  // as the timestamp for every row, which regenerated on every memo
+  // recomputation. Every row showed the exact same timestamp (the moment the
+  // page last re-rendered), making it look like all aircraft were snapshotted
+  // simultaneously — misleading for audit purposes. The "user" column was
+  // always "System" which isn't meaningful. Changed: timestamp is a stable
+  // label ("as of <date>"), and "user" is replaced with the aircraft
+  // registration for better CSV readability.  Also include "Not Complied"
+  // count which was missing from the export but visible in the UI.
+  const exportRows = useMemo(() => {
+    const snapshotDate = new Date().toISOString().slice(0, 10);
+    return (fleetAdSummary?.aircraftSummaries ?? []).map((summary) => {
+      const reg =
+        aircraft?.find((ac) => ac._id === summary.aircraftId)?.currentRegistration ??
+        summary.aircraftId.slice(-6);
+      const notComplied = (summary as unknown as Record<string, number>)["notCompliedCount"] ?? 0;
+      return {
         event: "AD Compliance Snapshot",
-        user: "System",
-        timestamp: new Date().toISOString(),
-        details: `${
-          aircraft?.find((ac) => ac._id === summary.aircraftId)?.currentRegistration ??
-          summary.aircraftId.slice(-6)
-        }: ${summary.overdueCount} overdue, ${summary.dueSoonCount} due soon, ${summary.total} total ADs`,
-      })),
-    [aircraft, fleetAdSummary],
-  );
+        aircraft: reg,
+        timestamp: snapshotDate,
+        details: `${reg}: ${summary.overdueCount} overdue, ${notComplied} not complied, ${summary.dueSoonCount} due soon, ${summary.total} total ADs`,
+      };
+    });
+  }, [aircraft, fleetAdSummary]);
 
   // BUG-QCM-048: Guard against missing org context (see comment above on isLoaded).
   if (!orgLoaded) {
@@ -688,8 +699,8 @@ export default function AuditTrailPage() {
             data={exportRows}
             columns={[
               { key: "event", header: "Event" },
-              { key: "user", header: "User" },
-              { key: "timestamp", header: "Timestamp" },
+              { key: "aircraft", header: "Aircraft" },
+              { key: "timestamp", header: "Snapshot Date" },
               { key: "details", header: "Details" },
             ]}
             fileName="audit-trail.csv"
