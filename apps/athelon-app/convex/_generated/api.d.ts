@@ -101,6 +101,7 @@ import type * as domains_workOrders_workOrders from "../domains/workOrders/workO
 import type * as email from "../email.js";
 import type * as emailLog from "../emailLog.js";
 import type * as emailTemplates from "../emailTemplates.js";
+import type * as evidenceChecklists from "../evidenceChecklists.js";
 import type * as faaLookup from "../faaLookup.js";
 import type * as fileStorage from "../fileStorage.js";
 import type * as fleetCalendar from "../fleetCalendar.js";
@@ -173,6 +174,8 @@ import type * as taskAssignments from "../taskAssignments.js";
 import type * as taskCardVendorServices from "../taskCardVendorServices.js";
 import type * as taskCards from "../taskCards.js";
 import type * as taskCompliance from "../taskCompliance.js";
+import type * as taskStepPartTrace from "../taskStepPartTrace.js";
+import type * as taskStepReferences from "../taskStepReferences.js";
 import type * as tatEstimation from "../tatEstimation.js";
 import type * as technicianTraining from "../technicianTraining.js";
 import type * as technicians from "../technicians.js";
@@ -285,6 +288,7 @@ declare const fullApi: ApiFromModules<{
   email: typeof email;
   emailLog: typeof emailLog;
   emailTemplates: typeof emailTemplates;
+  evidenceChecklists: typeof evidenceChecklists;
   faaLookup: typeof faaLookup;
   fileStorage: typeof fileStorage;
   fleetCalendar: typeof fleetCalendar;
@@ -357,6 +361,8 @@ declare const fullApi: ApiFromModules<{
   taskCardVendorServices: typeof taskCardVendorServices;
   taskCards: typeof taskCards;
   taskCompliance: typeof taskCompliance;
+  taskStepPartTrace: typeof taskStepPartTrace;
+  taskStepReferences: typeof taskStepReferences;
   tatEstimation: typeof tatEstimation;
   technicianTraining: typeof technicianTraining;
   technicians: typeof technicians;

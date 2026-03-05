@@ -63,6 +63,49 @@ const ratingsExercisedValidator = v.array(
   ),
 );
 
+type StepAuthorizationType = "airframe" | "powerplant" | "inspection" | "ndt" | "borescope";
+
+const NDT_PATTERN =
+  /\bndt\b|non[-\s]?destructive|eddy\s?current|ultrasonic|magnetic\s+particle|dye\s+penetrant|liquid\s+penetrant/i;
+const BORESCOPE_PATTERN = /\bborescope\b|\bboroscope\b/i;
+const POWERPLANT_PATTERN =
+  /\bpowerplant\b|\bengine\b|\bturbine\b|\bcompressor\b|\bcombustor\b|\bhot section\b|\bpropeller\b|\bfuel nozzle\b/i;
+
+function resolveStepAuthorizationType(args: {
+  description: string;
+  signOffRequiresIa: boolean;
+  specialToolReference?: string | null;
+  aircraftSystem?: string | null;
+}): StepAuthorizationType {
+  const search = `${args.description} ${args.specialToolReference ?? ""}`.toLowerCase();
+
+  if (BORESCOPE_PATTERN.test(search)) return "borescope";
+  if (NDT_PATTERN.test(search)) return "ndt";
+  if (args.signOffRequiresIa) return "inspection";
+
+  if (
+    args.aircraftSystem === "engine_left" ||
+    args.aircraftSystem === "engine_right" ||
+    args.aircraftSystem === "engine_center" ||
+    args.aircraftSystem === "engine_single" ||
+    POWERPLANT_PATTERN.test(search)
+  ) {
+    return "powerplant";
+  }
+
+  return "airframe";
+}
+
+function isRatingAllowedForAuthorization(
+  requiredAuthorizationType: StepAuthorizationType,
+  selectedRating: "airframe" | "powerplant" | "ia" | "none",
+): boolean {
+  if (selectedRating === "none") return false;
+  if (requiredAuthorizationType === "inspection") return selectedRating === "ia";
+  if (requiredAuthorizationType === "powerplant") return selectedRating === "powerplant";
+  return selectedRating === "airframe" || selectedRating === "powerplant" || selectedRating === "ia";
+}
+
 /**
  * Validator for a single step definition provided when creating a task card.
  * Prerequisites use step numbers (1-indexed integers), not IDs — IDs don't
@@ -595,6 +638,26 @@ export const completeStep = mutation({
         );
       }
 
+      // MBP-0055: Backend rating-to-step authorization gate.
+      // Mirror frontend stepAuthorization.ts logic so invalid ratings cannot be
+      // submitted via direct API calls or modified clients.
+      const requiredAuthorizationType = resolveStepAuthorizationType({
+        description: step.description,
+        signOffRequiresIa: step.signOffRequiresIa,
+        specialToolReference: step.specialToolReference,
+        aircraftSystem: taskCard.aircraftSystem,
+      });
+
+      for (const exercisedRating of args.ratingsExercised) {
+        if (!isRatingAllowedForAuthorization(requiredAuthorizationType, exercisedRating)) {
+          throw new Error(
+            `Rating authorization failed: Step ${step.stepNumber} requires ` +
+            `${requiredAuthorizationType === "inspection" ? "IA" : requiredAuthorizationType} authorization, ` +
+            `but selected rating "${exercisedRating}" is not permitted for this step type.`,
+          );
+        }
+      }
+
       // ── Retrieve active certificate (snapshot at signing time) ─────────────
       // Per Marcus (task-card-execution.md §4.3):
       //   The certificate number is written at signing time as an immutable snapshot.
@@ -971,35 +1034,15 @@ export const signTaskCard = mutation({
       .collect();
 
     if (iaRequiredSteps.length > 0) {
-      const iaCert = await ctx.db
-        .query("certificates")
-        .withIndex("by_type", (q) =>
-          q
-            .eq("technicianId", args.callerTechnicianId)
-            .eq("certificateType", "IA"),
-        )
-        .filter((q) =>
-          q.and(
-            q.eq(q.field("active"), true),
-            q.eq(q.field("hasIaAuthorization"), true),
-          ),
-        )
-        .first();
-
-      const hasCurrentIa =
-        iaCert !== null &&
-        iaCert.iaExpiryDate !== undefined &&
-        iaCert.iaExpiryDate >= now;
-
-      if (!hasCurrentIa) {
+      if (!taskCard.inspectorSignedAt || !taskCard.inspectorTechnicianId) {
         throw new Error(
-          `This task card contains ${iaRequiredSteps.length} IA-required step(s) ` +
-          `(step numbers: [${iaRequiredSteps.map((s) => s.stepNumber).join(", ")}]). ` +
-          `The card-level signer must hold a current Inspection Authorization. ` +
-          `Technician ${args.callerTechnicianId} (${callerTech.legalName}) ` +
-          `${!iaCert ? "does not hold an IA" : `has an IA that ${!iaCert.iaExpiryDate ? "has no expiry on file" : `expired ${new Date(iaCert.iaExpiryDate).toISOString()}`}`}. ` +
-          `Phase 2.1 TODO: Once counterSignStep is implemented, an IA counter-signature ` +
-          `on each IA-required step will be an alternative to the card signer holding IA.`,
+          `This task card contains ${iaRequiredSteps.length} IA/RIII-required step(s). ` +
+          `An independent inspector sign-off is required before final card sign-off.`,
+        );
+      }
+      if (taskCard.inspectorTechnicianId === args.callerTechnicianId) {
+        throw new Error(
+          "Inspector and final card signer must be different technicians for RIII separation-of-duties.",
         );
       }
     }
@@ -1068,11 +1111,7 @@ export const signTaskCard = mutation({
       consumedByRecordId: args.taskCardId,
     });
 
-    // ── Record the card-level sign-off in notes ───────────────────────────────
-    // TODO (Phase 2.1 schema extension): Add dedicated signature fields to taskCards
-    // (signingTechnicianId, signedAt, signedCertificateNumber, cardSignatureAuthEventId).
-    // For Phase 2.0, the sign-off is recorded in notes (appended) and the audit log.
-    // The audit log is the authoritative record — notes is a display convenience.
+    // ── Record the card-level sign-off in dedicated immutable fields ─────────
     const signatureNoteEntry =
       `[CARD SIGNED ${new Date(now).toISOString()}] ` +
       `Signed by: ${callerTech.legalName} (Cert: ${signingCert.certificateNumber}). ` +
@@ -1080,7 +1119,11 @@ export const signTaskCard = mutation({
       `Statement: ${args.returnToServiceStatement.trim()}`;
 
     await ctx.db.patch(args.taskCardId, {
-      completedAt: now, // May already be set from completeStep — update to signing time
+      completedAt: now,
+      signingTechnicianId: args.callerTechnicianId,
+      signedAt: now,
+      signedCertificateNumber: signingCert.certificateNumber,
+      cardSignatureAuthEventId: args.signatureAuthEventId,
       notes: taskCard.notes
         ? `${taskCard.notes}\n${signatureNoteEntry}`
         : signatureNoteEntry,
@@ -1112,6 +1155,94 @@ export const signTaskCard = mutation({
       signingTechnicianId: args.callerTechnicianId,
       certificateNumber: signingCert.certificateNumber,
     };
+  },
+});
+
+export const signTaskCardInspector = mutation({
+  args: {
+    taskCardId: v.id("taskCards"),
+    organizationId: v.id("organizations"),
+    signatureAuthEventId: v.id("signatureAuthEvents"),
+    callerTechnicianId: v.id("technicians"),
+    notes: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const now = Date.now();
+    const callerUserId = await requireAuth(ctx);
+
+    const taskCard = await ctx.db.get(args.taskCardId);
+    if (!taskCard || taskCard.organizationId !== args.organizationId) {
+      throw new Error("Task card not found for inspector sign-off.");
+    }
+    if (taskCard.status !== "complete") {
+      throw new Error("Inspector sign-off requires task card status complete.");
+    }
+    if (taskCard.inspectorSignedAt) {
+      throw new Error("Inspector sign-off already recorded for this card.");
+    }
+
+    const iaRequiredSteps = await ctx.db
+      .query("taskCardSteps")
+      .withIndex("by_task_card", (q) => q.eq("taskCardId", args.taskCardId))
+      .filter((q) => q.eq(q.field("signOffRequiresIa"), true))
+      .collect();
+
+    if (iaRequiredSteps.length === 0) {
+      throw new Error("Inspector sign-off is only required for IA/RIII step cards.");
+    }
+
+    const inspector = await ctx.db.get(args.callerTechnicianId);
+    if (!inspector || inspector.status !== "active" || !inspector.userId) {
+      throw new Error("Inspector must be an active technician with system identity.");
+    }
+
+    const iaCert = await ctx.db
+      .query("certificates")
+      .withIndex("by_type", (q) =>
+        q.eq("technicianId", args.callerTechnicianId).eq("certificateType", "IA"),
+      )
+      .filter((q) => q.and(q.eq(q.field("active"), true), q.eq(q.field("hasIaAuthorization"), true)))
+      .first();
+
+    if (!iaCert || !iaCert.iaExpiryDate || iaCert.iaExpiryDate < now) {
+      throw new Error("Inspector sign-off requires a current IA certificate.");
+    }
+
+    const authEvent = await ctx.db.get(args.signatureAuthEventId);
+    if (!authEvent || authEvent.consumed || authEvent.expiresAt < now || authEvent.technicianId !== args.callerTechnicianId) {
+      throw new Error("Invalid or expired signature authorization event.");
+    }
+
+    await ctx.db.patch(args.signatureAuthEventId, {
+      consumed: true,
+      consumedAt: now,
+      consumedByTable: "taskCards",
+      consumedByRecordId: args.taskCardId,
+    });
+
+    await ctx.db.patch(args.taskCardId, {
+      inspectorTechnicianId: args.callerTechnicianId,
+      inspectorSignedAt: now,
+      inspectorCertificateNumber: iaCert.certificateNumber,
+      inspectorSignatureAuthEventId: args.signatureAuthEventId,
+      notes: args.notes?.trim()
+        ? `${taskCard.notes ? `${taskCard.notes}\n` : ""}[INSPECTOR SIGNED ${new Date(now).toISOString()}] ${inspector.legalName}: ${args.notes.trim()}`
+        : taskCard.notes,
+      updatedAt: now,
+    });
+
+    await ctx.db.insert("auditLog", {
+      organizationId: args.organizationId,
+      eventType: "record_signed",
+      tableName: "taskCards",
+      recordId: args.taskCardId,
+      userId: callerUserId,
+      technicianId: args.callerTechnicianId,
+      notes: `Inspector sign-off recorded by ${inspector.legalName} (${iaCert.certificateNumber}) for ${iaRequiredSteps.length} IA/RIII step(s).`,
+      timestamp: now,
+    });
+
+    return { inspectorTechnicianId: args.callerTechnicianId, inspectorSignedAt: now };
   },
 });
 

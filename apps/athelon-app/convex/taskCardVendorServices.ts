@@ -18,6 +18,7 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
+import { requireAuth } from "./shared/helpers/authHelpers";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SHARED VALIDATORS
@@ -55,8 +56,9 @@ export const addVendorServiceToTask = mutation({
 
   handler: async (ctx, args): Promise<Id<"taskCardVendorServices">> => {
     const now = Date.now();
+    const userId = await requireAuth(ctx);
 
-    return await ctx.db.insert("taskCardVendorServices", {
+    const id = await ctx.db.insert("taskCardVendorServices", {
       taskCardId: args.taskCardId,
       workOrderId: args.workOrderId,
       organizationId: args.organizationId,
@@ -71,6 +73,20 @@ export const addVendorServiceToTask = mutation({
       createdAt: now,
       updatedAt: now,
     });
+
+    await ctx.db.insert("taskCardVendorServiceStatusHistory", {
+      taskCardVendorServiceId: id,
+      taskCardId: args.taskCardId,
+      workOrderId: args.workOrderId,
+      organizationId: args.organizationId,
+      toStatus: "planned",
+      actualCost: args.estimatedCost,
+      notes: args.notes,
+      changedByUserId: userId,
+      createdAt: now,
+    });
+
+    return id;
   },
 });
 
@@ -92,6 +108,7 @@ export const updateVendorServiceStatus = mutation({
 
   handler: async (ctx, args): Promise<void> => {
     const now = Date.now();
+    const userId = await requireAuth(ctx);
 
     const record = await ctx.db.get(args.id);
     if (!record) {
@@ -107,6 +124,19 @@ export const updateVendorServiceStatus = mutation({
     if (args.notes !== undefined) patch.notes = args.notes;
 
     await ctx.db.patch(args.id, patch);
+
+    await ctx.db.insert("taskCardVendorServiceStatusHistory", {
+      taskCardVendorServiceId: record._id,
+      taskCardId: record.taskCardId,
+      workOrderId: record.workOrderId,
+      organizationId: record.organizationId,
+      fromStatus: record.status,
+      toStatus: args.status,
+      actualCost: args.actualCost,
+      notes: args.notes,
+      changedByUserId: userId,
+      createdAt: now,
+    });
   },
 });
 
@@ -125,6 +155,7 @@ export const removeVendorServiceFromTask = mutation({
 
   handler: async (ctx, args): Promise<void> => {
     const now = Date.now();
+    const userId = await requireAuth(ctx);
 
     const record = await ctx.db.get(args.id);
     if (!record) {
@@ -134,6 +165,17 @@ export const removeVendorServiceFromTask = mutation({
     await ctx.db.patch(args.id, {
       status: "cancelled",
       updatedAt: now,
+    });
+
+    await ctx.db.insert("taskCardVendorServiceStatusHistory", {
+      taskCardVendorServiceId: record._id,
+      taskCardId: record.taskCardId,
+      workOrderId: record.workOrderId,
+      organizationId: record.organizationId,
+      fromStatus: record.status,
+      toStatus: "cancelled",
+      changedByUserId: userId,
+      createdAt: now,
     });
   },
 });
@@ -179,5 +221,18 @@ export const getVendorServicesForWorkOrder = query({
       .collect();
 
     return records.filter((r) => r.status !== "cancelled");
+  },
+});
+
+export const listStatusHistoryForTask = query({
+  args: {
+    taskCardId: v.id("taskCards"),
+  },
+  handler: async (ctx, args) => {
+    const rows = await ctx.db
+      .query("taskCardVendorServiceStatusHistory")
+      .withIndex("by_task_card", (q) => q.eq("taskCardId", args.taskCardId))
+      .collect();
+    return rows.sort((a, b) => b.createdAt - a.createdAt);
   },
 });

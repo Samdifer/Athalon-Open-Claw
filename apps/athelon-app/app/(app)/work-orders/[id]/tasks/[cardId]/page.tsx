@@ -990,12 +990,13 @@ export default function TaskCardPage() {
         <CardContent className="pt-0">
           <StepPartsTracker
             orgId={orgId}
+            workOrderId={workOrderId}
+            taskCardId={cardId}
+            techId={techId}
             steps={taskCard.steps.map((s) => ({
               _id: String(s._id),
               stepNumber: s.stepNumber,
               description: s.description,
-              partsInstalled: s.partsInstalled,
-              partsRemoved: s.partsRemoved,
             }))}
             inventoryParts={(partsInventory ?? []).map((part) => ({
               _id: String(part._id),
@@ -1004,6 +1005,11 @@ export default function TaskCardPage() {
               description: part.description,
               serialNumber: part.serialNumber,
               condition: part.condition,
+              partCategory: part.partCategory,
+              lotId: part.lotId ? String(part.lotId) : undefined,
+              lotNumber: part.lotNumber,
+              batchNumber: part.batchNumber,
+              eightOneThirtyId: part.eightOneThirtyId ? String(part.eightOneThirtyId) : undefined,
             }))}
           />
         </CardContent>

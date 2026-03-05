@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import { useMutation, useQuery } from "convex/react";
 import { toast } from "sonner";
 import { ArrowRightLeft, Plus, Search, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -21,6 +22,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
+import { formatDateTime } from "@/lib/format";
 
 type InventoryPart = {
   _id: string;
@@ -29,64 +33,31 @@ type InventoryPart = {
   description?: string;
   serialNumber?: string;
   condition?: string;
-};
-
-type StepPartInstalled = {
-  partId?: string;
-  partNumber: string;
-  serialNumber?: string;
-  description: string;
-  quantity: number;
-  eightOneThirtyReference?: string;
-};
-
-type StepPartRemoved = {
-  partId?: string;
-  partNumber: string;
-  serialNumber?: string;
-  description: string;
-  conditionAtRemoval: "serviceable" | "unserviceable" | "scrap";
+  partCategory?: string;
+  lotId?: string;
+  lotNumber?: string;
+  batchNumber?: string;
+  eightOneThirtyId?: string;
 };
 
 type StepModel = {
   _id: string;
   stepNumber: number;
   description: string;
-  partsInstalled?: Array<{
-    partId?: string;
-    partNumber: string;
-    serialNumber?: string;
-    description: string;
-    quantity: number;
-  }>;
-  partsRemoved?: Array<{
-    partId?: string;
-    partNumber: string;
-    serialNumber?: string;
-    description: string;
-    conditionAtRemoval?: string;
-  }>;
 };
-
-type StepLocalState = {
-  installed: StepPartInstalled[];
-  removed: StepPartRemoved[];
-};
-
-function stepStorageKey(orgId: string, stepId: string) {
-  return `step-parts-trace:${orgId}:${stepId}`;
-}
 
 function PartCard({
   title,
   detail,
   meta,
-  onRemove,
+  timeline,
+  onVoid,
 }: {
   title: string;
   detail?: string;
   meta?: string;
-  onRemove?: () => void;
+  timeline?: string;
+  onVoid?: () => void;
 }) {
   return (
     <div className="rounded-md border border-border/60 bg-muted/20 p-2.5">
@@ -95,21 +66,15 @@ function PartCard({
           <p className="text-xs font-mono text-foreground">{title}</p>
           {detail ? <p className="text-xs text-muted-foreground mt-0.5">{detail}</p> : null}
           {meta ? <p className="text-[11px] text-muted-foreground mt-1">{meta}</p> : null}
+          {timeline ? <p className="text-[10px] text-sky-300 mt-1">{timeline}</p> : null}
         </div>
-        {/* BUG-LT-HUNT-145: StepPartsTracker had no way to remove accidentally
-            added parts. A tech who added the wrong part to "Installed" or
-            "Removed" was stuck with incorrect parts traceability data on their
-            step — a maintenance records integrity issue. Under 14 CFR 43.9
-            each part installation/removal must be accurately recorded. Without
-            a remove button, the tech would need to clear localStorage manually
-            or void the entire task card to fix a simple data entry mistake. */}
-        {onRemove && (
+        {onVoid && (
           <Button
             variant="ghost"
             size="icon"
             className="h-6 w-6 text-muted-foreground hover:text-destructive flex-shrink-0"
-            onClick={onRemove}
-            aria-label="Remove part from trace"
+            onClick={onVoid}
+            aria-label="Void trace event"
           >
             <Trash2 className="w-3 h-3" />
           </Button>
@@ -121,76 +86,41 @@ function PartCard({
 
 export function StepPartsTracker({
   orgId,
+  workOrderId,
+  taskCardId,
+  techId,
   steps,
   inventoryParts,
 }: {
   orgId?: string;
+  workOrderId: string;
+  taskCardId: string;
+  techId?: string;
   steps: StepModel[];
   inventoryParts: InventoryPart[];
 }) {
-  const [stepState, setStepState] = useState<Record<string, StepLocalState>>({});
+  const events = useQuery(
+    api.taskStepPartTrace.listForTaskCard,
+    taskCardId ? { taskCardId: taskCardId as Id<"taskCards"> } : "skip",
+  );
+  const addTraceEvent = useMutation(api.taskStepPartTrace.addTraceEvent);
+  const voidTraceEvent = useMutation(api.taskStepPartTrace.voidTraceEvent);
+
   const [dialog, setDialog] = useState<{ stepId: string; type: "installed" | "removed" } | null>(null);
   const [search, setSearch] = useState("");
   const [selectedPartId, setSelectedPartId] = useState<string>("");
   const [quantity, setQuantity] = useState("1");
   const [ref8130, setRef8130] = useState("");
   const [removeCondition, setRemoveCondition] = useState<"serviceable" | "unserviceable" | "scrap">("serviceable");
-
-  useEffect(() => {
-    if (!orgId) return;
-
-    const seeded: Record<string, StepLocalState> = {};
-    for (const step of steps) {
-      const key = stepStorageKey(orgId, step._id);
-      const fromStorage = localStorage.getItem(key);
-      if (fromStorage) {
-        try {
-          const parsed = JSON.parse(fromStorage) as Partial<StepLocalState>;
-          // BUG-HUNTER-TRACE-001: Guard against malformed localStorage payloads.
-          // A bad payload (manual edits/old schema) previously flowed straight
-          // into render paths that expect arrays, causing .map runtime crashes.
-          if (Array.isArray(parsed.installed) && Array.isArray(parsed.removed)) {
-            seeded[step._id] = {
-              installed: parsed.installed,
-              removed: parsed.removed,
-            };
-            continue;
-          }
-        } catch {
-          // fall through to backend seed
-        }
-      }
-      seeded[step._id] = {
-        installed: (step.partsInstalled ?? []).map((p) => ({
-          partId: p.partId,
-          partNumber: p.partNumber,
-          serialNumber: p.serialNumber,
-          description: p.description,
-          quantity: p.quantity,
-          eightOneThirtyReference: "",
-        })),
-        removed: (step.partsRemoved ?? []).map((p) => ({
-          partId: p.partId,
-          partNumber: p.partNumber,
-          serialNumber: p.serialNumber,
-          description: p.description,
-          conditionAtRemoval:
-            p.conditionAtRemoval === "unserviceable"
-              ? "unserviceable"
-              : p.conditionAtRemoval === "scrap"
-              ? "scrap"
-              : "serviceable",
-        })),
-      };
-    }
-    setStepState(seeded);
-  }, [orgId, steps]);
+  const [fromCustody, setFromCustody] = useState("Inventory");
+  const [toCustody, setToCustody] = useState("Aircraft");
+  const [custodyNote, setCustodyNote] = useState("");
 
   const filteredParts = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return inventoryParts;
     return inventoryParts.filter((p) =>
-      [p.partNumber, p.serialNumber, p.partName, p.description]
+      [p.partNumber, p.serialNumber, p.partName, p.description, p.lotNumber, p.batchNumber]
         .filter(Boolean)
         .join(" ")
         .toLowerCase()
@@ -198,18 +128,12 @@ export function StepPartsTracker({
     );
   }, [inventoryParts, search]);
 
-  function persist(next: Record<string, StepLocalState>): boolean {
-    if (!orgId) return false;
-    try {
-      for (const [stepId, value] of Object.entries(next)) {
-        localStorage.setItem(stepStorageKey(orgId, stepId), JSON.stringify(value));
-      }
-      return true;
-    } catch {
-      toast.error("Unable to save parts traceability locally.");
-      return false;
-    }
-  }
+  const stepEvents = useMemo(() => {
+    const all = events ?? [];
+    const voidedIds = new Set(all.filter((e) => e.eventType === "voided" && e.linkedEventId).map((e) => String(e.linkedEventId)));
+    const active = all.filter((e) => e.eventType !== "voided" && !voidedIds.has(String(e._id)));
+    return active;
+  }, [events]);
 
   function openAddPart(stepId: string, type: "installed" | "removed") {
     setDialog({ stepId, type });
@@ -218,91 +142,66 @@ export function StepPartsTracker({
     setQuantity("1");
     setRef8130("");
     setRemoveCondition("serviceable");
+    setFromCustody(type === "installed" ? "Inventory" : "Aircraft");
+    setToCustody(type === "installed" ? "Aircraft" : "Quarantine");
+    setCustodyNote("");
   }
 
-  function removePart(stepId: string, type: "installed" | "removed", index: number) {
-    setStepState((prev) => {
-      const current = prev[stepId];
-      if (!current) return prev;
-      const next = { ...prev };
-      if (type === "installed") {
-        next[stepId] = {
-          ...current,
-          installed: current.installed.filter((_, i) => i !== index),
-        };
-      } else {
-        next[stepId] = {
-          ...current,
-          removed: current.removed.filter((_, i) => i !== index),
-        };
-      }
-      const persisted = persist(next);
-      if (!persisted) return prev;
-      return next;
-    });
-    toast.success("Part removed from step trace.");
-  }
-
-  function addPart() {
-    if (!dialog) return;
+  async function addPart() {
+    if (!dialog || !orgId) return;
     const selected = inventoryParts.find((p) => p._id === selectedPartId);
     if (!selected) {
       toast.error("Select a part first.");
       return;
     }
 
-    let didSave = true;
-    setStepState((prev) => {
-      const current = prev[dialog.stepId] ?? { installed: [], removed: [] };
-      const next = { ...prev };
-      if (dialog.type === "installed") {
-        const qty = Math.max(1, Number.parseInt(quantity || "1", 10) || 1);
-        next[dialog.stepId] = {
-          ...current,
-          installed: [
-            ...current.installed,
-            {
-              partId: selected._id,
-              partNumber: selected.partNumber,
-              serialNumber: selected.serialNumber,
-              description: selected.description ?? selected.partName,
-              quantity: qty,
-              eightOneThirtyReference: ref8130.trim() || undefined,
-            },
-          ],
-        };
-      } else {
-        next[dialog.stepId] = {
-          ...current,
-          removed: [
-            ...current.removed,
-            {
-              partId: selected._id,
-              partNumber: selected.partNumber,
-              serialNumber: selected.serialNumber,
-              description: selected.description ?? selected.partName,
-              conditionAtRemoval: removeCondition,
-            },
-          ],
-        };
-      }
-      const persisted = persist(next);
-      didSave = persisted;
-      if (!persisted) return prev;
-      return next;
-    });
+    try {
+      const qty = Math.max(1, Number.parseInt(quantity || "1", 10) || 1);
+      await addTraceEvent({
+        organizationId: orgId as Id<"organizations">,
+        workOrderId: workOrderId as Id<"workOrders">,
+        taskCardId: taskCardId as Id<"taskCards">,
+        stepId: dialog.stepId as Id<"taskCardSteps">,
+        eventType: dialog.type,
+        partId: selected._id as Id<"parts">,
+        partNumber: selected.partNumber,
+        serialNumber: selected.serialNumber,
+        description: selected.description ?? selected.partName,
+        quantity: dialog.type === "installed" ? qty : undefined,
+        conditionAtRemoval: dialog.type === "removed" ? removeCondition : undefined,
+        partCategory: selected.partCategory,
+        lotId: selected.lotId as Id<"lots"> | undefined,
+        lotNumber: selected.lotNumber,
+        batchNumber: selected.batchNumber,
+        eightOneThirtyId: selected.eightOneThirtyId as Id<"eightOneThirtyRecords"> | undefined,
+        eightOneThirtyReference: ref8130.trim() || undefined,
+        fromCustody: fromCustody.trim() || undefined,
+        toCustody: toCustody.trim() || undefined,
+        chainOfCustodyNote: custodyNote.trim() || undefined,
+        technicianId: techId as Id<"technicians"> | undefined,
+      });
+      toast.success("Part trace event recorded.");
+      setDialog(null);
+    } catch {
+      toast.error("Failed to save part trace event.");
+    }
+  }
 
-    if (!didSave) return;
-    toast.success("Part added to step trace.");
-    setDialog(null);
+  async function voidEvent(eventId: Id<"taskStepPartTraceEvents">) {
+    try {
+      await voidTraceEvent({
+        eventId,
+        reason: "Voided from task step parts trace UI",
+        technicianId: techId as Id<"technicians"> | undefined,
+      });
+      toast.success("Trace event voided with immutable audit record.");
+    } catch {
+      toast.error("Failed to void event.");
+    }
   }
 
   if (steps.length === 0) {
-    return (
-      <p className="text-xs text-muted-foreground italic">
-        No step-level parts traceability required on this card.
-      </p>
-    );
+    return <p className="text-xs text-muted-foreground italic">No step-level parts traceability required on this card.</p>;
   }
 
   return (
@@ -311,8 +210,9 @@ export function StepPartsTracker({
         .slice()
         .sort((a, b) => a.stepNumber - b.stepNumber)
         .map((step) => {
-          const state = stepState[step._id] ?? { installed: [], removed: [] };
-          const rowCount = Math.max(state.removed.length, state.installed.length);
+          const removed = stepEvents.filter((e) => String(e.stepId) === step._id && e.eventType === "removed");
+          const installed = stepEvents.filter((e) => String(e.stepId) === step._id && e.eventType === "installed");
+          const rowCount = Math.max(removed.length, installed.length);
 
           return (
             <div key={step._id} className="rounded-lg border border-border/60 p-3">
@@ -322,26 +222,24 @@ export function StepPartsTracker({
               <div className="grid grid-cols-1 md:grid-cols-[1fr_52px_1fr] gap-3">
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      Parts Removed
-                    </h4>
+                    <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Parts Removed</h4>
                     <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => openAddPart(step._id, "removed")}>
                       <Plus className="w-3 h-3 mr-1" /> Add Part
                     </Button>
                   </div>
-                  {state.removed.length === 0 ? (
+                  {removed.length === 0 ? (
                     <p className="text-xs text-muted-foreground italic">No removed parts tracked.</p>
                   ) : (
-                    state.removed.map((part, idx) => (
-                      <div key={`${part.partNumber}-${idx}`} className="space-y-1">
+                    removed.map((event) => (
+                      <div key={String(event._id)} className="space-y-1">
                         <PartCard
-                          title={`${part.partNumber}${part.serialNumber ? ` · S/N ${part.serialNumber}` : ""}`}
-                          detail={part.description}
-                          onRemove={() => removePart(step._id, "removed", idx)}
+                          title={`${event.partNumber}${event.serialNumber ? ` · S/N ${event.serialNumber}` : ""}`}
+                          detail={event.description}
+                          meta={`Cond ${event.conditionAtRemoval ?? "serviceable"}${event.lotNumber ? ` · Lot ${event.lotNumber}` : ""}`}
+                          timeline={`${event.fromCustody ?? "Unknown"} → ${event.toCustody ?? "Unknown"} · ${formatDateTime(event.createdAt)}`}
+                          onVoid={() => void voidEvent(event._id)}
                         />
-                        <Badge variant="outline" className="text-[10px] capitalize">
-                          {part.conditionAtRemoval}
-                        </Badge>
+                        <Badge variant="outline" className="text-[10px] capitalize">{event.conditionAtRemoval ?? "serviceable"}</Badge>
                       </div>
                     ))
                   )}
@@ -359,23 +257,22 @@ export function StepPartsTracker({
 
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      Parts Installed
-                    </h4>
+                    <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Parts Installed</h4>
                     <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => openAddPart(step._id, "installed")}>
                       <Plus className="w-3 h-3 mr-1" /> Add Part
                     </Button>
                   </div>
-                  {state.installed.length === 0 ? (
+                  {installed.length === 0 ? (
                     <p className="text-xs text-muted-foreground italic">No installed parts tracked.</p>
                   ) : (
-                    state.installed.map((part, idx) => (
+                    installed.map((event) => (
                       <PartCard
-                        key={`${part.partNumber}-${idx}`}
-                        title={`${part.partNumber}${part.serialNumber ? ` · S/N ${part.serialNumber}` : ""}`}
-                        detail={part.description}
-                        meta={`Qty ${part.quantity}${part.eightOneThirtyReference ? ` · 8130-3 ${part.eightOneThirtyReference}` : ""}`}
-                        onRemove={() => removePart(step._id, "installed", idx)}
+                        key={String(event._id)}
+                        title={`${event.partNumber}${event.serialNumber ? ` · S/N ${event.serialNumber}` : ""}`}
+                        detail={event.description}
+                        meta={`Qty ${event.quantity ?? 1}${event.eightOneThirtyReference ? ` · 8130-3 ${event.eightOneThirtyReference}` : ""}${event.batchNumber ? ` · Batch ${event.batchNumber}` : ""}`}
+                        timeline={`${event.fromCustody ?? "Unknown"} → ${event.toCustody ?? "Unknown"} · ${formatDateTime(event.createdAt)}`}
+                        onVoid={() => void voidEvent(event._id)}
                       />
                     ))
                   )}
@@ -388,14 +285,14 @@ export function StepPartsTracker({
       <Dialog open={!!dialog} onOpenChange={(open) => !open && setDialog(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{dialog?.type === "removed" ? "Add Removed Part" : "Add Installed Part"}</DialogTitle>
-            <DialogDescription>Select from parts inventory and add to this step trace.</DialogDescription>
+            <DialogTitle>{dialog?.type === "removed" ? "Record Removed Part" : "Record Installed Part"}</DialogTitle>
+            <DialogDescription>Select inventory part and capture custody metadata.</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-3">
             <div className="relative">
               <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-muted-foreground" />
-              <Input value={search} onChange={(e) => setSearch(e.target.value)} className="pl-8" placeholder="Search P/N, S/N, description" />
+              <Input value={search} onChange={(e) => setSearch(e.target.value)} className="pl-8" placeholder="Search P/N, S/N, lot, batch" />
             </div>
 
             <Select value={selectedPartId} onValueChange={setSelectedPartId}>
@@ -405,7 +302,7 @@ export function StepPartsTracker({
               <SelectContent>
                 {filteredParts.slice(0, 50).map((part) => (
                   <SelectItem key={part._id} value={part._id}>
-                    {part.partNumber} {part.serialNumber ? `· ${part.serialNumber}` : ""}
+                    {part.partNumber} {part.serialNumber ? `· ${part.serialNumber}` : ""} {part.lotNumber ? `· Lot ${part.lotNumber}` : ""}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -428,11 +325,15 @@ export function StepPartsTracker({
                 </SelectContent>
               </Select>
             )}
+
+            <Input value={fromCustody} onChange={(e) => setFromCustody(e.target.value)} placeholder="From custody/location" />
+            <Input value={toCustody} onChange={(e) => setToCustody(e.target.value)} placeholder="To custody/location" />
+            <Input value={custodyNote} onChange={(e) => setCustodyNote(e.target.value)} placeholder="Chain-of-custody notes (optional)" />
           </div>
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialog(null)}>Cancel</Button>
-            <Button onClick={addPart}>Add Part</Button>
+            <Button onClick={() => void addPart()}>Record Event</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

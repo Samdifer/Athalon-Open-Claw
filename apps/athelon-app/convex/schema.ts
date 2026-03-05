@@ -1799,6 +1799,57 @@ export default defineSchema({
     .index("by_work_order", ["workOrderId"])
     .index("by_org_status", ["organizationId", "complianceStatus"]),
 
+  // Task/subtask-level manual and compliance references (MBP-0032).
+  taskStepReferences: defineTable({
+    organizationId: v.id("organizations"),
+    workOrderId: v.id("workOrders"),
+    taskCardId: v.id("taskCards"),
+    stepId: v.id("taskCardSteps"),
+    referenceType: v.union(v.literal("pdf"), v.literal("link"), v.literal("file")),
+    title: v.string(),
+    url: v.string(),
+    notes: v.optional(v.string()),
+    documentId: v.optional(v.id("documents")),
+    storageId: v.optional(v.id("_storage")),
+    createdByUserId: v.string(),
+    createdAt: v.number(),
+  })
+    .index("by_task_card", ["taskCardId"])
+    .index("by_step", ["stepId"])
+    .index("by_work_order", ["workOrderId"]),
+
+  // Immutable chain-of-custody events for step-level parts traceability (MBP-0035).
+  taskStepPartTraceEvents: defineTable({
+    organizationId: v.id("organizations"),
+    workOrderId: v.id("workOrders"),
+    taskCardId: v.id("taskCards"),
+    stepId: v.id("taskCardSteps"),
+    eventType: v.union(v.literal("installed"), v.literal("removed"), v.literal("voided")),
+    partId: v.optional(v.id("parts")),
+    partNumber: v.string(),
+    serialNumber: v.optional(v.string()),
+    description: v.string(),
+    quantity: v.optional(v.number()),
+    conditionAtRemoval: v.optional(v.union(v.literal("serviceable"), v.literal("unserviceable"), v.literal("scrap"))),
+    partCategory: v.optional(v.string()),
+    lotId: v.optional(v.id("lots")),
+    lotNumber: v.optional(v.string()),
+    batchNumber: v.optional(v.string()),
+    eightOneThirtyId: v.optional(v.id("eightOneThirtyRecords")),
+    eightOneThirtyReference: v.optional(v.string()),
+    fromCustody: v.optional(v.string()),
+    toCustody: v.optional(v.string()),
+    chainOfCustodyNote: v.optional(v.string()),
+    linkedEventId: v.optional(v.id("taskStepPartTraceEvents")),
+    createdByUserId: v.string(),
+    createdByTechnicianId: v.optional(v.id("technicians")),
+    createdAt: v.number(),
+  })
+    .index("by_step", ["stepId"])
+    .index("by_task_card", ["taskCardId"])
+    .index("by_work_order", ["workOrderId"])
+    .index("by_part", ["partId"]),
+
   // ═══════════════════════════════════════════════════════════════════════════
   // MAINTENANCE RECORDS  (14 CFR 43.9)
   //
@@ -2274,6 +2325,8 @@ export default defineSchema({
     receivingInspectedAt: v.optional(v.number()),
     receivingInspectionNotes: v.optional(v.string()),
     receivingRejectionReason: v.optional(v.string()),
+    // Wave 6 MBP-0049: Conformity / chain-of-custody evidence captured at receiving.
+    receivingConformityDocumentIds: v.optional(v.array(v.id("documents"))),
 
     // v5: Installation tracking (GAP-12)
     installedOnAircraftId: v.optional(v.id("aircraft")),
@@ -2588,6 +2641,50 @@ export default defineSchema({
     .index("by_customer", ["customerId"])
     .index("by_org", ["organizationId"]),
 
+  // Customer-submitted messages/requests from portal users to the shop.
+  customerRequests: defineTable({
+    organizationId: v.id("organizations"),
+    customerId: v.id("customers"),
+    customerNameSnapshot: v.string(),
+    customerEmailSnapshot: v.optional(v.string()),
+
+    // Optional scoping for request context.
+    workOrderId: v.optional(v.id("workOrders")),
+    aircraftId: v.optional(v.id("aircraft")),
+
+    subject: v.string(),
+    message: v.string(),
+    category: v.union(
+      v.literal("general"),
+      v.literal("invoice"),
+      v.literal("quote"),
+      v.literal("work_order"),
+      v.literal("technical"),
+      v.literal("parts"),
+    ),
+    priority: v.union(v.literal("low"), v.literal("normal"), v.literal("high")),
+
+    status: v.union(
+      v.literal("new"),
+      v.literal("in_review"),
+      v.literal("responded"),
+      v.literal("closed"),
+    ),
+
+    submittedByUserId: v.string(),
+    submittedByEmail: v.optional(v.string()),
+    internalResponse: v.optional(v.string()),
+    respondedByUserId: v.optional(v.string()),
+    respondedAt: v.optional(v.number()),
+
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_customer", ["customerId", "createdAt"])
+    .index("by_org_status", ["organizationId", "status"])
+    .index("by_organization", ["organizationId", "createdAt"])
+    .index("by_work_order", ["workOrderId", "createdAt"]),
+
   // ═══════════════════════════════════════════════════════════════════════════
   // AUDIT LOG
   //
@@ -2831,6 +2928,35 @@ export default defineSchema({
     .index("by_task_card", ["taskCardId"])
     .index("by_work_order", ["workOrderId"])
     .index("by_vendor", ["vendorId"]),
+
+  // Immutable status history trail for task-level vendor work.
+  taskCardVendorServiceStatusHistory: defineTable({
+    taskCardVendorServiceId: v.id("taskCardVendorServices"),
+    taskCardId: v.id("taskCards"),
+    workOrderId: v.id("workOrders"),
+    organizationId: v.id("organizations"),
+    fromStatus: v.optional(v.union(
+      v.literal("planned"),
+      v.literal("sent_for_work"),
+      v.literal("in_progress"),
+      v.literal("completed"),
+      v.literal("cancelled"),
+    )),
+    toStatus: v.union(
+      v.literal("planned"),
+      v.literal("sent_for_work"),
+      v.literal("in_progress"),
+      v.literal("completed"),
+      v.literal("cancelled"),
+    ),
+    actualCost: v.optional(v.number()),
+    notes: v.optional(v.string()),
+    changedByUserId: v.string(),
+    createdAt: v.number(),
+  })
+    .index("by_task_vendor_service", ["taskCardVendorServiceId"])
+    .index("by_task_card", ["taskCardId"])
+    .index("by_work_order", ["workOrderId"]),
 
   // ═══════════════════════════════════════════════════════════════════════════
   // PURCHASE ORDERS
@@ -3109,6 +3235,28 @@ export default defineSchema({
   })
     .index("by_quote", ["quoteId"])
     .index("by_org", ["orgId"])
+    .index("by_org_quote", ["orgId", "quoteId"]),
+
+  // Immutable event trail for quote line decisions (MBP-0053 / FR-024).
+  quoteLineItemDecisionEvents: defineTable({
+    orgId: v.id("organizations"),
+    quoteId: v.id("quotes"),
+    lineItemId: v.id("quoteLineItems"),
+    discrepancyId: v.optional(v.id("discrepancies")),
+    decision: v.union(
+      v.literal("approved"),
+      v.literal("declined"),
+      v.literal("deferred"),
+    ),
+    decisionNotes: v.optional(v.string()),
+    actorUserId: v.string(),
+    actorTechnicianId: v.optional(v.id("technicians")),
+    actorName: v.optional(v.string()),
+    decidedAt: v.number(),
+    createdAt: v.number(),
+  })
+    .index("by_line_item", ["lineItemId"])
+    .index("by_quote", ["quoteId"])
     .index("by_org_quote", ["orgId", "quoteId"]),
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -3647,6 +3795,44 @@ export default defineSchema({
     .index("by_attachment", ["attachedToTable", "attachedToId"])
     .index("by_org", ["organizationId"])
     .index("by_org_uploaded", ["organizationId", "uploadedAt"]),
+
+  // Admin-managed checklist templates for in-dock and RTS evidence hubs.
+  evidenceChecklistTemplates: defineTable({
+    organizationId: v.id("organizations"),
+    evidenceType: v.union(v.literal("in_dock"), v.literal("rts")),
+    name: v.string(),
+    items: v.array(v.string()),
+    isDefault: v.boolean(),
+    isActive: v.boolean(),
+    createdByUserId: v.string(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_org_type", ["organizationId", "evidenceType"]),
+
+  // Work-order checklist instantiations + immutable completion audit fields.
+  workOrderEvidenceChecklistItems: defineTable({
+    organizationId: v.id("organizations"),
+    workOrderId: v.id("workOrders"),
+    templateId: v.optional(v.id("evidenceChecklistTemplates")),
+    evidenceType: v.union(v.literal("in_dock"), v.literal("rts")),
+    bucketKey: v.union(
+      v.literal("in_dock_checklist"),
+      v.literal("in_dock_video"),
+      v.literal("rts_checklist"),
+      v.literal("rts_video"),
+    ),
+    label: v.string(),
+    order: v.number(),
+    completed: v.boolean(),
+    completedByUserId: v.optional(v.string()),
+    completedByTechnicianId: v.optional(v.id("technicians")),
+    completedAt: v.optional(v.number()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_work_order_type", ["workOrderId", "evidenceType"])
+    .index("by_work_order_bucket", ["workOrderId", "bucketKey"]),
 
   // ═══════════════════════════════════════════════════════════════════════════
   // CONFORMITY INSPECTIONS (Phase 1)

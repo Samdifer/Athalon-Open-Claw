@@ -1,26 +1,19 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useState } from "react";
+import { useMutation, useQuery } from "convex/react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { FileUpload, type UploadedFile } from "@/components/FileUpload";
+import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
 import { formatDateTime } from "@/lib/format";
 
 type RefType = "pdf" | "link" | "file";
-
-type StepRef = {
-  id: string;
-  stepId: string;
-  stepNumber: number;
-  title: string;
-  type: RefType;
-  url: string;
-  notes?: string;
-  createdAt: number;
-};
 
 type Step = {
   _id: string;
@@ -28,51 +21,10 @@ type Step = {
   description: string;
 };
 
-function createStepReferenceId() {
-  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
-    return crypto.randomUUID();
-  }
-  return `step-ref-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-}
-
-// BUG-LT-HUNT-146: Include orgId in localStorage key for StepReferences.
-// Same cross-org data bleed pattern as BUG-LT-HUNT-102 (TurnoverNotes),
-// BUG-LT-HUNT-115 (VendorServicePanel), and BUG-LT-HUNT-141 (ApprovedDataRef).
-// A user at multiple shops could see reference documents from Shop A's task
-// card appearing on Shop B's task card if WO/card IDs collide. Reference docs
-// linked to step-level work are part of the maintenance record chain.
 export function StepReferences({ orgId, workOrderId, taskCardId, steps }: { orgId?: string; workOrderId: string; taskCardId: string; steps: Step[] }) {
-  const storageKey = useMemo(() => `step-references:${orgId ?? "no-org"}:${workOrderId}:${taskCardId}`, [orgId, workOrderId, taskCardId]);
-  const [refs, setRefs] = useState<StepRef[]>([]);
-
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(storageKey);
-      setRefs(raw ? (JSON.parse(raw) as StepRef[]) : []);
-    } catch {
-      setRefs([]);
-    }
-  }, [storageKey]);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(storageKey, JSON.stringify(refs));
-    } catch {
-      toast.error("Unable to save step references locally.");
-    }
-  }, [refs, storageKey]);
-
-  function addReference(ref: Omit<StepRef, "id" | "createdAt">) {
-    setRefs((prev) => [
-      {
-        ...ref,
-        id: createStepReferenceId(),
-        createdAt: Date.now(),
-      },
-      ...prev,
-    ]);
-    toast.success("Reference added");
-  }
+  const refs = useQuery(api.taskStepReferences.listForTaskCard, {
+    taskCardId: taskCardId as Id<"taskCards">,
+  });
 
   return (
     <Card className="border-border/60">
@@ -91,7 +43,7 @@ export function StepReferences({ orgId, workOrderId, taskCardId, steps }: { orgI
             .slice()
             .sort((a, b) => a.stepNumber - b.stepNumber)
             .map((step) => {
-              const stepRefs = refs.filter((r) => r.stepId === step._id);
+              const stepRefs = (refs ?? []).filter((r) => String(r.stepId) === step._id);
               return (
                 <div key={step._id} className="rounded-md border border-border/50 p-3 space-y-2">
                   <div className="flex items-center justify-between gap-2">
@@ -100,9 +52,11 @@ export function StepReferences({ orgId, workOrderId, taskCardId, steps }: { orgI
                       <p className="text-xs text-muted-foreground truncate">{step.description}</p>
                     </div>
                     <AddReferenceDialog
+                      orgId={orgId}
+                      workOrderId={workOrderId}
+                      taskCardId={taskCardId}
                       stepId={step._id}
                       stepNumber={step.stepNumber}
-                      onSave={addReference}
                     />
                   </div>
                   {stepRefs.length === 0 ? (
@@ -110,19 +64,7 @@ export function StepReferences({ orgId, workOrderId, taskCardId, steps }: { orgI
                   ) : (
                     <div className="space-y-1.5">
                       {stepRefs.map((ref) => (
-                        <div key={ref.id} className="flex items-center justify-between gap-2 text-xs">
-                          <div className="min-w-0">
-                            <div className="flex items-center gap-1.5">
-                              <span className="font-medium text-foreground truncate">{ref.title}</span>
-                              <Badge variant="outline" className="text-[10px] uppercase">{ref.type}</Badge>
-                            </div>
-                            <a href={ref.url} target="_blank" rel="noreferrer" className="text-sky-400 hover:underline truncate block">
-                              {ref.url}
-                            </a>
-                            {ref.notes && <p className="text-[11px] text-muted-foreground">{ref.notes}</p>}
-                            <p className="text-[10px] text-muted-foreground">{formatDateTime(ref.createdAt)}</p>
-                          </div>
-                        </div>
+                        <StepReferenceRow key={String(ref._id)} refItem={ref} />
                       ))}
                     </div>
                   )}
@@ -135,12 +77,123 @@ export function StepReferences({ orgId, workOrderId, taskCardId, steps }: { orgI
   );
 }
 
-function AddReferenceDialog({ stepId, stepNumber, onSave }: { stepId: string; stepNumber: number; onSave: (ref: Omit<StepRef, "id" | "createdAt">) => void }) {
+function StepReferenceRow({
+  refItem,
+}: {
+  refItem: {
+    _id: Id<"taskStepReferences">;
+    title: string;
+    referenceType: RefType;
+    url: string;
+    notes?: string;
+    createdAt: number;
+    storageId?: Id<"_storage">;
+  };
+}) {
+  const storageUrl = useQuery(
+    api.documents.getDocumentUrl,
+    refItem.storageId ? { storageId: refItem.storageId } : "skip",
+  );
+  const resolvedUrl = storageUrl ?? refItem.url;
+
+  return (
+    <div className="flex items-center justify-between gap-2 text-xs rounded border border-border/40 p-2">
+      <div className="min-w-0">
+        <div className="flex items-center gap-1.5">
+          <span className="font-medium text-foreground truncate">{refItem.title}</span>
+          <Badge variant="outline" className="text-[10px] uppercase">{refItem.referenceType}</Badge>
+        </div>
+        <p className="text-[11px] text-muted-foreground truncate">{resolvedUrl}</p>
+        {refItem.notes && <p className="text-[11px] text-muted-foreground">{refItem.notes}</p>}
+        <p className="text-[10px] text-muted-foreground">{formatDateTime(refItem.createdAt)}</p>
+      </div>
+      <Button asChild variant="outline" size="sm" className="h-7 text-[11px]">
+        <a href={resolvedUrl} target="_blank" rel="noreferrer">View</a>
+      </Button>
+    </div>
+  );
+}
+
+function AddReferenceDialog({
+  orgId,
+  workOrderId,
+  taskCardId,
+  stepId,
+  stepNumber,
+}: {
+  orgId?: string;
+  workOrderId: string;
+  taskCardId: string;
+  stepId: string;
+  stepNumber: number;
+}) {
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [type, setType] = useState<RefType>("pdf");
   const [url, setUrl] = useState("");
   const [notes, setNotes] = useState("");
+  const [uploadedFile, setUploadedFile] = useState<UploadedFile | null>(null);
+
+  const addReference = useMutation(api.taskStepReferences.addReference);
+  const saveDocument = useMutation(api.documents.saveDocument);
+
+  async function handleSave() {
+    if (!orgId) return;
+    if (!title.trim()) {
+      toast.error("Title is required");
+      return;
+    }
+
+    try {
+      let documentId: Id<"documents"> | undefined;
+      let storageId: Id<"_storage"> | undefined;
+      let resolvedUrl = url.trim();
+
+      if (uploadedFile) {
+        storageId = uploadedFile.storageId as Id<"_storage">;
+        documentId = await saveDocument({
+          organizationId: orgId as Id<"organizations">,
+          attachedToTable: "taskCardSteps",
+          attachedToId: stepId,
+          storageId,
+          fileName: uploadedFile.fileName,
+          fileSize: uploadedFile.fileSize,
+          mimeType: uploadedFile.mimeType,
+          documentType: "approved_data",
+          description: `Step ${stepNumber} reference`,
+        });
+        resolvedUrl = `uploaded://${uploadedFile.fileName}`;
+      }
+
+      if (!resolvedUrl) {
+        toast.error("Provide a URL or upload a file.");
+        return;
+      }
+
+      await addReference({
+        organizationId: orgId as Id<"organizations">,
+        workOrderId: workOrderId as Id<"workOrders">,
+        taskCardId: taskCardId as Id<"taskCards">,
+        stepId: stepId as Id<"taskCardSteps">,
+        referenceType: type,
+        title: title.trim(),
+        url: resolvedUrl,
+        notes: notes.trim() || undefined,
+        documentId,
+        storageId,
+      });
+
+      toast.success("Reference added");
+      setOpen(false);
+      setTitle("");
+      setType("pdf");
+      setUrl("");
+      setNotes("");
+      setUploadedFile(null);
+    } catch {
+      toast.error("Failed to add reference");
+    }
+  }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -160,32 +213,18 @@ function AddReferenceDialog({ stepId, stepNumber, onSave }: { stepId: string; st
               </Button>
             ))}
           </div>
-          <Input placeholder="URL or path" value={url} onChange={(e) => setUrl(e.target.value)} />
+          <Input placeholder="URL (optional if uploading)" value={url} onChange={(e) => setUrl(e.target.value)} />
+          <FileUpload
+            accept="documents"
+            compact
+            onUpload={(file) => {
+              setUploadedFile(file);
+              setType(file.mimeType === "application/pdf" ? "pdf" : "file");
+            }}
+          />
           <Input placeholder="Notes (optional)" value={notes} onChange={(e) => setNotes(e.target.value)} />
           <div className="flex justify-end">
-            <Button
-              onClick={() => {
-                if (!title.trim() || !url.trim()) {
-                  toast.error("Title and URL/path are required");
-                  return;
-                }
-                onSave({
-                  stepId,
-                  stepNumber,
-                  title: title.trim(),
-                  type,
-                  url: url.trim(),
-                  notes: notes.trim() || undefined,
-                });
-                setOpen(false);
-                setTitle("");
-                setType("pdf");
-                setUrl("");
-                setNotes("");
-              }}
-            >
-              Save Reference
-            </Button>
+            <Button onClick={() => void handleSave()}>Save Reference</Button>
           </div>
         </div>
       </DialogContent>

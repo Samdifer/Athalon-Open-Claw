@@ -108,6 +108,7 @@ export function SignCardDialog({
 
   const createAuthEvent = useMutation(api.workOrders.createSignatureAuthEvent);
   const signTaskCard = useMutation(api.taskCards.signTaskCard);
+  const signTaskCardInspector = useMutation(api.taskCards.signTaskCardInspector);
 
   async function handleSign(bypassTrainingWarning = false) {
     if (rating === "none") {
@@ -141,12 +142,6 @@ export function SignCardDialog({
 
       setPin("");
       setStatement("");
-      // BUG-QCM-SCD-001: No success toast after card-level sign-off. For a
-      // 14 CFR 43.9 certification event (permanently locking a task card), the
-      // dialog was closing silently. A QCM or IA had no confirmation the record
-      // was written before the Convex subscription re-rendered the card as
-      // "Signed & Complete". On slow connections this window could be several
-      // seconds with no feedback at all.
       toast.success("Task card signed & locked");
       onSuccess();
       onClose();
@@ -154,6 +149,38 @@ export function SignCardDialog({
       setError(
         err instanceof Error ? err.message : "Failed to sign task card",
       );
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  async function handleInspectorSign() {
+    if (pin.length < 4) {
+      setError("PIN is required for inspector sign-off.");
+      return;
+    }
+    setIsSubmitting(true);
+    setError(null);
+    try {
+      const { eventId } = await createAuthEvent({
+        organizationId: orgId,
+        technicianId: techId,
+        intendedTable: "taskCards",
+        pin,
+      });
+      await signTaskCardInspector({
+        taskCardId,
+        organizationId: orgId,
+        signatureAuthEventId: eventId,
+        callerTechnicianId: techId,
+        notes: statement.trim() || undefined,
+      });
+      toast.success("Inspector sign-off recorded");
+      setPin("");
+      onSuccess();
+      onClose();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed inspector sign-off");
     } finally {
       setIsSubmitting(false);
     }
@@ -282,6 +309,22 @@ export function SignCardDialog({
             disabled={isSubmitting}
           >
             Cancel
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => {
+              void handleInspectorSign();
+            }}
+            disabled={isSubmitting || pin.length < 4}
+            className="gap-2"
+            size="sm"
+          >
+            {isSubmitting ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <AlertCircle className="w-3.5 h-3.5" />
+            )}
+            Inspector Sign-Off
           </Button>
           <Button
             onClick={() => {
