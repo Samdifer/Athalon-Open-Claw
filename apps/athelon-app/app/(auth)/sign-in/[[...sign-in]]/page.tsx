@@ -1,4 +1,5 @@
 import { SignIn } from "@clerk/clerk-react";
+import { Link } from "react-router-dom";
 
 export default function SignInPage() {
   return (
@@ -14,6 +15,12 @@ export default function SignInPage() {
         </div>
         <p className="text-sm text-muted-foreground">
           FAA Part 145 Maintenance Management
+        </p>
+        <p className="text-xs text-muted-foreground mt-2">
+          Customer portal user?{" "}
+          <Link className="underline underline-offset-2" to="/portal/sign-in">
+            Sign in here
+          </Link>
         </p>
       </div>
       <SignIn />

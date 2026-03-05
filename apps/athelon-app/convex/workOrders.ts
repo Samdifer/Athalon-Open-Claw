@@ -1725,6 +1725,7 @@ export const updateScheduleFields = mutation({
     promisedDeliveryDate: v.optional(v.number()),
     estimatedLaborHoursOverride: v.optional(v.number()),
     scheduledStartDate: v.optional(v.number()),
+    commitmentChangeReason: v.optional(v.string()),
     callerIpAddress: v.optional(v.string()),
   },
 
@@ -1736,6 +1737,46 @@ export const updateScheduleFields = mutation({
     if (!wo) throw new Error(`Work order ${args.workOrderId} not found.`);
     if (wo.organizationId !== args.organizationId) {
       throw new Error("Organization mismatch — cannot update scheduling fields.");
+    }
+
+    const callerTech = await ctx.db
+      .query("technicians")
+      .withIndex("by_organization", (q: any) => q.eq("organizationId", args.organizationId))
+      .filter((q: any) => q.eq(q.field("userId"), callerUserId))
+      .first();
+
+    if (!callerTech) {
+      throw new Error("ACCESS_DENIED: technician profile required.");
+    }
+
+    const allowedRoles = new Set(["admin", "shop_manager", "lead_technician", "qcm_inspector"]);
+    if (!allowedRoles.has(callerTech.role ?? "")) {
+      throw new Error(
+        "ACCESS_DENIED: schedule/date commitments require admin, shop_manager, lead_technician, or qcm_inspector role.",
+      );
+    }
+
+    const changingPromisedDate =
+      args.promisedDeliveryDate !== undefined &&
+      args.promisedDeliveryDate !== wo.promisedDeliveryDate;
+
+    if (changingPromisedDate) {
+      const reason = args.commitmentChangeReason?.trim();
+      if (!reason) {
+        throw new Error("commitmentChangeReason is required when changing committed RTS date.");
+      }
+
+      const postInspectionStatuses = new Set([
+        "pending_inspection",
+        "pending_signoff",
+        "open_discrepancies",
+        "ready_for_rts",
+      ]);
+      if (!postInspectionStatuses.has(wo.status ?? "")) {
+        throw new Error(
+          `RTS commitment date can only be changed in post-inspection states. Current status: ${wo.status}.`,
+        );
+      }
     }
 
     const updates: {
@@ -1764,8 +1805,14 @@ export const updateScheduleFields = mutation({
       tableName: "workOrders",
       recordId: args.workOrderId,
       userId: callerUserId,
+      technicianId: callerTech._id,
       ipAddress: args.callerIpAddress,
-      notes: `Scheduling fields updated on ${wo.workOrderNumber}: ${changedFields}.`,
+      notes:
+        `Scheduling fields updated on ${wo.workOrderNumber}: ${changedFields}.` +
+        (changingPromisedDate
+          ? ` Committed RTS change: ${wo.promisedDeliveryDate ?? "unset"} -> ${args.promisedDeliveryDate}.` +
+            ` Reason: ${args.commitmentChangeReason?.trim()}.`
+          : ""),
       timestamp: now,
     });
   },

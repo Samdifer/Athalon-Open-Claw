@@ -167,6 +167,7 @@ export function WOHeaderKPI({
         organizationId: orgId,
         workOrderId: workOrder._id,
         promisedDeliveryDate: normalizeDateInputToUTC(newRtsDate),
+        commitmentChangeReason: reason.trim(),
       });
       toast.success("RTS date updated.", {
         description: `Reason logged: ${reason.trim()}`,

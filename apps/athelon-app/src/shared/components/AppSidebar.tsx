@@ -189,6 +189,7 @@ const mainNav: NavEntry[] = [
       { title: "Warranty Claims", href: "/billing/warranty" },
       { title: "Settings", href: "/billing/settings" },
       { title: "Customer Portal", href: "/portal" },
+      { title: "Customer Requests", href: "/billing/customer-requests" },
     ],
   },
   {

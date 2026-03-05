@@ -27,7 +27,7 @@
 - [ ] TEAM-J: MBP-0100 (invoice view), MBP-0101 (download PDFs), MBP-0102 (message submission), MBP-0055 (completeStep auth)
 
 ### Wave 6 — P0 Partial Completion (2 agents)
-- [ ] TEAM-K: MBP-0032 (WO docs completion), MBP-0033 (task execution completion), MBP-0035 (parts traceability), MBP-0045 (evidence hub)
+- [x] TEAM-K: MBP-0032 (WO docs completion), MBP-0033 (task execution completion), MBP-0035 (parts traceability), MBP-0045 (evidence hub) ✅ e4e601a
 - [ ] TEAM-L: MBP-0041 (lead workspace completion), MBP-0049 (receiving inspection), MBP-0051 (WO header KPI), MBP-0053 (secondary quote)
 
 ### Wave 7 — Polish + P2 (2 agents)

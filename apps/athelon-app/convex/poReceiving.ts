@@ -21,6 +21,37 @@ import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import { requireAuth } from "./lib/authHelpers";
 
+const RECEIVING_ALLOWED_ROLES = new Set([
+  "parts_clerk",
+  "shop_manager",
+  "admin",
+]);
+
+async function requireReceivingRole(
+  ctx: any,
+  organizationId: Id<"organizations">,
+): Promise<{ callerUserId: string; callerTechnicianId?: Id<"technicians"> }> {
+  const callerUserId = await requireAuth(ctx);
+
+  const callerTech = await ctx.db
+    .query("technicians")
+    .withIndex("by_organization", (q: any) => q.eq("organizationId", organizationId))
+    .filter((q: any) => q.eq(q.field("userId"), callerUserId))
+    .first();
+
+  if (!callerTech) {
+    throw new Error("ACCESS_DENIED: technician profile required for receiving workflow.");
+  }
+
+  if (!RECEIVING_ALLOWED_ROLES.has(callerTech.role ?? "")) {
+    throw new Error(
+      "ACCESS_DENIED: receiving requires parts_clerk, shop_manager, or admin role.",
+    );
+  }
+
+  return { callerUserId, callerTechnicianId: callerTech._id };
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // SHARED VALIDATORS
 // ─────────────────────────────────────────────────────────────────────────────
@@ -91,8 +122,10 @@ export const receiveAgainstPO = mutation({
     shelf: v.optional(v.string()),
     binNumber: v.optional(v.string()),
     notes: v.optional(v.string()),
+    // MBP-0049: conformity/evidence docs captured at receiving time.
+    conformityDocumentIds: v.optional(v.array(v.id("documents"))),
     // Caller
-    receivedByUserId: v.string(),
+    receivedByUserId: v.optional(v.string()),
   },
 
   handler: async (ctx, args): Promise<{
@@ -100,7 +133,10 @@ export const receiveAgainstPO = mutation({
     lotId?: string;
   }> => {
     const now = Date.now();
-    await requireAuth(ctx);
+    const { callerUserId, callerTechnicianId } = await requireReceivingRole(
+      ctx,
+      args.organizationId,
+    );
 
     // ── 1. Validate PO exists and status is SUBMITTED or PARTIAL ────────────
     const po = await ctx.db.get(args.purchaseOrderId);
@@ -128,7 +164,17 @@ export const receiveAgainstPO = mutation({
       );
     }
 
-    // ── 3. Validate receivedQty doesn't exceed remaining ────────────────────
+    // ── 3. Validate conformity docs belong to org (if supplied) ───────────
+    if (args.conformityDocumentIds?.length) {
+      for (const docId of args.conformityDocumentIds) {
+        const doc = await ctx.db.get(docId);
+        if (!doc || doc.organizationId !== args.organizationId) {
+          throw new Error(`Conformity document ${docId} not found in this organization.`);
+        }
+      }
+    }
+
+    // ── 4. Validate receivedQty doesn't exceed remaining ────────────────────
     if (args.receivedQty <= 0) {
       throw new Error("receivedQty must be > 0.");
     }
@@ -216,6 +262,7 @@ export const receiveAgainstPO = mutation({
       shelf: args.shelf?.trim(),
       binNumber: args.binNumber?.trim(),
       partCategory: args.partCategory,
+      receivingConformityDocumentIds: args.conformityDocumentIds,
       createdAt: now,
       updatedAt: now,
     };
@@ -281,12 +328,16 @@ export const receiveAgainstPO = mutation({
       eventType: "record_created",
       tableName: "parts",
       recordId: partIds[0],
-      userId: args.receivedByUserId,
+      userId: callerUserId,
+      technicianId: callerTechnicianId,
       notes: `PO ${po.poNumber} receiving: ${args.receivedQty}x ${args.partNumber} "${args.partName}" ` +
         `received against line item "${lineItem.description}". ` +
         `${partIds.length} part record(s) created in pending_inspection. ` +
         `PO status → ${newPoStatus}.` +
-        (args.lotNumber ? ` Lot: ${args.lotNumber}.` : ""),
+        (args.lotNumber ? ` Lot: ${args.lotNumber}.` : "") +
+        (args.conformityDocumentIds?.length
+          ? ` Conformity docs attached: ${args.conformityDocumentIds.length}.`
+          : ""),
       timestamp: now,
     });
 
@@ -307,6 +358,8 @@ export const listPOsAwaitingReceiving = query({
   },
 
   handler: async (ctx, args) => {
+    await requireReceivingRole(ctx, args.organizationId);
+
     // Fetch SUBMITTED POs
     const submitted = await ctx.db
       .query("purchaseOrders")
@@ -375,6 +428,8 @@ export const getPOReceivingDetail = query({
     if (!po) {
       throw new Error(`PO ${args.purchaseOrderId} not found.`);
     }
+
+    await requireReceivingRole(ctx, po.orgId);
 
     const lineItems = await ctx.db
       .query("poLineItems")

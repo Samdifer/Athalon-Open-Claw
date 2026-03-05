@@ -233,6 +233,7 @@ function ReceivingInspectionDialog({
         partId: part._id,
         inspectedByTechnicianId: technicianId,
         inspectionResult,
+        checklistCompleted: true,
         inspectionNotes: inspectionNotes.trim() || undefined,
         rejectionReason: inspectionResult === "rejected" ? rejectionReason.trim() : undefined,
       });

@@ -261,7 +261,7 @@ export default function CustomerDashboardPage() {
       </div>
 
       {/* Quick Action Buttons */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
         {[
           {
             to: "/portal/work-orders",
@@ -271,6 +271,7 @@ export default function CustomerDashboardPage() {
           { to: "/portal/quotes", label: "View Quotes", icon: FileText },
           { to: "/portal/invoices", label: "View Invoices", icon: Receipt },
           { to: "/portal/fleet", label: "My Fleet", icon: Plane },
+          { to: "/portal/messages", label: "Messages", icon: Activity },
         ].map((link) => (
           <Link
             key={link.to}

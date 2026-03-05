@@ -200,6 +200,7 @@ export const getLeadWorkspace = query({
       });
 
     const taskCards: any[] = [];
+    const taskSteps: any[] = [];
     for (const wo of activeWorkOrders) {
       const cards = await ctx.db
         .query("taskCards")
@@ -212,7 +213,26 @@ export const getLeadWorkspace = query({
           .query("taskCardSteps")
           .withIndex("by_task_card", (q: any) => q.eq("taskCardId", card._id))
           .collect();
-        const pendingSteps = steps.filter((step: any) => step.status === "pending").length;
+        const pendingStepRows = steps.filter((step: any) => step.status === "pending");
+        const pendingSteps = pendingStepRows.length;
+
+        for (const step of pendingStepRows) {
+          taskSteps.push({
+            _id: step._id,
+            taskCardId: card._id,
+            taskCardNumber: card.taskCardNumber,
+            stepNumber: step.stepNumber,
+            description: step.description,
+            workOrderId: wo._id,
+            workOrderNumber: wo.workOrderNumber,
+            estimatedMinutes: null,
+            assignedToTechnicianId: card.assignedToTechnicianId ?? null,
+            assignedToName: card.assignedToTechnicianId
+              ? technicianById.get(String(card.assignedToTechnicianId))?.legalName ?? "Unknown"
+              : null,
+          });
+        }
+
         taskCards.push({
           ...card,
           workOrderNumber: wo.workOrderNumber,
@@ -270,6 +290,48 @@ export const getLeadWorkspace = query({
         minutes,
       }))
       .sort((a, b) => b.minutes - a.minutes);
+
+    const teamInsightMap = new Map<string, {
+      teamName: string;
+      assignmentCount: number;
+      workOrderCount: number;
+      assignedMinutes: number;
+      technicians: Set<string>;
+    }>();
+
+    for (const assignment of activeAssignments) {
+      const teamName = assignment.assignedTeamName?.trim() || "Unassigned Team";
+      const key = teamName.toLowerCase();
+      const row = teamInsightMap.get(key) ?? {
+        teamName,
+        assignmentCount: 0,
+        workOrderCount: 0,
+        assignedMinutes: 0,
+        technicians: new Set<string>(),
+      };
+
+      row.assignmentCount += 1;
+      if (assignment.workOrderId) {
+        row.workOrderCount += 1;
+        row.assignedMinutes += minutesByWorkOrder.get(String(assignment.workOrderId)) ?? 0;
+      }
+      if (assignment.assignedToTechnicianId) {
+        const techName =
+          technicianById.get(String(assignment.assignedToTechnicianId))?.legalName ?? "Unknown";
+        row.technicians.add(techName);
+      }
+      teamInsightMap.set(key, row);
+    }
+
+    const teamInsights = Array.from(teamInsightMap.values())
+      .map((row) => ({
+        teamName: row.teamName,
+        assignmentCount: row.assignmentCount,
+        workOrderCount: row.workOrderCount,
+        assignedMinutes: row.assignedMinutes,
+        technicianCount: row.technicians.size,
+      }))
+      .sort((a, b) => b.assignedMinutes - a.assignedMinutes);
 
     const reportsForDate = await ctx.db
       .query("turnoverReports")
@@ -351,7 +413,17 @@ export const getLeadWorkspace = query({
         }
         return a.taskCardNumber.localeCompare(b.taskCardNumber);
       }),
+      taskSteps: taskSteps.sort((a, b) => {
+        if (a.workOrderNumber !== b.workOrderNumber) {
+          return a.workOrderNumber.localeCompare(b.workOrderNumber);
+        }
+        if (a.taskCardNumber !== b.taskCardNumber) {
+          return a.taskCardNumber.localeCompare(b.taskCardNumber);
+        }
+        return (a.stepNumber ?? 0) - (b.stepNumber ?? 0);
+      }),
       assignments: activeAssignments,
+      teamInsights,
       dayMetrics: {
         totalMinutes,
         workOrderMinutes,

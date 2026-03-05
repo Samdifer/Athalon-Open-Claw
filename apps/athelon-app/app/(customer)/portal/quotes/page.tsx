@@ -1,10 +1,10 @@
-import { useState } from "react";
-import { useQuery, useMutation } from "convex/react";
+import { useMemo, useState } from "react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Check, X, Download } from "lucide-react";
+import { ArrowLeft, Check, X } from "lucide-react";
 import { toast } from "sonner";
 import { usePortalCustomerId } from "@/hooks/usePortalCustomerId";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -16,21 +16,26 @@ const STATUS_COLORS: Record<string, string> = {
   CONVERTED: "bg-purple-100 text-purple-700",
 };
 
-function QuoteDetail({ quote, customerId, onBack }: {
+function QuoteDetail({
+  quote,
+  customerId,
+  onBack,
+}: {
   quote: any;
   customerId: Id<"customers">;
   onBack: () => void;
 }) {
   const [declining, setDeclining] = useState(false);
   const [declineReason, setDeclineReason] = useState("");
-  const approveQuote = useMutation(api.billing.approveQuote);
-  const declineQuote = useMutation(api.billing.declineQuote);
-  const decideLineItem = useMutation(api.gapFixes.decideQuoteLineItem);
+
+  const approveQuote = useMutation(api.customerPortal.customerApproveQuote);
+  const declineQuote = useMutation(api.customerPortal.customerDeclineQuote);
+  const decideLineItem = useMutation(api.customerPortal.customerDecideQuoteLineItem);
 
   const handleApprove = async () => {
     try {
-      await approveQuote({ orgId: quote.orgId, quoteId: quote._id });
-      toast.success("Quote approved successfully!");
+      await approveQuote({ customerId, quoteId: quote._id });
+      toast.success("Quote approved successfully.");
       onBack();
     } catch (e: any) {
       toast.error(e.message ?? "Failed to approve quote.");
@@ -42,8 +47,9 @@ function QuoteDetail({ quote, customerId, onBack }: {
       toast.error("Please provide a reason for declining.");
       return;
     }
+
     try {
-      await declineQuote({ orgId: quote.orgId, quoteId: quote._id, declineReason });
+      await declineQuote({ customerId, quoteId: quote._id, declineReason });
       toast.success("Quote declined.");
       onBack();
     } catch (e: any) {
@@ -53,10 +59,15 @@ function QuoteDetail({ quote, customerId, onBack }: {
 
   const handleLineItemDecision = async (
     lineItemId: Id<"quoteLineItems">,
-    decision: "approved" | "declined" | "deferred"
+    decision: "approved" | "declined" | "deferred",
   ) => {
     try {
-      await decideLineItem({ orgId: quote.orgId, lineItemId, decision });
+      await decideLineItem({
+        customerId,
+        quoteId: quote._id,
+        lineItemId,
+        decision,
+      });
       toast.success(`Line item ${decision}.`);
     } catch (e: any) {
       toast.error(e.message ?? "Failed to update line item.");
@@ -73,16 +84,14 @@ function QuoteDetail({ quote, customerId, onBack }: {
         <CardHeader>
           <div className="flex items-center justify-between flex-wrap gap-2">
             <CardTitle className="text-lg">{quote.quoteNumber}</CardTitle>
-            <Badge className={STATUS_COLORS[quote.status] ?? ""}>
-              {quote.status}
-            </Badge>
+            <Badge className={STATUS_COLORS[quote.status] ?? ""}>{quote.status}</Badge>
           </div>
           <p className="text-sm text-gray-500">
             {quote.aircraftRegistration} · Created {new Date(quote.createdAt).toLocaleDateString()}
           </p>
         </CardHeader>
+
         <CardContent className="space-y-4">
-          {/* Line Items */}
           <div>
             <p className="text-sm font-medium text-gray-700 mb-2">Line Items</p>
             <div className="border rounded-lg overflow-hidden">
@@ -104,11 +113,22 @@ function QuoteDetail({ quote, customerId, onBack }: {
                       <td className="p-2">
                         <div>
                           <p>{li.description}</p>
-                          <Badge variant="outline" className="text-xs mt-0.5">{li.type}</Badge>
+                          <Badge variant="outline" className="text-xs mt-0.5">
+                            {li.type}
+                          </Badge>
                           {li.customerDecision && (
                             <Badge className="ml-1 text-xs" variant="secondary">
                               {li.customerDecision}
                             </Badge>
+                          )}
+                          {Array.isArray(li.decisionHistory) && li.decisionHistory.length > 0 && (
+                            <div className="mt-1 space-y-0.5">
+                              {li.decisionHistory.slice(0, 2).map((event: any, idx: number) => (
+                                <p key={idx} className="text-[11px] text-gray-500">
+                                  {event.decision} · {event.actorName ?? "Unknown"} · {new Date(event.decidedAt).toLocaleString()}
+                                </p>
+                              ))}
+                            </div>
                           )}
                         </div>
                       </td>
@@ -152,7 +172,6 @@ function QuoteDetail({ quote, customerId, onBack }: {
             </div>
           </div>
 
-          {/* Totals */}
           <div className="bg-gray-50 rounded-lg p-4 space-y-1 text-sm">
             <div className="flex justify-between">
               <span className="text-gray-500">Labor</span>
@@ -172,7 +191,6 @@ function QuoteDetail({ quote, customerId, onBack }: {
             </div>
           </div>
 
-          {/* Actions */}
           {quote.status === "SENT" && (
             <div className="space-y-3 pt-2">
               {!declining ? (
@@ -198,11 +216,7 @@ function QuoteDetail({ quote, customerId, onBack }: {
                     rows={3}
                   />
                   <div className="flex gap-2">
-                    <Button
-                      variant="destructive"
-                      className="flex-1"
-                      onClick={handleDecline}
-                    >
+                    <Button variant="destructive" className="flex-1" onClick={handleDecline}>
                       Confirm Decline
                     </Button>
                     <Button variant="outline" onClick={() => setDeclining(false)}>
@@ -227,10 +241,13 @@ function QuoteDetail({ quote, customerId, onBack }: {
 
 export default function CustomerQuotesPage() {
   const customerId = usePortalCustomerId();
-  const [selectedQuote, setSelectedQuote] = useState<any>(null);
-  const quotes = useQuery(
-    api.customerPortal.listCustomerQuotes,
-    customerId ? { customerId } : "skip"
+  const [selectedQuoteId, setSelectedQuoteId] = useState<Id<"quotes"> | null>(null);
+
+  const quotes = useQuery(api.customerPortal.listCustomerQuotes, customerId ? { customerId } : "skip");
+
+  const selectedQuote = useMemo(
+    () => quotes?.find((q: any) => q._id === selectedQuoteId) ?? null,
+    [quotes, selectedQuoteId],
   );
 
   if (!customerId) {
@@ -238,7 +255,13 @@ export default function CustomerQuotesPage() {
   }
 
   if (selectedQuote) {
-    return <QuoteDetail quote={selectedQuote} customerId={customerId} onBack={() => setSelectedQuote(null)} />;
+    return (
+      <QuoteDetail
+        quote={selectedQuote}
+        customerId={customerId}
+        onBack={() => setSelectedQuoteId(null)}
+      />
+    );
   }
 
   if (!quotes) {
@@ -261,20 +284,18 @@ export default function CustomerQuotesPage() {
         </Card>
       ) : (
         <div className="space-y-3">
-          {quotes.map((quote) => (
+          {quotes.map((quote: any) => (
             <Card
               key={quote._id}
               className="hover:shadow-md transition-shadow cursor-pointer"
-              onClick={() => setSelectedQuote(quote)}
+              onClick={() => setSelectedQuoteId(quote._id)}
             >
               <CardContent className="py-4">
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <p className="font-semibold text-sm">{quote.quoteNumber}</p>
-                      <Badge className={STATUS_COLORS[quote.status] ?? ""}>
-                        {quote.status}
-                      </Badge>
+                      <Badge className={STATUS_COLORS[quote.status] ?? ""}>{quote.status}</Badge>
                     </div>
                     <p className="text-sm text-gray-500 mt-1">{quote.aircraftRegistration}</p>
                     <p className="text-xs text-gray-400">

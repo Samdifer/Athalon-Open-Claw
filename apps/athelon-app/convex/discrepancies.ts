@@ -80,26 +80,39 @@ async function requireAuth(ctx: {
 // Discrepancy numbers are work-order-scoped, sequential human-readable IDs.
 // Format: WO-{workOrderNumber}-DISC-{N} (e.g., WO-2024-0045-DISC-3)
 //
-// We count existing discrepancies for this work order and increment.
-// This is an optimistic approach — in high-concurrency scenarios, two concurrent
-// openDiscrepancy calls for the same work order could generate the same number.
-// TODO: Phase 4.1 — Implement a Convex counter document per work order for
-// true atomic sequential numbering without conflicts.
+// Uses an orgCounter per work order to guarantee stable, monotonic, unique IDs
+// even under concurrent discrepancy creation.
 // ─────────────────────────────────────────────────────────────────────────────
 
 async function generateDiscrepancyNumber(
   ctx: { db: any },
-  workOrderId: Id<"workOrders">,
-  workOrderNumber: string,
+  args: {
+    organizationId: Id<"organizations">;
+    workOrderId: Id<"workOrders">;
+    workOrderNumber: string;
+  },
 ): Promise<string> {
-  const existingCount = await ctx.db
-    .query("discrepancies")
-    .withIndex("by_work_order", (q: any) => q.eq("workOrderId", workOrderId))
-    .collect()
-    .then((records: { _id: string }[]) => records.length);
+  const counterType = `discrepancy:${String(args.workOrderId)}`;
 
-  const sequenceNumber = existingCount + 1;
-  return `WO-${workOrderNumber}-DISC-${sequenceNumber}`;
+  const counter = await ctx.db
+    .query("orgCounters")
+    .withIndex("by_org_type", (q: any) =>
+      q.eq("orgId", String(args.organizationId)).eq("counterType", counterType),
+    )
+    .first();
+
+  const next = (counter?.lastValue ?? 0) + 1;
+  if (counter) {
+    await ctx.db.patch(counter._id, { lastValue: next });
+  } else {
+    await ctx.db.insert("orgCounters", {
+      orgId: String(args.organizationId),
+      counterType,
+      lastValue: next,
+    });
+  }
+
+  return `WO-${args.workOrderNumber}-DISC-${next}`;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -263,11 +276,11 @@ export const openDiscrepancy = mutation({
     const aircraftId = workOrder.aircraftId;
 
     // ── Generate discrepancy number ───────────────────────────────────────────
-    const discrepancyNumber = await generateDiscrepancyNumber(
-      ctx,
-      args.workOrderId,
-      workOrder.workOrderNumber,
-    );
+    const discrepancyNumber = await generateDiscrepancyNumber(ctx, {
+      organizationId: args.organizationId,
+      workOrderId: args.workOrderId,
+      workOrderNumber: workOrder.workOrderNumber,
+    });
 
     // ── Create the discrepancy record ─────────────────────────────────────────
     const discrepancyId = await ctx.db.insert("discrepancies", {

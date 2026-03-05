@@ -118,6 +118,7 @@ const BillingCreditMemosPage = lazy(
 const BillingRecurringPage = lazy(() => import("@/app/(app)/billing/recurring/page"));
 const BillingTaxConfigPage = lazy(() => import("@/app/(app)/billing/tax-config/page"));
 const BillingSettingsPage = lazy(() => import("@/app/(app)/billing/settings/page"));
+const CustomerRequestsQueuePage = lazy(() => import("@/app/(app)/billing/customer-requests/page"));
 const OTCSalesPage = lazy(() => import("@/app/(app)/billing/otc/page"));
 const WarrantyPage = lazy(() => import("@/app/(app)/billing/warranty/page"));
 const LaborKitsPage = lazy(() => import("@/app/(app)/billing/labor-kits/page"));
@@ -277,6 +278,7 @@ export function protectedAppRoutes() {
             <Route path="/billing/recurring" element={<BillingRecurringPage />} />
             <Route path="/billing/tax-config" element={<BillingTaxConfigPage />} />
             <Route path="/billing/settings" element={<BillingSettingsPage />} />
+            <Route path="/billing/customer-requests" element={<CustomerRequestsQueuePage />} />
             <Route path="/billing/otc" element={<OTCSalesPage />} />
             <Route path="/billing/warranty" element={<WarrantyPage />} />
             <Route path="/billing/labor-kits" element={<LaborKitsPage />} />

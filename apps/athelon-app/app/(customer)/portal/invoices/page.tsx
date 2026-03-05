@@ -4,7 +4,9 @@ import { api } from "@/convex/_generated/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Download } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
+import { DownloadPDFButton } from "@/src/shared/components/pdf/DownloadPDFButton";
+import { InvoicePDF } from "@/src/shared/components/pdf/InvoicePDF";
 import { usePortalCustomerId } from "@/hooks/usePortalCustomerId";
 
 const STATUS_COLORS: Record<string, string> = {
@@ -12,6 +14,13 @@ const STATUS_COLORS: Record<string, string> = {
   PARTIAL: "bg-amber-100 text-amber-700",
   PAID: "bg-green-100 text-green-700",
   VOID: "bg-gray-100 text-gray-500",
+};
+
+const PAYMENT_STATUS_BADGE: Record<string, string> = {
+  paid: "bg-green-100 text-green-700",
+  partially_paid: "bg-amber-100 text-amber-700",
+  unpaid: "bg-slate-100 text-slate-700",
+  overdue: "bg-red-100 text-red-700",
 };
 
 function InvoiceDetail({ invoice, onBack }: { invoice: any; onBack: () => void }) {
@@ -25,8 +34,23 @@ function InvoiceDetail({ invoice, onBack }: { invoice: any; onBack: () => void }
         <CardHeader>
           <div className="flex items-center justify-between flex-wrap gap-2">
             <CardTitle className="text-lg">{invoice.invoiceNumber}</CardTitle>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap justify-end">
+              <DownloadPDFButton
+                label="PDF"
+                fileName={`${invoice.invoiceNumber || "invoice"}.pdf`}
+                document={(
+                  <InvoicePDF
+                    orgName="Athelon MRO"
+                    invoice={invoice}
+                    lineItems={invoice.lineItems}
+                    customer={null}
+                  />
+                )}
+              />
               {invoice.isOverdue && <Badge className="bg-red-100 text-red-700">Overdue</Badge>}
+              <Badge className={PAYMENT_STATUS_BADGE[invoice.paymentStatus] ?? "bg-slate-100 text-slate-700"}>
+                {invoice.paymentStatus?.replace(/_/g, " ") ?? "unpaid"}
+              </Badge>
               <Badge className={STATUS_COLORS[invoice.status] ?? ""}>
                 {invoice.status}
               </Badge>
@@ -173,6 +197,9 @@ export default function CustomerInvoicesPage() {
                     <div className="flex items-center gap-2 flex-wrap">
                       <p className="font-semibold text-sm">{inv.invoiceNumber}</p>
                       {inv.isOverdue && <Badge className="bg-red-100 text-red-700">Overdue</Badge>}
+                      <Badge className={PAYMENT_STATUS_BADGE[inv.paymentStatus] ?? "bg-slate-100 text-slate-700"}>
+                        {inv.paymentStatus?.replace(/_/g, " ") ?? "unpaid"}
+                      </Badge>
                       <Badge className={STATUS_COLORS[inv.status] ?? ""}>
                         {inv.status}
                       </Badge>

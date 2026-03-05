@@ -4,7 +4,9 @@ import { api } from "@/convex/_generated/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ChevronRight } from "lucide-react";
+import { Activity, ArrowLeft, ChevronRight } from "lucide-react";
+import { DownloadPDFButton } from "@/src/shared/components/pdf/DownloadPDFButton";
+import { RtsDocumentPDF } from "@/src/shared/components/pdf/RtsDocumentPDF";
 import { usePortalCustomerId } from "@/hooks/usePortalCustomerId";
 import type { Id } from "@/convex/_generated/dataModel";
 
@@ -68,6 +70,7 @@ function WorkOrderDetail({ woId, customerId, onBack }: {
   onBack: () => void;
 }) {
   const detail = useQuery(api.customerPortal.getCustomerWorkOrderDetail, { woId, customerId });
+  const timeline = useQuery(api.customerPortal.getCustomerWorkOrderTimeline, { woId, customerId });
 
   if (!detail) {
     return (
@@ -87,9 +90,40 @@ function WorkOrderDetail({ woId, customerId, onBack }: {
         <CardHeader>
           <div className="flex items-center justify-between flex-wrap gap-2">
             <CardTitle className="text-lg">{detail.workOrderNumber}</CardTitle>
-            <Badge className={STATUS_COLORS[detail.status] ?? "bg-gray-100 text-gray-700"}>
-              {detail.status.replace(/_/g, " ")}
-            </Badge>
+            <div className="flex items-center gap-2">
+              {detail.hasRts && (
+                <DownloadPDFButton
+                  label="RTS PDF"
+                  fileName={`${detail.workOrderNumber || "work-order"}-RTS.pdf`}
+                  document={(
+                    <RtsDocumentPDF
+                      workOrder={{ _id: detail._id, workOrderNumber: detail.workOrderNumber }}
+                      aircraft={{
+                        currentRegistration: detail.aircraftRegistration,
+                        make: detail.aircraftMake,
+                        model: detail.aircraftModel,
+                        serialNumber: detail.serialNumber,
+                        totalTimeAirframeHours: detail.aircraftTotalTimeAtClose,
+                      }}
+                      taskCards={detail.taskSummaries}
+                      discrepancies={detail.discrepancies ?? []}
+                      parts={detail.partsSummary ?? []}
+                      rtsData={{
+                        statement: detail.rtsRecord?.returnToServiceStatement,
+                        date: detail.rtsRecord?.returnToServiceDate,
+                      }}
+                      inspector={{
+                        certificateNumber: detail.rtsRecord?.iaCertificateNumber,
+                        date: detail.rtsRecord?.returnToServiceDate,
+                      }}
+                    />
+                  )}
+                />
+              )}
+              <Badge className={STATUS_COLORS[detail.status] ?? "bg-gray-100 text-gray-700"}>
+                {detail.status.replace(/_/g, " ")}
+              </Badge>
+            </div>
           </div>
           <p className="text-sm text-gray-500">
             {detail.aircraftRegistration} — {detail.aircraftMake} {detail.aircraftModel}
@@ -165,6 +199,32 @@ function WorkOrderDetail({ woId, customerId, onBack }: {
               </div>
             </div>
           )}
+
+          <div>
+            <p className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+              <Activity className="w-4 h-4 text-gray-500" />
+              Timeline
+            </p>
+            {!timeline ? (
+              <p className="text-sm text-gray-500">Loading timeline...</p>
+            ) : timeline.length === 0 ? (
+              <p className="text-sm text-gray-500">No timeline events yet.</p>
+            ) : (
+              <div className="space-y-2">
+                {timeline.map((event: any) => (
+                  <div key={event._id} className="p-2 rounded-lg border bg-white">
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-sm font-medium text-gray-800">{event.title}</p>
+                      <p className="text-xs text-gray-400 whitespace-nowrap">
+                        {new Date(event.timestamp).toLocaleString()}
+                      </p>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-0.5">{event.description}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </CardContent>
       </Card>
     </div>
@@ -218,6 +278,7 @@ export default function CustomerWorkOrdersPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <p className="font-semibold text-sm">{wo.workOrderNumber}</p>
+                      {wo.hasRts && <Badge className="bg-green-100 text-green-700">RTS available</Badge>}
                       <Badge className={STATUS_COLORS[wo.status] ?? "bg-gray-100 text-gray-700"} variant="outline">
                         {wo.status.replace(/_/g, " ")}
                       </Badge>

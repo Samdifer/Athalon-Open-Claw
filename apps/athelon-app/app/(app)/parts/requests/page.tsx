@@ -153,6 +153,7 @@ function InspectDialog({ open, onClose, part, techId }: InspectDialogProps) {
         partId: part._id,
         inspectedByTechnicianId: techId,
         inspectionResult: result,
+        checklistCompleted: true,
         inspectionNotes: inspectionNotes.trim() || undefined,
         rejectionReason: result === "rejected" ? rejectionReason.trim() : undefined,
       });

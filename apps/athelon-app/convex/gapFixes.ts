@@ -20,6 +20,30 @@ async function requireAuth(ctx: {
   return identity.subject;
 }
 
+async function requireRoleInOrganization(
+  ctx: any,
+  args: { organizationId: Id<"organizations">; allowedRoles: string[] },
+): Promise<{ userId: string; technician: any }> {
+  const userId = await requireAuth(ctx);
+  const technician = await ctx.db
+    .query("technicians")
+    .withIndex("by_organization", (q: any) => q.eq("organizationId", args.organizationId))
+    .filter((q: any) => q.eq(q.field("userId"), userId))
+    .first();
+
+  if (!technician) {
+    throw new Error("ACCESS_DENIED: technician profile required.");
+  }
+
+  if (!args.allowedRoles.includes(technician.role ?? "")) {
+    throw new Error(
+      `ACCESS_DENIED: requires one of roles [${args.allowedRoles.join(", ")}].`,
+    );
+  }
+
+  return { userId, technician };
+}
+
 // Utility: map a Clerk organization ID to a Convex organization record.
 export const setClerkOrganizationMapping = mutation({
   args: {
@@ -382,21 +406,55 @@ export const completeReceivingInspection = mutation({
     inspectionResult: v.union(v.literal("approved"), v.literal("rejected")),
     inspectionNotes: v.optional(v.string()),
     rejectionReason: v.optional(v.string()),
+    // MBP-0049: checklist + conformity trail
+    checklistCompleted: v.boolean(),
+    checklistVersion: v.optional(v.string()),
+    conformityDocumentIds: v.optional(v.array(v.id("documents"))),
   },
   handler: async (ctx, args) => {
-    const userId = await requireAuth(ctx);
     const part = await ctx.db.get(args.partId);
     if (!part) throw new Error("Part not found.");
     if (part.location !== "pending_inspection") {
       throw new Error(`Part is not in pending_inspection status (current: ${part.location}).`);
     }
+
+    const { userId, technician } = await requireRoleInOrganization(ctx, {
+      organizationId: part.organizationId,
+      allowedRoles: ["parts_clerk", "qcm_inspector", "shop_manager", "admin"],
+    });
+
+    if (String(technician._id) !== String(args.inspectedByTechnicianId)) {
+      throw new Error("ACCESS_DENIED: inspectedByTechnicianId must match authenticated technician.");
+    }
+
+    if (!args.checklistCompleted) {
+      throw new Error("Receiving checklist must be completed before inspection can be finalized.");
+    }
+
+    if (args.conformityDocumentIds?.length) {
+      for (const docId of args.conformityDocumentIds) {
+        const doc = await ctx.db.get(docId);
+        if (!doc || doc.organizationId !== part.organizationId) {
+          throw new Error(`Conformity document ${docId} not found in this organization.`);
+        }
+      }
+    }
+
     const now = Date.now();
+    const composedNotes = [
+      args.inspectionNotes?.trim(),
+      `Checklist complete${args.checklistVersion ? ` (${args.checklistVersion.trim()})` : ""}`,
+    ]
+      .filter(Boolean)
+      .join(" | ");
+
     if (args.inspectionResult === "approved") {
       await ctx.db.patch(args.partId, {
         location: "inventory",
         receivingInspectedBy: args.inspectedByTechnicianId,
         receivingInspectedAt: now,
-        receivingInspectionNotes: args.inspectionNotes,
+        receivingInspectionNotes: composedNotes || undefined,
+        receivingConformityDocumentIds: args.conformityDocumentIds,
         updatedAt: now,
       });
       // Part history: inspected + stocked
@@ -408,7 +466,7 @@ export const completeReceivingInspection = mutation({
         toLocation: "inventory",
         performedByUserId: userId,
         performedByTechnicianId: args.inspectedByTechnicianId,
-        notes: `Receiving inspection APPROVED${args.inspectionNotes ? `: ${args.inspectionNotes}` : ""}`,
+        notes: `Receiving inspection APPROVED${composedNotes ? `: ${composedNotes}` : ""}`,
       });
       await ctx.runMutation(internal.partHistory.recordEvent, {
         organizationId: part.organizationId,
@@ -425,7 +483,8 @@ export const completeReceivingInspection = mutation({
         condition: "unserviceable",
         receivingInspectedBy: args.inspectedByTechnicianId,
         receivingInspectedAt: now,
-        receivingInspectionNotes: args.inspectionNotes,
+        receivingInspectionNotes: composedNotes || undefined,
+        receivingConformityDocumentIds: args.conformityDocumentIds,
         receivingRejectionReason: args.rejectionReason,
         updatedAt: now,
       });
@@ -508,6 +567,11 @@ export const releasePartReservation = mutation({
 export const listPartsPendingInspection = query({
   args: { organizationId: v.id("organizations") },
   handler: async (ctx, args) => {
+    await requireRoleInOrganization(ctx, {
+      organizationId: args.organizationId,
+      allowedRoles: ["parts_clerk", "qcm_inspector", "shop_manager", "admin"],
+    });
+
     return ctx.db
       .query("parts")
       .withIndex("by_location", (q) => q.eq("organizationId", args.organizationId).eq("location", "pending_inspection"))
@@ -851,24 +915,40 @@ export const decideQuoteLineItem = mutation({
     decisionNotes: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const callerUserId = await requireAuth(ctx);
+    const { userId: callerUserId, technician: decidingTechnician } = await requireRoleInOrganization(ctx, {
+      organizationId: args.orgId,
+      allowedRoles: ["lead_technician", "qcm_inspector", "shop_manager", "admin", "technician"],
+    });
+
     const item = await ctx.db.get(args.lineItemId);
     if (!item) throw new Error("Line item not found.");
     if (item.orgId !== args.orgId) throw new Error("ORG_MISMATCH.");
 
-    const decidingTechnician = await ctx.db
-      .query("technicians")
-      .withIndex("by_organization", (q) => q.eq("organizationId", args.orgId))
-      .filter((q) => q.eq(q.field("userId"), callerUserId))
-      .first();
+    const now = Date.now();
+    const cleanedNotes = args.decisionNotes?.trim();
 
     await ctx.db.patch(args.lineItemId, {
       customerDecision: args.decision,
-      customerDecisionNotes: args.decisionNotes?.trim(),
-      customerDecisionAt: Date.now(),
+      customerDecisionNotes: cleanedNotes,
+      customerDecisionAt: now,
       customerDecisionByUserId: callerUserId,
       customerDecisionByTechnicianId: decidingTechnician?._id,
       customerDecisionByName: decidingTechnician?.legalName,
+      updatedAt: now,
+    });
+
+    await ctx.db.insert("quoteLineItemDecisionEvents", {
+      orgId: args.orgId,
+      quoteId: item.quoteId,
+      lineItemId: args.lineItemId,
+      discrepancyId: item.discrepancyId,
+      decision: args.decision,
+      decisionNotes: cleanedNotes,
+      actorUserId: callerUserId,
+      actorTechnicianId: decidingTechnician?._id,
+      actorName: decidingTechnician?.legalName,
+      decidedAt: now,
+      createdAt: now,
     });
 
     // GAP-10: If declined and linked to a discrepancy, defer the discrepancy
@@ -878,7 +958,7 @@ export const decideQuoteLineItem = mutation({
         await ctx.db.patch(item.discrepancyId, {
           status: "dispositioned",
           disposition: "deferred_customer_declined",
-          updatedAt: Date.now(),
+          updatedAt: now,
         });
       }
     }

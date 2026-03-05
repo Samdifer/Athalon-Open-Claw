@@ -1,4 +1,4 @@
-import { Outlet, Link, useNavigate } from "react-router-dom";
+import { Outlet, Link, NavLink, useNavigate } from "react-router-dom";
 import { useAuth, useUser } from "@clerk/clerk-react";
 import { Button } from "@/components/ui/button";
 import { Plane, LogOut } from "lucide-react";
@@ -10,7 +10,7 @@ export function CustomerLayout() {
 
   const handleSignOut = async () => {
     await signOut();
-    navigate("/sign-in");
+    navigate("/portal/sign-in");
   };
 
   return (
@@ -50,14 +50,21 @@ export function CustomerLayout() {
               { to: "/portal/quotes", label: "Quotes" },
               { to: "/portal/invoices", label: "Invoices" },
               { to: "/portal/fleet", label: "Fleet" },
+              { to: "/portal/messages", label: "Messages" },
             ].map((item) => (
-              <Link
+              <NavLink
                 key={item.to}
                 to={item.to}
-                className="px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md whitespace-nowrap transition-colors"
+                className={({ isActive }) =>
+                  `px-3 py-1.5 text-sm font-medium rounded-md whitespace-nowrap transition-colors ${
+                    isActive
+                      ? "text-blue-700 bg-blue-100"
+                      : "text-gray-600 hover:text-blue-600 hover:bg-blue-50"
+                  }`
+                }
               >
                 {item.label}
-              </Link>
+              </NavLink>
             ))}
           </div>
         </div>

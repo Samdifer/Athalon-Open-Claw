@@ -152,6 +152,8 @@ export function ReceivingInspection() {
         partId: selectedPart._id,
         inspectedByTechnicianId: techId,
         inspectionResult: isRejected ? "rejected" : "approved",
+        checklistCompleted: checklistPass || isRejected,
+        checklistVersion: "receiving-v1",
         inspectionNotes: [
           `Inspector: ${inspectorName.trim()}`,
           `Date: ${inspectionDate}`,
