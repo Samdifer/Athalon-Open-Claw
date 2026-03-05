@@ -261,6 +261,31 @@ This file is the markdown-authoritative source of truth for feature status, impl
   **Fix:** Reset tech selection back to current user instead of blank on close.  
   **Why it matters:** Speeds recurring payment entry and reduces accidental mis-attribution.
 
+- **BUG-DOM-117** — Maintenance Programs edit dialog retained stale form values when closed via backdrop/X, causing the next "Add Program" to show leftover data from a previous edit.
+  **File:** `app/(app)/fleet/maintenance-programs/page.tsx`
+  **Fix:** Added `resetForm()` to the Dialog `onOpenChange` close handler.
+  **Why it matters:** DOM creating a new maintenance program no longer inherits stale fields from a prior edit session — prevents silent misconfiguration of interval definitions.
+
+- **BUG-DOM-118** — Fleet Calendar "today" highlight used local-timezone accessors (`getDate`, `getMonth`) while event placement used UTC accessors (`getUTCDate`, `getUTCMonth`), causing the highlight to appear on the wrong day in non-UTC timezones.
+  **File:** `app/(app)/fleet/calendar/page.tsx`
+  **Fix:** Switched `isToday` check to use UTC accessors (`getUTCDate`, `getUTCMonth`, `getUTCFullYear`).
+  **Why it matters:** A DOM in UTC-5 no longer sees the "today" dot on a different day than where today's scheduled events appear.
+
+- **BUG-DOM-119** — Maintenance Programs "Deactivate" button called `removeProgram` (permanent delete) but showed a "Program deactivated" toast. The DOM thought they were toggling off (reversible), but the record was permanently deleted.
+  **File:** `app/(app)/fleet/maintenance-programs/page.tsx`
+  **Fix:** Replaced destructive `removeProgram` call with `updateProgram({ id, isActive: false })` to match the inline Switch behavior. Also disabled the button when already inactive.
+  **Why it matters:** Prevents irreversible data loss of maintenance program definitions — a DOM deactivating a seasonal inspection program can reactivate it next year.
+
+- **BUG-DOM-120** — OJT Training page had a `"use client"` Next.js directive at the top — a no-op in a Vite+React app that misleads contributors into thinking the project uses Next.js conventions.
+  **File:** `app/(app)/training/ojt/page.tsx`
+  **Fix:** Removed the `"use client"` directive and added a clarifying comment.
+  **Why it matters:** Codebase hygiene — prevents cargo-cult proliferation of framework-wrong directives across the training module.
+
+- **BUG-DOM-121** — Fleet Calendar rendered a bare unstyled `<div>` when org context was missing, inconsistent with the rest of the app's Card-based empty states with recovery actions.
+  **File:** `app/(app)/fleet/calendar/page.tsx`
+  **Fix:** Replaced the plain div with a Card-based empty state including the page header, contextual guidance, and a "Complete Setup" link to onboarding.
+  **Why it matters:** DOM landing on the calendar without org context gets a professional recovery path instead of a dead-end sentence.
+
 ## Canonical Governance
 
 1. `MASTER-BUILD-LIST.md` is the only write-authoritative feature specification artifact.
