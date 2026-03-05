@@ -128,6 +128,16 @@ export default function WOProfitabilityPage() {
     marginPct: number;
   }
 
+  // BUG-BM-HUNT-115: Pre-build customer lookup map. customers.find() inside the
+  // invoice loop was O(n·m) — on shops with hundreds of invoices and customers
+  // this caused visible frame drops when switching date ranges.
+  const customerMap = useMemo(() => {
+    if (!customers) return new Map<string, string>();
+    const m = new Map<string, string>();
+    for (const c of customers) m.set(c._id as string, c.name);
+    return m;
+  }, [customers]);
+
   const woRows = useMemo((): WORow[] => {
     if (!invoices || !purchaseOrders || !customers) return [];
 
@@ -158,13 +168,12 @@ export default function WOProfitabilityPage() {
       const totalCost = actualParts + actualLabor;
       const margin = realizedRevenue - totalCost;
       const marginPct = realizedRevenue > 0 ? (margin / realizedRevenue) * 100 : 0;
-      const cust = customers.find((c) => c._id === inv.customerId);
 
       return {
         invoiceId: inv._id,
         invoiceNumber: inv.invoiceNumber,
         workOrderId: woId,
-        customer: cust?.name ?? "Unknown",
+        customer: customerMap.get(inv.customerId as string) ?? "Unknown",
         quoted: inv.total,
         actualParts,
         actualLabor,

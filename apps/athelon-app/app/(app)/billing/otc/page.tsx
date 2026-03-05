@@ -99,8 +99,10 @@ export default function OTCSalesPage() {
       .slice(0, 8);
   }, [parts, partSearch]);
 
+  // BUG-BM-HUNT-113: selectedTaxRateId can be "_none" sentinel (see tax rate select below),
+  // so treat both empty string and "_none" as "no tax".
   const selectedTaxRate = useMemo(() => {
-    if (!taxRates || !selectedTaxRateId) return 0;
+    if (!taxRates || !selectedTaxRateId || selectedTaxRateId === "_none") return 0;
     const rate = taxRates.find((r) => r._id === selectedTaxRateId);
     return rate?.rate ?? 0;
   }, [taxRates, selectedTaxRateId]);
@@ -417,10 +419,12 @@ export default function OTCSalesPage() {
                 {taxRates && taxRates.length > 0 && (
                   <div>
                     <Label>Tax Rate</Label>
-                    <Select value={selectedTaxRateId} onValueChange={setSelectedTaxRateId}>
+                    {/* BUG-BM-HUNT-113: Radix Select doesn't support empty string values.
+                        Use "_none" sentinel and handle it in selectedTaxRate memo + createSale. */}
+                    <Select value={selectedTaxRateId || "_none"} onValueChange={(v) => setSelectedTaxRateId(v === "_none" ? "" : v)}>
                       <SelectTrigger><SelectValue placeholder="No tax" /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">No tax</SelectItem>
+                        <SelectItem value="_none">No tax</SelectItem>
                         {taxRates.filter((r) => r.active).map((r) => (
                           <SelectItem key={r._id} value={r._id}>
                             {r.name} ({r.rate}%)

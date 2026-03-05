@@ -256,10 +256,16 @@ export default function TimeClockPage() {
     return result;
   }, [entries, filterTech, filterWO, searchTech, technicians]);
 
-  const dailySummary = useMemo(() => {
+  // BUG-BM-HUNT-114: Recompute "today" on every entries change so the summary
+  // doesn't go stale if the page stays open across midnight. Previously the
+  // threshold was baked into the memo closure and never updated.
+  const todayMs = useMemo(() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const todayMs = today.getTime();
+    return today.getTime();
+  }, [entries]); // entries change triggers fresh "today" check
+
+  const dailySummary = useMemo(() => {
 
     const byTech = new Map<string, { techId: Id<"technicians">; totalMinutes: number }>();
 
@@ -287,7 +293,7 @@ export default function TimeClockPage() {
     }
 
     return Array.from(byTech.values());
-  }, [entries]);
+  }, [entries, todayMs]);
 
   const openWorkOrders = useMemo(
     () =>

@@ -267,8 +267,17 @@ function ClaimDetailDialog({
                   <Textarea value={resolution} onChange={(e) => setResolution(e.target.value)} />
                 </div>
                 <div className="flex gap-2">
+                  {/* BUG-BM-HUNT-112: Validate approvedAmount is a finite positive number before sending.
+                      parseFloat("abc") returns NaN which silently corrupted the backend record. */}
                   <Button size="sm" variant="default" disabled={actionLoading || !approvedAmount}
-                    onClick={() => handleAction(async () => { await approve({ claimId, approvedAmount: parseFloat(approvedAmount), resolution: resolution || undefined }); toast.success("Claim approved"); })}>
+                    onClick={() => {
+                      const parsed = Number(approvedAmount);
+                      if (!Number.isFinite(parsed) || parsed < 0) {
+                        toast.error("Approved amount must be a valid non-negative number.");
+                        return;
+                      }
+                      handleAction(async () => { await approve({ claimId, approvedAmount: parsed, resolution: resolution || undefined }); toast.success("Claim approved"); });
+                    }}>
                     <Check className="h-3.5 w-3.5 mr-1" /> Approve
                   </Button>
                   <Button size="sm" variant="destructive" disabled={actionLoading || !resolution}
@@ -299,26 +308,33 @@ export default function WarrantyPage() {
   const [createOpen, setCreateOpen] = useState(false);
   const [selectedClaim, setSelectedClaim] = useState<Id<"warrantyClaims"> | null>(null);
 
+  // BUG-BM-HUNT-111: Fetch ALL claims for stats (unfiltered), and tab-filtered claims for the table.
+  // Previously stats were computed from the tab-filtered query, so switching to "Denied" tab
+  // showed 0 pending/$0 approved, making the billing summary cards useless.
+  const allClaims = useQuery(
+    api.warranty.listClaims,
+    orgId ? { organizationId: orgId } : "skip",
+  );
   const claims = useQuery(
     api.warranty.listClaims,
     orgId ? { organizationId: orgId, status: tab === "all" ? undefined : tab } : "skip",
   );
   const prereq = usePagePrereqs({
     requiresOrg: true,
-    isDataLoading: !isLoaded || claims === undefined,
+    isDataLoading: !isLoaded || claims === undefined || allClaims === undefined,
   });
 
   const stats = useMemo(() => {
-    if (!claims) return { total: 0, pending: 0, approved: 0, recoveryRate: 0 };
-    const total = claims.length;
-    const pending = claims.filter((c) => ["submitted", "under_review"].includes(c.status))
+    if (!allClaims) return { total: 0, pending: 0, approved: 0, recoveryRate: 0 };
+    const total = allClaims.length;
+    const pending = allClaims.filter((c) => ["submitted", "under_review"].includes(c.status))
       .reduce((s, c) => s + c.claimedAmount, 0);
-    const approved = claims.filter((c) => c.status === "approved" || c.status === "paid")
+    const approved = allClaims.filter((c) => c.status === "approved" || c.status === "paid")
       .reduce((s, c) => s + (c.approvedAmount ?? 0), 0);
-    const totalClaimed = claims.reduce((s, c) => s + c.claimedAmount, 0);
+    const totalClaimed = allClaims.reduce((s, c) => s + c.claimedAmount, 0);
     const recoveryRate = totalClaimed > 0 ? (approved / totalClaimed) * 100 : 0;
     return { total, pending, approved, recoveryRate };
-  }, [claims]);
+  }, [allClaims]);
   // BUG-BM-097: Client-side search so billing manager can find claims by number, part, or description
   const claimRows = useMemo(() => {
     const all = claims ?? [];
