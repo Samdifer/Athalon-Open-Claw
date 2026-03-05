@@ -6,6 +6,30 @@ This file is the markdown-authoritative source of truth for feature status, impl
 
 ## Bug Hunter Fixes
 
+- **BUG-QCM-HUNT-135** — Compliance main page was missing an Audit Readiness link in the Compliance Tools grid. The Audit Readiness dashboard — a critical pre-audit preparation tool with readiness scores, timeline, and checklist — was only accessible via the sidebar. A QCM inspector preparing for an FAA audit would not discover it from the compliance hub.
+  **File:** `app/(app)/compliance/page.tsx`
+  **Impact:** QCM Inspector can't navigate to Audit Readiness from the compliance dashboard.
+
+- **BUG-QCM-HUNT-136** — Compliance main page was missing a Diamond Award Tracking link. The FAA Diamond Award of Excellence page tracks technician training hours — a compliance metric that belongs in this section. Hidden behind sidebar-only navigation.
+  **File:** `app/(app)/compliance/page.tsx`
+  **Impact:** Diamond Award page undiscoverable from compliance hub.
+
+- **BUG-QCM-HUNT-137** — EnhancedAuditTrail used a raw `<select>` element for the "Group by" dropdown — the only unstyled native HTML control in the entire compliance section. On dark mode, the raw `<select>` renders with platform-default styling (white background on Windows) that clashes with the design system. Every other dropdown in the app uses shadcn's Select.
+  **File:** `app/(app)/compliance/_components/EnhancedAuditTrail.tsx`
+  **Impact:** Visual inconsistency and broken dark mode styling on the audit trail grouping control.
+
+- **BUG-QCM-HUNT-138** — Compliance dashboard header only had a single "Audit Trail" button. Every compliance subpage (ad-sb, audit-trail, qcm-review, audit-readiness) has quick-access buttons to its siblings. The main Compliance page — the hub — was the only one missing this navigation pattern. Added AD/SB Tracking, Audit Trail, Audit Readiness, and QCM Review buttons.
+  **File:** `app/(app)/compliance/page.tsx`
+  **Impact:** QCM inspector had to scroll down to the Compliance Tools section to navigate, missing the header shortcut pattern.
+
+- **BUG-QCM-HUNT-139** — RTSEvidenceSummary showed only a "Ready"/"Not Ready" badge with no pass/fail count. A QCM with 4/6 checks passing had to count individual icons to gauge progress. Added a pass count display (e.g. "4/6") next to the badge.
+  **File:** `app/(app)/work-orders/[id]/_components/RTSEvidenceSummary.tsx`
+  **Impact:** QCM can't quickly gauge RTS readiness progress without scanning each row.
+
+- **BUG-QCM-HUNT-140** — Release Aircraft page error message persisted after the user corrected their input. After a validation error (e.g. "Aircraft total time cannot decrease"), the red error banner stayed visible even while the user was typing a correction — persisting until they clicked Submit again. Wrapped input setters to auto-clear the error on any form change.
+  **File:** `app/(app)/work-orders/[id]/release/page.tsx`
+  **Impact:** Stale error banner confuses QCM/shop manager into thinking their correction didn't work.
+
 - **BUG-BM-HUNT-127** — Time Approval page `filteredPending/Approved/Rejected` useMemos depended on inline `applyContextFilter` and `applyTechFilter` functions that were recreated every render. This defeated memoization entirely — with 100+ time entries, the page recomputed all three filtered lists on every state change (checkbox, dialog open, etc.). Inlined the filter logic directly in each useMemo so deps are stable primitives.
   **File:** `app/(app)/billing/time-approval/page.tsx`
   **Impact:** Performance — unnecessary O(3n) recomputation on every render; visible jank with large entry counts.
