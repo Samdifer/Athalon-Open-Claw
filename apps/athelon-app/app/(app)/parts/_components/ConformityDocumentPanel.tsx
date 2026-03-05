@@ -160,10 +160,31 @@ function formatFileSize(bytes: number): string {
 
 // ─── DocumentLinkRow ─────────────────────────────────────────────────────────
 
+// BUG-HUNT-112: View button that resolves the Convex storage URL via a live
+// query. Previously handleView opened `#doc-${storageId}` which navigated
+// nowhere — the "View document" button was completely non-functional. Now each
+// row queries its own serving URL and opens it in a new tab.
+function ViewDocumentButton({ storageId }: { storageId: Id<"_storage"> }) {
+  const url = useQuery(api.documents.getDocumentUrl, { storageId });
+  return (
+    <Button
+      variant="ghost"
+      size="icon"
+      className="h-7 w-7"
+      title={url ? "View document" : "Loading…"}
+      disabled={!url}
+      onClick={() => {
+        if (url) window.open(url, "_blank", "noopener,noreferrer");
+      }}
+    >
+      <ExternalLink className="w-3.5 h-3.5" />
+    </Button>
+  );
+}
+
 function DocumentLinkRow({
   link,
   onUnlink,
-  onView,
 }: {
   link: {
     _id: Id<"partDocuments">;
@@ -178,7 +199,6 @@ function DocumentLinkRow({
     } | null;
   };
   onUnlink: (linkId: Id<"partDocuments">, fileName: string) => void;
-  onView: (storageId: Id<"_storage">) => void;
 }) {
   const meta = DOCUMENT_ROLE_META[link.documentRole];
   const doc = link.document;
@@ -209,15 +229,7 @@ function DocumentLinkRow({
         </span>
       </div>
       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-7 w-7"
-          title="View document"
-          onClick={() => onView(doc.storageId)}
-        >
-          <ExternalLink className="w-3.5 h-3.5" />
-        </Button>
+        <ViewDocumentButton storageId={doc.storageId} />
         <Button
           variant="ghost"
           size="icon"
@@ -434,9 +446,6 @@ export function ConformityDocumentPanel({
     partId || lotId ? { partId, lotId } : "skip",
   );
 
-  // Get document URL helper
-  const getDocUrl = useQuery(api.documents.getDocumentUrl, "skip");
-
   const unlinkDocument = useMutation(api.partDocuments.unlinkDocument);
 
   // Merge part + lot docs, deduplicate by linkage._id
@@ -463,14 +472,6 @@ export function ConformityDocumentPanel({
     } finally {
       setUnlinkTarget(null);
     }
-  }
-
-  function handleView(storageId: Id<"_storage">) {
-    // Open document URL in new tab — we'll use the query directly
-    // Since we can't easily call a query imperatively, we open a placeholder
-    // The DocumentLinkRow's view button will trigger this
-    // For now, we use a workaround by building the URL from the Convex deployment
-    window.open(`#doc-${storageId}`, "_blank");
   }
 
   return (
@@ -590,7 +591,6 @@ export function ConformityDocumentPanel({
                   onUnlink={(linkId, fileName) =>
                     setUnlinkTarget({ linkId, fileName })
                   }
-                  onView={handleView}
                 />
               ))}
             </div>

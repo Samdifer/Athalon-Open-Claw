@@ -106,12 +106,17 @@ function CreateLotDialog({
   orgId: Id<"organizations">;
 }) {
   const create = useMutation(api.lots.createLot);
+  // BUG-HUNT-114: Fetch vendors so we can use a proper selector. Previously
+  // the form had a free-text "Vendor" input that was never sent to the backend
+  // (createLot expects vendorId, not vendorName). The clerk would fill in a
+  // vendor name, submit the lot, and the vendor info was silently discarded.
+  const vendors = useQuery(api.vendors.listVendors, { orgId });
   const [partNumber, setPartNumber] = useState("");
   const [partName, setPartName] = useState("");
   const [lotNumber, setLotNumber] = useState("");
   const [batchNumber, setBatchNumber] = useState("");
   const [quantity, setQuantity] = useState("");
-  const [vendorName, setVendorName] = useState("");
+  const [vendorId, setVendorId] = useState("");
   const [hasShelfLife, setHasShelfLife] = useState(false);
   const [shelfLifeDate, setShelfLifeDate] = useState("");
   const [notes, setNotes] = useState("");
@@ -123,7 +128,7 @@ function CreateLotDialog({
     setLotNumber("");
     setBatchNumber("");
     setQuantity("");
-    setVendorName("");
+    setVendorId("");
     setHasShelfLife(false);
     setShelfLifeDate("");
     setNotes("");
@@ -157,6 +162,7 @@ function CreateLotDialog({
         batchNumber: batchNumber.trim() || undefined,
         originalQuantity: parseFloat(quantity),
         receivedQuantity: parseFloat(quantity),
+        vendorId: vendorId ? (vendorId as Id<"vendors">) : undefined,
         receivedByUserId: "system",
         hasShelfLife,
         shelfLifeExpiryDate: shelfLifeDate
@@ -253,12 +259,26 @@ function CreateLotDialog({
             </div>
             <div>
               <Label>Vendor</Label>
-              <Input
-                value={vendorName}
-                onChange={(e) => setVendorName(e.target.value.slice(0, 100))}
-                maxLength={100}
-                placeholder="e.g. Aircraft Spruce"
-              />
+              {vendors === undefined ? (
+                <div className="h-9 bg-muted/30 rounded-md border border-border/60 animate-pulse" />
+              ) : vendors.length === 0 ? (
+                <p className="text-xs text-muted-foreground py-2">
+                  No vendors configured.
+                </p>
+              ) : (
+                <Select value={vendorId} onValueChange={setVendorId}>
+                  <SelectTrigger className="h-9 text-sm bg-muted/30 border-border/60">
+                    <SelectValue placeholder="Select vendor…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {vendors.map((v) => (
+                      <SelectItem key={v._id} value={v._id}>
+                        {v.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -555,9 +575,19 @@ export default function LotsPage() {
       : "skip",
   );
 
+  // BUG-HUNT-111: Stats cards must reflect global totals regardless of the
+  // active condition tab. Previously stats were derived from the tab-filtered
+  // `lots` query — switching to "Quarantine" made "Total Lots" show only
+  // quarantine lot count and "Active" show 0. Fetch all lots separately so the
+  // summary stays accurate (same pattern as cores BUG-PC-HUNT-108).
+  const allLots = useQuery(
+    api.lots.listLots,
+    orgId ? { organizationId: orgId } : "skip",
+  );
+
   const prereq = usePagePrereqs({
     requiresOrg: true,
-    isDataLoading: !isLoaded || lots === undefined,
+    isDataLoading: !isLoaded || lots === undefined || allLots === undefined,
   });
 
   // Client-side search filter
@@ -574,18 +604,18 @@ export default function LotsPage() {
     );
   }, [lots, searchQuery]);
 
-  // Stats
+  // Stats — derived from allLots (unfiltered) so summary cards are always global
   const stats = useMemo(() => {
-    if (!lots) return { total: 0, active: 0, quarantined: 0, expired: 0 };
+    if (!allLots) return { total: 0, active: 0, quarantined: 0, expired: 0 };
     return {
-      total: lots.length,
-      active: lots.filter(
+      total: allLots.length,
+      active: allLots.filter(
         (l) => l.condition === "new" || l.condition === "serviceable",
       ).length,
-      quarantined: lots.filter((l) => l.condition === "quarantine").length,
-      expired: lots.filter((l) => l.condition === "expired").length,
+      quarantined: allLots.filter((l) => l.condition === "quarantine").length,
+      expired: allLots.filter((l) => l.condition === "expired").length,
     };
-  }, [lots]);
+  }, [allLots]);
 
   if (
     prereq.state === "loading_context" ||

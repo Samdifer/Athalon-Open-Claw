@@ -122,6 +122,8 @@ function ShelfLifeBandSection({
                 <span className={colorClass}>{daysLabel(item.daysRemaining)}</span>
               </TableCell>
               <TableCell>{locationLabel(item.location)}</TableCell>
+              {/* BUG-HUNT-113: Pre-fill part number in PO link so the clerk
+                  doesn't have to re-type it from the alert row */}
               <TableCell className="text-right">
                 {item.daysRemaining <= 0 ? (
                   <Badge variant="destructive" className="text-xs">
@@ -129,7 +131,7 @@ function ShelfLifeBandSection({
                   </Badge>
                 ) : (
                   <Button variant="outline" size="sm" asChild>
-                    <Link to="/billing/purchase-orders/new">Create PO</Link>
+                    <Link to={`/billing/purchase-orders/new?partNumber=${encodeURIComponent(item.partNumber)}`}>Create PO</Link>
                   </Button>
                 )}
               </TableCell>
@@ -381,7 +383,7 @@ export default function AlertsPage() {
                     </TableCell>
                     <TableCell className="text-right">
                       <Button variant="outline" size="sm" asChild>
-                        <Link to="/billing/purchase-orders/new">Create PO</Link>
+                        <Link to={`/billing/purchase-orders/new?partNumber=${encodeURIComponent(item.partNumber)}`}>Create PO</Link>
                       </Button>
                     </TableCell>
                   </TableRow>

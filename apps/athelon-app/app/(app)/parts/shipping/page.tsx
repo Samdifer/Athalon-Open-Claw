@@ -231,12 +231,17 @@ export default function ShippingPage() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      {/* BUG-HUNT-115: Added Cancelled count. Previously summary cards showed
+          Total/Pending/In Transit/Delivered but omitted Cancelled — inconsistent
+          with the Cancelled tab (BUG-PC-086). A parts clerk couldn't see at a
+          glance how many shipments had been cancelled. */}
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
         {[
           { label: "Total", value: counts.all, icon: Package },
           { label: "Pending", value: counts.pending, color: "text-yellow-400" },
           { label: "In Transit", value: counts.in_transit, color: "text-blue-400" },
           { label: "Delivered", value: counts.delivered, color: "text-green-400" },
+          { label: "Cancelled", value: counts.cancelled, color: "text-red-400" },
         ].map((c) => (
           <Card key={c.label}><CardContent className="p-4 text-center">
             <p className="text-sm text-muted-foreground">{c.label}</p>
