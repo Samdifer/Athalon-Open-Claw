@@ -104,8 +104,13 @@ function LiveKPICards({
       ["open", "in_progress", "open_discrepancies"].includes(wo.status),
     );
     const aog = active.filter((wo) => wo.priority === "aog");
+    // BUG-DOM-116: Draft WOs were included in the open-discrepancy count because
+    // only closed/voided/cancelled statuses were excluded. A draft WO is pre-work —
+    // its squawks are speculative entries, not actionable shop discrepancies. Including
+    // them inflated the KPI and could mislead the DOM into chasing ghosts. Fix: also
+    // exclude draft from the sum.
     const openDisc = workOrders.reduce((acc, wo) => {
-      if (["closed", "voided", "cancelled"].includes(wo.status)) return acc;
+      if (["draft", "closed", "voided", "cancelled"].includes(wo.status)) return acc;
       return acc + (wo.openDiscrepancyCount ?? 0);
     }, 0);
     const overdueAds = fleetAd?.fleetTotals?.overdueAds ?? 0;
@@ -480,7 +485,7 @@ function LiveActiveWorkOrders({ workOrders }: { workOrders: WorkOrdersWithRisk |
                     {getStatusBadge(wo.status, STATUS_LABELS[wo.status] ?? wo.status, wo.priority ?? undefined)}
                     {wo.openDiscrepancyCount > 0 && (
                       <Badge className="bg-red-500/15 text-red-400 border-red-500/30 text-[9px] h-4 px-1">
-                        {wo.openDiscrepancyCount} squawk
+                        {wo.openDiscrepancyCount} squawk{wo.openDiscrepancyCount === 1 ? "" : "s"}
                       </Badge>
                     )}
                   </div>
@@ -578,7 +583,7 @@ function LiveAttentionItems({ workOrders }: { workOrders: WorkOrdersWithRisk | u
         id: `aog-${wo._id}`,
         severity: "critical",
         title: "AOG Aircraft",
-        description: `${tail}${type ? ` ${type}` : ""} — ${wo.description} (${wo.workOrderNumber})`,
+        description: `${tail}${type ? ` ${type}` : ""} — ${wo.description ?? "No description"} (${wo.workOrderNumber})`,
         action: "View WO",
         href: `/work-orders/${wo._id}`,
         icon: AlertTriangle,

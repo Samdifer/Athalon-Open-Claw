@@ -1018,6 +1018,7 @@ export default function SchedulingPage() {
     setAutoScheduling(true);
     try {
       let successCount = 0;
+      let failedCount = 0;
       for (const a of assignments) {
         try {
           await upsertScheduleAssignment({
@@ -1030,10 +1031,19 @@ export default function SchedulingPage() {
           });
           successCount++;
         } catch {
-          // Continue with remaining
+          failedCount++;
         }
       }
-      toast.success(`Auto-scheduled ${successCount} work order${successCount !== 1 ? "s" : ""}`);
+
+      if (successCount === 0) {
+        toast.error("Auto-schedule failed — no work orders were assigned");
+      } else if (failedCount > 0) {
+        toast.warning(
+          `Auto-scheduled ${successCount} work order${successCount !== 1 ? "s" : ""}; ${failedCount} failed`,
+        );
+      } else {
+        toast.success(`Auto-scheduled ${successCount} work order${successCount !== 1 ? "s" : ""}`);
+      }
     } finally {
       setAutoScheduling(false);
     }

@@ -6,6 +6,26 @@ This file is the markdown-authoritative source of truth for feature status, impl
 
 ## Bug Hunter Fixes
 
+- **BUG-SM-HUNT-003** — Work Orders default sort claimed to be “newest first” but actually preserved backend order, so high-priority recent jobs could appear buried unpredictably.  
+  **File:** `app/(app)/work-orders/page.tsx`  
+  **Fix:** Updated default sort branch to explicitly sort by `openedAt` descending (newest first), while keeping AOG-first grouping behavior.  
+  **Why it matters:** Shop managers now get deterministic queue triage aligned to recency, reducing missed fresh arrivals.
+
+- **BUG-SM-HUNT-004** — Dashboard active WO rows displayed discrepancy badge text as singular (“squawk”) for every count.  
+  **File:** `app/(app)/dashboard/page.tsx`  
+  **Fix:** Added singular/plural label handling for discrepancy counts in the Active Work Orders widget.  
+  **Why it matters:** Removes ambiguous at-a-glance wording in high-tempo dashboard scanning.
+
+- **BUG-SM-HUNT-005** — Dashboard Attention Required AOG description could render literal `undefined` when WO description was empty.  
+  **File:** `app/(app)/dashboard/page.tsx`  
+  **Fix:** Added safe fallback text (`"No description"`) when composing AOG attention line items.  
+  **Why it matters:** Shop managers no longer see broken-looking alert rows during incomplete WO intake.
+
+- **BUG-SM-HUNT-006** — Scheduling Auto Schedule always reported success toast even when every assignment mutation failed.  
+  **File:** `app/(app)/scheduling/page.tsx`  
+  **Fix:** Added success/failure accounting and differentiated toasts: error for zero applied, warning for partial, success for full apply.  
+  **Why it matters:** Prevents false confidence and rework when planners assume bays were assigned but nothing actually persisted.
+
 - **BUG-DOM-109** — Fleet cards built detail links from raw registration/serial strings, so tails containing `/` or spaces could break routing and open the wrong aircraft (or 404).  
   **File:** `app/(app)/fleet/page.tsx`  
   **Fix:** URL-encoded the fleet tail parameter in all three "Open" links (list, tiles, truncated views).  

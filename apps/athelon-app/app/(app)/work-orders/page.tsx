@@ -235,8 +235,8 @@ export default function WorkOrdersPage() {
         const bPct = b.tasksTotal > 0 ? b.tasksComplete / b.tasksTotal : 0;
         return aPct - bPct;
       }
-      // default: newest first (backend insertion order — no re-sort)
-      return 0;
+      // default: newest first by WO open timestamp
+      return b.openedAt - a.openedAt;
     };
 
     const aogRows = base.filter((w) => w.priority === "aog").sort(sortFn);
