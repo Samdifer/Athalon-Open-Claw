@@ -4937,4 +4937,30 @@ export default defineSchema({
   })
     .index("by_aircraft", ["aircraftId"])
     .index("by_org", ["organizationId"]),
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // FILES (MBP-0063 — File Storage Integration)
+  //
+  // Generic file storage metadata table. Files can be linked to any entity
+  // via linkedEntityType + linkedEntityId. Used for step sign-off photos
+  // (linkedEntityType: "taskCardStep"), discrepancy evidence photos
+  // (linkedEntityType: "discrepancy"), and general document attachments.
+  //
+  // File bytes live in Convex built-in storage (ctx.storage); this table
+  // holds the pointer (storageId) and display/classification metadata.
+  // ═══════════════════════════════════════════════════════════════════════════
+  files: defineTable({
+    fileName: v.string(),
+    mimeType: v.string(),
+    fileSize: v.number(),       // bytes
+    storageId: v.id("_storage"),
+    organizationId: v.id("organizations"),
+    linkedEntityType: v.string(), // e.g. "taskCardStep", "discrepancy", "workOrder"
+    linkedEntityId: v.string(),   // The _id of the linked record as a string
+    uploadedByUserId: v.string(), // Clerk user ID
+    uploadedAt: v.number(),       // Unix ms
+  })
+    .index("by_entity", ["linkedEntityType", "linkedEntityId"])
+    .index("by_org", ["organizationId"])
+    .index("by_org_uploaded", ["organizationId", "uploadedAt"]),
 });

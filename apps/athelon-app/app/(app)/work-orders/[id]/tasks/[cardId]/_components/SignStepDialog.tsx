@@ -271,6 +271,7 @@ export function SignStepDialog({
   const createAuthEvent = useMutation(api.workOrders.createSignatureAuthEvent);
   const completeStep = useMutation(api.taskCards.completeStep);
   const saveDocument = useMutation(api.documents.saveDocument);
+  const storeFileMetadata = useMutation(api.fileStorage.storeFileMetadata);
 
   async function handleSign(bypassTrainingWarning = false) {
     setError(null);
@@ -359,19 +360,17 @@ export function SignStepDialog({
         callerTechnicianId: techId,
       });
 
-      // Save uploaded photos as documents attached to this step
+      // Save uploaded photos as files linked to this step (MBP-0065)
       for (const storageId of photoStorageIds) {
         try {
-          await saveDocument({
+          await storeFileMetadata({
             organizationId: orgId,
-            attachedToTable: "taskCardSteps",
-            attachedToId: stepId as string,
             storageId: storageId as Id<"_storage">,
             fileName: `step-${stepNumber}-photo.jpg`,
             fileSize: 0, // Size tracked at upload time
             mimeType: "image/jpeg",
-            documentType: "photo",
-            description: `Step ${stepNumber} sign-off photo`,
+            linkedEntityType: "taskCardStep",
+            linkedEntityId: stepId as string,
           });
         } catch {
           // Non-blocking — step is already signed

@@ -18,7 +18,6 @@ import {
   AlertTriangle,
   Loader2,
   AlertCircle,
-  Camera,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -39,6 +38,8 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { FileUpload, type UploadedFile } from "@/components/FileUpload";
+import { PhotoGallery } from "@/components/PhotoGallery";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -140,10 +141,14 @@ export function RaiseFindingDialog({
   // Labor estimate
   const [mhEstimate, setMhEstimate] = useState("");
 
+  // MBP-0066: Photo upload for discrepancy evidence
+  const [photoStorageIds, setPhotoStorageIds] = useState<string[]>([]);
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const openDiscrepancy = useMutation(api.discrepancies.openDiscrepancy);
+  const storeFileMetadata = useMutation(api.fileStorage.storeFileMetadata);
 
   function resetForm() {
     setDescription("");
@@ -168,6 +173,7 @@ export function RaiseFindingDialog({
     setStcNumber("");
     setMhEstimate("");
     setAircraftHoursEntry(aircraftHours > 0 ? String(aircraftHours) : "");
+    setPhotoStorageIds([]);
   }
 
   // BUG-LT-HUNT-006: Reset all form state and error when the dialog (re-)opens.
@@ -247,7 +253,7 @@ export function RaiseFindingDialog({
             ? "recommended"
             : "customer_information";
 
-      await openDiscrepancy({
+      const discrepancyResult = await openDiscrepancy({
         workOrderId,
         organizationId: orgId,
         description: description.trim(),
@@ -277,6 +283,28 @@ export function RaiseFindingDialog({
         mhEstimate: mhEstimateParsed,
         writtenByTechnicianId: techId,
       });
+
+      // MBP-0066: Save uploaded photos as files linked to the new discrepancy
+      const discrepancyId = typeof discrepancyResult === "string"
+        ? discrepancyResult
+        : (discrepancyResult as { discrepancyId?: string })?.discrepancyId ?? "";
+      if (discrepancyId && photoStorageIds.length > 0) {
+        for (const storageId of photoStorageIds) {
+          try {
+            await storeFileMetadata({
+              organizationId: orgId,
+              storageId: storageId as Id<"_storage">,
+              fileName: `discrepancy-photo.jpg`,
+              fileSize: 0,
+              mimeType: "image/jpeg",
+              linkedEntityType: "discrepancy",
+              linkedEntityId: discrepancyId,
+            });
+          } catch {
+            // Non-blocking — discrepancy already created
+          }
+        }
+      }
 
       resetForm();
       // BUG-QCM-RFD-001: No success toast after raising a finding/discrepancy.
@@ -602,20 +630,33 @@ export function RaiseFindingDialog({
             />
           </div>
 
-          {/* Photo attachment placeholder */}
+          {/* MBP-0066: Photo upload for discrepancy evidence */}
           <div>
-            <Label className="text-xs font-medium mb-1.5 block">Photo Attachment</Label>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="gap-2"
-              onClick={() => toast.info("Coming soon")}
+            <Label className="text-xs font-medium mb-1.5 block">
+              Evidence Photos{" "}
+              <span className="text-muted-foreground font-normal">(optional)</span>
+            </Label>
+            {photoStorageIds.length > 0 && (
+              <div className="mb-2">
+                <PhotoGallery
+                  storageIds={photoStorageIds}
+                  onDelete={(id) =>
+                    setPhotoStorageIds((prev) => prev.filter((s) => s !== id))
+                  }
+                  confirmDelete={false}
+                />
+              </div>
+            )}
+            <FileUpload
+              accept="images"
+              multiple
+              compact
+              maxSizeMB={10}
               disabled={isSubmitting}
-            >
-              <Camera className="w-3.5 h-3.5" />
-              Attach Photo
-            </Button>
+              onUpload={(file) =>
+                setPhotoStorageIds((prev) => [...prev, file.storageId])
+              }
+            />
           </div>
 
           {/* Corrective Action */}

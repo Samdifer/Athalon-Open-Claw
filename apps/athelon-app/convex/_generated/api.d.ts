@@ -102,6 +102,7 @@ import type * as email from "../email.js";
 import type * as emailLog from "../emailLog.js";
 import type * as emailTemplates from "../emailTemplates.js";
 import type * as faaLookup from "../faaLookup.js";
+import type * as fileStorage from "../fileStorage.js";
 import type * as fleetCalendar from "../fleetCalendar.js";
 import type * as form8130 from "../form8130.js";
 import type * as gapFixes from "../gapFixes.js";
@@ -283,6 +284,7 @@ declare const fullApi: ApiFromModules<{
   emailLog: typeof emailLog;
   emailTemplates: typeof emailTemplates;
   faaLookup: typeof faaLookup;
+  fileStorage: typeof fileStorage;
   fleetCalendar: typeof fleetCalendar;
   form8130: typeof form8130;
   gapFixes: typeof gapFixes;

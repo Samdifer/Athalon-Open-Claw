@@ -1,13 +1,20 @@
 "use client";
 
 /**
- * FileUpload.tsx — Drag-and-drop file upload using Convex file storage.
+ * FileUpload.tsx — MBP-0064: Reusable File Upload Component
+ *
+ * Drag-and-drop file upload using Convex file storage with:
+ * - File type validation (images, PDFs, docs)
+ * - Size limit (configurable, default 50MB)
+ * - Upload progress indicator
+ * - Preview (thumbnail for images, icon for docs)
+ * - Uses generateUploadUrl → fetch PUT → storeFileMetadata
  *
  * Usage:
  *   <FileUpload
- *     onUpload={(storageId, url) => { ... }}
- *     accept="images"          // "images" | "all"
- *     maxSizeMB={10}
+ *     onUpload={(file) => { ... }}
+ *     accept="images"          // "images" | "documents" | "all"
+ *     maxSizeMB={50}
  *     multiple
  *   />
  */
@@ -16,7 +23,7 @@ import { useState, useRef, useCallback } from "react";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { toast } from "sonner";
-import { Upload, X, Loader2, ImageIcon, FileIcon } from "lucide-react";
+import { Upload, X, Loader2, ImageIcon, FileIcon, FileText } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -34,9 +41,9 @@ export interface UploadedFile {
 interface FileUploadProps {
   /** Called once per file after successful upload */
   onUpload: (file: UploadedFile) => void;
-  /** "images" restricts to image/* ; "all" allows anything */
-  accept?: "images" | "all";
-  /** Max file size in MB. Default 10 */
+  /** "images" restricts to image/*; "documents" adds PDFs/docs; "all" allows anything */
+  accept?: "images" | "documents" | "all";
+  /** Max file size in MB. Default 50 */
   maxSizeMB?: number;
   /** Allow selecting multiple files */
   multiple?: boolean;
@@ -49,13 +56,47 @@ interface FileUploadProps {
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
 const IMAGE_ACCEPT = "image/jpeg,image/png,image/gif,image/webp,image/tiff";
+const DOCUMENT_ACCEPT =
+  "image/jpeg,image/png,image/gif,image/webp,image/tiff,.pdf,.doc,.docx,.xls,.xlsx";
 const ALL_ACCEPT =
   "image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.csv";
+
+const ALLOWED_IMAGE_TYPES = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/gif",
+  "image/webp",
+  "image/tiff",
+]);
+
+const ALLOWED_DOC_TYPES = new Set([
+  ...ALLOWED_IMAGE_TYPES,
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.ms-excel",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+]);
+
+function isFileTypeAllowed(
+  file: File,
+  accept: "images" | "documents" | "all",
+): boolean {
+  if (accept === "all") return true;
+  if (accept === "images") return ALLOWED_IMAGE_TYPES.has(file.type);
+  return ALLOWED_DOC_TYPES.has(file.type);
+}
 
 function formatSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function getAcceptDescription(accept: "images" | "documents" | "all"): string {
+  if (accept === "images") return "JPEG, PNG, GIF, WebP, TIFF";
+  if (accept === "documents") return "Images, PDF, Word, Excel";
+  return "Images, PDF, Office docs, Text";
 }
 
 interface PendingFile {
@@ -72,7 +113,7 @@ interface PendingFile {
 export function FileUpload({
   onUpload,
   accept = "all",
-  maxSizeMB = 10,
+  maxSizeMB = 50,
   multiple = false,
   compact = false,
   disabled = false,
@@ -81,10 +122,15 @@ export function FileUpload({
   const [dragOver, setDragOver] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const generateUploadUrl = useMutation(api.documents.generateUploadUrl);
+  const generateUploadUrl = useMutation(api.fileStorage.generateUploadUrl);
 
   const maxBytes = maxSizeMB * 1024 * 1024;
-  const acceptAttr = accept === "images" ? IMAGE_ACCEPT : ALL_ACCEPT;
+  const acceptAttr =
+    accept === "images"
+      ? IMAGE_ACCEPT
+      : accept === "documents"
+        ? DOCUMENT_ACCEPT
+        : ALL_ACCEPT;
 
   const uploadFile = useCallback(
     async (file: File, id: string) => {
@@ -93,19 +139,27 @@ export function FileUpload({
         setPending((p) =>
           p.map((f) =>
             f.id === id
-              ? { ...f, status: "error", error: `Too large (${formatSize(file.size)}). Max ${maxSizeMB}MB.` }
+              ? {
+                  ...f,
+                  status: "error",
+                  error: `Too large (${formatSize(file.size)}). Max ${maxSizeMB}MB.`,
+                }
               : f,
           ),
         );
         return;
       }
 
-      // Validate type for images mode
-      if (accept === "images" && !file.type.startsWith("image/")) {
+      // Validate type
+      if (!isFileTypeAllowed(file, accept)) {
         setPending((p) =>
           p.map((f) =>
             f.id === id
-              ? { ...f, status: "error", error: "Only image files allowed." }
+              ? {
+                  ...f,
+                  status: "error",
+                  error: `File type not allowed. Accepted: ${getAcceptDescription(accept)}.`,
+                }
               : f,
           ),
         );
@@ -113,7 +167,9 @@ export function FileUpload({
       }
 
       setPending((p) =>
-        p.map((f) => (f.id === id ? { ...f, status: "uploading", progress: 10 } : f)),
+        p.map((f) =>
+          f.id === id ? { ...f, status: "uploading", progress: 10 } : f,
+        ),
       );
 
       try {
@@ -139,21 +195,15 @@ export function FileUpload({
           p.map((f) => (f.id === id ? { ...f, progress: 80 } : f)),
         );
 
-        // 3. Get serving URL — we call getDocumentUrl but storageId needs to be cast
-        // For simplicity, we'll construct the URL from the storage response
-        // Actually Convex returns the storageId, we need to get the URL separately
-        // We'll use a second fetch or let the parent handle it
-        // For now, generate a temporary URL by calling the query via a workaround
-        // The simplest approach: return storageId and let parent use useQuery
-        // But the callback expects a URL. Let's get it:
-
         setPending((p) =>
-          p.map((f) => (f.id === id ? { ...f, progress: 100, status: "done" } : f)),
+          p.map((f) =>
+            f.id === id ? { ...f, progress: 100, status: "done" } : f,
+          ),
         );
 
         onUpload({
           storageId,
-          url: "", // URL will be resolved by PhotoGallery via query
+          url: "", // URL resolved by consumer via getFileUrl query
           fileName: file.name,
           fileSize: file.size,
           mimeType: file.type || "application/octet-stream",
@@ -166,7 +216,9 @@ export function FileUpload({
       } catch (err) {
         const msg = err instanceof Error ? err.message : "Upload failed";
         setPending((p) =>
-          p.map((f) => (f.id === id ? { ...f, status: "error", error: msg } : f)),
+          p.map((f) =>
+            f.id === id ? { ...f, status: "error", error: msg } : f,
+          ),
         );
         toast.error(`Failed to upload ${file.name}: ${msg}`);
       }
@@ -184,7 +236,13 @@ export function FileUpload({
         const previewUrl = file.type.startsWith("image/")
           ? URL.createObjectURL(file)
           : undefined;
-        return { file, id, progress: 0, status: "pending" as const, previewUrl };
+        return {
+          file,
+          id,
+          progress: 0,
+          status: "pending" as const,
+          previewUrl,
+        };
       });
 
       setPending((p) => [...p, ...newPending]);
@@ -235,6 +293,9 @@ export function FileUpload({
 
   const isUploading = pending.some((f) => f.status === "uploading");
 
+  const DropIcon =
+    accept === "images" ? ImageIcon : isUploading ? Loader2 : Upload;
+
   return (
     <div className="space-y-2">
       {/* Drop zone */}
@@ -260,14 +321,12 @@ export function FileUpload({
           className="hidden"
           disabled={disabled}
         />
-        <div className={`flex flex-col items-center gap-1.5 text-center ${compact ? "" : "py-2"}`}>
-          {isUploading ? (
-            <Loader2 className="w-5 h-5 text-primary animate-spin" />
-          ) : accept === "images" ? (
-            <ImageIcon className="w-5 h-5 text-muted-foreground" />
-          ) : (
-            <Upload className="w-5 h-5 text-muted-foreground" />
-          )}
+        <div
+          className={`flex flex-col items-center gap-1.5 text-center ${compact ? "" : "py-2"}`}
+        >
+          <DropIcon
+            className={`w-5 h-5 ${isUploading ? "text-primary animate-spin" : "text-muted-foreground"}`}
+          />
           <div>
             <p className="text-xs font-medium text-foreground">
               {dragOver
@@ -277,8 +336,8 @@ export function FileUpload({
                   : "Drag & drop files here, or click to browse"}
             </p>
             <p className="text-[10px] text-muted-foreground mt-0.5">
-              {accept === "images" ? "JPEG, PNG, GIF, WebP" : "Images, PDF, Office docs"} ·
-              Max {maxSizeMB}MB{multiple ? " · Multiple files" : ""}
+              {getAcceptDescription(accept)} · Max {maxSizeMB}MB
+              {multiple ? " · Multiple files" : ""}
             </p>
           </div>
         </div>
@@ -299,12 +358,16 @@ export function FileUpload({
                   alt=""
                   className="w-8 h-8 rounded object-cover flex-shrink-0"
                 />
+              ) : pf.file.type === "application/pdf" ? (
+                <FileText className="w-4 h-4 text-muted-foreground flex-shrink-0" />
               ) : (
                 <FileIcon className="w-4 h-4 text-muted-foreground flex-shrink-0" />
               )}
 
               <div className="flex-1 min-w-0">
-                <p className="text-[11px] font-medium truncate">{pf.file.name}</p>
+                <p className="text-[11px] font-medium truncate">
+                  {pf.file.name}
+                </p>
                 <p className="text-[10px] text-muted-foreground">
                   {formatSize(pf.file.size)}
                 </p>
@@ -315,7 +378,9 @@ export function FileUpload({
                   <p className="text-[10px] text-red-400 mt-0.5">{pf.error}</p>
                 )}
                 {pf.status === "done" && (
-                  <p className="text-[10px] text-green-400 mt-0.5">✓ Uploaded</p>
+                  <p className="text-[10px] text-green-400 mt-0.5">
+                    ✓ Uploaded
+                  </p>
                 )}
               </div>
 
