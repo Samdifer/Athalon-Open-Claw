@@ -135,3 +135,35 @@
 - **What was broken:** The work order dropdown used to generate logbook entries showed an empty list (a) while work orders were loading and (b) when no closed WOs existed for the aircraft. The DOM opens the logbook tab, clicks the dropdown, sees nothing, and thinks the feature is broken.
 - **Fix:** Added context-sensitive placeholder text ("Loading work orders…" / "No completed work orders") and disabled hint items inside the dropdown content to explain why the list is empty.
 - **Impact:** DOM users immediately understand the state of the WO list without confusion.
+
+### Cycle 4 — Billing Manager (2026-03-05)
+
+**BUG-BM-HUNT-150: Time Approval durations ignore paused time — billing approves inflated hours**
+- **File:** `app/(app)/billing/time-approval/page.tsx`
+- **What was broken:** `fmtDuration()` computed raw `clockOut - clockIn` without subtracting `totalPausedMinutes`. A tech who clocked in for 8h but paused for 2h showed "8h 0m" to the billing manager. When approved, this inflated billable labor by the paused duration — directly overbilling the customer.
+- **Fix:** Added `totalPausedMinutes` parameter to `fmtDuration()` and subtracted it. Updated all 3 call sites (pending, approved, rejected tabs) to pass the entry's paused minutes.
+- **Impact:** Billing manager now sees accurate active-work duration, preventing systematic overbilling.
+
+**BUG-BM-HUNT-151: Pending hours summary also ignores paused time**
+- **File:** `app/(app)/billing/time-approval/page.tsx`
+- **What was broken:** The "X h Ym pending" summary badge used raw clock-in-to-clock-out minutes without pause deduction. A manager seeing "24h pending" might actually have only 18h of active labor — the 6h gap was paused time.
+- **Fix:** Subtract `totalPausedMinutes` from each entry's raw duration in `pendingTotalMinutes` computation.
+- **Impact:** Billing manager's labor cost assessment before bulk-approve is now accurate.
+
+**BUG-BM-HUNT-152: Analytics monthly "Collected" revenue misattributed for partial payments**
+- **File:** `app/(app)/billing/analytics/page.tsx`
+- **What was broken:** When `paidAt` was undefined (always the case for PARTIAL invoices — it's only set on full payment), the code fell back to `createdAt`, attributing partial payments to the invoice creation month instead of when payments actually started. An invoice created in October with $5k paid in January showed January's partial payment under October's "Collected" column.
+- **Fix:** Fall back to `sentAt` (when the invoice started its payment lifecycle) before `createdAt`. This is a closer proxy for when collections activity began.
+- **Impact:** Monthly revenue chart now more accurately reflects when cash was received.
+
+**BUG-BM-HUNT-153: CSV export mangles special characters in Excel**
+- **File:** `lib/export.ts`
+- **What was broken:** The `downloadCSV()` function produced valid UTF-8 but without a BOM (Byte Order Mark). Excel on Windows defaults to ANSI encoding without a BOM, causing accented characters in customer names (e.g., "González Aviation"), em-dashes, and currency symbols to render as garbled text.
+- **Fix:** Prepend `\uFEFF` (UTF-8 BOM) to the CSV content before creating the Blob.
+- **Impact:** Exported invoice and parts CSVs now open correctly in Excel on all platforms.
+
+**BUG-BM-HUNT-154: AR Dashboard customer balances not linked to customer profile**
+- **File:** `app/(app)/billing/ar-dashboard/page.tsx`
+- **What was broken:** Customer names in the "Customer Balances" table were plain text. A billing manager chasing collections had to manually navigate to Billing → Customers → search for the name — multiple clicks and context-switching to see that customer's invoice history and contact info.
+- **Fix:** Wrapped customer names in `<Link to="/billing/customers/${cb.customerId}">` for one-click navigation.
+- **Impact:** Faster AR collection workflow — click a delinquent customer, see their full history immediately.

@@ -8,4 +8,6 @@
 | 2 | 2026-03-05 | QCM Inspector | BUG-QCM-HUNT-130 through BUG-QCM-HUNT-134 |
 | 3 | 2026-03-05 | DOM (Director of Maintenance) | BUG-DOM-HUNT-140 through BUG-DOM-HUNT-145 |
 
-**Next up:** Billing Manager
+| 4 | 2026-03-05 | Billing Manager | BUG-BM-HUNT-150 through BUG-BM-HUNT-154 |
+
+**Next up:** Lead Technician
