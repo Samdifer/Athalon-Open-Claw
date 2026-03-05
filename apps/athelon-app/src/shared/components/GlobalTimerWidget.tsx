@@ -26,30 +26,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Clock3, Pause, Play, Square } from "lucide-react";
+import { getOpenEntryElapsedMs, formatDurationWithSeconds } from "@/lib/time-utils";
 
 type TimerContextType = "shop" | "work_order" | "task" | "step";
 
-function formatDuration(minutes: number): string {
-  const h = Math.floor(minutes / 60);
-  const m = minutes % 60;
-  return h > 0 ? `${h}h ${m}m` : `${m}m`;
-}
-
 function shortId(id: string): string {
   return id.length > 10 ? `${id.slice(0, 6)}…` : id;
-}
-
-function elapsedMinutes(entry: {
-  clockInAt: number;
-  totalPausedMinutes?: number;
-  pausedAt?: number;
-}): number {
-  const now = Date.now();
-  const elapsedMs = now - entry.clockInAt;
-  const pausedMs = (entry.totalPausedMinutes ?? 0) * 60_000;
-  const activePauseMs = entry.pausedAt ? Math.max(0, now - entry.pausedAt) : 0;
-  const activeMs = Math.max(0, elapsedMs - pausedMs - activePauseMs);
-  return Math.round(activeMs / 60_000);
 }
 
 export function GlobalTimerWidget() {
@@ -219,7 +201,7 @@ export function GlobalTimerWidget() {
                 : "bg-green-500/15 text-green-400 border-green-500/30"
             }`}
           >
-            {isActivePaused ? "Paused" : "Active"} · {formatDuration(elapsedMinutes(activeEntry))}
+            {isActivePaused ? "Paused" : "Active"} · {formatDurationWithSeconds(getOpenEntryElapsedMs(activeEntry))}
           </Badge>
           <span className="hidden lg:inline text-[11px] text-muted-foreground max-w-[140px] truncate">
             {contextLabel}

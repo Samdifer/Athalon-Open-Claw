@@ -52,22 +52,28 @@ export function ProgressRingSet() {
           );
 
           const taskIds = new Set(tasks.map((t) => String(t._id)));
-          const requiredTotalStages = tasks.length * 4 * jackets.length;
+          const isRepetition = curriculum.signOffModel === "repetition_5col";
+          const maxPerTask = isRepetition ? 5 : 4;
+          const requiredTotalStages = tasks.length * maxPerTask * jackets.length;
           let signedStages = 0;
           let masteredTasks = 0;
 
           const trainerTechDay = new Map<string, Set<string>>();
 
           for (const events of eventsByJacket) {
-            const perTaskStage = new Map<string, Set<string>>();
+            const perTaskCompletion = new Map<string, Set<string | number>>();
             for (const event of events) {
               if (!event.trainerSignedAt || !taskIds.has(String(event.taskId))) continue;
               signedStages += 1;
 
               const taskKey = String(event.taskId);
-              const stages = perTaskStage.get(taskKey) ?? new Set<string>();
-              stages.add(event.stage);
-              perTaskStage.set(taskKey, stages);
+              const items = perTaskCompletion.get(taskKey) ?? new Set<string | number>();
+              if (isRepetition && event.columnNumber) {
+                items.add(event.columnNumber);
+              } else {
+                items.add(event.stage);
+              }
+              perTaskCompletion.set(taskKey, items);
 
               const day = new Date(event.trainerSignedAt).toISOString().slice(0, 10);
               const key = `${String(event.trainerId)}::${String(event.technicianId)}::${day}`;
@@ -76,7 +82,7 @@ export function ProgressRingSet() {
               trainerTechDay.set(key, signed);
             }
 
-            masteredTasks += Array.from(perTaskStage.values()).filter((stages) => stages.size === 4).length;
+            masteredTasks += Array.from(perTaskCompletion.values()).filter((items) => items.size === maxPerTask).length;
           }
 
           const anomaly = Array.from(trainerTechDay.values()).some((signed) => signed.size > 15)

@@ -13,6 +13,10 @@ export const ROUTE_PERMISSION_MAP: ReadonlyArray<{
     allowedRoles: ["admin", "shop_manager", "billing_manager"],
   },
   {
+    pattern: "/crm/*",
+    allowedRoles: ["admin", "shop_manager", "billing_manager"],
+  },
+  {
     pattern: "/compliance/*",
     allowedRoles: ["admin", "shop_manager", "qcm_inspector"],
   },
@@ -20,8 +24,13 @@ export const ROUTE_PERMISSION_MAP: ReadonlyArray<{
     pattern: "/scheduling/*",
     allowedRoles: ["admin", "shop_manager", "lead_technician"],
   },
+  {
+    pattern: "/personnel/time-management",
+    allowedRoles: ["admin", "shop_manager", "lead_technician"],
+  },
   { pattern: "/personnel/*", allowedRoles: ["admin", "shop_manager"] },
-  { pattern: "/lead", allowedRoles: ["admin", "lead_technician"] },
+  { pattern: "/my-work/*", allowedRoles: ALL_ROLES },
+  { pattern: "/lead", allowedRoles: ["admin", "shop_manager", "lead_technician"] },
   {
     pattern: "/parts/*",
     allowedRoles: ["admin", "shop_manager", "parts_clerk", "lead_technician"],

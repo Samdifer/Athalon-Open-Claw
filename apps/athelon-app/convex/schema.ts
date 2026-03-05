@@ -2312,6 +2312,9 @@ export default defineSchema({
     binNumber: v.optional(v.string()),             // e.g. "12"
     binLocation: v.optional(v.string()),           // Composite display: "A-3-B-12"
 
+    // v11: Relational warehouse location (Warehouse Hierarchy)
+    binLocationId: v.optional(v.id("warehouseBins")),
+
     createdAt: v.number(),
     updatedAt: v.number(),
   })
@@ -2324,7 +2327,8 @@ export default defineSchema({
     .index("by_location", ["organizationId", "location"]) // now covers pending_inspection queries
     .index("by_shelf_life", ["hasShelfLifeLimit", "shelfLifeLimitDate"])
     .index("by_org_category", ["organizationId", "partCategory"])
-    .index("by_org_lot", ["organizationId", "lotId"]),
+    .index("by_org_lot", ["organizationId", "lotId"])
+    .index("by_org_bin", ["organizationId", "binLocationId"]),
 
   // ═══════════════════════════════════════════════════════════════════════════
   // 8130-3 RECORDS  (FAA Airworthiness Approval Tag)
@@ -3047,6 +3051,19 @@ export default defineSchema({
     // Multi-currency support
     currency: v.optional(v.string()),     // ISO 4217 code, default "USD"
 
+    // Notes
+    notes: v.optional(v.string()),
+
+    // Quote builder metadata (scheduler feature parity)
+    projectTitle: v.optional(v.string()),               // Distinct title separate from notes
+    priority: v.optional(v.union(
+      v.literal("routine"),
+      v.literal("urgent"),
+      v.literal("aog"),
+    )),
+    requestedStartDate: v.optional(v.number()),          // Unix ms — when customer wants work to begin
+    requestedEndDate: v.optional(v.number()),            // Unix ms — customer-requested completion
+
     createdAt: v.number(),
     updatedAt: v.number(),
   })
@@ -3103,6 +3120,7 @@ export default defineSchema({
     markupMultiplier: v.optional(v.number()),
     fixedPriceOverride: v.optional(v.number()),
     pricingMode: v.optional(v.union(v.literal("derived"), v.literal("override"))),
+    isMarkupOverride: v.optional(v.boolean()),  // True when user manually deviated from auto-tier
 
     createdAt: v.number(),
     updatedAt: v.number(),
@@ -3159,6 +3177,30 @@ export default defineSchema({
     .index("by_quote", ["quoteId"])
     .index("by_org", ["orgId"])
     .index("by_org_quote", ["orgId", "quoteId"]),
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // SHOP SETTINGS
+  //
+  // Organization-level financial configuration for the quote builder:
+  // shop rate, average hourly cost (for margin calculation), and tiered
+  // markup schedules for parts and services.
+  // ═══════════════════════════════════════════════════════════════════════════
+  shopSettings: defineTable({
+    orgId: v.id("organizations"),
+    shopRate: v.number(),                    // Default hourly labor rate (e.g., 135)
+    averageHourlyCost: v.number(),           // Internal labor cost for margin calc (e.g., 58)
+    partMarkupTiers: v.array(v.object({
+      maxCostThreshold: v.number(),          // Upper bound of this tier (e.g. 500)
+      markupMultiplier: v.number(),          // e.g. 1.30 for 30% markup
+    })),
+    serviceMarkupTiers: v.array(v.object({
+      maxCostThreshold: v.number(),
+      markupMultiplier: v.number(),
+    })),
+    updatedAt: v.number(),
+    createdAt: v.number(),
+  })
+    .index("by_org", ["orgId"]),
 
   // ═══════════════════════════════════════════════════════════════════════════
   // INVOICES
@@ -4559,13 +4601,18 @@ export default defineSchema({
     ),
 
     notes: v.optional(v.string()),
+
+    // v11: Relational warehouse location (Warehouse Hierarchy)
+    binLocationId: v.optional(v.id("warehouseBins")),
+
     createdAt: v.number(),
     updatedAt: v.number(),
   })
     .index("by_org", ["organizationId"])
     .index("by_org_part", ["organizationId", "partNumber"])
     .index("by_lot_number", ["organizationId", "lotNumber"])
-    .index("by_shelf_life", ["hasShelfLife", "shelfLifeExpiryDate"]),
+    .index("by_shelf_life", ["hasShelfLife", "shelfLifeExpiryDate"])
+    .index("by_org_bin", ["organizationId", "binLocationId"]),
 
   // ═══════════════════════════════════════════════════════════════════════════
   // PART HISTORY  (Inventory System v10)
@@ -4738,17 +4785,21 @@ export default defineSchema({
     .index("by_part", ["partId"]),
 
   // ==========================================
-  // OJT TRAINING JACKET SYSTEM (7 tables)
+  // OJT TRAINING JACKET SYSTEM (9 tables)
   // ==========================================
 
   // Curriculum definitions per aircraft type
   ojtCurricula: defineTable({
     organizationId: v.string(),
-    aircraftType: v.string(), // e.g. "King Air B200", "Cessna 172"
+    aircraftType: v.string(), // e.g. "TBM", "King Air B200"
     name: v.string(),
     description: v.optional(v.string()),
     isActive: v.boolean(),
     createdByTechnicianId: v.optional(v.id("technicians")),
+    // Which sign-off model: "progression_4stage" (observe->assist->supervised->evaluated)
+    // or "repetition_5col" (4 instructor observations + 1 authorization/test)
+    signOffModel: v.optional(v.union(v.literal("progression_4stage"), v.literal("repetition_5col"))),
+    version: v.optional(v.string()), // OJT log version, e.g. "2.1"
     createdAt: v.number(),
     updatedAt: v.number(),
   })
@@ -4760,26 +4811,47 @@ export default defineSchema({
   ojtCurriculumSections: defineTable({
     organizationId: v.string(),
     curriculumId: v.id("ojtCurricula"),
-    name: v.string(), // "Initial", "Basics", "Intermediate", "Advanced", "Sheet Metal", "Avionics", "Powerplant"
+    name: v.string(), // "Initial Training", "Basic Tasks", "Specializations", etc.
     description: v.optional(v.string()),
     displayOrder: v.number(),
+    // One-level nesting for specialization sub-groups (Engine, Sheet Metal, etc.)
+    parentSectionId: v.optional(v.id("ojtCurriculumSections")),
+    // Drives UI rendering: standard=multi-stage tasks, authorization=binary capabilities,
+    // procedural=checklist items, reference=info only
+    sectionType: v.optional(v.union(
+      v.literal("standard"),
+      v.literal("authorization"),
+      v.literal("procedural"),
+      v.literal("reference"),
+    )),
     createdAt: v.number(),
     updatedAt: v.number(),
   })
     .index("by_curriculum", ["curriculumId"])
-    .index("by_org", ["organizationId"]),
+    .index("by_org", ["organizationId"])
+    .index("by_parent", ["parentSectionId"]),
 
   // Individual trainable tasks within a section
   ojtTasks: defineTable({
     organizationId: v.string(),
     curriculumId: v.id("ojtCurricula"),
     sectionId: v.id("ojtCurriculumSections"),
-    ataChapter: v.string(), // "71", "28-20", etc.
+    ataChapter: v.string(), // "71", "28", "GEN", "INSP", "Shop"
     description: v.string(),
     approvedDataRef: v.optional(v.string()), // AMM section reference
     isSharedAcrossTypes: v.boolean(), // reusable across aircraft curricula
     estimatedMinutes: v.optional(v.number()),
     displayOrder: v.number(),
+    // Proficiency tier for tasks that repeat across sections (Basic -> Intermediate)
+    proficiencyTier: v.optional(v.union(
+      v.literal("initial"),
+      v.literal("basic"),
+      v.literal("intermediate"),
+      v.literal("advanced"),
+      v.literal("specialization"),
+    )),
+    // Number of sign-off columns required (default: 5 for repetition, 4 for progression)
+    requiredSignOffs: v.optional(v.number()),
     createdAt: v.number(),
     updatedAt: v.number(),
   })
@@ -4814,7 +4886,12 @@ export default defineSchema({
     jacketId: v.id("ojtJackets"),
     taskId: v.id("ojtTasks"),
     technicianId: v.id("technicians"),
-    stage: v.union(v.literal("observe"), v.literal("assist"), v.literal("supervised"), v.literal("evaluated")),
+    stage: v.union(
+      // Progression model (4-stage)
+      v.literal("observe"), v.literal("assist"), v.literal("supervised"), v.literal("evaluated"),
+      // Repetition model (5-column): columns 1-4 instructor, column 5 authorization
+      v.literal("instructor_completion"), v.literal("authorization_test"),
+    ),
     trainerId: v.id("technicians"),
     trainerCertificateSnapshot: v.optional(v.string()), // cert info at time of sign-off
     approvedDataRef: v.optional(v.string()),
@@ -4824,6 +4901,9 @@ export default defineSchema({
     trainerSignedAt: v.optional(v.number()),
     chiefInspectorId: v.optional(v.id("technicians")),
     chiefInspectorSignedAt: v.optional(v.number()),
+    // For repetition_5col model: which column (1-5) this event fills
+    columnNumber: v.optional(v.number()),
+    isAuthorizationSignOff: v.optional(v.boolean()), // true for column 5
     notes: v.optional(v.string()),
     createdAt: v.number(),
   })
@@ -4872,6 +4952,56 @@ export default defineSchema({
     .index("by_technician", ["technicianId"])
     .index("by_org", ["organizationId"])
     .index("by_org_period", ["organizationId", "period"]),
+
+  // Binary capability authorizations (towing, engine run, etc.) per jacket
+  ojtAuthorizations: defineTable({
+    organizationId: v.string(),
+    jacketId: v.id("ojtJackets"),
+    technicianId: v.id("technicians"),
+    curriculumId: v.id("ojtCurricula"),
+    capabilityKey: v.string(), // e.g. "aircraft_towing", "engine_run"
+    capabilityLabel: v.string(), // "Aircraft Towing"
+    displayOrder: v.number(),
+    isGranted: v.boolean(),
+    grantedAt: v.optional(v.number()),
+    grantedByTechnicianId: v.optional(v.id("technicians")),
+    grantedByName: v.optional(v.string()), // snapshot of grantor name
+    revokedAt: v.optional(v.number()),
+    revokedByTechnicianId: v.optional(v.id("technicians")),
+    revokedReason: v.optional(v.string()),
+    notes: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_jacket", ["jacketId"])
+    .index("by_technician", ["technicianId"])
+    .index("by_org", ["organizationId"])
+    .index("by_jacket_capability", ["jacketId", "capabilityKey"]),
+
+  // Personnel OJT enrollment tracking (Work Roster)
+  ojtEnrollmentRoster: defineTable({
+    organizationId: v.string(),
+    technicianId: v.id("technicians"),
+    isEnrolledInOjt: v.boolean(),
+    lastDigitalUpdate: v.optional(v.number()),
+    hasOjtLogConverted: v.optional(v.boolean()),
+    ojtLogVersion: v.optional(v.string()), // e.g. "1.4", "1.5"
+    personnelCategory: v.optional(v.union(
+      v.literal("mechanic"),
+      v.literal("avionics"),
+      v.literal("detailer"),
+      v.literal("inspection"),
+      v.literal("admin"),
+      v.literal("management"),
+      v.literal("test_pilot"),
+    )),
+    locationCode: v.optional(v.string()), // "BJC", "CMA"
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_org", ["organizationId"])
+    .index("by_technician", ["technicianId"])
+    .index("by_org_enrolled", ["organizationId", "isEnrolledInOjt"]),
 
   // ==========================================
   // MAINTENANCE PROGRAMS (Chapter 5 intervals)
@@ -4986,4 +5116,320 @@ export default defineSchema({
     .index("by_entity", ["linkedEntityType", "linkedEntityId"])
     .index("by_org", ["organizationId"])
     .index("by_org_uploaded", ["organizationId", "uploadedAt"]),
+
+  // ==========================================
+  // CRM MODULE — Contacts, Interactions, Opportunities, Health
+  // Added for Corridor/EBIS 5 feature parity
+  // ==========================================
+
+  crmContacts: defineTable({
+    organizationId: v.id("organizations"),
+    customerId: v.id("customers"),
+    firstName: v.string(),
+    lastName: v.string(),
+    title: v.optional(v.string()),
+    role: v.optional(v.union(
+      v.literal("owner"),
+      v.literal("dom"),
+      v.literal("chief_pilot"),
+      v.literal("ap_manager"),
+      v.literal("operations"),
+      v.literal("dispatcher"),
+      v.literal("other"),
+    )),
+    email: v.optional(v.string()),
+    phone: v.optional(v.string()),
+    mobilePhone: v.optional(v.string()),
+    isPrimary: v.boolean(),
+    receiveStatusUpdates: v.optional(v.boolean()),
+    notes: v.optional(v.string()),
+    active: v.boolean(),
+    lastContactedAt: v.optional(v.number()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_organization", ["organizationId"])
+    .index("by_customer", ["customerId"])
+    .index("by_organization_and_customer", ["organizationId", "customerId"]),
+
+  crmInteractions: defineTable({
+    organizationId: v.id("organizations"),
+    customerId: v.id("customers"),
+    contactId: v.optional(v.id("crmContacts")),
+    type: v.union(
+      v.literal("phone_call"),
+      v.literal("email"),
+      v.literal("meeting"),
+      v.literal("site_visit"),
+      v.literal("note"),
+    ),
+    direction: v.optional(v.union(
+      v.literal("inbound"),
+      v.literal("outbound"),
+    )),
+    subject: v.string(),
+    description: v.optional(v.string()),
+    outcome: v.optional(v.string()),
+    durationMinutes: v.optional(v.number()),
+    interactionDate: v.number(),
+    followUpDate: v.optional(v.number()),
+    followUpCompleted: v.optional(v.boolean()),
+    createdByUserId: v.string(),
+    createdByName: v.optional(v.string()),
+    createdAt: v.number(),
+  })
+    .index("by_organization", ["organizationId"])
+    .index("by_customer", ["customerId"])
+    .index("by_organization_and_customer", ["organizationId", "customerId"])
+    .index("by_organization_and_type", ["organizationId", "type"])
+    .index("by_organization_and_interactionDate", ["organizationId", "interactionDate"]),
+
+  crmOpportunities: defineTable({
+    organizationId: v.id("organizations"),
+    customerId: v.id("customers"),
+    aircraftId: v.optional(v.id("aircraft")),
+    predictionId: v.optional(v.id("maintenancePredictions")),
+    title: v.string(),
+    description: v.optional(v.string()),
+    stage: v.union(
+      v.literal("prospecting"),
+      v.literal("qualification"),
+      v.literal("proposal"),
+      v.literal("negotiation"),
+      v.literal("won"),
+      v.literal("lost"),
+    ),
+    estimatedValue: v.number(),
+    estimatedLaborHours: v.optional(v.number()),
+    probability: v.optional(v.number()),
+    expectedCloseDate: v.optional(v.number()),
+    actualCloseDate: v.optional(v.number()),
+    lostReason: v.optional(v.string()),
+    wonWorkOrderId: v.optional(v.id("workOrders")),
+    wonQuoteId: v.optional(v.id("quotes")),
+    assignedToUserId: v.optional(v.string()),
+    assignedToName: v.optional(v.string()),
+    source: v.optional(v.union(
+      v.literal("prediction"),
+      v.literal("referral"),
+      v.literal("walk_in"),
+      v.literal("phone"),
+      v.literal("website"),
+      v.literal("trade_show"),
+      v.literal("existing_customer"),
+      v.literal("other"),
+    )),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_organization", ["organizationId"])
+    .index("by_organization_and_stage", ["organizationId", "stage"])
+    .index("by_organization_and_customer", ["organizationId", "customerId"])
+    .index("by_prediction", ["predictionId"]),
+
+  crmHealthSnapshots: defineTable({
+    organizationId: v.id("organizations"),
+    customerId: v.id("customers"),
+    overallScore: v.number(),
+    factors: v.object({
+      woFrequency: v.number(),
+      paymentTimeliness: v.number(),
+      fleetSize: v.number(),
+      contractValue: v.number(),
+      communicationFrequency: v.number(),
+      recencyOfWork: v.number(),
+    }),
+    churnRiskLevel: v.union(
+      v.literal("low"),
+      v.literal("medium"),
+      v.literal("high"),
+    ),
+    snapshotDate: v.number(),
+    createdAt: v.number(),
+  })
+    .index("by_organization", ["organizationId"])
+    .index("by_customer", ["customerId"])
+    .index("by_organization_and_customer", ["organizationId", "customerId"]),
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // WAREHOUSE LOCATION HIERARCHY  (v11)
+  //
+  // Five-level configurable hierarchy: Warehouse → Area → Shelf → ShelfLocation → Bin
+  // Parent IDs are denormalized on child tables because Convex lacks JOINs —
+  // enables direct indexed queries like "all bins in warehouse X".
+  // Parts and lots reference warehouseBins (the leaf node) via binLocationId.
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  warehouses: defineTable({
+    organizationId: v.id("organizations"),
+    name: v.string(),
+    code: v.string(),
+    description: v.optional(v.string()),
+    address: v.optional(v.string()),
+    shopLocationId: v.optional(v.id("shopLocations")),
+    isActive: v.boolean(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_organization", ["organizationId"])
+    .index("by_org_code", ["organizationId", "code"]),
+
+  warehouseAreas: defineTable({
+    organizationId: v.id("organizations"),
+    warehouseId: v.id("warehouses"),
+    name: v.string(),
+    code: v.string(),
+    description: v.optional(v.string()),
+    areaType: v.optional(v.union(
+      v.literal("general"),
+      v.literal("hazmat"),
+      v.literal("temperature_controlled"),
+      v.literal("secure"),
+      v.literal("quarantine"),
+      v.literal("receiving"),
+    )),
+    isActive: v.boolean(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_warehouse", ["warehouseId"])
+    .index("by_organization", ["organizationId"])
+    .index("by_org_warehouse", ["organizationId", "warehouseId"]),
+
+  warehouseShelves: defineTable({
+    organizationId: v.id("organizations"),
+    warehouseId: v.id("warehouses"),
+    areaId: v.id("warehouseAreas"),
+    name: v.string(),
+    code: v.string(),
+    description: v.optional(v.string()),
+    isActive: v.boolean(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_area", ["areaId"])
+    .index("by_organization", ["organizationId"])
+    .index("by_org_area", ["organizationId", "areaId"]),
+
+  warehouseShelfLocations: defineTable({
+    organizationId: v.id("organizations"),
+    warehouseId: v.id("warehouses"),
+    areaId: v.id("warehouseAreas"),
+    shelfId: v.id("warehouseShelves"),
+    name: v.string(),
+    code: v.string(),
+    isActive: v.boolean(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_shelf", ["shelfId"])
+    .index("by_organization", ["organizationId"])
+    .index("by_org_shelf", ["organizationId", "shelfId"]),
+
+  warehouseBins: defineTable({
+    organizationId: v.id("organizations"),
+    warehouseId: v.id("warehouses"),
+    areaId: v.id("warehouseAreas"),
+    shelfId: v.id("warehouseShelves"),
+    shelfLocationId: v.id("warehouseShelfLocations"),
+    name: v.string(),
+    code: v.string(),
+    barcode: v.optional(v.string()),
+    displayPath: v.optional(v.string()),
+    isActive: v.boolean(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_shelf_location", ["shelfLocationId"])
+    .index("by_organization", ["organizationId"])
+    .index("by_org_shelf_location", ["organizationId", "shelfLocationId"])
+    .index("by_org_barcode", ["organizationId", "barcode"]),
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // PARTS TAGGING SYSTEM  (v11)
+  //
+  // Hierarchical taxonomy: TagCategory → Tag → Subtag
+  // Many-to-many junction via partTags.
+  // System categories: Aircraft Type, Engine Type, ATA Chapter, Component Type.
+  // Users can create custom categories. Denormalized display names on partTags
+  // enable list rendering without extra lookups.
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  tagCategories: defineTable({
+    organizationId: v.id("organizations"),
+    name: v.string(),
+    slug: v.string(),
+    categoryType: v.union(
+      v.literal("aircraft_type"),
+      v.literal("engine_type"),
+      v.literal("ata_chapter"),
+      v.literal("component_type"),
+      v.literal("custom"),
+    ),
+    description: v.optional(v.string()),
+    displayOrder: v.number(),
+    isSystem: v.boolean(),
+    isActive: v.boolean(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_organization", ["organizationId"])
+    .index("by_org_slug", ["organizationId", "slug"])
+    .index("by_org_type", ["organizationId", "categoryType"]),
+
+  tags: defineTable({
+    organizationId: v.id("organizations"),
+    categoryId: v.id("tagCategories"),
+    name: v.string(),
+    code: v.optional(v.string()),
+    description: v.optional(v.string()),
+    aircraftMake: v.optional(v.string()),
+    aircraftModel: v.optional(v.string()),
+    engineMake: v.optional(v.string()),
+    engineModel: v.optional(v.string()),
+    isActive: v.boolean(),
+    displayOrder: v.number(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_category", ["categoryId"])
+    .index("by_organization", ["organizationId"])
+    .index("by_org_category", ["organizationId", "categoryId"]),
+
+  subtags: defineTable({
+    organizationId: v.id("organizations"),
+    tagId: v.id("tags"),
+    categoryId: v.id("tagCategories"),
+    name: v.string(),
+    code: v.optional(v.string()),
+    description: v.optional(v.string()),
+    aircraftSeries: v.optional(v.string()),
+    isActive: v.boolean(),
+    displayOrder: v.number(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_tag", ["tagId"])
+    .index("by_organization", ["organizationId"])
+    .index("by_org_tag", ["organizationId", "tagId"]),
+
+  partTags: defineTable({
+    organizationId: v.id("organizations"),
+    partId: v.id("parts"),
+    tagId: v.id("tags"),
+    subtagId: v.optional(v.id("subtags")),
+    categoryId: v.id("tagCategories"),
+    categoryName: v.string(),
+    tagName: v.string(),
+    subtagName: v.optional(v.string()),
+    createdAt: v.number(),
+    createdByUserId: v.string(),
+  })
+    .index("by_part", ["partId"])
+    .index("by_tag", ["tagId"])
+    .index("by_subtag", ["subtagId"])
+    .index("by_org_tag", ["organizationId", "tagId"])
+    .index("by_org_category", ["organizationId", "categoryId"])
+    .index("by_part_category", ["partId", "categoryId"])
+    .index("by_org_part", ["organizationId", "partId"]),
 });

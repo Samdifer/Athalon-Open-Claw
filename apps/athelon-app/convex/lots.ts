@@ -49,6 +49,8 @@ export const createLot = mutation({
     certificateOfConformityId: v.optional(v.id("documents")),
     eightOneThirtyId: v.optional(v.id("eightOneThirtyRecords")),
     notes: v.optional(v.string()),
+    // v11: Relational warehouse location
+    binLocationId: v.optional(v.id("warehouseBins")),
   },
 
   handler: async (ctx, args): Promise<Id<"lots">> => {
@@ -85,6 +87,7 @@ export const createLot = mutation({
       shelfLifeExpiryDate: args.shelfLifeExpiryDate,
       condition: "new" as const,
       notes: args.notes,
+      binLocationId: args.binLocationId,
       createdAt: now,
       updatedAt: now,
     });

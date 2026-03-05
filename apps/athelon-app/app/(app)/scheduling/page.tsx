@@ -84,15 +84,31 @@ import { buildDailyCapacityPoints } from "./_lib/capacityModel";
 function GanttSkeleton() {
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center gap-3 px-4 py-2.5 border-b border-border/50">
-        <Skeleton className="h-7 w-40 rounded-md" />
+      {/* Skeleton Tier 1 — Nav */}
+      <div className="flex items-center gap-1 px-4 pb-2 pt-2 border-b border-border/30">
+        <Skeleton className="h-7 w-24 rounded-md" />
+        <Skeleton className="h-7 w-14 rounded-md" />
+        <Skeleton className="h-7 w-20 rounded-md" />
+        <Skeleton className="h-7 w-28 rounded-md" />
+        <Skeleton className="h-7 w-32 rounded-md" />
+      </div>
+      {/* Skeleton Tier 2 — Actions */}
+      <div className="flex items-center gap-1.5 px-4 py-1.5 border-b border-border/20 bg-muted/10">
+        <Skeleton className="h-7 w-7 rounded-md" />
         <Skeleton className="h-4 w-px" />
-        <Skeleton className="h-4 w-44" />
-        <div className="flex-1" />
-        <Skeleton className="h-7 w-24" />
-        <Skeleton className="h-7 w-7" />
-        <Skeleton className="h-7 w-7" />
-        <Skeleton className="h-7 w-16" />
+        <Skeleton className="h-7 w-7 rounded-md" />
+        <Skeleton className="h-4 w-px" />
+        <Skeleton className="h-7 w-7 rounded-md" />
+        <Skeleton className="h-7 w-7 rounded-md" />
+        <Skeleton className="h-7 w-7 rounded-md" />
+        <Skeleton className="h-7 w-7 rounded-md" />
+        <Skeleton className="h-4 w-px" />
+        <Skeleton className="h-7 w-7 rounded-md" />
+        <Skeleton className="h-7 w-7 rounded-md" />
+        <Skeleton className="h-4 w-px" />
+        <Skeleton className="h-7 w-7 rounded-md" />
+        <Skeleton className="h-7 w-7 rounded-md" />
+        <Skeleton className="h-7 w-7 rounded-md" />
       </div>
       <div className="flex flex-1 overflow-hidden">
         <div className="w-40 flex-shrink-0 border-r border-border/40 space-y-0">
@@ -1597,205 +1613,221 @@ export default function SchedulingPage() {
           : "h-full flex flex-col relative"
       }
     >
-      {/* Sub-nav toolbar */}
+      {/* Tier 1 — Page Navigation */}
       {!isFullscreen && (
-        <div className="flex items-center gap-2 px-2 sm:px-4 py-2 border-b border-border/30 bg-muted/20 flex-shrink-0">
-        <Button variant="secondary" size="sm" className="text-xs h-7" asChild>
-          <Link to="/scheduling">Gantt Board</Link>
-        </Button>
-        <Button variant="ghost" size="sm" className="text-xs h-7" asChild>
-          <Link to="/scheduling/bays">
-            <Warehouse className="w-3.5 h-3.5" />
-            Bays
-          </Link>
-        </Button>
-        <Button variant="ghost" size="sm" className="text-xs h-7" asChild>
-          <Link to="/scheduling/capacity">Capacity</Link>
-        </Button>
-        <Button variant="ghost" size="sm" className="text-xs h-7" asChild>
-          <Link to="/scheduling/roster">Roster & Teams</Link>
-        </Button>
-        <Button variant="ghost" size="sm" className="text-xs h-7" asChild>
-          <Link to="/scheduling/financial-planning">Financial Planning</Link>
-        </Button>
+        <div className="flex items-center gap-1 flex-wrap border-b border-border/30 pb-2 px-2 sm:px-4 pt-2 flex-shrink-0">
+          <Button variant="secondary" size="sm" className="text-xs h-7" asChild>
+            <Link to="/scheduling">Gantt Board</Link>
+          </Button>
+          <Button variant="ghost" size="sm" className="text-xs h-7" asChild>
+            <Link to="/scheduling/bays">
+              <Warehouse className="w-3.5 h-3.5" />
+              Bays
+            </Link>
+          </Button>
+          <Button variant="ghost" size="sm" className="text-xs h-7" asChild>
+            <Link to="/scheduling/capacity">Capacity</Link>
+          </Button>
+          <Button variant="ghost" size="sm" className="text-xs h-7" asChild>
+            <Link to="/scheduling/roster">Roster & Teams</Link>
+          </Button>
+          <Button variant="ghost" size="sm" className="text-xs h-7" asChild>
+            <Link to="/scheduling/financial-planning">Financial Planning</Link>
+          </Button>
+        </div>
+      )}
 
-        <div className="flex-1" />
+      {/* Tier 2 — Gantt Actions Toolbar */}
+      {!isFullscreen && (
+        <div className="flex items-center gap-1.5 flex-wrap px-2 sm:px-4 py-1.5 bg-muted/10 border-b border-border/20 flex-shrink-0">
+          {/* ── View ──────────────────────────────────────── */}
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-xs h-7"
+            onClick={() => setFullscreen(true)}
+            data-testid="scheduling-enter-fullscreen"
+          >
+            <Maximize2 className="w-3.5 h-3.5" />
+            <span className="hidden md:inline">Fullscreen</span>
+          </Button>
 
-        <Button
-          variant="outline"
-          size="sm"
-          className="text-xs h-7"
-          onClick={() => setFullscreen(true)}
-          data-testid="scheduling-enter-fullscreen"
-        >
-          <Maximize2 className="w-3.5 h-3.5" />
-          Fullscreen
-        </Button>
+          <div className="h-4 w-px bg-border/40 mx-0.5" />
 
-        <Button
-          variant={commandCenterOpen ? "secondary" : "outline"}
-          size="sm"
-          className="text-xs h-7"
-          onClick={() => setCommandCenterOpen(true)}
-          data-testid="toggle-command-center"
-        >
-          <Command className="w-3.5 h-3.5" />
-          Command Center
-        </Button>
+          {/* ── Edit ──────────────────────────────────────── */}
+          <Button
+            variant={scheduleEditMode ? "secondary" : "outline"}
+            size="sm"
+            className="text-xs h-7"
+            onClick={toggleScheduleEditMode}
+            data-testid="toggle-schedule-edit-mode"
+          >
+            <Edit className="w-3.5 h-3.5" />
+            <span className="hidden md:inline">Edit Mode</span>
+          </Button>
 
-        <Button
-          variant={quoteWorkspaceOpen ? "secondary" : "outline"}
-          size="sm"
-          className="text-xs h-7"
-          onClick={() => setQuoteWorkspaceOpen(true)}
-          disabled={quoteWorkspaceWorkOrders.length === 0}
-          data-testid="toggle-quote-workspace"
-        >
-          <FileText className="w-3.5 h-3.5" />
-          Quote Workspace
-        </Button>
-
-        <Button
-          variant={scheduleEditMode ? "secondary" : "outline"}
-          size="sm"
-          className="text-xs h-7"
-          onClick={toggleScheduleEditMode}
-          data-testid="toggle-schedule-edit-mode"
-        >
-          <Edit className="w-3.5 h-3.5" />
-          Edit Mode
-        </Button>
-
-        {scheduleEditMode && (
-          <>
-            <Button
-              variant={scheduleEditTool === "distribute" ? "secondary" : "outline"}
-              size="sm"
-              className="text-xs h-7"
-              onClick={() => activateScheduleEditTool("distribute")}
-              data-testid="schedule-edit-tool-distribute"
-            >
-              <SlidersHorizontal className="w-3.5 h-3.5" />
-              Distribute
-            </Button>
-            <Button
-              variant={scheduleEditTool === "block" ? "secondary" : "outline"}
-              size="sm"
-              className="text-xs h-7"
-              onClick={() => activateScheduleEditTool("block")}
-              data-testid="schedule-edit-tool-block"
-            >
-              <Ban className="w-3.5 h-3.5" />
-              Block Days
-            </Button>
-          </>
-        )}
-
-        <Button
-          variant={magicSelectionMode ? "secondary" : "outline"}
-          size="sm"
-          className="text-xs h-7"
-          onClick={toggleMagicSelectionMode}
-          data-testid="toggle-magic-selection-mode"
-        >
-          <ListChecks className="w-3.5 h-3.5" />
-          Board Select
-          {magicSelectedIds.length > 0 && (
-            <Badge variant="secondary" className="h-4 px-1 text-[10px]">
-              {magicSelectedIds.length}
-            </Badge>
+          {scheduleEditMode && (
+            <>
+              <Button
+                variant={scheduleEditTool === "distribute" ? "secondary" : "outline"}
+                size="sm"
+                className="text-xs h-7"
+                onClick={() => activateScheduleEditTool("distribute")}
+                data-testid="schedule-edit-tool-distribute"
+              >
+                <SlidersHorizontal className="w-3.5 h-3.5" />
+                <span className="hidden md:inline">Distribute</span>
+              </Button>
+              <Button
+                variant={scheduleEditTool === "block" ? "secondary" : "outline"}
+                size="sm"
+                className="text-xs h-7"
+                onClick={() => activateScheduleEditTool("block")}
+                data-testid="schedule-edit-tool-block"
+              >
+                <Ban className="w-3.5 h-3.5" />
+                <span className="hidden md:inline">Block Days</span>
+              </Button>
+            </>
           )}
-        </Button>
 
-        <Button
-          variant={graveyardOpen ? "secondary" : "outline"}
-          size="sm"
-          className="text-xs h-7"
-          onClick={() => {
-            setBacklogOpen(false);
-            setGraveyardOpen((prev) => !prev);
-          }}
-        >
-          <Archive className="w-3.5 h-3.5" />
-          Graveyard
-          {archivedProjects.length > 0 && (
-            <Badge variant="secondary" className="h-4 px-1 text-[10px]">
-              {archivedProjects.length}
-            </Badge>
-          )}
-        </Button>
+          <div className="h-4 w-px bg-border/40 mx-0.5" />
 
-        <Button
-          variant={analyticsOpen ? "secondary" : "outline"}
-          size="sm"
-          className="text-xs h-7"
-          onClick={() => setAnalyticsOpen((prev) => !prev)}
-          data-testid="toggle-analytics-panel"
-        >
-          <BarChart3 className="w-3.5 h-3.5" />
-          Analytics
-        </Button>
+          {/* ── Panel toggles ─────────────────────────────── */}
+          <Button
+            variant={magicSelectionMode ? "secondary" : "outline"}
+            size="sm"
+            className="text-xs h-7"
+            onClick={toggleMagicSelectionMode}
+            data-testid="toggle-magic-selection-mode"
+          >
+            <ListChecks className="w-3.5 h-3.5" />
+            <span className="hidden md:inline">Board Select</span>
+            {magicSelectedIds.length > 0 && (
+              <Badge variant="secondary" className="h-4 px-1 text-[10px]">
+                {magicSelectedIds.length}
+              </Badge>
+            )}
+          </Button>
 
-        <Button
-          variant={rosterOpen ? "secondary" : "outline"}
-          size="sm"
-          className="text-xs h-7"
-          onClick={() => setRosterOpen((prev) => !prev)}
-          data-testid="toggle-roster-panel"
-        >
-          <Users className="w-3.5 h-3.5" />
-          Roster
-        </Button>
+          <Button
+            variant={graveyardOpen ? "secondary" : "outline"}
+            size="sm"
+            className="text-xs h-7"
+            onClick={() => {
+              setBacklogOpen(false);
+              setGraveyardOpen((prev) => !prev);
+            }}
+          >
+            <Archive className="w-3.5 h-3.5" />
+            <span className="hidden md:inline">Graveyard</span>
+            {archivedProjects.length > 0 && (
+              <Badge variant="secondary" className="h-4 px-1 text-[10px]">
+                {archivedProjects.length}
+              </Badge>
+            )}
+          </Button>
 
-        <Button
-          variant="outline"
-          size="sm"
-          className="text-xs h-7"
-          onClick={openMagicScheduler}
-        >
-          <Sparkles className="w-3.5 h-3.5" />
-          Magic Scheduler
-        </Button>
+          <Button
+            variant={analyticsOpen ? "secondary" : "outline"}
+            size="sm"
+            className="text-xs h-7"
+            onClick={() => setAnalyticsOpen((prev) => !prev)}
+            data-testid="toggle-analytics-panel"
+          >
+            <BarChart3 className="w-3.5 h-3.5" />
+            <span className="hidden md:inline">Analytics</span>
+          </Button>
 
-        <Button
-          variant="outline"
-          size="sm"
-          className="text-xs h-7"
-          onClick={handleAutoSchedule}
-          disabled={autoScheduling}
-        >
-          <Sparkles className="w-3.5 h-3.5" />
-          {autoScheduling ? "Scheduling..." : "Auto Schedule"}
-        </Button>
+          <Button
+            variant={rosterOpen ? "secondary" : "outline"}
+            size="sm"
+            className="text-xs h-7"
+            onClick={() => setRosterOpen((prev) => !prev)}
+            data-testid="toggle-roster-panel"
+          >
+            <Users className="w-3.5 h-3.5" />
+            <span className="hidden md:inline">Roster</span>
+          </Button>
 
-        <Button
-          variant="outline"
-          size="sm"
-          className="text-xs h-7"
-          onClick={() => void undo()}
-          disabled={!canUndo}
-          title={undoLabel ? `Undo: ${undoLabel}` : "Nothing to undo"}
-          data-testid="undo-button"
-        >
-          <Undo2 className="w-3.5 h-3.5" />
-          Undo
-          {undoCount > 0 && (
-            <Badge variant="secondary" className="h-4 px-1 text-[10px]">
-              {undoCount}
-            </Badge>
-          )}
-        </Button>
+          <div className="h-4 w-px bg-border/40 mx-0.5" />
 
-        <Button
-          variant="outline"
-          size="sm"
-          className="text-xs h-7"
-          onClick={() => setShortcutsOpen(true)}
-          title="Keyboard shortcuts (?)"
-          data-testid="shortcuts-button"
-        >
-          <Keyboard className="w-3.5 h-3.5" />
-        </Button>
+          {/* ── AI ────────────────────────────────────────── */}
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-xs h-7"
+            onClick={openMagicScheduler}
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            <span className="hidden md:inline">Magic Scheduler</span>
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-xs h-7"
+            onClick={handleAutoSchedule}
+            disabled={autoScheduling}
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            <span className="hidden md:inline">{autoScheduling ? "Scheduling..." : "Auto Schedule"}</span>
+          </Button>
+
+          <div className="h-4 w-px bg-border/40 mx-0.5" />
+
+          {/* ── Utils ─────────────────────────────────────── */}
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-xs h-7"
+            onClick={() => void undo()}
+            disabled={!canUndo}
+            title={undoLabel ? `Undo: ${undoLabel}` : "Nothing to undo"}
+            data-testid="undo-button"
+          >
+            <Undo2 className="w-3.5 h-3.5" />
+            <span className="hidden md:inline">Undo</span>
+            {undoCount > 0 && (
+              <Badge variant="secondary" className="h-4 px-1 text-[10px]">
+                {undoCount}
+              </Badge>
+            )}
+          </Button>
+
+          <Button
+            variant={commandCenterOpen ? "secondary" : "outline"}
+            size="sm"
+            className="text-xs h-7"
+            onClick={() => setCommandCenterOpen(true)}
+            data-testid="toggle-command-center"
+          >
+            <Command className="w-3.5 h-3.5" />
+            <span className="hidden md:inline">Command Center</span>
+          </Button>
+
+          <Button
+            variant={quoteWorkspaceOpen ? "secondary" : "outline"}
+            size="sm"
+            className="text-xs h-7"
+            onClick={() => setQuoteWorkspaceOpen(true)}
+            disabled={quoteWorkspaceWorkOrders.length === 0}
+            data-testid="toggle-quote-workspace"
+          >
+            <FileText className="w-3.5 h-3.5" />
+            <span className="hidden md:inline">Quote Workspace</span>
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-xs h-7"
+            onClick={() => setShortcutsOpen(true)}
+            title="Keyboard shortcuts (?)"
+            data-testid="shortcuts-button"
+          >
+            <Keyboard className="w-3.5 h-3.5" />
+          </Button>
         </div>
       )}
 

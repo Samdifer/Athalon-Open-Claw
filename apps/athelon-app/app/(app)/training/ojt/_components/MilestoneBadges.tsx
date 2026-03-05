@@ -63,16 +63,23 @@ export function MilestoneBadges({ technicianId }: { technicianId?: Id<"technicia
           convex.query(api.ojt.getCurriculum, { id: jacket.curriculumId }),
         ]);
 
-        const taskStageMap = new Map<string, Set<string>>();
+        const isRepetition = curriculum?.signOffModel === "repetition_5col";
+        const maxPerTask = isRepetition ? 5 : 4;
+
+        const taskCompletionMap = new Map<string, Set<string | number>>();
         for (const event of events) {
           if (!event.trainerSignedAt) continue;
           const key = String(event.taskId);
-          const stages = taskStageMap.get(key) ?? new Set<string>();
-          stages.add(event.stage);
-          taskStageMap.set(key, stages);
+          const items = taskCompletionMap.get(key) ?? new Set<string | number>();
+          if (isRepetition && event.columnNumber) {
+            items.add(event.columnNumber);
+          } else {
+            items.add(event.stage);
+          }
+          taskCompletionMap.set(key, items);
         }
 
-        const masteredTasks = tasks.filter((task) => (taskStageMap.get(String(task._id))?.size ?? 0) === 4).length;
+        const masteredTasks = tasks.filter((task) => (taskCompletionMap.get(String(task._id))?.size ?? 0) === maxPerTask).length;
 
         if (tasks.length > 0 && masteredTasks / tasks.length >= 0.5) milestones.halfway = true;
 
@@ -85,7 +92,7 @@ export function MilestoneBadges({ technicianId }: { technicianId?: Id<"technicia
           const sectionMastered = sections.some((section) => {
             const sectionTasks = tasks.filter((task) => task.sectionId === section._id);
             if (sectionTasks.length === 0) return false;
-            return sectionTasks.every((task) => (taskStageMap.get(String(task._id))?.size ?? 0) === 4);
+            return sectionTasks.every((task) => (taskCompletionMap.get(String(task._id))?.size ?? 0) === maxPerTask);
           });
           if (sectionMastered) milestones.section_complete = true;
         }
