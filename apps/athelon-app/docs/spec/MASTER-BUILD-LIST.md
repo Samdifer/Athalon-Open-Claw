@@ -6,6 +6,26 @@ This file is the markdown-authoritative source of truth for feature status, impl
 
 ## Bug Hunter Fixes
 
+- **BUG-SM-HUNT-007** — Work Orders could crash/render broken rows when partially seeded records had null `workOrderNumber`, `description`, `priority`, or `openedAt` values, because list/search/sort logic assumed non-null strings/numbers.
+  **File:** `app/(app)/work-orders/page.tsx`
+  **Fix:** Added defensive fallbacks during row normalization (`WO-<id>` number, default description/customer/priority, resilient `openedAt` fallback).
+  **Why it matters:** Shop managers can still triage queue data during imperfect imports instead of hitting runtime errors or blank rows.
+
+- **BUG-SM-HUNT-008** — “Awaiting Parts” tab included draft work orders, surfacing pre-intake jobs in the active parts-waiting queue and inflating actionable counts.
+  **File:** `app/(app)/work-orders/page.tsx`
+  **Fix:** Updated awaiting-parts filter and tab counter logic to exclude `draft` along with terminal statuses.
+  **Why it matters:** Queue reflects true in-work blockers, so scheduling/parts follow-up time is spent on live jobs.
+
+- **BUG-SM-HUNT-009** — Reports date range included transactions exactly at midnight after the selected “To” date because the upper bound used an inclusive comparison after already shifting to next-day midnight.
+  **File:** `app/(app)/reports/page.tsx`
+  **Fix:** Switched revenue and throughput filters from `ts > toTs` to `ts >= toTs` for correct end-of-day exclusivity.
+  **Why it matters:** Monthly/period totals match operator expectations and avoid subtle off-by-one-day revenue or throughput inflation.
+
+- **BUG-SM-HUNT-010** — Scheduling page returned `null` when a required query resolved missing data, causing a blank screen with no recovery path.
+  **File:** `app/(app)/scheduling/page.tsx`
+  **Fix:** Replaced null-render path with actionable empty state guidance and tightened pointer event typing (`ReactPointerEvent`) to avoid fragile namespace-dependent typing.
+  **Why it matters:** Shop managers get a clear recovery action instead of a dead UI when planning data loads incompletely.
+
 - **BUG-PC-HUNT-103** — PO Receiving initialized line items by calling `setState` during render (`if (step===2) initializeLineItems()`), which risks React render-loop warnings and duplicate initialization under strict/concurrent rendering.  
   **File:** `app/(app)/parts/receiving/po/page.tsx`  
   **Fix:** Moved initialization into a `useEffect` tied to `step`, `poDetail`, and `lineItemsData.length`.  

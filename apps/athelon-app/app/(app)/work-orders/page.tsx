@@ -126,12 +126,12 @@ function filterWorkOrders(rows: WorkOrderRow[], tab: FilterTab) {
     case "pending":
       return rows.filter((w) => ["pending_inspection", "pending_signoff"].includes(w.status));
     case "awaiting_parts":
-      // Only include non-terminal WOs — closed/cancelled/voided WOs may still
-      // have historic pending-part records but they don't need shop attention.
+      // Only include actionable WOs — drafts are pre-work and terminal statuses
+      // don't need live shop attention.
       return rows.filter(
         (w) =>
           w.partsOnOrder > 0 &&
-          !["closed", "cancelled", "voided"].includes(w.status),
+          !["draft", "closed", "cancelled", "voided"].includes(w.status),
       );
     case "complete":
       return rows.filter((w) => ["closed", "cancelled", "voided"].includes(w.status));
@@ -178,14 +178,14 @@ export default function WorkOrdersPage() {
     return rows.map((wo) => ({
       id: String(wo._id),
       href: `/work-orders/${wo._id}`,
-      number: wo.workOrderNumber,
+      number: wo.workOrderNumber ?? `WO-${String(wo._id).slice(0, 8)}`,
       status: wo.status,
       workOrderType: wo.workOrderType,
       statusLabel: WO_STATUS_LABEL[wo.status as WoStatus] ?? wo.status,
       typeLabel: WO_TYPE_LABEL[wo.workOrderType as WoType] ?? wo.workOrderType,
       rawType: wo.workOrderType,
-      priority: wo.priority,
-      description: wo.description,
+      priority: wo.priority ?? "routine",
+      description: wo.description ?? "No description",
       customer: wo.customerName ?? "No customer",
       aircraft: wo.aircraft?.currentRegistration ?? "—",
       aircraftType: wo.aircraft
@@ -197,7 +197,7 @@ export default function WorkOrdersPage() {
       tasksTotal: wo.taskCardCount ?? 0,
       openSquawks: wo.openDiscrepancyCount ?? 0,
       partsOnOrder: wo.pendingPartCount ?? 0,
-      openedAt: wo.openedAt,
+      openedAt: wo.openedAt ?? Date.now(),
     }));
   }, [raw]);
 
@@ -278,7 +278,7 @@ export default function WorkOrdersPage() {
       if (["open", "in_progress", "open_discrepancies"].includes(wo.status)) c.active++;
       if (wo.status === "on_hold") c.on_hold++;
       if (["pending_inspection", "pending_signoff"].includes(wo.status)) c.pending++;
-      if (wo.partsOnOrder > 0 && !["closed", "cancelled", "voided"].includes(wo.status))
+      if (wo.partsOnOrder > 0 && !["draft", "closed", "cancelled", "voided"].includes(wo.status))
         c.awaiting_parts++;
       if (["closed", "cancelled", "voided"].includes(wo.status)) c.complete++;
     }

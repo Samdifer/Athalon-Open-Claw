@@ -94,7 +94,7 @@ export default function ReportsPage() {
     const monthly: Record<string, number> = {};
     for (const inv of invoices) {
       const ts = inv.paidAt ?? inv.updatedAt;
-      if (!ts || ts < fromTs || ts > toTs) continue;
+      if (!ts || ts < fromTs || ts >= toTs) continue;
       const d = new Date(ts);
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
       monthly[key] = (monthly[key] || 0) + (inv.total ?? 0);
@@ -125,7 +125,7 @@ export default function ReportsPage() {
     const monthly: Record<string, number> = {};
     for (const wo of woResult.page as any[]) {
       const ts = wo.closedAt ?? wo._creationTime;
-      if (ts < fromTs || ts > toTs) continue;
+      if (ts < fromTs || ts >= toTs) continue;
       const d = new Date(ts);
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
       monthly[key] = (monthly[key] || 0) + 1;

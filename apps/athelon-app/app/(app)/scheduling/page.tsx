@@ -7,6 +7,7 @@ import {
   useCallback,
   useEffect,
   type UIEvent,
+  type PointerEvent as ReactPointerEvent,
 } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -608,7 +609,7 @@ export default function SchedulingPage() {
   }, [timelineConfig, pnlPopout, analyticsPopout, syncTimelineScroll]);
 
   const startPanelResize = useCallback(
-    (e: React.PointerEvent, target: "pnl" | "analytics") => {
+    (e: ReactPointerEvent, target: "pnl" | "analytics") => {
       e.preventDefault();
       e.stopPropagation();
       setResizingPanel({
@@ -620,7 +621,7 @@ export default function SchedulingPage() {
     [panelHeights],
   );
 
-  const startRosterResize = useCallback((e: React.PointerEvent) => {
+  const startRosterResize = useCallback((e: ReactPointerEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setResizingRoster({
@@ -1485,7 +1486,15 @@ export default function SchedulingPage() {
     !planningFinancialSettings ||
     !schedulingSettings
   ) {
-    return null;
+    return (
+      <ActionableEmptyState
+        title="Scheduling data is temporarily unavailable"
+        missingInfo="Some scheduling inputs did not load. Refresh this page or reopen Scheduling to continue planning."
+        primaryActionLabel="Back to Dashboard"
+        primaryActionType="link"
+        primaryActionTarget="/dashboard"
+      />
+    );
   }
 
   if (workOrders.length === 0) {
