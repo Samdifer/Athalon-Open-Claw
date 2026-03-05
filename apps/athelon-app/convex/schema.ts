@@ -3191,6 +3191,9 @@ export default defineSchema({
     laborTotal: v.number(),
     partsTotal: v.number(),
     subtotal: v.number(),
+    // BUG-BM-HUNT-TAX: taxRatePercent stored so recomputeInvoiceTotals can
+    // reapply tax whenever line items change on a DRAFT invoice.
+    taxRatePercent: v.optional(v.number()),
     tax: v.number(),
     total: v.number(),
     amountPaid: v.number(),

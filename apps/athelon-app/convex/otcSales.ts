@@ -84,13 +84,24 @@ export const createOTCSale = mutation({
       if (item.partId) {
         const part = await ctx.db.get(item.partId);
         if (part) {
-          // For serialized parts, mark as sold; for non-serialized, this is tracked via audit
+          // BUG-BM-HUNT-003: Previously only an audit log was written; the part's
+          // location was never updated.  This left the part in "inventory" status
+          // so it could be sold again via OTC or reserved for a work order.
+          // Fix: mark the part as "scrapped" (consumed/sold) so it is removed from
+          // available inventory.  This is the closest available location status for
+          // a part that has left the building via an OTC sale.
+          if (part.location === "inventory") {
+            await ctx.db.patch(item.partId, {
+              location: "scrapped",
+              updatedAt: now,
+            });
+          }
           await ctx.db.insert("auditLog", {
             organizationId: args.organizationId,
             eventType: "part_removed",
             tableName: "parts",
             recordId: item.partId,
-            notes: `OTC sale ${receiptNumber}: ${item.quantity}x ${item.description}`,
+            notes: `OTC sale ${receiptNumber}: ${item.quantity}x ${item.description} — location set to scrapped`,
             timestamp: now,
           });
         }

@@ -145,7 +145,13 @@ export default function AuditReadinessPage() {
     return oldest;
   }, null);
   const oldestOpenDays = oldestOpenAt ? Math.floor((Date.now() - oldestOpenAt) / 86_400_000) : 0;
-  const discrepancyScore = clampPct(100 - openDiscrepancies.length * 4 - oldestOpenDays);
+  // BUG-DOM-115: oldestOpenDays was subtracted raw from 100. A single discrepancy
+  // open for 97+ days drove the score permanently to 0 regardless of how few
+  // discrepancies existed, making the metric useless as a trend indicator. The age
+  // penalty is now capped at 30 days so the formula stays bounded: worst case from
+  // age alone is −30, leaving room for count-based deductions to provide signal.
+  const agePenalty = Math.min(oldestOpenDays, 30);
+  const discrepancyScore = clampPct(100 - openDiscrepancies.length * 4 - agePenalty);
 
   const metrics: Metric[] = [
     {

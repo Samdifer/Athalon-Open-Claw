@@ -79,7 +79,7 @@ function VoiceNoteAudio({ noteId, storageId, playingId, setPlayingId, audioRefs 
       <Button
         variant="outline"
         size="icon-xs"
-        className="h-10 w-10 sm:h-6 sm:w-6"
+        className="h-10 w-10 sm:h-8 sm:w-8"
         onClick={() => void handleTogglePlay()}
         disabled={!audioUrl}
         title={playingId === noteId ? "Stop playback" : "Play voice note"}
@@ -105,7 +105,8 @@ function VoiceNoteAudio({ noteId, storageId, playingId, setPlayingId, audioRefs 
 }
 
 export function VoiceNotesPanel({ organizationId, workOrderId, taskCardId, compact = false, className }: VoiceNotesPanelProps) {
-  const notes = useQuery(api.voiceNotes.list, { workOrderId, taskCardId }) ?? [];
+  // BUG-TECH-001: Pass organizationId so voice notes are org-scoped on the backend.
+  const notes = useQuery(api.voiceNotes.list, { organizationId: organizationId as string, workOrderId, taskCardId }) ?? [];
   const technicians = useQuery(api.technicians.list, { organizationId }) ?? [];
   const updateTranscript = useMutation(api.voiceNotes.updateTranscript);
   const removeNote = useMutation(api.voiceNotes.remove);
@@ -212,7 +213,7 @@ export function VoiceNotesPanel({ organizationId, workOrderId, taskCardId, compa
                     <Button
                       variant="ghost"
                       size="icon-xs"
-                      className="h-10 w-10 sm:h-6 sm:w-6"
+                      className="h-10 w-10 sm:h-8 sm:w-8"
                       onClick={() => void handleSaveEdit()}
                       disabled={isSavingEdit}
                       title="Save transcript"
@@ -222,7 +223,7 @@ export function VoiceNotesPanel({ organizationId, workOrderId, taskCardId, compa
                     <Button
                       variant="ghost"
                       size="icon-xs"
-                      className="h-10 w-10 sm:h-6 sm:w-6"
+                      className="h-10 w-10 sm:h-8 sm:w-8"
                       onClick={() => {
                         setEditingId(null);
                         setDraftTranscript("");
@@ -237,7 +238,7 @@ export function VoiceNotesPanel({ organizationId, workOrderId, taskCardId, compa
                   <Button
                     variant="ghost"
                     size="icon-xs"
-                    className="h-10 w-10 sm:h-6 sm:w-6"
+                    className="h-10 w-10 sm:h-8 sm:w-8"
                     onClick={() => handleStartEdit(note)}
                     title="Edit transcript"
                   >
@@ -247,7 +248,7 @@ export function VoiceNotesPanel({ organizationId, workOrderId, taskCardId, compa
                 <Button
                   variant="ghost"
                   size="icon-xs"
-                  className="h-10 w-10 sm:h-6 sm:w-6 text-destructive hover:text-destructive"
+                  className="h-10 w-10 sm:h-8 sm:w-8 text-destructive hover:text-destructive"
                   onClick={() => setDeleteTargetId(note._id)}
                   title="Delete voice note"
                 >

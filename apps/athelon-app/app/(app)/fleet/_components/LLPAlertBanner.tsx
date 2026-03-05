@@ -20,7 +20,14 @@ export function LLPAlertBanner() {
   const parts = useQuery(api.parts.listParts, orgId ? { organizationId: orgId } : "skip") as LLPPart[] | undefined;
 
   const counts = useMemo(() => {
-    const rows = (parts ?? []).filter((p) => p.isLifeLimited);
+    // BUG-DOM-113: Previously counted ALL life-limited parts including uninstalled
+    // warehouse stock. A part sitting in a bin with high pre-install accumulated hours
+    // would trigger a critical/overdue alert even though it is not flying and accruing
+    // additional time. Only installed parts (those assigned to an aircraft) should
+    // contribute to the LLP alert banner — matching the stoplight grid's own filter.
+    const rows = (parts ?? []).filter(
+      (p) => p.isLifeLimited && (p.currentAircraftId ?? p.installedOnAircraftId),
+    );
     let warning = 0;
     let critical = 0;
     let overdue = 0;

@@ -47,12 +47,19 @@ export const create = mutation({
     phaseNumber: v.optional(v.number()),
     requiredPartsTemplate: v.optional(v.array(v.string())),
     estimatedLaborHours: v.optional(v.number()),
+    // BUG-DOM-117: isActive was missing from the create mutation args. The UI form
+    // includes an "Active" toggle that was silently ignored — Convex strips unknown
+    // fields and the handler hardcoded isActive:true. A DOM creating a program with
+    // the toggle set to inactive (e.g., staging a future inspection) would see the
+    // program immediately appear as active with no way to pre-set it inactive at
+    // creation time.
+    isActive: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const now = Date.now();
     return await ctx.db.insert("maintenancePrograms", {
       ...args,
-      isActive: true,
+      isActive: args.isActive ?? true,
       createdAt: now,
       updatedAt: now,
     });
@@ -124,7 +131,13 @@ export const computeDueDates = query({
       }
 
       if (program.hourInterval) {
-        const hoursRemaining = program.hourInterval; // from last compliance (simplified)
+        // BUG-DOM-114: hoursRemaining was always set to the full program.hourInterval,
+        // ignoring the aircraft's currentTotalTime. A 1 000-hour interval always showed
+        // "1 000 hours remaining" regardless of how many hours the aircraft had flown,
+        // making the DOM's maintenance planning completely inaccurate. Fix: compute
+        // remaining as interval minus (totalTime modulo interval).
+        const hoursIntoInterval = args.currentTotalTime % program.hourInterval;
+        const hoursRemaining = program.hourInterval - hoursIntoInterval;
         const monthsUntilDue = args.averageMonthlyHours > 0
           ? hoursRemaining / args.averageMonthlyHours
           : Infinity;
@@ -137,7 +150,9 @@ export const computeDueDates = query({
       }
 
       if (program.cycleInterval) {
-        const cyclesRemaining = program.cycleInterval;
+        // BUG-DOM-114 (cycles): Same issue — always showed full interval remaining.
+        const cyclesIntoInterval = args.currentCycles % program.cycleInterval;
+        const cyclesRemaining = program.cycleInterval - cyclesIntoInterval;
         const monthsUntilDue = args.averageMonthlyCycles > 0
           ? cyclesRemaining / args.averageMonthlyCycles
           : Infinity;

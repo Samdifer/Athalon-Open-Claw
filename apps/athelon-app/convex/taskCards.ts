@@ -1292,14 +1292,15 @@ export const listTaskCardsForTechnician = query({
       )
       .collect();
 
-    // Filter out voided and completed, focus on active work
-    const activeCards = cards.filter(
-      (c) => c.status === "not_started" || c.status === "in_progress" || c.status === "incomplete_na_steps",
-    );
+    // BUG-TECH-002: Previously filtered out "complete" and "voided" cards here,
+    // so the frontend's "Show all / Active only" toggle (BUG-031) never worked —
+    // hiddenCount was always 0 and historical cards were never shown. The frontend
+    // My Work page already implements the status filter client-side. Return all
+    // assigned cards and let the caller decide what to display.
 
     // Enrich with work order info and steps
     const enriched = await Promise.all(
-      activeCards.map(async (tc) => {
+      cards.map(async (tc) => {
         const wo = await ctx.db.get(tc.workOrderId);
         const steps = await ctx.db
           .query("taskCardSteps")

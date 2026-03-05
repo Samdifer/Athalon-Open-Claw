@@ -230,12 +230,17 @@ export const receiveAgainstPO = mutation({
         partIds.push(partId);
       }
     } else {
-      // One record for non-serialized (batch) parts
+      // One record for non-serialized (batch) parts.
+      // BUG-PC-02 fix: set quantityOnHand so that inventory counts and the
+      // parts grid display the correct received quantity. Previously this field
+      // was omitted, so every batch-received part showed 0 (or undefined) in
+      // all inventory views that read `quantityOnHand` for display.
       const notesWithQty = args.notes
         ? `Qty received: ${args.receivedQty}. ${args.notes}`
         : `Qty received: ${args.receivedQty}`;
       const partId = await ctx.db.insert("parts", {
         ...basePart,
+        quantityOnHand: args.receivedQty,
         notes: notesWithQty,
       });
       partIds.push(partId);

@@ -2,21 +2,35 @@ import { v } from "convex/values";
 import { query, mutation } from "./_generated/server";
 
 export const list = query({
-  args: { workOrderId: v.optional(v.id("workOrders")), taskCardId: v.optional(v.id("taskCards")) },
+  args: {
+    // BUG-TECH-001: organizationId was missing — voice notes were not org-scoped.
+    // Any caller who knew a workOrderId or taskCardId could retrieve voice notes
+    // belonging to another organization. Added as optional for backward compat
+    // but callers should always supply it; results are filtered when provided.
+    organizationId: v.optional(v.string()),
+    workOrderId: v.optional(v.id("workOrders")),
+    taskCardId: v.optional(v.id("taskCards")),
+  },
   handler: async (ctx, args) => {
+    let results;
     if (args.taskCardId) {
-      return await ctx.db
+      results = await ctx.db
         .query("voiceNotes")
         .withIndex("by_task_card", (q) => q.eq("taskCardId", args.taskCardId))
         .collect();
-    }
-    if (args.workOrderId) {
-      return await ctx.db
+    } else if (args.workOrderId) {
+      results = await ctx.db
         .query("voiceNotes")
         .withIndex("by_work_order", (q) => q.eq("workOrderId", args.workOrderId))
         .collect();
+    } else {
+      return [];
     }
-    return [];
+    // Enforce org isolation: filter to caller's org when provided.
+    if (args.organizationId) {
+      results = results.filter((n) => n.organizationId === args.organizationId);
+    }
+    return results;
   },
 });
 

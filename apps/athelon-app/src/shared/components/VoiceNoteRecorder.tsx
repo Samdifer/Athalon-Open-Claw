@@ -80,6 +80,20 @@ export function VoiceNoteRecorder({
   const clearDraft = useCallback(() => {
     clearElapsedInterval();
     stopAndReleaseStream();
+    // BUG-TECH-004: MediaRecorder was not explicitly stopped in clearDraft.
+    // When the component unmounts mid-recording (e.g. navigating away),
+    // stopAndReleaseStream() stops the media tracks but the MediaRecorder
+    // continues internally and fires onstop asynchronously — calling React
+    // setState on an unmounted component. React 18+ suppresses the error but
+    // the orphaned recording is still processed. Fix: stop the recorder first
+    // (before nulling the ref) so onstop runs synchronously in the same tick,
+    // then null the ref so onstop's blob-processing guard sees it and bails.
+    const recorder = mediaRecorderRef.current;
+    if (recorder && recorder.state !== "inactive") {
+      // Detach onstop before stopping so the blob/URL processing is skipped.
+      recorder.onstop = null;
+      recorder.stop();
+    }
     mediaRecorderRef.current = null;
     chunksRef.current = [];
     startedAtRef.current = null;

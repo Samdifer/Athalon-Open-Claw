@@ -930,6 +930,9 @@ export const createInvoiceFromWorkOrder = mutation({
       laborTotal: 0,
       partsTotal: 0,
       subtotal: 0,
+      // BUG-BM-HUNT-TAX: Store taxRatePercent so recomputeInvoiceTotals can
+      // reapply it whenever line items change on this DRAFT invoice.
+      taxRatePercent: taxRatePercent > 0 ? taxRatePercent : undefined,
       tax: 0, // Will be recalculated after line items are totaled
       total: 0,
       amountPaid: 0,
@@ -1161,7 +1164,11 @@ export const createInvoiceManual = mutation({
       laborTotal: 0,
       partsTotal: 0,
       subtotal: 0,
-      tax: 0, // Recalculated when line items are added; taxRateId stored for future recalc
+      // BUG-BM-HUNT-TAX: Store resolved taxRatePercent so recomputeInvoiceTotals
+      // can reapply it when line items are added. Previously taxRateId was
+      // intended to be stored here but the field was never added to the schema.
+      taxRatePercent: taxRatePercent > 0 ? taxRatePercent : undefined,
+      tax: 0, // Recalculated when line items are added via recomputeInvoiceTotals
       total: 0,
       amountPaid: 0,
       balance: 0,
@@ -1339,6 +1346,26 @@ export const sendInvoice = mutation({
     if (invoice.orgId !== args.orgId) throw new Error(`Invoice does not belong to org.`);
     if (invoice.status !== "DRAFT") {
       throw new Error(`Invoice must be DRAFT to send. Current: "${invoice.status}".`);
+    }
+
+    // BUG-BM-HUNT-006: Prevent sending a $0 empty invoice — this would confuse
+    // the customer and create an immutable record with no financial value.
+    const lineItems = await ctx.db
+      .query("invoiceLineItems")
+      .withIndex("by_org_invoice", (q) =>
+        q.eq("orgId", args.orgId).eq("invoiceId", args.invoiceId),
+      )
+      .collect();
+    if (lineItems.length === 0) {
+      throw new Error(
+        `Invoice ${invoice.invoiceNumber} has no line items. Add at least one line item before sending.`,
+      );
+    }
+    if (invoice.total <= 0) {
+      throw new Error(
+        `Invoice ${invoice.invoiceNumber} has a $0.00 total. ` +
+        `Add billable line items before sending.`,
+      );
     }
 
     await ctx.db.patch(args.invoiceId, {
@@ -2065,7 +2092,14 @@ async function recomputeInvoiceTotals(
 
   const subtotal = Math.round((laborTotal + partsTotal + otherTotal) * 100) / 100;
   const invoice = await ctx.db.get(invoiceId);
-  const tax = invoice?.tax ?? 0;
+  // BUG-BM-HUNT-TAX: Recompute tax from the stored taxRatePercent so that adding
+  // or removing line items on a DRAFT invoice keeps tax in sync with the rate.
+  // Previously this fell back to invoice.tax (the old stored flat amount), meaning
+  // manually-created invoices always had $0 tax regardless of what rate was chosen.
+  const taxRatePercent = invoice?.taxRatePercent ?? 0;
+  const tax = taxRatePercent > 0
+    ? Math.round(subtotal * (taxRatePercent / 100) * 100) / 100
+    : (invoice?.tax ?? 0);
   const total = Math.round((subtotal + tax) * 100) / 100;
   const amountPaid = invoice?.amountPaid ?? 0;
   const balance = Math.round((total - amountPaid) * 100) / 100;
@@ -2074,6 +2108,7 @@ async function recomputeInvoiceTotals(
     laborTotal: Math.round(laborTotal * 100) / 100,
     partsTotal: Math.round(partsTotal * 100) / 100,
     subtotal,
+    tax,
     total,
     balance,
     updatedAt: now,

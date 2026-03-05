@@ -194,6 +194,28 @@ export const completeCalibration = mutation({
     nextDue: v.number(),
   },
   handler: async (ctx, { toolId, date, nextDue }) => {
+    // BUG-PC-04 fix: Validate calibration date ordering before persisting.
+    // Previously no validation was performed, so a user who accidentally
+    // swapped the two date fields (or entered a past date for "next due")
+    // would save a record where nextCalibrationDue <= lastCalibrationDate.
+    // On the next tool check-in the tool would be immediately re-flagged as
+    // calibration_due — with no visible error during entry.
+    if (nextDue <= date) {
+      throw new Error(
+        "Next calibration due date must be after the calibration date. " +
+        "Please verify the dates and resubmit."
+      );
+    }
+    if (nextDue <= Date.now()) {
+      throw new Error(
+        "Next calibration due date must be in the future. " +
+        "A past next-due date would immediately flag this tool as calibration overdue."
+      );
+    }
+
+    const tool = await ctx.db.get(toolId);
+    if (!tool) throw new Error("Tool not found.");
+
     await ctx.db.patch(toolId, {
       status: "available",
       lastCalibrationDate: date,

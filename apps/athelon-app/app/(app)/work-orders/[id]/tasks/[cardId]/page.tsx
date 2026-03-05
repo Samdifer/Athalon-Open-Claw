@@ -377,6 +377,51 @@ export default function TaskCardPage() {
   const currentAircraftHours =
     workOrderResult?.aircraft?.totalTimeAirframeHours ?? 0;
 
+  // BUG-TECH-003: React Rules of Hooks violation — useMemo, useState, and
+  // useEffect were previously called AFTER conditional early returns (isLoading,
+  // !taskCards, !taskCard). React requires all hooks to be called unconditionally
+  // and in the same order on every render. If the first render hit an early return
+  // (e.g. isLoading=true), the hooks were skipped; when loading finished and the
+  // component re-rendered past the guards, React saw new hooks and threw
+  // "Rendered more hooks than during the previous render".
+  //
+  // Fix: hoist useMemo (actualHours), useState (timerElapsedMs), and the
+  // associated useEffect to before any early returns. Both only need data that
+  // is already available at this point in the component (query refs, not
+  // task-card-specific derived state).
+
+  // Actual hours for the task card's TimeVarianceBar — computable from the
+  // work-order time entries query which is available before early returns.
+  const actualHours = useMemo(() => {
+    const now = Date.now();
+    return (workOrderTimeEntries ?? [])
+      .filter((entry) => String(entry.taskCardId ?? "") === cardId)
+      .reduce((sum, entry) => {
+        if (typeof entry.durationMinutes === "number") return sum + entry.durationMinutes / 60;
+        if (entry.clockOutAt) return sum + Math.max(0, entry.clockOutAt - entry.clockInAt) / 3600000;
+        return sum + Math.max(0, now - entry.clockInAt) / 3600000;
+      }, 0);
+  }, [workOrderTimeEntries, cardId]);
+
+  // Live elapsed counter for the header task/step timer display. Must be hoisted
+  // before early returns to avoid the Rules of Hooks violation. Uses
+  // activeTimer?.entry directly (available from the query above) instead of the
+  // activeTimerEntry alias that was defined after the early returns.
+  const [timerElapsedMs, setTimerElapsedMs] = useState<number>(0);
+  useEffect(() => {
+    const entry = activeTimer?.entry;
+    if (!entry) {
+      setTimerElapsedMs(0);
+      return;
+    }
+    const clockInAt = (entry as { clockInAt?: number }).clockInAt;
+    if (!clockInAt) return;
+    setTimerElapsedMs(Date.now() - clockInAt);
+    const id = setInterval(() => setTimerElapsedMs(Date.now() - clockInAt), 1000);
+    return () => clearInterval(id);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [(activeTimer?.entry as { _id?: string } | undefined)?._id]);
+
   // Wait for both taskCards AND workOrderResult so aircraft hours are
   // always accurate when the page first renders — prevents findings from
   // being raised with 0 hours if workOrderResult resolves after taskCards.
@@ -413,16 +458,6 @@ export default function TaskCardPage() {
   ).length;
 
   const estimatedHours = taskCard.estimatedHours ?? 0;
-  const actualHours = useMemo(() => {
-    const now = Date.now();
-    return (workOrderTimeEntries ?? [])
-      .filter((entry) => String(entry.taskCardId ?? "") === cardId)
-      .reduce((sum, entry) => {
-        if (typeof entry.durationMinutes === "number") return sum + entry.durationMinutes / 60;
-        if (entry.clockOutAt) return sum + Math.max(0, entry.clockOutAt - entry.clockInAt) / 3600000;
-        return sum + Math.max(0, now - entry.clockInAt) / 3600000;
-      }, 0);
-  }, [workOrderTimeEntries, cardId]);
 
   // BUG-LT2-006: Include "in_progress" steps in the "remaining steps" count.
   // Previously only counted "pending" steps — if Step 3 is in_progress and
@@ -464,26 +499,6 @@ export default function TaskCardPage() {
     activeTimerEntry &&
     (activeTimerEntry.entryType ?? "work_order") === "step" &&
     activeTimerEntry.taskCardId === cardId;
-
-  // BUG-LT-HUNT-076: Live elapsed display for the active timer.
-  // Without this, when a task timer is running the header only shows
-  // "Stop Task Clock" with no time indicator. The tech has no idea if
-  // they forgot to stop the clock from the previous shift or just
-  // started it 5 minutes ago — they have to navigate to Time Clock to check.
-  // Ticks every second while any timer entry is active; resets on stop.
-  const [timerElapsedMs, setTimerElapsedMs] = useState<number>(0);
-  useEffect(() => {
-    if (!activeTimerEntry) {
-      setTimerElapsedMs(0);
-      return;
-    }
-    const clockInAt = (activeTimerEntry as { clockInAt?: number }).clockInAt;
-    if (!clockInAt) return;
-    setTimerElapsedMs(Date.now() - clockInAt);
-    const id = setInterval(() => setTimerElapsedMs(Date.now() - clockInAt), 1000);
-    return () => clearInterval(id);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [(activeTimerEntry as { _id?: string } | undefined)?._id]);
 
   // ── Map Convex compliance items to local shape ────────────────────────────
   const complianceItems: TaskComplianceItem[] = (complianceItemsRaw ?? []).map((item) => ({

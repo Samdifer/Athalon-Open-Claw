@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -86,6 +86,19 @@ export function ReceivingInspection() {
 
   const sortedLog = useMemo(() => [...log].sort((a, b) => b.inspectedAt - a.inspectedAt), [log]);
 
+  // BUG-PC-05a fix: Pre-populate expected/received qty from the part's own
+  // quantity field when the inspector opens the checklist dialog. Previously
+  // both fields defaulted to "1" regardless of batch size — a clerk receiving
+  // 10 units would always need to manually update both fields, and if they
+  // forgot, the quantity mismatch check would silently block acceptance.
+  useEffect(() => {
+    if (selectedPart) {
+      const qty = String(selectedPart.quantityOnHand ?? selectedPart.quantity ?? 1);
+      setExpectedQty(qty);
+      setReceivedQty(qty);
+    }
+  }, [selectedPart]);
+
   function resetDialogState() {
     setSelectedPart(null);
     setVisualCondition("acceptable");
@@ -99,7 +112,15 @@ export function ReceivingInspection() {
   }
 
   async function submitDecision(decision: Decision) {
-    if (!selectedPart || !techId) return;
+    if (!selectedPart) return;
+    // BUG-PC-05b fix: Provide an actionable error when the technician record
+    // cannot be resolved. Previously the function returned silently when
+    // techId was undefined — the "Accept / Reject" buttons appeared enabled
+    // but clicking them did nothing, with no feedback to the user.
+    if (!techId) {
+      toast.error("Technician profile not found. Please ensure your account is linked to a technician record before completing inspections.");
+      return;
+    }
     if (!inspectorName.trim()) {
       toast.error("Inspector name is required.");
       return;

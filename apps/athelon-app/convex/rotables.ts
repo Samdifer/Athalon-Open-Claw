@@ -95,6 +95,20 @@ export const recordAction = mutation({
     performedBy: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    // BUG-PC-03 fix: A condemned rotable must not be returned to any active
+    // lifecycle state. Previously any action (e.g. "installed") could silently
+    // override the condemned status because there was no guard. A condemned
+    // component is permanently removed from service and must not re-enter the
+    // fleet under any circumstances.
+    const rotable = await ctx.db.get(args.rotableId);
+    if (!rotable) throw new Error("Rotable not found.");
+    if (rotable.status === "condemned" && args.action !== "condemned") {
+      throw new Error(
+        `Cannot record action "${args.action}" on a condemned rotable (P/N ${rotable.partNumber} S/N ${rotable.serialNumber}). ` +
+        "Condemned components are permanently removed from service."
+      );
+    }
+
     await ctx.db.insert("rotableHistory", { ...args, createdAt: Date.now() });
     // Update rotable status based on action
     const statusMap: Record<string, string> = {

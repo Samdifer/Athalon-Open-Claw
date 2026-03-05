@@ -5,6 +5,7 @@ type PartStatus =
   | "ordered"
   | "shipped"
   | "received"
+  | "in_stock"
   | "pending_inspection"
   | "issued"
   | "installed"
@@ -28,6 +29,15 @@ const STATUS_META: Record<PartStatus, { label: string; className: string }> = {
   received: {
     label: "Received",
     className: "bg-purple-500/15 text-purple-600 dark:text-purple-400 border-purple-500/30",
+  },
+  // BUG-PC-01: "inventory" (in-stock parts) was incorrectly mapped to the
+  // "received" status (label: "Received", purple badge). Parts that have
+  // passed receiving inspection and are available in stock should show
+  // "In Stock" with a distinct green color — not the purple "Received" badge
+  // which implies the part just arrived from a supplier.
+  in_stock: {
+    label: "In Stock",
+    className: "bg-green-500/15 text-green-600 dark:text-green-400 border-green-500/30",
   },
   pending_inspection: {
     label: "Pending Inspection",
@@ -62,7 +72,12 @@ function mapRawStatus(status: string): PartStatus {
   if (status === "issued" || status === "removed_pending_disposition") return "issued";
   if (status === "installed") return "installed";
   if (status === "pending_inspection") return "pending_inspection";
-  if (status === "inventory") return "received";
+  // BUG-PC-01 fix: "inventory" location = part is in stock after passing
+  // receiving inspection. Map to "in_stock" (green "In Stock" badge) instead
+  // of "received" (purple "Received" badge) which caused confusion for parts
+  // clerks because "Received" implies the part just arrived, not that it's
+  // cleared and available for issuance.
+  if (status === "inventory") return "in_stock";
   if (status === "quarantine") return "quarantine";
   if (status === "scrapped") return "scrapped";
   if (status === "returned_to_stock" || status === "returned_to_vendor") return "returned";

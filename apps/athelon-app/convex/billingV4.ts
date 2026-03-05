@@ -536,7 +536,12 @@ export const updateInvoiceLineItem = mutation({
     const discPct = args.discountPercent ?? item.discountPercent ?? 0;
     const discAmt = args.discountAmount ?? item.discountAmount ?? 0;
     const subtotal = qty * unitPrice;
-    const total = Math.round((subtotal - (subtotal * discPct / 100) - discAmt) * 100) / 100;
+    const rawTotal = Math.round((subtotal - (subtotal * discPct / 100) - discAmt) * 100) / 100;
+    // BUG-BM-HUNT-004: Credits and deposits may legitimately have negative totals
+    // (qty < 0 and/or discount exceeds subtotal).  Math.max(0, total) was clamping
+    // them to zero, making credit line items silently ineffective.
+    const isCreditLike = item.type === "credit" || item.type === "deposit";
+    const total = isCreditLike ? rawTotal : Math.max(0, rawTotal);
 
     await ctx.db.patch(args.lineItemId, {
       description: args.description ?? item.description,
@@ -544,7 +549,7 @@ export const updateInvoiceLineItem = mutation({
       unitPrice,
       discountPercent: discPct || undefined,
       discountAmount: discAmt || undefined,
-      total: Math.max(0, total),
+      total,
     });
 
     await recalcInvoiceTotals(ctx, item.invoiceId);
@@ -714,6 +719,24 @@ export const applyCreditMemoToInvoice = mutation({
     const invoice = await ctx.db.get(args.invoiceId);
     if (!invoice) throw new Error("Invoice not found.");
     if (invoice.orgId !== args.orgId) throw new Error("ORG_MISMATCH.");
+    // BUG-BM-HUNT-005: Guard against applying a credit memo to a DRAFT invoice
+    // (which hasn't been sent yet and whose balance may change) or a VOID invoice
+    // (which is closed and should never receive payments or credits).
+    if (invoice.status === "DRAFT") {
+      throw new Error(
+        "Cannot apply a credit memo to a DRAFT invoice. Send the invoice first.",
+      );
+    }
+    if (invoice.status === "VOID") {
+      throw new Error(
+        "Cannot apply a credit memo to a VOID invoice. Issue a new invoice if needed.",
+      );
+    }
+    if (invoice.status === "PAID") {
+      throw new Error(
+        "Invoice is already fully paid. No credit can be applied.",
+      );
+    }
 
     const now = Date.now();
     // Apply credit as a payment
@@ -860,8 +883,17 @@ export const createInvoiceFromQuote = mutation({
     const quote = await ctx.db.get(args.quoteId);
     if (!quote) throw new Error("Quote not found.");
     if (quote.orgId !== args.orgId) throw new Error("ORG_MISMATCH.");
-    if (quote.status !== "APPROVED" && quote.status !== "CONVERTED") {
-      throw new Error("Quote must be APPROVED to create an invoice from it.");
+    // BUG-BM-HUNT-001: Only APPROVED quotes may be converted; CONVERTED means an
+    // invoice was already generated from this quote.  Allowing CONVERTED would
+    // silently create a second (duplicate) invoice for the same customer.
+    if (quote.status !== "APPROVED") {
+      throw new Error(
+        `Quote must be in APPROVED status to create an invoice. ` +
+        `Current status: "${quote.status}". ` +
+        (quote.status === "CONVERTED"
+          ? "This quote has already been converted to an invoice."
+          : ""),
+      );
     }
 
     // Get quote line items
@@ -913,6 +945,14 @@ export const createInvoiceFromQuote = mutation({
         updatedAt: now,
       });
     }
+
+    // BUG-BM-HUNT-001: Mark the source quote as CONVERTED so it cannot be
+    // converted to a second invoice.  Previously this patch was missing, leaving
+    // the quote in APPROVED status and allowing duplicate invoices to be created.
+    await ctx.db.patch(args.quoteId, {
+      status: "CONVERTED",
+      updatedAt: now,
+    });
 
     return invoiceId;
   },

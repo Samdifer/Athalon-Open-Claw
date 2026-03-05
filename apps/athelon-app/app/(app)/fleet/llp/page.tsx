@@ -59,10 +59,18 @@ export default function LLPDashboardPage() {
 
     let criticalAlerts = 0;
     let upcomingReplacements = 0;
+    // BUG-DOM-112: totalTracked previously used llpParts.length which counted ALL
+    // life-limited parts including uninstalled warehouse stock. The stoplight grid
+    // only renders parts with an aircraft assignment (currentAircraftId /
+    // installedOnAircraftId), so the KPI "Total LLPs Tracked" would show a higher
+    // number than the grid contained. A DOM comparing the card to the grid rows
+    // would see a mismatch and lose trust in the data. Fix: count only installed parts.
+    let trackedInstalled = 0;
 
     for (const part of llpParts) {
       const aircraftId = part.currentAircraftId ?? part.installedOnAircraftId;
       if (!aircraftId) continue;
+      trackedInstalled++;
       const category = part.partCategory ?? "Uncategorized";
       categorySet.add(category);
 
@@ -81,7 +89,7 @@ export default function LLPDashboardPage() {
     return {
       categories: [...categorySet].sort((a, b) => a.localeCompare(b)),
       byAircraftCategory,
-      totalTracked: llpParts.length,
+      totalTracked: trackedInstalled,
       criticalAlerts,
       upcomingReplacements,
       aircraftRows,

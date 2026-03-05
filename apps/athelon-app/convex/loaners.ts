@@ -79,6 +79,23 @@ export const returnItem = mutation({
   handler: async (ctx, args) => {
     const now = Date.now();
     const item = await ctx.db.get(args.id);
+    if (!item) throw new Error("Loaner item not found.");
+    // BUG-PC-06 fix: Guard against returning an item that is not currently
+    // loaned out. Previously there was no status check — a race condition
+    // (two clerks both clicking "Return" simultaneously) or an accidentally
+    // triggered mutation could reset a maintenance/retired item to "available"
+    // and corrupt the loan history. The UI already prevents the button from
+    // appearing for non-loaned-out items, but the backend must also enforce
+    // this invariant for correctness and audit trail integrity.
+    if (item.status !== "loaned_out") {
+      throw new Error(
+        `Cannot return loaner item — current status is "${item.status}", expected "loaned_out". ` +
+        "The item may have already been returned."
+      );
+    }
+    if (item.organizationId !== args.organizationId) {
+      throw new Error("ORG_MISMATCH: loaner item does not belong to the requesting organization.");
+    }
     await ctx.db.patch(args.id, {
       status: "available",
       actualReturnDate: now,
@@ -91,7 +108,7 @@ export const returnItem = mutation({
       loanerItemId: args.id,
       organizationId: args.organizationId,
       action: "returned",
-      customerId: item?.loanedToCustomerId,
+      customerId: item.loanedToCustomerId,
       notes: args.notes,
       createdAt: now,
     });
