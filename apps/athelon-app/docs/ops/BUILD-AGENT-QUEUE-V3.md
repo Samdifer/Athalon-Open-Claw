@@ -7,12 +7,12 @@
 ## Queue
 
 ### Wave 1 — File Upload Foundation + Photos (2 agents)
-- [ ] TEAM-A: MBP-0063 (Convex file storage), MBP-0064 (FileUpload component), MBP-0065 (photo on step sign-off), MBP-0066 (photo on discrepancy)
-- [ ] TEAM-B: MBP-0067 (WO document attachment), MBP-0068 (photo gallery lightbox), MBP-0117 (conformityInspections table), MBP-0118 (conformity mutations)
+- [x] TEAM-A: MBP-0063 (Convex file storage), MBP-0064 (FileUpload component), MBP-0065 (photo on step sign-off), MBP-0066 (photo on discrepancy) ✅ 3438143
+- [x] TEAM-B: MBP-0067 (WO document attachment), MBP-0068 (photo gallery lightbox), MBP-0117 (conformityInspections table), MBP-0118 (conformity mutations) ✅ 5a1623a
 
 ### Wave 2 — Notifications + PDF (2 agents)
-- [ ] TEAM-C: MBP-0071 (notifications table), MBP-0072 (bell icon), MBP-0073 (dropdown panel), MBP-0074 (auto-notifications), MBP-0075 (mark read), MBP-0076 (preferences)
-- [ ] TEAM-D: MBP-0077 (invoice PDF), MBP-0078 (quote PDF), MBP-0079 (RTS PDF), MBP-0080 (WO PDF), MBP-0081 (download button), MBP-0082 (print button)
+- [x] TEAM-C: MBP-0071 (notifications table), MBP-0072 (bell icon), MBP-0073 (dropdown panel), MBP-0074 (auto-notifications), MBP-0075 (mark read), MBP-0076 (preferences) ✅
+- [x] TEAM-D: MBP-0077 (invoice PDF), MBP-0078 (quote PDF), MBP-0079 (RTS PDF), MBP-0080 (WO PDF), MBP-0081 (download button), MBP-0082 (print button) ✅
 
 ### Wave 3 — Dashboard + Billing Wiring (2 agents)
 - [ ] TEAM-E: MBP-0056 (WO pie chart), MBP-0057 (revenue trend), MBP-0058 (TAT bar), MBP-0059 (tech utilization), MBP-0060 (billing analytics)

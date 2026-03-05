@@ -222,6 +222,8 @@ const mainNav: NavEntry[] = [
       { title: "Profitability", href: "/reports/financials/profitability" },
       { title: "Runway", href: "/reports/financials/runway" },
       { title: "Inventory", href: "/reports/inventory" },
+      { title: "Revenue", href: "/reports/revenue" },
+      { title: "Throughput", href: "/reports/throughput" },
     ],
   },
 ];

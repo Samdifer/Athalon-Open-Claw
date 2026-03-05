@@ -102,3 +102,31 @@ export function detectConflicts(scheduledWOs: ScheduledWO[]): Conflict[] {
 
   return conflicts;
 }
+
+/**
+ * MBP-0113: Check for bay time overlap with a proposed scheduling change.
+ * Returns list of conflicting WO numbers.
+ */
+export function checkBayTimeConflict(
+  proposedWoId: string,
+  proposedStart: number,
+  proposedEnd: number,
+  bayWOs: ScheduledWO[],
+): { conflictingWoNumbers: string[]; overlapDetails: { woNumber: string; overlapStart: number; overlapEnd: number }[] } {
+  const conflictingWoNumbers: string[] = [];
+  const overlapDetails: { woNumber: string; overlapStart: number; overlapEnd: number }[] = [];
+
+  for (const wo of bayWOs) {
+    if (wo.woId === proposedWoId) continue;
+    if (proposedStart < wo.endDate && wo.startDate < proposedEnd) {
+      conflictingWoNumbers.push(wo.workOrderNumber);
+      overlapDetails.push({
+        woNumber: wo.workOrderNumber,
+        overlapStart: Math.max(proposedStart, wo.startDate),
+        overlapEnd: Math.min(proposedEnd, wo.endDate),
+      });
+    }
+  }
+
+  return { conflictingWoNumbers, overlapDetails };
+}

@@ -60,3 +60,35 @@ export const removeTraining = mutation({
     await ctx.db.delete(args.trainingId);
   },
 });
+
+// ─── MBP-0111: Skill Matching Query ──────────────────────────────────────────
+
+/**
+ * Returns a map of technician IDs to their active (non-expired) training types.
+ * Used by drag-drop skill matching and auto-scheduler.
+ */
+export const getActiveTrainingByOrg = query({
+  args: { organizationId: v.string() },
+  handler: async (ctx, args) => {
+    const records = await ctx.db
+      .query("technicianTraining")
+      .withIndex("by_org", (q) => q.eq("organizationId", args.organizationId))
+      .collect();
+
+    const now = Date.now();
+    // Filter to active (non-expired) training only
+    const active = records.filter(
+      (r) => !r.expiresAt || r.expiresAt > now,
+    );
+
+    // Group by technician
+    const byTech = new Map<string, string[]>();
+    for (const r of active) {
+      const existing = byTech.get(r.technicianId) ?? [];
+      existing.push(r.trainingType);
+      byTech.set(r.technicianId, existing);
+    }
+
+    return Object.fromEntries(byTech);
+  },
+});

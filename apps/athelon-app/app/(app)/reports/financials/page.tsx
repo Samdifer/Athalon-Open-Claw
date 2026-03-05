@@ -11,7 +11,6 @@ import {
   Receipt,
   Package,
   Users,
-  Wrench,
   BarChart2,
   Navigation,
   FileBarChart,
@@ -33,6 +32,12 @@ import {
   Area,
   LineChart,
   Line,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  Legend,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -251,6 +256,68 @@ export default function FinancialDashboardPage() {
     return Array.from(byCustomer.values()).sort((a, b) => b.total - a.total).slice(0, 5);
   }, [invoices, customers]);
 
+  // ── AR Aging (buckets: Current, 1-30, 31-60, 61-90, 90+) ───────────────
+
+  const arAging = useMemo(() => {
+    if (!invoices) return [];
+    const buckets = [
+      { label: "Current", min: -Infinity, max: 0, amount: 0 },
+      { label: "1–30 days", min: 1, max: 30, amount: 0 },
+      { label: "31–60 days", min: 31, max: 60, amount: 0 },
+      { label: "61–90 days", min: 61, max: 90, amount: 0 },
+      { label: "90+ days", min: 91, max: Infinity, amount: 0 },
+    ];
+    for (const inv of invoices) {
+      if (inv.status === "PAID" || inv.status === "VOID" || inv.status === "DRAFT") continue;
+      if (inv.balance <= 0) continue;
+      const dueDate = inv.dueDate ?? inv.createdAt;
+      const daysOverdue = Math.floor((now - dueDate) / (1000 * 60 * 60 * 24));
+      for (const bucket of buckets) {
+        if (daysOverdue >= bucket.min && daysOverdue <= bucket.max) {
+          bucket.amount += inv.balance;
+          break;
+        }
+      }
+    }
+    return buckets.map((b) => ({ name: b.label, amount: Math.round(b.amount * 100) / 100 }));
+  }, [invoices, now]);
+
+  // ── Payment Collection Trend (last 12 months) ─────────────────────────────
+
+  const paymentTrend = useMemo(() => {
+    if (!invoices) return [];
+    const keys: string[] = [];
+    const d = new Date();
+    for (let i = 11; i >= 0; i--) {
+      const dt = new Date(d.getFullYear(), d.getMonth() - i, 1);
+      keys.push(`${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}`);
+    }
+    const byMonth: Record<string, number> = {};
+    for (const k of keys) byMonth[k] = 0;
+    for (const inv of invoices) {
+      if (inv.status !== "PAID" && inv.status !== "PARTIAL") continue;
+      if (!inv.paidAt) continue;
+      const key = getMonthKey(inv.paidAt);
+      if (byMonth[key] !== undefined) {
+        byMonth[key] += inv.amountPaid ?? inv.total;
+      }
+    }
+    return keys.map((key) => ({ month: getMonthLabel(key), collected: byMonth[key] }));
+  }, [invoices]);
+
+  // ── Revenue by Customer (pie chart) ────────────────────────────────────────
+
+  const CUSTOMER_COLORS = ["#3b82f6", "#22c55e", "#f59e0b", "#a855f7", "#ef4444", "#06b6d4", "#f97316", "#ec4899"];
+
+  const revenueByCustomerPie = useMemo(() => {
+    if (!topCustomers || topCustomers.length === 0) return [];
+    return topCustomers.map((c, i) => ({
+      name: c.name,
+      value: Math.round(c.total * 100) / 100,
+      color: CUSTOMER_COLORS[i % CUSTOMER_COLORS.length],
+    }));
+  }, [topCustomers]);
+
   // ── Revenue by customer ───────────────────────────────────────────────────
   // NOTE: WO-type and aircraft-type revenue breakdowns require server-side joins
   // (invoice → work order → type/aircraft). These are tracked as BACKEND-NEEDED
@@ -386,17 +453,28 @@ export default function FinancialDashboardPage() {
 
         <Card className="border-border/60">
           <CardHeader className="pb-2">
-            <div className="flex items-center gap-2">
-              <CardTitle className="text-sm font-medium">Revenue by Aircraft Type</CardTitle>
-            </div>
+            <CardTitle className="text-sm font-medium">AR Aging</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-[220px] flex flex-col items-center justify-center gap-2 rounded-md border border-dashed border-border/60 bg-muted/10 text-center px-4">
-              <p className="text-sm font-medium text-muted-foreground">Aircraft type breakdown unavailable</p>
-              <p className="text-xs text-muted-foreground/70 max-w-xs">
-                Revenue by aircraft type requires joining invoices to work orders and aircraft records — a server-side query not yet implemented. See MASTER-BUILD-LIST.md.
-              </p>
-            </div>
+            {arAging.length === 0 || arAging.every((b) => b.amount === 0) ? (
+              <div className="h-[220px] flex items-center justify-center text-sm text-muted-foreground">
+                No outstanding receivables
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={220}>
+                <BarChart data={arAging}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="name" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
+                  <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} tickFormatter={(v: number) => `$${(v / 1000).toFixed(0)}k`} />
+                  <Tooltip contentStyle={TOOLTIP_STYLE} formatter={((v: any) => [fmtUSD(Number(v ?? 0)), "Outstanding"]) as any} />
+                  <Bar dataKey="amount" radius={[4, 4, 0, 0]}>
+                    {arAging.map((_, i) => (
+                      <Cell key={i} fill={["#22c55e", "#3b82f6", "#f59e0b", "#f97316", "#ef4444"][i] ?? "#6b7280"} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -438,19 +516,74 @@ export default function FinancialDashboardPage() {
         <Card className="border-border/60">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <Wrench className="w-4 h-4" /> Revenue by WO Type
+              <DollarSign className="w-4 h-4" /> Revenue by Customer
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-col items-center justify-center gap-2 rounded-md border border-dashed border-border/60 bg-muted/10 text-center px-4 py-8">
-              <p className="text-sm font-medium text-muted-foreground">WO type breakdown unavailable</p>
-              <p className="text-xs text-muted-foreground/70 max-w-xs">
-                Revenue by work order type requires a server-side join from invoices to work order types. See MASTER-BUILD-LIST.md.
-              </p>
-            </div>
+            {revenueByCustomerPie.length === 0 ? (
+              <div className="h-[220px] flex items-center justify-center text-sm text-muted-foreground">
+                No customer revenue data
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={220}>
+                <PieChart>
+                  <Pie
+                    data={revenueByCustomerPie}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={45}
+                    outerRadius={75}
+                    paddingAngle={2}
+                    dataKey="value"
+                  >
+                    {revenueByCustomerPie.map((entry, i) => (
+                      <Cell key={i} fill={entry.color} stroke="transparent" />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={TOOLTIP_STYLE}
+                    formatter={((v: any) => [fmtUSD(Number(v ?? 0)), "Revenue"]) as any}
+                  />
+                  <Legend
+                    wrapperStyle={{ fontSize: "10px" }}
+                    formatter={(value: string) => (
+                      <span style={{ color: "hsl(var(--muted-foreground))" }}>{value}</span>
+                    )}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            )}
           </CardContent>
         </Card>
       </div>
+
+      {/* ── Payment Collection Trend ──────────────────────────────────────── */}
+      <Card className="border-border/60">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-medium">Payment Collections — Last 12 Months</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {paymentTrend.length === 0 || paymentTrend.every((d) => (d.collected ?? 0) === 0) ? (
+            <div className="h-[220px] flex items-center justify-center text-sm text-muted-foreground">No payment data</div>
+          ) : (
+            <ResponsiveContainer width="100%" height={220}>
+              <BarChart data={paymentTrend}>
+                <defs>
+                  <linearGradient id="collectGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#22c55e" stopOpacity={0.8} />
+                    <stop offset="95%" stopColor="#22c55e" stopOpacity={0.3} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="month" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
+                <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} tickFormatter={(v: number) => `$${(v / 1000).toFixed(0)}k`} />
+                <Tooltip contentStyle={TOOLTIP_STYLE} formatter={((v: any) => [fmtUSD(Number(v ?? 0)), "Collected"]) as any} />
+                <Bar dataKey="collected" fill="url(#collectGrad)" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

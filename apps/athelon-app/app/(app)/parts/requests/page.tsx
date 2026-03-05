@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Package, Plus, ClipboardCheck, AlertTriangle, CheckCircle2, XCircle, Loader2, AlertCircle, Send } from "lucide-react";
+import { Package, Plus, ClipboardCheck, AlertTriangle, CheckCircle2, XCircle, Loader2, AlertCircle, Send, RotateCcw, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -33,6 +33,13 @@ import { useSelectedLocation } from "@/components/LocationSwitcher";
 import { toast } from "sonner";
 import { PartStatusBadge } from "@/src/shared/components/PartStatusBadge";
 import { PartsIssueDialog } from "@/app/(app)/parts/_components/PartsIssueDialog";
+import { Input } from "@/components/ui/input";
+import {
+  type PartReturnQueueItem,
+  getReturnQueue,
+  saveReturnQueue,
+  PartReturnDialog,
+} from "@/app/(app)/parts/_components/PartReturnDialog";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -342,6 +349,47 @@ export default function PartsRequestsPage() {
     partName: string;
     workOrderId: Id<"workOrders">;
   } | null>(null);
+
+  // MBP-0048: Part Return Queue
+  const [returnQueue, setReturnQueue] = useState<PartReturnQueueItem[]>(() =>
+    orgId ? getReturnQueue(orgId) : [],
+  );
+
+  // Refresh return queue when orgId changes
+  // (simple effect-free approach: re-read on render if orgId is set)
+  const refreshReturnQueue = () => {
+    if (orgId) setReturnQueue(getReturnQueue(orgId));
+  };
+
+  function handleReturnAction(itemId: string, action: "received" | "inspected" | "restocked" | "rejected") {
+    if (!orgId) return;
+    const queue = getReturnQueue(orgId);
+    const updated = queue.map((item) =>
+      item.id === itemId ? { ...item, status: action as PartReturnQueueItem["status"] } : item,
+    );
+    saveReturnQueue(orgId, updated);
+    setReturnQueue(updated);
+    toast.success(`Part return marked as ${action}.`);
+  }
+
+  // MBP-0037: Catalog search for intake control
+  const [catalogSearch, setCatalogSearch] = useState("");
+  const allInventoryParts = useQuery(
+    api.parts.listParts,
+    orgId
+      ? { organizationId: orgId, location: "inventory", shopLocationId: selectedShopLocationId }
+      : "skip",
+  ) as PartItem[] | undefined;
+
+  const catalogResults = (allInventoryParts ?? []).filter((p) => {
+    if (!catalogSearch.trim()) return false;
+    const q = catalogSearch.toLowerCase();
+    return (
+      p.partNumber.toLowerCase().includes(q) ||
+      p.partName.toLowerCase().includes(q) ||
+      (p.description ?? "").toLowerCase().includes(q)
+    );
+  }).slice(0, 10);
 
   // Open WO part requests across all work orders
   // NOTE: api.workOrderParts types resolve after `convex dev` regenerates types
@@ -684,6 +732,164 @@ export default function PartsRequestsPage() {
           technicianId={techId ?? undefined}
         />
       )}
+
+      {/* ─── MBP-0037: Catalog Search / Intake Control ─────────────────── */}
+      <Card className="border-border/60">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <Search className="w-4 h-4 text-primary" />
+            Catalog Search — Part Request Intake
+          </CardTitle>
+          <p className="text-xs text-muted-foreground">
+            Search existing parts to prefill a request, or submit a net-new part for clerk approval.
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <Input
+            placeholder="Search by part number, name, or description..."
+            value={catalogSearch}
+            onChange={(e) => setCatalogSearch(e.target.value)}
+            className="text-sm"
+          />
+          {catalogResults.length > 0 && (
+            <div className="space-y-1.5">
+              {catalogResults.map((p) => (
+                <div
+                  key={p._id}
+                  className="flex items-center justify-between p-2 rounded-md border border-border/40 bg-muted/10"
+                >
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-mono font-medium truncate">{p.partNumber}</p>
+                    <p className="text-[11px] text-muted-foreground truncate">{p.partName}</p>
+                  </div>
+                  <Badge variant="outline" className="text-[10px] ml-2">
+                    {p.condition}
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          )}
+          {catalogSearch.trim() && catalogResults.length === 0 && allInventoryParts !== undefined && (
+            <p className="text-xs text-muted-foreground italic">
+              No matching parts found in catalog. You may submit a net-new part request via{" "}
+              <Link to="/parts/new" className="text-primary hover:underline">Receive Part</Link>.
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* ─── MBP-0048: Part Return Queue ────────────────────────────────── */}
+      <Card className="border-border/60">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-sm flex items-center gap-2">
+              <RotateCcw className="w-4 h-4 text-primary" />
+              Part Return Queue
+            </CardTitle>
+            <div className="flex items-center gap-2">
+              <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={refreshReturnQueue}>
+                Refresh
+              </Button>
+              <PartReturnDialog
+                orgId={orgId}
+                techName={undefined}
+              />
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {returnQueue.length === 0 ? (
+            <p className="text-xs text-muted-foreground italic">
+              No parts pending return. Technicians can initiate returns from task card steps.
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {returnQueue.map((item) => (
+                <div
+                  key={item.id}
+                  className="flex items-start justify-between gap-3 p-3 rounded-md border border-border/40"
+                >
+                  <div className="flex-1 min-w-0 space-y-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-xs font-mono font-medium">{item.partNumber}</span>
+                      {item.serialNumber && (
+                        <span className="text-[10px] text-muted-foreground font-mono">S/N: {item.serialNumber}</span>
+                      )}
+                      <Badge
+                        variant="outline"
+                        className={`text-[10px] ${
+                          item.status === "pending"
+                            ? "border-amber-500/30 text-amber-600 dark:text-amber-400"
+                            : item.status === "received"
+                              ? "border-blue-500/30 text-blue-600 dark:text-blue-400"
+                              : item.status === "restocked"
+                                ? "border-green-500/30 text-green-600 dark:text-green-400"
+                                : item.status === "rejected"
+                                  ? "border-red-500/30 text-red-600 dark:text-red-400"
+                                  : "border-border/30"
+                        }`}
+                      >
+                        {item.status}
+                      </Badge>
+                    </div>
+                    <p className="text-[11px] text-muted-foreground">
+                      Qty: {item.quantity} · {item.condition} · Returned by: {item.returnedBy}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground">{item.reason}</p>
+                    <p className="text-[10px] text-muted-foreground/60">
+                      {new Date(item.returnedAt).toLocaleString()}
+                    </p>
+                  </div>
+                  {item.status === "pending" && (
+                    <div className="flex flex-col gap-1">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-6 text-[10px] px-2"
+                        onClick={() => handleReturnAction(item.id, "received")}
+                      >
+                        Confirm Receipt
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-6 text-[10px] px-2 text-red-500"
+                        onClick={() => handleReturnAction(item.id, "rejected")}
+                      >
+                        Reject
+                      </Button>
+                    </div>
+                  )}
+                  {item.status === "received" && (
+                    <div className="flex flex-col gap-1">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-6 text-[10px] px-2"
+                        onClick={() => handleReturnAction(item.id, "inspected")}
+                      >
+                        Inspected
+                      </Button>
+                    </div>
+                  )}
+                  {item.status === "inspected" && (
+                    <div className="flex flex-col gap-1">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-6 text-[10px] px-2 text-green-600"
+                        onClick={() => handleReturnAction(item.id, "restocked")}
+                      >
+                        Re-Stock
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

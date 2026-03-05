@@ -3,7 +3,9 @@ import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { TrendingUp, TrendingDown } from "lucide-react";
 import {
   LineChart,
   Line,
@@ -58,12 +60,37 @@ export const RevenueTrendChart = React.memo(function RevenueTrendChart() {
     });
   }, [invoices]);
 
+  // Trend indicator: compare last 3 months avg to prior 3 months avg
+  const trend = useMemo(() => {
+    if (chartData.length < 6) return null;
+    const recent = chartData.slice(-3).reduce((s, d) => s + d.revenue, 0) / 3;
+    const prior = chartData.slice(-6, -3).reduce((s, d) => s + d.revenue, 0) / 3;
+    if (prior === 0) return null;
+    const pctChange = ((recent - prior) / prior) * 100;
+    return { pctChange: Math.round(pctChange), up: pctChange >= 0 };
+  }, [chartData]);
+
   if (!orgId) return null;
 
   return (
     <Card className="border-border/60">
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-semibold">Revenue Trend (12 Months)</CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-sm font-semibold">Revenue Trend (12 Months)</CardTitle>
+          {trend && (
+            <Badge
+              variant="outline"
+              className={`text-[10px] gap-1 ${
+                trend.up
+                  ? "text-green-400 border-green-500/30 bg-green-500/10"
+                  : "text-red-400 border-red-500/30 bg-red-500/10"
+              }`}
+            >
+              {trend.up ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+              {trend.up ? "+" : ""}{trend.pctChange}%
+            </Badge>
+          )}
+        </div>
       </CardHeader>
       <CardContent>
         {!invoices ? (

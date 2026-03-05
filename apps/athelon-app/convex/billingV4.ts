@@ -619,11 +619,16 @@ async function recalcInvoiceTotals(ctx: { db: any }, invoiceId: Id<"invoices">) 
   }
   const subtotal = Math.round((laborTotal + partsTotal) * 100) / 100;
   const invoice = await ctx.db.get(invoiceId);
-  const tax = invoice?.tax ?? 0;
+  // MBP-0119: Recompute tax from stored taxRatePercent instead of using stale flat amount.
+  // This ensures adding/removing line items keeps tax in sync with the configured rate.
+  const taxRatePercent = invoice?.taxRatePercent ?? 0;
+  const tax = taxRatePercent > 0
+    ? Math.round(subtotal * (taxRatePercent / 100) * 100) / 100
+    : (invoice?.tax ?? 0);
   const total = Math.round((subtotal + tax) * 100) / 100;
   const balance = Math.round((total - (invoice?.amountPaid ?? 0)) * 100) / 100;
 
-  await ctx.db.patch(invoiceId, { laborTotal, partsTotal, subtotal, total, balance, updatedAt: Date.now() });
+  await ctx.db.patch(invoiceId, { laborTotal, partsTotal, subtotal, tax, total, balance, updatedAt: Date.now() });
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -890,6 +895,92 @@ export const computeTaxForInvoice = query({
   },
 });
 
+// MBP-0120: Apply computed tax to an invoice (mutation companion to computeTaxForInvoice query)
+export const applyComputedTaxToInvoice = mutation({
+  args: {
+    orgId: v.id("organizations"),
+    invoiceId: v.id("invoices"),
+  },
+  handler: async (ctx, args) => {
+    await requireAuth(ctx);
+    const invoice = await ctx.db.get(args.invoiceId);
+    if (!invoice) throw new Error("Invoice not found.");
+    if (invoice.orgId !== args.orgId) throw new Error("ORG_MISMATCH.");
+    if (invoice.status !== "DRAFT") throw new Error("Can only apply tax to DRAFT invoices.");
+
+    const now = Date.now();
+
+    // Check customer tax exemption
+    const exemption = await ctx.db
+      .query("customerTaxExemptions")
+      .withIndex("by_org_customer", (q: any) =>
+        q.eq("orgId", args.orgId).eq("customerId", invoice.customerId),
+      )
+      .first();
+
+    const isFullExempt = exemption?.exemptionType === "full" &&
+      (!exemption.expiresAt || exemption.expiresAt > now);
+    if (isFullExempt) {
+      const total = Math.round((invoice.subtotal + 0) * 100) / 100;
+      const balance = Math.round((total - (invoice.amountPaid ?? 0)) * 100) / 100;
+      await ctx.db.patch(args.invoiceId, {
+        tax: 0, taxRatePercent: 0, total, balance, updatedAt: now,
+      });
+      return { tax: 0, breakdown: [{ name: "Tax Exempt", amount: 0 }] };
+    }
+
+    const laborExempt = exemption?.exemptionType === "labor_only" &&
+      (!exemption.expiresAt || exemption.expiresAt > now);
+    const partsExempt = exemption?.exemptionType === "parts_only" &&
+      (!exemption.expiresAt || exemption.expiresAt > now);
+
+    // Fetch active tax rates for this org
+    const taxRates = await ctx.db
+      .query("taxRates")
+      .withIndex("by_org_active", (q: any) => q.eq("orgId", args.orgId).eq("active", true))
+      .collect();
+
+    if (taxRates.length === 0) {
+      return { tax: 0, breakdown: [] };
+    }
+
+    let totalTax = 0;
+    const breakdown: Array<{ name: string; rate: number; taxableAmount: number; amount: number }> = [];
+    for (const tr of taxRates) {
+      let taxableAmount = 0;
+      if (tr.appliesTo === "all") {
+        taxableAmount = (laborExempt ? 0 : invoice.laborTotal) + (partsExempt ? 0 : invoice.partsTotal);
+      } else if (tr.appliesTo === "labor" && !laborExempt) {
+        taxableAmount = invoice.laborTotal;
+      } else if (tr.appliesTo === "parts" && !partsExempt) {
+        taxableAmount = invoice.partsTotal;
+      }
+      const amount = Math.round(taxableAmount * tr.rate / 100 * 100) / 100;
+      totalTax += amount;
+      breakdown.push({ name: tr.name, rate: tr.rate, taxableAmount, amount });
+    }
+
+    const computedTax = Math.round(totalTax * 100) / 100;
+    const total = Math.round((invoice.subtotal + computedTax) * 100) / 100;
+    const balance = Math.round((total - (invoice.amountPaid ?? 0)) * 100) / 100;
+
+    // Store the computed tax and the effective combined rate
+    const effectiveRate = invoice.subtotal > 0
+      ? Math.round(computedTax / invoice.subtotal * 10000) / 100
+      : 0;
+
+    await ctx.db.patch(args.invoiceId, {
+      tax: computedTax,
+      taxRatePercent: effectiveRate,
+      total,
+      balance,
+      updatedAt: now,
+    });
+
+    return { tax: computedTax, breakdown };
+  },
+});
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // GAP-13: QUOTE → INVOICE CONVERSION
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -901,6 +992,7 @@ export const createInvoiceFromQuote = mutation({
     createdByTechId: v.id("technicians"),
     dueDate: v.optional(v.number()),
     paymentTerms: v.optional(v.string()),
+    taxRateId: v.optional(v.id("taxRates")),
   },
   handler: async (ctx, args) => {
     await requireAuth(ctx);
@@ -921,6 +1013,48 @@ export const createInvoiceFromQuote = mutation({
           : ""),
       );
     }
+
+    // MBP-0119/0120: Resolve tax rate for the invoice
+    let taxRatePercent = 0;
+    if (args.taxRateId) {
+      const taxRate = await ctx.db.get(args.taxRateId);
+      if (taxRate && taxRate.orgId === args.orgId && taxRate.active) {
+        taxRatePercent = taxRate.rate;
+      }
+    }
+    // If no explicit tax rate, try org's default
+    if (taxRatePercent === 0) {
+      const defaultTaxRate = await ctx.db
+        .query("taxRates")
+        .withIndex("by_org_active", (q: any) => q.eq("orgId", args.orgId).eq("active", true))
+        .filter((q: any) => q.eq(q.field("isDefault"), true))
+        .first();
+      if (defaultTaxRate) {
+        taxRatePercent = defaultTaxRate.rate;
+      }
+    }
+
+    // Check customer tax exemption
+    if (taxRatePercent > 0) {
+      const exemption = await ctx.db
+        .query("customerTaxExemptions")
+        .withIndex("by_org_customer", (q: any) =>
+          q.eq("orgId", args.orgId).eq("customerId", quote.customerId),
+        )
+        .first();
+      if (exemption) {
+        const notExpired = !exemption.expiresAt || exemption.expiresAt > now;
+        if (notExpired && exemption.exemptionType === "full") {
+          taxRatePercent = 0;
+        }
+      }
+    }
+
+    // Compute tax from subtotal
+    const tax = taxRatePercent > 0
+      ? Math.round(quote.subtotal * (taxRatePercent / 100) * 100) / 100
+      : quote.tax;
+    const total = Math.round((quote.subtotal + tax) * 100) / 100;
 
     // Get quote line items
     const quoteItems = await ctx.db
@@ -943,10 +1077,11 @@ export const createInvoiceFromQuote = mutation({
       laborTotal: quote.laborTotal,
       partsTotal: quote.partsTotal,
       subtotal: quote.subtotal,
-      tax: quote.tax,
-      total: quote.total,
+      taxRatePercent: taxRatePercent > 0 ? taxRatePercent : undefined,
+      tax,
+      total,
       amountPaid: 0,
-      balance: quote.total,
+      balance: total,
       dueDate: args.dueDate,
       paymentTerms: args.paymentTerms,
       createdAt: now,

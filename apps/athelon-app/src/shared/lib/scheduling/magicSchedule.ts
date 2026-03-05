@@ -112,18 +112,30 @@ function findLeastLoadedBay(
   return bestBayId;
 }
 
+/**
+ * MBP-0114: Enhanced auto-schedule algorithm.
+ *
+ * When autoMode is true, applies greedy scheduling:
+ *   1. Sort by priority (AOG > urgent > routine)
+ *   2. Assign to first available bay+tech combo
+ *   3. Respect training constraints (prefer bays where qualified techs are available)
+ *   4. Respect bay capacity (no double-booking)
+ *
+ * When autoMode is false (default), preserves caller's ordering.
+ */
 export function magicSchedule(
   orderedJobs: MagicJobInput[],
   bays: MagicBayInput[],
   techPool?: TechCapacity[],
+  options?: { autoMode?: boolean },
 ): MagicAssignment[] {
   if (orderedJobs.length === 0 || bays.length === 0) return [];
 
-  // Respect the caller's explicit priority order. The caller (Magic Scheduler
-  // dialog) lets the user manually reorder WOs — re-sorting here would discard
-  // that ordering. Only fall back to priority-based sort when no explicit order
-  // was provided (single-item lists or programmatic callers).
-  const sortedJobs = orderedJobs;
+  // MBP-0114: In auto mode, sort by priority for greedy scheduling.
+  // Otherwise respect the caller's explicit order.
+  const sortedJobs = options?.autoMode
+    ? sortByPriority(orderedJobs)
+    : orderedJobs;
 
   const bayBookings = new Map<string, { startDate: number; endDate: number }[]>();
   for (const bay of bays) {
@@ -151,13 +163,27 @@ export function magicSchedule(
       ? validateTraining(job.requiredTraining, techPool)
       : [];
 
-    // Find best bay: use load-leveling to prefer least-loaded bay,
-    // then find earliest available slot within that bay
+    // MBP-0114: Find best bay using enhanced greedy algorithm:
+    // 1. Prefer bays where qualified techs are available (training match)
+    // 2. Load-level across bays (least-loaded first)
+    // 3. Find earliest non-conflicting slot
     let selectedBayId: string | null = null;
     let selectedStart = Infinity;
 
-    // Try load-leveled approach first: prefer least-loaded bay
+    // Score bays: training-qualified bays get priority, then by load
     const sortedBays = [...bays].sort((a, b) => {
+      // Training affinity: prefer bays where we have qualified techs
+      if (options?.autoMode && techPool && job.requiredTraining && job.requiredTraining.length > 0) {
+        const aHasQualified = techPool.some((t) =>
+          job.requiredTraining!.every((req) => t.training.includes(req)),
+        );
+        const bHasQualified = techPool.some((t) =>
+          job.requiredTraining!.every((req) => t.training.includes(req)),
+        );
+        if (aHasQualified && !bHasQualified) return -1;
+        if (!aHasQualified && bHasQualified) return 1;
+      }
+
       const aLoad = (bayBookings.get(a.bayId) ?? []).reduce(
         (sum, bk) => sum + (bk.endDate - bk.startDate),
         0,

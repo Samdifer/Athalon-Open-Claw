@@ -17,16 +17,16 @@ import {
 // rendered as raw "cancelled" text with the grey fallback color, making the
 // pie chart legend inconsistent with the rest of the app's status vocabulary.
 const STATUS_COLORS: Record<string, string> = {
-  open: "#3b82f6",
-  in_progress: "#f59e0b",
-  complete: "#22c55e",
-  closed: "#22c55e",
+  draft: "#6b7280",              // gray
+  open: "#3b82f6",               // blue
+  in_progress: "#f59e0b",        // amber
+  pending_inspection: "#a855f7", // purple
+  pending_signoff: "#f97316",    // orange
+  closed: "#22c55e",             // green
+  cancelled: "#ef4444",          // red
+  complete: "#22c55e",           // green (alias)
   on_hold: "#6b7280",
-  draft: "#a78bfa",
-  pending_inspection: "#06b6d4",
-  pending_signoff: "#8b5cf6",
   open_discrepancies: "#ef4444",
-  cancelled: "#64748b",
   voided: "#991b1b",
 };
 

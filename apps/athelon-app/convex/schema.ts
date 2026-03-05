@@ -3746,6 +3746,29 @@ export default defineSchema({
     .index("by_org_status", ["organizationId", "status"]),
 
   // ═══════════════════════════════════════════════════════════════════════════
+  // SCHEDULE SNAPSHOTS — MBP-0116: Schedule Baseline Comparison
+  //
+  // Stores point-in-time snapshots of the schedule for baseline comparison.
+  // Each snapshot captures all active schedule assignments at save time.
+  // ═══════════════════════════════════════════════════════════════════════════
+  scheduleSnapshots: defineTable({
+    organizationId: v.id("organizations"),
+    name: v.string(),
+    entries: v.array(v.object({
+      workOrderId: v.string(),
+      workOrderNumber: v.string(),
+      hangarBayId: v.string(),
+      startDate: v.number(),
+      endDate: v.number(),
+      priority: v.string(),
+      aircraftReg: v.optional(v.string()),
+    })),
+    createdAt: v.number(),
+    createdByUserId: v.string(),
+  })
+    .index("by_org", ["organizationId"]),
+
+  // ═══════════════════════════════════════════════════════════════════════════
   // TECHNICIAN TRAINING — Wave 3: Training-Based Constraints
   //
   // Per-technician training records for scheduling constraint validation.

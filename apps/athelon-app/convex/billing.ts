@@ -43,6 +43,125 @@ import { createNotificationHelper } from "./notifications";
 // which uses an atomic orgCounters document instead of a scan-based loop.
 
 // ─────────────────────────────────────────────────────────────────────────────
+// MBP-0069 / MBP-0070: PRICING PROFILE RESOLUTION
+//
+// Resolves the effective labor rate and parts markup for a given org+customer
+// by checking customer-specific profiles first, then falling back to the
+// org-wide default profile.
+// ─────────────────────────────────────────────────────────────────────────────
+
+interface ResolvedPricing {
+  laborRate: number;
+  partsMarkupPercent: number;
+  profileName: string | null;
+}
+
+async function resolvePricingProfile(
+  ctx: MutationCtx,
+  orgId: Id<"organizations">,
+  customerId: Id<"customers">,
+): Promise<ResolvedPricing> {
+  const now = Date.now();
+
+  // Try customer-specific profile first
+  const customerProfile = await ctx.db
+    .query("pricingProfiles")
+    .withIndex("by_org_customer", (q) =>
+      q.eq("orgId", orgId).eq("customerId", customerId),
+    )
+    .filter((q) =>
+      q.and(
+        q.lte(q.field("effectiveDate"), now),
+        q.or(
+          q.eq(q.field("expiryDate"), undefined),
+          q.gte(q.field("expiryDate"), now),
+        ),
+      ),
+    )
+    .first();
+
+  if (customerProfile) {
+    return {
+      laborRate: customerProfile.laborRateOverride ?? 0,
+      partsMarkupPercent: customerProfile.partsMarkupPercent ?? 0,
+      profileName: customerProfile.name,
+    };
+  }
+
+  // Fall back to org-wide default
+  const defaultProfile = await ctx.db
+    .query("pricingProfiles")
+    .withIndex("by_org_default", (q) =>
+      q.eq("orgId", orgId).eq("isDefault", true),
+    )
+    .filter((q) =>
+      q.and(
+        q.lte(q.field("effectiveDate"), now),
+        q.or(
+          q.eq(q.field("expiryDate"), undefined),
+          q.gte(q.field("expiryDate"), now),
+        ),
+      ),
+    )
+    .first();
+
+  if (defaultProfile) {
+    return {
+      laborRate: defaultProfile.laborRateOverride ?? 0,
+      partsMarkupPercent: defaultProfile.partsMarkupPercent ?? 0,
+      profileName: defaultProfile.name,
+    };
+  }
+
+  return { laborRate: 0, partsMarkupPercent: 0, profileName: null };
+}
+
+/**
+ * MBP-0069/0070: Auto-applies pricing profile rates to a line item.
+ * - Labor: uses profile's labor rate when caller passes unitPrice = 0
+ * - Parts: applies markup from profile over part's unitCost when caller passes unitPrice = 0
+ */
+async function autoApplyPricing(
+  ctx: MutationCtx,
+  orgId: Id<"organizations">,
+  customerId: Id<"customers">,
+  type: "labor" | "part" | "external_service",
+  unitPrice: number,
+  partId?: Id<"parts">,
+): Promise<{ unitPrice: number; pricingNote: string }> {
+  // Only auto-apply when caller passes 0 (indicating "use profile rate")
+  if (unitPrice !== 0) {
+    return { unitPrice, pricingNote: "" };
+  }
+
+  const pricing = await resolvePricingProfile(ctx, orgId, customerId);
+
+  if (type === "labor") {
+    if (pricing.laborRate > 0) {
+      return {
+        unitPrice: pricing.laborRate,
+        pricingNote: ` [Auto-priced: $${pricing.laborRate}/hr from ${pricing.profileName ?? "default"} profile]`,
+      };
+    }
+    return { unitPrice: 0, pricingNote: " [WARNING: No pricing profile found — rate defaults to $0]" };
+  }
+
+  if (type === "part" && partId) {
+    const part = await ctx.db.get(partId);
+    if (part && part.unitCost != null && part.unitCost > 0) {
+      const markup = pricing.partsMarkupPercent;
+      const computedPrice = Math.round(part.unitCost * (1 + markup / 100) * 100) / 100;
+      return {
+        unitPrice: computedPrice,
+        pricingNote: ` [Auto-priced: cost $${part.unitCost} + ${markup}% markup from ${pricing.profileName ?? "default"} profile]`,
+      };
+    }
+  }
+
+  return { unitPrice: 0, pricingNote: "" };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // INTERNAL UTILITY: ASSERT INVOICE IS EDITABLE
 //
 // Invoices in SENT or PAID status are immutable. This guard is called at the
@@ -211,15 +330,20 @@ export const addQuoteLineItem = mutation({
     if (args.qty <= 0) throw new Error("qty must be greater than 0.");
     if (args.unitPrice < 0) throw new Error("unitPrice must be >= 0.");
 
-    const total = Math.round(args.qty * args.unitPrice * 100) / 100;
+    // MBP-0069/0070: Auto-apply pricing profile rates when unitPrice is 0
+    const { unitPrice: resolvedPrice, pricingNote } = await autoApplyPricing(
+      ctx, args.orgId, quote.customerId, args.type, args.unitPrice, args.partId,
+    );
+
+    const total = Math.round(args.qty * resolvedPrice * 100) / 100;
 
     const lineItemId = await ctx.db.insert("quoteLineItems", {
       orgId: args.orgId,
       quoteId: args.quoteId,
       type: args.type,
-      description: args.description,
+      description: args.description + pricingNote,
       qty: args.qty,
-      unitPrice: args.unitPrice,
+      unitPrice: resolvedPrice,
       total,
       technicianId: args.technicianId,
       partId: args.partId,
@@ -1229,15 +1353,28 @@ export const addInvoiceLineItem = mutation({
     if (args.qty === 0) throw new Error("qty must not be zero.");
     // Allow negative qty for credits
 
-    const total = Math.round(args.qty * args.unitPrice * 100) / 100;
+    // MBP-0069/0070: Auto-apply pricing profile rates when unitPrice is 0
+    // Only for labor and part types; credits/deposits keep their explicit price
+    const shouldAutoPrice = (args.type === "labor" || args.type === "part") && args.unitPrice === 0;
+    let resolvedPrice = args.unitPrice;
+    let pricingNote = "";
+    if (shouldAutoPrice) {
+      const result = await autoApplyPricing(
+        ctx, args.orgId, invoice.customerId, args.type as "labor" | "part", args.unitPrice, args.partId,
+      );
+      resolvedPrice = result.unitPrice;
+      pricingNote = result.pricingNote;
+    }
+
+    const total = Math.round(args.qty * resolvedPrice * 100) / 100;
 
     const lineItemId = await ctx.db.insert("invoiceLineItems", {
       orgId: args.orgId,
       invoiceId: args.invoiceId,
       type: args.type,
-      description: args.description,
+      description: args.description + pricingNote,
       qty: args.qty,
-      unitPrice: args.unitPrice,
+      unitPrice: resolvedPrice,
       total,
       technicianId: args.technicianId,
       partId: args.partId,

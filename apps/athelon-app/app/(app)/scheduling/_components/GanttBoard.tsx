@@ -13,8 +13,12 @@ import {
   Archive,
   Ban,
   CheckCircle2,
+  Clock,
+  ShieldAlert,
   SlidersHorizontal,
 } from "lucide-react";
+import type { TATEstimate } from "./TATEstimateBadge";
+import type { SkillGap } from "./SkillWarningBadge";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPES
@@ -105,6 +109,14 @@ interface GanttBoardProps {
     mode: "distribute" | "block";
     adjustment: 1 | -1;
   }) => Promise<void>;
+  // MBP-0111: Skill matching
+  techTrainingMap?: Record<string, string[]>;
+  woRequiredTraining?: Record<string, string[]>;
+  woAssignedTechIds?: Record<string, string[]>;
+  // MBP-0115: TAT estimation
+  tatEstimates?: TATEstimate[];
+  // MBP-0116: Baseline snapshot overlay
+  baselinePositions?: Map<string, { startDate: number; endDate: number }>;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -189,6 +201,11 @@ export function GanttBoard({
   selectedMagicWorkOrderIds = [],
   onToggleMagicWorkOrder,
   onApplyDayModelEdit,
+  techTrainingMap,
+  woRequiredTraining,
+  woAssignedTechIds,
+  tatEstimates,
+  baselinePositions,
 }: GanttBoardProps) {
   const navigate = useNavigate();
   const internalScrollRef = useRef<HTMLDivElement>(null);
@@ -216,6 +233,13 @@ export function GanttBoard({
   const [dragDelta, setDragDelta] = useState(0);
   const [dragHoverBayId, setDragHoverBayId] = useState<string | null>(null);
   const [laneDropTargetId, setLaneDropTargetId] = useState<string | null>(null);
+
+  // MBP-0110: Ghost bar + snap guides state
+  const [snapGuides, setSnapGuides] = useState<number[]>([]);
+  // MBP-0111: Skill warnings during drag
+  const [dragSkillWarnings, setDragSkillWarnings] = useState<SkillGap[]>([]);
+  // MBP-0113: Conflict warnings during drag
+  const [dragConflicts, setDragConflicts] = useState<string[]>([]);
 
   // ── Today ──────────────────────────────────────────────────────────────
   const today = useMemo(() => {
@@ -370,9 +394,47 @@ export function GanttBoard({
     if (isEditMode || magicSelectionMode) return;
 
     function handlePointerMove(e: PointerEvent) {
-      setDragDelta(e.clientX - dragState!.startX);
+      const delta = e.clientX - dragState!.startX;
+      setDragDelta(delta);
       if (dragState?.type === "move") {
-        setDragHoverBayId(resolveHoveredBayId(e.clientY));
+        const hoveredBay = resolveHoveredBayId(e.clientY);
+        setDragHoverBayId(hoveredBay);
+
+        // MBP-0110: Compute snap guides
+        const daysDelta = Math.round(delta / cellWidth);
+        const msToDay = (ms: number) => Math.floor(ms / DAY_MS);
+        const newStart = dragState!.origStartDate + daysDelta * DAY_MS;
+        const newEnd = dragState!.origEndDate + daysDelta * DAY_MS;
+        const startIdx = msToDay(newStart) - rangeStartDay;
+        const endIdx = msToDay(newEnd) - rangeStartDay;
+        setSnapGuides([startIdx, endIdx]);
+
+        // MBP-0111: Check skill matching
+        const targetBay = hoveredBay ?? dragState!.hangarBayId;
+        if (techTrainingMap && woRequiredTraining && woAssignedTechIds) {
+          const reqTraining = woRequiredTraining[dragState!.workOrderId] ?? [];
+          const techIds = woAssignedTechIds[dragState!.workOrderId] ?? [];
+          const gaps: SkillGap[] = [];
+          for (const techId of techIds) {
+            const techTraining = techTrainingMap[techId] ?? [];
+            const missing = reqTraining.filter((r: string) => !techTraining.includes(r));
+            if (missing.length > 0) gaps.push({ techId, missingTraining: missing });
+          }
+          setDragSkillWarnings(gaps);
+        }
+
+        // MBP-0113: Check bay conflicts during drag
+        const targetRow = rows.find((r) => r.id === targetBay);
+        if (targetRow) {
+          const conflicts: string[] = [];
+          for (const wo of targetRow.wos) {
+            if (wo.workOrderId === dragState!.workOrderId) continue;
+            if (newStart < wo.promisedDeliveryDate && wo.scheduledStartDate < newEnd) {
+              conflicts.push(wo.workOrderNumber);
+            }
+          }
+          setDragConflicts(conflicts);
+        }
       }
     }
 
@@ -401,6 +463,21 @@ export function GanttBoard({
           );
         }
 
+        // MBP-0113: Toast conflict warnings
+        if (dragConflicts.length > 0) {
+          toast.warning(
+            `Bay conflict: overlaps with ${dragConflicts.join(", ")}`,
+            { duration: 5000 },
+          );
+        }
+        // MBP-0111: Toast skill warnings
+        if (dragSkillWarnings.length > 0) {
+          toast.warning(
+            `Skill gap: ${dragSkillWarnings.length} tech(s) missing required training`,
+            { duration: 5000 },
+          );
+        }
+
         try {
           await onScheduleChange({
             workOrderId: dragState!.workOrderId,
@@ -418,6 +495,9 @@ export function GanttBoard({
       setDragState(null);
       setDragDelta(0);
       setDragHoverBayId(null);
+      setSnapGuides([]);
+      setDragSkillWarnings([]);
+      setDragConflicts([]);
     }
 
     window.addEventListener("pointermove", handlePointerMove);
@@ -434,6 +514,13 @@ export function GanttBoard({
     resolveHoveredBayId,
     isEditMode,
     magicSelectionMode,
+    rangeStartDay,
+    rows,
+    techTrainingMap,
+    woRequiredTraining,
+    woAssignedTechIds,
+    dragConflicts,
+    dragSkillWarnings,
   ]);
 
   const moveBayRow = useCallback(
@@ -739,6 +826,38 @@ export function GanttBoard({
               />
             )}
 
+            {/* MBP-0110: Snap guide lines during drag */}
+            {dragState && snapGuides.map((dayIdx, i) => (
+              <div
+                key={`snap-${i}`}
+                className="absolute top-0 bottom-0 z-25 pointer-events-none"
+                style={{
+                  left: dayIdx * cellWidth + cellWidth / 2,
+                  width: 1,
+                  background:
+                    "repeating-linear-gradient(to bottom, #8b5cf6 0px, #8b5cf6 3px, transparent 3px, transparent 6px)",
+                }}
+              />
+            ))}
+
+            {/* MBP-0110: Drag skill/conflict floating indicator */}
+            {dragState && (dragSkillWarnings.length > 0 || dragConflicts.length > 0) && (
+              <div className="absolute top-1 right-2 z-40 pointer-events-none flex gap-2">
+                {dragSkillWarnings.length > 0 && (
+                  <div className="flex items-center gap-1 text-[10px] font-medium text-amber-500 bg-amber-500/15 border border-amber-400/40 rounded px-2 py-0.5">
+                    <ShieldAlert className="w-3 h-3" />
+                    {dragSkillWarnings.length} skill gap(s)
+                  </div>
+                )}
+                {dragConflicts.length > 0 && (
+                  <div className="flex items-center gap-1 text-[10px] font-medium text-red-500 bg-red-500/15 border border-red-400/40 rounded px-2 py-0.5">
+                    <AlertTriangle className="w-3 h-3" />
+                    Conflicts: {dragConflicts.join(", ")}
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Header row */}
             <div
               className="flex border-b border-border/40 bg-muted/30 sticky top-0 z-10"
@@ -870,6 +989,30 @@ export function GanttBoard({
                     );
                   })}
 
+                {/* MBP-0116: Baseline ghost bars */}
+                {baselinePositions && row.wos.map((wo) => {
+                  const baseline = baselinePositions.get(wo.workOrderId);
+                  if (!baseline) return null;
+                  const msToDay = (ms: number) => Math.floor(ms / DAY_MS);
+                  const bStartIdx = Math.max(0, msToDay(baseline.startDate) - rangeStartDay);
+                  const bEndIdx = Math.max(0, msToDay(baseline.endDate) - rangeStartDay);
+                  const bLeft = bStartIdx * cellWidth;
+                  const bWidth = Math.max(cellWidth, (bEndIdx - bStartIdx) * cellWidth);
+                  return (
+                    <div
+                      key={`baseline-${wo.workOrderId}`}
+                      className="absolute rounded-md border-2 border-dashed border-violet-400/50 bg-violet-400/10 pointer-events-none"
+                      style={{
+                        left: bLeft,
+                        width: bWidth,
+                        top: (ROW_HEIGHT - BAR_HEIGHT) / 2 - 2,
+                        height: BAR_HEIGHT + 4,
+                      }}
+                      title={`Baseline: ${new Date(baseline.startDate).toLocaleDateString()} → ${new Date(baseline.endDate).toLocaleDateString()}`}
+                    />
+                  );
+                })}
+
                 {row.wos.map((wo) => {
                   const { startDayIdx, endDayIdx } = getProjectPosition(wo);
                   const durationDays = Math.max(
@@ -978,6 +1121,40 @@ export function GanttBoard({
                             <CheckCircle2 className="h-3 w-3" />
                           </span>
                         )}
+                        {/* MBP-0115: TAT estimate badge */}
+                        {tatEstimates && wo.aircraft && barWidth > 180 && (() => {
+                          const acType = `${wo.aircraft.make} ${wo.aircraft.model}`;
+                          const est = tatEstimates.find((e) => e.aircraftType === acType);
+                          if (!est || est.sampleCount === 0) return null;
+                          return (
+                            <span
+                              className="inline-flex items-center gap-0.5 text-[9px] bg-violet-500/20 text-violet-300 rounded px-1 py-0 flex-shrink-0"
+                              title={`Est. ${est.averageDays}d based on ${est.sampleCount} similar WOs`}
+                            >
+                              <Clock className="w-2.5 h-2.5" />
+                              ~{est.averageDays}d
+                            </span>
+                          );
+                        })()}
+                        {/* MBP-0111: Skill warning on bar */}
+                        {woRequiredTraining && woAssignedTechIds && techTrainingMap && barWidth > 140 && (() => {
+                          const reqT = woRequiredTraining[wo.workOrderId] ?? [];
+                          const techIds = woAssignedTechIds[wo.workOrderId] ?? [];
+                          if (reqT.length === 0 || techIds.length === 0) return null;
+                          const hasGap = techIds.some((tid: string) => {
+                            const tt = techTrainingMap[tid] ?? [];
+                            return reqT.some((r: string) => !tt.includes(r));
+                          });
+                          if (!hasGap) return null;
+                          return (
+                            <span
+                              className="inline-flex items-center gap-0.5 text-[9px] bg-amber-500/20 text-amber-300 rounded px-1 py-0 flex-shrink-0"
+                              title="Tech missing required training"
+                            >
+                              <ShieldAlert className="w-2.5 h-2.5" />
+                            </span>
+                          );
+                        })()}
                       </div>
 
                       {onArchiveAssignment && !interactionPaused && (

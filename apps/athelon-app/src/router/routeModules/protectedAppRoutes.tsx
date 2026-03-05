@@ -145,6 +145,8 @@ const FinancialProfitabilityPage = lazy(
 const FinancialRunwayPage = lazy(
   () => import("@/app/(app)/reports/financials/runway/page"),
 );
+const RevenueReportPage = lazy(() => import("@/app/(app)/reports/revenue/page"));
+const ThroughputReportPage = lazy(() => import("@/app/(app)/reports/throughput/page"));
 
 const ShopSettingsPage = lazy(() => import("@/app/(app)/settings/shop/page"));
 const UsersSettingsPage = lazy(() => import("@/app/(app)/settings/users/page"));
@@ -299,6 +301,8 @@ export function protectedAppRoutes() {
               element={<FinancialProfitabilityPage />}
             />
             <Route path="/reports/financials/runway" element={<FinancialRunwayPage />} />
+            <Route path="/reports/revenue" element={<RevenueReportPage />} />
+            <Route path="/reports/throughput" element={<ThroughputReportPage />} />
 
             <Route path="/settings/shop" element={<ShopSettingsPage />} />
             <Route path="/settings/users" element={<UsersSettingsPage />} />

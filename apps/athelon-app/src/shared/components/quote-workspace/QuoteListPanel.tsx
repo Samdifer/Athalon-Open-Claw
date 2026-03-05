@@ -10,7 +10,13 @@ import {
   Search,
   FileText,
   ChevronRight,
+  Download,
 } from "lucide-react";
+import { ExportCSVButton } from "@/src/shared/components/ExportCSVButton";
+import {
+  QUOTE_CSV_COLUMNS,
+  mapQuotesForCSV,
+} from "@/src/shared/utils/csvExport";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -117,12 +123,22 @@ export default function QuotesPage() {
             </p>
           )}
         </div>
-        <Button asChild size="sm">
-          <Link to="/billing/quotes/new">
-            <Plus className="w-3.5 h-3.5 mr-1.5" />
-            New Quote
-          </Link>
-        </Button>
+        <div className="flex gap-2">
+          <ExportCSVButton
+            data={mapQuotesForCSV(filtered, customerMap)}
+            columns={QUOTE_CSV_COLUMNS}
+            fileName="quotes.csv"
+            showDateFilter
+            dateFieldKey="createdAt"
+            className="gap-1.5 text-xs"
+          />
+          <Button asChild size="sm">
+            <Link to="/billing/quotes/new">
+              <Plus className="w-3.5 h-3.5 mr-1.5" />
+              New Quote
+            </Link>
+          </Button>
+        </div>
       </div>
 
       {/* Filter Tabs + Search */}

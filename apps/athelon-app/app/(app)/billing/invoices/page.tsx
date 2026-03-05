@@ -44,6 +44,11 @@ import {
 } from "@/components/ui/select";
 import { formatDate, formatDateUTC } from "@/lib/format";
 import { downloadCSV } from "@/lib/export";
+import { ExportCSVButton } from "@/src/shared/components/ExportCSVButton";
+import {
+  INVOICE_CSV_COLUMNS,
+  mapInvoicesForCSV,
+} from "@/src/shared/utils/csvExport";
 import { toast } from "sonner";
 
 type InvoiceStatus = "DRAFT" | "SENT" | "PARTIAL" | "PAID" | "VOID" | "all";
@@ -609,35 +614,14 @@ export default function InvoicesPage() {
           )}
         </div>
         <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
+          <ExportCSVButton
+            data={mapInvoicesForCSV(filtered, customerMap)}
+            columns={INVOICE_CSV_COLUMNS}
+            fileName="invoices.csv"
+            showDateFilter
+            dateFieldKey="createdAt"
             className="gap-1.5 text-xs"
-            onClick={() => {
-              if (filtered.length) {
-                downloadCSV(
-                  filtered.map((inv) => ({
-                    "Invoice #": inv.invoiceNumber ?? "",
-                    Customer: customerMap.get(inv.customerId as string) ?? "Unknown",
-                    Status: inv.status,
-                    Total: inv.total,
-                    "Amount Paid": inv.amountPaid ?? 0,
-                    Balance: inv.balance ?? inv.total,
-                    // BUG-BM-HUNT-005: dueDate is a date-only field (UTC-midnight); format in UTC to avoid off-by-one exports.
-                    "Due Date": inv.dueDate ? formatDateUTC(inv.dueDate) : "",
-                    Created: formatDate(inv._creationTime),
-                    Sent: inv.sentAt ? formatDate(inv.sentAt) : "",
-                    Paid: inv.paidAt ? formatDate(inv.paidAt) : "",
-                  })),
-                  "invoices.csv",
-                );
-                toast.success("Invoices exported");
-              }
-            }}
-          >
-            <Download className="w-3.5 h-3.5" />
-            Export CSV
-          </Button>
+          />
           <Button asChild size="sm">
             <Link to="/billing/invoices/new">
               <Plus className="w-3.5 h-3.5 mr-1.5" />
