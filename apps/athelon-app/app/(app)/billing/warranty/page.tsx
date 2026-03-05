@@ -208,7 +208,7 @@ function ClaimDetailDialog({
   const [resolution, setResolution] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
 
-  if (!claimId) return;
+  if (!claimId) return null;
 
   const handleAction = async (fn: () => Promise<unknown>) => {
     setActionLoading(true);
@@ -351,7 +351,7 @@ export default function WarrantyPage() {
 
   if (prereq.state === "loading_context" || prereq.state === "loading_data") {
     return (
-      <div className="p-6 space-y-3" data-testid="page-loading-state">
+      <div className="space-y-5" data-testid="page-loading-state">
         <Skeleton className="h-8 w-56" />
         {Array.from({ length: 4 }).map((_, i) => (
           <Skeleton key={i} className="h-10 w-full" />
@@ -375,13 +375,13 @@ export default function WarrantyPage() {
   if (!orgId) return null;
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-5">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <ShieldCheck className="h-6 w-6" /> Warranty Claims
+          <h1 className="text-lg sm:text-xl font-semibold text-foreground flex items-center gap-2">
+            <ShieldCheck className="h-5 w-5" /> Warranty Claims
           </h1>
-          <p className="text-muted-foreground text-sm">Track and manage warranty claims against parts, vendors, and OEMs</p>
+          <p className="text-sm text-muted-foreground mt-0.5">Track and manage warranty claims against parts, vendors, and OEMs</p>
         </div>
         <Button onClick={() => setCreateOpen(true)}>
           <Plus className="h-4 w-4 mr-1" /> New Claim
@@ -389,7 +389,7 @@ export default function WarrantyPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <Card><CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Total Claims</CardTitle></CardHeader>
           <CardContent><div className="text-2xl font-bold">{stats.total}</div></CardContent></Card>
         <Card><CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground flex items-center gap-1"><Clock className="h-3.5 w-3.5" /> Pending Amount</CardTitle></CardHeader>

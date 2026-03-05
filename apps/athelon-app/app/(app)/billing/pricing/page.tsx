@@ -37,6 +37,7 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDate } from "@/lib/format";
+import { toast } from "sonner";
 
 const RULE_TYPE_STYLES: Record<string, string> = {
   cost_plus: "bg-blue-500/15 text-blue-400 border-blue-500/30",
@@ -116,6 +117,7 @@ export default function PricingPage() {
         effectiveDate: new Date(profileEffective).getTime(),
         isDefault: profileIsDefault,
       });
+      toast.success("Pricing profile created.");
       setProfileDialog(false);
       setProfileName(""); setProfileCustomerId(""); setProfileLaborRate("");
       setProfileLaborMult(""); setProfileMarkup(""); setProfileDiscount("");
@@ -145,7 +147,7 @@ export default function PricingPage() {
             {(profiles ?? []).length} profiles · {(rules ?? []).length} rules
           </p>
         </div>
-        <Button size="sm" onClick={() => setProfileDialog(true)}>
+        <Button size="sm" onClick={() => { setError(null); setProfileDialog(true); }}>
           <Plus className="w-3.5 h-3.5 mr-1.5" />
           New Profile
         </Button>
@@ -169,7 +171,7 @@ export default function PricingPage() {
               <Tag className="w-7 h-7 text-muted-foreground/40 mx-auto mb-2" />
               <p className="text-sm text-muted-foreground">No pricing profiles yet.</p>
               <p className="text-xs text-muted-foreground/60 mt-1">Create profiles to set customer-specific labor rates and markup.</p>
-              <Button size="sm" variant="outline" className="mt-3" onClick={() => setProfileDialog(true)}>
+              <Button size="sm" variant="outline" className="mt-3" onClick={() => { setError(null); setProfileDialog(true); }}>
                 <Plus className="w-3 h-3 mr-1" />
                 New Profile
               </Button>
@@ -284,12 +286,12 @@ export default function PricingPage() {
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs">Customer (leave blank for org-wide)</Label>
-              <Select value={profileCustomerId} onValueChange={setProfileCustomerId}>
+              <Select value={profileCustomerId || "_org_wide"} onValueChange={(v) => setProfileCustomerId(v === "_org_wide" ? "" : v)}>
                 <SelectTrigger className="h-9 text-sm">
                   <SelectValue placeholder="Org-wide (all customers)" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Org-wide</SelectItem>
+                  <SelectItem value="_org_wide">Org-wide (all customers)</SelectItem>
                   {(customers ?? []).map((c) => (
                     <SelectItem key={c._id} value={c._id}>{c.name}</SelectItem>
                   ))}
