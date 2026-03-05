@@ -144,7 +144,14 @@ export function LogbookTab({
       ]),
     ];
     const csv = rows.map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")).join("\n");
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    // BUG-DOM-131: CSV lacked a UTF-8 BOM (Byte Order Mark). Excel on Windows —
+    // the standard tool in every Part 145 shop's front office — defaults to ANSI
+    // encoding when opening .csv files without a BOM. This garbles non-ASCII
+    // characters (diacritics in technician names, degree symbols in descriptions,
+    // certain special characters in tail registrations). Prepending the BOM
+    // (\uFEFF) tells Excel to read the file as UTF-8 without requiring the user
+    // to go through the import wizard.
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;

@@ -62,8 +62,13 @@ export default function FleetCalendarPage() {
   const events = useMemo<ScheduleEvent[]>(() => {
     if (!workOrders) return [];
     const result: ScheduleEvent[] = [];
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    // BUG-DOM-127: `today` previously used local-tz midnight (setHours(0,0,0,0))
+    // while all event dates are UTC timestamps rendered with UTC accessors.
+    // A shop in UTC-5 at 3 PM local (8 PM UTC) would see today's scheduled WOs
+    // marked "overdue" because local midnight > UTC midnight for the same date.
+    // Use UTC midnight for consistency with the rest of the calendar logic.
+    const nowUtc = new Date();
+    const today = new Date(Date.UTC(nowUtc.getUTCFullYear(), nowUtc.getUTCMonth(), nowUtc.getUTCDate()));
 
     for (const wo of workOrders) {
       const dateMs = wo.scheduledStartDate ?? wo.promisedDeliveryDate;

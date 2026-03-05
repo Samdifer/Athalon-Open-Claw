@@ -94,13 +94,20 @@ export default function OjtJacketsPage() {
       }
       setLoadingJackets(true);
       try {
-        const rows = await Promise.all(
+        // BUG-DOM-129: Promise.all() meant one corrupt/deleted curriculum record
+        // would prevent ALL jackets from loading. The DOM opens the jackets list
+        // and sees an empty table with an error toast — even if 19 of 20 curricula
+        // loaded fine. Use Promise.allSettled() so partial failures are isolated
+        // and successfully-loaded jackets still appear.
+        const results = await Promise.allSettled(
           curricula.map((curriculum) =>
             convex.query(api.ojt.listJacketsByCurriculum, { curriculumId: curriculum._id }),
           ),
         );
         if (cancelled) return;
-        const merged = rows.flat();
+        const merged = results.flatMap((r) =>
+          r.status === "fulfilled" ? r.value : [],
+        );
         const map = new Map<string, Jacket>();
         merged.forEach((row) => map.set(row._id, row));
         setJackets(Array.from(map.values()));

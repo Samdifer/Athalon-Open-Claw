@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { Link } from "react-router-dom";
 import { useQuery, useMutation } from "convex/react";
 import { useUser } from "@clerk/clerk-react";
 import { api } from "@/convex/_generated/api";
@@ -16,6 +17,7 @@ import {
   ChevronRight,
   Loader2,
   Trash2,
+  Users,
   Wrench,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -466,6 +468,30 @@ export default function TrainingPage() {
                 <Skeleton key={i} className="h-16 w-full rounded-lg" />
               ))}
             </div>
+          ) : filteredTechs.length === 0 ? (
+            // BUG-DOM-130: When technicians loaded but none exist (new org) or
+            // search matches nothing, the page rendered an empty div with zero
+            // guidance. A DOM opening Training for the first time sees a blank
+            // area and doesn't know whether the system is broken or they need to
+            // add personnel first. Show an actionable empty state.
+            <Card className="border-border/60">
+              <CardContent className="py-12 text-center">
+                <Users className="w-7 h-7 text-muted-foreground/40 mx-auto mb-2" />
+                <p className="text-sm font-medium text-muted-foreground">
+                  {search ? "No technicians match your search" : "No technicians registered"}
+                </p>
+                <p className="text-xs text-muted-foreground/60 mt-1">
+                  {search
+                    ? "Try adjusting your search term."
+                    : "Add technician profiles in Personnel before managing training records."}
+                </p>
+                {!search && (
+                  <Button asChild variant="outline" size="sm" className="mt-3">
+                    <Link to="/personnel">Go to Personnel</Link>
+                  </Button>
+                )}
+              </CardContent>
+            </Card>
           ) : (
             <div className="space-y-2">
               {filteredTechs.map((tech) => {

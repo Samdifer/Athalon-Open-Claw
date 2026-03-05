@@ -68,17 +68,29 @@ export default function OjtDashboardPage() {
       }
       const taskMap = new Map<string, number>();
       const activeJacketMap = new Map<string, number>();
-      const taskRows = await Promise.all(
+      // BUG-DOM-128: Promise.all() meant one failed curriculum query killed stats
+      // for every curriculum. A single deleted or corrupt curriculum record would
+      // cause the entire dashboard to show 0/0 for all cards with a generic error
+      // toast. Use Promise.allSettled() so partial failures degrade gracefully —
+      // the DOM still sees stats for the curricula that loaded successfully.
+      const taskResults = await Promise.allSettled(
         curricula.map((c) => convex.query(api.ojt.listTasksByCurriculum, { curriculumId: c._id })),
       );
-      const jacketRows = await Promise.all(
+      const jacketResults = await Promise.allSettled(
         curricula.map((c) => convex.query(api.ojt.listJacketsByCurriculum, { curriculumId: c._id })),
       );
       curricula.forEach((curriculum, idx) => {
-        taskMap.set(curriculum._id, taskRows[idx].length);
+        const taskResult = taskResults[idx];
+        const jacketResult = jacketResults[idx];
+        taskMap.set(
+          curriculum._id,
+          taskResult.status === "fulfilled" ? taskResult.value.length : 0,
+        );
         activeJacketMap.set(
           curriculum._id,
-          jacketRows[idx].filter((j: Jacket) => j.status === "in_progress").length,
+          jacketResult.status === "fulfilled"
+            ? jacketResult.value.filter((j: Jacket) => j.status === "in_progress").length
+            : 0,
         );
       });
       if (!cancelled) {
