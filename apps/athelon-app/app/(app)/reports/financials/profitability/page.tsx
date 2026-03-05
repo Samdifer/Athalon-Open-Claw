@@ -88,7 +88,8 @@ export default function WOProfitabilityPage() {
   const purchaseOrders = useQuery(api.billing.listPurchaseOrders, orgId ? { orgId } : "skip");
   const customers = useQuery(api.customers.listCustomers, orgId ? { orgId } : "skip");
 
-  const isLoading = !isLoaded || invoices === undefined || purchaseOrders === undefined;
+  // BUG-BH-014: Wait for customers query too; otherwise table briefly renders as "Unknown" for every row.
+  const isLoading = !isLoaded || invoices === undefined || purchaseOrders === undefined || customers === undefined;
 
   // ── Date range cutoff ──────────────────────────────────────────────────────
 
@@ -115,6 +116,7 @@ export default function WOProfitabilityPage() {
   // ── Per-WO P&L rows ───────────────────────────────────────────────────────
 
   interface WORow {
+    invoiceId: string;
     invoiceNumber: string;
     workOrderId: string | undefined;
     customer: string;
@@ -135,7 +137,7 @@ export default function WOProfitabilityPage() {
     const filtered = invoices.filter(
       (i) =>
         (i.status === "PAID" || i.status === "PARTIAL") &&
-        i.createdAt >= cutoff,
+        (i.createdAt ?? i._creationTime) >= cutoff,
     );
 
     // Build PO cost by work order
@@ -159,6 +161,7 @@ export default function WOProfitabilityPage() {
       const cust = customers.find((c) => c._id === inv.customerId);
 
       return {
+        invoiceId: inv._id,
         invoiceNumber: inv.invoiceNumber,
         workOrderId: woId,
         customer: cust?.name ?? "Unknown",
@@ -309,6 +312,7 @@ export default function WOProfitabilityPage() {
                   <TableHead className="text-xs">Invoice #</TableHead>
                   <TableHead className="text-xs">Customer</TableHead>
                   <TableHead className="text-xs text-right">Invoiced</TableHead>
+                  <TableHead className="text-xs text-right">Realized Revenue</TableHead>
                   <TableHead className="text-xs text-right">Parts Cost</TableHead>
                   <TableHead className="text-xs text-right">Labor Cost</TableHead>
                   <TableHead className="text-xs text-right">Margin</TableHead>
@@ -318,15 +322,16 @@ export default function WOProfitabilityPage() {
               <TableBody>
                 {woRows.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center text-sm text-muted-foreground py-8">
+                    <TableCell colSpan={8} className="text-center text-sm text-muted-foreground py-8">
                       No invoices found for the selected period
                     </TableCell>
                   </TableRow>
                 ) : (
                   woRows.map((row) => (
-                    <TableRow key={row.invoiceNumber} className="border-border/40">
+                    <TableRow key={row.invoiceId} className="border-border/40">
                       <TableCell className="text-sm font-mono">{row.invoiceNumber}</TableCell>
                       <TableCell className="text-sm">{row.customer}</TableCell>
+                      <TableCell className="text-sm text-right tabular-nums">{fmtUSD(row.quoted)}</TableCell>
                       <TableCell className="text-sm text-right tabular-nums">{fmtUSD(row.total)}</TableCell>
                       <TableCell className="text-sm text-right tabular-nums text-amber-400">{fmtUSD(row.actualParts)}</TableCell>
                       <TableCell className="text-sm text-right tabular-nums text-amber-400">{fmtUSD(row.actualLabor)}</TableCell>

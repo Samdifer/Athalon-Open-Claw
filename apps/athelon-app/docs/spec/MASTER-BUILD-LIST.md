@@ -6,6 +6,46 @@ This file is the markdown-authoritative source of truth for feature status, impl
 
 ## Bug Hunter Fixes
 
+- **BUG-BH-012** — Quote Workspace “Attention Queue” total added AOG count + sent-quote count, which double-counted the same work order when both conditions applied.
+  **File:** `src/shared/components/quote-workspace/QuoteWorkspaceShell.tsx`
+  **Fix:** Switched attention metric to a single unique WO filter (`priority === "aog" || quoteStatus === "SENT"`).
+  **Why it matters:** Billing managers now see a true workload count instead of inflated queue totals.
+
+- **BUG-BH-013** — Invoice batch actions used selected rows from the filtered list only, so search/filter changes could hide selected invoices from the payment dialog while void action still applied to all selected IDs.
+  **File:** `app/(app)/billing/invoices/page.tsx`
+  **Fix:** Derived `selectedInvoices`/`selectedDraftIds` from the full invoice dataset (`all`) instead of only filtered rows.
+  **Why it matters:** Batch send/void/payment actions now operate on the same selected set consistently, preventing hidden-selection surprises.
+
+- **BUG-BH-014** — WO Profitability page rendered before customers query loaded, briefly showing “Unknown” customers and blank-looking report context.
+  **File:** `app/(app)/reports/financials/profitability/page.tsx`
+  **Fix:** Added `customers === undefined` to loading gate.
+  **Why it matters:** Billing users get stable, trustworthy customer context when opening P&L.
+
+- **BUG-BH-015** — WO Profitability date filtering relied on `createdAt` only and used invoice number as row key, causing dropped rows when legacy invoices lacked `createdAt` and risking duplicate-key rendering collisions.
+  **File:** `app/(app)/reports/financials/profitability/page.tsx`
+  **Fix:** Date filter now falls back to `_creationTime`; table rows use stable `invoiceId` key.
+  **Why it matters:** P&L period filters include legacy records correctly and table rendering remains deterministic.
+
+- **BUG-BM-HUNT-008** — Profitability report column labeled "Invoiced" was showing collected revenue for partial invoices after margin fix, making the table internally inconsistent and confusing billing reconciliation.
+  **File:** `app/(app)/reports/financials/profitability/page.tsx`
+  **Fix:** Added a dedicated "Realized Revenue" column, restored "Invoiced" to true invoice total (`quoted`), and updated empty-state column span.
+  **Why it matters:** Billing managers can now compare billed vs collected amounts directly and trust margin context during collection follow-up.
+
+- **BUG-BM-HUNT-009** — Quote → Invoice due date parsing used `new Date(YYYY-MM-DD)` local-time conversion, which can shift stored due dates by timezone and create off-by-one collection dates.
+  **File:** `src/shared/components/quote-workspace/QuoteDetailEditor.tsx`
+  **Fix:** Switched date-input parsing to UTC-midnight (`Date.UTC`) and added invalid-date guard before create-invoice submission.
+  **Why it matters:** Prevents accidental wrong due dates when converting approved quotes into invoices across time zones.
+
+- **BUG-BM-HUNT-010** — Quote decline and create-invoice dialogs retained stale form values when closed via backdrop/X, causing accidental reuse of prior reason/terms on the next action.
+  **File:** `src/shared/components/quote-workspace/QuoteDetailEditor.tsx`
+  **Fix:** Added explicit `onOpenChange` close resets for decline reason, invoice due date, and payment terms.
+  **Why it matters:** Billing users can safely process multiple quotes in sequence without hidden stale-field carryover.
+
+- **BUG-BM-HUNT-011** — Time Clock work-order filter compared raw Convex ID objects against string select values, so valid WO filters could silently return zero rows.
+  **File:** `app/(app)/billing/time-clock/page.tsx`
+  **Fix:** Normalized entry `workOrderId` to string before comparison in filtered list logic.
+  **Why it matters:** Billing managers can reliably isolate labor by work order for invoice prep.
+
 - **BUG-SM-HUNT-007** — Work Orders could crash/render broken rows when partially seeded records had null `workOrderNumber`, `description`, `priority`, or `openedAt` values, because list/search/sort logic assumed non-null strings/numbers.
   **File:** `app/(app)/work-orders/page.tsx`
   **Fix:** Added defensive fallbacks during row normalization (`WO-<id>` number, default description/customer/priority, resilient `openedAt` fallback).

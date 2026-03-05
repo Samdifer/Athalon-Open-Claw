@@ -277,6 +277,11 @@ export function QuoteWorkspaceShell({
     () => workOrders.filter((wo) => wo.quoteStatus === "SENT").length,
     [workOrders],
   );
+  // BUG-BH-012: Attention queue should count unique WOs needing action, not double-count AOG+SENT rows.
+  const attentionCount = useMemo(
+    () => workOrders.filter((wo) => wo.priority === "aog" || wo.quoteStatus === "SENT").length,
+    [workOrders],
+  );
 
   const exportRows = useMemo(
     () =>
@@ -535,7 +540,7 @@ export function QuoteWorkspaceShell({
               Attention Queue
             </p>
             <p className="mt-1 text-2xl font-semibold text-amber-600 dark:text-amber-400">
-              {aogCount + sentCount}
+              {attentionCount}
             </p>
             <p className="text-[11px] text-muted-foreground">
               {aogCount} AOG · {sentCount} sent quotes

@@ -549,10 +549,11 @@ export default function InvoicesPage() {
   // Selected invoice objects + draft-only subset — memoized so batch action buttons
   // don't trigger O(n) passes on every checkbox toggle or search keystroke.
   const { selectedInvoices, selectedDraftIds } = useMemo(() => {
-    const selected = filtered.filter((inv) => selectedIds.has(inv._id));
+    // BUG-BH-013: Batch actions must operate on all selected invoices, even when search/filter hides some rows.
+    const selected = all.filter((inv) => selectedIds.has(inv._id));
     const drafts = selected.filter((inv) => inv.status === "DRAFT").map((inv) => inv._id);
     return { selectedInvoices: selected, selectedDraftIds: drafts };
-  }, [filtered, selectedIds]);
+  }, [all, selectedIds]);
 
   // Overdue check helper
   const isOverdue = (inv: { dueDate?: number; status: string }) =>
