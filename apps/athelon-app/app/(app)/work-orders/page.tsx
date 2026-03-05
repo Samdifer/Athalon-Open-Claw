@@ -313,9 +313,12 @@ export default function WorkOrdersPage() {
       <div className="flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between">
         <div>
           <h1 className="text-lg sm:text-xl md:text-2xl font-semibold text-foreground">Work Orders</h1>
+          {/* BUG-SM-HUNT-030: Was recomputing active count inline with
+              .filter() on every render, duplicating the work already done by
+              the memoized `counts` object. This wasted cycles on large WO lists
+              and was a maintenance footgun (two places defining "active"). */}
           <p className="text-sm text-muted-foreground mt-0.5">
-            {workOrders.length} total ·{" "}
-            {workOrders.filter((w) => ["open", "in_progress", "open_discrepancies"].includes(w.status)).length} active
+            {workOrders.length} total · {counts.active} active
           </p>
         </div>
         <div className="flex gap-2 w-full sm:w-auto">
@@ -800,10 +803,12 @@ export default function WorkOrdersPage() {
                         >
                           {wo.typeLabel}
                         </Badge>
+                        {/* BUG-SM-HUNT-031: Badge always showed singular "squawk"
+                            even when count > 1 (e.g. "3 squawk"). Fixed to pluralize. */}
                         {wo.openSquawks > 0 && (
                           <Badge className="bg-red-500/15 text-red-400 border border-red-500/30 text-[9px] gap-0.5">
                             <AlertTriangle className="w-2.5 h-2.5" />
-                            {wo.openSquawks} squawk
+                            {wo.openSquawks} squawk{wo.openSquawks !== 1 ? "s" : ""}
                           </Badge>
                         )}
                         {wo.partsOnOrder > 0 && (

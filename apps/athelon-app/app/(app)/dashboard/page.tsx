@@ -778,7 +778,10 @@ function LiveFleetStatus({ workOrders }: { workOrders: WorkOrdersWithRisk | unde
         statusColor = "text-orange-400";
         statusDot = "bg-orange-400";
       } else {
-        statusLabel = ac.status.replace(/_/g, " ");
+        // BUG-SM-HUNT-033: ac.status can be null/undefined for aircraft imported
+        // without a status field or created via bulk CSV import. Calling .replace()
+        // on undefined crashes the entire dashboard. Safe fallback to "Unknown".
+        statusLabel = (ac.status ?? "unknown").replace(/_/g, " ");
         statusColor = "text-muted-foreground";
         statusDot = "bg-muted-foreground/40";
       }

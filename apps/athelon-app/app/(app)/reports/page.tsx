@@ -3,7 +3,7 @@ import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import { usePagePrereqs } from "@/hooks/usePagePrereqs";
-import { FileBarChart, Download, DollarSign, TrendingUp, BarChart2, Navigation, AlertCircle } from "lucide-react";
+import { FileBarChart, Download, DollarSign, TrendingUp, BarChart2, Navigation, AlertCircle, Package } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -223,6 +223,16 @@ export default function ReportsPage() {
           <Link to="/reports/financials/runway">
             <Navigation className="w-3.5 h-3.5" />
             Runway
+          </Link>
+        </Button>
+        {/* BUG-SM-HUNT-034: Inventory Report page existed at /reports/inventory
+            but had no link from the Reports sub-nav. A shop manager reviewing
+            monthly reports had no discoverable path to the inventory valuation
+            and stock analysis without knowing the URL. */}
+        <Button variant="ghost" size="sm" className="h-8 text-xs gap-1.5 border border-border/40" asChild>
+          <Link to="/reports/inventory">
+            <Package className="w-3.5 h-3.5" />
+            Inventory
           </Link>
         </Button>
       </div>

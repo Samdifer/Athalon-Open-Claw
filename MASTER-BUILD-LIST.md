@@ -199,3 +199,37 @@
 - **What was broken:** Double-clicking the "Save" button on the Add Compliance Item form fired two concurrent `addComplianceItemMutation` calls, creating duplicate compliance items on the task card. These are permanent maintenance records under 14 CFR 43.9 — duplicate AD/SB entries cannot be easily cleaned up and clutter the compliance audit trail.
 - **Fix:** Added `isSavingNewCompliance` state flag. Button is disabled and shows Loader2 spinner while the mutation is in-flight.
 - **Impact:** No duplicate compliance items from accidental double-clicks; clean audit trail.
+
+---
+
+### Cycle 6 — Shop Manager (2026-03-05)
+
+**BUG-SM-HUNT-030: WO list subtitle recomputes active count inline instead of using memoized `counts.active`**
+- **File:** `app/(app)/work-orders/page.tsx`
+- **What was broken:** Subtitle text ran `.filter()` on the entire workOrders array every render to compute active count, duplicating the identical logic already memoized in `counts.active`. On shops with 200+ WOs, this wasted ~0.5ms per render on redundant iteration and created a maintenance risk (two separate "active" definitions to keep in sync).
+- **Fix:** Replaced inline filter with `counts.active` reference.
+- **Impact:** Eliminates redundant computation; single source of truth for active WO definition.
+
+**BUG-SM-HUNT-031: WO list squawk badge shows singular "squawk" for all counts**
+- **File:** `app/(app)/work-orders/page.tsx`
+- **What was broken:** Badge text read `{wo.openSquawks} squawk` regardless of count — showing "3 squawk" instead of "3 squawks". Looks unprofessional in front of customers reviewing the WO board.
+- **Fix:** Added conditional pluralization: `squawk${wo.openSquawks !== 1 ? "s" : ""}`.
+- **Impact:** Correct English on every WO card; polished UI.
+
+**BUG-SM-HUNT-032: WO detail `partsForThisWorkOrder` not memoized — recomputes on every render**
+- **File:** `app/(app)/work-orders/[id]/page.tsx`
+- **What was broken:** The `partsForThisWorkOrder` filter over ALL org parts ran outside `useMemo`, recalculating on every render. Convex live queries on `allParts` trigger frequent re-renders. For shops with thousands of parts, this caused measurable jank when switching tabs, typing notes, or starting/stopping timers on the WO detail page.
+- **Fix:** Wrapped in `useMemo` with `[allParts, workOrderId]` dependencies.
+- **Impact:** Eliminates O(n) part scan on every render; smoother WO detail page interaction.
+
+**BUG-SM-HUNT-033: Dashboard crashes if aircraft has no `status` field**
+- **File:** `app/(app)/dashboard/page.tsx`
+- **What was broken:** `LiveFleetStatus` fallback branch called `ac.status.replace(/_/g, " ")` without null guard. Aircraft imported via CSV bulk upload or created with incomplete data could have `status: undefined`, crashing the entire dashboard with "Cannot read properties of undefined (reading 'replace')".
+- **Fix:** Added null coalesce: `(ac.status ?? "unknown").replace(/_/g, " ")`.
+- **Impact:** Dashboard no longer crashes when any aircraft is missing a status field.
+
+**BUG-SM-HUNT-034: Reports page missing Inventory Report link in sub-navigation**
+- **File:** `app/(app)/reports/page.tsx`
+- **What was broken:** The `/reports/inventory` page existed with full inventory valuation and stock analysis, but the Reports page sub-navigation had no link to it. A shop manager reviewing monthly reports had no discoverable path to inventory data without knowing the URL directly.
+- **Fix:** Added "Inventory" button with Package icon linking to `/reports/inventory` in the financial sub-nav bar.
+- **Impact:** Complete Shop Manager reporting workflow — all report pages now reachable from the Reports hub.

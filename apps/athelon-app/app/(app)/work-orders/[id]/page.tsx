@@ -472,13 +472,21 @@ export default function WorkOrderDetailPage() {
     ),
   ];
 
-  const partsForThisWorkOrder = ((allParts ?? []) as WorkOrderPart[]).filter(
-    (part) =>
-      part.receivingWorkOrderId === workOrderId ||
-      part.reservedForWorkOrderId === workOrderId ||
-      part.installedByWorkOrderId === workOrderId ||
-      part.installedOnWorkOrderId === workOrderId ||
-      part.removedByWorkOrderId === workOrderId,
+  // BUG-SM-HUNT-032: Was not wrapped in useMemo — recalculated on every render
+  // because `allParts` is a Convex live query that updates frequently. For orgs
+  // with thousands of parts, this filter ran needlessly on every state change
+  // (tab switch, timer tick, keystroke). Now memoized on the two real dependencies.
+  const partsForThisWorkOrder = useMemo(
+    () =>
+      ((allParts ?? []) as WorkOrderPart[]).filter(
+        (part) =>
+          part.receivingWorkOrderId === workOrderId ||
+          part.reservedForWorkOrderId === workOrderId ||
+          part.installedByWorkOrderId === workOrderId ||
+          part.installedOnWorkOrderId === workOrderId ||
+          part.removedByWorkOrderId === workOrderId,
+      ),
+    [allParts, workOrderId],
   );
 
   const requestsForThisWorkOrder = useMemo(() => {

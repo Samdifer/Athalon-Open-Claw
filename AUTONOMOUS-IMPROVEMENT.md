@@ -11,4 +11,6 @@
 | 4 | 2026-03-05 | Billing Manager | BUG-BM-HUNT-150 through BUG-BM-HUNT-154 |
 | 5 | 2026-03-05 | Lead Technician | BUG-LT-HUNT-201 through BUG-LT-HUNT-206 |
 
-**Next up:** Shop Manager
+| 6 | 2026-03-05 | Shop Manager | BUG-SM-HUNT-030 through BUG-SM-HUNT-034 |
+
+**Next up:** Parts Clerk
