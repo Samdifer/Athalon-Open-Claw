@@ -167,3 +167,43 @@ export const listByTaskCard = query({
       .collect();
   },
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// QUERY: listByOrg  (MBP-0118)
+//
+// Lists all conformity inspections for an organization, ordered by creation.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const listInspectionsByOrg = query({
+  args: {
+    organizationId: v.id("organizations"),
+  },
+
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("conformityInspections")
+      .withIndex("by_org", (q) => q.eq("organizationId", args.organizationId))
+      .order("desc")
+      .collect();
+  },
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// QUERY: getById  (MBP-0118)
+//
+// Returns a single conformity inspection by ID, with org-scoped access check.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const getById = query({
+  args: {
+    organizationId: v.id("organizations"),
+    inspectionId: v.id("conformityInspections"),
+  },
+
+  handler: async (ctx, args) => {
+    const inspection = await ctx.db.get(args.inspectionId);
+    if (!inspection) return null;
+    if (inspection.organizationId !== args.organizationId) return null;
+    return inspection;
+  },
+});
