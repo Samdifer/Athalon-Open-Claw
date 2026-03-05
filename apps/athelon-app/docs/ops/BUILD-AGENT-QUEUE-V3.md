@@ -15,12 +15,12 @@
 - [x] TEAM-D: MBP-0077 (invoice PDF), MBP-0078 (quote PDF), MBP-0079 (RTS PDF), MBP-0080 (WO PDF), MBP-0081 (download button), MBP-0082 (print button) ✅
 
 ### Wave 3 — Dashboard + Billing Wiring (2 agents)
-- [ ] TEAM-E: MBP-0056 (WO pie chart), MBP-0057 (revenue trend), MBP-0058 (TAT bar), MBP-0059 (tech utilization), MBP-0060 (billing analytics)
-- [ ] TEAM-F: MBP-0069 (labor rate auto-apply), MBP-0070 (pricing→invoice wiring), MBP-0119 (tax calculation), MBP-0120 (computeTaxForInvoice), MBP-0061 (CSV exports), MBP-0062 (date range filter)
+- [x] TEAM-E: MBP-0056 (WO pie chart), MBP-0057 (revenue trend), MBP-0058 (TAT bar), MBP-0059 (tech utilization), MBP-0060 (billing analytics) ✅ bc80c24
+- [x] TEAM-F: MBP-0069 (labor rate auto-apply), MBP-0070 (pricing→invoice wiring), MBP-0119 (tax calculation), MBP-0120 (computeTaxForInvoice), MBP-0061 (CSV exports), MBP-0062 (date range filter) ✅ 508b749
 
 ### Wave 4 — Scheduling + Reports (2 agents)
-- [ ] TEAM-G: MBP-0110 (Gantt drag-drop), MBP-0111 (skill matching), MBP-0112 (bay allocation), MBP-0113 (bay conflict), MBP-0114 (auto-schedule), MBP-0115 (TAT estimation), MBP-0116 (snapshot compare)
-- [ ] TEAM-H: MBP-0103 (monthly revenue report), MBP-0104 (WO throughput report), MBP-0048 (part return workflow), MBP-0037 (parts request intake), MBP-0125 (shift handoff notes)
+- [x] TEAM-G: MBP-0110 (Gantt drag-drop), MBP-0111 (skill matching), MBP-0112 (bay allocation), MBP-0113 (bay conflict), MBP-0114 (auto-schedule), MBP-0115 (TAT estimation), MBP-0116 (snapshot compare) ✅ b174393
+- [x] TEAM-H: MBP-0103 (monthly revenue report), MBP-0104 (WO throughput report), MBP-0048 (part return workflow), MBP-0037 (parts request intake), MBP-0125 (shift handoff notes) ✅ (already present/verified)
 
 ### Wave 5 — Customer Portal (2 agents)
 - [ ] TEAM-I: MBP-0096 (customer login), MBP-0097 (customer dashboard), MBP-0098 (WO tracking), MBP-0099 (quote approve/decline)
