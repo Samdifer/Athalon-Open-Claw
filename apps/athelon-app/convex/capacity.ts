@@ -19,6 +19,7 @@ import {
   resolveEffectiveShift,
   type ShiftLike,
 } from "./lib/rosterHelpers";
+import { requireSchedulingManager } from "./shared/helpers/schedulingPermissions";
 
 const DEFAULT_SETTINGS = {
   capacityBufferPercent: 15,
@@ -31,11 +32,6 @@ const DEFAULT_SETTINGS = {
 const shopLocationFilterValidator = v.optional(
   v.union(v.id("shopLocations"), v.literal("all")),
 );
-
-function requireAuth(identity: { subject: string } | null): string {
-  if (!identity) throw new Error("Not authenticated");
-  return identity.subject;
-}
 
 function resolveScopedLocationId(
   shopLocationId?: Id<"shopLocations"> | "all",
@@ -227,8 +223,10 @@ export const upsertSchedulingSettings = mutation({
     defaultEfficiencyMultiplier: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    const userId = requireAuth(identity);
+    const { userId } = await requireSchedulingManager(ctx, {
+      organizationId: args.organizationId,
+      operation: "scheduling settings update",
+    });
     const nowMs = Date.now();
 
     const existing = await ctx.db
@@ -318,9 +316,29 @@ export const upsertTechnicianShift = mutation({
     notes: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    const userId = requireAuth(identity);
+    const { userId } = await requireSchedulingManager(ctx, {
+      organizationId: args.organizationId,
+      operation: "technician shift update",
+    });
     const nowMs = Date.now();
+
+    const technician = await ctx.db.get(args.technicianId);
+    if (!technician || technician.organizationId !== args.organizationId) {
+      throw new Error("Technician not found for organization");
+    }
+
+    const daysOfWeek = Array.from(
+      new Set(args.daysOfWeek.filter((day) => Number.isFinite(day) && day >= 0 && day <= 6)),
+    ).sort((a, b) => a - b);
+    if (daysOfWeek.length === 0) {
+      throw new Error("Shift requires at least one work day");
+    }
+    if (args.endHour <= args.startHour) {
+      throw new Error("Shift end hour must be after start hour");
+    }
+    if (args.efficiencyMultiplier <= 0) {
+      throw new Error("Efficiency multiplier must be greater than zero");
+    }
 
     const existing = await ctx.db
       .query("technicianShifts")
@@ -338,7 +356,7 @@ export const upsertTechnicianShift = mutation({
       organizationId: args.organizationId,
       effectiveFrom: nowMs,
       effectiveTo: undefined,
-      daysOfWeek: args.daysOfWeek,
+      daysOfWeek,
       startHour: args.startHour,
       endHour: args.endHour,
       efficiencyMultiplier: args.efficiencyMultiplier,
@@ -354,7 +372,7 @@ export const upsertTechnicianShift = mutation({
       recordId: newShiftId,
       userId,
       timestamp: nowMs,
-      notes: `Shift updated for technician ${args.technicianId}: ${args.daysOfWeek.join(",")} days, ${args.startHour}–${args.endHour}h, ×${args.efficiencyMultiplier}`,
+      notes: `Shift updated for technician ${args.technicianId}: ${daysOfWeek.join(",")} days, ${args.startHour}–${args.endHour}h, ×${args.efficiencyMultiplier}`,
     });
 
     return newShiftId;

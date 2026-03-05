@@ -163,6 +163,7 @@ import type * as shared_helpers_billingHelpers from "../shared/helpers/billingHe
 import type * as shared_helpers_numberGenerator from "../shared/helpers/numberGenerator.js";
 import type * as shared_helpers_orgScope from "../shared/helpers/orgScope.js";
 import type * as shared_helpers_rosterHelpers from "../shared/helpers/rosterHelpers.js";
+import type * as shared_helpers_schedulingPermissions from "../shared/helpers/schedulingPermissions.js";
 import type * as shared_helpers_workOrderNumber from "../shared/helpers/workOrderNumber.js";
 import type * as shipping from "../shipping.js";
 import type * as shopLocations from "../shopLocations.js";
@@ -350,6 +351,7 @@ declare const fullApi: ApiFromModules<{
   "shared/helpers/numberGenerator": typeof shared_helpers_numberGenerator;
   "shared/helpers/orgScope": typeof shared_helpers_orgScope;
   "shared/helpers/rosterHelpers": typeof shared_helpers_rosterHelpers;
+  "shared/helpers/schedulingPermissions": typeof shared_helpers_schedulingPermissions;
   "shared/helpers/workOrderNumber": typeof shared_helpers_workOrderNumber;
   shipping: typeof shipping;
   shopLocations: typeof shopLocations;

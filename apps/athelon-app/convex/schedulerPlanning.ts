@@ -7,6 +7,7 @@
 import { mutation, query, internalMutation } from "./_generated/server";
 import type { Id } from "./_generated/dataModel";
 import { v } from "convex/values";
+import { requireSchedulingManager } from "./shared/helpers/schedulingPermissions";
 
 const DEFAULT_PART_MARKUP_TIERS = [
   { maxLimit: 500, markupPercent: 30 },
@@ -21,11 +22,6 @@ const DEFAULT_SERVICE_MARKUP_TIERS = [
   { maxLimit: 10000, markupPercent: 12 },
   { maxLimit: 999999, markupPercent: 8 },
 ];
-
-function requireAuth(identity: { subject: string } | null): string {
-  if (!identity) throw new Error("Not authenticated");
-  return identity.subject;
-}
 
 const dailyEffortValidator = v.array(
   v.object({
@@ -434,8 +430,10 @@ export const upsertScheduleAssignment = mutation({
     isLocked: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    const userId = requireAuth(identity);
+    const { userId } = await requireSchedulingManager(ctx, {
+      organizationId: args.organizationId,
+      operation: "schedule assignment update",
+    });
     const now = Date.now();
 
     if (args.endDate <= args.startDate) {
@@ -608,12 +606,14 @@ export const setScheduleDayModel = mutation({
     nonWorkDays: v.optional(v.array(v.number())),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    const userId = requireAuth(identity);
-    const now = Date.now();
-
     const assignment = await ctx.db.get(args.assignmentId);
     if (!assignment) throw new Error("Schedule assignment not found");
+
+    const { userId } = await requireSchedulingManager(ctx, {
+      organizationId: assignment.organizationId,
+      operation: "schedule day-model update",
+    });
+    const now = Date.now();
 
     if (args.dailyEffort) {
       for (const row of args.dailyEffort) {
@@ -781,12 +781,14 @@ export const archiveScheduleAssignment = mutation({
     assignmentId: v.id("scheduleAssignments"),
   },
   handler: async (ctx, { assignmentId }) => {
-    const identity = await ctx.auth.getUserIdentity();
-    const userId = requireAuth(identity);
-    const now = Date.now();
-
     const assignment = await ctx.db.get(assignmentId);
     if (!assignment) throw new Error("Schedule assignment not found");
+
+    const { userId } = await requireSchedulingManager(ctx, {
+      organizationId: assignment.organizationId,
+      operation: "schedule assignment archive",
+    });
+    const now = Date.now();
 
     await ctx.db.patch(assignmentId, {
       archivedAt: now,
@@ -835,12 +837,14 @@ export const restoreScheduleAssignment = mutation({
     assignmentId: v.id("scheduleAssignments"),
   },
   handler: async (ctx, { assignmentId }) => {
-    const identity = await ctx.auth.getUserIdentity();
-    const userId = requireAuth(identity);
-    const now = Date.now();
-
     const assignment = await ctx.db.get(assignmentId);
     if (!assignment) throw new Error("Schedule assignment not found");
+
+    const { userId } = await requireSchedulingManager(ctx, {
+      organizationId: assignment.organizationId,
+      operation: "schedule assignment restore",
+    });
+    const now = Date.now();
 
     await ctx.db.patch(assignmentId, {
       archivedAt: undefined,
@@ -920,8 +924,10 @@ export const upsertPlanningFinancialSettings = mutation({
     serviceMarkupTiers: v.optional(markupTierValidator),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    const userId = requireAuth(identity);
+    const { userId } = await requireSchedulingManager(ctx, {
+      organizationId: args.organizationId,
+      operation: "planning financial settings update",
+    });
     const now = Date.now();
 
     const existing = await ctx.db
@@ -963,8 +969,10 @@ export const backfillLegacyScheduleAssignments = mutation({
     dryRun: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    const userId = requireAuth(identity);
+    const { userId } = await requireSchedulingManager(ctx, {
+      organizationId: args.organizationId,
+      operation: "legacy schedule backfill",
+    });
 
     return runLegacyScheduleBackfill(ctx, {
       organizationId: args.organizationId,
