@@ -6,6 +6,31 @@ This file is the markdown-authoritative source of truth for feature status, impl
 
 ## Bug Hunter Fixes
 
+- **BUG-QCM-HUNT-121** — RTSEvidenceSummary rendered both a Lucide icon (CheckCircle2/CircleOff) AND a Unicode emoji (✅/❌) for each readiness check — duplicate visual indicators. The emoji renders inconsistently across platforms (Windows vs macOS vs mobile) and clutters the row.
+  **File:** `app/(app)/work-orders/[id]/_components/RTSEvidenceSummary.tsx`
+  **Fix:** Removed redundant emoji, keeping only the Lucide icon — consistent with every other status indicator in the compliance section.
+  **Why it matters:** QCM inspectors on different devices saw inconsistent rendering; cleaner UI improves readability.
+
+- **BUG-QCM-HUNT-122** — Compliance error boundary (`compliance/error.tsx`) used a raw `<button>` with inline className instead of shadcn Button component. No error icon, no structured layout. Every other error boundary in the app uses proper Button + AlertCircle + descriptive messaging.
+  **File:** `app/(app)/compliance/error.tsx`
+  **Fix:** Rewrote to match the established error boundary pattern (AlertCircle icon, descriptive title, muted error message, shadcn Button).
+  **Why it matters:** A QCM inspector hitting a compliance page error saw an unstyled text link that looked broken — undermining confidence in the tool.
+
+- **BUG-QCM-HUNT-123** — Release Aircraft page used `parseFloat()` for aircraft total time validation. `parseFloat("123abc")` silently returns 123 — accepting malformed input and creating incorrect maintenance records. Same class of bug already fixed on the RTS page (BUG-QCM-HUNT-004).
+  **File:** `app/(app)/work-orders/[id]/release/page.tsx`
+  **Fix:** Replaced `parseFloat` with `Number()` + `Number.isFinite()` for strict parsing. Also eliminated redundant second `parseFloat` call in the mutation payload.
+  **Why it matters:** Prevents garbage hour values from being permanently recorded in the maintenance log — a 14 CFR 43.9(a) compliance risk.
+
+- **BUG-QCM-HUNT-124** — Audit Trail CSV export used `new Date().toISOString()` as the timestamp for every row, regenerating on each memo recomputation. All rows showed the exact same timestamp (moment of last render). The "User" column was always "System" — not meaningful. Missing "Not Complied" count that was visible in the UI.
+  **File:** `app/(app)/compliance/audit-trail/page.tsx`
+  **Fix:** Changed timestamp to a stable snapshot date label, replaced "User" column with "Aircraft" registration, included notCompliedCount in export details.
+  **Why it matters:** Audit trail exports are used for FAA inspector review — misleading timestamps and missing compliance data undermine their value.
+
+- **BUG-QCM-HUNT-125** — RTSEvidenceSummary's "Generate RTS Document" button navigated to `/work-orders/:id/rts` — the same page it's rendered on when viewed from the RTS flow. The QCM inspector saw a link to navigate to their current page.
+  **File:** `app/(app)/work-orders/[id]/_components/RTSEvidenceSummary.tsx`, `app/(app)/work-orders/[id]/rts/page.tsx`
+  **Fix:** Added `hideRtsLink` prop; RTS page passes `hideRtsLink` to suppress the redundant navigation button. Other consumers (WO detail page) still show it.
+  **Why it matters:** Removes a confusing dead-end navigation element from the most critical regulatory page in the app.
+
 - **BUG-BM-HUNT-115** — Billing sidebar missing 5 critical pages (Time Clock, Pricing, Vendors, Tax Config, Settings). A billing manager had no way to navigate to these pages without manually typing URLs. Routes existed in `protectedAppRoutes.tsx` but were never added to the sidebar nav.
   **File:** `components/AppSidebar.tsx`
   **Fix:** Added sidebar links for Time Clock, Pricing, Tax Config, Vendors, and Settings under the Billing section.
