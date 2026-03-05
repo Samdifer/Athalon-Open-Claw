@@ -175,7 +175,7 @@ export default function PredictionsPage() {
     const openWoAircraft = new Set(
       workOrders
         .filter((wo) => !["closed", "cancelled", "voided"].includes(wo.status))
-        .map((wo) => wo.aircraft?._id)
+        .map((wo) => (wo as Record<string, unknown>).aircraftId as string | undefined)
         .filter((id): id is string => Boolean(id)),
     );
 

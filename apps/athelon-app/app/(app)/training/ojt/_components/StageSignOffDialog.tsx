@@ -75,6 +75,9 @@ export function StageSignOffDialog({
     [technicians, authorizedTrainerIds, technicianId],
   );
 
+  // Derive effective selected stage: explicit user pick, or auto-advance to next
+  const selectedStage: Stage | null = (stage || nextStage) ?? null;
+
   const canSubmit = !!selectedStage && !!trainerId && !isSubmitting;
 
   const handleOpenChange = (value: boolean) => {
@@ -88,10 +91,7 @@ export function StageSignOffDialog({
     }
   };
 
-  // Derive effective selected stage: explicit user pick, or auto-advance to next
-  const selectedStage: Stage | null = (stage || nextStage) ?? null;
-
-  async function handleSubmit() {
+  const handleSubmit = async () => {
     if (!selectedStage || !trainerId) {
       toast.error("Select a stage and trainer");
       return;
@@ -123,7 +123,7 @@ export function StageSignOffDialog({
     } finally {
       setIsSubmitting(false);
     }
-  }
+  };
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>

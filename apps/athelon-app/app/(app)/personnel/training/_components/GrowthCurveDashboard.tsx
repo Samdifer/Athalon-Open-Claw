@@ -240,8 +240,8 @@ export function GrowthCurveDashboard({ orgId }: Props) {
               <XAxis dataKey="month" tick={{ fontSize: 12 }} tickFormatter={formatMonth} minTickGap={20} />
               <YAxis domain={[0, 200]} tick={{ fontSize: 12 }} tickFormatter={(v) => `${v}%`} />
               <Tooltip
-                formatter={(value: number | string) => `${Number(value).toFixed(1)}%`}
-                labelFormatter={(label: string) => formatMonth(label)}
+                formatter={(value: number | string | undefined) => `${Number(value ?? 0).toFixed(1)}%`}
+                labelFormatter={(label: unknown) => formatMonth(String(label ?? ""))}
               />
               <Legend />
               {series.map((s, idx) => (

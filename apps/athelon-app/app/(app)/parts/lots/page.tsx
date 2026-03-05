@@ -155,8 +155,9 @@ function CreateLotDialog({
         partName: partName.trim(),
         lotNumber: lotNumber.trim() || undefined,
         batchNumber: batchNumber.trim() || undefined,
-        quantity: parseFloat(quantity),
-        vendorName: vendorName.trim() || undefined,
+        originalQuantity: parseFloat(quantity),
+        receivedQuantity: parseFloat(quantity),
+        receivedByUserId: "system",
         hasShelfLife,
         shelfLifeExpiryDate: shelfLifeDate
           ? new Date(shelfLifeDate).getTime()
@@ -318,8 +319,8 @@ function LotDetailSheet({
   if (!lotId) return null;
 
   const quantityPct =
-    lot && lot.quantityOriginal > 0
-      ? Math.round((lot.quantityRemaining / lot.quantityOriginal) * 100)
+    lot && lot.originalQuantity > 0
+      ? Math.round((lot.remainingQuantity / lot.originalQuantity) * 100)
       : 0;
 
   return (
@@ -364,7 +365,7 @@ function LotDetailSheet({
             <div>
               <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
                 <span>
-                  {lot.quantityRemaining} / {lot.quantityOriginal} remaining
+                  {lot.remainingQuantity} / {lot.originalQuantity} remaining
                 </span>
                 <span>{quantityPct}%</span>
               </div>
@@ -390,10 +391,10 @@ function LotDetailSheet({
                   {lot.batchNumber}
                 </div>
               )}
-              {lot.vendorName && (
+              {((lot as Record<string, unknown>).vendorName as string | undefined) && (
                 <div>
                   <span className="font-medium">Vendor:</span>{" "}
-                  {lot.vendorName}
+                  {String((lot as Record<string, unknown>).vendorName ?? "")}
                 </div>
               )}
               {lot.hasShelfLife && lot.shelfLifeExpiryDate && (
@@ -462,7 +463,8 @@ function LotDetailSheet({
 // ─── Lot Parts Tab ──────────────────────────────────────────────────────────
 
 function LotPartsTab({ lotId }: { lotId: Id<"lots"> }) {
-  const parts = useQuery(api.lots.getLotParts, { lotId });
+  const { orgId } = useCurrentOrg();
+  const parts = useQuery(api.lots.getLotParts, orgId ? { organizationId: orgId, lotId } : "skip");
 
   if (parts === undefined) {
     return (
@@ -738,10 +740,10 @@ export default function LotsPage() {
                   </TableCell>
                   <TableCell className="text-right">
                     <span className="font-medium">
-                      {lot.quantityRemaining}
+                      {lot.remainingQuantity}
                     </span>
                     <span className="text-muted-foreground">
-                      /{lot.quantityOriginal}
+                      /{lot.originalQuantity}
                     </span>
                   </TableCell>
                   <TableCell>
@@ -768,7 +770,7 @@ export default function LotsPage() {
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    {lot.vendorName || (
+                    {((lot as Record<string, unknown>).vendorName as string | undefined) || (
                       <span className="text-muted-foreground">--</span>
                     )}
                   </TableCell>

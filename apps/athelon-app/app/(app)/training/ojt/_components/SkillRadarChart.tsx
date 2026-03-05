@@ -118,7 +118,7 @@ export function SkillRadarChart({ jacketId, title = "Section Skill Radar", class
               <PolarAngleAxis dataKey="section" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
               <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fontSize: 10 }} />
               <Tooltip
-                formatter={(value: number) => [`${value}%`, "Completion"]}
+                formatter={(value: number | undefined) => [`${value ?? 0}%`, "Completion"]}
                 contentStyle={{
                   background: "hsl(var(--popover))",
                   border: "1px solid hsl(var(--border))",

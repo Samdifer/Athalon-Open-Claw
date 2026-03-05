@@ -265,7 +265,7 @@ export function PartHistoryTimeline({ partId }: PartHistoryTimelineProps) {
       {history.map((event, idx) => (
         <TimelineEvent
           key={event._id}
-          event={event as Parameters<typeof TimelineEvent>[0]["event"]}
+          event={{ ...event, timestamp: (event as unknown as { timestamp?: number }).timestamp ?? event._creationTime } as Parameters<typeof TimelineEvent>[0]["event"]}
           isLast={idx === history.length - 1}
         />
       ))}

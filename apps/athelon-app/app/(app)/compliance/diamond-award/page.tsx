@@ -131,7 +131,7 @@ export default function DiamondAwardPage() {
       if (!t?.completedAt || t.completedAt < start || t.completedAt >= end) continue;
       const key = String(t.technicianId);
       const entry = trainingByTech.get(key) ?? { eligibleMin: 0, nonEligibleMin: 0, cert: undefined };
-      const minutes = Number(t.actualMinutes ?? t.durationMinutes ?? 60);
+      const minutes = Number((t as Record<string, unknown>).actualMinutes ?? (t as Record<string, unknown>).durationMinutes ?? 60);
       if (isTrainingEligible(t)) entry.eligibleMin += Math.max(0, minutes);
       else entry.nonEligibleMin += Math.max(0, minutes);
       if (!entry.cert && t.certificateNumber) entry.cert = t.certificateNumber;

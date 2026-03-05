@@ -232,7 +232,7 @@ export function EfficiencyBaseline({ orgId }: Props) {
                 <YAxis type="number" dataKey="y" name="Efficiency" unit="%" tick={{ fontSize: 12 }} domain={[0, (max: number) => Math.min(Math.ceil(max / 20) * 20, 250)]} />
                 <Tooltip
                   cursor={{ strokeDasharray: "3 3" }}
-                  formatter={(value: number | string) => `${Number(value).toFixed(1)}%`}
+                  formatter={(value: number | string | undefined) => `${Number(value ?? 0).toFixed(1)}%`}
                 />
                 <Scatter name="Technicians" dataKey="y" fill="#3b82f6" />
                 {trendlineData.length === 2 && (

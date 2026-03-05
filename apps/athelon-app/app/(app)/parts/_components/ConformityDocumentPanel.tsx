@@ -306,8 +306,9 @@ function UploadAndLinkForm({
         partId,
         lotId,
         documentId,
-        documentRole: selectedRole,
-        notes: description.trim() || undefined,
+        documentRole: selectedRole as "other" | "photo" | "vendor_invoice" | "certificate_of_conformity" | "certificate_of_airworthiness" | "test_report" | "8130_3_tag" | "receiving_inspection_report" | "packing_slip" | "material_certification" | "spec_sheet",
+        description: description.trim() || undefined,
+        linkedByUserId: "system",
       });
 
       toast.success(`"${file.name}" attached as ${DOCUMENT_ROLE_META[selectedRole].label}.`);
@@ -438,12 +439,13 @@ export function ConformityDocumentPanel({
 
   const unlinkDocument = useMutation(api.partDocuments.unlinkDocument);
 
-  // Merge part + lot docs, deduplicate by _id
+  // Merge part + lot docs, deduplicate by linkage._id
   const allDocs = [...(partDocs ?? []), ...(lotDocs ?? [])];
   const seenIds = new Set<string>();
   const uniqueDocs = allDocs.filter((d) => {
-    if (seenIds.has(d._id)) return false;
-    seenIds.add(d._id);
+    const id = d.linkage._id;
+    if (seenIds.has(id)) return false;
+    seenIds.add(id);
     return true;
   });
 
@@ -566,9 +568,13 @@ export function ConformityDocumentPanel({
             <div className="divide-y divide-border/30">
               {uniqueDocs.map((link) => (
                 <DocumentLinkRow
-                  key={link._id}
+                  key={link.linkage._id}
                   link={
-                    link as {
+                    {
+                      _id: link.linkage._id,
+                      documentRole: link.linkage.documentRole as DocumentRole,
+                      document: link.document,
+                    } as unknown as {
                       _id: Id<"partDocuments">;
                       documentRole: DocumentRole;
                       document: {

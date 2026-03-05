@@ -284,7 +284,7 @@ export default function CapabilitiesListPage() {
   }
 
   const stationAddress = primaryLocation
-    ? [primaryLocation.addressLine1, primaryLocation.city, primaryLocation.state, primaryLocation.postalCode]
+    ? [primaryLocation.address, primaryLocation.city, primaryLocation.state, (primaryLocation as Record<string, unknown>).postalCode as string | undefined]
         .filter(Boolean)
         .join(", ")
     : "Address not configured";

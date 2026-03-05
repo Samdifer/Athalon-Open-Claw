@@ -2291,6 +2291,9 @@ export default defineSchema({
     minStockLevel: v.optional(v.number()),
     reorderPoint: v.optional(v.number()),
 
+    // v10: Quantity tracking for non-serialized (batch) parts
+    quantityOnHand: v.optional(v.number()),       // Current on-hand count for consumables/expendables
+
     // v10: Valuation fields (Inventory System Phase 1)
     unitCost: v.optional(v.number()),             // Cost per unit at last receipt
     averageCost: v.optional(v.number()),           // Weighted average cost across all receipts

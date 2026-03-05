@@ -3,13 +3,14 @@ import { Link, useParams } from "react-router-dom";
 import { useQuery } from "convex/react";
 import { ArrowLeft } from "lucide-react";
 import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { RemainingLifeBar, getRemainingLifeMetrics } from "../../_components/RemainingLifeBar";
 
 type AircraftDoc = {
-  _id: string;
+  _id: Id<"aircraft">;
   currentRegistration?: string;
   serialNumber?: string;
   totalTimeAirframeHours?: number;
@@ -63,7 +64,7 @@ export default function AircraftLLPDetailPage() {
 
   const engines = useQuery(
     api.aircraft.listEnginesForAircraft,
-    orgId && aircraft?._id ? { organizationId: orgId, aircraftId: aircraft._id } : "skip",
+    orgId && aircraft?._id ? { organizationId: orgId, aircraftId: aircraft._id as Id<"aircraft"> } : "skip",
   ) as EngineDoc[] | undefined;
 
   const llpRows = useMemo(() => {

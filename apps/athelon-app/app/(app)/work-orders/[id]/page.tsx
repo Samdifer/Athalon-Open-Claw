@@ -1261,9 +1261,8 @@ export default function WorkOrderDetailPage() {
               </>
             )}
             <VoiceNotesPanel
-              notes={voiceNotes}
-              onUpdateTranscript={handleUpdateVoiceNoteTranscript}
-              onDelete={handleDeleteVoiceNote}
+              organizationId={orgId}
+              workOrderId={workOrderId}
             />
           </div>
           <Card className="border-border/60">

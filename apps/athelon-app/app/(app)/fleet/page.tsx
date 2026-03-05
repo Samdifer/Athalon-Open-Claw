@@ -566,7 +566,7 @@ export default function FleetPage() {
         make: ac.make ?? "",
         model: ac.model ?? "",
         status: getStatusStyle(ac.status).label,
-        totalTime: ac.currentTt != null ? String(ac.currentTt) : "",
+        totalTime: ac.totalTimeAirframeHours != null ? String(ac.totalTimeAirframeHours) : "",
         nextScheduled: ac.nextScheduledStartDate ? new Date(ac.nextScheduledStartDate).toISOString() : "",
       })),
     [filtered],

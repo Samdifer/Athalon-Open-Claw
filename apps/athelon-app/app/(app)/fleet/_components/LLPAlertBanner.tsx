@@ -13,6 +13,8 @@ type LLPPart = {
   lifeLimitCycles?: number;
   hoursAccumulatedBeforeInstall?: number;
   cyclesAccumulatedBeforeInstall?: number;
+  currentAircraftId?: string;
+  installedOnAircraftId?: string;
 };
 
 export function LLPAlertBanner() {

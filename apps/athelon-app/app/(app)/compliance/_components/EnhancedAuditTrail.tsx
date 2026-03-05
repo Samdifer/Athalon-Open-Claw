@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ChevronDown, ChevronRight, ListFilter, Timeline } from "lucide-react";
+import { ChevronDown, ChevronRight, ListFilter, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -87,7 +87,7 @@ export function EnhancedAuditTrail({ events }: Props) {
             className="h-8 text-xs"
             onClick={() => setTimelineMode((prev) => !prev)}
           >
-            <Timeline className="w-3.5 h-3.5" />
+            <Clock className="w-3.5 h-3.5" />
             {timelineMode ? "Grouped View" : "Timeline View"}
           </Button>
         </div>

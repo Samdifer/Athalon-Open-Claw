@@ -45,8 +45,10 @@ export function DueDateProjection(props: Props) {
   }, [data, props.focusProgramId]);
 
   const timeline = useMemo(() => {
-    if (!projection || projection.projections.length === 0) return [] as typeof projection.projections;
-    const sorted = [...projection.projections].sort((a, b) => a.dueDate - b.dueDate);
+    if (!projection) return [] as Array<{ type: string; dueDate: number; remaining: string; leftPct: number }>;
+    const proj = projection as { projections: Array<{ type: string; dueDate: number; remaining: string }> };
+    if (!proj.projections || proj.projections.length === 0) return [] as Array<{ type: string; dueDate: number; remaining: string; leftPct: number }>;
+    const sorted = [...proj.projections].sort((a, b) => a.dueDate - b.dueDate);
     const min = sorted[0]?.dueDate ?? 0;
     const max = sorted[sorted.length - 1]?.dueDate ?? min;
     const span = Math.max(1, max - min);

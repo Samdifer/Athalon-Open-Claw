@@ -269,7 +269,7 @@ export default function LeadTechnicianWorkspacePage() {
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
               <XAxis dataKey="name" tick={{ fontSize: 11 }} interval={0} angle={-25} textAnchor="end" height={70} />
               <YAxis tick={{ fontSize: 11 }} />
-              <Tooltip formatter={(v: number | string) => [`${v}h`, "Hours"]} />
+              <Tooltip formatter={(v: number | string | undefined) => [`${v ?? 0}h`, "Hours"]} />
               <ReferenceLine y={8} stroke="#f59e0b" strokeDasharray="4 4" />
               <Bar dataKey="hours" fill="#06b6d4" radius={[4, 4, 0, 0]} />
             </BarChart>

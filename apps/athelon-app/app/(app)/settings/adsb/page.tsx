@@ -32,7 +32,7 @@ export default function AdsbSettingsPage() {
   const defaults = useMemo(() => {
     const map: Record<string, Config> = {};
     for (const aircraft of fleet ?? []) {
-      const correctionFactor = aircraft.aircraftCategory === "jet" ? 0.98 : 0.92;
+      const correctionFactor = (aircraft.aircraftCategory as string) === "jet" ? 0.98 : 0.92;
       map[aircraft._id] = {
         enabled: false,
         correctionFactor,
@@ -121,7 +121,7 @@ export default function AdsbSettingsPage() {
                       className="font-mono"
                     />
                     <p className="text-[11px] text-muted-foreground">
-                      Default {aircraft.aircraftCategory === "jet" ? "0.98 (turbine)" : "0.92 (piston)"}
+                      Default {(aircraft.aircraftCategory as string) === "jet" ? "0.98 (turbine)" : "0.92 (piston)"}
                     </p>
                   </div>
 

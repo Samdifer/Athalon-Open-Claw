@@ -82,7 +82,7 @@ export default function AircraftAdsbPage() {
   const source = sortedSessions[0]?.dataSource ?? "Manual";
 
   const correctionFactor =
-    aircraft?.aircraftCategory === "rotorcraft" || aircraft?.aircraftCategory === "jet"
+    (aircraft?.aircraftCategory as string) === "rotorcraft" || (aircraft?.aircraftCategory as string) === "jet"
       ? 0.98
       : 0.92;
 
