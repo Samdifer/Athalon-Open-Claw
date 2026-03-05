@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -208,6 +208,15 @@ function CoreDetailDialog({
   const [creditAmount, setCreditAmount] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
   const [scrapAlertOpen, setScrapAlertOpen] = useState(false);
+
+  // BUG-PC-HUNT-141: Reset creditAmount when switching between cores.
+  // If a clerk opens Core A (inspected), enters $500 credit, cancels, then
+  // opens Core B (also inspected), the $500 is pre-filled — risk of issuing
+  // the wrong credit amount. Reset on coreId change.
+  useEffect(() => {
+    setCreditAmount("");
+    setScrapAlertOpen(false);
+  }, [coreId]);
 
   if (!coreId) return null;
 

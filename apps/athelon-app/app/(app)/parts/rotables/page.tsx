@@ -260,6 +260,23 @@ export default function RotablesPage() {
       toast.error("Organization context is required");
       return;
     }
+    // BUG-PC-HUNT-142: Validate numeric fields are non-negative.
+    // HTML type="number" allows negative values — a clerk entering -500 TSN
+    // creates a nonsensical record. Validate before submit.
+    const numericFields = [
+      { val: form.tsnHours, label: "TSN Hours" },
+      { val: form.tsoHours, label: "TSO Hours" },
+      { val: form.tboHours, label: "TBO Hours" },
+      { val: form.purchasePrice, label: "Purchase Price" },
+      { val: form.currentValue, label: "Current Value" },
+      { val: form.coreValue, label: "Core Value" },
+    ];
+    for (const { val, label } of numericFields) {
+      if (val && parseFloat(val) < 0) {
+        toast.error(`${label} cannot be negative.`);
+        return;
+      }
+    }
     setIsCreatingRotable(true);
     try {
       await createRotable({

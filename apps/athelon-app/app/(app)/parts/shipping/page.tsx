@@ -80,11 +80,17 @@ export default function ShippingPage() {
     if (tab !== "all") list = list.filter((s) => s.status === tab);
     if (search) {
       const q = search.toLowerCase();
+      // BUG-PC-HUNT-144: Include type, origin, destination in search.
+      // A parts clerk searching "inbound" to find all inbound shipments
+      // got zero results — had to visually scan the entire list.
       list = list.filter(
         (s) =>
           s.shipmentNumber.toLowerCase().includes(q) ||
           s.trackingNumber?.toLowerCase().includes(q) ||
-          s.carrier?.toLowerCase().includes(q)
+          s.carrier?.toLowerCase().includes(q) ||
+          s.type?.toLowerCase().includes(q) ||
+          s.originName?.toLowerCase().includes(q) ||
+          s.destinationName?.toLowerCase().includes(q)
       );
     }
     return list;
@@ -93,6 +99,14 @@ export default function ShippingPage() {
   const handleCreate = async () => {
     if (!orgId) {
       toast.error("Organization context is required");
+      return;
+    }
+    // BUG-PC-HUNT-143: Require at least carrier or tracking number.
+    // Previously allowed creating shipments with zero identifying info —
+    // a parts clerk later seeing "SHP-0047 | outbound" with no carrier,
+    // tracking #, origin, or destination has no way to trace the package.
+    if (!formCarrier.trim() && !formTracking.trim()) {
+      toast.error("Carrier or tracking number is required to identify the shipment.");
       return;
     }
     setIsCreating(true);

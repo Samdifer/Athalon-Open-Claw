@@ -675,6 +675,7 @@ function PartDetailSheet({ part, onClose }: PartDetailSheetProps) {
                           month: "long",
                           day: "numeric",
                           year: "numeric",
+                          timeZone: "UTC",
                         }),
                         shelfExpired ? "err" : undefined,
                       )}
