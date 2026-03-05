@@ -6,6 +6,21 @@ This file is the markdown-authoritative source of truth for feature status, impl
 
 ## Bug Hunter Fixes
 
+- **BUG-QCM-HUNT-006** — Compliance card skipped AD/SB status query when `currentRegistration` was blank, showing “Not Configured” even when AD records existed for the aircraft.
+  **File:** `app/(app)/compliance/_components/AircraftComplianceCard.tsx`
+  **Fix:** Removed tail-number gate and always queried compliance by `aircraftId` + `organizationId`.
+  **Why it matters:** QCM inspectors no longer miss real non-compliance on imported/onboarding aircraft with temporary missing registrations.
+
+- **BUG-QCM-HUNT-008** — Release page could show active release form for already-released work orders after refresh/navigation, allowing duplicate submit attempts that fail late.
+  **File:** `app/(app)/work-orders/[id]/release/page.tsx`
+  **Fix:** Added persisted release-state guard using `wo.releasedAt` and render confirmation mode for previously released WOs.
+  **Why it matters:** Prevents confusing duplicate-release workflow and keeps release records operationally trustworthy.
+
+- **BUG-QCM-HUNT-009** — Audit Trail fleet overview subtitle showed “Loading sort order…” whenever the preloaded summary map was empty, including valid zero-record states.
+  **File:** `app/(app)/compliance/audit-trail/page.tsx`
+  **Fix:** Added explicit `isSummaryLoaded` prop and switched subtitle logic to load-state rather than map size.
+  **Why it matters:** QCM inspectors get accurate status messaging instead of false loading indicators during fleet-level compliance review.
+
 - **BUG-QCM-HUNT-004** — RTS hours input accepted malformed values like `123abc` (via `parseFloat`) and negative numbers, creating invalid hour entries and late submit failures.
   **File:** `app/(app)/work-orders/[id]/rts/page.tsx`
   **Fix:** Replaced permissive parsing with strict numeric validation using `Number(...)`, `Number.isFinite`, and non-negative guard; updated user-facing error copy.

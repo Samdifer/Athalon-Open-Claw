@@ -265,8 +265,21 @@ export default function ReleaseAircraftPage() {
     } | null;
   };
 
-  // If already released, show confirmation
-  if (released) {
+  const existingRelease = wo.releasedAt
+    ? {
+        workOrderNumber: wo.workOrderNumber,
+        aircraftRegistration: aircraft?.currentRegistration ?? "Unknown",
+        releasedAt: wo.releasedAt,
+        // BUG-QCM-HUNT-008: Reloading this page after a successful release
+        // previously dropped the local `released` state and showed the release
+        // form again, allowing duplicate submit attempts that fail with backend
+        // errors. Respect persisted releasedAt and render confirmation mode.
+        releasedBy: "Recorded in maintenance log",
+      }
+    : null;
+
+  // If just released now OR already released previously, show confirmation.
+  if (released || existingRelease) {
     return (
       <div className="space-y-5 max-w-2xl">
         <Button
@@ -280,7 +293,7 @@ export default function ReleaseAircraftPage() {
             Work Order
           </Link>
         </Button>
-        <ReleaseConfirmationCard data={released} />
+        <ReleaseConfirmationCard data={(released ?? existingRelease)!} />
       </div>
     );
   }

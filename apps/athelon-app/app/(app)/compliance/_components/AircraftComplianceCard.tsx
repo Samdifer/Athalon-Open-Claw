@@ -41,12 +41,14 @@ export function AircraftComplianceCard({
   orgId,
 }: AircraftComplianceCardProps) {
   const tailNumber = aircraft.currentRegistration ?? "—";
-  const reg = aircraft.currentRegistration;
-
-  const compliance = useQuery(
-    api.adCompliance.checkAdDueForAircraft,
-    reg ? { aircraftId: aircraft._id, organizationId: orgId } : "skip",
-  );
+  const compliance = useQuery(api.adCompliance.checkAdDueForAircraft, {
+    // BUG-QCM-HUNT-006: Query was incorrectly skipped when currentRegistration
+    // was missing. Compliance is keyed by aircraftId, not tail number. For
+    // newly imported aircraft (or records mid-onboarding) this made the card
+    // show "Not Configured" even when blocking AD records existed.
+    aircraftId: aircraft._id,
+    organizationId: orgId,
+  });
 
   const summary = compliance?.summary;
   const isLoading = compliance === undefined;

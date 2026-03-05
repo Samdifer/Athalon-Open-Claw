@@ -222,7 +222,7 @@ function AdCompliancePanel({
   return (
     <div className="space-y-4">
       {/* Summary Row
-          BUG-QCM-C3: Same issue as AdComplianceTab BUG-QCM-C2 — the 4-card
+          BUG-QCM-C3: Same issue as AdComplianceTab BUG-QCM-C2 - the 4-card
           summary only tracked overdueCount (date-overrun ADs). An aircraft with
           0 overdue but 3 never-performed ADs showed "Overdue: 0" neutral/grey
           while the blocking banner below was red. Added a 5th "Not Complied"
@@ -289,7 +289,7 @@ function AdCompliancePanel({
                     pending-determination ADs."). The " and " separator only rendered
                     when overdueCount>0, so two non-overdue issue types ran together
                     with no space or comma between them. Replaced with a helper that
-                    builds the list as a JS array joined with " and " / ", " — same
+                    builds the list as a JS array joined with " and " / ", " - same
                     pattern used throughout the billing analytics page. */}
                 {aircraftRegistration} has{" "}
                 {(() => {
@@ -304,7 +304,7 @@ function AdCompliancePanel({
             </div>
             {/* BUG-QCM-048: Blocking banner had no action link. QCM could see
                 "3 overdue ADs" but had no direct path to record compliance or
-                update status — they had to navigate away to Compliance → AD/SB,
+                update status - they had to navigate away to Compliance → AD/SB,
                 then re-select the aircraft from a dropdown. Now provides a
                 direct link to /compliance/ad-sb pre-filtered to this aircraft. */}
             <Link
@@ -322,7 +322,7 @@ function AdCompliancePanel({
       <Card className="border-border/60">
         <CardHeader className="pb-2">
           <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-            Airworthiness Directives — {aircraftRegistration}
+            Airworthiness Directives - {aircraftRegistration}
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-0">
@@ -367,7 +367,7 @@ function AircraftComplianceSummaryRow({
   onSelect: (id: string) => void;
   /** When provided from fleetAdSummary, skip the per-aircraft Convex query.
    *  BH-QCM-004: Eliminates N redundant checkAdDueForAircraft subscriptions
-   *  in the fleet overview — one subscription per aircraft was being fired even
+   *  in the fleet overview - one subscription per aircraft was being fired even
    *  though the fleet summary already contained all needed count fields.
    *  With 10+ aircraft this was 10+ concurrent Convex subscriptions on page load. */
   preloadedSummary?: PreloadedAdSummary;
@@ -418,7 +418,7 @@ function AircraftComplianceSummaryRow({
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <span className="font-mono text-xs font-semibold text-foreground">
-            {ac.currentRegistration ?? "—"}
+            {ac.currentRegistration ?? "-"}
           </span>
           <span className="text-xs text-muted-foreground truncate">
             {ac.make ?? ""} {ac.model ?? ""}
@@ -474,6 +474,7 @@ function FleetOverviewPanel({
   selectedAircraftId,
   onSelect,
   summaryByAircraftId,
+  isSummaryLoaded,
 }: {
   aircraft: { _id: Id<"aircraft">; currentRegistration?: string; make?: string; model?: string }[];
   organizationId: Id<"organizations">;
@@ -482,6 +483,8 @@ function FleetOverviewPanel({
   /** Pre-built map of aircraft ID → compliance counts from fleet summary.
    *  When provided, each row skips its own per-aircraft Convex query. */
   summaryByAircraftId?: Map<string, PreloadedAdSummary>;
+  /** Fleet summary query load state; distinct from map size (which can be 0). */
+  isSummaryLoaded: boolean;
 }) {
   if (aircraft.length === 0) {
     return (
@@ -499,7 +502,7 @@ function FleetOverviewPanel({
       <CardHeader className="pb-2 pt-3 px-4">
         <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
           <List className="w-3.5 h-3.5" />
-          Fleet Overview — Click a row to drill in
+          Fleet Overview - Click a row to drill in
         </CardTitle>
         {/* BUG-QCM-049: "Non-compliant first" subtitle was always shown even during
             the window while fleetAdSummary is still loading (sortedAircraft falls back
@@ -510,7 +513,7 @@ function FleetOverviewPanel({
             switches to "Non-compliant first" only when the sort is actually applied. */}
         <p className="text-[11px] text-muted-foreground">
           All {aircraft.length} fleet aircraft ·{" "}
-          {(summaryByAircraftId?.size ?? 0) > 0 ? "Non-compliant first" : "Loading sort order…"}{" "}
+          {isSummaryLoaded ? "Non-compliant first" : "Loading sort order…"} {" "}
           · Overdue ADs block RTS
         </p>
       </CardHeader>
@@ -536,7 +539,7 @@ export default function AuditTrailPage() {
   // BUG-QCM-048: Previously `useCurrentOrg()` was destructured without `isLoaded`.
   // Every other compliance page (compliance/page.tsx, ad-sb/page.tsx,
   // qcm-review/page.tsx) guards against missing org context via `usePagePrereqs`
-  // or `isLoaded` checks — the audit trail was the only one that didn't.
+  // or `isLoaded` checks - the audit trail was the only one that didn't.
   // Consequence: a user without an organization, or with a slow Clerk load,
   // would see skeleton states permanently with no explanation and no path forward.
   // Now: while org context is loading we show a spinner; once loaded without
@@ -570,7 +573,7 @@ export default function AuditTrailPage() {
     orgId ? { organizationId: orgId } : "skip",
   );
 
-  // Fleet AD summary — used to sort aircraft in the FleetOverviewPanel so that
+  // Fleet AD summary - used to sort aircraft in the FleetOverviewPanel so that
   // "Non-compliant first" in the panel subtitle is actually true.
   // Without this sort the claim was false: aircraft rendered in insertion order.
   const fleetAdSummary = useQuery(
@@ -582,7 +585,7 @@ export default function AuditTrailPage() {
   // AircraftComplianceSummaryRow can skip its own per-aircraft query.
   // The fleet summary already contains overdueCount, dueSoonCount, etc.
   // Without this map, N per-aircraft Convex subscriptions fire on every
-  // audit trail page load — one per aircraft in the fleet.
+  // audit trail page load - one per aircraft in the fleet.
   const summaryByAircraftId = useMemo<Map<string, PreloadedAdSummary>>(() => {
     const m = new Map<string, PreloadedAdSummary>();
     if (!fleetAdSummary) return m;
@@ -591,7 +594,7 @@ export default function AuditTrailPage() {
         total: s.total,
         overdueCount: s.overdueCount,
         dueSoonCount: s.dueSoonCount,
-        // Access notCompliedCount via type cast — the field exists in the
+        // Access notCompliedCount via type cast - the field exists in the
         // backend response but isn't in the TypeScript interface yet.
         notCompliedCount: (s as unknown as Record<string, number>)["notCompliedCount"] ?? 0,
       });
@@ -662,7 +665,7 @@ export default function AuditTrailPage() {
   return (
     <div className="space-y-5">
       {/* Header */}
-      {/* BUG-QCM-F4: Previously the Audit Trail page had no sub-navigation — a QCM
+      {/* BUG-QCM-F4: Previously the Audit Trail page had no sub-navigation - a QCM
           inspector landing here from the Compliance dashboard had no way to reach
           the main Compliance overview, AD/SB tracking, or QCM Review without using
           the browser back button or the sidebar. Added: (1) a "← Back to Compliance"
@@ -736,7 +739,7 @@ export default function AuditTrailPage() {
         </div>
       </div>
 
-      {/* Fleet Overview — all aircraft at a glance */}
+      {/* Fleet Overview - all aircraft at a glance */}
       {aircraft === undefined ? (
         <Card className="border-border/60">
           <CardContent className="p-4 space-y-2">
@@ -750,10 +753,11 @@ export default function AuditTrailPage() {
           selectedAircraftId={selectedAircraftId}
           onSelect={(aircraftId) => setSelectedAircraftInUrl(aircraftId)}
           summaryByAircraftId={summaryByAircraftId}
+          isSummaryLoaded={fleetAdSummary !== undefined}
         />
       ) : null}
 
-      {/* Aircraft Selector — for manual override / drill-in */}
+      {/* Aircraft Selector - for manual override / drill-in */}
       <Card className="border-border/60">
         <CardContent className="p-4">
           <div className="flex items-center gap-3">
