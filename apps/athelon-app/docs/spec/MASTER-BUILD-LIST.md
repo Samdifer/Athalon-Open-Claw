@@ -98,6 +98,30 @@ This file is the markdown-authoritative source of truth for feature status, impl
   **File:** `app/(app)/fleet/calendar/page.tsx`
   **Impact:** "Today" button and day highlight inconsistency in non-UTC shops.
 
+- **BUG-LT-HUNT-141** — ApprovedDataRef localStorage key (`approved-data-ref:${workOrderId}:${cardId}:${stepId}`) did not include orgId. Same cross-org data bleed class as BUG-LT-HUNT-102 and BUG-LT-HUNT-115. A tech at two Part 145 shops could see approved data references from Shop A's step on Shop B's step if WO/card/step IDs collide. Under 14 CFR 43.9 a wrong AMM/AD reference on a signed step is a records violation. Added orgId to the key.
+  **File:** `app/(app)/work-orders/[id]/tasks/[cardId]/_components/ApprovedDataRef.tsx`
+  **Impact:** Cross-org approved data reference bleed — wrong AMM/AD reference on maintenance records.
+
+- **BUG-LT-HUNT-142** — ApprovedDataRef inputs were always editable — even on completed/voided cards and signed/N/A steps. A tech could modify the approved data reference AFTER step sign-off, making the maintenance record no longer match what was actually referenced during the work. Added `readOnly` prop that renders the reference as static text for completed/voided/signed states.
+  **Files:** `ApprovedDataRef.tsx`, `tasks/[cardId]/page.tsx`
+  **Impact:** Post-sign-off modification of approved data references — 14 CFR 43.9 records integrity.
+
+- **BUG-LT-HUNT-143** — `handleSignStepIntent` blocked signing ANY step when ANY step timer was active — even if the timer was on a completely different step. A lead tech clocked on Step 5 couldn't sign off Step 2 (already work-complete) without stopping their Step 5 timer. The guard now only blocks signing the specific step whose timer is running. Signing Step 2 while Step 5's timer runs is allowed.
+  **File:** `app/(app)/work-orders/[id]/tasks/[cardId]/page.tsx`
+  **Impact:** Workflow blocker — tech forced to stop unrelated timer to sign a completed step.
+
+- **BUG-LT-HUNT-144** — Findings badge on task card page showed "Findings 7" counting ALL active discrepancies for the WO, not just this task card. A tech with 2 findings on their card and 5 from other cards saw "Findings 7" and assumed their card had 7 problems. Added "WO" qualifier ("3 WO Findings"), linked to the WO page, and show "No Findings" when count is zero instead of "Findings 0".
+  **File:** `app/(app)/work-orders/[id]/tasks/[cardId]/page.tsx`
+  **Impact:** Misleading finding count causes unnecessary alarm and QCM escalation.
+
+- **BUG-LT-HUNT-145** — StepPartsTracker had no delete/remove functionality for accidentally added parts. A tech who added the wrong part to "Installed" or "Removed" was permanently stuck with incorrect traceability data. Added trash icon button to each PartCard and a `removePart` handler that updates localStorage. Under 14 CFR 43.9 each part installation/removal must be accurately recorded.
+  **File:** `app/(app)/work-orders/[id]/tasks/[cardId]/_components/StepPartsTracker.tsx`
+  **Impact:** Unrecoverable incorrect parts traceability — tech forced to void card to fix data entry mistake.
+
+- **BUG-LT-HUNT-146** — StepReferences localStorage key (`step-references:${workOrderId}:${taskCardId}`) missing orgId. Same cross-org data bleed pattern. Added orgId to the key and updated the component signature to accept orgId prop.
+  **File:** `app/(app)/work-orders/[id]/tasks/[cardId]/_components/StepReferences.tsx`
+  **Impact:** Cross-org step reference document bleed.
+
 - **BUG-PC-124** — Shipping page formType not reset after successful creation. After creating an inbound shipment, opening the dialog again showed "Inbound" pre-selected instead of the default "Outbound". The success path in `handleCreate` reset all form fields except `formType`. Added `setFormType("outbound")` to the success cleanup.
   **File:** `app/(app)/parts/shipping/page.tsx`
   **Impact:** Parts clerk creating an outbound shipment after an inbound one accidentally creates another inbound.
