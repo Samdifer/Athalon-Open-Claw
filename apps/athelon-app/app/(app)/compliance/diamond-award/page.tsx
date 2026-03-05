@@ -319,7 +319,22 @@ export default function DiamondAwardPage() {
               </tr>
             </thead>
             <tbody>
-              {filteredRows.map((row) => (
+              {/* BUG-QCM-HUNT-161: No empty state when department filter yields 0
+                  technicians. A QCM filtering by a department with no techs saw an
+                  empty table body with headers and no message — looked broken.
+                  BUG-QCM-HUNT-162: Table rows were in database insertion order. A QCM
+                  reviewing Diamond Award progress wants to see least-trained techs
+                  first so they can prioritize training assignments. Sorted ascending
+                  by eligible hours — techs closest to 0h (needing the most attention)
+                  appear at the top. */}
+              {filteredRows.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="text-center text-sm text-muted-foreground py-8">
+                    No technicians match the current filters.
+                  </td>
+                </tr>
+              )}
+              {[...filteredRows].sort((a, b) => a.eligibleHours - b.eligibleHours).map((row) => (
                 <tr key={row.id} className="border-t cursor-pointer hover:bg-muted/30" onClick={() => setSelectedTechId(row.id)}>
                   <td className="px-3 py-2 font-medium">{row.technicianName}</td>
                   <td className="px-3 py-2 text-muted-foreground capitalize">{row.department}</td>

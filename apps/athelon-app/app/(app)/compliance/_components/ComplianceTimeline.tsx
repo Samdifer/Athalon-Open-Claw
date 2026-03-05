@@ -46,6 +46,15 @@ export function ComplianceTimeline({ items }: { items: ComplianceDeadline[] }) {
           <p className="text-sm text-muted-foreground">No upcoming AD, training, or calibration deadlines detected.</p>
         ) : (
           <div className="space-y-2">
+            {/* BUG-QCM-HUNT-160: Show how many items are visible vs total. A QCM
+                with 50 upcoming deadlines only saw 12 with no indication more
+                existed — they could miss critical due dates that fell outside the
+                visible window. Now shows "Showing X of Y" when truncated. */}
+            {sorted.length > 12 && (
+              <p className="text-[11px] text-muted-foreground/70 text-right">
+                Showing 12 of {sorted.length} deadlines (nearest first)
+              </p>
+            )}
             {sorted.slice(0, 12).map((item) => {
               const state = deadlineState(item.dueAt);
               const color =
