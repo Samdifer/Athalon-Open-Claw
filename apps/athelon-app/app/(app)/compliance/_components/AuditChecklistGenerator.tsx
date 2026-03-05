@@ -12,7 +12,11 @@ export type ChecklistItem = {
   actionHref: string;
 };
 
-export function AuditChecklistGenerator({ items }: { items: ChecklistItem[] }) {
+// BUG-QCM-HUNT-163: Export was missing the overall readiness score. A QCM
+// downloading the checklist for an upcoming FAA audit had a PASS/FAIL list
+// with no summary score — they'd have to manually count. Now includes the
+// weighted readiness score at the top of the export for quick reference.
+export function AuditChecklistGenerator({ items, overallScore }: { items: ChecklistItem[]; overallScore?: number }) {
   const grouped = items.reduce<Record<string, ChecklistItem[]>>((acc, item) => {
     acc[item.group] = acc[item.group] ?? [];
     acc[item.group].push(item);
@@ -20,9 +24,12 @@ export function AuditChecklistGenerator({ items }: { items: ChecklistItem[] }) {
   }, {});
 
   const exportChecklist = () => {
+    const passCount = items.filter((i) => i.compliant).length;
     const lines = [
       "ATHELON PART 145 PRE-AUDIT CHECKLIST",
       `Generated: ${new Date().toISOString()}`,
+      ...(overallScore != null ? [`Overall Readiness Score: ${overallScore}%`] : []),
+      `Summary: ${passCount}/${items.length} checks passing`,
       "",
     ];
 

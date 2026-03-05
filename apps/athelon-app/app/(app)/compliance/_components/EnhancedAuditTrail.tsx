@@ -69,10 +69,26 @@ export function EnhancedAuditTrail({ events }: Props) {
       map.set(key, bucket);
     }
 
-    return [...map.entries()].map(([key, rows]) => ({
+    // BUG-QCM-HUNT-164: Groups were in Map insertion order (first-seen event per
+    // group key). When grouped by "date", entries should be newest-first so the
+    // most recent audit events appear at the top. When grouped by "workOrder" or
+    // "technician", alphabetical is the natural sort. A QCM auditing by date saw
+    // the oldest events first — they'd have to scroll past weeks of history to
+    // reach today's entries.
+    const entries = [...map.entries()].map(([key, rows]) => ({
       key,
       rows: [...rows].sort((a, b) => b.timestamp - a.timestamp),
     }));
+
+    if (groupBy === "date") {
+      // Newest dates first
+      entries.sort((a, b) => b.rows[0].timestamp - a.rows[0].timestamp);
+    } else {
+      // Alphabetical by group key
+      entries.sort((a, b) => a.key.localeCompare(b.key));
+    }
+
+    return entries;
   }, [filtered, groupBy]);
 
   const sortedTimeline = useMemo(

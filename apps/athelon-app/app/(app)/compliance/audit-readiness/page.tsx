@@ -383,7 +383,13 @@ export default function AuditReadinessPage() {
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
         <ComplianceTimeline items={deadlineItems} />
-        <AuditChecklistGenerator items={checklistItems} />
+        <AuditChecklistGenerator
+          items={checklistItems}
+          overallScore={Math.round(
+            metrics.reduce((sum, m) => sum + m.score * (m.key === "ads" || m.key === "training" ? 1.4 : 1), 0) /
+            (metrics.reduce((sum, m) => sum + (m.key === "ads" || m.key === "training" ? 1.4 : 1), 0) || 1),
+          )}
+        />
       </div>
 
       {metrics.some((m) => m.tone === "red") && (

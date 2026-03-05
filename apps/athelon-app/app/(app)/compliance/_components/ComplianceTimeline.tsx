@@ -1,8 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { AlertTriangle, CalendarClock, CheckCircle2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export type ComplianceDeadline = {
@@ -31,7 +33,10 @@ function deadlineState(dueAt: number) {
 }
 
 export function ComplianceTimeline({ items }: { items: ComplianceDeadline[] }) {
+  const [showAll, setShowAll] = useState(false);
   const sorted = [...items].sort((a, b) => a.dueAt - b.dueAt);
+  const PAGE_SIZE = 12;
+  const visible = showAll ? sorted : sorted.slice(0, PAGE_SIZE);
 
   return (
     <Card className="border-border/60">
@@ -50,12 +55,12 @@ export function ComplianceTimeline({ items }: { items: ComplianceDeadline[] }) {
                 with 50 upcoming deadlines only saw 12 with no indication more
                 existed — they could miss critical due dates that fell outside the
                 visible window. Now shows "Showing X of Y" when truncated. */}
-            {sorted.length > 12 && (
+            {sorted.length > PAGE_SIZE && !showAll && (
               <p className="text-[11px] text-muted-foreground/70 text-right">
-                Showing 12 of {sorted.length} deadlines (nearest first)
+                Showing {PAGE_SIZE} of {sorted.length} deadlines (nearest first)
               </p>
             )}
-            {sorted.slice(0, 12).map((item) => {
+            {visible.map((item) => {
               const state = deadlineState(item.dueAt);
               const color =
                 state.kind === "overdue"
@@ -89,6 +94,16 @@ export function ComplianceTimeline({ items }: { items: ComplianceDeadline[] }) {
                 </Link>
               );
             })}
+            {sorted.length > PAGE_SIZE && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full h-7 text-xs text-muted-foreground"
+                onClick={() => setShowAll((prev) => !prev)}
+              >
+                {showAll ? `Show fewer (${PAGE_SIZE})` : `Show all ${sorted.length} deadlines`}
+              </Button>
+            )}
           </div>
         )}
       </CardContent>
