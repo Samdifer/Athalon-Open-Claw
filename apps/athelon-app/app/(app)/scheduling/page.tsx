@@ -25,6 +25,9 @@ import SchedulingRosterWorkspace from "./_components/roster/SchedulingRosterWork
 import { SchedulingCommandCenterDialog } from "./_components/SchedulingCommandCenterDialog";
 import { SchedulingOnboardingPanel } from "./_components/SchedulingOnboardingPanel";
 import { SchedulingQuoteWorkspaceDialog } from "./_components/SchedulingQuoteWorkspaceDialog";
+import { BayAllocationGrid } from "./_components/BayAllocationGrid";
+import { ScheduleSnapshotPanel, getBaselinePositions } from "./_components/ScheduleSnapshotPanel";
+import type { TATEstimate } from "./_components/TATEstimateBadge";
 import DraggableWindow from "./_components/DraggableWindow";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -57,7 +60,6 @@ import {
   Warehouse,
 } from "lucide-react";
 import { toast } from "sonner";
-import { autoSchedule } from "@/lib/scheduling/autoSchedule";
 import { magicSchedule } from "@/lib/scheduling/magicSchedule";
 import { detectConflicts } from "@/lib/scheduling/conflicts";
 import type { ScheduledWO } from "@/lib/scheduling/conflicts";
@@ -190,6 +192,8 @@ export default function SchedulingPage() {
       bayId: string;
     }>
   >([]);
+  const [activeSnapshotId, setActiveSnapshotId] = useState<string | null>(null);
+  const [showBayAllocation, setShowBayAllocation] = useState(false);
   const [pnlOpen, setPnlOpen] = useState(true);
   const [analyticsOpen, setAnalyticsOpen] = useState(false);
   const [rosterOpen, setRosterOpen] = useState(false);
@@ -257,6 +261,18 @@ export default function SchedulingPage() {
   );
   const planningFinancialSettings = useQuery(
     api.schedulerPlanning.getPlanningFinancialSettings,
+    orgId ? { organizationId: orgId } : "skip",
+  );
+  const techTrainingByOrg = useQuery(
+    api.technicianTraining.getActiveTrainingByOrg,
+    orgId ? { organizationId: orgId as string } : "skip",
+  );
+  const tatEstimates = useQuery(
+    api.tatEstimation.getEstimates,
+    orgId ? { organizationId: orgId } : "skip",
+  );
+  const scheduleSnapshots = useQuery(
+    api.scheduleSnapshots.listSnapshots,
     orgId ? { organizationId: orgId } : "skip",
   );
   const schedulingSettings = useQuery(
@@ -352,6 +368,35 @@ export default function SchedulingPage() {
   const archivedProjects = useMemo(
     () => allPlannerProjects.filter((project) => project.archivedAt !== undefined),
     [allPlannerProjects],
+  );
+
+  const woRequiredTraining = useMemo(
+    () =>
+      Object.fromEntries(
+        workOrders.map((wo) => [String(wo._id), (wo as { requiredTraining?: string[] }).requiredTraining ?? []]),
+      ) as Record<string, string[]>,
+    [workOrders],
+  );
+
+  const woAssignedTechIds = useMemo(
+    () =>
+      Object.fromEntries(
+        workOrders.map((wo) => [
+          String(wo._id),
+          ((wo as { assignedTechnicianIds?: string[] }).assignedTechnicianIds ?? []).map(String),
+        ]),
+      ) as Record<string, string[]>,
+    [workOrders],
+  );
+
+  const activeSnapshot = useMemo(
+    () => scheduleSnapshots?.find((s) => String(s._id) === activeSnapshotId) ?? null,
+    [scheduleSnapshots, activeSnapshotId],
+  );
+
+  const baselinePositions = useMemo(
+    () => getBaselinePositions(activeSnapshot),
+    [activeSnapshot],
   );
 
   const scheduledWoIds = useMemo(
@@ -1005,14 +1050,27 @@ export default function SchedulingPage() {
         })),
     }));
 
-    const assignments = autoSchedule(
+    const techPool = (technicianWorkload ?? []).map((tech) => {
+      const hours = Math.max(1, (tech.endHour ?? 17) - (tech.startHour ?? 9));
+      return {
+        technicianId: String(tech.technicianId),
+        availableHoursPerDay: hours,
+        efficiencyMultiplier: tech.efficiencyMultiplier ?? 1,
+        assignedHours: tech.estimatedRemainingHours ?? 0,
+        training: ((techTrainingByOrg as Record<string, string[]>) ?? {})[String(tech.technicianId)] ?? [],
+      };
+    });
+
+    const assignments = magicSchedule(
       unscheduledWorkOrders.map((wo) => ({
         woId: wo._id,
         priority: wo.priority,
-        promisedDeliveryDate: wo.promisedDeliveryDate,
         estimatedDurationDays: Math.max(1, Math.ceil(wo.effectiveEstimatedHours / 8)),
+        requiredTraining: (wo as { requiredTraining?: string[] }).requiredTraining ?? [],
       })),
       bayList,
+      techPool,
+      { autoMode: true },
     );
 
     if (assignments.length === 0) {
@@ -1409,10 +1467,20 @@ export default function SchedulingPage() {
       .filter((wo): wo is NonNullable<typeof wo> => !!wo)
       .map((wo) => ({
         woId: wo._id as string,
+        priority: wo.priority,
         estimatedDurationDays: Math.max(1, Math.ceil((wo.effectiveEstimatedHours ?? 0) / 8)),
+        requiredTraining: (wo as { requiredTraining?: string[] }).requiredTraining ?? [],
       }));
 
-    const assignments = magicSchedule(orderedJobs, bayList);
+    const techPool = (technicianWorkload ?? []).map((tech) => ({
+      technicianId: String(tech.technicianId),
+      availableHoursPerDay: Math.max(1, (tech.endHour ?? 17) - (tech.startHour ?? 9)),
+      efficiencyMultiplier: tech.efficiencyMultiplier ?? 1,
+      assignedHours: tech.estimatedRemainingHours ?? 0,
+      training: ((techTrainingByOrg as Record<string, string[]>) ?? {})[String(tech.technicianId)] ?? [],
+    }));
+
+    const assignments = magicSchedule(orderedJobs, bayList, techPool, { autoMode: false });
     if (assignments.length === 0) {
       toast.warning("No valid scheduling results were produced");
       return;
@@ -1747,6 +1815,63 @@ export default function SchedulingPage() {
         storageKey={onboardingStorageKey ?? "default"}
       />
 
+      {!isFullscreen && orgId && (
+        <div className="border-t border-border/40 px-3 py-2 space-y-2 bg-background/40">
+          <div className="flex items-center justify-between gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-xs h-7"
+              onClick={() => setShowBayAllocation((prev) => !prev)}
+            >
+              <Warehouse className="w-3.5 h-3.5" />
+              {showBayAllocation ? "Hide Bay Allocation" : "Show Bay Allocation"}
+            </Button>
+
+            <div className="text-[11px] text-muted-foreground">
+              {activeSnapshotId ? "Baseline overlay active" : "No baseline selected"}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-3">
+            <div className="xl:col-span-2">
+              {showBayAllocation && (
+                <BayAllocationGrid
+                  bays={(bays as { _id: string; name: string; type: string; status: string }[]) ?? []}
+                  projects={scheduledProjects.map((p) => ({
+                    workOrderId: p.workOrderId,
+                    workOrderNumber: p.workOrderNumber,
+                    workOrderStatus: p.workOrderStatus,
+                    priority: p.priority,
+                    hangarBayId: p.hangarBayId,
+                    scheduledStartDate: p.scheduledStartDate,
+                    promisedDeliveryDate: p.promisedDeliveryDate,
+                    aircraft: p.aircraft,
+                  }))}
+                  conflicts={conflicts}
+                />
+              )}
+            </div>
+            <div className="rounded-lg border border-border/50 bg-card/50 p-2">
+              <ScheduleSnapshotPanel
+                orgId={orgId}
+                currentProjects={scheduledProjects.map((p) => ({
+                  workOrderId: p.workOrderId,
+                  workOrderNumber: p.workOrderNumber,
+                  hangarBayId: p.hangarBayId,
+                  scheduledStartDate: p.scheduledStartDate,
+                  promisedDeliveryDate: p.promisedDeliveryDate,
+                  priority: p.priority,
+                  aircraft: p.aircraft,
+                }))}
+                activeSnapshotId={activeSnapshotId}
+                onSetActiveSnapshot={setActiveSnapshotId}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
       {isFullscreen && (
         <div className="absolute top-3 right-3 z-50">
           <Button
@@ -1786,6 +1911,11 @@ export default function SchedulingPage() {
               scrollRef={ganttScrollRef}
               onTimelineScroll={handleTimelineScroll}
               onTimelineConfigChange={setTimelineConfig}
+              techTrainingMap={(techTrainingByOrg as Record<string, string[]>) ?? {}}
+              woRequiredTraining={woRequiredTraining}
+              woAssignedTechIds={woAssignedTechIds}
+              tatEstimates={(tatEstimates as TATEstimate[]) ?? []}
+              baselinePositions={baselinePositions}
             />
           </div>
 

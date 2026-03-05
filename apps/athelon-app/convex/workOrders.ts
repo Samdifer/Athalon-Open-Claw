@@ -1977,6 +1977,16 @@ export const getWorkOrdersWithScheduleRisk = query({
           (sum, c) => sum + (c.estimatedHours ?? 0),
           0,
         );
+        const requiredTraining = Array.from(
+          new Set(cards.flatMap((c) => c.requiredTraining ?? [])),
+        );
+        const assignedTechnicianIds = Array.from(
+          new Set(
+            cards
+              .map((c) => c.assignedToTechnicianId)
+              .filter(Boolean) as Id<"technicians">[],
+          ),
+        );
         const completedHours = cards
           .filter((c) => c.status === "complete")
           .reduce((sum, c) => sum + (c.estimatedHours ?? 0), 0);
@@ -2033,6 +2043,8 @@ export const getWorkOrdersWithScheduleRisk = query({
           completedTaskCardCount: cards.filter((c) => c.status === "complete").length,
           openDiscrepancyCount: openDiscrepancies.length,
           pendingPartCount: pendingPartCountByWoId.get(String(wo._id)) ?? 0,
+          requiredTraining,
+          assignedTechnicianIds,
           riskLevel,
           sourceQuoteId: linkedQuote?._id,
           quoteNumber: linkedQuote?.quoteNumber ?? null,
