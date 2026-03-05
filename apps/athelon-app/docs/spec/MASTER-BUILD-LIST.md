@@ -6,6 +6,31 @@ This file is the markdown-authoritative source of truth for feature status, impl
 
 ## Bug Hunter Fixes
 
+- **BUG-SM-HUNT-016** — New Work Order form `estimatedLaborHoursOverride` silently discarded an explicit "0" value because `0 || undefined` evaluates to `undefined`. A shop manager entering 0 hours for warranty/no-charge work got their override dropped, causing fallback to task-card sum.
+  **File:** `app/(app)/work-orders/new/page.tsx`
+  **Fix:** Replaced `|| undefined` chain with strict `Number.isFinite` + non-negative guard using an IIFE, so 0 is a valid passthrough.
+  **Why it matters:** Explicit zero-hour overrides are now preserved, supporting warranty and goodwill WOs.
+
+- **BUG-SM-HUNT-017** — New Work Order form's promised delivery date past-date validation used `new Date("YYYY-MM-DD")` (UTC midnight) while the actual submission parsed dates as local midnight. In UTC+ timezones, today's date could falsely show a "past date" warning after 00:00 UTC.
+  **File:** `app/(app)/work-orders/new/page.tsx`
+  **Fix:** Switched validation to the same local-midnight split-and-construct pattern used by the submit handler.
+  **Why it matters:** Shop managers no longer see false overdue warnings when creating WOs with today's promised date.
+
+- **BUG-SM-HUNT-018** — Kanban board drag-and-drop from any column into "Pending Inspection" always set status to `pending_inspection`, even for WOs that were already `pending_signoff`. This silently downgraded QCM sign-off readiness.
+  **File:** `app/(app)/work-orders/kanban/page.tsx`
+  **Fix:** Drop handler now checks if the WO's original status was `pending_signoff` and preserves it when dropping back into the same column.
+  **Why it matters:** QCM sign-off state is no longer lost through routine kanban board rearrangement.
+
+- **BUG-SM-HUNT-019** — Dashboard `todayLabel` was memoized with empty deps `useMemo(fn, [])`, computing once on mount. If the dashboard stayed open past midnight, it displayed yesterday's date all day.
+  **File:** `app/(app)/dashboard/page.tsx`
+  **Fix:** Added `workOrdersWithRisk` as a dependency so the label re-evaluates when live query data updates (which happens frequently enough to catch date rollovers).
+  **Why it matters:** Shop managers who keep the dashboard open see the correct date without manual refresh.
+
+- **BUG-SM-HUNT-020** — Kanban board showed `pending_signoff` and `pending_inspection` WOs identically in the same "Pending Inspection" column, with no visual way to distinguish QCM-ready work orders from those awaiting regular inspector review.
+  **File:** `app/(app)/work-orders/kanban/page.tsx`
+  **Fix:** Added a purple "QCM" badge on cards with `pending_signoff` status.
+  **Why it matters:** Shop managers can instantly identify which WOs in the inspection column are ready for QCM release vs. still awaiting initial inspection.
+
 - **BUG-QCM-HUNT-006** — Compliance card skipped AD/SB status query when `currentRegistration` was blank, showing “Not Configured” even when AD records existed for the aircraft.
   **File:** `app/(app)/compliance/_components/AircraftComplianceCard.tsx`
   **Fix:** Removed tail-number gate and always queried compliance by `aircraftId` + `organizationId`.
