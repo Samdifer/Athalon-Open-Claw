@@ -97,3 +97,41 @@
 - **What was broken:** Items due more than 30 days out showed only "future" with a green badge but no actual day count. An AD due in 31 days looked identical to one due in 365 days — impossible for the QCM to prioritize upcoming deadlines or plan audit prep timing.
 - **Fix:** Changed "future" badge to show the actual day count (e.g., "45d", "180d") so deadlines are immediately comparable.
 - **Impact:** QCM inspector can now visually prioritize all timeline items by their actual urgency, not just a binary near/far classification.
+
+### Cycle 3 — DOM (Director of Maintenance) (2026-03-05)
+
+**BUG-DOM-HUNT-140: OJT Jackets page has dead "use client" Next.js directive**
+- **File:** `app/(app)/training/ojt/jackets/page.tsx`
+- **What was broken:** The `"use client"` directive at the top of the file is a Next.js convention. Athelon is a Vite+React app — the directive is a no-op that misleads contributors into thinking the project uses Next.js patterns (server components, RSC). Same issue already fixed on the OJT dashboard in BUG-DOM-120.
+- **Fix:** Replaced with an explanatory comment documenting the cleanup.
+- **Impact:** Prevents architectural confusion for contributors and eliminates a misleading signal about the project's framework.
+
+**BUG-DOM-HUNT-141: OJT Jackets page formatDate uses wrong timezone and inconsistent format**
+- **File:** `app/(app)/training/ojt/jackets/page.tsx`
+- **What was broken:** `formatDate()` used `toLocaleDateString()` with no options — (1) missing `timeZone: "UTC"` causing jacket start/qualification dates to display one day early for shops west of UTC, and (2) producing "3/5/2026" format while every other date in the app uses "Mar 5, 2026" format. A DOM comparing training dates across pages sees inconsistent formats.
+- **Fix:** Added `"en-US"` locale with `{ month: "short", day: "numeric", year: "numeric", timeZone: "UTC" }` options matching the rest of the app.
+- **Impact:** Training dates now display correctly and consistently regardless of the user's timezone.
+
+**BUG-DOM-HUNT-142: Logbook tab shows "No entries found" while data is still loading**
+- **File:** `app/(app)/fleet/[tail]/_components/LogbookTab.tsx`
+- **What was broken:** When `entriesRaw` is undefined (Convex query still in flight), the code defaults to `[]` and renders "No entries found." — making the DOM think the logbook is empty when it's just loading. On slow connections or large aircraft with many entries, this flash of false-empty state lasts several seconds.
+- **Fix:** Added a loading skeleton check: when `entriesRaw === undefined`, render skeleton placeholders instead of the empty state message. Also added `Skeleton` to the import list.
+- **Impact:** DOM users no longer see a misleading "No entries found" message while logbook data loads.
+
+**BUG-DOM-HUNT-143: TeamTrainingDashboard has dead "use client" Next.js directive**
+- **File:** `app/(app)/training/ojt/_components/TeamTrainingDashboard.tsx`
+- **What was broken:** Same "use client" artifact as BUG-DOM-HUNT-140.
+- **Fix:** Replaced with explanatory comment.
+- **Impact:** Consistent framework signal cleanup across the training module.
+
+**BUG-DOM-HUNT-144: Chief Inspector Review shows raw database IDs instead of task names**
+- **File:** `app/(app)/training/ojt/_components/ChiefInspectorReview.tsx`
+- **What was broken:** The countersign review panel displayed `event.taskId` directly — a raw Convex ID like "j5782ndks..." — instead of the human-readable task description. A Chief Inspector countersigning OJT evaluations had no way to know WHICH task they were approving without cross-referencing the curriculum manually.
+- **Fix:** Added queries for the jacket's curriculum and its tasks, built a taskId→description lookup map, and now displays "ATA 71 — Inspect main rotor..." instead of the raw ID. Also cleaned up the "use client" directive.
+- **Impact:** Chief Inspectors can now actually read and verify what they're countersigning — critical for Part 145 training compliance.
+
+**BUG-DOM-HUNT-145: Logbook "Generate Entry from WO" dropdown shows empty list with no explanation**
+- **File:** `app/(app)/fleet/[tail]/_components/LogbookTab.tsx`
+- **What was broken:** The work order dropdown used to generate logbook entries showed an empty list (a) while work orders were loading and (b) when no closed WOs existed for the aircraft. The DOM opens the logbook tab, clicks the dropdown, sees nothing, and thinks the feature is broken.
+- **Fix:** Added context-sensitive placeholder text ("Loading work orders…" / "No completed work orders") and disabled hint items inside the dropdown content to explain why the list is empty.
+- **Impact:** DOM users immediately understand the state of the WO list without confusion.
