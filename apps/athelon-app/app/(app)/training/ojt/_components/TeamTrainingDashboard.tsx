@@ -1,4 +1,5 @@
-"use client";
+// BUG-DOM-HUNT-143: Removed "use client" Next.js directive — same Vite+React
+// cleanup as BUG-DOM-120 and BUG-DOM-HUNT-140.
 
 import { useEffect, useMemo, useState } from "react";
 import { useConvex, useQuery } from "convex/react";

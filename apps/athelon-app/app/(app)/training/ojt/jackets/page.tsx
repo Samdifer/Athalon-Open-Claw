@@ -1,4 +1,6 @@
-"use client";
+// BUG-DOM-HUNT-140: Removed "use client" Next.js directive — this is a Vite+React
+// app and the directive is a no-op that misleads contributors into thinking the
+// project uses Next.js conventions (same issue as BUG-DOM-120 on OJT dashboard).
 
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -39,9 +41,19 @@ import {
 
 type Jacket = Doc<"ojtJackets">;
 
+// BUG-DOM-HUNT-141: formatDate used toLocaleDateString() with no options — producing
+// inconsistent date format (e.g. "3/5/2026" vs "Mar 5, 2026" everywhere else) and
+// missing timeZone:"UTC" causing dates to display one day early for non-UTC shops.
+// OJT jacket start/qualification dates are stored as UTC timestamps; rendering them
+// in local timezone shifts them for any shop west of UTC.
 function formatDate(ts?: number) {
   if (!ts) return "—";
-  return new Date(ts).toLocaleDateString();
+  return new Date(ts).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "UTC",
+  });
 }
 
 function statusBadge(status: string) {

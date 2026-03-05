@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 
 type EntryType = "all" | "maintenance" | "inspection" | "alteration" | "repair";
@@ -162,9 +163,27 @@ export function LogbookTab({
           <div className="flex gap-2">
             <Select value={selectedWoId} onValueChange={handlePrefillFromWo}>
               <SelectTrigger>
-                <SelectValue placeholder="Select completed work order" />
+                <SelectValue placeholder={
+                  workOrdersRaw === undefined
+                    ? "Loading work orders…"
+                    : completedWorkOrders.length === 0
+                      ? "No completed work orders"
+                      : "Select completed work order"
+                } />
               </SelectTrigger>
               <SelectContent>
+                {/* BUG-DOM-HUNT-145: WO dropdown showed an empty list with no explanation
+                    when (a) work orders were still loading or (b) no WOs have been closed
+                    for this aircraft. The DOM opens the logbook tab intending to generate
+                    an entry, clicks the dropdown, sees nothing, and thinks it's broken.
+                    Show a disabled placeholder item in both cases so the user understands
+                    why the list is empty. */}
+                {workOrdersRaw === undefined && (
+                  <SelectItem value="__loading" disabled>Loading…</SelectItem>
+                )}
+                {workOrdersRaw !== undefined && completedWorkOrders.length === 0 && (
+                  <SelectItem value="__empty" disabled>No closed work orders found</SelectItem>
+                )}
                 {completedWorkOrders.map((wo) => (
                   <SelectItem key={String(wo._id)} value={String(wo._id)}>
                     {wo.workOrderNumber}
@@ -239,7 +258,24 @@ export function LogbookTab({
         </CardHeader>
         <CardContent className="pt-0">
           <div className="space-y-2">
-            {filteredEntries.length === 0 ? (
+            {/* BUG-DOM-HUNT-142: When entriesRaw is undefined (still loading from
+                Convex), the entries array defaults to [] and this block renders
+                "No entries found" — misleading the DOM into thinking the logbook is
+                empty when it's just loading. Show a proper loading skeleton first. */}
+            {entriesRaw === undefined ? (
+              <div className="space-y-2">
+                <div className="rounded-md border border-border/60 p-3 space-y-2">
+                  <Skeleton className="h-3 w-24" />
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-3 w-48" />
+                </div>
+                <div className="rounded-md border border-border/60 p-3 space-y-2">
+                  <Skeleton className="h-3 w-24" />
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-3 w-48" />
+                </div>
+              </div>
+            ) : filteredEntries.length === 0 ? (
               <p className="text-xs text-muted-foreground">No entries found.</p>
             ) : (
               filteredEntries.map((entry) => (
