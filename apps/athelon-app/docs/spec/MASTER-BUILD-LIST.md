@@ -6,6 +6,46 @@ This file is the markdown-authoritative source of truth for feature status, impl
 
 ## Bug Hunter Fixes
 
+- **BUG-113** — AD/SB compliance page was a navigation dead-end in the QCM flow, with no direct path back to Compliance or forward to Audit Trail/QCM Review.  
+  **File:** `app/(app)/compliance/ad-sb/page.tsx`  
+  **Fix:** Added header journey navigation buttons (`Compliance`, `Audit Trail`, `QCM Review`) and wired Audit Trail link to carry selected `?aircraft=` context.  
+  **Why it matters:** Keeps the intended Compliance → AD/SB → Audit Trail → RTS Review journey navigable without relying on sidebar/back-button detours.
+
+- **BUG-114** — Audit Trail ignored `?aircraft=` URL context, so deep links/refresh/back dropped the selected aircraft and forced manual re-selection.  
+  **File:** `app/(app)/compliance/audit-trail/page.tsx`  
+  **Fix:** Added URL/state synchronization for aircraft selection, route actions through query-param updates, and preserve current aircraft when jumping back to AD/SB.  
+  **Why it matters:** QCM inspectors stay on the correct aircraft context across page transitions and browser navigation.
+
+- **BUG-115** — QCM Review blocked RTS page access unless `canClose` was already true, preventing inspectors from opening RTS preconditions early for blocker review.  
+  **File:** `app/(app)/compliance/qcm-review/page.tsx`  
+  **Fix:** Show a direct RTS navigation action for selected work orders in both states (`Sign Off & Close` when ready, `Review RTS Preconditions` when not ready).  
+  **Why it matters:** Restores continuous Audit Trail → RTS Review workflow even when work orders are not yet fully clear to close.
+
+- **BUG-116** — QCM Review close-readiness data was truncated to the first 200 work orders due to paginated query limits.  
+  **File:** `app/(app)/compliance/qcm-review/page.tsx`  
+  **Fix:** Added incremental `loadMore` loop while pagination reports `CanLoadMore`, so all open/pending-signoff work orders are available.  
+  **Why it matters:** Prevents missing older open work orders in large shops and avoids false “not found in queue” outcomes.
+
+- **BUG-LT-HUNT-099** — Step sign-off button wiring caused a TypeScript/runtime handler mismatch (`onClick={handleSign}` while `handleSign` expected an optional boolean), risking incorrect click event values being treated as bypass flags.  
+  **File:** `app/(app)/work-orders/[id]/tasks/[cardId]/_components/SignStepDialog.tsx`  
+  **Fix:** Wrapped click handler with `onClick={() => void handleSign()}` so the dialog always invokes sign-off with the expected default flow.  
+  **Why it matters:** Lead technicians can reliably sign steps without brittle event-argument behavior in a safety-critical workflow.
+
+- **BUG-LT-HUNT-100** — Card sign-off button had the same handler mismatch pattern as step sign-off (`onClick={handleSign}` with a boolean parameter), creating the same risk at card-level certification.  
+  **File:** `app/(app)/work-orders/[id]/tasks/[cardId]/_components/SignCardDialog.tsx`  
+  **Fix:** Switched to `onClick={() => void handleSign()}` and kept explicit bypass flow only in the training-warning confirmation action.  
+  **Why it matters:** Prevents fragile click behavior during 14 CFR 43.9 card certification.
+
+- **BUG-LT-HUNT-101** — Signature re-auth continue flow malformed URLs when `returnTo` already had query params (`?tab=...`), producing `...?tab=x?authEventId=...` and dropping context.  
+  **File:** `app/(app)/work-orders/[id]/signature/page.tsx`  
+  **Fix:** Rebuilt destination with `URLSearchParams`, preserving existing query params and appending `authEventId` safely.  
+  **Why it matters:** Techs return to the exact sign-off screen state after PIN auth instead of losing place mid-workflow.
+
+- **BUG-LT-HUNT-102** — Turnover notes local storage key was not organization-scoped, so multi-org users could see mixed notes if WO/card IDs collided.  
+  **Files:** `app/(app)/work-orders/[id]/tasks/[cardId]/_components/TurnoverNotes.tsx`, `app/(app)/work-orders/[id]/tasks/[cardId]/page.tsx`  
+  **Fix:** Added `organizationId` to turnover note storage key and passed `orgId` from task card page.  
+  **Why it matters:** Shift handoff notes stay isolated to the correct shop context.
+
 - **BUG-SM-HUNT-003** — Work Orders default sort claimed to be “newest first” but actually preserved backend order, so high-priority recent jobs could appear buried unpredictably.  
   **File:** `app/(app)/work-orders/page.tsx`  
   **Fix:** Updated default sort branch to explicitly sort by `openedAt` descending (newest first), while keeping AOG-first grouping behavior.  
@@ -2855,4 +2895,3 @@ This command regenerates derived reference artifacts from Registry B, C, and D:
 - Route rows without FS/MBP mapping: **0**
 - Alias rows: **670**
 - Interconnection edges: **42**
-

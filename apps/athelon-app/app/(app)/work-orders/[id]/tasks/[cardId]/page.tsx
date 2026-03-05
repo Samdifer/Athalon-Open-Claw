@@ -1101,6 +1101,7 @@ export default function TaskCardPage() {
       </Card>
 
       <TurnoverNotes
+        organizationId={orgId}
         workOrderId={workOrderId}
         taskCardId={cardId}
         readOnly={cardIsVoided || cardIsComplete}

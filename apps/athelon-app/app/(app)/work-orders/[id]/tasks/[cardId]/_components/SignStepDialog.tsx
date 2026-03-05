@@ -745,7 +745,7 @@ export function SignStepDialog({
               id="sign-step-pin"
               type="password"
               value={pin}
-              onChange={(e) => setPin(e.target.value)}
+              onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))}
               placeholder="4–6 digit PIN"
               maxLength={6}
               inputMode="numeric"
@@ -776,7 +776,9 @@ export function SignStepDialog({
             Cancel
           </Button>
           <Button
-            onClick={handleSign}
+            onClick={() => {
+              void handleSign();
+            }}
             disabled={
               isSubmitting ||
               pin.length < 4 ||

@@ -122,9 +122,19 @@ export default function SignaturePage() {
 
   function handleContinue() {
     if (!authEvent) return;
-    const dest = returnTo
-      ? `${returnTo}?authEventId=${authEvent.eventId}`
-      : `/work-orders/${workOrderId}`;
+    if (!returnTo) {
+      router.push(`/work-orders/${workOrderId}`);
+      return;
+    }
+
+    // BUG-LT-HUNT-101: Preserve existing query params when appending authEventId.
+    // `returnTo` can already include search params (e.g. /work-orders/123/rts?tab=signoff).
+    // Previously we always appended `?authEventId=...`, producing malformed URLs like
+    // `.../rts?tab=signoff?authEventId=...` and dropping original context.
+    const [pathPart, searchPart = ""] = returnTo.split("?");
+    const params = new URLSearchParams(searchPart);
+    params.set("authEventId", authEvent.eventId);
+    const dest = `${pathPart}?${params.toString()}`;
     router.push(dest);
   }
 

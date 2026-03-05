@@ -13,13 +13,17 @@ type TurnoverEntry = {
 };
 
 type Props = {
+  organizationId?: string;
   workOrderId: string;
   taskCardId: string;
   readOnly?: boolean;
 };
 
-function storageKey(workOrderId: string, taskCardId: string) {
-  return `athelon:turnover-notes:${workOrderId}:${taskCardId}`;
+function storageKey(organizationId: string | undefined, workOrderId: string, taskCardId: string) {
+  // BUG-LT-HUNT-102: Include organization in local storage key.
+  // Without org scoping, turnover notes can bleed across org context for users
+  // who belong to multiple shops if WO/task IDs collide.
+  return `athelon:turnover-notes:${organizationId ?? "no-org"}:${workOrderId}:${taskCardId}`;
 }
 
 function createTurnoverEntryId() {
@@ -35,10 +39,13 @@ const SUGGESTIONS = [
   "Handoff template: 1) Progress: [x/y steps]. 2) Findings: [reference]. 3) Parts/documents: [status]. 4) Risks: [watch items]. 5) Immediate next task: [owner/action].",
 ];
 
-export function TurnoverNotes({ workOrderId, taskCardId, readOnly = false }: Props) {
+export function TurnoverNotes({ organizationId, workOrderId, taskCardId, readOnly = false }: Props) {
   const [entries, setEntries] = useState<TurnoverEntry[]>([]);
   const [draft, setDraft] = useState("");
-  const key = useMemo(() => storageKey(workOrderId, taskCardId), [workOrderId, taskCardId]);
+  const key = useMemo(
+    () => storageKey(organizationId, workOrderId, taskCardId),
+    [organizationId, workOrderId, taskCardId],
+  );
 
   useEffect(() => {
     try {

@@ -17,6 +17,9 @@ import {
   Minus,
   ArrowUpRight,
   ExternalLink,
+  ArrowLeft,
+  FileSearch,
+  ClipboardList,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -149,6 +152,10 @@ export default function AdSbCompliancePage() {
   });
 
   const totals = fleetSummary?.fleetTotals;
+  const auditTrailHref =
+    selectedAircraft !== "all"
+      ? `/compliance/audit-trail?aircraft=${encodeURIComponent(selectedAircraft)}`
+      : "/compliance/audit-trail";
 
   // Aircraft lookup
   const aircraftMap = useMemo(() => {
@@ -267,14 +274,51 @@ export default function AdSbCompliancePage() {
   return (
     <div className="space-y-5">
       {/* Header */}
-      <div>
-        <h1 className="text-lg sm:text-xl md:text-2xl font-semibold text-foreground flex items-center gap-2">
-          <ShieldCheck className="w-5 h-5 text-muted-foreground" />
-          AD/SB Compliance Tracking
-        </h1>
-        <p className="text-sm text-muted-foreground mt-0.5">
-          Airworthiness Directive and Service Bulletin compliance status across the fleet
-        </p>
+      <div className="flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-lg sm:text-xl md:text-2xl font-semibold text-foreground flex items-center gap-2">
+            <ShieldCheck className="w-5 h-5 text-muted-foreground" />
+            AD/SB Compliance Tracking
+          </h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            Airworthiness Directive and Service Bulletin compliance status across the fleet
+          </p>
+        </div>
+        <div className="flex items-center gap-2 flex-shrink-0 flex-wrap">
+          <Button
+            asChild
+            variant="ghost"
+            size="sm"
+            className="h-8 gap-1.5 text-xs text-muted-foreground"
+          >
+            <Link to="/compliance">
+              <ArrowLeft className="w-3.5 h-3.5" />
+              Compliance
+            </Link>
+          </Button>
+          <Button
+            asChild
+            variant="outline"
+            size="sm"
+            className="h-8 gap-1.5 text-xs border-border/60"
+          >
+            <Link to={auditTrailHref}>
+              <FileSearch className="w-3.5 h-3.5" />
+              Audit Trail
+            </Link>
+          </Button>
+          <Button
+            asChild
+            variant="outline"
+            size="sm"
+            className="h-8 gap-1.5 text-xs border-border/60"
+          >
+            <Link to="/compliance/qcm-review">
+              <ClipboardList className="w-3.5 h-3.5" />
+              QCM Review
+            </Link>
+          </Button>
+        </div>
       </div>
 
       {/* Summary Cards

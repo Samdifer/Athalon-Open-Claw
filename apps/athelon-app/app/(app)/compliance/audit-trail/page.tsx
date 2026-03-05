@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery } from "convex/react";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import { api } from "@/convex/_generated/api";
@@ -19,7 +19,7 @@ import {
   ExternalLink,
   Loader2,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -542,8 +542,28 @@ export default function AuditTrailPage() {
   // Now: while org context is loading we show a spinner; once loaded without
   // an org we show the standard "missing context" ActionableEmptyState.
   const { orgId, isLoaded: orgLoaded } = useCurrentOrg();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [selectedAircraftId, setSelectedAircraftId] = useState<string | null>(
+    () => searchParams.get("aircraft") ?? null,
+  );
 
-  const [selectedAircraftId, setSelectedAircraftId] = useState<string | null>(null);
+  const setSelectedAircraftInUrl = (aircraftId: string | null) => {
+    const nextParams = new URLSearchParams(searchParams);
+    if (aircraftId) {
+      nextParams.set("aircraft", aircraftId);
+    } else {
+      nextParams.delete("aircraft");
+    }
+    setSearchParams(nextParams, { replace: true });
+  };
+
+  // BUG-QCM-AT-004: Audit Trail did not read/sync ?aircraft from URL, so deep
+  // links from AD/SB and refresh/share/back always dropped the QCM back to an
+  // unselected state. Syncing state with query params preserves drill-in context.
+  useEffect(() => {
+    const aircraftId = searchParams.get("aircraft");
+    setSelectedAircraftId(aircraftId && aircraftId.length > 0 ? aircraftId : null);
+  }, [searchParams]);
 
   const aircraft = useQuery(
     api.aircraft.list,
@@ -610,9 +630,12 @@ export default function AuditTrailPage() {
         event: "AD Compliance Snapshot",
         user: "System",
         timestamp: new Date().toISOString(),
-        details: `${summary.registration}: ${summary.overdueCount} overdue, ${summary.dueSoonCount} due soon, ${summary.total} total ADs`,
+        details: `${
+          aircraft?.find((ac) => ac._id === summary.aircraftId)?.currentRegistration ??
+          summary.aircraftId.slice(-6)
+        }: ${summary.overdueCount} overdue, ${summary.dueSoonCount} due soon, ${summary.total} total ADs`,
       })),
-    [fleetAdSummary],
+    [aircraft, fleetAdSummary],
   );
 
   // BUG-QCM-048: Guard against missing org context (see comment above on isLoaded).
@@ -688,7 +711,13 @@ export default function AuditTrailPage() {
             size="sm"
             className="h-8 gap-1.5 text-xs border-border/60"
           >
-            <Link to="/compliance/ad-sb">
+            <Link
+              to={
+                selectedAircraftId
+                  ? `/compliance/ad-sb?aircraft=${encodeURIComponent(selectedAircraftId)}`
+                  : "/compliance/ad-sb"
+              }
+            >
               <ShieldAlert className="w-3.5 h-3.5" />
               AD/SB Tracking
             </Link>
@@ -719,7 +748,7 @@ export default function AuditTrailPage() {
           aircraft={sortedAircraft}
           organizationId={orgId}
           selectedAircraftId={selectedAircraftId}
-          onSelect={setSelectedAircraftId}
+          onSelect={(aircraftId) => setSelectedAircraftInUrl(aircraftId)}
           summaryByAircraftId={summaryByAircraftId}
         />
       ) : null}
@@ -738,7 +767,7 @@ export default function AuditTrailPage() {
               ) : (
                 <Select
                   value={selectedAircraftId ?? ""}
-                  onValueChange={(val) => setSelectedAircraftId(val || null)}
+                  onValueChange={(val) => setSelectedAircraftInUrl(val || null)}
                 >
                   <SelectTrigger className="h-9 w-64 text-xs">
                     <SelectValue placeholder="Choose an aircraft…" />

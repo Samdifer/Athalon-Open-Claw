@@ -220,10 +220,12 @@ function CloseReadinessPanel({
                   ? "Ready to close"
                   : `Not ready — ${readiness.blockers?.length ?? 0} blocker(s)`}
               </span>
-              {readiness.canClose && (
+              {selectedWoId && (
                 <Button asChild size="sm" className="ml-auto h-7 text-xs">
                   <Link to={`/work-orders/${selectedWoId}/rts`}>
-                    Sign Off &amp; Close
+                    {readiness.canClose
+                      ? "Sign Off & Close"
+                      : "Review RTS Preconditions"}
                   </Link>
                 </Button>
               )}
@@ -294,11 +296,24 @@ export default function QcmReviewPage() {
     orgId ? { organizationId: orgId } : "skip",
   );
 
-  const { results: workOrders, status: workOrdersStatus } = usePaginatedQuery(
+  const {
+    results: workOrders,
+    status: workOrdersStatus,
+    loadMore: loadMoreWorkOrders,
+  } = usePaginatedQuery(
     api.workOrders.listWorkOrders,
     orgId ? { organizationId: orgId } : "skip",
     { initialNumItems: 200 },
   );
+
+  // BUG-QCM-QR-002: Close-readiness only loaded the first 200 work orders.
+  // Larger shops could not reach older open/pending-signoff WOs from this page.
+  // Keep loading until exhausted so the QCM queue is complete.
+  useEffect(() => {
+    if (workOrdersStatus === "CanLoadMore") {
+      loadMoreWorkOrders(200);
+    }
+  }, [loadMoreWorkOrders, workOrdersStatus]);
 
   const prereq = usePagePrereqs({
     requiresOrg: true,
