@@ -535,7 +535,8 @@ export default function SchedulingRosterWorkspace({
         <TabsContent value="roster" className="mt-3 space-y-3">
           {workspace.focus.observedHoliday && (
             <Card className="border-amber-700/40 bg-amber-900/20">
-              <CardContent className="p-3 text-amber-200 text-sm flex items-center gap-2">
+              {/* BUG-LT-HUNT-119: text-amber-200 unreadable in light mode */}
+              <CardContent className="p-3 text-amber-800 dark:text-amber-200 text-sm flex items-center gap-2">
                 <AlertTriangle className="h-4 w-4" />
                 Holiday observed: {workspace.focus.observedHoliday.name}. No shifts are considered
                 active.

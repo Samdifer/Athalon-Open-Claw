@@ -6,6 +6,26 @@ This file is the markdown-authoritative source of truth for feature status, impl
 
 ## Bug Hunter Fixes
 
+- **BUG-LT-HUNT-115** — VendorServicePanel localStorage key not scoped by organization. Users belonging to multiple shops would see vendor service data bleed between orgs if WO/task card IDs collide. Same class as BUG-LT-HUNT-102 (TurnoverNotes). Added orgId to the storage key.
+  **File:** `app/(app)/work-orders/[id]/tasks/[cardId]/_components/VendorServicePanel.tsx`
+  **Impact:** Cross-org vendor data bleed — maintenance records integrity issue.
+
+- **BUG-LT-HUNT-116** — My Work page handoff note text used `text-amber-200/90`, which is nearly invisible in light mode (pale yellow on white). A tech in a well-lit hangar using light mode can't read their own handoff notes. Fixed to use dual-mode pattern: `text-amber-800 dark:text-amber-200/90`.
+  **File:** `app/(app)/my-work/page.tsx`
+  **Impact:** Handoff notes unreadable in light mode — safety-critical shift turnover info invisible.
+
+- **BUG-LT-HUNT-117** — WOHeaderKPI RTS date dialog did not reset form fields on re-open. If a shop manager opened the dialog, typed a date and reason, then cancelled, the stale values persisted. Re-opening for a different reason showed the old reason pre-filled. Added useEffect reset on dialogOpen.
+  **File:** `app/(app)/work-orders/[id]/_components/WOHeaderKPI.tsx`
+  **Impact:** Misleading RTS date change reason logged in schedule audit trail.
+
+- **BUG-LT-HUNT-118** — WOHeaderKPI RTS reason textarea had no maxLength cap. A shop manager pasting verbose context (email chain, customer requirements) could exceed backend limits and get a cryptic error. Added maxLength=500 with character counter.
+  **File:** `app/(app)/work-orders/[id]/_components/WOHeaderKPI.tsx`
+  **Impact:** Cryptic backend validation error on RTS date change; lost input.
+
+- **BUG-LT-HUNT-119** — `text-amber-200` used in 4 locations across the app is unreadable in light mode (pale yellow on white/light backgrounds). Fixed all instances to use dual-mode: `text-amber-800 dark:text-amber-200`. Affected: My Work handoff notes, Scheduling Roster holiday banner, Scheduling Dock Preview holiday text, AI Inspection Suggestions advisory banner.
+  **Files:** `SchedulingRosterWorkspace.tsx`, `SchedulingRosterDockPreview.tsx`, `AIInspectionSuggestions.tsx`
+  **Impact:** Critical advisory text (holidays, AI suggestions) invisible in light mode.
+
 - **BUG-DOM-122** — Fleet Calendar query range and grid layout used local-timezone Date constructors while events use UTC timestamps. Shops west of UTC (e.g. UTC-5) would miss events on the first/last day of the month and render grid cells with incorrect day offsets. Fixed getDaysInMonth/getFirstDayOfWeek to use Date.UTC and rangeStart/rangeEnd to use Date.UTC boundaries.
   **File:** `app/(app)/fleet/calendar/page.tsx`
   **Impact:** DOM sees wrong or missing events on fleet calendar near month boundaries.

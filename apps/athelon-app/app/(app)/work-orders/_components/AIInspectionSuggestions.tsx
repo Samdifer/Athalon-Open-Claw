@@ -76,7 +76,8 @@ export function AIInspectionSuggestions({ aircraftType, ataChapter, onChange }: 
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
-        <div className="rounded-md border border-amber-500/30 bg-amber-500/10 p-2.5 text-[11px] text-amber-200 flex items-start gap-2">
+        {/* BUG-LT-HUNT-119: text-amber-200 unreadable in light mode */}
+        <div className="rounded-md border border-amber-500/30 bg-amber-500/10 p-2.5 text-[11px] text-amber-800 dark:text-amber-200 flex items-start gap-2">
           <ShieldAlert className="w-3.5 h-3.5 mt-0.5" />
           <p>These suggestions are advisory. All items require technician/inspector confirmation.</p>
         </div>

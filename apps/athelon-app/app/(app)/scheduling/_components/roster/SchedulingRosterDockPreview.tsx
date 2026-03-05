@@ -169,7 +169,8 @@ export default function SchedulingRosterDockPreview({
                 <AlertTriangle className="h-3 w-3" />
                 Holiday Observed
               </p>
-              <p className="text-[10px] text-amber-200/80 mt-0.5">
+              {/* BUG-LT-HUNT-119: text-amber-200 unreadable in light mode */}
+              <p className="text-[10px] text-amber-800/80 dark:text-amber-200/80 mt-0.5">
                 {workspace.focus.observedHoliday.name} ({workspace.focus.focusDateKey})
               </p>
             </div>

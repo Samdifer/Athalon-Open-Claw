@@ -38,8 +38,14 @@ const STATUS_STYLES: Record<VendorServiceStatus, string> = {
   complete: "bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/30",
 };
 
-function buildStorageKey(workOrderId: string, cardId: string) {
-  return `athelon:taskCardVendorServices:${workOrderId}:${cardId}`;
+// BUG-LT-HUNT-115: Include organizationId in localStorage key.
+// Same class as BUG-LT-HUNT-102 (TurnoverNotes). Without org scoping, a user
+// who belongs to multiple shops would see vendor service data bleed between
+// orgs if WO/task card IDs collide. Vendor services attached to Shop A's WO
+// could appear on Shop B's UI for a completely different aircraft — confusing
+// at best, a maintenance records integrity issue at worst.
+function buildStorageKey(orgId: string | undefined, workOrderId: string, cardId: string) {
+  return `athelon:taskCardVendorServices:${orgId ?? "no-org"}:${workOrderId}:${cardId}`;
 }
 
 function parseMoney(value: string): number | undefined {
@@ -51,15 +57,17 @@ function parseMoney(value: string): number | undefined {
 }
 
 export function VendorServicePanel({
+  orgId,
   workOrderId,
   cardId,
   readOnly = false,
 }: {
+  orgId?: string;
   workOrderId: string;
   cardId: string;
   readOnly?: boolean;
 }) {
-  const storageKey = useMemo(() => buildStorageKey(workOrderId, cardId), [workOrderId, cardId]);
+  const storageKey = useMemo(() => buildStorageKey(orgId, workOrderId, cardId), [orgId, workOrderId, cardId]);
   const [services, setServices] = useState<VendorService[]>([]);
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);

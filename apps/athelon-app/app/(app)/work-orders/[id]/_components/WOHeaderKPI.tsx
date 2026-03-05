@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useMutation } from "convex/react";
 import { AlertTriangle, CalendarClock, Clock3, Wrench } from "lucide-react";
 import { api } from "@/convex/_generated/api";
@@ -83,6 +83,21 @@ export function WOHeaderKPI({
   const [saving, setSaving] = useState(false);
 
   const isManagerOrAdmin = tech?.role === "admin" || tech?.role === "shop_manager";
+
+  // BUG-LT-HUNT-117: Reset RTS date dialog fields when it (re-)opens.
+  // Previously, if a shop manager opened the dialog, typed a date and reason,
+  // then clicked Cancel, the stale values persisted in state. Re-opening the
+  // dialog for a DIFFERENT reason showed the old reason pre-filled. In the
+  // worst case, the manager doesn't notice the old reason, submits, and the
+  // schedule audit log records "parts delay" when the real reason is
+  // "customer change order" — a misleading operations record. Same class as
+  // BUG-LT4-002 (SignCardDialog) and BUG-LT-HUNT-002 (MarkNaDialog).
+  useEffect(() => {
+    if (dialogOpen) {
+      setNewRtsDate("");
+      setReason("");
+    }
+  }, [dialogOpen]);
 
   const estimatedHours = useMemo(() => {
     if (typeof workOrder.estimatedLaborHoursOverride === "number") {
@@ -222,13 +237,22 @@ export function WOHeaderKPI({
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="rts-reason">Reason</Label>
+                    {/* BUG-LT-HUNT-118: RTS reason textarea had no maxLength cap.
+                        A shop manager pasting verbose context (email chain,
+                        customer requirements) could exceed backend limits and
+                        get a cryptic error. 500 chars is generous for a date
+                        change reason. Counter turns amber near the limit. */}
                     <Textarea
                       id="rts-reason"
                       value={reason}
-                      onChange={(e) => setReason(e.target.value)}
+                      onChange={(e) => setReason(e.target.value.slice(0, 500))}
                       placeholder="Why is the RTS commitment date changing?"
                       rows={4}
+                      maxLength={500}
                     />
+                    <p className={`text-[10px] text-right mt-0.5 ${reason.length >= 450 ? "text-amber-400" : "text-muted-foreground/50"}`}>
+                      {reason.length}/500
+                    </p>
                   </div>
                 </div>
                 <DialogFooter>

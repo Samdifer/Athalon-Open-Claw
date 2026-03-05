@@ -425,7 +425,13 @@ export default function MyWorkPage() {
                           {formatDateTime(lastHandoffNote.createdAt)}
                         </span>
                       </div>
-                      <p className="text-xs text-amber-200/90 line-clamp-2">
+                      {/* BUG-LT-HUNT-116: text-amber-200 is nearly invisible in light mode
+                          (very pale yellow on a white background). A tech opening My Work
+                          in a well-lit hangar with light mode enabled can't read their
+                          own handoff notes — the text blends into the bg-amber-500/10
+                          background. Use the same dual-mode pattern as the header above:
+                          text-amber-800 in light, text-amber-200 in dark. */}
+                      <p className="text-xs text-amber-800 dark:text-amber-200/90 line-clamp-2">
                         {lastHandoffNote.note}
                       </p>
                       <p className="text-[10px] text-muted-foreground mt-0.5">
