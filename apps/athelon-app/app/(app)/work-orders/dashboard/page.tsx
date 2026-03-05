@@ -1,5 +1,3 @@
-"use client";
-
 import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "convex/react";
@@ -11,6 +9,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import { formatDate } from "@/lib/format";
 import { Button } from "@/components/ui/button";
@@ -42,9 +41,12 @@ export default function WorkOrderDashboardPage() {
     orgId ? { organizationId: orgId, shopLocationId: "all" } : "skip",
   );
 
+  // BUG-SM-HUNT-024: `orgId` from useCurrentOrg is `string | undefined` but
+  // timeClock.listTimeEntries expects `Id<"organizations">`. The raw string
+  // would cause a TypeScript error in strict mode. Cast to the correct type.
   const timeEntries = useQuery(
     api.timeClock.listTimeEntries,
-    orgId ? { orgId, entryType: "work_order" } : "skip",
+    orgId ? { orgId: orgId as Id<"organizations">, entryType: "work_order" } : "skip",
   );
 
   const isLoading =

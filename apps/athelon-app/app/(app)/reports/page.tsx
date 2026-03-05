@@ -1,5 +1,3 @@
-"use client";
-
 import { useMemo, useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -124,11 +122,16 @@ export default function ReportsPage() {
   const throughputCapped = woResult !== undefined && woResult.isDone === false;
 
   // WO throughput by month
+  // BUG-SM-HUNT-025: Falling back to `_creationTime` when `closedAt` is missing
+  // misattributes WOs to their creation month instead of their close month. A WO
+  // created in January but closed in March would inflate January's throughput and
+  // undercount March. For closed WOs without closedAt, use `completedAt` as a
+  // better proxy (set when work finishes), then _creationTime as last resort.
   const throughputData = useMemo(() => {
     if (!woResult?.page) return [];
     const monthly: Record<string, number> = {};
     for (const wo of woResult.page as any[]) {
-      const ts = wo.closedAt ?? wo._creationTime;
+      const ts = wo.closedAt ?? wo.completedAt ?? wo._creationTime;
       if (ts < fromTs || ts >= toTs) continue;
       const d = new Date(ts);
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;

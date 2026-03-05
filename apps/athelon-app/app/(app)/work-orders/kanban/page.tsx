@@ -1,5 +1,3 @@
-"use client";
-
 /**
  * Work Order Kanban Board
  *
@@ -198,7 +196,10 @@ const WoCard = memo(function WoCard({
       <div className="flex items-center justify-between text-[10px] text-muted-foreground/70">
         <div className="flex items-center gap-1.5">
           <Clock className="h-3 w-3" />
-          <span>{days}d open</span>
+          {/* BUG-SM-HUNT-023: Draft WOs don't have a meaningful openedAt — they
+              haven't been formally opened yet. Showing "42d open" for a draft
+              that was created 42 days ago is misleading. Show "Draft" instead. */}
+          <span>{wo.status === "draft" ? "Draft" : `${days}d open`}</span>
         </div>
         {wo.taskCardCount != null && wo.taskCardCount > 0 && (
           <span>
