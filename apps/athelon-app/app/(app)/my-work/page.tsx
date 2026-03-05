@@ -24,7 +24,7 @@ import {
   TASK_STATUS_LABEL,
   TASK_STATUS_STYLES,
 } from "@/lib/mro-constants";
-import { formatDateTime, formatDate } from "@/lib/format";
+import { formatDateTime, formatDate, formatDateUTC } from "@/lib/format";
 
 // ─── Loading skeleton ─────────────────────────────────────────────────────────
 
@@ -382,7 +382,7 @@ export default function MyWorkPage() {
                         <Calendar className="w-3 h-3 flex-shrink-0" />
                         <span>
                           {scheduleRisk === "overdue" ? "Overdue — " : scheduleRisk === "at_risk" ? "Due soon — " : "Due "}
-                          {formatDate(card.promisedDeliveryDate)}
+                          {formatDateUTC(card.promisedDeliveryDate)}
                         </span>
                       </div>
                     )}

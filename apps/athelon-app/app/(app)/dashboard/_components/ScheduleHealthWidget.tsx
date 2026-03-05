@@ -15,7 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { formatDate } from "@/lib/format";
+import { formatDateUTC } from "@/lib/format";
 
 // ─── Schedule Health Widget ────────────────────────────────────────────────────
 //
@@ -52,7 +52,11 @@ export const ScheduleHealthWidget = React.memo(function ScheduleHealthWidget() {
     );
   }
 
-  const total = (stats.onTrack + stats.atRisk + stats.overdue + stats.noDate) || 1;
+  // BUG-SM-HUNT-028: `|| 1` prevented the "no work orders" message from ever
+  // showing. When all counts are zero (empty shop / fresh org), total became 1,
+  // so `total === 1 && stats.noDate === 1` was always false (0 !== 1). Now we
+  // keep the real zero value and use a separate check for the empty-shop case.
+  const total = stats.onTrack + stats.atRisk + stats.overdue + stats.noDate;
   const atRiskItems = stats.atRiskList ?? [];
 
   return (
@@ -136,7 +140,7 @@ export const ScheduleHealthWidget = React.memo(function ScheduleHealthWidget() {
                   {item.promisedDeliveryDate && (
                     <span className="text-[10px] text-muted-foreground flex items-center gap-1 flex-shrink-0">
                       <Calendar className="w-3 h-3" />
-                      {formatDate(item.promisedDeliveryDate)}
+                      {formatDateUTC(item.promisedDeliveryDate)}
                     </span>
                   )}
                 </div>
@@ -154,7 +158,7 @@ export const ScheduleHealthWidget = React.memo(function ScheduleHealthWidget() {
         ) : (
           <div className="flex items-center gap-2 py-2 text-xs text-muted-foreground">
             <CheckCircle2 className="w-4 h-4 text-green-400 flex-shrink-0" />
-            {total === 1 && stats.noDate === 1
+            {total === 0
               ? "No work orders open yet"
               : "All work orders with delivery dates are on track"}
           </div>

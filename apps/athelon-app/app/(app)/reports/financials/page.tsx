@@ -113,22 +113,31 @@ export default function FinancialDashboardPage() {
   // ── Derived metrics ────────────────────────────────────────────────────────
 
   const now = Date.now();
+  // BUG-SM-HUNT-027: Period boundaries were memoized with [] (no deps), computed
+  // once on mount. A shop manager who leaves the Financial Dashboard open across
+  // a month boundary sees stale MTD/QTD/YTD figures because the start-of-period
+  // timestamps never update. Key on `invoices` reference identity so they
+  // recompute whenever Convex pushes new invoice data (which also implies time
+  // has passed). This is lightweight — just a few Date constructor calls.
   const startOfMonth = useMemo(() => {
     const d = new Date();
     d.setDate(1); d.setHours(0, 0, 0, 0);
     return d.getTime();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [invoices]);
   const startOfQuarter = useMemo(() => {
     const d = new Date();
     d.setMonth(Math.floor(d.getMonth() / 3) * 3, 1);
     d.setHours(0, 0, 0, 0);
     return d.getTime();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [invoices]);
   const startOfYear = useMemo(() => {
     const d = new Date();
     d.setMonth(0, 1); d.setHours(0, 0, 0, 0);
     return d.getTime();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [invoices]);
 
   const kpis = useMemo(() => {
     if (!invoices || !purchaseOrders) return null;

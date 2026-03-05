@@ -1027,7 +1027,13 @@ export default function WorkOrderDetailPage() {
         </Card>
       )}
 
-      <Tabs defaultValue="squawks">
+      {/* BUG-SM-HUNT-026: Tabs was uncontrolled (defaultValue) while
+          handleJumpToSquawk + workOrderId reset called setActiveTab expecting
+          to programmatically switch the visible tab. Since the component was
+          uncontrolled, those calls only updated React state but the UI stayed
+          on whatever tab the user last clicked. Switch to controlled mode so
+          setActiveTab actually changes the displayed tab. */}
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as WorkOrderTab)}>
         <TabsList className="h-9 bg-muted/40 p-0.5 mb-4 overflow-x-auto max-w-full flex-wrap">
           {(
             [

@@ -6,6 +6,26 @@ This file is the markdown-authoritative source of truth for feature status, impl
 
 ## Bug Hunter Fixes
 
+- **BUG-SM-HUNT-026** — WO Detail page Tabs component was uncontrolled (`defaultValue="squawks"`) while code called `setActiveTab()` to programmatically switch tabs (e.g., `handleJumpToSquawk`, workOrderId reset). State updated but the visible tab never changed — users clicking a linked squawk from the Parts tab would see nothing happen.
+  **File:** `app/(app)/work-orders/[id]/page.tsx`
+  **Fix:** Changed `<Tabs defaultValue="squawks">` → `<Tabs value={activeTab} onValueChange={setActiveTab}>` (controlled mode).
+  **Impact:** Programmatic tab switching (jump-to-squawk, WO navigation reset) now actually works.
+
+- **BUG-SM-HUNT-027** — Financial Dashboard period boundaries (`startOfMonth`, `startOfQuarter`, `startOfYear`) were memoized with `[]` (no deps), computed once on mount. A shop manager leaving the page open across midnight/month boundary saw stale MTD/QTD/YTD revenue.
+  **File:** `app/(app)/reports/financials/page.tsx`
+  **Fix:** Key memos on `invoices` reference identity so they recompute when Convex pushes new data.
+  **Impact:** MTD/QTD/YTD figures stay current for long-lived sessions.
+
+- **BUG-SM-HUNT-028** — ScheduleHealthWidget "no work orders" message never showed for empty shops. `const total = (...) || 1` forced total to 1 when all counts were zero, making the condition `total === 1 && stats.noDate === 1` always false for an empty org. Users saw "All work orders with delivery dates are on track" on a brand new org with zero WOs.
+  **File:** `app/(app)/dashboard/_components/ScheduleHealthWidget.tsx`
+  **Fix:** Removed `|| 1` fallback; changed condition to `total === 0` for the empty-shop case.
+  **Impact:** New orgs see correct "No work orders open yet" message.
+
+- **BUG-SM-HUNT-029** — `promisedDeliveryDate` (stored as UTC midnight) was formatted with `formatDate()` (local timezone) across 5 files: WO list, WO dashboard, lead workspace, my-work, and schedule health widget. Users in UTC-negative timezones (e.g., US Eastern) saw delivery dates shifted one day early (Feb 15 UTC midnight → Feb 14 at 7pm EST).
+  **Files:** `work-orders/page.tsx`, `work-orders/dashboard/page.tsx`, `work-orders/lead/page.tsx`, `my-work/page.tsx`, `dashboard/_components/ScheduleHealthWidget.tsx`
+  **Fix:** Switched all `promisedDeliveryDate` formatting to `formatDateUTC()`.
+  **Impact:** Delivery dates display correctly in all US timezones.
+
 - **BUG-QCM-HUNT-135** — Compliance main page was missing an Audit Readiness link in the Compliance Tools grid. The Audit Readiness dashboard — a critical pre-audit preparation tool with readiness scores, timeline, and checklist — was only accessible via the sidebar. A QCM inspector preparing for an FAA audit would not discover it from the compliance hub.
   **File:** `app/(app)/compliance/page.tsx`
   **Impact:** QCM Inspector can't navigate to Audit Readiness from the compliance dashboard.

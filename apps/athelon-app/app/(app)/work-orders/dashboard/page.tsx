@@ -11,7 +11,7 @@ import {
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
-import { formatDate } from "@/lib/format";
+import { formatDate, formatDateUTC } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -223,7 +223,10 @@ export default function WorkOrderDashboardPage() {
                         </Badge>
                       </div>
                       <div className="text-[11px] text-muted-foreground mt-1">
-                        RTS target: {row.promisedDeliveryDate ? formatDate(row.promisedDeliveryDate) : "Not set"}
+                        {/* BUG-SM-HUNT-029: promisedDeliveryDate is stored as UTC midnight.
+                            formatDate() uses local timezone, showing the wrong day in UTC-
+                            negative zones (e.g., Feb 15 UTC midnight → Feb 14 at 7pm EST). */}
+                        RTS target: {row.promisedDeliveryDate ? formatDateUTC(row.promisedDeliveryDate) : "Not set"}
                       </div>
                     </div>
                     <div className="w-full sm:w-[360px]">

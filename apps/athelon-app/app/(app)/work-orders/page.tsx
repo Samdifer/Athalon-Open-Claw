@@ -23,7 +23,7 @@ import {
 } from "lucide-react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
-import { formatDate } from "@/lib/format";
+import { formatDate, formatDateUTC } from "@/lib/format";
 import {
   WO_STATUS_LABEL,
   WO_STATUS_STYLES,
@@ -843,7 +843,7 @@ export default function WorkOrdersPage() {
                               <span className={`text-[11px] flex items-center gap-1 ${dueDateColor}`}>
                                 <RiskIcon risk={risk} />
                                 <Calendar className="w-3 h-3" />
-                                Due {formatDate(wo.promisedDeliveryDate)}
+                                Due {formatDateUTC(wo.promisedDeliveryDate)}
                               </span>
                             </>
                           );

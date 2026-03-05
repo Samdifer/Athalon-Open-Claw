@@ -16,7 +16,7 @@ import { toast } from "sonner";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
-import { formatDate } from "@/lib/format";
+import { formatDate, formatDateUTC } from "@/lib/format";
 import {
   WO_STATUS_LABEL,
   WO_STATUS_STYLES,
@@ -491,7 +491,7 @@ export default function WorkOrderLeadWorkspacePage() {
                   </Badge>
                   <span className="text-xs text-muted-foreground">
                     {workOrder.promisedDeliveryDate
-                      ? `RTS ${formatDate(workOrder.promisedDeliveryDate)}`
+                      ? `RTS ${formatDateUTC(workOrder.promisedDeliveryDate)}`
                       : "No RTS date"}
                   </span>
                   <span className="text-xs text-muted-foreground">
