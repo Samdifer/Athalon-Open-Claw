@@ -12,6 +12,8 @@ import {
   FileSearch,
   PlaneTakeoff,
   ClipboardList,
+  ClipboardCheck,
+  Trophy,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -110,17 +112,60 @@ export default function CompliancePage() {
             Fleet-wide airworthiness directive compliance status
           </p>
         </div>
-        <Button
-          asChild
-          variant="outline"
-          size="sm"
-          className="h-8 gap-1.5 text-xs border-border/60 w-full sm:w-auto"
-        >
-          <Link to="/compliance/audit-trail">
-            <FileSearch className="w-3.5 h-3.5" />
-            Audit Trail
-          </Link>
-        </Button>
+        {/* BUG-QCM-HUNT-138: Compliance dashboard header only had a single
+            "Audit Trail" button. Every compliance subpage has quick-access
+            buttons to its siblings (established in BUG-QCM-F4 and BUG-QCM-055).
+            The main Compliance page — the hub — was the only one missing links
+            to AD/SB Tracking, Audit Readiness, and QCM Review. A QCM inspector
+            landing here had to scroll down to the Compliance Tools section to
+            navigate, missing the header shortcut pattern they learned on every
+            other page. Added the full set of sibling links. */}
+        <div className="flex items-center gap-2 flex-shrink-0 flex-wrap">
+          <Button
+            asChild
+            variant="outline"
+            size="sm"
+            className="h-8 gap-1.5 text-xs border-border/60"
+          >
+            <Link to="/compliance/ad-sb">
+              <ShieldAlert className="w-3.5 h-3.5" />
+              AD/SB Tracking
+            </Link>
+          </Button>
+          <Button
+            asChild
+            variant="outline"
+            size="sm"
+            className="h-8 gap-1.5 text-xs border-border/60"
+          >
+            <Link to="/compliance/audit-trail">
+              <FileSearch className="w-3.5 h-3.5" />
+              Audit Trail
+            </Link>
+          </Button>
+          <Button
+            asChild
+            variant="outline"
+            size="sm"
+            className="h-8 gap-1.5 text-xs border-border/60"
+          >
+            <Link to="/compliance/audit-readiness">
+              <ClipboardCheck className="w-3.5 h-3.5" />
+              Audit Readiness
+            </Link>
+          </Button>
+          <Button
+            asChild
+            variant="outline"
+            size="sm"
+            className="h-8 gap-1.5 text-xs border-border/60"
+          >
+            <Link to="/compliance/qcm-review">
+              <ClipboardList className="w-3.5 h-3.5" />
+              QCM Review
+            </Link>
+          </Button>
+        </div>
       </div>
 
       {/* Fleet stats */}
@@ -258,6 +303,50 @@ export default function CompliancePage() {
                     <p className="text-xs font-medium">Fleet Management</p>
                     <p className="text-[11px] text-muted-foreground mt-0.5">
                       Manage aircraft and per-aircraft AD records
+                    </p>
+                  </div>
+                </Link>
+              </Button>
+
+              {/* BUG-QCM-HUNT-135: Audit Readiness page was unreachable from the
+                  main compliance dashboard. Every other compliance subpage (AD/SB,
+                  Audit Trail, QCM Review) was linked here, but the Audit Readiness
+                  dashboard — a critical pre-audit preparation tool — was only
+                  accessible via the sidebar or direct URL. A QCM inspector preparing
+                  for an upcoming FAA audit would not discover it from this page. */}
+              <Button
+                asChild
+                variant="outline"
+                className="justify-start h-auto py-3 px-4 border-border/60"
+              >
+                <Link to="/compliance/audit-readiness" className="flex items-start gap-3">
+                  <ClipboardCheck className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-0.5" />
+                  <div className="text-left">
+                    <p className="text-xs font-medium">Audit Readiness</p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                      Pre-audit score, compliance timeline, and readiness checklist
+                    </p>
+                  </div>
+                </Link>
+              </Button>
+
+              {/* BUG-QCM-HUNT-136: Diamond Award page was unreachable from the
+                  compliance dashboard. The FAA Diamond Award of Excellence tracks
+                  technician training hours — a compliance metric that belongs in
+                  this section. QCMs and DOMs preparing for audits need to verify
+                  training compliance; hiding the Diamond Award page behind only
+                  sidebar navigation means they may miss it entirely. */}
+              <Button
+                asChild
+                variant="outline"
+                className="justify-start h-auto py-3 px-4 border-border/60"
+              >
+                <Link to="/compliance/diamond-award" className="flex items-start gap-3">
+                  <Trophy className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-0.5" />
+                  <div className="text-left">
+                    <p className="text-xs font-medium">Diamond Award Tracking</p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                      FAA Diamond Award of Excellence progress by technician
                     </p>
                   </div>
                 </Link>

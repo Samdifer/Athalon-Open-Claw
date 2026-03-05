@@ -146,8 +146,18 @@ export default function ReleaseAircraftPage() {
 
   const releaseAircraft = useMutation(api.gapFixes.releaseAircraftToCustomer);
 
-  const [aircraftTotalTime, setAircraftTotalTime] = useState<string>("");
-  const [pickupNotes, setPickupNotes] = useState<string>("");
+  // BUG-QCM-HUNT-140: Wrapped setters to auto-clear the error message when
+  // the user changes any form input. Previously, after a validation error
+  // (e.g. "Aircraft total time cannot decrease"), the red error banner persisted
+  // even while the user corrected their input — staying visible until they
+  // clicked Submit again. A QCM or shop manager seeing a persistent red error
+  // while actively typing a correction is confusing: they don't know if the
+  // error still applies or if it's stale. Now: any input change dismisses the
+  // error immediately so the user gets clean visual feedback.
+  const [aircraftTotalTime, setAircraftTotalTimeRaw] = useState<string>("");
+  const setAircraftTotalTime = (v: string) => { setError(null); setAircraftTotalTimeRaw(v); };
+  const [pickupNotes, setPickupNotesRaw] = useState<string>("");
+  const setPickupNotes = (v: string) => { setError(null); setPickupNotesRaw(v); };
   const [customerSignature, setCustomerSignature] = useState<string>("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);

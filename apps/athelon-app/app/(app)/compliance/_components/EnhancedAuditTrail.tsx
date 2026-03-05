@@ -7,6 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export type AuditEventRow = {
   id: string;
@@ -114,19 +121,30 @@ export function EnhancedAuditTrail({ events }: Props) {
           </div>
         </div>
 
+        {/* BUG-QCM-HUNT-137: Previously used a raw <select> element for the
+            "Group by" dropdown — the only unstyled native HTML control in the
+            entire compliance section. Every other dropdown across the app uses
+            shadcn's Select component. On dark mode, the raw <select> renders
+            with platform-default styling (white background on Windows, grey on
+            macOS) that clashes with the design system. Replaced with shadcn
+            Select for visual consistency and accessible keyboard navigation. */}
         {!timelineMode && (
           <div>
             <Label className="text-xs text-muted-foreground">Group by</Label>
-            <select
+            <Select
               value={groupBy}
-              onChange={(e) => setGroupBy(e.target.value as GroupBy)}
-              className="mt-1 h-8 rounded-md border border-input bg-background px-2 text-xs"
+              onValueChange={(v) => setGroupBy(v as GroupBy)}
             >
-              <option value="workOrder">Work Order</option>
-              <option value="technician">Technician</option>
-              <option value="date">Date</option>
-              <option value="eventType">Event Type</option>
-            </select>
+              <SelectTrigger className="mt-1 h-8 w-48 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="workOrder" className="text-xs">Work Order</SelectItem>
+                <SelectItem value="technician" className="text-xs">Technician</SelectItem>
+                <SelectItem value="date" className="text-xs">Date</SelectItem>
+                <SelectItem value="eventType" className="text-xs">Event Type</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         )}
 

@@ -53,9 +53,19 @@ export function RTSEvidenceSummary({
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <CardTitle className="text-sm font-semibold">RTS Evidence Summary</CardTitle>
-          <Badge variant="outline" className={ready ? "text-green-500 border-green-500/40" : "text-amber-500 border-amber-500/40"}>
-            {ready ? "Ready for RTS" : "Not Ready"}
-          </Badge>
+          <div className="flex items-center gap-2">
+            {/* BUG-QCM-HUNT-139: Previously showed only a "Ready"/"Not Ready"
+                badge with no indication of progress. A QCM with 4/6 checks
+                passing had to count the individual icons to understand how
+                close the WO was to release readiness. Added a pass count so
+                the QCM can instantly gauge progress without scanning each row. */}
+            <span className="text-[11px] text-muted-foreground font-mono">
+              {checks.filter((c) => c.passed).length}/{checks.length}
+            </span>
+            <Badge variant="outline" className={ready ? "text-green-500 border-green-500/40" : "text-amber-500 border-amber-500/40"}>
+              {ready ? "Ready for RTS" : "Not Ready"}
+            </Badge>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
