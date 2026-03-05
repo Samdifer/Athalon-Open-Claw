@@ -194,11 +194,17 @@ export default function OTCSalesPage() {
       });
       setLastSaleId(saleId);
       setReceiptDialog(true);
-      // Reset
+      // Reset all POS state so the next sale starts clean
       setCart([]);
       setCustomerName("");
       setCustomerEmail("");
       setNotes("");
+      // BUG-BM-HUNT-131: Reset tax rate and payment method after completing a sale.
+      // Without this, the next sale silently inherits the previous sale's tax rate
+      // and payment method — e.g. a cash customer gets charged with "on account",
+      // or a tax-exempt walk-in gets taxed at the previous customer's rate.
+      setSelectedTaxRateId("");
+      setPaymentMethod("cash");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to complete sale — please try again");
     } finally {

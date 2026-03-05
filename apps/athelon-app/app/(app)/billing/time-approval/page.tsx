@@ -153,9 +153,28 @@ export default function TimeApprovalPage() {
     return entries.filter((entry) => (entry.technicianId as string) === techFilter);
   };
 
-  const filteredPending = useMemo(() => applyTechFilter(applyContextFilter(pending)), [pending, contextFilter, techFilter]);
-  const filteredApproved = useMemo(() => applyTechFilter(applyContextFilter(approved)), [approved, contextFilter, techFilter]);
-  const filteredRejected = useMemo(() => applyTechFilter(applyContextFilter(rejected)), [rejected, contextFilter, techFilter]);
+  // BUG-BM-HUNT-127: Inline filter logic directly in useMemos instead of depending
+  // on applyContextFilter/applyTechFilter — those are plain functions recreated every
+  // render, which defeated memoization and caused unnecessary recomputation on every
+  // render. With hundreds of time entries this caused visible jank.
+  const filteredPending = useMemo(() => {
+    let items = pending ?? [];
+    if (contextFilter !== "all") items = items.filter((e) => (e.entryType ?? "work_order") === contextFilter);
+    if (techFilter !== "all") items = items.filter((e) => (e.technicianId as string) === techFilter);
+    return items;
+  }, [pending, contextFilter, techFilter]);
+  const filteredApproved = useMemo(() => {
+    let items = approved ?? [];
+    if (contextFilter !== "all") items = items.filter((e) => (e.entryType ?? "work_order") === contextFilter);
+    if (techFilter !== "all") items = items.filter((e) => (e.technicianId as string) === techFilter);
+    return items;
+  }, [approved, contextFilter, techFilter]);
+  const filteredRejected = useMemo(() => {
+    let items = rejected ?? [];
+    if (contextFilter !== "all") items = items.filter((e) => (e.entryType ?? "work_order") === contextFilter);
+    if (techFilter !== "all") items = items.filter((e) => (e.technicianId as string) === techFilter);
+    return items;
+  }, [rejected, contextFilter, techFilter]);
 
   const isLoading = !isLoaded || pending === undefined;
 
@@ -495,6 +514,7 @@ export default function TimeApprovalPage() {
                       <TableHead className="text-xs">Clock Out</TableHead>
                       <TableHead className="text-xs">Duration</TableHead>
                       <TableHead className="text-xs">Rejection Reason</TableHead>
+                      <TableHead className="text-xs">Rejected By</TableHead>
                       <TableHead className="text-xs">Rejected At</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -512,6 +532,12 @@ export default function TimeApprovalPage() {
                         <TableCell className="text-xs text-muted-foreground">{fmtDuration(entry.clockInAt, entry.clockOutAt)}</TableCell>
                         <TableCell className="text-xs text-muted-foreground max-w-[160px] truncate">
                           {(entry as { rejectionReason?: string }).rejectionReason ?? "—"}
+                        </TableCell>
+                        {/* BUG-BM-HUNT-128: Show who rejected so billing manager has an audit trail */}
+                        <TableCell className="text-xs font-medium text-foreground truncate max-w-[120px]">
+                          {(entry as { rejectedByTechId?: string }).rejectedByTechId
+                            ? resolveTech((entry as { rejectedByTechId: string }).rejectedByTechId)
+                            : "—"}
                         </TableCell>
                         <TableCell className="text-xs text-muted-foreground">{fmtTs((entry as { rejectedAt?: number }).rejectedAt)}</TableCell>
                       </TableRow>

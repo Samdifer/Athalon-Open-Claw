@@ -187,7 +187,15 @@ export default function InvoiceDetailPage() {
   const isLoading = !isLoaded || invoice === undefined;
 
   const handleSend = async () => {
-    if (!orgId) return;
+    if (!orgId || !invoice) return;
+    // BUG-BM-HUNT-129: Prevent sending an invoice with no line items or $0 total.
+    // Without this guard, a billing manager could accidentally send an empty invoice
+    // to a customer — embarrassing and creates accounting cleanup work.
+    if (invoice.total <= 0) {
+      setError("Cannot send a $0.00 invoice. Add line items before sending.");
+      toast.error("Invoice has no billable amount. Add line items first.");
+      return;
+    }
     setActionLoading("send"); setError(null);
     try {
       await sendInvoice({ orgId, invoiceId });

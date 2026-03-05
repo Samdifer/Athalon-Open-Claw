@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -207,6 +207,15 @@ function ClaimDetailDialog({
   const [approvedAmount, setApprovedAmount] = useState("");
   const [resolution, setResolution] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
+
+  // BUG-BM-HUNT-130: Reset form state when switching between claims.
+  // Without this, approvedAmount and resolution from a previous claim leak into the
+  // next one — billing manager could accidentally approve Claim B for Claim A's amount.
+  useEffect(() => {
+    setApprovedAmount("");
+    setResolution("");
+    setActionLoading(false);
+  }, [claimId]);
 
   if (!claimId) return null;
 
