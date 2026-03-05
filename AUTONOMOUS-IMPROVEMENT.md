@@ -14,4 +14,6 @@
 | 6 | 2026-03-05 | Shop Manager | BUG-SM-HUNT-030 through BUG-SM-HUNT-034 |
 | 7 | 2026-03-05 | Parts Clerk | BUG-PC-HUNT-120 through BUG-PC-HUNT-123 |
 
-**Next up:** QCM Inspector
+| 8 | 2026-03-05 | QCM Inspector | BUG-QCM-HUNT-160 through BUG-QCM-HUNT-164 |
+
+**Next up:** DOM (Director of Maintenance)

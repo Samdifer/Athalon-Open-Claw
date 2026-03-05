@@ -257,3 +257,35 @@
 - **What was broken:** The request lifecycle is: requested → ordered → shipped → received → issued. But the queue only had tabs for All/Pending/Ordered/Received — no Shipped tab. A parts clerk tracking inbound vendor shipments couldn't filter to just shipped items. Additionally, the "ordered" status had no "Mark Shipped" transition button, so clerks had to skip directly from "ordered" to "received" — losing the shipped tracking state entirely.
 - **Fix:** Added "Shipped" tab with filter, added "Mark Shipped" button for ordered requests.
 - **Impact:** Complete request lifecycle tracking; clerks can now see what's en route vs. what's still on order.
+
+### Bug Hunter Opus — QCM Inspector Cycle 8 (2026-03-05)
+
+**BUG-QCM-HUNT-160: ComplianceTimeline silently truncates at 12 items with no indicator**
+- **File:** `app/(app)/compliance/_components/ComplianceTimeline.tsx`
+- **What was broken:** The timeline always showed `sorted.slice(0, 12)` with no indication that more deadlines existed. A QCM with 50 upcoming AD, training, and calibration deadlines saw only the nearest 12 and had no way to know 38 more existed — potentially missing critical regulatory due dates that fell just outside the visible window.
+- **Fix:** Added "Showing 12 of N deadlines" indicator when truncated, plus a "Show all N deadlines" / "Show fewer" toggle button so the QCM can expand the full list when needed.
+- **Impact:** QCM can now see all upcoming deadlines for complete audit preparation.
+
+**BUG-QCM-HUNT-161: Diamond Award table has no empty state when department filter yields 0 rows**
+- **File:** `app/(app)/compliance/diamond-award/page.tsx`
+- **What was broken:** Selecting a department with no technicians rendered an empty `<tbody>` with column headers and no rows — looked broken. No message explaining why the table is empty or how to fix it.
+- **Fix:** Added "No technicians match the current filters" empty state row spanning all 5 columns.
+- **Impact:** QCM and DOM no longer see a blank table that looks like a loading bug.
+
+**BUG-QCM-HUNT-162: Diamond Award table unsorted — techs in database insertion order**
+- **File:** `app/(app)/compliance/diamond-award/page.tsx`
+- **What was broken:** Technician rows appeared in arbitrary Convex insertion order. A QCM reviewing Diamond Award progress to assign training couldn't quickly identify who needed the most attention — they had to visually scan all rows and compare hours.
+- **Fix:** Sorted rows ascending by eligible hours so least-trained techs (most needing training) appear first.
+- **Impact:** QCM can immediately identify training gaps and prioritize assignments.
+
+**BUG-QCM-HUNT-163: AuditChecklistGenerator export missing overall readiness score**
+- **File:** `app/(app)/compliance/_components/AuditChecklistGenerator.tsx` + `audit-readiness/page.tsx`
+- **What was broken:** The exported pre-audit checklist text file contained PASS/FAIL per item but no overall readiness score summary. A QCM downloading the checklist for FAA audit prep had to manually count passing items to assess overall readiness.
+- **Fix:** Added optional `overallScore` prop to AuditChecklistGenerator; export now includes "Overall Readiness Score: N%" and "Summary: X/Y checks passing" at the top. Audit readiness page passes the weighted score.
+- **Impact:** Exported checklist is now a complete audit-prep document with score context.
+
+**BUG-QCM-HUNT-164: EnhancedAuditTrail grouped view renders groups in unsorted insertion order**
+- **File:** `app/(app)/compliance/_components/EnhancedAuditTrail.tsx`
+- **What was broken:** Groups appeared in Map insertion order (order of first-seen event per group key). When grouped by "date", the oldest dates appeared first — a QCM auditing recent activity had to scroll past weeks of history to reach today's events. When grouped by "workOrder" or "technician", order was arbitrary.
+- **Fix:** Date groups now sort newest-first; all other groupings sort alphabetically by key.
+- **Impact:** QCM sees the most relevant data first regardless of grouping mode.
