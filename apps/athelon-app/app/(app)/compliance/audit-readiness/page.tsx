@@ -9,16 +9,20 @@ import { usePagePrereqs } from "@/hooks/usePagePrereqs";
 import {
   AlertTriangle,
   ArrowDownRight,
+  ArrowLeft,
   ArrowRight,
   ArrowUpRight,
   ClipboardCheck,
+  FileSearch,
   FileText,
+  ShieldAlert,
   ShieldCheck,
   Wrench,
   GraduationCap,
   SearchCheck,
   Siren,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -128,7 +132,15 @@ export default function AuditReadinessPage() {
   const toolScore = activeTools.length === 0 ? 100 : clampPct((toolsCurrent / activeTools.length) * 100);
 
   const trackedAds = adSummary?.fleetTotals.trackedAds ?? 0;
-  const problematicAds = (adSummary?.fleetTotals.overdueAds ?? 0) + (adSummary?.fleetTotals.pendingAds ?? 0);
+  // BUG-QCM-HUNT-130: problematicAds previously summed only overdueAds + pendingAds,
+  // ignoring notCompliedAds (ADs that were never performed). An aircraft with 4
+  // never-performed ADs but 0 date-overrun ADs would show an AD Compliance score
+  // of 100% — grossly misleading for a QCM preparing for an audit. Those ADs block
+  // RTS just as hard as overdue ones and should penalize the readiness score equally.
+  // Now includes notCompliedAds via the same defensive type-cast used throughout
+  // the compliance section (backend field exists but isn't in the TS surface yet).
+  const notCompliedAds = (adSummary?.fleetTotals as unknown as Record<string, number> | undefined)?.["notCompliedAds"] ?? 0;
+  const problematicAds = (adSummary?.fleetTotals.overdueAds ?? 0) + notCompliedAds + (adSummary?.fleetTotals.pendingAds ?? 0);
   const adScore = trackedAds === 0 ? 100 : clampPct(((trackedAds - problematicAds) / trackedAds) * 100);
 
   const workspaceWarningPenalty = Math.min((stationWorkspace?.warnings?.length ?? 0) * 20, 100);
@@ -258,7 +270,14 @@ export default function AuditReadinessPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between gap-4">
+      {/* BUG-QCM-HUNT-133: Audit Readiness page was missing cross-navigation links
+          to sibling compliance pages. Every other compliance subpage (ad-sb, audit-trail,
+          qcm-review) has "← Compliance", "AD/SB Tracking", "Audit Trail", and "QCM Review"
+          shortcut buttons. The Audit Readiness page had none — a QCM inspector arriving
+          from the compliance dashboard had to use the sidebar or browser back button to
+          navigate to other compliance tools. Added consistent cross-nav matching the
+          pattern established in BUG-QCM-F4 and BUG-QCM-055. */}
+      <div className="flex flex-col sm:flex-row gap-2 sm:items-start sm:justify-between">
         <div>
           <h1 className="text-xl md:text-2xl font-semibold flex items-center gap-2">
             <ClipboardCheck className="w-5 h-5 text-muted-foreground" />
@@ -266,7 +285,52 @@ export default function AuditReadinessPage() {
           </h1>
           <p className="text-sm text-muted-foreground mt-1">Aggregated readiness metrics, deadline timeline, and pre-audit checklist in one view.</p>
         </div>
-        <Badge variant="outline" className="text-xs">/compliance/audit-readiness</Badge>
+        <div className="flex items-center gap-2 flex-shrink-0 flex-wrap">
+          <Button
+            asChild
+            variant="ghost"
+            size="sm"
+            className="h-8 gap-1.5 text-xs text-muted-foreground"
+          >
+            <Link to="/compliance">
+              <ArrowLeft className="w-3.5 h-3.5" />
+              Compliance
+            </Link>
+          </Button>
+          <Button
+            asChild
+            variant="outline"
+            size="sm"
+            className="h-8 gap-1.5 text-xs border-border/60"
+          >
+            <Link to="/compliance/ad-sb">
+              <ShieldAlert className="w-3.5 h-3.5" />
+              AD/SB Tracking
+            </Link>
+          </Button>
+          <Button
+            asChild
+            variant="outline"
+            size="sm"
+            className="h-8 gap-1.5 text-xs border-border/60"
+          >
+            <Link to="/compliance/audit-trail">
+              <FileSearch className="w-3.5 h-3.5" />
+              Audit Trail
+            </Link>
+          </Button>
+          <Button
+            asChild
+            variant="outline"
+            size="sm"
+            className="h-8 gap-1.5 text-xs border-border/60"
+          >
+            <Link to="/compliance/qcm-review">
+              <SearchCheck className="w-3.5 h-3.5" />
+              QCM Review
+            </Link>
+          </Button>
+        </div>
       </div>
 
       <AuditReadinessScore

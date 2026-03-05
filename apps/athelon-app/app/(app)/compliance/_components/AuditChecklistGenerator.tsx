@@ -1,6 +1,7 @@
 "use client";
 
 import { Link } from "react-router-dom";
+import { CheckCircle2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -63,7 +64,20 @@ export function AuditChecklistGenerator({ items }: { items: ChecklistItem[] }) {
                   to={item.actionHref}
                   className="flex items-center justify-between rounded-md border border-border/50 px-3 py-2 hover:bg-muted/40"
                 >
-                  <span className="text-sm">{item.compliant ? "✅" : "❌"} {item.title}</span>
+                  {/* BUG-QCM-HUNT-131: Previously used emoji (✅/❌) which renders
+                      inconsistently across platforms (Windows vs macOS vs mobile) and
+                      was already fixed in RTSEvidenceSummary (BUG-QCM-HUNT-121). The
+                      pre-audit checklist is the last compliance component still using
+                      emoji — every other status indicator uses Lucide icons. Matching
+                      the icon-only pattern for visual consistency. */}
+                  <span className="text-sm flex items-center gap-1.5">
+                    {item.compliant ? (
+                      <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0" />
+                    ) : (
+                      <XCircle className="w-4 h-4 text-red-500 flex-shrink-0" />
+                    )}
+                    {item.title}
+                  </span>
                   <span className="text-[11px] text-primary">Open</span>
                 </Link>
               ))}

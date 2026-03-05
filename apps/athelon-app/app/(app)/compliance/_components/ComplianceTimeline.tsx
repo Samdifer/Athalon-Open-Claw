@@ -63,12 +63,17 @@ export function ComplianceTimeline({ items }: { items: ComplianceDeadline[] }) {
                       <p className="text-[11px] text-muted-foreground mt-0.5">{item.category} · Due {new Date(item.dueAt).toLocaleDateString("en-US", { timeZone: "UTC" })} (UTC)</p>
                     </div>
                     <Badge className={state.kind === "overdue" ? "bg-rose-500/10 text-rose-500" : state.kind === "soon" ? "bg-amber-500/10 text-amber-500" : "bg-emerald-500/10 text-emerald-500"}>
+                      {/* BUG-QCM-HUNT-134: "future" badge previously showed only "future"
+                          with no day count. An AD due in 31 days looked identical to one
+                          due in 365 days — impossible for the QCM to prioritize upcoming
+                          deadlines or plan audit prep timing. Now shows the actual day
+                          count so the timeline is actionable. */}
                       {state.kind === "overdue" ? (
                         <span className="inline-flex items-center gap-1"><AlertTriangle className="w-3 h-3" /> {Math.abs(state.days)}d overdue</span>
                       ) : state.kind === "soon" ? (
                         <span>{state.days}d</span>
                       ) : (
-                        <span className="inline-flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> future</span>
+                        <span className="inline-flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> {state.days}d</span>
                       )}
                     </Badge>
                   </div>
