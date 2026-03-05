@@ -777,9 +777,14 @@ export default function AircraftDetailPage() {
                   title="Past"
                   count={allPastWOs.length}
                   wos={pastWOs}
-                  emptyMessage="No closed work orders"
+                  emptyMessage="No completed work orders"
                   truncated={pastWOsTruncated}
-                  tailLink={`/work-orders?aircraft=${encodeURIComponent(tailNumber)}&status=closed`}
+                  // BUG-DOM-113: Past WO section includes closed + cancelled records,
+                  // but the "view all" deep link was hardcoded to status=closed.
+                  // DOM users drilling into history missed every cancelled WO and saw
+                  // a lower count than the card header. Route to the "complete" tab
+                  // in Work Orders, which includes closed/cancelled/voided terminal WOs.
+                  tailLink={`/work-orders?aircraft=${encodeURIComponent(tailNumber)}&status=complete`}
                 />
               </>
             )}
@@ -1071,11 +1076,11 @@ function WoSection({
                 to={tailLink}
                 className="block text-xs text-sky-600 dark:text-sky-400 hover:text-sky-500 dark:hover:text-sky-300 underline text-center py-2 border border-border/40 rounded-md bg-muted/20 transition-colors"
               >
-                Showing most recent 20 of {count} closed work orders — view all →
+                Showing most recent 20 of {count} completed work orders — view all →
               </Link>
             ) : (
               <p className="text-xs text-muted-foreground text-center py-2 border border-border/40 rounded-md bg-muted/20">
-                Showing most recent 20 of {count} closed work orders
+                Showing most recent 20 of {count} completed work orders
               </p>
             )
           )}

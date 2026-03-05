@@ -101,6 +101,21 @@ This file is the markdown-authoritative source of truth for feature status, impl
   **Fix:** Guarded `tail` route param before decoding and defaulted safely when missing.  
   **Why it matters:** DOM oversight/logbook access remains resilient even when links are malformed or manually edited.
 
+- **BUG-DOM-113** — Aircraft detail “Past” work-order history included cancelled WOs in-count, but the “view all” link filtered to `status=closed`, hiding cancelled records and creating count mismatch.  
+  **File:** `app/(app)/fleet/[tail]/page.tsx`  
+  **Fix:** Updated deep link to `status=complete` (terminal bucket), and updated empty/summary copy from “closed” to “completed” to match actual dataset.  
+  **Why it matters:** DOM can trust that fleet history counts and drill-down lists reflect the same completed WO population.
+
+- **BUG-DOM-114** — Fleet “Clear Filters” reset search/filter chips but left sort mode active (e.g., “Status”), so the list stayed non-default after reset.  
+  **File:** `app/(app)/fleet/page.tsx`  
+  **Fix:** Reset `sortKey` to default registration sorting inside the existing clear action.  
+  **Why it matters:** “Clear Filters” now truly restores baseline fleet view, reducing triage confusion during morning dispatch checks.
+
+- **BUG-DOM-115** — Predictions page assumed severity enum always matched known values; unexpected/stale severity strings could break summary math and crash card rendering.  
+  **File:** `app/(app)/fleet/predictions/page.tsx`  
+  **Fix:** Added defensive severity guards in summary counting and fallback card styling (`medium`) for unknown severities.  
+  **Why it matters:** DOM still gets actionable prediction visibility instead of a hard UI failure when legacy/migrated data is imperfect.
+
 - **BUG-QCM-HUNT-001** — RTS authorization page could hang in an endless loading skeleton when org context was missing or still loading.  
   **File:** `app/(app)/work-orders/[id]/rts/page.tsx`  
   **Fix:** Added explicit org context guards (`isLoaded` spinner + onboarding empty state) before report rendering.  

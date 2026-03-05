@@ -158,7 +158,9 @@ export default function PredictionsPage() {
     const active = predictions.filter((p) => p.status === "active");
     const counts = { critical: 0, high: 0, medium: 0, low: 0, nextDate: null as number | null };
     for (const p of active) {
-      counts[p.severity as Severity]++;
+      if (p.severity in counts) {
+        counts[p.severity as Severity]++;
+      }
       if (!counts.nextDate || p.predictedDate < counts.nextDate) {
         counts.nextDate = p.predictedDate;
       }
@@ -500,7 +502,14 @@ export default function PredictionsPage() {
           ) : (
             <div className="grid gap-4">
               {filtered.map((pred) => {
-                const sev = SEVERITY_CONFIG[pred.severity as Severity];
+                // BUG-DOM-115: Prediction cards assumed every severity value was one of
+                // critical/high/medium/low. If backend data contains an unknown severity
+                // (stale enum, migration artifact, bad import), sev becomes undefined and
+                // the page crashes while rendering cards. Fall back to "medium" styling
+                // so DOM users can still review and action the prediction.
+                const sev =
+                  SEVERITY_CONFIG[pred.severity as Severity] ??
+                  SEVERITY_CONFIG.medium;
                 const ac = aircraftMap.get(pred.aircraftId);
                 const SevIcon = sev.icon;
 

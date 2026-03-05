@@ -832,11 +832,15 @@ export default function FleetPage() {
               size="sm"
               className="mt-3"
               onClick={() => {
+                // BUG-DOM-114: "Clear Filters" left sort mode untouched (e.g., "Status"),
+                // so the list still looked non-default after reset. DOM users expect a
+                // full return-to-baseline view when clearing all filters.
                 setSearchTerm("");
                 setScheduleFilter("all");
                 setClassFilter("all");
                 setMakeFilter("all");
                 setModelFilter("all");
+                setSortKey("registration");
               }}
             >
               Clear Filters
