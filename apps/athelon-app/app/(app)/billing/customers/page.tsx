@@ -97,8 +97,7 @@ export default function CustomersPage() {
         c.name.toLowerCase().includes(q) ||
         (c.companyName?.toLowerCase().includes(q) ?? false) ||
         (c.email?.toLowerCase().includes(q) ?? false) ||
-        (c.phone?.toLowerCase().includes(q) ?? false) ||
-        (c.tailNumbers?.some((t: string) => t.toLowerCase().includes(q)) ?? false),
+        (c.phone?.toLowerCase().includes(q) ?? false),
     );
   }, [customers, search]);
 
@@ -126,7 +125,7 @@ export default function CustomersPage() {
       <div className="relative w-full sm:w-72">
         <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
         <Input
-          placeholder="Search by name, company, email, phone, tail#..."
+          placeholder="Search by name, company, email, phone..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="h-8 pl-8 pr-3 text-xs bg-muted/30 border-border/60"

@@ -118,7 +118,12 @@ function getInvoiceStatusStyle(status: string): { color: string; label: string }
   return map[status] ?? { color: "bg-muted text-muted-foreground border-border/30", label: status };
 }
 
+// BUG-FD-006: Draft WOs were excluded from active statuses, causing them to appear
+// in the "Past" section. A front desk person creating a new WO (which starts as draft)
+// would immediately see it filed under "Past" — confusing and wrong. Drafts are
+// pre-work items that need attention, not completed jobs.
 const ACTIVE_WO_STATUSES = new Set([
+  "draft",
   "open",
   "in_progress",
   "pending_inspection",
@@ -706,6 +711,22 @@ export default function CustomerDetailPage() {
 
         {/* ─── Work Orders Tab ──────────────────────────────────────────── */}
         <TabsContent value="work-orders" className="mt-4 space-y-4">
+          {/* BUG-FD-010: No "New Work Order" action on the customer's WO tab.
+              Front desk needed to navigate away to /work-orders/new and manually
+              find the aircraft. Adding a direct action button. */}
+          {!isLoading && customer && (
+            <div className="flex justify-end">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 text-xs"
+                onClick={() => router.push(`/work-orders/new?customer=${customerId}`)}
+              >
+                <Plus className="w-3 h-3 mr-1" />
+                New Work Order
+              </Button>
+            </div>
+          )}
           {workOrders === undefined ? (
             <Card className="border-border/60">
               <CardContent className="p-6 space-y-3">
@@ -864,11 +885,14 @@ export default function CustomerDetailPage() {
           <Card className="border-border/60">
             <CardHeader className="pb-3 flex flex-row items-center justify-between">
               <CardTitle className="text-sm font-medium">Quotes</CardTitle>
+              {/* BUG-FD-007: "New Quote" button didn't pass the customer ID, forcing
+                  front desk to re-select the customer on the quote creation page.
+                  Now passes customerId as a query param for pre-fill. */}
               <Button
                 variant="outline"
                 size="sm"
                 className="h-7 text-xs"
-                onClick={() => router.push("/billing/quotes/new")}
+                onClick={() => router.push(`/billing/quotes/new?customerId=${customerId}`)}
               >
                 <Plus className="w-3 h-3 mr-1" />
                 New Quote
@@ -945,12 +969,39 @@ export default function CustomerDetailPage() {
         {/* ─── Invoices Tab ─────────────────────────────────────────────── */}
         <TabsContent value="invoices" className="mt-4 space-y-4">
           {/* AR Summary */}
+          {/* BUG-FD-008: AR summary only showed outstanding balance and overdue count
+              but no total billed or total paid. Front desk answering "how much have we
+              billed this customer?" or "how much have they paid?" had to mentally sum
+              the invoice table. Added total billed and total paid cards so the full
+              billing picture is visible at a glance. */}
           {invoices && invoices.length > 0 && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <Card className="border-border/60">
                 <CardContent className="p-4">
-                  <p className="text-xs text-muted-foreground mb-1">Outstanding Balance</p>
+                  <p className="text-xs text-muted-foreground mb-1">Total Billed</p>
                   <p className="text-lg font-semibold text-foreground">
+                    ${(invoices as Record<string, unknown>[]).reduce(
+                      (sum, inv) => sum + ((inv.total as number) ?? 0),
+                      0,
+                    ).toFixed(2)}
+                  </p>
+                </CardContent>
+              </Card>
+              <Card className="border-border/60">
+                <CardContent className="p-4">
+                  <p className="text-xs text-muted-foreground mb-1">Total Paid</p>
+                  <p className="text-lg font-semibold text-green-400">
+                    ${(invoices as Record<string, unknown>[]).reduce(
+                      (sum, inv) => sum + ((inv.amountPaid as number) ?? 0),
+                      0,
+                    ).toFixed(2)}
+                  </p>
+                </CardContent>
+              </Card>
+              <Card className="border-border/60">
+                <CardContent className="p-4">
+                  <p className="text-xs text-muted-foreground mb-1">Outstanding</p>
+                  <p className={`text-lg font-semibold ${outstandingBalance > 0 ? "text-amber-400" : "text-foreground"}`}>
                     ${outstandingBalance.toFixed(2)}
                   </p>
                 </CardContent>
@@ -989,9 +1040,14 @@ export default function CustomerDetailPage() {
                 <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
+                    {/* BUG-FD-009: Invoice table didn't show how much was paid vs
+                        total, making it hard for front desk to verify partial payments.
+                        Added "Paid" column so the full picture (total, paid, remaining)
+                        is visible without clicking into each invoice. */}
                     <TableRow>
                       <TableHead>Invoice #</TableHead>
                       <TableHead>Amount</TableHead>
+                      <TableHead>Paid</TableHead>
                       <TableHead>Balance Due</TableHead>
                       <TableHead>Due Date</TableHead>
                       <TableHead>Status</TableHead>
@@ -1018,6 +1074,9 @@ export default function CustomerDetailPage() {
                           </TableCell>
                           <TableCell className="text-sm">
                             ${((inv.total as number) ?? 0).toFixed(2)}
+                          </TableCell>
+                          <TableCell className="text-sm text-green-400">
+                            ${((inv.amountPaid as number) ?? 0).toFixed(2)}
                           </TableCell>
                           <TableCell className="text-sm font-medium">
                             ${(((inv.total as number) ?? 0) - ((inv.amountPaid as number) ?? 0)).toFixed(2)}
