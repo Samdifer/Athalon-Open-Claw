@@ -922,6 +922,11 @@ export default function DashboardPage() {
     orgId ? { organizationId: orgId } : "skip",
   );
 
+  // BUG-SM-HUNT-019: todayLabel was memoized with no deps `useMemo(fn, [])`,
+  // so it computed once on mount. A shop manager who leaves the dashboard open
+  // past midnight sees yesterday's date all day. Since `workOrdersWithRisk`
+  // changes frequently (Convex live query), keying on its reference identity
+  // triggers a re-evaluation often enough to stay current without adding a timer.
   const todayLabel = useMemo(() => {
     const d = new Date();
     return d.toLocaleDateString("en-US", {
@@ -930,7 +935,8 @@ export default function DashboardPage() {
       day: "numeric",
       year: "numeric",
     });
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [workOrdersWithRisk]);
 
   return (
     <div className="space-y-6">

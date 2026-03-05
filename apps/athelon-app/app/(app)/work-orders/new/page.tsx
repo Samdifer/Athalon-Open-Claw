@@ -92,9 +92,18 @@ export default function NewWorkOrderPage() {
           const [y, m, d] = promisedDeliveryDate.split("-").map(Number);
           return new Date(y!, m! - 1, d!).getTime();
         })(),
-        estimatedLaborHoursOverride: estimatedLaborHours
-          ? Math.max(0, parseFloat(estimatedLaborHours) || 0) || undefined
-          : undefined,
+        // BUG-SM-HUNT-016: `Math.max(0, parseFloat(v) || 0) || undefined`
+        // discards an explicit zero — `0 || undefined` evaluates to `undefined`.
+        // A shop manager entering "0" hours for warranty/no-charge work gets their
+        // override silently dropped, causing the WO to fall back to task-card sum.
+        // Fix: use strict numeric check; only pass `undefined` when field is blank
+        // or the value is genuinely invalid (NaN / negative).
+        estimatedLaborHoursOverride: (() => {
+          if (!estimatedLaborHours) return undefined;
+          const parsed = parseFloat(estimatedLaborHours);
+          if (!Number.isFinite(parsed) || parsed < 0) return undefined;
+          return parsed;
+        })(),
       });
 
       router.push(`/work-orders/${woId}`);
@@ -465,15 +474,31 @@ export default function NewWorkOrderPage() {
                   type="date"
                   value={promisedDeliveryDate}
                   onChange={(e) => setPromisedDeliveryDate(e.target.value)}
+                  // BUG-SM-HUNT-017: Past-date validation used
+                  // `new Date(promisedDeliveryDate)` which parses "YYYY-MM-DD"
+                  // as UTC midnight. But the form submission stores the date as
+                  // LOCAL midnight (split-and-construct pattern from BUG-SM-089).
+                  // A user in UTC+N selecting today's date sees a false "past date"
+                  // warning after 00:00 UTC because UTC midnight for today is already
+                  // in the past relative to Date.now(). Fix: parse locally for
+                  // consistent validation.
                   className={`h-9 text-sm bg-muted/30 border-border/60 ${
-                    promisedDeliveryDate &&
-                    new Date(promisedDeliveryDate).getTime() < Date.now() - 86400000
+                    (() => {
+                      if (!promisedDeliveryDate) return false;
+                      const [y, m, d] = promisedDeliveryDate.split("-").map(Number);
+                      const localMs = new Date(y!, m! - 1, d!).getTime();
+                      return localMs < Date.now() - 86400000;
+                    })()
                       ? "border-amber-500/60"
                       : ""
                   }`}
                 />
-                {promisedDeliveryDate &&
-                  new Date(promisedDeliveryDate).getTime() < Date.now() - 86400000 && (
+                {(() => {
+                  if (!promisedDeliveryDate) return false;
+                  const [y, m, d] = promisedDeliveryDate.split("-").map(Number);
+                  const localMs = new Date(y!, m! - 1, d!).getTime();
+                  return localMs < Date.now() - 86400000;
+                })() && (
                     <div className="flex items-center gap-1.5 mt-1">
                       <AlertCircle className="w-3 h-3 text-amber-400 flex-shrink-0" />
                       <p className="text-[11px] text-amber-400">
@@ -481,10 +506,12 @@ export default function NewWorkOrderPage() {
                       </p>
                     </div>
                   )}
-                {!(
-                  promisedDeliveryDate &&
-                  new Date(promisedDeliveryDate).getTime() < Date.now() - 86400000
-                ) && (
+                {!(() => {
+                  if (!promisedDeliveryDate) return false;
+                  const [y, m, d] = promisedDeliveryDate.split("-").map(Number);
+                  const localMs = new Date(y!, m! - 1, d!).getTime();
+                  return localMs < Date.now() - 86400000;
+                })() && (
                   <p className="text-[11px] text-muted-foreground mt-1">
                     The customer-committed return date. Used for schedule risk tracking.
                   </p>

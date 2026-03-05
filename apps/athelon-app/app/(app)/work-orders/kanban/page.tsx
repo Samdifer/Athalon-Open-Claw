@@ -72,6 +72,11 @@ function getKanbanColumn(status: string): KanbanStatus {
 }
 
 // Map kanban column → mutation status (for drop)
+// BUG-SM-HUNT-018: Dragging a `pending_signoff` WO out of "Pending Inspection"
+// and back (or from any column) mapped to `pending_inspection`, silently
+// downgrading QCM sign-off state to regular inspection. The column now maps to
+// `pending_inspection` for most drops, but the drop handler checks the WO's
+// original status and preserves `pending_signoff` if it was already there.
 const COLUMN_TO_STATUS: Record<string, string> = {
   draft: "draft",
   open: "open",
@@ -157,6 +162,15 @@ const WoCard = memo(function WoCard({
           <span className="font-mono text-xs font-semibold text-foreground">
             {wo.workOrderNumber}
           </span>
+          {/* BUG-SM-HUNT-020: pending_signoff WOs were visually identical to
+              pending_inspection in the same kanban column. QCM-ready work
+              orders need a clear badge so the shop manager can distinguish
+              "ready for QCM release" from "waiting for inspector review". */}
+          {wo.status === "pending_signoff" && (
+            <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30 text-[9px] px-1">
+              QCM
+            </Badge>
+          )}
         </div>
         {priorityBadge(wo.priority)}
       </div>
@@ -361,11 +375,19 @@ export default function KanbanPage() {
       return;
     }
 
+    // BUG-SM-HUNT-018: If dropping into "Pending Inspection" column and the WO
+    // was already `pending_signoff`, preserve the sign-off state. Downgrading
+    // from pending_signoff → pending_inspection silently reverts QCM readiness.
+    let resolvedStatus = newStatus;
+    if (columnKey === "pending_inspection" && wo.status === "pending_signoff") {
+      resolvedStatus = "pending_signoff";
+    }
+
     try {
       await updateStatus({
         workOrderId: woId as Id<"workOrders">,
         organizationId: orgId,
-        newStatus: newStatus as "draft" | "open" | "in_progress" | "on_hold" | "pending_inspection" | "pending_signoff" | "open_discrepancies" | "closed" | "cancelled" | "voided",
+        newStatus: resolvedStatus as "draft" | "open" | "in_progress" | "on_hold" | "pending_inspection" | "pending_signoff" | "open_discrepancies" | "closed" | "cancelled" | "voided",
       });
       toast.success(`Moved to ${KANBAN_COLUMNS.find((c) => c.key === columnKey)?.label}`);
     } catch (err) {
