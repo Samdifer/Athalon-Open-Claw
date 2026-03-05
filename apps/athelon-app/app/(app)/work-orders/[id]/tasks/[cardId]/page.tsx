@@ -343,6 +343,21 @@ export default function TaskCardPage() {
   // isSavingComplianceUpdate flag to disable the button while the mutation is
   // in-flight.
   const [isSavingComplianceUpdate, setIsSavingComplianceUpdate] = useState(false);
+  // BUG-LT-HUNT-201: No loading guard on vendor service status update "Save".
+  // Double-clicking fires two concurrent updateVendorServiceMutation calls,
+  // creating duplicate status records and confusing the vendor services audit
+  // trail.
+  const [isSavingVendorUpdate, setIsSavingVendorUpdate] = useState(false);
+  // BUG-LT-HUNT-202: No loading guard on compliance item Remove (×) button.
+  // Double-clicking fires two removeComplianceItemMutation calls — the second
+  // fails with "item not found" and shows an error toast to the QCM, who then
+  // wonders if the first removal also failed.
+  const [removingComplianceId, setRemovingComplianceId] = useState<string | null>(null);
+  // BUG-LT-HUNT-206: No loading guard on Add Compliance Item "Save" button.
+  // Double-clicking creates duplicate compliance items on the task card's audit
+  // trail — a permanent maintenance record under 14 CFR 43.9 that cannot be
+  // easily cleaned up.
+  const [isSavingNewCompliance, setIsSavingNewCompliance] = useState(false);
 
   const taskCards = useQuery(
     api.taskCards.listTaskCardsForWorkOrder,
@@ -453,8 +468,18 @@ export default function TaskCardPage() {
     );
   }
 
+  // BUG-LT-HUNT-204: Finding count previously included ALL discrepancies for
+  // this WO — including "dispositioned" ones (findings that have been evaluated
+  // and resolved). A lead tech who had 7 historical discrepancies (5
+  // dispositioned, 2 open) would see "Findings 7" in the header and assume the
+  // card has 7 active problems, triggering unnecessary alarm and hold-up
+  // conversations with the QCM. Filter to active findings only (open or
+  // under_evaluation) so the badge reflects actionable work remaining. The total
+  // count (including dispositioned) is still visible in the WO discrepancy list.
   const findingCount = (discrepancies ?? []).filter(
-    (d) => String(d.workOrderId ?? "") === workOrderId,
+    (d) =>
+      String(d.workOrderId ?? "") === workOrderId &&
+      d.status !== "dispositioned",
   ).length;
 
   const estimatedHours = taskCard.estimatedHours ?? 0;
@@ -1028,12 +1053,22 @@ export default function TaskCardPage() {
                   summaries, not essays). Character counter added below the
                   textarea so the tech can see how close they are. */}
               <div className="flex-1 space-y-1">
+                {/* BUG-LT-HUNT-205: Disable the textarea while handoff note
+                    submission is in-flight. Previously only the Send button was
+                    disabled via handoffSubmitting — the tech could keep typing
+                    in the textarea while the mutation ran. If the mutation
+                    succeeded, setHandoffNote("") would clear their additional
+                    text with no warning; if it failed, the text was preserved
+                    but the tech had no visual indication the submit was still
+                    processing. Disabling the textarea during submit prevents
+                    text loss and provides clear "I'm busy" feedback. */}
                 <Textarea
                   value={handoffNote}
                   onChange={(e) => setHandoffNote(e.target.value.slice(0, 500))}
                   placeholder="Add a shift handoff note..."
                   rows={2}
                   maxLength={500}
+                  disabled={handoffSubmitting}
                   className="text-xs bg-muted/30 border-border/60 resize-none w-full"
                   aria-label="Shift handoff note"
                 />
@@ -1271,9 +1306,10 @@ export default function TaskCardPage() {
                 // but the button remained visually enabled — user clicks and
                 // nothing happens with no feedback. Include the same guards in
                 // disabled so the button correctly reflects save-ability.
-                disabled={!addReference.trim() || !orgId || !taskCard.workOrderId || !taskCard.aircraftId}
+                disabled={!addReference.trim() || !orgId || !taskCard.workOrderId || !taskCard.aircraftId || isSavingNewCompliance}
                 onClick={async () => {
-                  if (!orgId || !taskCard.workOrderId || !taskCard.aircraftId) return;
+                  if (!orgId || !taskCard.workOrderId || !taskCard.aircraftId || isSavingNewCompliance) return;
+                  setIsSavingNewCompliance(true);
                   try {
                     await addComplianceItemMutation({
                       taskCardId: cardId as Id<"taskCards">,
@@ -1291,10 +1327,16 @@ export default function TaskCardPage() {
                     setAddDescription("");
                   } catch {
                     toast.error("Failed to add compliance item");
+                  } finally {
+                    setIsSavingNewCompliance(false);
                   }
                 }}
               >
-                Save
+                {isSavingNewCompliance ? (
+                  <><Loader2 className="w-3 h-3 mr-1 animate-spin" />Saving…</>
+                ) : (
+                  "Save"
+                )}
               </Button>
             </div>
           </div>
@@ -1364,7 +1406,10 @@ export default function TaskCardPage() {
                         size="sm"
                         className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
                         aria-label="Remove compliance item"
+                        disabled={removingComplianceId === item.id}
                         onClick={async () => {
+                          if (removingComplianceId) return;
+                          setRemovingComplianceId(item.id);
                           try {
                             await removeComplianceItemMutation({
                               itemId: item.id as Id<"taskComplianceItems">,
@@ -1372,10 +1417,16 @@ export default function TaskCardPage() {
                             toast.success("Compliance item removed");
                           } catch {
                             toast.error("Failed to remove compliance item");
+                          } finally {
+                            setRemovingComplianceId(null);
                           }
                         }}
                       >
-                        <X className="w-3 h-3" />
+                        {removingComplianceId === item.id ? (
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                        ) : (
+                          <X className="w-3 h-3" />
+                        )}
                       </Button>
                     )}
                   </div>
@@ -1713,7 +1764,9 @@ export default function TaskCardPage() {
                       <Button
                         size="sm"
                         className="h-7 text-xs"
+                        disabled={isSavingVendorUpdate}
                         onClick={async () => {
+                          if (isSavingVendorUpdate) return;
                           try {
                             const costNum = vendorSvcActualCost.trim()
                               ? parseFloat(vendorSvcActualCost)
@@ -1726,6 +1779,7 @@ export default function TaskCardPage() {
                               toast.error("Actual cost must be a positive number.");
                               return;
                             }
+                            setIsSavingVendorUpdate(true);
                             await updateVendorServiceMutation({
                               id: svc.id as Id<"taskCardVendorServices">,
                               status: vendorSvcUpdateStatus,
@@ -1738,10 +1792,16 @@ export default function TaskCardPage() {
                             setUpdatingVendorSvcId(null);
                           } catch {
                             toast.error("Failed to update vendor service status");
+                          } finally {
+                            setIsSavingVendorUpdate(false);
                           }
                         }}
                       >
-                        Save
+                        {isSavingVendorUpdate ? (
+                          <><Loader2 className="w-3 h-3 mr-1 animate-spin" />Saving…</>
+                        ) : (
+                          "Save"
+                        )}
                       </Button>
                     </div>
                   </div>

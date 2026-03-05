@@ -167,3 +167,35 @@
 - **What was broken:** Customer names in the "Customer Balances" table were plain text. A billing manager chasing collections had to manually navigate to Billing → Customers → search for the name — multiple clicks and context-switching to see that customer's invoice history and contact info.
 - **Fix:** Wrapped customer names in `<Link to="/billing/customers/${cb.customerId}">` for one-click navigation.
 - **Impact:** Faster AR collection workflow — click a delinquent customer, see their full history immediately.
+
+### Cycle 5 — Lead Technician (2026-03-05)
+
+**BUG-LT-HUNT-201: Vendor service status update Save button has no loading guard**
+- **File:** `app/(app)/work-orders/[id]/tasks/[cardId]/page.tsx`
+- **What was broken:** Double-clicking the "Save" button on a vendor service status update fired two concurrent `updateVendorServiceMutation` calls. Both succeeded, creating duplicate status-change records in the vendor services audit trail. A tech reviewing the history would see "Completed" logged twice with identical timestamps — making it unclear if two separate completions happened.
+- **Fix:** Added `isSavingVendorUpdate` state flag. Button is disabled and shows a Loader2 spinner while the mutation is in-flight. Same pattern as `isSavingComplianceUpdate` (BUG-QCM-C19).
+- **Impact:** Clean vendor service audit trail; no duplicate status entries from accidental double-clicks.
+
+**BUG-LT-HUNT-202: Compliance Remove (×) button has no loading guard**
+- **File:** `app/(app)/work-orders/[id]/tasks/[cardId]/page.tsx`
+- **What was broken:** Double-clicking the Remove (×) button on a compliance item fired two `removeComplianceItemMutation` calls. The first succeeded; the second failed with an "item not found" error, showing a red error toast to the QCM. The QCM would then wonder if the first removal also failed and might re-add the item unnecessarily.
+- **Fix:** Added `removingComplianceId` state tracking. Button is disabled and shows Loader2 spinner for the specific item being removed. Guard prevents second mutation from firing.
+- **Impact:** No confusing error toasts on compliance item removal; single clean mutation per click.
+
+**BUG-LT-HUNT-204: Finding count badge includes dispositioned discrepancies**
+- **File:** `app/(app)/work-orders/[id]/tasks/[cardId]/page.tsx`
+- **What was broken:** The "Findings X" badge in the task card header counted ALL discrepancies for the work order, including "dispositioned" ones (findings that have already been evaluated and resolved). A lead tech working a WO with 7 historical discrepancies — 5 already dispositioned, 2 still open — would see "Findings 7" and assume all 7 were active problems requiring attention, triggering unnecessary alarm and conversations with the QCM.
+- **Fix:** Filter findingCount to exclude `status === "dispositioned"` discrepancies. Only "open" and "under_evaluation" findings count toward the badge.
+- **Impact:** Accurate active finding count; no inflated severity perception from resolved history.
+
+**BUG-LT-HUNT-205: Handoff note textarea not disabled during submission**
+- **File:** `app/(app)/work-orders/[id]/tasks/[cardId]/page.tsx`
+- **What was broken:** While the handoff note submit mutation was in-flight, only the Send button was disabled via `handoffSubmitting` — the textarea itself remained editable. A tech could continue typing after clicking "Add". If the mutation succeeded, `setHandoffNote("")` cleared the textarea including the new text they'd typed, losing it silently. If it failed, the tech had no visual feedback the submission was still processing.
+- **Fix:** Added `disabled={handoffSubmitting}` to the Textarea component. Provides clear "I'm busy" feedback and prevents text loss.
+- **Impact:** No silent text loss during handoff note submission; clear processing state.
+
+**BUG-LT-HUNT-206: Add Compliance Item Save button has no loading guard**
+- **File:** `app/(app)/work-orders/[id]/tasks/[cardId]/page.tsx`
+- **What was broken:** Double-clicking the "Save" button on the Add Compliance Item form fired two concurrent `addComplianceItemMutation` calls, creating duplicate compliance items on the task card. These are permanent maintenance records under 14 CFR 43.9 — duplicate AD/SB entries cannot be easily cleaned up and clutter the compliance audit trail.
+- **Fix:** Added `isSavingNewCompliance` state flag. Button is disabled and shows Loader2 spinner while the mutation is in-flight.
+- **Impact:** No duplicate compliance items from accidental double-clicks; clean audit trail.

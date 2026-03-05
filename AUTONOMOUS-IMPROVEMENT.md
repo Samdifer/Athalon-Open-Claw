@@ -9,5 +9,6 @@
 | 3 | 2026-03-05 | DOM (Director of Maintenance) | BUG-DOM-HUNT-140 through BUG-DOM-HUNT-145 |
 
 | 4 | 2026-03-05 | Billing Manager | BUG-BM-HUNT-150 through BUG-BM-HUNT-154 |
+| 5 | 2026-03-05 | Lead Technician | BUG-LT-HUNT-201 through BUG-LT-HUNT-206 |
 
-**Next up:** Lead Technician
+**Next up:** Shop Manager
