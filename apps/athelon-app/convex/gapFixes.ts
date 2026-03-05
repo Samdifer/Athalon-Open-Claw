@@ -904,16 +904,32 @@ export const listStepsRequiringIAReview = query({
       (s) => s.signOffRequiresIa && s.status === "pending"
     );
 
+    // BUG-QCM-IAQ-001: Previously all IA-pending steps were returned regardless
+    // of parent WO status. Steps on closed, voided, or cancelled WOs appeared in
+    // the QCM's IA sign-off queue as actionable items — but clicking "IA Sign Off"
+    // would either navigate to a closed WO (confusing) or fail at the backend
+    // because the task card on a closed WO rejects further sign-offs. A QCM with
+    // 100 historical WOs could see dozens of stale steps cluttering the queue,
+    // making it impossible to find the real pending work. Filter to only WOs in
+    // active states (open, in_progress, pending_signoff) where IA sign-off is
+    // actually possible.
+    const ACTIVE_WO_STATUSES = new Set(["open", "in_progress", "pending_signoff"]);
+
     const results = [];
     for (const step of needsReview) {
       const card = await ctx.db.get(step.taskCardId);
       const wo = card ? await ctx.db.get(card.workOrderId) : null;
+
+      // Skip steps whose parent WO is not in an active/actionable state
+      if (!wo || !ACTIVE_WO_STATUSES.has(wo.status ?? "")) continue;
+
       const ac = step.aircraftId ? await ctx.db.get(step.aircraftId) : null;
       results.push({
         ...step,
         taskCardTitle: card?.title ?? "Unknown",
         taskCardNumber: card?.taskCardNumber ?? "Unknown",
         workOrderNumber: wo?.workOrderNumber ?? "Unknown",
+        workOrderId: wo?._id ?? null,
         aircraftRegistration: ac?.currentRegistration ?? "Unknown",
       });
     }
