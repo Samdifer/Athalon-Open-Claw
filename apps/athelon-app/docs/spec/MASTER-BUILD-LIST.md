@@ -6,6 +6,31 @@ This file is the markdown-authoritative source of truth for feature status, impl
 
 ## Bug Hunter Fixes
 
+- **BUG-PC-HUNT-106** — Receiving Inspection checklist `inspectionDate` defaulted to `new Date().toISOString().slice(0, 10)` (UTC date). A parts clerk in UTC-5 working after 7pm local would see tomorrow's UTC date pre-filled, creating a compliance mismatch between the 8130-3 tag date and the inspection record.
+  **File:** `app/(app)/parts/_components/ReceivingInspection.tsx`
+  **Fix:** Replaced with local calendar date using `getFullYear()/getMonth()/getDate()` pattern (same as BUG-PC-088).
+  **Why it matters:** Inspection dates must match the actual calendar day for audit trail and 8130-3 traceability.
+
+- **BUG-PC-HUNT-107** — Inventory Count page only checked `prereq.state === "loading_context"` but not `"loading_data"`. During the data-loading phase (org resolved, counts query in-flight), the component fell through to the list view and rendered an empty table with no loading indicator — making it look like there were zero inventory counts.
+  **File:** `app/(app)/parts/inventory-count/page.tsx`
+  **Fix:** Added `|| prereq.state === "loading_data"` to match the pattern used on all other Parts pages.
+  **Why it matters:** Parts clerks no longer see a false "no counts" state during normal page load.
+
+- **BUG-PC-HUNT-108** — Core Tracking page stats cards ("Cores Out", "Value Outstanding") were computed from the tab-filtered `cores` query. Switching to the "Received" tab made stats show 0 cores out / $0 outstanding, which is dangerously misleading for a parts clerk trying to get an at-a-glance financial summary.
+  **File:** `app/(app)/parts/cores/page.tsx`
+  **Fix:** Added a separate `allCores` query (no status filter) for stats computation, keeping the filtered query for the table rows.
+  **Why it matters:** Summary cards now always reflect global truth regardless of active status tab.
+
+- **BUG-PC-HUNT-109** — Inventory Count page: the delete confirmation `AlertDialog` was rendered inside the detail view (`if (selectedCountId && countDetail)` block), but the delete button only appears in the list view. Clicking the trash icon on a draft count set `deleteConfirmId` state but the dialog never rendered — completely dead button.
+  **File:** `app/(app)/parts/inventory-count/page.tsx`
+  **Fix:** Moved the delete `AlertDialog` to the list view's render tree so it's always mountable when `deleteConfirmId` is set.
+  **Why it matters:** Parts clerks can now actually delete draft inventory counts from the list view.
+
+- **BUG-PC-HUNT-110** — Loaners page showed a dead-end "No loaner items found" card when search or tab filters returned empty results, with no way to clear the filter or understand why. Unlike other pages that use `ActionableEmptyState` with context-aware actions.
+  **File:** `app/(app)/parts/loaners/page.tsx`
+  **Fix:** Replaced generic `Card` with `ActionableEmptyState` that shows the search term, explains why results are empty, and offers a "Clear Search" / "Show All" / "New Loaner Item" action depending on context.
+  **Why it matters:** Parts clerks searching for a misspelled customer name now get clear feedback and a one-click path forward.
+
 - **BUG-SM-HUNT-016** — New Work Order form `estimatedLaborHoursOverride` silently discarded an explicit "0" value because `0 || undefined` evaluates to `undefined`. A shop manager entering 0 hours for warranty/no-charge work got their override dropped, causing fallback to task-card sum.
   **File:** `app/(app)/work-orders/new/page.tsx`
   **Fix:** Replaced `|| undefined` chain with strict `Number.isFinite` + non-negative guard using an IIFE, so 0 is a valid passthrough.
