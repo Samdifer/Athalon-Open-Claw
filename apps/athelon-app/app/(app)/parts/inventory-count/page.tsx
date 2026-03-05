@@ -156,7 +156,11 @@ export default function InventoryCountPage() {
     }
   };
 
-  if (prereq.state === "loading_context") {
+  // BUG-PC-HUNT-107: Previously only checked "loading_context" — during
+  // "loading_data" (org resolved but counts query still in-flight), the
+  // component fell through to the list view and rendered an empty table
+  // with no loading indicator, making it look like there were no counts.
+  if (prereq.state === "loading_context" || prereq.state === "loading_data") {
     return (
       <div className="space-y-4" data-testid="page-loading-state">
         <Skeleton className="h-8 w-48" />
@@ -482,35 +486,6 @@ export default function InventoryCountPage() {
           </AlertDialogContent>
         </AlertDialog>
 
-        <AlertDialog open={!!deleteConfirmId} onOpenChange={(open) => { if (!open) setDeleteConfirmId(null); }}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Delete this draft count?</AlertDialogTitle>
-              <AlertDialogDescription>
-                This draft inventory count will be permanently removed. This action cannot be undone.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                onClick={async () => {
-                  if (!deleteConfirmId) return;
-                  try {
-                    await deleteCount({ countId: deleteConfirmId });
-                    toast.success("Count deleted");
-                  } catch (err) {
-                    toast.error(err instanceof Error ? err.message : "Failed to delete count");
-                  } finally {
-                    setDeleteConfirmId(null);
-                  }
-                }}
-              >
-                Delete
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
       </div>
     );
   }
@@ -598,6 +573,41 @@ export default function InventoryCountPage() {
           </Table>
         </Card>
       )}
+
+      {/* BUG-PC-HUNT-109: Delete confirmation dialog was previously inside the
+          detail view block, but the delete button only appears in the list view.
+          Clicking the trash icon on a draft count set deleteConfirmId but the
+          dialog never rendered — the button was completely dead. Moved here so
+          it renders in both list and detail contexts. */}
+      <AlertDialog open={!!deleteConfirmId} onOpenChange={(open) => { if (!open) setDeleteConfirmId(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this draft count?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This draft inventory count will be permanently removed. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={async () => {
+                if (!deleteConfirmId) return;
+                try {
+                  await deleteCount({ countId: deleteConfirmId });
+                  toast.success("Count deleted");
+                } catch (err) {
+                  toast.error(err instanceof Error ? err.message : "Failed to delete count");
+                } finally {
+                  setDeleteConfirmId(null);
+                }
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Create Dialog */}
       <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>

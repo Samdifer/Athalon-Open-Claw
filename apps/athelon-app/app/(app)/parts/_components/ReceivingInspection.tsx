@@ -69,9 +69,17 @@ export function ReceivingInspection() {
   const [expectedQty, setExpectedQty] = useState("1");
   const [receivedQty, setReceivedQty] = useState("1");
   const [inspectorName, setInspectorName] = useState("");
-  const [inspectionDate, setInspectionDate] = useState(
-    new Date().toISOString().slice(0, 10),
-  );
+  // BUG-PC-HUNT-106: Use local calendar date (not UTC) for inspection date.
+  // Same issue as BUG-PC-088: a clerk in UTC-5 working after 7pm local would
+  // see tomorrow's UTC date pre-filled, creating a compliance discrepancy
+  // between the 8130-3 signature date and the inspection record.
+  const [inspectionDate, setInspectionDate] = useState(() => {
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  });
   const [notes, setNotes] = useState("");
   const [log, setLog] = useState<LogItem[]>([]);
   const [saving, setSaving] = useState(false);

@@ -337,12 +337,28 @@ export default function LoanersPage() {
       {isLoading ? (
         <div className="space-y-2">{Array.from({ length: 4 }).map((_, i) => <LoanerSkeleton key={i} />)}</div>
       ) : filtered.length === 0 ? (
-        <Card className="border-border/60">
-          <CardContent className="py-16 text-center">
-            <Package className="w-8 h-8 text-muted-foreground/40 mx-auto mb-3" />
-            <p className="text-sm font-medium text-muted-foreground">No loaner items found</p>
-          </CardContent>
-        </Card>
+        /* BUG-PC-HUNT-110: Previously showed a dead-end card with "No loaner
+           items found" and no way to clear the active search or tab filter.
+           A parts clerk searching for a misspelled customer name would have no
+           indication whether the search returned nothing or the system is empty.
+           Now provides clear-filter actions matching other pages' patterns. */
+        <ActionableEmptyState
+          title={search.trim() ? `No loaners matching "${search}"` : `No ${activeTab === "all" ? "" : STATUS_LABELS[activeTab]?.toLowerCase() + " "}loaner items`}
+          missingInfo={
+            search.trim()
+              ? "Try a different search term or clear the filter."
+              : activeTab !== "all"
+                ? "No loaner items have this status. Switch to All to see everything."
+                : "Create your first loaner item to start tracking rentals."
+          }
+          primaryActionLabel={search.trim() ? "Clear Search" : activeTab !== "all" ? "Show All" : "New Loaner Item"}
+          primaryActionType="button"
+          primaryActionTarget={() => {
+            if (search.trim()) setSearch("");
+            else if (activeTab !== "all") setActiveTab("all");
+            else setCreateOpen(true);
+          }}
+        />
       ) : (
         <div className="space-y-2">
           {filtered.map((item) => {

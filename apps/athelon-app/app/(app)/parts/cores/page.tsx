@@ -355,24 +355,34 @@ export default function CoresPage() {
     api.cores.listCores,
     orgId ? { organizationId: orgId, status: tab === "all" ? undefined : tab } : "skip",
   );
+  // BUG-PC-HUNT-108: Stats cards must always reflect global counts regardless
+  // of which status tab is active. Previously stats were derived from the
+  // tab-filtered `cores` query — switching to the "Received" tab made "Cores
+  // Out" show 0 and "Value Outstanding" show $0, which is misleading for a
+  // parts clerk trying to get an at-a-glance summary while reviewing a
+  // specific status. Fetch all cores separately for accurate summary.
+  const allCores = useQuery(
+    api.cores.listCores,
+    orgId ? { organizationId: orgId } : "skip",
+  );
   const overdueCores = useQuery(
     api.cores.listOverdueCores,
     orgId ? { organizationId: orgId } : "skip",
   );
   const prereq = usePagePrereqs({
     requiresOrg: true,
-    isDataLoading: !isLoaded || cores === undefined || overdueCores === undefined,
+    isDataLoading: !isLoaded || cores === undefined || allCores === undefined || overdueCores === undefined,
   });
 
   const stats = useMemo(() => {
-    if (!cores) return { totalOut: 0, valueOutstanding: 0, overdueCount: 0 };
-    const awaitingCores = cores.filter((c) => c.status === "awaiting_return");
+    if (!allCores) return { totalOut: 0, valueOutstanding: 0, overdueCount: 0 };
+    const awaitingCores = allCores.filter((c) => c.status === "awaiting_return");
     return {
       totalOut: awaitingCores.length,
       valueOutstanding: awaitingCores.reduce((s, c) => s + c.coreValue, 0),
       overdueCount: overdueCores?.length ?? 0,
     };
-  }, [cores, overdueCores]);
+  }, [allCores, overdueCores]);
   const coreRows = cores ?? [];
 
   if (prereq.state === "loading_context" || prereq.state === "loading_data") {
