@@ -29,18 +29,24 @@ function QuoteDetail({
 }) {
   const [declining, setDeclining] = useState(false);
   const [declineReason, setDeclineReason] = useState("");
+  const [isApproving, setIsApproving] = useState(false);
+  const [isDeclining, setIsDeclining] = useState(false);
+  const [lineItemPendingId, setLineItemPendingId] = useState<Id<"quoteLineItems"> | null>(null);
 
   const approveQuote = useMutation(api.customerPortal.customerApproveQuote);
   const declineQuote = useMutation(api.customerPortal.customerDeclineQuote);
   const decideLineItem = useMutation(api.customerPortal.customerDecideQuoteLineItem);
 
   const handleApprove = async () => {
+    setIsApproving(true);
     try {
       await approveQuote({ customerId, quoteId: quote._id });
       toast.success("Quote approved successfully.");
       onBack();
     } catch (e: any) {
       toast.error(e.message ?? "Failed to approve quote.");
+    } finally {
+      setIsApproving(false);
     }
   };
 
@@ -50,12 +56,15 @@ function QuoteDetail({
       return;
     }
 
+    setIsDeclining(true);
     try {
-      await declineQuote({ customerId, quoteId: quote._id, declineReason });
+      await declineQuote({ customerId, quoteId: quote._id, declineReason: declineReason.trim() });
       toast.success("Quote declined.");
       onBack();
     } catch (e: any) {
       toast.error(e.message ?? "Failed to decline quote.");
+    } finally {
+      setIsDeclining(false);
     }
   };
 
@@ -63,6 +72,7 @@ function QuoteDetail({
     lineItemId: Id<"quoteLineItems">,
     decision: "approved" | "declined" | "deferred",
   ) => {
+    setLineItemPendingId(lineItemId);
     try {
       await decideLineItem({
         customerId,
@@ -73,6 +83,8 @@ function QuoteDetail({
       toast.success(`Line item ${decision}.`);
     } catch (e: any) {
       toast.error(e.message ?? "Failed to update line item.");
+    } finally {
+      setLineItemPendingId(null);
     }
   };
 
@@ -133,6 +145,11 @@ function QuoteDetail({
                           <Badge variant="outline" className="text-xs mt-0.5">
                             {li.type}
                           </Badge>
+                          {li.discrepancyNumber && (
+                            <Badge variant="outline" className="ml-1 text-xs mt-0.5 font-mono">
+                              {li.discrepancyNumber}
+                            </Badge>
+                          )}
                           {li.customerDecision && (
                             <Badge className="ml-1 text-xs" variant="secondary">
                               {li.customerDecision}
@@ -160,6 +177,7 @@ function QuoteDetail({
                               variant="outline"
                               className="h-7 text-xs text-green-600"
                               onClick={() => handleLineItemDecision(li._id, "approved")}
+                              disabled={lineItemPendingId === li._id || isApproving || isDeclining}
                             >
                               ✓
                             </Button>
@@ -168,6 +186,7 @@ function QuoteDetail({
                               variant="outline"
                               className="h-7 text-xs text-red-600"
                               onClick={() => handleLineItemDecision(li._id, "declined")}
+                              disabled={lineItemPendingId === li._id || isApproving || isDeclining}
                             >
                               ✗
                             </Button>
@@ -176,6 +195,7 @@ function QuoteDetail({
                               variant="outline"
                               className="h-7 text-xs"
                               onClick={() => handleLineItemDecision(li._id, "deferred")}
+                              disabled={lineItemPendingId === li._id || isApproving || isDeclining}
                             >
                               Defer
                             </Button>
@@ -212,13 +232,18 @@ function QuoteDetail({
             <div className="space-y-3 pt-2">
               {!declining ? (
                 <div className="flex gap-3">
-                  <Button className="flex-1 bg-green-600 hover:bg-green-700" onClick={handleApprove}>
-                    <Check className="w-4 h-4 mr-1" /> Approve Quote
+                  <Button
+                    className="flex-1 bg-green-600 hover:bg-green-700"
+                    onClick={handleApprove}
+                    disabled={isApproving || isDeclining || !!lineItemPendingId}
+                  >
+                    <Check className="w-4 h-4 mr-1" /> {isApproving ? "Approving..." : "Approve Quote"}
                   </Button>
                   <Button
                     variant="outline"
                     className="flex-1 text-red-600 border-red-200 hover:bg-red-50"
                     onClick={() => setDeclining(true)}
+                    disabled={isApproving || isDeclining || !!lineItemPendingId}
                   >
                     <X className="w-4 h-4 mr-1" /> Decline
                   </Button>
@@ -230,13 +255,20 @@ function QuoteDetail({
                     placeholder="Reason for declining..."
                     value={declineReason}
                     onChange={(e) => setDeclineReason(e.target.value)}
+                    maxLength={1000}
                     rows={3}
+                    disabled={isDeclining}
                   />
                   <div className="flex gap-2">
-                    <Button variant="destructive" className="flex-1" onClick={handleDecline}>
-                      Confirm Decline
+                    <Button
+                      variant="destructive"
+                      className="flex-1"
+                      onClick={handleDecline}
+                      disabled={isDeclining || isApproving || !!lineItemPendingId}
+                    >
+                      {isDeclining ? "Declining..." : "Confirm Decline"}
                     </Button>
-                    <Button variant="outline" onClick={() => setDeclining(false)}>
+                    <Button variant="outline" onClick={() => setDeclining(false)} disabled={isDeclining}>
                       Cancel
                     </Button>
                   </div>

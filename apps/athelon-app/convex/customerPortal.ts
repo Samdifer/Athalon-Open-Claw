@@ -592,12 +592,14 @@ export const customerDecideQuoteLineItem = mutation({
       throw new Error(`Decision notes must be ${CUSTOMER_DECISION_NOTES_MAX} characters or less.`);
     }
 
+    const actorName = customer.companyName?.trim() || customer.name;
+
     await ctx.db.patch(args.lineItemId, {
       customerDecision: args.decision,
       customerDecisionNotes: trimmedDecisionNotes || undefined,
       customerDecisionAt: now,
       customerDecisionByUserId: userId,
-      customerDecisionByName: "Customer Portal",
+      customerDecisionByName: actorName,
       updatedAt: now,
     });
 
@@ -609,7 +611,7 @@ export const customerDecideQuoteLineItem = mutation({
       decision: args.decision,
       decisionNotes: trimmedDecisionNotes,
       actorUserId: userId,
-      actorName: "Customer Portal",
+      actorName,
       decidedAt: now,
       createdAt: now,
     });
@@ -623,7 +625,7 @@ export const customerDecideQuoteLineItem = mutation({
       fieldName: "customerDecision",
       oldValue: JSON.stringify(lineItem.customerDecision ?? null),
       newValue: JSON.stringify(args.decision),
-      notes: `Line item decision set to ${args.decision} in customer portal.`,
+      notes: `Line item decision set to ${args.decision} in customer portal by ${actorName}.`,
       timestamp: now,
     });
 
