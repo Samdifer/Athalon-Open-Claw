@@ -8,7 +8,7 @@
 // Parts are created in "pending_inspection" status per INV-23 and must
 // pass receiving inspection before becoming issuable inventory.
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -303,6 +303,18 @@ function Step2EnterData({
       item.receivedQty > 0 &&
       item.isSerialized &&
       item.serialNumbers.some((s) => !s.trim()),
+  );
+
+  // BUG-PC-HUNT-104: Prevent advancing with incomplete receiving metadata.
+  // Previously the wizard allowed blank part number/name (and missing shelf date)
+  // then failed only at final submit with a generic error.
+  const hasRequiredFieldErrors = lineItemsData.some(
+    (item) =>
+      item.isSelected &&
+      item.receivedQty > 0 &&
+      (!item.partNumber.trim() ||
+        !item.partName.trim() ||
+        (item.hasShelfLifeLimit && !item.shelfLifeLimitDate)),
   );
 
   return (
@@ -652,19 +664,26 @@ function Step2EnterData({
       </div>
 
       {/* Navigation */}
-      <div className="flex items-center justify-between pt-2">
-        <Button variant="outline" size="sm" onClick={onBack}>
-          <ChevronLeft className="w-3.5 h-3.5 mr-1" />
-          Back
-        </Button>
-        <Button
-          size="sm"
-          onClick={onNext}
-          disabled={!hasSelectedItems || hasSerialErrors}
-        >
-          Next: Review
-          <ChevronRight className="w-3.5 h-3.5 ml-1" />
-        </Button>
+      <div className="space-y-2 pt-2">
+        {hasRequiredFieldErrors && (
+          <p className="text-xs text-destructive">
+            Complete Part Number, Part Name, and shelf-life date (when required) for all selected lines before review.
+          </p>
+        )}
+        <div className="flex items-center justify-between">
+          <Button variant="outline" size="sm" onClick={onBack}>
+            <ChevronLeft className="w-3.5 h-3.5 mr-1" />
+            Back
+          </Button>
+          <Button
+            size="sm"
+            onClick={onNext}
+            disabled={!hasSelectedItems || hasSerialErrors || hasRequiredFieldErrors}
+          >
+            Next: Review
+            <ChevronRight className="w-3.5 h-3.5 ml-1" />
+          </Button>
+        </div>
       </div>
     </div>
   );
@@ -954,10 +973,14 @@ export default function POReceivingPage() {
     [],
   );
 
-  // When poDetail changes and we're on step 2 with no data, initialize
-  if (step === 2 && poDetail && lineItemsData.length === 0) {
-    initializeLineItems();
-  }
+  // BUG-PC-HUNT-103: Avoid state updates during render.
+  // Initialize step data via effect so React doesn't hit setState-in-render
+  // warnings or duplicate initialization under strict/concurrent rendering.
+  useEffect(() => {
+    if (step === 2 && poDetail && lineItemsData.length === 0) {
+      initializeLineItems();
+    }
+  }, [step, poDetail, lineItemsData.length, initializeLineItems]);
 
   const handleUpdateLineItem = useCallback(
     (index: number, updates: Partial<LineItemReceivingData>) => {

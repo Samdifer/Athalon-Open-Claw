@@ -6,6 +6,21 @@ This file is the markdown-authoritative source of truth for feature status, impl
 
 ## Bug Hunter Fixes
 
+- **BUG-PC-HUNT-103** — PO Receiving initialized line items by calling `setState` during render (`if (step===2) initializeLineItems()`), which risks React render-loop warnings and duplicate initialization under strict/concurrent rendering.  
+  **File:** `app/(app)/parts/receiving/po/page.tsx`  
+  **Fix:** Moved initialization into a `useEffect` tied to `step`, `poDetail`, and `lineItemsData.length`.  
+  **Why it matters:** Parts clerks moving quickly between POs no longer risk unstable wizard behavior from render-time mutations.
+
+- **BUG-PC-HUNT-104** — PO Receiving let users proceed to review with missing core metadata (blank Part Number/Part Name and missing shelf-life date when shelf-life was enabled), then failed late at submit.  
+  **File:** `app/(app)/parts/receiving/po/page.tsx`  
+  **Fix:** Added step-2 required-field validation and blocked `Next: Review` until required receiving fields are complete, with inline operator guidance.  
+  **Why it matters:** Clerks catch incomplete receiving packets immediately instead of losing time on end-of-flow submission failures.
+
+- **BUG-PC-HUNT-105** — Loaner Tracking page could stay stuck in loading skeleton indefinitely when org context was missing because it lacked onboarding/context guards.  
+  **File:** `app/(app)/parts/loaners/page.tsx`  
+  **Fix:** Added `usePagePrereqs` handling with explicit loading and missing-context states plus onboarding recovery empty state.  
+  **Why it matters:** Parts teams now get a clear setup path instead of a dead-end loading screen.
+
 - **BUG-113** — AD/SB compliance page was a navigation dead-end in the QCM flow, with no direct path back to Compliance or forward to Audit Trail/QCM Review.  
   **File:** `app/(app)/compliance/ad-sb/page.tsx`  
   **Fix:** Added header journey navigation buttons (`Compliance`, `Audit Trail`, `QCM Review`) and wired Audit Trail link to carry selected `?aircraft=` context.  

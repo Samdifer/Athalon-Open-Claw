@@ -6,6 +6,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
+import { usePagePrereqs } from "@/hooks/usePagePrereqs";
 import {
   Plus, Search, Package, ChevronDown, ChevronRight, AlertCircle,
   ArrowLeftRight, Loader2,
@@ -26,6 +27,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { formatDate, formatCurrency } from "@/lib/format";
+import { ActionableEmptyState } from "@/components/zero-state/ActionableEmptyState";
 
 type LoanerFilter = "all" | "available" | "loaned_out" | "maintenance" | "retired";
 
@@ -113,6 +115,10 @@ export default function LoanersPage() {
   const [returnForm, setReturnForm] = useState({ conditionIn: "", notes: "" });
 
   const isLoading = !isLoaded || loaners === undefined;
+  const prereq = usePagePrereqs({
+    requiresOrg: true,
+    isDataLoading: isLoading,
+  });
 
   const filtered = useMemo(() => {
     if (!loaners) return [];
@@ -229,6 +235,29 @@ export default function LoanersPage() {
       setIsReturning(false);
     }
   }
+
+  // BUG-PC-HUNT-105: prevent perpetual skeleton when org context is missing.
+  if (prereq.state === "loading_context" || prereq.state === "loading_data") {
+    return (
+      <div className="space-y-2" data-testid="page-loading-state">
+        {Array.from({ length: 4 }).map((_, i) => <LoanerSkeleton key={i} />)}
+      </div>
+    );
+  }
+
+  if (prereq.state === "missing_context") {
+    return (
+      <ActionableEmptyState
+        title="Loaner tracking requires organization setup"
+        missingInfo="Complete onboarding before managing rental and loaner inventory."
+        primaryActionLabel="Complete Setup"
+        primaryActionType="link"
+        primaryActionTarget="/onboarding"
+      />
+    );
+  }
+
+  if (!orgId || !loaners) return null;
 
   return (
     <div className="space-y-5">
