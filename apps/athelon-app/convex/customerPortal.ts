@@ -74,6 +74,11 @@ function safeParseAuditValue(raw: string | undefined): string | null {
   }
 }
 
+const CUSTOMER_REQUEST_SUBJECT_MAX = 120;
+const CUSTOMER_REQUEST_MESSAGE_MAX = 2000;
+const CUSTOMER_DECLINE_REASON_MAX = 1000;
+const STAFF_INTERNAL_RESPONSE_MAX = 2000;
+
 export const getCustomerByEmail = query({
   args: { email: v.string() },
   handler: async (ctx, args) => {
@@ -436,6 +441,11 @@ export const customerApproveQuote = mutation({
     const userId = await requireAuth(ctx);
     const now = Date.now();
 
+    const notes = args.notes?.trim();
+    if (notes && notes.length > STAFF_INTERNAL_RESPONSE_MAX) {
+      throw new Error(`Approval notes must be ${STAFF_INTERNAL_RESPONSE_MAX} characters or less.`);
+    }
+
     const quote = await ctx.db.get(args.quoteId);
     if (!quote) throw new Error("Quote not found.");
     if (quote.customerId !== args.customerId || quote.orgId !== customer.organizationId) {
@@ -460,7 +470,7 @@ export const customerApproveQuote = mutation({
       fieldName: "status",
       oldValue: JSON.stringify("SENT"),
       newValue: JSON.stringify("APPROVED"),
-      notes: `Quote ${quote.quoteNumber} APPROVED via customer portal. ${args.notes ?? ""}`.trim(),
+      notes: `Quote ${quote.quoteNumber} APPROVED via customer portal. ${notes ?? ""}`.trim(),
       timestamp: now,
     });
 
@@ -490,6 +500,9 @@ export const customerDeclineQuote = mutation({
 
     const reason = args.declineReason.trim();
     if (!reason) throw new Error("Decline reason is required.");
+    if (reason.length > CUSTOMER_DECLINE_REASON_MAX) {
+      throw new Error(`Decline reason must be ${CUSTOMER_DECLINE_REASON_MAX} characters or less.`);
+    }
 
     await ctx.db.patch(args.quoteId, {
       status: "DECLINED",
@@ -541,6 +554,11 @@ export const customerDecideQuoteLineItem = mutation({
     const lineItem = await ctx.db.get(args.lineItemId);
     if (!lineItem || lineItem.quoteId !== args.quoteId) {
       throw new Error("Line item not found on this quote.");
+    }
+    if (!lineItem.discrepancyId) {
+      throw new Error(
+        "Line item decisions are only available for discrepancy-originated quote lines.",
+      );
     }
 
     const trimmedDecisionNotes = args.decisionNotes?.trim();
@@ -701,8 +719,14 @@ export const submitCustomerRequest = mutation({
     if (trimmedSubject.length < 3) {
       throw new Error("Subject must be at least 3 characters.");
     }
+    if (trimmedSubject.length > CUSTOMER_REQUEST_SUBJECT_MAX) {
+      throw new Error(`Subject must be ${CUSTOMER_REQUEST_SUBJECT_MAX} characters or less.`);
+    }
     if (trimmedMessage.length < 10) {
       throw new Error("Message must be at least 10 characters.");
+    }
+    if (trimmedMessage.length > CUSTOMER_REQUEST_MESSAGE_MAX) {
+      throw new Error(`Message must be ${CUSTOMER_REQUEST_MESSAGE_MAX} characters or less.`);
     }
 
     if (args.workOrderId) {
@@ -743,7 +767,7 @@ export const submitCustomerRequest = mutation({
       organizationId: customer.organizationId,
       eventType: "record_created",
       tableName: "customerRequests",
-      recordId: requestId,
+      recordId: String(requestId),
       userId: callerUserId,
       notes: `Customer portal request submitted: ${trimmedSubject}`,
       timestamp: now,
@@ -814,9 +838,16 @@ export const updateInboundCustomerRequest = mutation({
       throw new Error("Request not found.");
     }
 
+    const trimmedResponse = args.internalResponse?.trim();
+    if (trimmedResponse && trimmedResponse.length > STAFF_INTERNAL_RESPONSE_MAX) {
+      throw new Error(
+        `Internal response must be ${STAFF_INTERNAL_RESPONSE_MAX} characters or less.`,
+      );
+    }
+
     await ctx.db.patch(args.requestId, {
       status: args.status,
-      internalResponse: args.internalResponse?.trim() || undefined,
+      internalResponse: trimmedResponse || undefined,
       respondedByUserId: args.status === "responded" || args.status === "closed" ? userId : undefined,
       respondedAt: args.status === "responded" || args.status === "closed" ? now : undefined,
       updatedAt: now,
@@ -826,12 +857,12 @@ export const updateInboundCustomerRequest = mutation({
       organizationId: args.organizationId,
       eventType: "record_updated",
       tableName: "customerRequests",
-      recordId: args.requestId,
+      recordId: String(args.requestId),
       userId,
       fieldName: "status",
       oldValue: JSON.stringify(request.status),
       newValue: JSON.stringify(args.status),
-      notes: args.internalResponse?.trim() ? `Response: ${args.internalResponse.trim().slice(0, 300)}` : undefined,
+      notes: trimmedResponse ? `Response: ${trimmedResponse.slice(0, 300)}` : undefined,
       timestamp: now,
     });
 
