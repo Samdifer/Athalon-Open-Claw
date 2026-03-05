@@ -56,7 +56,13 @@ type IAStep = {
 function groupByWorkOrder(steps: IAStep[]): Record<string, IAStep[]> {
   return steps.reduce(
     (acc, step) => {
-      const key = step.workOrderNumber;
+      // BUG-QCM-HUNT-005: Some imported IA step rows can miss workOrderNumber.
+      // Grouping by undefined collapsed multiple WOs into one "undefined" bucket.
+      // Use a stable fallback per linked WO so queue grouping remains trustworthy.
+      const fallbackKey = step.workOrderId
+        ? `WO-${String(step.workOrderId).slice(-6).toUpperCase()}`
+        : "WO-UNKNOWN";
+      const key = step.workOrderNumber?.trim() || fallbackKey;
       if (!acc[key]) acc[key] = [];
       acc[key].push(step);
       return acc;

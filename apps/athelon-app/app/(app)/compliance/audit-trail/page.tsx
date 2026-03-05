@@ -766,13 +766,18 @@ export default function AuditTrailPage() {
                 <Skeleton className="h-9 w-64" />
               ) : (
                 <Select
-                  value={selectedAircraftId ?? ""}
-                  onValueChange={(val) => setSelectedAircraftInUrl(val || null)}
+                  value={selectedAircraftId ?? "__all"}
+                  onValueChange={(val) =>
+                    setSelectedAircraftInUrl(val === "__all" ? null : val)
+                  }
                 >
                   <SelectTrigger className="h-9 w-64 text-xs">
                     <SelectValue placeholder="Choose an aircraft…" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="__all" className="text-xs">
+                      All Aircraft (Fleet Overview)
+                    </SelectItem>
                     {sortedAircraft.length === 0 ? (
                       <SelectItem value="__none" disabled>
                         No aircraft in fleet

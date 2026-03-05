@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 import { useQuery, useMutation } from "convex/react";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
@@ -45,6 +45,12 @@ export default function RtsPage() {
   const [limitations, setLimitations] = useState("");
   const [signatureAuthEventId, setSignatureAuthEventId] = useState(authEventIdFromUrl);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (authEventIdFromUrl.trim()) {
+      setSignatureAuthEventId(authEventIdFromUrl);
+    }
+  }, [authEventIdFromUrl]);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [successRtsId, setSuccessRtsId] = useState<string | null>(null);
 
@@ -102,11 +108,15 @@ export default function RtsPage() {
   // Handle submit
   async function handleAuthorize() {
     if (!orgId || !workOrderId) return;
-    const hours = parseFloat(aircraftHoursAtRts);
-    if (isNaN(hours)) {
-      setSubmitError("Please enter valid aircraft hours.");
+    const parsedHours = Number(aircraftHoursAtRts.trim());
+    // BUG-QCM-HUNT-004: parseFloat accepted malformed strings like "123abc"
+    // and allowed negative values. That can create invalid RTS hour entries and
+    // confusing backend rejections. Require a strict finite, non-negative number.
+    if (!Number.isFinite(parsedHours) || parsedHours < 0) {
+      setSubmitError("Please enter valid non-negative aircraft hours.");
       return;
     }
+    const hours = parsedHours;
     setIsSubmitting(true);
     setSubmitError(null);
     try {

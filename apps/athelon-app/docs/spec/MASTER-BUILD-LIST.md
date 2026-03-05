@@ -6,6 +6,26 @@ This file is the markdown-authoritative source of truth for feature status, impl
 
 ## Bug Hunter Fixes
 
+- **BUG-QCM-HUNT-004** — RTS hours input accepted malformed values like `123abc` (via `parseFloat`) and negative numbers, creating invalid hour entries and late submit failures.
+  **File:** `app/(app)/work-orders/[id]/rts/page.tsx`
+  **Fix:** Replaced permissive parsing with strict numeric validation using `Number(...)`, `Number.isFinite`, and non-negative guard; updated user-facing error copy.
+  **Why it matters:** QCM inspectors can’t accidentally authorize RTS with corrupted total-time values.
+
+- **BUG-QCM-HUNT-005** — IA queue grouping used raw `workOrderNumber` only; null/missing WO numbers collapsed unrelated steps into a single “undefined” bucket.
+  **File:** `app/(app)/compliance/qcm-review/page.tsx`
+  **Fix:** Added stable fallback group keys from `workOrderId` (`WO-<id suffix>`) with a final `WO-UNKNOWN` fallback.
+  **Why it matters:** IA sign-off queue remains correctly grouped per work order even with imperfect imported records.
+
+- **BUG-QCM-HUNT-006** — Audit Trail aircraft selector had no way to clear a selected aircraft and return to fleet-level overview without page reload.
+  **File:** `app/(app)/compliance/audit-trail/page.tsx`
+  **Fix:** Added explicit `All Aircraft (Fleet Overview)` select option and wired it to clear `?aircraft=` context.
+  **Why it matters:** QCM inspectors can smoothly toggle between per-aircraft drill-in and fleet oversight in one workflow.
+
+- **BUG-QCM-HUNT-007** — RTS page only seeded `signatureAuthEventId` from URL on first render; auth redirects that updated query params mid-session could leave stale/empty form state.
+  **File:** `app/(app)/work-orders/[id]/rts/page.tsx`
+  **Fix:** Added effect to sync non-empty `authEventId` query param into signature field state.
+  **Why it matters:** Re-auth handoff is reliable and avoids manual ID re-entry after returning from signature flow.
+
 - **BUG-BH-012** — Quote Workspace “Attention Queue” total added AOG count + sent-quote count, which double-counted the same work order when both conditions applied.
   **File:** `src/shared/components/quote-workspace/QuoteWorkspaceShell.tsx`
   **Fix:** Switched attention metric to a single unique WO filter (`priority === "aog" || quoteStatus === "SENT"`).
