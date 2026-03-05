@@ -6,6 +6,26 @@ This file is the markdown-authoritative source of truth for feature status, impl
 
 ## Bug Hunter Fixes
 
+- **BUG-BM-HUNT-127** — Time Approval page `filteredPending/Approved/Rejected` useMemos depended on inline `applyContextFilter` and `applyTechFilter` functions that were recreated every render. This defeated memoization entirely — with 100+ time entries, the page recomputed all three filtered lists on every state change (checkbox, dialog open, etc.). Inlined the filter logic directly in each useMemo so deps are stable primitives.
+  **File:** `app/(app)/billing/time-approval/page.tsx`
+  **Impact:** Performance — unnecessary O(3n) recomputation on every render; visible jank with large entry counts.
+
+- **BUG-BM-HUNT-128** — Time Approval rejected entries table didn't show who rejected each entry. Multiple managers can reject time entries, but the table only showed the rejection reason and timestamp — no name. Added a "Rejected By" column using `rejectedByTechId` for audit accountability.
+  **File:** `app/(app)/billing/time-approval/page.tsx`
+  **Impact:** Audit gap — billing manager can't trace who rejected a technician's time entry.
+
+- **BUG-BM-HUNT-129** — Invoice detail `handleSend` had no guard against sending a $0 invoice with no line items. A billing manager could create a DRAFT invoice, skip adding line items, and click Send — sending an empty invoice to the customer. Added a pre-flight check on `invoice.total <= 0` with error + toast.
+  **File:** `app/(app)/billing/invoices/[id]/page.tsx`
+  **Impact:** Data integrity — empty invoices sent to customers cause embarrassment and accounting cleanup.
+
+- **BUG-BM-HUNT-130** — Warranty ClaimDetailDialog didn't reset `approvedAmount` and `resolution` state when switching between claims. If a billing manager approved Claim A for $500 with resolution notes, then clicked Claim B, the $500 and notes were pre-filled — risk of approving Claim B with Claim A's values. Added `useEffect` reset on `claimId` change.
+  **File:** `app/(app)/billing/warranty/page.tsx`
+  **Impact:** Billing accuracy — stale form state could cause wrong approval amounts on warranty claims.
+
+- **BUG-BM-HUNT-131** — OTC Counter Sales didn't reset `selectedTaxRateId` or `paymentMethod` after completing a sale. The next sale silently inherited the previous sale's tax rate and payment method (e.g. a cash walk-in gets "on account", or a tax-exempt customer gets taxed at the previous rate). Added resets in the success path.
+  **File:** `app/(app)/billing/otc/page.tsx`
+  **Impact:** Billing accuracy — incorrect tax and payment method applied to subsequent sales.
+
 - **BUG-LT-HUNT-115** — VendorServicePanel localStorage key not scoped by organization. Users belonging to multiple shops would see vendor service data bleed between orgs if WO/task card IDs collide. Same class as BUG-LT-HUNT-102 (TurnoverNotes). Added orgId to the storage key.
   **File:** `app/(app)/work-orders/[id]/tasks/[cardId]/_components/VendorServicePanel.tsx`
   **Impact:** Cross-org vendor data bleed — maintenance records integrity issue.
