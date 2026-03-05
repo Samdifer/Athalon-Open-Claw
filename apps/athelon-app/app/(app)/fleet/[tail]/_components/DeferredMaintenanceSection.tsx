@@ -1,4 +1,8 @@
-"use client";
+// BUG-DOM-125: Removed "use client" — this is a Vite+React app, not Next.js.
+// The directive is dead code here but signals architectural confusion. If
+// copied into a future component, a developer might assume Next.js patterns
+// (server components, RSC) are in play, leading to incorrect assumptions
+// about data fetching and rendering boundaries.
 
 import { useState } from "react";
 import { useQuery, useMutation } from "convex/react";

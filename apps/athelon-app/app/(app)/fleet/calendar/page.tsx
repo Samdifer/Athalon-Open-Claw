@@ -15,12 +15,18 @@ const MONTHS = [
   "July", "August", "September", "October", "November", "December",
 ];
 
+// BUG-DOM-122: getDaysInMonth/getFirstDayOfWeek previously used local-tz Date
+// constructors. Because scheduledStartDate/promisedDeliveryDate are stored as
+// UTC-midnight timestamps, and event placement uses UTC accessors, the calendar
+// grid layout and query range must also use UTC. A shop in UTC-5 at 11 PM local
+// time would compute the wrong number of days or first-day offset for the next
+// UTC month, causing events to shift into the wrong cell or disappear entirely.
 function getDaysInMonth(year: number, month: number) {
-  return new Date(year, month + 1, 0).getDate();
+  return new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
 }
 
 function getFirstDayOfWeek(year: number, month: number) {
-  return new Date(year, month, 1).getDay();
+  return new Date(Date.UTC(year, month, 1)).getUTCDay();
 }
 
 type ScheduleEvent = {
@@ -34,11 +40,19 @@ type ScheduleEvent = {
 export default function FleetCalendarPage() {
   const { orgId } = useCurrentOrg();
   const now = new Date();
-  const [year, setYear] = useState(now.getFullYear());
-  const [month, setMonth] = useState(now.getMonth());
+  // BUG-DOM-123: Calendar state (year/month) must use UTC to stay consistent
+  // with the UTC-based isToday highlight and event placement. Using local-tz
+  // getMonth()/getFullYear() caused the "Today" button and grid highlight to
+  // disagree near midnight in non-UTC timezones.
+  const [year, setYear] = useState(now.getUTCFullYear());
+  const [month, setMonth] = useState(now.getUTCMonth());
 
-  const rangeStart = new Date(year, month, 1).getTime();
-  const rangeEnd = new Date(year, month + 1, 0, 23, 59, 59, 999).getTime();
+  // BUG-DOM-122: Range boundaries must use UTC to match UTC-stored timestamps.
+  // Local-tz boundaries caused first/last-day events to fall outside the query
+  // window for shops west of UTC (e.g. UTC-5 missed March 1 events because
+  // local midnight March 1 = 05:00 UTC March 1, excluding 00:00-04:59 UTC).
+  const rangeStart = Date.UTC(year, month, 1);
+  const rangeEnd = Date.UTC(year, month + 1, 0, 23, 59, 59, 999);
 
   const workOrders = useQuery(
     api.fleetCalendar.listScheduledWorkOrders,
@@ -155,12 +169,12 @@ export default function FleetCalendarPage() {
           <Button variant="outline" size="icon" className="h-8 w-8" onClick={goNext}>
             <ChevronRight className="w-4 h-4" />
           </Button>
-          {(month !== now.getMonth() || year !== now.getFullYear()) && (
+          {(month !== now.getUTCMonth() || year !== now.getUTCFullYear()) && (
             <Button
               variant="outline"
               size="sm"
               className="h-8 text-xs ml-1"
-              onClick={() => { setMonth(now.getMonth()); setYear(now.getFullYear()); }}
+              onClick={() => { setMonth(now.getUTCMonth()); setYear(now.getUTCFullYear()); }}
             >
               Today
             </Button>

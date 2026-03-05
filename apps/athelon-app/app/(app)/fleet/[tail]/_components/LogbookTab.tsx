@@ -245,7 +245,11 @@ export function LogbookTab({
               filteredEntries.map((entry) => (
                 <div key={entry._id} className="rounded-md border border-border/60 p-3">
                   <div className="flex items-center justify-between">
-                    <p className="text-xs text-muted-foreground">{entry.date ? new Date(entry.date).toISOString().slice(0, 10) : "—"}</p>
+                    {/* BUG-DOM-124: Entry dates displayed in raw ISO format (2026-03-05)
+                        while every other date in the app uses locale format pinned to UTC
+                        (Mar 5, 2026). A DOM switching between the logbook tab and the full
+                        logbook page would see inconsistent date formatting. */}
+                    <p className="text-xs text-muted-foreground">{entry.date ? new Date(entry.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" }) : "—"}</p>
                     <p className="text-xs font-mono text-muted-foreground">{entry.workOrderNumber ?? "Manual"}</p>
                   </div>
                   <p className="text-sm mt-1">{entry.description ?? "—"}</p>

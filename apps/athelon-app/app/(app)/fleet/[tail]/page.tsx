@@ -519,7 +519,14 @@ export default function AircraftDetailPage() {
             </Card>
 
             {/* Propellers Table */}
-            {(aircraft!.engineCount > 0) && (
+            {/* BUG-DOM-126: Propellers section was gated on engineCount > 0, which
+                caused two issues: (1) jet aircraft (Citation, Phenom, etc.) showed
+                an empty "No propellers registered" card — confusing for a DOM who
+                knows jets don't have propellers, and (2) if engineCount was 0 due to
+                a data entry gap, real propeller records were hidden. Gate on actual
+                propeller data instead: show when propellers query has returned and
+                has at least one record, or is still loading (show skeleton). */}
+            {(propellers === undefined || (propellers && propellers.length > 0)) && (
               <Card className="border-border/60">
                 <CardHeader className="pb-3 flex flex-row items-center justify-between">
                   <CardTitle className="text-sm font-semibold flex items-center gap-2">
