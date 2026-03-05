@@ -244,6 +244,7 @@ export function WOExecutionGantt({ workOrderId }: Props) {
   return (
     <div
       className="flex gap-3 select-none"
+      style={{ touchAction: "none" }}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
     >

@@ -15,6 +15,9 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
+// BUG-SM-HUNT-014: `cancelled` was missing from both maps. Cancelled WOs
+// rendered as raw "cancelled" text with the grey fallback color, making the
+// pie chart legend inconsistent with the rest of the app's status vocabulary.
 const STATUS_COLORS: Record<string, string> = {
   open: "#3b82f6",
   in_progress: "#f59e0b",
@@ -25,6 +28,7 @@ const STATUS_COLORS: Record<string, string> = {
   pending_inspection: "#06b6d4",
   pending_signoff: "#8b5cf6",
   open_discrepancies: "#ef4444",
+  cancelled: "#64748b",
   voided: "#991b1b",
 };
 
@@ -38,6 +42,7 @@ const STATUS_LABELS: Record<string, string> = {
   pending_inspection: "Pending Inspection",
   pending_signoff: "Pending Signoff",
   open_discrepancies: "Discrepancies",
+  cancelled: "Cancelled",
   voided: "Voided",
 };
 

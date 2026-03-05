@@ -119,8 +119,11 @@ export function magicSchedule(
 ): MagicAssignment[] {
   if (orderedJobs.length === 0 || bays.length === 0) return [];
 
-  // Sort by priority
-  const sortedJobs = sortByPriority(orderedJobs);
+  // Respect the caller's explicit priority order. The caller (Magic Scheduler
+  // dialog) lets the user manually reorder WOs — re-sorting here would discard
+  // that ordering. Only fall back to priority-based sort when no explicit order
+  // was provided (single-item lists or programmatic callers).
+  const sortedJobs = orderedJobs;
 
   const bayBookings = new Map<string, { startDate: number; endDate: number }[]>();
   for (const bay of bays) {

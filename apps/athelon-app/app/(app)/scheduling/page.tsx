@@ -392,9 +392,11 @@ export default function SchedulingPage() {
             if (priority === "urgent") return 1;
             return 2;
           };
+          // BUG-SM-HUNT-013: workOrderNumber can be null for imported/seeded records,
+          // causing a TypeError crash on .localeCompare(). Defensive fallback.
           return (
             priorityWeight(a.priority) - priorityWeight(b.priority) ||
-            a.workOrderNumber.localeCompare(b.workOrderNumber)
+            (a.workOrderNumber ?? "").localeCompare(b.workOrderNumber ?? "")
           );
         })
         .map((wo) => ({
@@ -521,18 +523,28 @@ export default function SchedulingPage() {
     }
   }, [onboardingRecord]);
 
+  // Map bay ID → human-readable bay name (used in conflict detection & Magic Scheduler results)
+  // BUG-SM-HUNT-011: bayNameMap was defined AFTER the conflicts useMemo that
+  // referenced it, causing a TDZ (temporal dead zone) ReferenceError crash on
+  // every render of the scheduling page. Moved above the first usage.
+  const bayNameMap = useMemo(
+    () => new Map((bays ?? []).map((b) => [String(b._id), b.name])),
+    [bays],
+  );
+
   // ── Conflict detection ────────────────────────────────────────────────
   const conflicts = useMemo(() => {
     const scheduled: ScheduledWO[] = scheduledProjects.map((wo) => ({
       woId: wo.workOrderId,
       workOrderNumber: wo.workOrderNumber,
       bayId: wo.hangarBayId,
+      bayName: bayNameMap.get(wo.hangarBayId),
       startDate: wo.scheduledStartDate,
       endDate: wo.promisedDeliveryDate,
       promisedDeliveryDate: wo.promisedDeliveryDate,
     }));
     return detectConflicts(scheduled);
-  }, [scheduledProjects]);
+  }, [scheduledProjects, bayNameMap]);
 
   useEffect(() => {
     if (!resizingPanel) return;
@@ -656,12 +668,6 @@ export default function SchedulingPage() {
   const workOrderMap = useMemo(
     () => new Map(workOrders.map((wo) => [String(wo._id), wo])),
     [workOrders],
-  );
-
-  // Map bay ID → human-readable bay name (used in Magic Scheduler results)
-  const bayNameMap = useMemo(
-    () => new Map((bays ?? []).map((b) => [String(b._id), b.name])),
-    [bays],
   );
 
   const planningRates = useMemo(() => {

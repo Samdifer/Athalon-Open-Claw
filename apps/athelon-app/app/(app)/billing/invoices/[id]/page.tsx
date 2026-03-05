@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "@/hooks/useRouter";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
@@ -434,8 +434,15 @@ export default function InvoiceDetailPage() {
                 )}
               </div>
               {/* BUG-BM-002: Show customer name in detail header */}
+              {/* BUG-FD-003: Customer name was plain text — front desk couldn't click
+                  through to the customer profile from an invoice. Now a link. */}
               {customer && (
-                <p className="text-sm font-medium text-foreground mt-0.5">{customer.name}</p>
+                <Link
+                  to={`/billing/customers/${customer._id}`}
+                  className="text-sm font-medium text-primary hover:underline mt-0.5 inline-block"
+                >
+                  {customer.name}
+                </Link>
               )}
               <p className="text-xs text-muted-foreground mt-0.5">
                 Created {formatDate(invoice.createdAt)}

@@ -93,7 +93,11 @@ export default function ReportsPage() {
     if (!invoices) return [];
     const monthly: Record<string, number> = {};
     for (const inv of invoices) {
-      const ts = inv.paidAt ?? inv.updatedAt;
+      // BUG-SM-106: Was using inv.updatedAt as fallback, but updatedAt changes on
+      // any edit (line item correction, note added) — not a payment date. This
+      // misattributed invoices edited recently to the wrong month. Use createdAt
+      // (consistent with RevenueTrendChart and Financial Dashboard).
+      const ts = inv.paidAt ?? inv.createdAt;
       if (!ts || ts < fromTs || ts >= toTs) continue;
       const d = new Date(ts);
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;

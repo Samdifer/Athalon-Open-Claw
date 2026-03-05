@@ -15,7 +15,16 @@ export type ComplianceDeadline = {
 
 function deadlineState(dueAt: number) {
   const now = Date.now();
-  const days = Math.ceil((dueAt - now) / 86_400_000);
+  // BUG-QCM-CT-001: Math.ceil produced days=0 when dueAt was in the past by
+  // less than 24 hours (e.g. AD due at midnight, checked at 6 AM same day).
+  // Zero is not < 0, so the item showed as "due soon" (amber) instead of
+  // "overdue" (red). For regulatory compliance, an AD past its due timestamp
+  // must immediately show as OVERDUE — there is no grace period. Using
+  // Math.floor ensures that any past-due timestamp produces a negative day
+  // count (e.g. -0.25 days → floor → -1 → overdue). Items due exactly now
+  // (dueAt === now) produce 0, which falls into the "soon" bucket — acceptable
+  // since the due moment hasn't technically passed.
+  const days = Math.floor((dueAt - now) / 86_400_000);
   if (days < 0) return { kind: "overdue" as const, days };
   if (days <= 30) return { kind: "soon" as const, days };
   return { kind: "future" as const, days };

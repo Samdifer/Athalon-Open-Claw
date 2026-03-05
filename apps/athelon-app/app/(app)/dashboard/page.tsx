@@ -21,6 +21,8 @@ import {
   Bell,
   ClipboardCheck,
   FileBox,
+  Users,
+  Calendar,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -201,9 +203,14 @@ function LiveKPICards({
 function LiveSecondaryKPIs() {
   const { orgId } = useCurrentOrg();
 
-  const pendingInspection = useQuery(
-    api.parts.listParts,
-    orgId ? { organizationId: orgId, location: "pending_inspection" as const } : "skip",
+  // BUG-SM-HUNT-012: "Parts Awaiting Inspection" was duplicated here AND in the
+  // Inventory Health section below, firing the same Convex query twice and
+  // showing identical data side-by-side. Replaced with "Pending Sign-Off" count
+  // which is operationally critical for shop managers tracking WOs ready for QCM
+  // release. "Parts Awaiting Inspection" is already covered by Inventory Health.
+  const woData = useQuery(
+    api.workOrders.getWorkOrdersWithScheduleRisk,
+    orgId ? { organizationId: orgId } : "skip",
   );
 
   const expiringCerts = useQuery(
@@ -211,19 +218,23 @@ function LiveSecondaryKPIs() {
     orgId ? { organizationId: orgId, withinDays: 30 } : "skip",
   );
 
-  const partsCount = pendingInspection?.length ?? null;
+  const pendingSignoffCount = useMemo(() => {
+    if (!woData) return null;
+    return woData.filter((wo) => wo.status === "pending_signoff").length;
+  }, [woData]);
+
   const certsCount = expiringCerts?.length ?? null;
 
   const cards = [
     {
-      title: "Parts Awaiting Inspection",
-      value: partsCount,
-      sub: "pending receiving inspection",
-      icon: Package,
-      href: "/parts/receiving",
-      color: "text-amber-400",
-      bgColor: "bg-amber-500/10",
-      alert: (partsCount ?? 0) > 0,
+      title: "Pending Sign-Off",
+      value: pendingSignoffCount,
+      sub: "ready for QCM release",
+      icon: ClipboardList,
+      href: "/work-orders",
+      color: "text-sky-400",
+      bgColor: "bg-sky-500/10",
+      alert: (pendingSignoffCount ?? 0) > 0,
     },
     {
       title: "Certs Expiring (30d)",
@@ -1064,6 +1075,70 @@ export default function DashboardPage() {
                 <Link to="/compliance/audit-trail">
                   <ShieldAlert className="w-3.5 h-3.5" />
                   Audit Trail
+                </Link>
+              </Button>
+              {/* BUG-SM-HUNT-015: Shop managers use scheduling and reports daily
+                  but had to hunt through sidebar nav. Adding quick-action links
+                  completes the Dashboard → WOs → Scheduling → Reports workflow. */}
+              <Button
+                asChild
+                variant="outline"
+                className="w-full justify-start h-9 text-xs gap-2 border-border/60"
+                size="sm"
+              >
+                <Link to="/scheduling">
+                  <Calendar className="w-3.5 h-3.5" />
+                  Scheduling Board
+                </Link>
+              </Button>
+              <Button
+                asChild
+                variant="outline"
+                className="w-full justify-start h-9 text-xs gap-2 border-border/60"
+                size="sm"
+              >
+                <Link to="/reports">
+                  <TrendingUp className="w-3.5 h-3.5" />
+                  Reports
+                </Link>
+              </Button>
+              {/* BUG-FD-005: Dashboard had no front-desk quick actions. The only
+                  shortcuts were MRO-tech oriented (WOs, squawks, parts). Front desk
+                  staff need one-click access to quotes, customers, and invoices —
+                  the pages they use most. Without these, they had to navigate through
+                  the sidebar menu every time, adding friction to every customer call. */}
+              <Separator className="my-1" />
+              <Button
+                asChild
+                variant="outline"
+                className="w-full justify-start h-9 text-xs gap-2 border-border/60"
+                size="sm"
+              >
+                <Link to="/billing/quotes/new">
+                  <FileBox className="w-3.5 h-3.5" />
+                  New Quote
+                </Link>
+              </Button>
+              <Button
+                asChild
+                variant="outline"
+                className="w-full justify-start h-9 text-xs gap-2 border-border/60"
+                size="sm"
+              >
+                <Link to="/billing/customers">
+                  <Users className="w-3.5 h-3.5" />
+                  Find Customer
+                </Link>
+              </Button>
+              <Button
+                asChild
+                variant="outline"
+                className="w-full justify-start h-9 text-xs gap-2 border-border/60"
+                size="sm"
+              >
+                <Link to="/billing/invoices">
+                  <DollarSign className="w-3.5 h-3.5" />
+                  Invoices
                 </Link>
               </Button>
             </CardContent>

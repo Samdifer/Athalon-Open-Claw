@@ -105,31 +105,33 @@ export function ReturnPartDialog({
       })),
     );
 
-    const localInstalled = steps.flatMap((step) => {
+    type LocalInstalledItem = {
+      id: string;
+      stepId: string;
+      stepNumber: number;
+      partId?: string;
+      partNumber: string;
+      serialNumber?: string;
+      description: string;
+      issuedQty: number;
+    };
+
+    const localInstalled: LocalInstalledItem[] = steps.flatMap((step) => {
       try {
         const raw = window.localStorage.getItem(stepStorageKey(orgId, step._id));
-        const parsed = raw ? (JSON.parse(raw) as { installed?: any[] }) : null;
-        return (parsed?.installed ?? []).map((part, idx) => ({
+        const parsed = raw ? (JSON.parse(raw) as { installed?: Array<Record<string, unknown>> }) : null;
+        return (parsed?.installed ?? []).map<LocalInstalledItem>((part, idx) => ({
           id: `${step._id}:local:${idx}`,
           stepId: step._id,
           stepNumber: step.stepNumber,
-          partId: part.partId,
-          partNumber: part.partNumber,
-          serialNumber: part.serialNumber,
-          description: part.description,
+          partId: part.partId as string | undefined,
+          partNumber: String(part.partNumber ?? ""),
+          serialNumber: part.serialNumber as string | undefined,
+          description: String(part.description ?? ""),
           issuedQty: Number(part.quantity) || 1,
         }));
       } catch {
-        return [] as Array<{
-          id: string;
-          stepId: string;
-          stepNumber: number;
-          partId?: string;
-          partNumber: string;
-          serialNumber?: string;
-          description: string;
-          issuedQty: number;
-        }>;
+        return [] as LocalInstalledItem[];
       }
     });
 

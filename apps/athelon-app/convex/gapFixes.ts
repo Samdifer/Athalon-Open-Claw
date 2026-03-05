@@ -1152,10 +1152,86 @@ export const releaseAircraftToCustomer = mutation({
     aircraftTotalTimeAtRelease: v.number(),
   },
   handler: async (ctx, args) => {
-    await requireAuth(ctx);
+    const callerUserId = await requireAuth(ctx);
     const now = Date.now();
     const wo = await ctx.db.get(args.workOrderId);
     if (!wo) throw new Error("Work order not found.");
+
+    // ── BUG-QCM-RELEASE-001: Validate WO status ─────────────────────────────
+    // Previously this mutation accepted ANY work order status — a draft,
+    // cancelled, or voided WO could have its aircraft "released" because the
+    // backend never checked. Only closed WOs (post-RTS) should be releasable.
+    // Under 14 CFR Part 145, releasing an aircraft from a non-closed WO means
+    // the maintenance event was never formally completed.
+    const RELEASABLE_STATUSES = ["closed", "pending_signoff"];
+    if (!RELEASABLE_STATUSES.includes(wo.status ?? "")) {
+      throw new Error(
+        `RELEASE_INVALID_WO_STATUS: Work order ${wo.workOrderNumber} has status "${wo.status}". ` +
+        `Aircraft can only be released to customer when the work order is closed or pending sign-off. ` +
+        `Current status "${wo.status}" indicates the maintenance event is not complete.`,
+      );
+    }
+
+    // ── BUG-QCM-RELEASE-002: Enforce RTS gate at backend ────────────────────
+    // Previously only the frontend checked for a signed RTS record (via
+    // `isRtsSigned` in release/page.tsx). Any direct API call or modified
+    // client could bypass the check entirely, releasing an aircraft without an
+    // authorized Return-to-Service record. Under 14 CFR Part 145, an aircraft
+    // CANNOT be returned to a customer without a signed RTS. This is the most
+    // critical regulatory gate in the entire system — it must be enforced at
+    // the mutation level, not just the UI.
+    if (!wo.returnToServiceId) {
+      throw new Error(
+        `RELEASE_NO_RTS: Work order ${wo.workOrderNumber} does not have an authorized ` +
+        `Return-to-Service record. Under 14 CFR Part 145, an aircraft cannot be ` +
+        `returned to a customer without a signed RTS. Complete the RTS authorization ` +
+        `before releasing this aircraft.`,
+      );
+    }
+
+    // Verify the RTS record actually exists and is valid
+    const rtsRecord = await ctx.db.get(wo.returnToServiceId as Id<"returnToService">);
+    if (!rtsRecord) {
+      throw new Error(
+        `RELEASE_RTS_RECORD_MISSING: Work order ${wo.workOrderNumber} references RTS ` +
+        `record ${wo.returnToServiceId} but the record does not exist. ` +
+        `This is a data integrity issue — contact your Director of Maintenance.`,
+      );
+    }
+
+    // ── BUG-QCM-RELEASE-003: Validate aircraft hours at backend ─────────────
+    // Previously there was NO backend validation of aircraftTotalTimeAtRelease.
+    // The frontend had validation (> 0, >= current airframe time), but any
+    // direct API call could submit zero, negative, or backwards-in-time hours.
+    // Under 14 CFR 43.9(a), all maintenance record entries must be accurate.
+    // An airframe that shrinks from 5,000 to 1,000 hours is an obvious error
+    // that would flag in any FAA audit.
+    if (!Number.isFinite(args.aircraftTotalTimeAtRelease) || args.aircraftTotalTimeAtRelease <= 0) {
+      throw new Error(
+        `RELEASE_INVALID_HOURS: aircraftTotalTimeAtRelease must be a positive finite number. ` +
+        `Received: ${args.aircraftTotalTimeAtRelease}.`,
+      );
+    }
+
+    if (wo.aircraftId) {
+      const ac = await ctx.db.get(wo.aircraftId);
+      if (ac && args.aircraftTotalTimeAtRelease < ac.totalTimeAirframeHours) {
+        throw new Error(
+          `RELEASE_HOURS_DECREASED: aircraftTotalTimeAtRelease (${args.aircraftTotalTimeAtRelease} hrs) ` +
+          `is less than the aircraft's current totalTimeAirframeHours (${ac.totalTimeAirframeHours} hrs). ` +
+          `Aircraft hours are monotonically increasing per 14 CFR 43.9(a). ` +
+          `The release hours must be >= the aircraft's recorded current time.`,
+        );
+      }
+    }
+
+    // ── BUG-QCM-RELEASE-004: Prevent duplicate release ──────────────────────
+    if (wo.releasedAt) {
+      throw new Error(
+        `RELEASE_ALREADY_RELEASED: Work order ${wo.workOrderNumber} was already released ` +
+        `at ${new Date(wo.releasedAt).toISOString()}. An aircraft can only be released once per work order.`,
+      );
+    }
 
     await ctx.db.patch(args.workOrderId, {
       customerFacingStatus: "completed",
@@ -1177,6 +1253,28 @@ export const releaseAircraftToCustomer = mutation({
         });
       }
     }
+
+    // ── BUG-QCM-RELEASE-005: Write audit log entry ──────────────────────────
+    // Previously this mutation created NO audit trail entry. WHO released WHAT
+    // aircraft WHEN was not recorded anywhere. Under 14 CFR Part 145, the
+    // release of an aircraft to customer is a significant compliance event that
+    // must be traceable. Every other critical mutation (authorizeReturnToService,
+    // signTaskCard, completeStep) writes to auditLog — this was the only one
+    // that didn't.
+    await ctx.db.insert("auditLog", {
+      organizationId: wo.organizationId,
+      eventType: "aircraft_returned",
+      tableName: "workOrders",
+      recordId: String(args.workOrderId),
+      userId: callerUserId,
+      technicianId: args.releasedByTechnicianId,
+      notes: `Aircraft released to customer. WO: ${wo.workOrderNumber}. ` +
+        `Aircraft hours at release: ${args.aircraftTotalTimeAtRelease}. ` +
+        `RTS record: ${wo.returnToServiceId}.` +
+        (args.customerSignature ? ` Customer signature: ${args.customerSignature}.` : "") +
+        (args.pickupNotes ? ` Pickup notes: ${args.pickupNotes.slice(0, 200)}.` : ""),
+      timestamp: now,
+    });
 
     // Notify shop managers about aircraft release
     const managers = await ctx.db

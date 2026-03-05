@@ -21,17 +21,24 @@ export function useScheduleUndo(executor: UndoExecutor) {
   }, []);
 
   const undo = useCallback(async () => {
+    // Read the top action from stack ref-safely, then pop.
+    // Side effects (async executor) must run OUTSIDE the state updater
+    // to avoid React batching issues and potential double-execution.
+    let topAction: UndoAction | undefined;
     setStack((prev) => {
       if (prev.length === 0) return prev;
-      const top = prev[prev.length - 1];
-      // fire-and-forget the inverse mutation
-      setUndoing(true);
-      executorRef
-        .current(top)
-        .catch(() => {})
-        .finally(() => setUndoing(false));
+      topAction = prev[prev.length - 1];
       return prev.slice(0, -1);
     });
+    if (!topAction) return;
+    setUndoing(true);
+    try {
+      await executorRef.current(topAction);
+    } catch {
+      // swallow — executor handles its own toasts
+    } finally {
+      setUndoing(false);
+    }
   }, []);
 
   const canUndo = stack.length > 0 && !undoing;

@@ -322,6 +322,18 @@ export default function WorkOrderDetailPage() {
     orgId && workOrderId ? { workOrderId, organizationId: orgId } : "skip",
   );
 
+  // BUG-FD-001: Front desk needs to see the customer name on a work order and
+  // click through to their profile. The WO doesn't store customerId directly —
+  // the customer relationship lives on the aircraft. Load the customer record
+  // via the aircraft's customerId so we can display name + link.
+  const aircraftForCustomer = data?.aircraft;
+  const customer = useQuery(
+    api.customers.getCustomer,
+    aircraftForCustomer?.customerId
+      ? { customerId: aircraftForCustomer.customerId }
+      : "skip",
+  );
+
   const closeReadiness = useQuery(
     api.workOrders.getCloseReadiness,
     orgId && workOrderId ? { workOrderId, organizationId: orgId } : "skip",
@@ -792,9 +804,19 @@ export default function WorkOrderDetailPage() {
               <ScheduleRiskChip riskLevel={riskLevel} />
             </div>
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="font-mono font-bold text-2xl text-foreground">
-                {aircraft?.currentRegistration ?? "—"}
-              </span>
+              {/* BUG-FD-002: Aircraft registration was plain text — front desk couldn't
+                  click through to the fleet detail page to check aircraft status, times,
+                  or maintenance history. Now a link. */}
+              {aircraft?.currentRegistration ? (
+                <Link
+                  to={`/fleet/${encodeURIComponent(aircraft.currentRegistration)}`}
+                  className="font-mono font-bold text-2xl text-foreground hover:text-primary transition-colors"
+                >
+                  {aircraft.currentRegistration}
+                </Link>
+              ) : (
+                <span className="font-mono font-bold text-2xl text-foreground">—</span>
+              )}
               {aircraft && (
                 <span className="text-base text-muted-foreground">
                   {aircraft.make} {aircraft.model}
@@ -808,6 +830,22 @@ export default function WorkOrderDetailPage() {
               )}
             </div>
             <p className="text-sm text-muted-foreground mt-1">{wo.description}</p>
+            {/* BUG-FD-001: Show customer name with link to their billing profile.
+                Front desk needs to identify the customer and navigate to their
+                profile in one click — previously this info was invisible on WOs. */}
+            {customer && (
+              <div className="flex items-center gap-1.5 mt-1">
+                <User className="w-3 h-3 text-muted-foreground" />
+                <Link
+                  to={`/billing/customers/${customer._id}`}
+                  className="text-sm font-medium text-primary hover:underline"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {customer.name}
+                  {customer.companyName ? ` — ${customer.companyName}` : ""}
+                </Link>
+              </div>
+            )}
           </div>
 
           <div className="w-full sm:w-auto flex-shrink-0 flex flex-col gap-2">
@@ -855,7 +893,7 @@ export default function WorkOrderDetailPage() {
                   <WorkOrderPDF
                     workOrder={wo}
                     aircraft={aircraft}
-                    customer={null}
+                    customer={customer ?? null}
                     taskCards={taskCards}
                     steps={taskCards.flatMap((tc) => tc.steps ?? []).map((s) => ({
                       taskCardId: String(s.taskCardId ?? ""),

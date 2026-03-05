@@ -88,11 +88,17 @@ export default function CustomersPage() {
     if (!customers) return [];
     if (!search.trim()) return customers;
     const q = search.toLowerCase();
+    // BUG-FD-004: Search didn't include phone number. Front desk typically
+    // searches by the phone number on caller-ID when a customer calls in.
+    // Also added tail number search so front desk can find a customer by their
+    // aircraft registration without navigating to the fleet page first.
     return customers.filter(
       (c) =>
         c.name.toLowerCase().includes(q) ||
         (c.companyName?.toLowerCase().includes(q) ?? false) ||
-        (c.email?.toLowerCase().includes(q) ?? false),
+        (c.email?.toLowerCase().includes(q) ?? false) ||
+        (c.phone?.toLowerCase().includes(q) ?? false) ||
+        (c.tailNumbers?.some((t: string) => t.toLowerCase().includes(q)) ?? false),
     );
   }, [customers, search]);
 
@@ -120,7 +126,7 @@ export default function CustomersPage() {
       <div className="relative w-full sm:w-72">
         <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
         <Input
-          placeholder="Search by name, company, email..."
+          placeholder="Search by name, company, email, phone, tail#..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="h-8 pl-8 pr-3 text-xs bg-muted/30 border-border/60"

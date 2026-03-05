@@ -268,11 +268,12 @@ export function GanttChart({
     }
   }, []);
 
-  // ── Drag handlers ─────────────────────────────────────────────────────
-  const handleMouseDown = useCallback(
-    (e: React.MouseEvent, wo: WorkOrderWithRisk, type: "move" | "resize") => {
+  // ── Drag handlers (pointer events for touch + mouse support) ─────────
+  const handlePointerDown = useCallback(
+    (e: React.PointerEvent, wo: WorkOrderWithRisk, type: "move" | "resize") => {
       e.preventDefault();
       e.stopPropagation();
+      (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
       setDragState({
         woId: wo._id,
         type,
@@ -288,11 +289,12 @@ export function GanttChart({
   useEffect(() => {
     if (!dragState) return;
 
-    function handleMouseMove(e: MouseEvent) {
+    function handlePointerMove(e: PointerEvent) {
       setDragDelta(e.clientX - dragState!.startX);
     }
 
-    async function handleMouseUp(e: MouseEvent) {
+    async function handlePointerUp(e: PointerEvent) {
+      (e.target as HTMLElement).releasePointerCapture?.(e.pointerId);
       const delta = e.clientX - dragState!.startX;
       const daysDelta = Math.round(delta / cellWidth);
 
@@ -324,11 +326,11 @@ export function GanttChart({
       setDragDelta(0);
     }
 
-    window.addEventListener("mousemove", handleMouseMove);
-    window.addEventListener("mouseup", handleMouseUp);
+    window.addEventListener("pointermove", handlePointerMove);
+    window.addEventListener("pointerup", handlePointerUp);
     return () => {
-      window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("mouseup", handleMouseUp);
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerup", handlePointerUp);
     };
   }, [dragState, cellWidth, updateSchedule]);
 
@@ -551,11 +553,12 @@ export function GanttChart({
                       width: barWidth + (isDragging && dragState?.type === "resize" ? dragDelta : 0),
                       top: barTop,
                       height: BAR_HEIGHT,
+                      touchAction: "none",
                     }}
-                    onMouseDown={(e) => handleMouseDown(e, wo, "move")}
+                    onPointerDown={(e) => handlePointerDown(e, wo, "move")}
                     onDoubleClick={() => navigate(`/work-orders/${wo._id}`)}
-                    onMouseEnter={() => setHoveredWO(wo._id)}
-                    onMouseLeave={() => setHoveredWO(null)}
+                    onPointerEnter={() => setHoveredWO(wo._id)}
+                    onPointerLeave={() => setHoveredWO(null)}
                   >
                     {/* Progress fill */}
                     <GanttProgressBar progress={pct} barWidth={barWidth} />
@@ -571,9 +574,10 @@ export function GanttChart({
                     {/* Resize handle */}
                     <div
                       className="absolute right-0 top-0 bottom-0 w-2 cursor-ew-resize hover:bg-white/20"
-                      onMouseDown={(e) => {
+                      style={{ touchAction: "none" }}
+                      onPointerDown={(e) => {
                         e.stopPropagation();
-                        handleMouseDown(e, wo, "resize");
+                        handlePointerDown(e, wo, "resize");
                       }}
                     />
 

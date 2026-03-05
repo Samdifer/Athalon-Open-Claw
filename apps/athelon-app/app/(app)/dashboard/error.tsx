@@ -1,18 +1,11 @@
-"use client";
-
-export default function Error({
-  error,
-  reset,
-}: {
-  error: Error;
-  reset: () => void;
-}) {
-  return (
-    <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
-      <p className="text-muted-foreground">Something went wrong: {error.message}</p>
-      <button onClick={reset} className="text-primary underline">
-        Try again
-      </button>
-    </div>
-  );
-}
+// BUG-SM-107: This file previously used Next.js App Router error boundary
+// conventions (export default function Error({ error, reset })). In a Vite +
+// React Router app, those conventions are inert — the file was never rendered
+// by any error boundary. The AppLayout uses React Suspense for lazy route
+// loading, and React error boundaries must be explicit class components or
+// use a library like react-error-boundary.
+//
+// Removed dead code. Error handling for the dashboard is provided by the
+// Suspense fallback in AppLayout and the per-widget loading/error states
+// within DashboardPage itself.
+export {};
