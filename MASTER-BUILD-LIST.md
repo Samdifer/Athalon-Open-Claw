@@ -33,3 +33,35 @@
 - **What was broken:** Summary cards showed Total/Pending/In Transit/Delivered but omitted Cancelled — inconsistent with the Cancelled tab added in BUG-PC-086. A clerk couldn't see at a glance how many shipments had been cancelled.
 - **Fix:** Added a fifth summary card for Cancelled count. Updated grid from `grid-cols-4` to `grid-cols-5`.
 - **Impact:** Complete shipment status visibility in the summary bar.
+
+### Bug Hunter Opus — Billing Manager (2026-03-05)
+
+**BUG-BM-HUNT-120: Invoice CSV export missing Customer, Balance, and date columns**
+- **File:** `app/(app)/billing/invoices/page.tsx`
+- **What was broken:** CSV export only included Invoice #, Status, Total, Due Date, Created. A billing manager exporting data for collections or reconciliation had no Customer Name, Amount Paid, Balance Due, Sent date, or Paid date columns.
+- **Fix:** Added Customer, Amount Paid, Balance, Sent, and Paid columns to the CSV export.
+- **Impact:** Billing manager can now export a complete invoice register for collections follow-up or accountant handoff.
+
+**BUG-BM-HUNT-121: Invoice detail — shared error state leaks across dialogs**
+- **File:** `app/(app)/billing/invoices/[id]/page.tsx`
+- **What was broken:** A single `error` state variable was shared across Send, Record Payment, Void, Set Due Date, and Edit Line Item actions. If a void failed and the user then opened the payment dialog, the stale void error banner remained visible — confusing the user into thinking the payment had failed.
+- **Fix:** Clear `error` state when opening each dialog (payment, void, due date, edit line item).
+- **Impact:** Eliminates misleading error messages that persist across unrelated billing actions.
+
+**BUG-BM-HUNT-122: Profitability page uses createdAt instead of paidAt for period attribution**
+- **File:** `app/(app)/reports/financials/profitability/page.tsx`
+- **What was broken:** The WO Profitability page filtered invoices by `createdAt >= cutoff`, but the Financial Dashboard correctly uses `paidAt` (cash-basis accounting). An invoice created in January but paid in March appeared in January's profitability but March's revenue — inconsistent numbers across reports.
+- **Fix:** Changed period attribution to use `paidAt` (falling back to `createdAt`) for consistency with the Financial Dashboard.
+- **Impact:** Revenue and profitability now align across all financial reports — no more conflicting numbers.
+
+**BUG-BM-HUNT-123: Batch Record Payments shows PAID/VOID invoices with $0 balance**
+- **File:** `app/(app)/billing/invoices/page.tsx`
+- **What was broken:** When selecting mixed-status invoices (including PAID and VOID), the batch "Record Payments" button appeared and the dialog showed $0.00 balance rows. Clicking "Pay All" would try to pay $0 on already-paid invoices — confusing and pointless.
+- **Fix:** Hide "Record Payments" button when no selected invoices have a balance > 0. Filter zero-balance invoices out of the batch payment dialog.
+- **Impact:** Billing manager only sees actionable invoices in the payment workflow — no dead rows cluttering the dialog.
+
+**BUG-BM-HUNT-124: Time Approval — no pending hours summary for billing manager**
+- **File:** `app/(app)/billing/time-approval/page.tsx`
+- **What was broken:** The pending tab showed individual time entries but provided no total hours summary. A billing manager reviewing 20+ entries had no quick way to assess total labor cost exposure before approving. They'd have to mentally sum every row.
+- **Fix:** Added a pending hours summary badge (e.g., "12h 30m pending") with entry count, displayed prominently above the approval table.
+- **Impact:** Billing manager can immediately assess labor cost impact before bulk-approving time entries.
