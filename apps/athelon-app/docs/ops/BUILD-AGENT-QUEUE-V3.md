@@ -23,12 +23,12 @@
 - [x] TEAM-H: MBP-0103 (monthly revenue report), MBP-0104 (WO throughput report), MBP-0048 (part return workflow), MBP-0037 (parts request intake), MBP-0125 (shift handoff notes) ✅ (already present/verified)
 
 ### Wave 5 — Customer Portal (2 agents)
-- [ ] TEAM-I: MBP-0096 (customer login), MBP-0097 (customer dashboard), MBP-0098 (WO tracking), MBP-0099 (quote approve/decline)
+- [x] TEAM-I: MBP-0096 (customer login), MBP-0097 (customer dashboard), MBP-0098 (WO tracking), MBP-0099 (quote approve/decline) ✅ 0e52ad4
 - [x] TEAM-J: MBP-0100 (invoice view), MBP-0101 (download PDFs), MBP-0102 (message submission), MBP-0055 (completeStep auth) ✅ 50e2f80
 
 ### Wave 6 — P0 Partial Completion (2 agents)
 - [x] TEAM-K: MBP-0032 (WO docs completion), MBP-0033 (task execution completion), MBP-0035 (parts traceability), MBP-0045 (evidence hub) ✅ e4e601a
-- [ ] TEAM-L: MBP-0041 (lead workspace completion), MBP-0049 (receiving inspection), MBP-0051 (WO header KPI), MBP-0053 (secondary quote)
+- [x] TEAM-L: MBP-0041 (lead workspace completion), MBP-0049 (receiving inspection), MBP-0051 (WO header KPI), MBP-0053 (secondary quote) ✅ 4a9cbc0
 
 ### Wave 7 — Polish + P2 (2 agents)
 - [ ] TEAM-M: MBP-0083 (dark mode), MBP-0084 (Cmd-K palette), MBP-0085 (activity timeline), MBP-0086 (keyboard shortcuts), MBP-0088 (bulk CSV import)
