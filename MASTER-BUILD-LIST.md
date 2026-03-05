@@ -233,3 +233,27 @@
 - **What was broken:** The `/reports/inventory` page existed with full inventory valuation and stock analysis, but the Reports page sub-navigation had no link to it. A shop manager reviewing monthly reports had no discoverable path to inventory data without knowing the URL directly.
 - **Fix:** Added "Inventory" button with Package icon linking to `/reports/inventory` in the financial sub-nav bar.
 - **Impact:** Complete Shop Manager reporting workflow — all report pages now reachable from the Reports hub.
+
+**BUG-PC-HUNT-120: ReceivingInspection resetDialogState uses UTC date instead of local**
+- **File:** `app/(app)/parts/_components/ReceivingInspection.tsx`
+- **What was broken:** Initial inspection date used local calendar date (BUG-PC-HUNT-106 fix), but `resetDialogState()` reset it with `new Date().toISOString().slice(0, 10)` — UTC. After completing one inspection and opening the next, a clerk in UTC-5 working after 7 PM local time would see tomorrow's date pre-filled. This creates a compliance mismatch between the 8130-3 sign-off date and the inspection record.
+- **Fix:** Replaced UTC `.toISOString()` with the same local-date helper used for initial state.
+- **Impact:** Consistent local dates across all inspection workflows; no regulatory discrepancies.
+
+**BUG-PC-HUNT-121: InventoryMasterTab shows $0.00 for all Unit Cost and Total Value**
+- **File:** `app/(app)/parts/_components/InventoryMasterTab.tsx`
+- **What was broken:** `unitCost` was hardcoded to `0` and the `PartRow` type didn't include `unitCost` from the data model. Every row in the Inventory Master tab showed $0.00 for unit cost and total value. A parts clerk or shop manager reviewing stock valuation got completely wrong data — rendering the "Total Value" column useless.
+- **Fix:** Added `unitCost` to the PartRow type and read it from the actual part record (`part.unitCost ?? 0`).
+- **Impact:** Inventory Master tab now shows real cost data; stock valuation is accurate.
+
+**BUG-PC-HUNT-122: Kanban view missing "Pending Inspection" column**
+- **File:** `app/(app)/parts/_components/InventoryKanban.tsx`
+- **What was broken:** The Kanban board had 5 columns (In Stock, Reserved, Issued, Installed, Scrapped) but no "Pending Inspection" column. Parts in `pending_inspection` location silently fell into "In Stock" via the default case in `toStage()`. A parts clerk using the Kanban to track the receiving → inspection → stock flow saw no separation between inspected and uninspected parts.
+- **Fix:** Added `pending_inspection` to the KanbanStage type, added it as the first column, and added the stage mapping in `toStage()`. Updated the grid to 6 columns.
+- **Impact:** Full receiving workflow visibility in the Kanban view; pending inspection parts are clearly separated.
+
+**BUG-PC-HUNT-123: PartsRequestQueue missing "Shipped" tab and "Mark Shipped" button**
+- **File:** `app/(app)/parts/_components/PartsRequestQueue.tsx`
+- **What was broken:** The request lifecycle is: requested → ordered → shipped → received → issued. But the queue only had tabs for All/Pending/Ordered/Received — no Shipped tab. A parts clerk tracking inbound vendor shipments couldn't filter to just shipped items. Additionally, the "ordered" status had no "Mark Shipped" transition button, so clerks had to skip directly from "ordered" to "received" — losing the shipped tracking state entirely.
+- **Fix:** Added "Shipped" tab with filter, added "Mark Shipped" button for ordered requests.
+- **Impact:** Complete request lifecycle tracking; clerks can now see what's en route vs. what's still on order.
