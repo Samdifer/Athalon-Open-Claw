@@ -58,7 +58,7 @@ function LoanerHistory({ loanerItemId }: { loanerItemId: Id<"loanerItems"> }) {
   return (
     <div className="mt-3 space-y-2 pl-4 border-l-2 border-border/40">
       <span className="text-xs font-medium text-muted-foreground">History ({history.length})</span>
-      {history.sort((a, b) => b.createdAt - a.createdAt).map((h) => (
+      {[...history].sort((a, b) => b.createdAt - a.createdAt).map((h) => (
         <div key={h._id} className="bg-muted/30 rounded p-2 text-xs">
           <div className="flex items-center gap-2">
             <Badge variant="outline" className="text-[9px]">{ACTION_LABELS[h.action] ?? h.action}</Badge>

@@ -100,6 +100,11 @@ export function PartsIssueDialog({
       return;
     }
 
+    if (typeof issuePart !== "function") {
+      setError("Part issuance is not available — workOrderParts module may not be deployed yet.");
+      return;
+    }
+
     setSubmitting(true);
     try {
       await issuePart({

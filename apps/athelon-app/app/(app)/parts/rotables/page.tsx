@@ -124,7 +124,7 @@ function RotableHistory({ rotableId, orgId }: { rotableId: Id<"rotables">; orgId
           <Plus className="w-3 h-3 mr-1" />Record Action
         </Button>
       </div>
-      {history.sort((a, b) => b.createdAt - a.createdAt).map((h) => (
+      {[...history].sort((a, b) => b.createdAt - a.createdAt).map((h) => (
         <div key={h._id} className="bg-muted/30 rounded p-2 text-xs">
           <div className="flex items-center gap-2">
             <Badge variant="outline" className="text-[9px]">{ACTION_LABELS[h.action] ?? h.action}</Badge>

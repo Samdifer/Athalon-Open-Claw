@@ -34,6 +34,26 @@ This file is the markdown-authoritative source of truth for feature status, impl
   **File:** `app/(app)/fleet/calendar/page.tsx`
   **Impact:** "Today" button and day highlight inconsistency in non-UTC shops.
 
+- **BUG-PC-124** — Shipping page formType not reset after successful creation. After creating an inbound shipment, opening the dialog again showed "Inbound" pre-selected instead of the default "Outbound". The success path in `handleCreate` reset all form fields except `formType`. Added `setFormType("outbound")` to the success cleanup.
+  **File:** `app/(app)/parts/shipping/page.tsx`
+  **Impact:** Parts clerk creating an outbound shipment after an inbound one accidentally creates another inbound.
+
+- **BUG-PC-125** — Parts Requests page cancelRequest crashes if workOrderParts module is absent. The mutation was obtained via `(api as any).workOrderParts?.cancelRequest`. If the Convex module isn't deployed, `cancelRequest` is `undefined` — clicking Cancel throws "cancelRequest is not a function". Added a typeof guard with a user-friendly toast.
+  **File:** `app/(app)/parts/requests/page.tsx`
+  **Impact:** Runtime crash when cancelling a part request before workOrderParts module is deployed.
+
+- **BUG-PC-126** — PartsIssueDialog issuePart mutation crashes if workOrderParts module is absent. Same pattern as BUG-PC-125 — `issuePart` obtained via optional chaining on `(api as any).workOrderParts?.issuePart`. If undefined, clicking "Issue Part" throws. Added a typeof guard.
+  **File:** `app/(app)/parts/_components/PartsIssueDialog.tsx`
+  **Impact:** Runtime crash when issuing a part from inventory before workOrderParts module is deployed.
+
+- **BUG-PC-127** — Rotables history `.sort()` mutates Convex query result in place. `history.sort(...)` mutates the array returned by `useQuery`, which Convex may freeze. Even if unfrozen, in-place mutation can cause React rendering inconsistencies. Fixed to `[...history].sort(...)`.
+  **File:** `app/(app)/parts/rotables/page.tsx`
+  **Impact:** Potential frozen-object crash or stale render when viewing rotable component history.
+
+- **BUG-PC-128** — Loaners history `.sort()` mutates Convex query result in place. Same class as BUG-PC-127 — the LoanerHistory component called `history.sort(...)` directly on the query result. Fixed to `[...history].sort(...)`.
+  **File:** `app/(app)/parts/loaners/page.tsx`
+  **Impact:** Potential frozen-object crash or stale render when viewing loaner item history.
+
 - **BUG-DOM-124** — Logbook tab displayed entry dates in raw ISO format (YYYY-MM-DD) while every other date in the app uses locale format pinned to UTC (e.g. "Mar 5, 2026"). A DOM switching between the logbook tab and full logbook page would see inconsistent date formatting. Fixed to use toLocaleDateString with timeZone:"UTC".
   **File:** `app/(app)/fleet/[tail]/_components/LogbookTab.tsx`
   **Impact:** Visual inconsistency in logbook date display.

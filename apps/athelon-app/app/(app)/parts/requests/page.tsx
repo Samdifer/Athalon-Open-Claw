@@ -378,6 +378,10 @@ export default function PartsRequestsPage() {
   const allParts = [...(pendingParts ?? []), ...(removedParts ?? [])] as PartItem[];
 
   async function handleCancelRequest(requestId: Id<"workOrderParts">) {
+    if (typeof cancelRequest !== "function") {
+      toast.error("Part request cancellation is not available — workOrderParts module may not be deployed yet.");
+      return;
+    }
     try {
       await cancelRequest({ requestId });
       toast.success("Part request cancelled.");

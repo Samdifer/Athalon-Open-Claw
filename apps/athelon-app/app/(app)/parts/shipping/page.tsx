@@ -109,7 +109,7 @@ export default function ShippingPage() {
       });
       toast.success("Shipment created");
       setShowCreate(false);
-      setFormCarrier(""); setFormTracking(""); setFormOrigin(""); setFormDest(""); setFormHazmat(false); setFormNotes("");
+      setFormType("outbound"); setFormCarrier(""); setFormTracking(""); setFormOrigin(""); setFormDest(""); setFormHazmat(false); setFormNotes("");
     } catch {
       toast.error("Failed to create shipment");
     } finally {
