@@ -618,11 +618,16 @@ export default function InvoicesPage() {
                 downloadCSV(
                   filtered.map((inv) => ({
                     "Invoice #": inv.invoiceNumber ?? "",
+                    Customer: customerMap.get(inv.customerId as string) ?? "Unknown",
                     Status: inv.status,
                     Total: inv.total,
+                    "Amount Paid": inv.amountPaid ?? 0,
+                    Balance: inv.balance ?? inv.total,
                     // BUG-BM-HUNT-005: dueDate is a date-only field (UTC-midnight); format in UTC to avoid off-by-one exports.
                     "Due Date": inv.dueDate ? formatDateUTC(inv.dueDate) : "",
                     Created: formatDate(inv._creationTime),
+                    Sent: inv.sentAt ? formatDate(inv.sentAt) : "",
+                    Paid: inv.paidAt ? formatDate(inv.paidAt) : "",
                   })),
                   "invoices.csv",
                 );
@@ -890,15 +895,17 @@ export default function InvoicesPage() {
             </Button>
           )}
 
-          {/* Record Payments */}
-          <Button
-            size="sm"
-            className="h-7 text-xs gap-1.5"
-            onClick={() => setPaymentDialogOpen(true)}
-          >
-            <CreditCard className="w-3 h-3" />
-            Record Payments
-          </Button>
+          {/* Record Payments — only show when at least one selected invoice has a balance */}
+          {selectedInvoices.some((inv) => (inv.balance ?? inv.total) > 0) && (
+            <Button
+              size="sm"
+              className="h-7 text-xs gap-1.5"
+              onClick={() => setPaymentDialogOpen(true)}
+            >
+              <CreditCard className="w-3 h-3" />
+              Record Payments
+            </Button>
+          )}
 
           {/* Deselect */}
           <Button
@@ -924,12 +931,14 @@ export default function InvoicesPage() {
       {orgId && (
         <BatchPaymentDialog
           open={paymentDialogOpen}
-          invoices={selectedInvoices.map((inv) => ({
-            _id: inv._id,
-            invoiceNumber: inv.invoiceNumber,
-            balance: inv.balance ?? inv.total,
-            total: inv.total,
-          }))}
+          invoices={selectedInvoices
+            .filter((inv) => (inv.balance ?? inv.total) > 0)
+            .map((inv) => ({
+              _id: inv._id,
+              invoiceNumber: inv.invoiceNumber,
+              balance: inv.balance ?? inv.total,
+              total: inv.total,
+            }))}
           orgId={orgId}
           currentTechId={currentTechId ?? undefined}
           onClose={() => setPaymentDialogOpen(false)}

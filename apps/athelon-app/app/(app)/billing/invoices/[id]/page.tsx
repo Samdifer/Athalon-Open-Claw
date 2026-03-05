@@ -465,6 +465,7 @@ export default function InvoiceDetailPage() {
                   title="Set Due Date"
                   className="h-5 w-5 p-0 text-muted-foreground hover:text-foreground"
                   onClick={() => {
+                    setError(null);
                     setDueDateValue(invoice.dueDate ? toDateInputValue(invoice.dueDate) : "");
                     setPaymentTermsValue(invoice.paymentTerms ?? "");
                     setDueDateDialog(true);
@@ -489,13 +490,13 @@ export default function InvoiceDetailPage() {
               </Button>
             )}
             {canPayment && (
-              <Button size="sm" onClick={() => setPaymentDialog(true)} className="h-8 gap-1.5 text-xs bg-green-600 hover:bg-green-700">
+              <Button size="sm" onClick={() => { setError(null); setPaymentDialog(true); }} className="h-8 gap-1.5 text-xs bg-green-600 hover:bg-green-700">
                 <DollarSign className="w-3.5 h-3.5" />
                 Record Payment
               </Button>
             )}
             {canVoid && (
-              <Button size="sm" variant="outline" onClick={() => setVoidDialog(true)} className="h-8 gap-1.5 text-xs border-red-500/40 text-red-600 dark:text-red-400 hover:bg-red-500/10">
+              <Button size="sm" variant="outline" onClick={() => { setError(null); setVoidDialog(true); }} className="h-8 gap-1.5 text-xs border-red-500/40 text-red-600 dark:text-red-400 hover:bg-red-500/10">
                 <XCircle className="w-3.5 h-3.5" />
                 Void
               </Button>
@@ -607,13 +608,13 @@ export default function InvoiceDetailPage() {
                               size="sm"
                               title="Edit line item"
                               className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
-                              onClick={() => openEditItem({
+                              onClick={() => { setError(null); openEditItem({
                                 _id: item._id as Id<"invoiceLineItems">,
                                 description: item.description,
                                 qty: item.qty,
                                 unitPrice: item.unitPrice,
                                 discountPercent: item.discountPercent,
-                              })}
+                              }); }}
                             >
                               <Pencil className="w-3.5 h-3.5" />
                             </Button>

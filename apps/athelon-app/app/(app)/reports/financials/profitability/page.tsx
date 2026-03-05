@@ -144,10 +144,13 @@ export default function WOProfitabilityPage() {
     // Only include PAID or PARTIAL invoices — DRAFT/SENT invoices have no collected
     // revenue yet and inflate margin figures. Same fix applied to Financial Dashboard
     // in BUG-SM-001; profitability page had the same flaw.
+    // BUG-BM-HUNT-122: Use paidAt (cash received date) for period attribution, not
+    // createdAt. This aligns with the Financial Dashboard's cash-basis accounting.
+    // An invoice created in January but paid in March belongs in March's profitability.
     const filtered = invoices.filter(
       (i) =>
         (i.status === "PAID" || i.status === "PARTIAL") &&
-        (i.createdAt ?? i._creationTime) >= cutoff,
+        ((i as { paidAt?: number }).paidAt ?? i.createdAt ?? i._creationTime) >= cutoff,
     );
 
     // Build PO cost by work order

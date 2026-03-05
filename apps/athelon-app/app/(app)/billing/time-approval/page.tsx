@@ -163,6 +163,21 @@ export default function TimeApprovalPage() {
   const approvedCount = filteredApproved.length;
   const rejectedCount = filteredRejected.length;
 
+  // BUG-BM-HUNT-124: Total pending hours summary so billing manager can assess
+  // labor cost impact before approving. Without this, they'd have to mentally sum
+  // 20+ entries to understand total labor exposure.
+  const pendingTotalMinutes = useMemo(() => {
+    let total = 0;
+    for (const entry of filteredPending) {
+      if (entry.clockOutAt) {
+        total += Math.round((entry.clockOutAt - entry.clockInAt) / 60000);
+      }
+    }
+    return total;
+  }, [filteredPending]);
+  const pendingHours = Math.floor(pendingTotalMinutes / 60);
+  const pendingMins = pendingTotalMinutes % 60;
+
   async function handleApprove(entryId: Id<"timeEntries">) {
     if (!orgId) return;
     if (!techId) {
@@ -308,7 +323,19 @@ export default function TimeApprovalPage() {
 
         <TabsContent value="pending" className="mt-4 space-y-3">
           {!isLoading && filteredPending.length > 0 && (
-            <div className="flex justify-end">
+            <div className="flex items-center justify-between">
+              {/* BUG-BM-HUNT-124: Total pending hours so billing manager sees labor cost at a glance */}
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-500/10 border border-amber-500/20">
+                  <Clock className="w-3.5 h-3.5 text-amber-500" />
+                  <span className="text-xs font-medium text-amber-600 dark:text-amber-400">
+                    {pendingHours > 0 ? `${pendingHours}h ${pendingMins}m` : `${pendingMins}m`} pending
+                  </span>
+                </div>
+                <span className="text-[10px] text-muted-foreground">
+                  {filteredPending.length} entr{filteredPending.length === 1 ? "y" : "ies"}
+                </span>
+              </div>
               <Button
                 size="sm"
                 className="h-8 text-xs"
