@@ -154,6 +154,7 @@ const mainNav: NavEntry[] = [
     icon: CalendarDays,
     section: "scheduling",
     children: [
+      { title: "Due-List Workbench", href: "/scheduling/due-list" },
       { title: "Roster & Teams", href: "/scheduling/roster" },
       { title: "Quote Workspace", href: "/scheduling/quotes" },
       { title: "Seed Audit", href: "/scheduling/seed-audit" },

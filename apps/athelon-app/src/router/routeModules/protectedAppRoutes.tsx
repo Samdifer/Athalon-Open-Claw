@@ -145,6 +145,7 @@ const FinancialPlanningPage = lazy(
 );
 const SchedulingQuotesPage = lazy(() => import("@/app/(app)/scheduling/quotes/page"));
 const SeedAuditPage = lazy(() => import("@/app/(app)/scheduling/seed-audit/page"));
+const DueListWorkbenchPage = lazy(() => import("@/app/(app)/scheduling/due-list/page"));
 
 const ReportsPage = lazy(() => import("@/app/(app)/reports/page"));
 const InventoryReportsPage = lazy(() => import("@/app/(app)/reports/inventory/page"));
@@ -329,6 +330,7 @@ export function protectedAppRoutes() {
               element={<FinancialPlanningPage />}
             />
             <Route path="/scheduling/quotes" element={<SchedulingQuotesPage />} />
+            <Route path="/scheduling/due-list" element={<DueListWorkbenchPage />} />
             <Route path="/scheduling/seed-audit" element={<SeedAuditPage />} />
 
             <Route path="/reports" element={<ReportsPage />} />

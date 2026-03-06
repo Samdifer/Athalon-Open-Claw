@@ -16,6 +16,7 @@ import type * as billingV4b from "../billingV4b.js";
 import type * as bulkImport from "../bulkImport.js";
 import type * as capacity from "../capacity.js";
 import type * as carryForwardItems from "../carryForwardItems.js";
+import type * as complianceLedger from "../complianceLedger.js";
 import type * as conformityInspections from "../conformityInspections.js";
 import type * as cores from "../cores.js";
 import type * as crm from "../crm.js";
@@ -99,6 +100,7 @@ import type * as domains_workOrders_taskCardVendorServices from "../domains/work
 import type * as domains_workOrders_taskCards from "../domains/workOrders/taskCards.js";
 import type * as domains_workOrders_taskCompliance from "../domains/workOrders/taskCompliance.js";
 import type * as domains_workOrders_workOrders from "../domains/workOrders/workOrders.js";
+import type * as dueEngine from "../dueEngine.js";
 import type * as email from "../email.js";
 import type * as emailLog from "../emailLog.js";
 import type * as emailTemplates from "../emailTemplates.js";
@@ -136,6 +138,7 @@ import type * as partSearch from "../partSearch.js";
 import type * as partTags from "../partTags.js";
 import type * as parts from "../parts.js";
 import type * as physicalInventory from "../physicalInventory.js";
+import type * as planningFromDueList from "../planningFromDueList.js";
 import type * as poReceiving from "../poReceiving.js";
 import type * as predictions from "../predictions.js";
 import type * as pricing from "../pricing.js";
@@ -213,6 +216,7 @@ declare const fullApi: ApiFromModules<{
   bulkImport: typeof bulkImport;
   capacity: typeof capacity;
   carryForwardItems: typeof carryForwardItems;
+  complianceLedger: typeof complianceLedger;
   conformityInspections: typeof conformityInspections;
   cores: typeof cores;
   crm: typeof crm;
@@ -296,6 +300,7 @@ declare const fullApi: ApiFromModules<{
   "domains/workOrders/taskCards": typeof domains_workOrders_taskCards;
   "domains/workOrders/taskCompliance": typeof domains_workOrders_taskCompliance;
   "domains/workOrders/workOrders": typeof domains_workOrders_workOrders;
+  dueEngine: typeof dueEngine;
   email: typeof email;
   emailLog: typeof emailLog;
   emailTemplates: typeof emailTemplates;
@@ -333,6 +338,7 @@ declare const fullApi: ApiFromModules<{
   partTags: typeof partTags;
   parts: typeof parts;
   physicalInventory: typeof physicalInventory;
+  planningFromDueList: typeof planningFromDueList;
   poReceiving: typeof poReceiving;
   predictions: typeof predictions;
   pricing: typeof pricing;
