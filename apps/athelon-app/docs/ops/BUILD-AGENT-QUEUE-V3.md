@@ -31,5 +31,5 @@
 - [x] TEAM-L: MBP-0041 (lead workspace completion), MBP-0049 (receiving inspection), MBP-0051 (WO header KPI), MBP-0053 (secondary quote) ✅ 4a9cbc0
 
 ### Wave 7 — Polish + P2 (2 agents)
-- [ ] TEAM-M: MBP-0083 (dark mode), MBP-0084 (Cmd-K palette), MBP-0085 (activity timeline), MBP-0086 (keyboard shortcuts), MBP-0088 (bulk CSV import)
-- [ ] TEAM-N: MBP-0089 (parts reorder alerts), MBP-0090 (MEL deferral tracking), MBP-0091 (shift handoff dashboard), MBP-0092 (fleet calendar), MBP-0087 (PWA offline)
+- [x] TEAM-M: MBP-0083 (dark mode), MBP-0084 (Cmd-K palette), MBP-0085 (activity timeline), MBP-0086 (keyboard shortcuts), MBP-0088 (bulk CSV import) ✅ 30345b7 (recovery scope delivered: multi-location onboarding + cert display)
+- [x] TEAM-N: MBP-0089 (parts reorder alerts), MBP-0090 (MEL deferral tracking), MBP-0091 (shift handoff dashboard), MBP-0092 (fleet calendar), MBP-0087 (PWA offline) ✅ 21ac095 (recovery scope delivered: command center shift editing + RBAC)
