@@ -156,6 +156,16 @@ function isWithinNextMonths(targetDateMs: number | null | undefined, months: num
   return targetDateMs <= max.getTime();
 }
 
+function getCampLinkBadge(state: string | undefined): { label: string; className: string } {
+  const map: Record<string, { label: string; className: string }> = {
+    linked: { label: "CAMP Linked", className: "border-emerald-500/30 bg-emerald-500/15 text-emerald-500" },
+    unlinked: { label: "CAMP Unlinked", className: "border-slate-500/30 bg-slate-500/15 text-slate-500" },
+    conflict: { label: "CAMP Conflict", className: "border-red-500/30 bg-red-500/15 text-red-500" },
+    stale: { label: "CAMP Stale", className: "border-amber-500/30 bg-amber-500/15 text-amber-500" },
+  };
+  return map[state ?? "unlinked"] ?? map.unlinked;
+}
+
 function FleetCardSkeleton() {
   return (
     <Card className="border-border/60">
@@ -593,6 +603,9 @@ export default function FleetPage() {
       <Badge variant="outline" className="text-[10px] border-border/60 text-muted-foreground">
         {classifyAircraftStyle(ac.make, ac.model)}
       </Badge>
+      <Badge variant="outline" className={`text-[10px] ${getCampLinkBadge(ac.campLinkState ?? ac.campStatus).className}`}>
+        {getCampLinkBadge(ac.campLinkState ?? ac.campStatus).label}
+      </Badge>
       {(ac.openWorkOrderCount ?? 0) > 0 && (
         <Badge className="text-[10px] border border-sky-500/30 bg-sky-500/15 text-sky-400">
           {ac.openWorkOrderCount} in work
@@ -958,6 +971,9 @@ export default function FleetPage() {
                   </Badge>
                   <Badge variant="outline" className="text-[10px] border-border/60">
                     {classifyAircraftStyle(ac.make, ac.model)}
+                  </Badge>
+                  <Badge variant="outline" className={`text-[10px] ${getCampLinkBadge(ac.campLinkState ?? ac.campStatus).className}`}>
+                    {getCampLinkBadge(ac.campLinkState ?? ac.campStatus).label}
                   </Badge>
                   {(ac.openWorkOrderCount ?? 0) > 0 && (
                     <span className="text-[10px] text-sky-500">

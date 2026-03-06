@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef, useMemo } from "react";
-import { useMutation } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import { toast } from "sonner";
@@ -35,7 +35,7 @@ type ImportResult = { row: number; success: boolean; error?: string };
 const FIELD_MAPS: Record<ImportType, { required: string[]; optional: string[] }> = {
   aircraft: {
     required: ["tailNumber", "make", "model", "serialNumber"],
-    optional: ["year", "totalTimeHours", "totalCycles"],
+    optional: ["year", "totalTimeHours", "totalCycles", "campAircraftId", "campTailNumber"],
   },
   parts: {
     required: ["partNumber", "partName"],
@@ -49,8 +49,8 @@ const FIELD_MAPS: Record<ImportType, { required: string[]; optional: string[] }>
 
 const TEMPLATE_ROWS: Record<ImportType, string[]> = {
   aircraft: [
-    "tailNumber,make,model,serialNumber,year,totalTimeHours,totalCycles",
-    "N123AB,Cessna,172S,172S-8390,2008,3450,5230",
+    "tailNumber,make,model,serialNumber,year,totalTimeHours,totalCycles,campAircraftId,campTailNumber",
+    "N123AB,Cessna,172S,172S-8390,2008,3450,5230,CAMP-AC-1001,N123AB",
   ],
   parts: [
     "partNumber,partName,description,serialNumber,condition,location",
@@ -133,6 +133,7 @@ export default function ImportPage() {
   const importAircraft = useMutation(api.bulkImport.importAircraft);
   const importParts = useMutation(api.bulkImport.importParts);
   const importCustomers = useMutation(api.bulkImport.importCustomers);
+  const applyCampMappings = useMutation(api.bulkImport.applyCampAircraftMappings);
 
   const fields = FIELD_MAPS[importType];
   const allFields = [...fields.required, ...fields.optional];
@@ -177,6 +178,29 @@ export default function ImportPage() {
       return obj;
     });
   }, [allFields, columnMapping, csvHeaders, csvRows]);
+
+  const campMappingRows = useMemo(() => {
+    if (importType !== "aircraft") return [];
+    return csvRows
+      .map((row) => {
+        const campIdHeader = columnMapping.campAircraftId;
+        const campTailHeader = columnMapping.campTailNumber;
+        const serialHeader = columnMapping.serialNumber;
+        const campId = campIdHeader ? row[csvHeaders.indexOf(campIdHeader)]?.trim() : "";
+        const campTailNumber = campTailHeader ? row[csvHeaders.indexOf(campTailHeader)]?.trim() : "";
+        const serialNumber = serialHeader ? row[csvHeaders.indexOf(serialHeader)]?.trim() : "";
+        if (!campId) return null;
+        return { campAircraftId: campId, campTailNumber: campTailNumber || undefined, serialNumber: serialNumber || undefined };
+      })
+      .filter((row): row is { campAircraftId: string; campTailNumber?: string; serialNumber?: string } => Boolean(row));
+  }, [importType, csvRows, csvHeaders, columnMapping]);
+
+  const campPreview = useQuery(
+    api.bulkImport.previewCampAircraftMappings,
+    orgId && campMappingRows.length > 0
+      ? { organizationId: orgId, rows: campMappingRows }
+      : "skip",
+  );
 
   const summary = useMemo(() => {
     if (!results) return null;
@@ -285,6 +309,37 @@ export default function ImportPage() {
       toast.error(e instanceof Error ? e.message : "Import failed");
     } finally {
       setImporting(false);
+    }
+  };
+
+  const handleApplyCampMappings = async () => {
+    if (!orgId || !campPreview) return;
+    const autoResolvable = campPreview.filter((row) => !row.ambiguous && row.selectedAircraftId);
+    if (autoResolvable.length === 0) {
+      toast.warning("No unambiguous CAMP mappings available. Resolve conflicts manually.");
+      return;
+    }
+
+    try {
+      const result = await applyCampMappings({
+        organizationId: orgId,
+        mappings: autoResolvable.map((row) => ({
+          aircraftId: row.selectedAircraftId,
+          campAircraftId: row.campAircraftId,
+          campTailNumber: row.campTailNumber,
+          linkageConfidence: row.linkageConfidence,
+          confirmRelink: false,
+        })),
+      });
+      const successCount = result.filter((item) => item.success).length;
+      const failCount = result.length - successCount;
+      if (failCount > 0) {
+        toast.warning(`Applied ${successCount}/${result.length} CAMP mappings. ${failCount} failed.`);
+      } else {
+        toast.success(`Applied ${successCount} CAMP mappings.`);
+      }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed CAMP mapping apply.");
     }
   };
 
@@ -474,6 +529,29 @@ export default function ImportPage() {
               )}
             </CardContent>
           </Card>
+
+          {importType === "aircraft" && campPreview && campPreview.length > 0 && (
+            <Card className="border-border/60">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm">5. CAMP mapping helper</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex flex-wrap gap-2 text-xs">
+                  <Badge variant="secondary">Rows with CAMP IDs: {campPreview.length}</Badge>
+                  <Badge variant={campPreview.some((r) => r.ambiguous) ? "destructive" : "secondary"}>
+                    Ambiguous: {campPreview.filter((r) => r.ambiguous).length}
+                  </Badge>
+                  <Badge variant="secondary">Auto-matchable: {campPreview.filter((r) => !r.ambiguous && r.selectedAircraftId).length}</Badge>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Ambiguous matches are blocked from auto-linking until manually confirmed.
+                </p>
+                <Button variant="outline" onClick={handleApplyCampMappings}>
+                  Apply unambiguous CAMP mappings
+                </Button>
+              </CardContent>
+            </Card>
+          )}
 
           {importing && <Progress value={progress} className="h-2" />}
 

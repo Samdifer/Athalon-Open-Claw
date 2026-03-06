@@ -111,6 +111,17 @@ function formatRegulation(reg: string | undefined): string {
   return reg.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
+function getCampBadge(state: string | undefined): { label: string; className: string } {
+  const normalized = state ?? "unlinked";
+  const map: Record<string, { label: string; className: string }> = {
+    linked: { label: "CAMP Linked", className: "bg-emerald-500/15 text-emerald-500 border-emerald-500/30" },
+    unlinked: { label: "CAMP Unlinked", className: "bg-slate-500/15 text-slate-500 border-slate-500/30" },
+    conflict: { label: "CAMP Conflict", className: "bg-red-500/15 text-red-500 border-red-500/30" },
+    stale: { label: "CAMP Stale", className: "bg-amber-500/15 text-amber-500 border-amber-500/30" },
+  };
+  return map[normalized] ?? map.unlinked;
+}
+
 // ─── Skeleton ─────────────────────────────────────────────────────────────────
 
 function DetailSkeleton() {
@@ -187,8 +198,13 @@ export default function AircraftDetailPage() {
   const [asOfDate, setAsOfDate] = useState("");
   const [updateTTError, setUpdateTTError] = useState<string | null>(null);
   const [updateTTSubmitting, setUpdateTTSubmitting] = useState(false);
+  const [campAircraftIdInput, setCampAircraftIdInput] = useState("");
+  const [campTailInput, setCampTailInput] = useState("");
+  const [unlinkReason, setUnlinkReason] = useState("");
 
   const updateTotalTime = useMutation(api.gapFixes.updateAircraftTotalTime);
+  const linkCampRecord = useMutation(api.aircraft.linkCampRecord);
+  const unlinkCampRecord = useMutation(api.aircraft.unlinkCampRecord);
 
   async function handleUpdateTT(e: React.FormEvent) {
     e.preventDefault();
@@ -236,6 +252,13 @@ export default function AircraftDetailPage() {
   const aircraft = useQuery(
     api.aircraft.getByTailNumber,
     orgId ? { organizationId: orgId, tailNumber } : "skip",
+  );
+
+  const campAudit = useQuery(
+    api.aircraft.listCampLinkAudit,
+    aircraft?._id && orgId
+      ? { organizationId: orgId, aircraftId: aircraft._id }
+      : "skip",
   );
 
   // Load engines for this aircraft
@@ -286,6 +309,8 @@ export default function AircraftDetailPage() {
 
   const status = aircraft?.status ?? "";
   const style = getStatusStyle(status);
+  const campState = aircraft?.campStatus ?? (aircraft?.campAircraftId ? "linked" : "unlinked");
+  const campBadge = getCampBadge(campState);
 
   // Work order categorization — memoized so dialog open/close state changes don't recompute
   const activeWOs = useMemo(
@@ -338,6 +363,9 @@ export default function AircraftDetailPage() {
                   className={`text-[11px] border ${style.color}`}
                 >
                   {style.label}
+                </Badge>
+                <Badge variant="outline" className={`text-[11px] border ${campBadge.className}`}>
+                  {campBadge.label}
                 </Badge>
               </div>
               <p className="text-sm text-muted-foreground mt-0.5">
@@ -434,6 +462,116 @@ export default function AircraftDetailPage() {
                   <Separator className="col-span-full opacity-40" />
                   <FieldRow label="Owner Name" value={aircraft!.ownerName ?? "—"} />
                   <FieldRow label="Owner Address" value={aircraft!.ownerAddress ?? "—"} />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-border/60">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-semibold">CAMP Linkage</CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0 space-y-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <FieldRow label="CAMP Aircraft ID" value={aircraft!.campAircraftId ?? "—"} mono />
+                  <FieldRow label="CAMP Tail" value={aircraft!.campTailNumber ?? "—"} mono />
+                  <FieldRow label="Sync Health" value={aircraft!.campSyncHealth ?? "—"} />
+                  <FieldRow
+                    label="Last Sync"
+                    value={aircraft!.campLastSyncAt ? new Date(aircraft!.campLastSyncAt).toLocaleString("en-US", { timeZone: "UTC" }) : "—"}
+                  />
+                </div>
+                <div className="rounded-md border border-border/60 p-3 space-y-2">
+                  <p className="text-xs text-muted-foreground">Link / relink CAMP record (manual override allowed).</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <Input
+                      placeholder="CAMP aircraft ID"
+                      value={campAircraftIdInput}
+                      onChange={(e) => setCampAircraftIdInput(e.target.value)}
+                    />
+                    <Input
+                      placeholder="CAMP tail (optional)"
+                      value={campTailInput}
+                      onChange={(e) => setCampTailInput(e.target.value)}
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      onClick={async () => {
+                        if (!orgId || !aircraft?._id || !campAircraftIdInput.trim()) {
+                          toast.error("CAMP aircraft ID is required.");
+                          return;
+                        }
+                        try {
+                          await linkCampRecord({
+                            organizationId: orgId,
+                            aircraftId: aircraft._id,
+                            campAircraftId: campAircraftIdInput.trim(),
+                            campTailNumber: campTailInput.trim() || undefined,
+                            linkageMethod: "manual",
+                            linkageConfidence: 1,
+                            reason: "Fleet detail manual link",
+                            confirmRelink: true,
+                          });
+                          toast.success("CAMP link updated.");
+                          setCampAircraftIdInput("");
+                          setCampTailInput("");
+                        } catch (error) {
+                          toast.error(error instanceof Error ? error.message : "Failed to link CAMP record.");
+                        }
+                      }}
+                    >
+                      Save CAMP Link
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      disabled={!aircraft!.campAircraftId}
+                      onClick={async () => {
+                        if (!orgId || !aircraft?._id) return;
+                        if (!unlinkReason.trim()) {
+                          toast.error("Unlink reason is required for audit safety.");
+                          return;
+                        }
+                        try {
+                          await unlinkCampRecord({
+                            organizationId: orgId,
+                            aircraftId: aircraft._id,
+                            reason: unlinkReason.trim(),
+                            confirmUnlink: true,
+                          });
+                          toast.success("CAMP record unlinked.");
+                          setUnlinkReason("");
+                        } catch (error) {
+                          toast.error(error instanceof Error ? error.message : "Failed to unlink CAMP record.");
+                        }
+                      }}
+                    >
+                      Unlink
+                    </Button>
+                  </div>
+                  <Input
+                    placeholder="Unlink reason (required for production guardrail)"
+                    value={unlinkReason}
+                    onChange={(e) => setUnlinkReason(e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide">Recent linkage audit</p>
+                  {(campAudit ?? []).length === 0 ? (
+                    <p className="text-xs text-muted-foreground">No linkage changes recorded yet.</p>
+                  ) : (
+                    <div className="space-y-1">
+                      {(campAudit ?? []).slice(0, 5).map((entry: any) => (
+                        <div key={entry._id} className="text-xs text-muted-foreground border-b border-border/40 pb-1">
+                          <span className="font-medium text-foreground mr-2">{entry.action}</span>
+                          {new Date(entry.createdAt).toLocaleString("en-US", { timeZone: "UTC" })}
+                          {entry.reason ? ` — ${entry.reason}` : ""}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>

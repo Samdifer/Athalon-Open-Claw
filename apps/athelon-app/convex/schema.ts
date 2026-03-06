@@ -411,6 +411,31 @@ export default defineSchema({
     status: aircraftStatus,
     baseLocation: v.optional(v.string()), // ICAO airport code
 
+    // CAMP linkage metadata (org-scoped mapping to external CAMP aircraft identity)
+    campAircraftId: v.optional(v.string()),
+    campTailNumber: v.optional(v.string()),
+    campStatus: v.optional(
+      v.union(
+        v.literal("linked"),
+        v.literal("unlinked"),
+        v.literal("conflict"),
+        v.literal("stale"),
+      ),
+    ),
+    campLastSyncAt: v.optional(v.number()),
+    campSyncHealth: v.optional(
+      v.union(
+        v.literal("healthy"),
+        v.literal("degraded"),
+        v.literal("failed"),
+        v.literal("unknown"),
+      ),
+    ),
+    campLinkageConfidence: v.optional(v.number()), // 0..1
+    campLinkageMethod: v.optional(
+      v.union(v.literal("manual"), v.literal("import"), v.literal("api")),
+    ),
+
     createdAt: v.number(),
     updatedAt: v.number(),
     createdByOrganizationId: v.optional(v.id("organizations")),
@@ -419,7 +444,10 @@ export default defineSchema({
     .index("by_registration", ["currentRegistration"])
     .index("by_organization", ["operatingOrganizationId"])
     .index("by_status", ["status"])
-    .index("by_customer", ["customerId"]), // v2: supports customer fleet queries
+    .index("by_customer", ["customerId"])
+    .index("by_camp_aircraft_id", ["campAircraftId"])
+    .index("by_org_camp_aircraft_id", ["operatingOrganizationId", "campAircraftId"])
+    .index("by_org_camp_tail", ["operatingOrganizationId", "campTailNumber"]), // v2: supports customer fleet queries
 
   // ═══════════════════════════════════════════════════════════════════════════
   // AIRCRAFT REGISTRATION HISTORY
@@ -435,6 +463,38 @@ export default defineSchema({
   })
     .index("by_aircraft", ["aircraftId"])
     .index("by_n_number", ["nNumber"]),
+
+  // Append-only CAMP linkage audit trail (before/after snapshots + actor).
+  campLinkAudit: defineTable({
+    organizationId: v.id("organizations"),
+    aircraftId: v.id("aircraft"),
+    action: v.union(v.literal("link"), v.literal("unlink"), v.literal("relink"), v.literal("sync_update")),
+    actorUserId: v.string(),
+    linkageMethod: v.union(v.literal("manual"), v.literal("import"), v.literal("api")),
+    before: v.optional(v.object({
+      campAircraftId: v.optional(v.string()),
+      campTailNumber: v.optional(v.string()),
+      campStatus: v.optional(v.string()),
+      campLastSyncAt: v.optional(v.number()),
+      campSyncHealth: v.optional(v.string()),
+      campLinkageConfidence: v.optional(v.number()),
+      campLinkageMethod: v.optional(v.string()),
+    })),
+    after: v.optional(v.object({
+      campAircraftId: v.optional(v.string()),
+      campTailNumber: v.optional(v.string()),
+      campStatus: v.optional(v.string()),
+      campLastSyncAt: v.optional(v.number()),
+      campSyncHealth: v.optional(v.string()),
+      campLinkageConfidence: v.optional(v.number()),
+      campLinkageMethod: v.optional(v.string()),
+    })),
+    reason: v.optional(v.string()),
+    createdAt: v.number(),
+  })
+    .index("by_org", ["organizationId"])
+    .index("by_aircraft", ["aircraftId"])
+    .index("by_org_aircraft", ["organizationId", "aircraftId"]),
 
   // ═══════════════════════════════════════════════════════════════════════════
   // ENGINES

@@ -5,6 +5,39 @@ import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 import { requireAuth } from "./lib/authHelpers";
 
+function normalizeTail(value?: string | null): string | undefined {
+  const normalized = value?.trim().toUpperCase();
+  return normalized && normalized.length > 0 ? normalized : undefined;
+}
+
+function normalizeCampAircraftId(value?: string | null): string | undefined {
+  const normalized = value?.trim();
+  return normalized && normalized.length > 0 ? normalized : undefined;
+}
+
+function getCampLinkState(aircraft: any): "linked" | "unlinked" | "conflict" | "stale" {
+  if (!aircraft.campAircraftId) return "unlinked";
+  if (aircraft.campStatus === "conflict") return "conflict";
+  const staleThresholdMs = 1000 * 60 * 60 * 24 * 7;
+  const ageMs = aircraft.campLastSyncAt ? Date.now() - aircraft.campLastSyncAt : Number.POSITIVE_INFINITY;
+  if (aircraft.campStatus === "stale" || ageMs > staleThresholdMs || aircraft.campSyncHealth === "failed") {
+    return "stale";
+  }
+  return "linked";
+}
+
+function campSnapshot(aircraft: any) {
+  return {
+    campAircraftId: aircraft.campAircraftId,
+    campTailNumber: aircraft.campTailNumber,
+    campStatus: aircraft.campStatus,
+    campLastSyncAt: aircraft.campLastSyncAt,
+    campSyncHealth: aircraft.campSyncHealth,
+    campLinkageConfidence: aircraft.campLinkageConfidence,
+    campLinkageMethod: aircraft.campLinkageMethod,
+  };
+}
+
 /**
  * List all aircraft for an organization with their current status.
  * Returns denormalized data for efficient list rendering.
@@ -102,6 +135,7 @@ export const list = query({
 
         return {
           ...ac,
+          campLinkState: getCampLinkState(ac),
           openWorkOrderCount: openCountByAircraft.get(ac._id) ?? 0,
           nextScheduledStartDate: nextScheduledByAircraft.get(ac._id) ?? null,
           featuredImageUrl,
@@ -355,6 +389,155 @@ export const backfillOperatingOrganizationFromWorkOrders = mutation({
       crossOrgAircraftIds,
       missingAircraftIds,
     };
+  },
+});
+
+export const listCampLinkAudit = query({
+  args: {
+    organizationId: v.id("organizations"),
+    aircraftId: v.id("aircraft"),
+  },
+  handler: async (ctx, args) => {
+    await requireAuth(ctx);
+    return await ctx.db
+      .query("campLinkAudit")
+      .withIndex("by_org_aircraft", (q) =>
+        q.eq("organizationId", args.organizationId).eq("aircraftId", args.aircraftId)
+      )
+      .order("desc")
+      .take(25);
+  },
+});
+
+export const linkCampRecord = mutation({
+  args: {
+    organizationId: v.id("organizations"),
+    aircraftId: v.id("aircraft"),
+    campAircraftId: v.string(),
+    campTailNumber: v.optional(v.string()),
+    campStatus: v.optional(v.union(v.literal("linked"), v.literal("conflict"), v.literal("stale"))),
+    campSyncHealth: v.optional(v.union(v.literal("healthy"), v.literal("degraded"), v.literal("failed"), v.literal("unknown"))),
+    campLastSyncAt: v.optional(v.number()),
+    linkageConfidence: v.optional(v.number()),
+    linkageMethod: v.union(v.literal("manual"), v.literal("import"), v.literal("api")),
+    reason: v.optional(v.string()),
+    confirmRelink: v.optional(v.boolean()),
+  },
+  handler: async (ctx, args) => {
+    const userId = await requireAuth(ctx);
+    const now = Date.now();
+    const aircraft = await ctx.db.get(args.aircraftId);
+    if (!aircraft) throw new Error("Aircraft not found.");
+    if (aircraft.operatingOrganizationId !== args.organizationId) {
+      throw new Error("Cross-organization linking is not allowed.");
+    }
+
+    const campAircraftId = normalizeCampAircraftId(args.campAircraftId);
+    if (!campAircraftId) throw new Error("CAMP aircraft ID is required.");
+
+    const orgConflict = await ctx.db
+      .query("aircraft")
+      .withIndex("by_org_camp_aircraft_id", (q) =>
+        q.eq("operatingOrganizationId", args.organizationId).eq("campAircraftId", campAircraftId)
+      )
+      .first();
+    if (orgConflict && orgConflict._id !== args.aircraftId) {
+      throw new Error(`CAMP aircraft ID ${campAircraftId} is already linked to another aircraft in this org.`);
+    }
+
+    const globalMatches = await ctx.db
+      .query("aircraft")
+      .withIndex("by_camp_aircraft_id", (q) => q.eq("campAircraftId", campAircraftId))
+      .collect();
+    const crossOrg = globalMatches.find(
+      (row) => row._id !== args.aircraftId && row.operatingOrganizationId && row.operatingOrganizationId !== args.organizationId,
+    );
+    if (crossOrg) {
+      throw new Error("Cross-org CAMP collision detected. CAMP aircraft ID is already bound to a different organization.");
+    }
+
+    if (aircraft.campAircraftId && aircraft.campAircraftId !== campAircraftId && !args.confirmRelink) {
+      throw new Error("Aircraft is already linked to a different CAMP ID. Confirm relink before overriding production linkage.");
+    }
+
+    const before = campSnapshot(aircraft);
+    await ctx.db.patch(args.aircraftId, {
+      campAircraftId,
+      campTailNumber: normalizeTail(args.campTailNumber),
+      campStatus: args.campStatus ?? "linked",
+      campLastSyncAt: args.campLastSyncAt ?? now,
+      campSyncHealth: args.campSyncHealth ?? "healthy",
+      campLinkageConfidence: args.linkageConfidence,
+      campLinkageMethod: args.linkageMethod,
+      updatedAt: now,
+    });
+
+    const afterDoc = await ctx.db.get(args.aircraftId);
+    await ctx.db.insert("campLinkAudit", {
+      organizationId: args.organizationId,
+      aircraftId: args.aircraftId,
+      action: aircraft.campAircraftId && aircraft.campAircraftId !== campAircraftId ? "relink" : "link",
+      actorUserId: userId,
+      linkageMethod: args.linkageMethod,
+      before,
+      after: afterDoc ? campSnapshot(afterDoc) : undefined,
+      reason: args.reason,
+      createdAt: now,
+    });
+
+    return { ok: true };
+  },
+});
+
+export const unlinkCampRecord = mutation({
+  args: {
+    organizationId: v.id("organizations"),
+    aircraftId: v.id("aircraft"),
+    reason: v.string(),
+    confirmUnlink: v.optional(v.boolean()),
+  },
+  handler: async (ctx, args) => {
+    const userId = await requireAuth(ctx);
+    const now = Date.now();
+    const aircraft = await ctx.db.get(args.aircraftId);
+    if (!aircraft) throw new Error("Aircraft not found.");
+    if (aircraft.operatingOrganizationId !== args.organizationId) {
+      throw new Error("Cross-organization unlink is not allowed.");
+    }
+    if (!aircraft.campAircraftId) throw new Error("Aircraft is not linked to CAMP.");
+    if (!args.confirmUnlink) {
+      throw new Error("Unlink requires explicit confirmation for production safety.");
+    }
+
+    const before = campSnapshot(aircraft);
+    await ctx.db.patch(args.aircraftId, {
+      campAircraftId: undefined,
+      campTailNumber: undefined,
+      campStatus: "unlinked",
+      campLastSyncAt: now,
+      campSyncHealth: "unknown",
+      campLinkageConfidence: undefined,
+      campLinkageMethod: undefined,
+      updatedAt: now,
+    });
+
+    await ctx.db.insert("campLinkAudit", {
+      organizationId: args.organizationId,
+      aircraftId: args.aircraftId,
+      action: "unlink",
+      actorUserId: userId,
+      linkageMethod: "manual",
+      before,
+      after: {
+        campStatus: "unlinked",
+        campLastSyncAt: now,
+        campSyncHealth: "unknown",
+      },
+      reason: args.reason,
+      createdAt: now,
+    });
+
+    return { ok: true };
   },
 });
 

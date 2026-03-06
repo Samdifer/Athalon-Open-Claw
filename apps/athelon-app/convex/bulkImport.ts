@@ -1,7 +1,7 @@
 // convex/bulkImport.ts
 // Athelon — Bulk CSV Import Mutations
 
-import { mutation } from "./_generated/server";
+import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import { requireAuth } from "./lib/authHelpers";
@@ -69,6 +69,163 @@ function trimOrUndefined(value: string | undefined) {
   return trimmed ? trimmed : undefined;
 }
 
+function normalizeTail(value: string | undefined) {
+  const normalized = value?.trim().toUpperCase();
+  return normalized ? normalized : undefined;
+}
+
+function normalizeSerial(value: string | undefined) {
+  const normalized = value?.trim().toUpperCase();
+  return normalized ? normalized : undefined;
+}
+
+export const previewCampAircraftMappings = query({
+  args: {
+    organizationId: v.id("organizations"),
+    rows: v.array(
+      v.object({
+        campAircraftId: v.string(),
+        campTailNumber: v.optional(v.string()),
+        serialNumber: v.optional(v.string()),
+      }),
+    ),
+  },
+  handler: async (ctx, args) => {
+    await requireAuth(ctx);
+    const aircraft = await ctx.db
+      .query("aircraft")
+      .withIndex("by_organization", (q: any) => q.eq("operatingOrganizationId", args.organizationId))
+      .collect();
+
+    return args.rows.map((row) => {
+      const normalizedTail = normalizeTail(row.campTailNumber);
+      const normalizedSerial = normalizeSerial(row.serialNumber);
+      const candidates = aircraft.filter((ac) => {
+        const tailMatch = normalizedTail && normalizeTail(ac.currentRegistration) === normalizedTail;
+        const serialMatch = normalizedSerial && normalizeSerial(ac.serialNumber) === normalizedSerial;
+        return Boolean(tailMatch || serialMatch);
+      });
+
+      const strongest = candidates.find(
+        (ac) => normalizedTail && normalizeTail(ac.currentRegistration) === normalizedTail && normalizedSerial && normalizeSerial(ac.serialNumber) === normalizedSerial,
+      );
+      const selected = strongest ?? candidates[0];
+      const ambiguous = candidates.length > 1 && !strongest;
+
+      return {
+        campAircraftId: row.campAircraftId,
+        campTailNumber: normalizedTail,
+        serialNumber: normalizedSerial,
+        candidateAircraftIds: candidates.map((c) => c._id),
+        selectedAircraftId: ambiguous ? undefined : selected?._id,
+        ambiguous,
+        linkageConfidence: strongest ? 0.98 : selected ? 0.75 : 0,
+      };
+    });
+  },
+});
+
+export const applyCampAircraftMappings = mutation({
+  args: {
+    organizationId: v.id("organizations"),
+    mappings: v.array(
+      v.object({
+        aircraftId: v.id("aircraft"),
+        campAircraftId: v.string(),
+        campTailNumber: v.optional(v.string()),
+        linkageConfidence: v.optional(v.number()),
+        confirmRelink: v.optional(v.boolean()),
+      }),
+    ),
+  },
+  handler: async (ctx, args) => {
+    const userId = await requireAuth(ctx);
+    const now = Date.now();
+    const results: { aircraftId: Id<"aircraft">; success: boolean; error?: string }[] = [];
+
+    for (const mapping of args.mappings) {
+      try {
+        const aircraft = await ctx.db.get(mapping.aircraftId);
+        if (!aircraft) throw new Error("Aircraft not found.");
+        if (aircraft.operatingOrganizationId !== args.organizationId) {
+          throw new Error("Aircraft organization mismatch.");
+        }
+
+        const campAircraftId = trimOrUndefined(mapping.campAircraftId);
+        if (!campAircraftId) throw new Error("Missing CAMP aircraft ID.");
+
+        const orgConflict = await ctx.db
+          .query("aircraft")
+          .withIndex("by_org_camp_aircraft_id", (q: any) =>
+            q.eq("operatingOrganizationId", args.organizationId).eq("campAircraftId", campAircraftId)
+          )
+          .first();
+        if (orgConflict && orgConflict._id !== mapping.aircraftId) {
+          throw new Error("CAMP aircraft ID already linked to another aircraft in this org.");
+        }
+
+        if (aircraft.campAircraftId && aircraft.campAircraftId !== campAircraftId && !mapping.confirmRelink) {
+          throw new Error("Relink requires confirmRelink=true.");
+        }
+
+        const before = {
+          campAircraftId: aircraft.campAircraftId,
+          campTailNumber: aircraft.campTailNumber,
+          campStatus: aircraft.campStatus,
+          campLastSyncAt: aircraft.campLastSyncAt,
+          campSyncHealth: aircraft.campSyncHealth,
+          campLinkageConfidence: aircraft.campLinkageConfidence,
+          campLinkageMethod: aircraft.campLinkageMethod,
+        };
+
+        await ctx.db.patch(mapping.aircraftId, {
+          campAircraftId,
+          campTailNumber: normalizeTail(mapping.campTailNumber),
+          campStatus: "linked",
+          campLastSyncAt: now,
+          campSyncHealth: "healthy",
+          campLinkageConfidence: mapping.linkageConfidence,
+          campLinkageMethod: "import",
+          updatedAt: now,
+        });
+
+        const afterDoc = await ctx.db.get(mapping.aircraftId);
+        await ctx.db.insert("campLinkAudit", {
+          organizationId: args.organizationId,
+          aircraftId: mapping.aircraftId,
+          action: aircraft.campAircraftId && aircraft.campAircraftId !== campAircraftId ? "relink" : "link",
+          actorUserId: userId,
+          linkageMethod: "import",
+          before,
+          after: afterDoc
+            ? {
+                campAircraftId: afterDoc.campAircraftId,
+                campTailNumber: afterDoc.campTailNumber,
+                campStatus: afterDoc.campStatus,
+                campLastSyncAt: afterDoc.campLastSyncAt,
+                campSyncHealth: afterDoc.campSyncHealth,
+                campLinkageConfidence: afterDoc.campLinkageConfidence,
+                campLinkageMethod: afterDoc.campLinkageMethod,
+              }
+            : undefined,
+          reason: "Bulk import CAMP mapping helper",
+          createdAt: now,
+        });
+
+        results.push({ aircraftId: mapping.aircraftId, success: true });
+      } catch (error) {
+        results.push({
+          aircraftId: mapping.aircraftId,
+          success: false,
+          error: error instanceof Error ? error.message : "Unknown error",
+        });
+      }
+    }
+
+    return results;
+  },
+});
+
 export const importAircraft = mutation({
   args: {
     organizationId: v.id("organizations"),
@@ -81,6 +238,8 @@ export const importAircraft = mutation({
         year: v.optional(v.number()),
         totalTimeHours: v.optional(v.number()),
         totalCycles: v.optional(v.number()),
+        campAircraftId: v.optional(v.string()),
+        campTailNumber: v.optional(v.string()),
       }),
     ),
   },
@@ -116,6 +275,20 @@ export const importAircraft = mutation({
           continue;
         }
 
+        const campAircraftId = trimOrUndefined(row.campAircraftId);
+        if (campAircraftId) {
+          const campConflict = await ctx.db
+            .query("aircraft")
+            .withIndex("by_org_camp_aircraft_id", (q: any) =>
+              q.eq("operatingOrganizationId", args.organizationId).eq("campAircraftId", campAircraftId)
+            )
+            .first();
+          if (campConflict) {
+            results.push({ row: i, success: false, error: `Duplicate CAMP aircraft ID in org: ${campAircraftId}` });
+            continue;
+          }
+        }
+
         const now = Date.now();
         const createdId = await ctx.db.insert("aircraft", {
           currentRegistration: tailNumber,
@@ -128,6 +301,13 @@ export const importAircraft = mutation({
           totalTimeAirframeHours: row.totalTimeHours ?? 0,
           totalTimeAirframeAsOfDate: now,
           totalLandingCycles: row.totalCycles,
+          campAircraftId,
+          campTailNumber: normalizeTail(row.campTailNumber),
+          campStatus: campAircraftId ? "linked" : "unlinked",
+          campLastSyncAt: campAircraftId ? now : undefined,
+          campSyncHealth: campAircraftId ? "healthy" : "unknown",
+          campLinkageConfidence: campAircraftId ? 0.8 : undefined,
+          campLinkageMethod: campAircraftId ? "import" : undefined,
           experimental: false,
           aircraftCategory: "normal",
           engineCount: 1,
@@ -154,6 +334,27 @@ export const importAircraft = mutation({
           notes: "Bulk CSV import: aircraft row created",
           timestamp: now,
         });
+
+        if (campAircraftId) {
+          await ctx.db.insert("campLinkAudit", {
+            organizationId: args.organizationId,
+            aircraftId: createdId,
+            action: "link",
+            actorUserId: userId,
+            linkageMethod: "import",
+            after: {
+              campAircraftId,
+              campTailNumber: normalizeTail(row.campTailNumber),
+              campStatus: "linked",
+              campLastSyncAt: now,
+              campSyncHealth: "healthy",
+              campLinkageConfidence: 0.8,
+              campLinkageMethod: "import",
+            },
+            reason: "Bulk aircraft import with CAMP linkage",
+            createdAt: now,
+          });
+        }
 
         results.push({ row: i, success: true });
       } catch (e: unknown) {
