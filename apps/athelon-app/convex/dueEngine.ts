@@ -138,12 +138,23 @@ export type AdLifecycleStatus =
   | "superseded";
 
 const AD_LIFECYCLE_TRANSITIONS: Record<AdLifecycleStatus, ReadonlySet<AdLifecycleStatus>> = {
-  pending_determination: new Set(["not_complied", "not_applicable", "complied_one_time", "complied_recurring", "superseded"]),
-  not_complied: new Set(["complied_one_time", "complied_recurring", "not_applicable", "superseded"]),
-  complied_one_time: new Set(["superseded"]),
-  complied_recurring: new Set(["complied_recurring", "superseded"]),
-  not_applicable: new Set(["superseded"]),
-  superseded: new Set([]),
+  pending_determination: new Set<AdLifecycleStatus>([
+    "not_complied",
+    "not_applicable",
+    "complied_one_time",
+    "complied_recurring",
+    "superseded",
+  ]),
+  not_complied: new Set<AdLifecycleStatus>([
+    "complied_one_time",
+    "complied_recurring",
+    "not_applicable",
+    "superseded",
+  ]),
+  complied_one_time: new Set<AdLifecycleStatus>(["superseded"]),
+  complied_recurring: new Set<AdLifecycleStatus>(["complied_recurring", "superseded"]),
+  not_applicable: new Set<AdLifecycleStatus>(["superseded"]),
+  superseded: new Set<AdLifecycleStatus>([]),
 };
 
 /**
@@ -172,12 +183,12 @@ export type DirectiveLifecycleState =
   | "recurring_next";
 
 const DIRECTIVE_TRANSITIONS: Record<DirectiveLifecycleState, ReadonlySet<DirectiveLifecycleState>> = {
-  identified: new Set(["assessed"]),
-  assessed: new Set(["applicable"]),
-  applicable: new Set(["scheduled"]),
-  scheduled: new Set(["complied"]),
-  complied: new Set(["recurring_next"]),
-  recurring_next: new Set(["scheduled", "complied"]),
+  identified: new Set<DirectiveLifecycleState>(["assessed"]),
+  assessed: new Set<DirectiveLifecycleState>(["applicable"]),
+  applicable: new Set<DirectiveLifecycleState>(["scheduled"]),
+  scheduled: new Set<DirectiveLifecycleState>(["complied"]),
+  complied: new Set<DirectiveLifecycleState>(["recurring_next"]),
+  recurring_next: new Set<DirectiveLifecycleState>(["scheduled", "complied"]),
 };
 
 export function assertValidDirectiveLifecycleTransition(

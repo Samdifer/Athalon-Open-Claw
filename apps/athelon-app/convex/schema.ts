@@ -2205,6 +2205,84 @@ export default defineSchema({
     .index("by_org_next_due_date", ["organizationId", "nextDueDate"]), // v2 NB-01
 
   // ═══════════════════════════════════════════════════════════════════════════
+  // COMPLIANCE LEDGER EVENTS (C1 FOUNDATION)
+  //
+  // Append-only stream of compliance state transitions and due snapshots.
+  // No mutation should patch/delete rows in this table.
+  // ═══════════════════════════════════════════════════════════════════════════
+  complianceLedgerEvents: defineTable({
+    organizationId: v.id("organizations"),
+
+    aggregateType: v.union(
+      v.literal("ad_compliance"),
+      v.literal("task_compliance"),
+      v.literal("directive_lifecycle"),
+      v.literal("counter_reconciliation"),
+    ),
+    aggregateId: v.string(),
+
+    eventType: v.string(),
+    previousState: v.optional(v.string()), // JSON payload
+    nextState: v.optional(v.string()), // JSON payload
+
+    // Optional denormalized due snapshot at event time.
+    dueDate: v.optional(v.number()),
+    dueHours: v.optional(v.number()),
+    dueCycles: v.optional(v.number()),
+
+    source: v.union(
+      v.literal("system"),
+      v.literal("user"),
+      v.literal("integration"),
+      v.literal("reconciliation"),
+    ),
+
+    entityTable: v.optional(v.string()),
+    entityId: v.optional(v.string()),
+    actorUserId: v.optional(v.string()),
+
+    occurredAt: v.number(),
+    createdAt: v.number(),
+  })
+    .index("by_org_occurred", ["organizationId", "occurredAt"])
+    .index("by_org_aggregate", ["organizationId", "aggregateType", "aggregateId"]),
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // COUNTER RECONCILIATION EVENTS (C1 FOUNDATION)
+  //
+  // Source-of-truth policy:
+  // - authoritativeSource identifies the winning authority.
+  // - observedValue vs authoritativeValue captures reconciliation deltas.
+  // - every event is immutable and ledgered.
+  // ═══════════════════════════════════════════════════════════════════════════
+  counterReconciliationEvents: defineTable({
+    organizationId: v.id("organizations"),
+    counterScope: v.union(v.literal("airframe"), v.literal("engine"), v.literal("apu")),
+    counterName: v.union(v.literal("hours"), v.literal("cycles")),
+    authoritativeSource: v.union(
+      v.literal("aircraft"),
+      v.literal("engine"),
+      v.literal("apu"),
+      v.literal("external_sync"),
+      v.literal("manual"),
+    ),
+    entityRef: v.string(),
+    observedValue: v.number(),
+    authoritativeValue: v.number(),
+    delta: v.number(),
+    action: v.union(
+      v.literal("accepted_authoritative"),
+      v.literal("accepted_observed"),
+      v.literal("requires_review"),
+    ),
+    metadataJson: v.optional(v.string()),
+    actorUserId: v.optional(v.string()),
+    createdAt: v.number(),
+  })
+    .index("by_org_created", ["organizationId", "createdAt"])
+    .index("by_org_counter", ["organizationId", "counterScope", "counterName"]),
+
+  // ═══════════════════════════════════════════════════════════════════════════
   // PARTS / INVENTORY
   //
   // v3 addition:

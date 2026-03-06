@@ -54,6 +54,10 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
+import {
+  assertValidAdLifecycleTransition,
+  computeDueSnapshot,
+} from "./dueEngine";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // INTERNAL UTILITY: REQUIRE AUTHENTICATED USER
@@ -79,35 +83,35 @@ async function requireAuth(ctx: {
 // Authoritative overdue determination uses live aircraft hours.
 // ─────────────────────────────────────────────────────────────────────────────
 
-function computeNextDue(ad: {
-  adType: string;
-  complianceType: string;
-  recurringIntervalHours?: number;
-  recurringIntervalDays?: number;
-  recurringIntervalCycles?: number;
-}, lastComplianceDate: number, lastComplianceHours: number, lastComplianceCycles?: number): {
-  nextDueDate?: number;
-  nextDueHours?: number;
-  nextDueCycles?: number;
-} {
-  // One-time ADs: no next due after compliance
-  if (ad.adType === "one_time" || ad.adType === "terminating_action") {
-    return {};
-  }
-
-  const result: { nextDueDate?: number; nextDueHours?: number; nextDueCycles?: number } = {};
-
-  if (ad.recurringIntervalDays != null) {
-    result.nextDueDate = lastComplianceDate + ad.recurringIntervalDays * 86_400_000;
-  }
-  if (ad.recurringIntervalHours != null) {
-    result.nextDueHours = lastComplianceHours + ad.recurringIntervalHours;
-  }
-  if (ad.recurringIntervalCycles != null && lastComplianceCycles != null) {
-    result.nextDueCycles = lastComplianceCycles + ad.recurringIntervalCycles;
-  }
-
-  return result;
+async function appendAdLedgerEvent(
+  ctx: { db: { insert: (...args: any[]) => Promise<any> } },
+  input: {
+    organizationId: Id<"organizations">;
+    adComplianceId: Id<"adCompliance">;
+    fromStatus: string;
+    toStatus: string;
+    due?: { nextDueDate?: number; nextDueHours?: number; nextDueCycles?: number };
+    actorUserId: string;
+    occurredAt: number;
+  },
+): Promise<void> {
+  await ctx.db.insert("complianceLedgerEvents", {
+    organizationId: input.organizationId,
+    aggregateType: "ad_compliance",
+    aggregateId: String(input.adComplianceId),
+    eventType: "ad_status_transition",
+    previousState: JSON.stringify({ complianceStatus: input.fromStatus }),
+    nextState: JSON.stringify({ complianceStatus: input.toStatus }),
+    dueDate: input.due?.nextDueDate,
+    dueHours: input.due?.nextDueHours,
+    dueCycles: input.due?.nextDueCycles,
+    source: "system",
+    entityTable: "adCompliance",
+    entityId: String(input.adComplianceId),
+    actorUserId: input.actorUserId,
+    occurredAt: input.occurredAt,
+    createdAt: Date.now(),
+  });
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -327,11 +331,18 @@ export const recordAdCompliance = mutation({
     const updatedHistory = [...adCompliance.complianceHistory, newHistoryEntry];
 
     // ── WRITE 3: Compute new next-due values ─────────────────────────────────
-    const nextDue = computeNextDue(
-      ad,
-      args.complianceDate,
-      args.aircraftHoursAtCompliance,
-      args.aircraftCyclesAtCompliance,
+    const nextDue = computeDueSnapshot(
+      {
+        adType: ad.adType,
+        recurringIntervalDays: ad.recurringIntervalDays,
+        recurringIntervalHours: ad.recurringIntervalHours,
+        recurringIntervalCycles: ad.recurringIntervalCycles,
+      },
+      {
+        complianceDate: args.complianceDate,
+        aircraftHoursAtCompliance: args.aircraftHoursAtCompliance,
+        aircraftCyclesAtCompliance: args.aircraftCyclesAtCompliance,
+      },
     );
 
     // ── WRITE 4: Determine new complianceStatus ────────────────────────────────
@@ -339,6 +350,8 @@ export const recordAdCompliance = mutation({
       ad.adType === "one_time" || ad.adType === "terminating_action"
         ? "complied_one_time"
         : "complied_recurring";
+
+    assertValidAdLifecycleTransition(adCompliance.complianceStatus, newStatus);
 
     // ── WRITE 5: Add maintenanceRecordId to the records array ─────────────────
     const updatedMaintenanceRecordIds = [
@@ -392,6 +405,16 @@ export const recordAdCompliance = mutation({
           ? `Next due date: ${new Date(nextDue.nextDueDate).toISOString()}. `
           : ""),
       timestamp: now,
+    });
+
+    await appendAdLedgerEvent(ctx, {
+      organizationId: args.organizationId,
+      adComplianceId: args.adComplianceId,
+      fromStatus: adCompliance.complianceStatus,
+      toStatus: newStatus,
+      due: nextDue,
+      actorUserId: callerUserId,
+      occurredAt: now,
     });
   },
 });
@@ -565,6 +588,8 @@ export const markAdNotApplicable = mutation({
       consumedByRecordId: args.adComplianceId,
     });
 
+    assertValidAdLifecycleTransition(adCompliance.complianceStatus, "not_applicable");
+
     // ── WRITE 2: Update adCompliance record ───────────────────────────────────
     await ctx.db.patch(args.adComplianceId, {
       applicable: false,
@@ -613,6 +638,15 @@ export const markAdNotApplicable = mutation({
           : "") +
         `Per 14 CFR 91.417(a)(2)(v) — record retained permanently with aircraft.`,
       timestamp: now,
+    });
+
+    await appendAdLedgerEvent(ctx, {
+      organizationId: args.organizationId,
+      adComplianceId: args.adComplianceId,
+      fromStatus: adCompliance.complianceStatus,
+      toStatus: "not_applicable",
+      actorUserId: callerUserId,
+      occurredAt: now,
     });
   },
 });
@@ -948,6 +982,8 @@ export const handleAdSupersession = mutation({
     let newPendingCount = 0;
 
     for (const oldCompliance of oldCompliances) {
+      assertValidAdLifecycleTransition(oldCompliance.complianceStatus, "superseded");
+
       // Mark old compliance record as superseded
       await ctx.db.patch(oldCompliance._id, {
         complianceStatus: "superseded",
@@ -964,7 +1000,7 @@ export const handleAdSupersession = mutation({
 
       // Create new pending_determination record for the new AD
       // Per Marcus §4.3: "The system must not automatically carry forward compliance."
-      await ctx.db.insert("adCompliance", {
+      const newComplianceId = await ctx.db.insert("adCompliance", {
         adId: args.newAdId,
         aircraftId: oldCompliance.aircraftId,
         engineId: oldCompliance.engineId,
@@ -1002,6 +1038,24 @@ export const handleAdSupersession = mutation({
           `New pending_determination record created for AD ${newAd.adNumber}. ` +
           priorComplianceNote,
         timestamp: now,
+      });
+
+      await appendAdLedgerEvent(ctx, {
+        organizationId: args.organizationId,
+        adComplianceId: oldCompliance._id,
+        fromStatus: oldCompliance.complianceStatus,
+        toStatus: "superseded",
+        actorUserId: callerUserId,
+        occurredAt: now,
+      });
+
+      await appendAdLedgerEvent(ctx, {
+        organizationId: args.organizationId,
+        adComplianceId: newComplianceId,
+        fromStatus: "pending_determination",
+        toStatus: "pending_determination",
+        actorUserId: callerUserId,
+        occurredAt: now,
       });
     }
 

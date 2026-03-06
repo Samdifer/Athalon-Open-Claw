@@ -43,6 +43,34 @@ const complianceStatusValidator = v.union(
   v.literal("na"),
 );
 
+const directiveTransitionPolicy: Record<string, ReadonlySet<string>> = {
+  pending: new Set(["compliant", "non_compliant", "deferred", "na"]),
+  non_compliant: new Set(["deferred", "compliant"]),
+  deferred: new Set(["pending", "compliant", "non_compliant", "na"]),
+  compliant: new Set(["deferred"]),
+  na: new Set([]),
+};
+
+function assertValidDirectiveTaskTransition(
+  from: string,
+  to: string,
+  referenceType: string,
+): void {
+  if (from === to) {
+    return;
+  }
+  if (referenceType !== "ad" && referenceType !== "sb") {
+    return;
+  }
+
+  const allowed = directiveTransitionPolicy[from] ?? new Set<string>();
+  if (!allowed.has(to)) {
+    throw new Error(
+      `INVALID_${referenceType.toUpperCase()}_TASK_COMPLIANCE_TRANSITION: ${from} -> ${to} is not allowed.`,
+    );
+  }
+}
+
 async function assertMutableTaskCard(ctx: { db: { get: (id: Id<"taskCards">) => Promise<any> } }, taskCardId: Id<"taskCards">) {
   const taskCard = await ctx.db.get(taskCardId);
   if (!taskCard) {
@@ -133,6 +161,12 @@ export const updateComplianceStatus = mutation({
     if (existing.complianceStatus === args.status) {
       return;
     }
+
+    assertValidDirectiveTaskTransition(
+      existing.complianceStatus,
+      args.status,
+      existing.referenceType,
+    );
 
     const historyEntry = {
       status: existing.complianceStatus,
