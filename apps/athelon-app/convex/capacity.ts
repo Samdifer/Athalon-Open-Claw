@@ -253,16 +253,45 @@ export const upsertSchedulingSettings = mutation({
       updatedByUserId: userId,
     };
 
+    let recordId: string;
     if (existing) {
       await ctx.db.patch(existing._id, patch);
+      recordId = String(existing._id);
     } else {
-      await ctx.db.insert("schedulingSettings", {
+      const inserted = await ctx.db.insert("schedulingSettings", {
         organizationId: args.organizationId,
         rosterWorkspaceEnabled: false,
         rosterWorkspaceBootstrappedAt: undefined,
         ...patch,
       });
+      recordId = String(inserted);
     }
+
+    await ctx.db.insert("auditLog", {
+      organizationId: args.organizationId,
+      eventType: "record_updated",
+      tableName: "schedulingSettings",
+      recordId,
+      userId,
+      oldValue: existing
+        ? JSON.stringify({
+            capacityBufferPercent: existing.capacityBufferPercent,
+            defaultShiftDays: existing.defaultShiftDays,
+            defaultStartHour: existing.defaultStartHour,
+            defaultEndHour: existing.defaultEndHour,
+            defaultEfficiencyMultiplier: existing.defaultEfficiencyMultiplier,
+          })
+        : undefined,
+      newValue: JSON.stringify({
+        capacityBufferPercent: patch.capacityBufferPercent,
+        defaultShiftDays: patch.defaultShiftDays,
+        defaultStartHour: patch.defaultStartHour,
+        defaultEndHour: patch.defaultEndHour,
+        defaultEfficiencyMultiplier: patch.defaultEfficiencyMultiplier,
+      }),
+      notes: existing ? "Scheduling settings updated" : "Scheduling settings created",
+      timestamp: nowMs,
+    });
   },
 });
 

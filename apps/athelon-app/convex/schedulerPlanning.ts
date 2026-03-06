@@ -642,6 +642,24 @@ export const setScheduleDayModel = mutation({
     if (args.nonWorkDays !== undefined) patch.nonWorkDays = args.nonWorkDays;
 
     await ctx.db.patch(args.assignmentId, patch);
+
+    await ctx.db.insert("auditLog", {
+      organizationId: assignment.organizationId,
+      eventType: "record_updated",
+      tableName: "scheduleAssignments",
+      recordId: String(args.assignmentId),
+      userId,
+      oldValue: JSON.stringify({
+        dailyEffort: assignment.dailyEffort ?? [],
+        nonWorkDays: assignment.nonWorkDays ?? [],
+      }),
+      newValue: JSON.stringify({
+        dailyEffort: patch.dailyEffort ?? assignment.dailyEffort ?? [],
+        nonWorkDays: patch.nonWorkDays ?? assignment.nonWorkDays ?? [],
+      }),
+      notes: "Schedule day model updated",
+      timestamp: now,
+    });
   },
 });
 
@@ -951,13 +969,46 @@ export const upsertPlanningFinancialSettings = mutation({
 
     if (existing) {
       await ctx.db.patch(existing._id, next);
+
+      await ctx.db.insert("auditLog", {
+        organizationId: args.organizationId,
+        eventType: "record_updated",
+        tableName: "planningFinancialSettings",
+        recordId: String(existing._id),
+        userId,
+        oldValue: JSON.stringify({
+          defaultShopRate: existing.defaultShopRate,
+          defaultLaborCostRate: existing.defaultLaborCostRate,
+          monthlyFixedOverhead: existing.monthlyFixedOverhead,
+          monthlyVariableOverhead: existing.monthlyVariableOverhead,
+          annualCapexAssumption: existing.annualCapexAssumption,
+          partMarkupTiers: existing.partMarkupTiers,
+          serviceMarkupTiers: existing.serviceMarkupTiers,
+        }),
+        newValue: JSON.stringify(next),
+        notes: "Planning financial settings updated",
+        timestamp: now,
+      });
       return existing._id;
     }
 
-    return await ctx.db.insert("planningFinancialSettings", {
+    const insertedId = await ctx.db.insert("planningFinancialSettings", {
       organizationId: args.organizationId,
       ...next,
     });
+
+    await ctx.db.insert("auditLog", {
+      organizationId: args.organizationId,
+      eventType: "record_created",
+      tableName: "planningFinancialSettings",
+      recordId: String(insertedId),
+      userId,
+      newValue: JSON.stringify(next),
+      notes: "Planning financial settings created",
+      timestamp: now,
+    });
+
+    return insertedId;
   },
 });
 
@@ -974,13 +1025,26 @@ export const backfillLegacyScheduleAssignments = mutation({
       operation: "legacy schedule backfill",
     });
 
-    return runLegacyScheduleBackfill(ctx, {
+    const result = await runLegacyScheduleBackfill(ctx, {
       organizationId: args.organizationId,
       includeClosed: args.includeClosed ?? false,
       createFallbackBayIfMissing: args.createFallbackBayIfMissing ?? true,
       dryRun: args.dryRun ?? false,
       actorUserId: userId,
     });
+
+    await ctx.db.insert("auditLog", {
+      organizationId: args.organizationId,
+      eventType: "system_event",
+      tableName: "scheduleAssignments",
+      recordId: "legacy_backfill",
+      userId,
+      newValue: JSON.stringify(result),
+      notes: "Legacy schedule assignment backfill executed",
+      timestamp: Date.now(),
+    });
+
+    return result;
   },
 });
 

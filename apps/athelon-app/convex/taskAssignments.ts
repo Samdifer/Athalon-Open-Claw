@@ -3,6 +3,7 @@
 
 import { v } from "convex/values";
 import { query, mutation } from "./_generated/server";
+import { requireSchedulingManager } from "./shared/helpers/schedulingPermissions";
 
 // ─── Queries ─────────────────────────────────────────────────────────────────
 
@@ -39,28 +40,32 @@ export const assignTechToTask = mutation({
     workOrderId: v.id("workOrders"),
   },
   handler: async (ctx, args) => {
-    // Validate technician exists
-    const tech = await ctx.db.get(args.technicianId);
-    if (!tech) throw new Error("Technician not found");
-
-    // Validate task card exists
-    const taskCard = await ctx.db.get(args.taskCardId);
-    if (!taskCard) throw new Error("Task card not found");
-
-    // Optional: validate training if technicianTraining table has records
-    // We do a best-effort check — if the tech has ANY training records,
-    // verify they have one matching the task type
-    const trainingRecords = await ctx.db
-      .query("technicianTraining")
-      .filter((q) => q.eq(q.field("technicianId"), args.technicianId))
-      .first();
-
-    // If training records exist for this tech, we could validate — but for now
-    // we allow assignment and log a warning pattern (no console in Convex mutations,
-    // so we just proceed).
+    if (args.scheduledEnd <= args.scheduledStart) {
+      throw new Error("scheduledEnd must be after scheduledStart");
+    }
 
     const now = Date.now();
-    return await ctx.db.insert("taskAssignments", {
+
+    const [workOrder, tech, taskCard] = await Promise.all([
+      ctx.db.get(args.workOrderId),
+      ctx.db.get(args.technicianId),
+      ctx.db.get(args.taskCardId),
+    ]);
+
+    if (!workOrder) throw new Error("Work order not found");
+    if (!tech) throw new Error("Technician not found");
+    if (!taskCard) throw new Error("Task card not found");
+
+    if (String(workOrder.organizationId) !== args.organizationId) {
+      throw new Error("organizationId does not match work order organization");
+    }
+
+    const { userId } = await requireSchedulingManager(ctx, {
+      organizationId: workOrder.organizationId,
+      operation: "task assignment create",
+    });
+
+    const assignmentId = await ctx.db.insert("taskAssignments", {
       workOrderId: args.workOrderId,
       taskCardId: args.taskCardId,
       technicianId: args.technicianId,
@@ -72,6 +77,27 @@ export const assignTechToTask = mutation({
       createdAt: now,
       updatedAt: now,
     });
+
+    await ctx.db.insert("auditLog", {
+      organizationId: workOrder.organizationId,
+      eventType: "record_created",
+      tableName: "taskAssignments",
+      recordId: String(assignmentId),
+      userId,
+      newValue: JSON.stringify({
+        workOrderId: args.workOrderId,
+        taskCardId: args.taskCardId,
+        technicianId: args.technicianId,
+        shopLocationId: args.shopLocationId,
+        scheduledStart: args.scheduledStart,
+        scheduledEnd: args.scheduledEnd,
+        status: "scheduled",
+      }),
+      notes: `Task assignment created for taskCard ${args.taskCardId}`,
+      timestamp: now,
+    });
+
+    return assignmentId;
   },
 });
 
@@ -86,12 +112,46 @@ export const moveAssignment = mutation({
     const existing = await ctx.db.get(assignmentId);
     if (!existing) throw new Error("Assignment not found");
 
+    const workOrder = await ctx.db.get(existing.workOrderId);
+    if (!workOrder) throw new Error("Linked work order not found");
+
+    const { userId } = await requireSchedulingManager(ctx, {
+      organizationId: workOrder.organizationId,
+      operation: "task assignment move",
+    });
+
+    const nextStart = newStart ?? existing.scheduledStart;
+    const nextEnd = newEnd ?? existing.scheduledEnd;
+    if (nextEnd <= nextStart) {
+      throw new Error("scheduledEnd must be after scheduledStart");
+    }
+
     const patch: Record<string, unknown> = { updatedAt: Date.now() };
     if (newTechId !== undefined) patch.technicianId = newTechId;
     if (newStart !== undefined) patch.scheduledStart = newStart;
     if (newEnd !== undefined) patch.scheduledEnd = newEnd;
 
     await ctx.db.patch(assignmentId, patch);
+
+    await ctx.db.insert("auditLog", {
+      organizationId: workOrder.organizationId,
+      eventType: "record_updated",
+      tableName: "taskAssignments",
+      recordId: String(assignmentId),
+      userId,
+      oldValue: JSON.stringify({
+        technicianId: existing.technicianId,
+        scheduledStart: existing.scheduledStart,
+        scheduledEnd: existing.scheduledEnd,
+      }),
+      newValue: JSON.stringify({
+        technicianId: newTechId ?? existing.technicianId,
+        scheduledStart: nextStart,
+        scheduledEnd: nextEnd,
+      }),
+      notes: "Task assignment moved/updated",
+      timestamp: Date.now(),
+    });
   },
 });
 
@@ -100,7 +160,28 @@ export const removeAssignment = mutation({
   handler: async (ctx, { assignmentId }) => {
     const existing = await ctx.db.get(assignmentId);
     if (!existing) throw new Error("Assignment not found");
+
+    const workOrder = await ctx.db.get(existing.workOrderId);
+    if (!workOrder) throw new Error("Linked work order not found");
+
+    const { userId } = await requireSchedulingManager(ctx, {
+      organizationId: workOrder.organizationId,
+      operation: "task assignment remove",
+    });
+
     await ctx.db.delete(assignmentId);
+
+    await ctx.db.insert("auditLog", {
+      organizationId: workOrder.organizationId,
+      eventType: "record_updated",
+      tableName: "taskAssignments",
+      recordId: String(assignmentId),
+      userId,
+      oldValue: JSON.stringify(existing),
+      newValue: JSON.stringify({ deleted: true }),
+      notes: "Task assignment removed",
+      timestamp: Date.now(),
+    });
   },
 });
 
@@ -114,6 +195,14 @@ export const logProgress = mutation({
     const existing = await ctx.db.get(assignmentId);
     if (!existing) throw new Error("Assignment not found");
 
+    const workOrder = await ctx.db.get(existing.workOrderId);
+    if (!workOrder) throw new Error("Linked work order not found");
+
+    const { userId } = await requireSchedulingManager(ctx, {
+      organizationId: workOrder.organizationId,
+      operation: "task assignment progress update",
+    });
+
     const newStatus =
       percentComplete >= 100
         ? ("complete" as const)
@@ -121,11 +210,34 @@ export const logProgress = mutation({
           ? ("in_progress" as const)
           : existing.status;
 
+    const updatedHours = (existing.actualHoursLogged ?? 0) + hoursWorked;
+    const now = Date.now();
+
     await ctx.db.patch(assignmentId, {
-      actualHoursLogged: (existing.actualHoursLogged ?? 0) + hoursWorked,
+      actualHoursLogged: updatedHours,
       percentComplete,
       status: newStatus,
-      updatedAt: Date.now(),
+      updatedAt: now,
+    });
+
+    await ctx.db.insert("auditLog", {
+      organizationId: workOrder.organizationId,
+      eventType: "record_updated",
+      tableName: "taskAssignments",
+      recordId: String(assignmentId),
+      userId,
+      oldValue: JSON.stringify({
+        actualHoursLogged: existing.actualHoursLogged ?? 0,
+        percentComplete: existing.percentComplete ?? 0,
+        status: existing.status,
+      }),
+      newValue: JSON.stringify({
+        actualHoursLogged: updatedHours,
+        percentComplete,
+        status: newStatus,
+      }),
+      notes: "Task assignment progress logged",
+      timestamp: now,
     });
   },
 });
