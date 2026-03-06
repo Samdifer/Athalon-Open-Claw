@@ -32,7 +32,8 @@
     "agentic:queue:add": "node scripts/agentic/queue.mjs add",
     "agentic:queue:list": "node scripts/agentic/queue.mjs list",
     "agentic:queue:complete": "node scripts/agentic/queue.mjs complete",
-    "test:agentic": "node --test scripts/agentic/tests/*.test.mjs"
+    "test:agentic": "node --test scripts/agentic/tests/*.test.mjs",
+    "test:camp-linkage": "node --test scripts/camp-linkage/*.test.mjs"
   },
   "dependencies": {
     "@clerk/clerk-react": "^5.61.1",
