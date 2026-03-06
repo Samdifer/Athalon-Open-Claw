@@ -1,14 +1,13 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id, Doc } from "@/convex/_generated/dataModel";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import { toast } from "sonner";
-import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { GripVertical, User, Clock } from "lucide-react";
+import { GripVertical, User, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // ─── Constants ──────────────────────────────────────────────────────────────
@@ -67,6 +66,11 @@ interface DragState {
   origTechIndex: number;
 }
 
+type InteractionNotice = {
+  level: "warning" | "error";
+  message: string;
+};
+
 // ─── Component ──────────────────────────────────────────────────────────────
 
 export function WOExecutionGantt({ workOrderId }: Props) {
@@ -93,9 +97,28 @@ export function WOExecutionGantt({ workOrderId }: Props) {
   // State
   const [dragState, setDragState] = useState<DragState | null>(null);
   const [dragDelta, setDragDelta] = useState({ dx: 0, dy: 0 });
+  const [interactionNotice, setInteractionNotice] = useState<InteractionNotice | null>(null);
   const gridRef = useRef<HTMLDivElement>(null);
 
   const origin = useMemo(() => dayStart(), []);
+
+  const announceBlockedInteraction = useCallback(
+    (message: string, level: "warning" | "error" = "warning") => {
+      setInteractionNotice({ level, message });
+      toast[level === "error" ? "error" : "warning"](message, { duration: 4000 });
+    },
+    [],
+  );
+
+  useEffect(() => {
+    if (!interactionNotice) return;
+    const timeout = window.setTimeout(() => {
+      setInteractionNotice(null);
+    }, 5000);
+    return () => {
+      window.clearTimeout(timeout);
+    };
+  }, [interactionNotice]);
 
   const activeTechs = useMemo(
     () => (technicians ?? []).filter((t) => t.status === "active"),
@@ -113,6 +136,41 @@ export function WOExecutionGantt({ workOrderId }: Props) {
   const unassigned = useMemo(
     () => (taskCards ?? []).filter((tc) => !assignedCardIds.has(tc._id)),
     [taskCards, assignedCardIds],
+  );
+
+  const techAssignments = useMemo(() => {
+    const map = new Map<string, TaskAssignment[]>();
+    activeTechs.forEach((tech) => {
+      map.set(tech._id, []);
+    });
+    (assignments ?? []).forEach((assignment) => {
+      const list = map.get(assignment.technicianId);
+      if (list) list.push(assignment);
+    });
+    return map;
+  }, [activeTechs, assignments]);
+
+  const taskCardMap = useMemo(
+    () => new Map((taskCards ?? []).map((tc) => [tc._id, tc])),
+    [taskCards],
+  );
+
+  const findLaneOverlapConflicts = useCallback(
+    (args: {
+      technicianId: string;
+      start: number;
+      end: number;
+      ignoreAssignmentId?: Id<"taskAssignments">;
+    }) => {
+      const lane = techAssignments.get(args.technicianId) ?? [];
+      return lane.filter((assignment) => {
+        if (args.ignoreAssignmentId && assignment._id === args.ignoreAssignmentId) {
+          return false;
+        }
+        return args.start < assignment.scheduledEnd && assignment.scheduledStart < args.end;
+      });
+    },
+    [techAssignments],
   );
 
   // ─── Pointer Handlers ──────────────────────────────────────────────────
@@ -160,7 +218,11 @@ export function WOExecutionGantt({ workOrderId }: Props) {
 
   const onPointerUp = useCallback(
     async (e: React.PointerEvent) => {
-      if (!dragState || !orgId) return;
+      if (!dragState) return;
+      if (!orgId) {
+        announceBlockedInteraction("Assignment update blocked: missing organization context.", "error");
+        return;
+      }
       (e.target as HTMLElement).releasePointerCapture(e.pointerId);
 
       const dx = e.clientX - dragState.startX;
@@ -181,6 +243,21 @@ export function WOExecutionGantt({ workOrderId }: Props) {
           const dropX = rect ? clampX(e.clientX - rect.left) : 0;
           const start = xToMs(dropX, origin);
           const end = start + 2 * 3_600_000; // default 2h
+
+          const overlaps = findLaneOverlapConflicts({
+            technicianId: newTech._id,
+            start,
+            end,
+          });
+          if (overlaps.length > 0) {
+            announceBlockedInteraction(
+              `Blocked: ${newTech.legalName} already has an overlapping assignment in this time range.`,
+            );
+            setDragState(null);
+            setDragDelta({ dx: 0, dy: 0 });
+            return;
+          }
+
           await assignTech({
             taskCardId: dragState.taskCardId,
             technicianId: newTech._id,
@@ -190,19 +267,60 @@ export function WOExecutionGantt({ workOrderId }: Props) {
             workOrderId,
           });
           toast.success("Task assigned");
+        } else if (dragState.type === "assign" && dragState.taskCardId && !newTech) {
+          announceBlockedInteraction("Assignment blocked: no active technician lane available.");
         } else if (dragState.type === "move" && dragState.assignmentId) {
           const newLeft = clampX(dragState.origLeft + dx);
           const newStart = xToMs(newLeft, origin);
           const newEnd = newStart + (dragState.origWidth / HOUR_WIDTH) * 3_600_000;
+          if (!newTech) {
+            announceBlockedInteraction("Move blocked: no valid technician lane selected.");
+            setDragState(null);
+            setDragDelta({ dx: 0, dy: 0 });
+            return;
+          }
+          const overlaps = findLaneOverlapConflicts({
+            technicianId: newTech._id,
+            start: newStart,
+            end: newEnd,
+            ignoreAssignmentId: dragState.assignmentId,
+          });
+          if (overlaps.length > 0) {
+            announceBlockedInteraction(
+              `Blocked: ${newTech.legalName} has a schedule overlap at the selected time.`,
+            );
+            setDragState(null);
+            setDragDelta({ dx: 0, dy: 0 });
+            return;
+          }
           await moveAssignment({
             assignmentId: dragState.assignmentId,
-            newTechId: newTech?._id,
+            newTechId: newTech._id,
             newStart,
             newEnd,
           });
         } else if (dragState.type === "resize-end" && dragState.assignmentId) {
           const newWidth = Math.max(HOUR_WIDTH / 2, dragState.origWidth + dx);
           const newEnd = xToMs(dragState.origLeft + newWidth, origin);
+          const assignment = (assignments ?? []).find((item) => item._id === dragState.assignmentId);
+          if (!assignment) {
+            announceBlockedInteraction("Resize blocked: assignment no longer exists.", "error");
+            setDragState(null);
+            setDragDelta({ dx: 0, dy: 0 });
+            return;
+          }
+          const overlaps = findLaneOverlapConflicts({
+            technicianId: assignment.technicianId,
+            start: assignment.scheduledStart,
+            end: newEnd,
+            ignoreAssignmentId: assignment._id,
+          });
+          if (overlaps.length > 0) {
+            announceBlockedInteraction("Resize blocked: new duration overlaps another task.");
+            setDragState(null);
+            setDragDelta({ dx: 0, dy: 0 });
+            return;
+          }
           await moveAssignment({
             assignmentId: dragState.assignmentId,
             newEnd,
@@ -215,7 +333,18 @@ export function WOExecutionGantt({ workOrderId }: Props) {
       setDragState(null);
       setDragDelta({ dx: 0, dy: 0 });
     },
-    [dragState, activeTechs, origin, orgId, workOrderId, assignTech, moveAssignment],
+    [
+      dragState,
+      activeTechs,
+      origin,
+      orgId,
+      workOrderId,
+      assignTech,
+      moveAssignment,
+      assignments,
+      findLaneOverlapConflicts,
+      announceBlockedInteraction,
+    ],
   );
 
   // ─── Loading ──────────────────────────────────────────────────────────
@@ -228,58 +357,69 @@ export function WOExecutionGantt({ workOrderId }: Props) {
     );
   }
 
-  // ─── Tech → assignment map ────────────────────────────────────────────
-
-  const techAssignments = new Map<string, TaskAssignment[]>();
-  activeTechs.forEach((t) => techAssignments.set(t._id, []));
-  assignments.forEach((a) => {
-    const arr = techAssignments.get(a.technicianId);
-    if (arr) arr.push(a);
-  });
-
-  const taskCardMap = new Map(taskCards.map((tc) => [tc._id, tc]));
-
   // ─── Render ───────────────────────────────────────────────────────────
 
   return (
     <div
-      className="flex gap-3 select-none"
-      style={{ touchAction: "none" }}
+      className="flex flex-col gap-3 select-none"
+      style={{ touchAction: "pan-x pan-y" }}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
     >
+      {interactionNotice && (
+        <div
+          className={cn(
+            "w-full rounded-md border px-3 py-2 text-xs flex items-start gap-2",
+            interactionNotice.level === "error"
+              ? "border-red-500/50 bg-red-500/10 text-red-200"
+              : "border-amber-500/50 bg-amber-500/10 text-amber-200",
+          )}
+          data-testid="wo-execution-interaction-notice"
+        >
+          <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+          <span>{interactionNotice.message}</span>
+        </div>
+      )}
+
+      <div className="flex flex-col lg:flex-row gap-3">
       {/* ── Unassigned sidebar ── */}
-      <div className="w-56 shrink-0 space-y-2">
+      <div className="w-full lg:w-56 shrink-0 space-y-2">
         <h3 className="text-sm font-semibold text-muted-foreground px-1">
           Unassigned Tasks
         </h3>
-        {unassigned.length === 0 && (
-          <p className="text-xs text-muted-foreground px-1">All tasks assigned</p>
-        )}
-        {unassigned.map((tc) => (
-          <Card
-            key={tc._id}
-            className="p-2 cursor-grab border-dashed border-muted-foreground/30 hover:border-primary/50 transition-colors"
-            style={{ touchAction: "none" }}
-            onPointerDown={(e) =>
-              onPointerDown(e, "assign", { taskCardId: tc._id as Id<"taskCards"> })
-            }
-          >
-            <div className="flex items-center gap-2">
-              <GripVertical className="h-3.5 w-3.5 text-muted-foreground" />
-              <div className="min-w-0 flex-1">
-                <p className="text-xs font-medium truncate">{tc.title}</p>
-                <p className="text-[10px] text-muted-foreground">
-                  {tc.taskCardNumber} · {tc.estimatedHours ?? "?"}h est.
-                </p>
+        <div
+          className="flex gap-2 overflow-x-auto pb-1 lg:block lg:space-y-2 lg:overflow-visible lg:pb-0"
+          data-testid="wo-execution-unassigned-strip"
+        >
+          {unassigned.length === 0 && (
+            <p className="text-xs text-muted-foreground px-1">All tasks assigned</p>
+          )}
+          {unassigned.map((tc) => (
+            <Card
+              key={tc._id}
+              className="p-2 cursor-grab border-dashed border-muted-foreground/30 hover:border-primary/50 transition-colors min-w-[220px] lg:min-w-0"
+              style={{ touchAction: "none" }}
+              data-testid={`wo-unassigned-${tc._id}`}
+              onPointerDown={(e) =>
+                onPointerDown(e, "assign", { taskCardId: tc._id as Id<"taskCards"> })
+              }
+            >
+              <div className="flex items-center gap-2">
+                <GripVertical className="h-3.5 w-3.5 text-muted-foreground" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-medium truncate">{tc.title}</p>
+                  <p className="text-[10px] text-muted-foreground">
+                    {tc.taskCardNumber} · {tc.estimatedHours ?? "?"}h est.
+                  </p>
+                </div>
               </div>
-            </div>
-          </Card>
-        ))}
+            </Card>
+          ))}
+        </div>
       </div>
 
       {/* ── Gantt grid ── */}
-      <div className="flex-1 overflow-x-auto border border-border rounded-lg bg-card">
+      <div className="flex-1 min-w-0 overflow-auto border border-border rounded-lg bg-card">
         <div
           className="relative"
           style={{
@@ -314,6 +454,7 @@ export function WOExecutionGantt({ workOrderId }: Props) {
                   idx % 2 === 0 ? "bg-muted/10" : "bg-transparent",
                 )}
                 style={{ height: LANE_HEIGHT }}
+                data-testid={`wo-tech-lane-${tech._id}`}
               >
                 {/* Tech label */}
                 <div
@@ -371,6 +512,7 @@ export function WOExecutionGantt({ workOrderId }: Props) {
                           "absolute top-1.5 h-[calc(100%-12px)] rounded-md border flex items-center px-2 gap-1 cursor-grab",
                           STATUS_COLORS[status],
                         )}
+                        data-testid={`wo-assignment-${asn._id}`}
                         style={{
                           left: displayLeft,
                           width: displayWidth,
@@ -420,6 +562,7 @@ export function WOExecutionGantt({ workOrderId }: Props) {
             </div>
           )}
         </div>
+      </div>
       </div>
     </div>
   );

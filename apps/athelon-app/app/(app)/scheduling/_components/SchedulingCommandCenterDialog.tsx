@@ -265,6 +265,12 @@ export function SchedulingCommandCenterDialog({
             </TabsTrigger>
           </TabsList>
 
+          {!canManageScheduling && (
+            <div className="mt-3 rounded border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-200">
+              Updates are blocked for your current role. Contact a scheduling admin to apply edits.
+            </div>
+          )}
+
           <TabsContent value="personnel" className="mt-4 space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
               <div className="rounded border border-border/60 p-3">
@@ -448,6 +454,19 @@ export function SchedulingCommandCenterDialog({
           </TabsContent>
 
           <TabsContent value="configuration" className="mt-4 space-y-4">
+            {configSummary.conflictsCount > 0 && (
+              <div
+                className="rounded border border-red-500/40 bg-red-500/10 px-3 py-2 text-xs text-red-200"
+                data-testid="command-center-conflict-warning"
+              >
+                {configSummary.conflictsCount}
+                {" "}
+                active scheduling conflict
+                {configSummary.conflictsCount === 1 ? "" : "s"}
+                {" "}
+                detected. Resolve board conflicts before committing broad capacity changes.
+              </div>
+            )}
             <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
               <div className="rounded border border-border/60 p-3">
                 <div className="text-[11px] uppercase text-muted-foreground">Bays</div>

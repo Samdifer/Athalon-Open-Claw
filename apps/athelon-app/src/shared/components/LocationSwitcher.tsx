@@ -110,6 +110,7 @@ export function LocationSwitcher() {
           variant="ghost"
           size="sm"
           className="h-8 gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground px-2"
+          data-testid="location-switcher-trigger"
         >
           <MapPin className="h-3.5 w-3.5" />
           <span className="truncate max-w-[120px]">{label}</span>
@@ -120,6 +121,7 @@ export function LocationSwitcher() {
         <DropdownMenuItem
           onClick={() => setSelectedLocationId(DEFAULT_LOCATION_ID)}
           className="gap-2 text-xs"
+          data-testid="location-switcher-option-all"
         >
           <Globe className="h-3.5 w-3.5" />
           All Locations
@@ -130,6 +132,7 @@ export function LocationSwitcher() {
             key={location._id}
             onClick={() => setSelectedLocationId(location._id)}
             className="gap-2 text-xs"
+            data-testid={`location-switcher-option-${location._id}`}
           >
             <MapPin className="h-3.5 w-3.5" />
             <span className="truncate">{location.name}</span>

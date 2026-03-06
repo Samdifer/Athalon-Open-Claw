@@ -1,6 +1,15 @@
 "use client";
 
-import { useState, useRef, useMemo, useEffect, useCallback, type RefObject } from "react";
+import {
+  memo,
+  useState,
+  useRef,
+  useMemo,
+  useEffect,
+  useCallback,
+  type UIEvent,
+  type RefObject,
+} from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -126,7 +135,10 @@ interface GanttBoardProps {
 const ROW_HEIGHT = 52;
 const BAR_HEIGHT = 32;
 const LABEL_WIDTH = 170;
+const COMPACT_LABEL_WIDTH = 132;
 const DAY_MS = 24 * 60 * 60 * 1000;
+const ROW_VIRTUALIZATION_THRESHOLD = 20;
+const ROW_VIRTUAL_OVERSCAN = 4;
 const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;
 
 type ViewMode = "day" | "week" | "month";
@@ -183,7 +195,7 @@ function parseBacklogPayload(raw: string): BacklogDropPayload | null {
 // COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
 
-export function GanttBoard({
+export const GanttBoard = memo(function GanttBoard({
   workOrders,
   scheduledProjects,
   onOpenBacklog,
@@ -210,10 +222,15 @@ export function GanttBoard({
   const navigate = useNavigate();
   const internalScrollRef = useRef<HTMLDivElement>(null);
   const timelineScrollRef = scrollRef ?? internalScrollRef;
+  const labelScrollRef = useRef<HTMLDivElement>(null);
   const timelineCanvasRef = useRef<HTMLDivElement>(null);
 
   const [viewMode, setViewMode] = useState<ViewMode>("day");
   const [showConflicts, setShowConflicts] = useState(true);
+  const [blockedActionBanner, setBlockedActionBanner] = useState<string | null>(null);
+  const [timelineScrollTop, setTimelineScrollTop] = useState(0);
+  const [timelineViewportHeight, setTimelineViewportHeight] = useState(0);
+  const [isCompactLayout, setIsCompactLayout] = useState(false);
   const isEditMode = interactionMode !== "normal";
   const dayEditMode: "distribute" | "block" =
     interactionMode === "normal" ? "distribute" : interactionMode;
@@ -240,6 +257,53 @@ export function GanttBoard({
   const [dragSkillWarnings, setDragSkillWarnings] = useState<SkillGap[]>([]);
   // MBP-0113: Conflict warnings during drag
   const [dragConflicts, setDragConflicts] = useState<string[]>([]);
+  const dragSkillWarningsRef = useRef<SkillGap[]>([]);
+  const dragConflictsRef = useRef<string[]>([]);
+  const blockedToastRef = useRef<{ message: string; at: number } | null>(null);
+
+  const notifyBlockedAction = useCallback((message: string) => {
+    const now = Date.now();
+    const previous = blockedToastRef.current;
+    const isDuplicate =
+      previous &&
+      previous.message === message &&
+      now - previous.at < 1200;
+
+    setBlockedActionBanner(message);
+    if (!isDuplicate) {
+      toast.warning(message, { duration: 3500 });
+      blockedToastRef.current = { message, at: now };
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!blockedActionBanner) return;
+    const timeout = window.setTimeout(() => {
+      setBlockedActionBanner(null);
+    }, 4500);
+    return () => {
+      window.clearTimeout(timeout);
+    };
+  }, [blockedActionBanner]);
+
+  useEffect(() => {
+    dragSkillWarningsRef.current = dragSkillWarnings;
+  }, [dragSkillWarnings]);
+
+  useEffect(() => {
+    dragConflictsRef.current = dragConflicts;
+  }, [dragConflicts]);
+
+  useEffect(() => {
+    function syncCompactMode() {
+      setIsCompactLayout(window.innerWidth < 768);
+    }
+    syncCompactMode();
+    window.addEventListener("resize", syncCompactMode);
+    return () => {
+      window.removeEventListener("resize", syncCompactMode);
+    };
+  }, []);
 
   // ── Today ──────────────────────────────────────────────────────────────
   const today = useMemo(() => {
@@ -291,13 +355,23 @@ export function GanttBoard({
   );
 
   // ── Row model ──────────────────────────────────────────────────────────
+  const scheduledByBayId = useMemo(() => {
+    const byBay = new Map<string, ScheduledPlannerProject[]>();
+    for (const project of scheduledProjects) {
+      const list = byBay.get(project.hangarBayId) ?? [];
+      list.push(project);
+      byBay.set(project.hangarBayId, list);
+    }
+    return byBay;
+  }, [scheduledProjects]);
+
   const rows = useMemo(() => {
     if (bays && bays.length > 0) {
       return bays.map((bay) => ({
         id: bay._id,
         label: bay.name,
         sublabel: bay.type,
-        wos: scheduledProjects.filter((wo) => wo.hangarBayId === bay._id),
+        wos: scheduledByBayId.get(bay._id) ?? [],
       }));
     }
     return scheduledProjects.map((wo) => ({
@@ -306,7 +380,46 @@ export function GanttBoard({
       sublabel: wo.workOrderNumber,
       wos: [wo],
     }));
-  }, [bays, scheduledProjects]);
+  }, [bays, scheduledProjects, scheduledByBayId]);
+
+  const shouldVirtualizeRows = rows.length > ROW_VIRTUALIZATION_THRESHOLD;
+
+  const visibleWindow = useMemo(() => {
+    if (rows.length === 0) {
+      return {
+        start: 0,
+        end: -1,
+      };
+    }
+
+    if (!shouldVirtualizeRows) {
+      return {
+        start: 0,
+        end: rows.length - 1,
+      };
+    }
+
+    const viewport = timelineViewportHeight > 0 ? timelineViewportHeight : ROW_HEIGHT * 8;
+    const start = Math.max(0, Math.floor(timelineScrollTop / ROW_HEIGHT) - ROW_VIRTUAL_OVERSCAN);
+    const end = Math.min(
+      rows.length - 1,
+      Math.ceil((timelineScrollTop + viewport) / ROW_HEIGHT) + ROW_VIRTUAL_OVERSCAN,
+    );
+
+    return {
+      start,
+      end,
+    };
+  }, [rows.length, shouldVirtualizeRows, timelineViewportHeight, timelineScrollTop]);
+
+  const visibleRows = useMemo(() => {
+    if (visibleWindow.end < visibleWindow.start) return [] as typeof rows;
+    return rows.slice(visibleWindow.start, visibleWindow.end + 1);
+  }, [rows, visibleWindow.start, visibleWindow.end]);
+
+  const topVirtualSpacerHeight = visibleWindow.start * ROW_HEIGHT;
+  const bottomVirtualSpacerHeight =
+    rows.length > 0 ? Math.max(0, (rows.length - visibleWindow.end - 1) * ROW_HEIGHT) : 0;
 
   const getProjectPosition = useCallback(
     (wo: ScheduledPlannerProject) => {
@@ -345,14 +458,16 @@ export function GanttBoard({
       if (!bays || bays.length === 0) return null;
       const canvas = timelineCanvasRef.current;
       if (!canvas) return null;
+      const viewport = timelineScrollRef.current;
       const rect = canvas.getBoundingClientRect();
-      const relativeY = clientY - rect.top - ROW_HEIGHT;
+      const relativeY =
+        clientY - rect.top - ROW_HEIGHT + (viewport?.scrollTop ?? timelineScrollTop);
       if (relativeY < 0) return null;
       const rowIndex = Math.floor(relativeY / ROW_HEIGHT);
       if (rowIndex < 0 || rowIndex >= rows.length) return null;
       return rows[rowIndex]?.id ?? null;
     },
-    [bays, rows],
+    [bays, rows, timelineScrollRef, timelineScrollTop],
   );
 
   // ── Today column ───────────────────────────────────────────────────────
@@ -367,6 +482,33 @@ export function GanttBoard({
       timelineScrollRef.current.scrollLeft = Math.max(0, todayIndex * cellWidth - 200);
     }
   }, [todayIndex, cellWidth, timelineScrollRef]);
+
+  useEffect(() => {
+    const viewport = timelineScrollRef.current;
+    if (!viewport) return;
+
+    function updateViewportHeight() {
+      setTimelineViewportHeight(viewport?.clientHeight ?? 0);
+    }
+
+    updateViewportHeight();
+    setTimelineScrollTop(viewport.scrollTop);
+
+    const observer =
+      typeof ResizeObserver !== "undefined"
+        ? new ResizeObserver(() => {
+            updateViewportHeight();
+          })
+        : null;
+
+    observer?.observe(viewport);
+    window.addEventListener("resize", updateViewportHeight);
+
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener("resize", updateViewportHeight);
+    };
+  }, [timelineScrollRef]);
 
   // ── Drag handlers ─────────────────────────────────────────────────────
   const handlePointerDown = useCallback(
@@ -464,16 +606,19 @@ export function GanttBoard({
         }
 
         // MBP-0113: Toast conflict warnings
-        if (dragConflicts.length > 0) {
+        const activeDragConflicts = dragConflictsRef.current;
+        const activeDragSkillWarnings = dragSkillWarningsRef.current;
+
+        if (activeDragConflicts.length > 0) {
           toast.warning(
-            `Bay conflict: overlaps with ${dragConflicts.join(", ")}`,
+            `Bay conflict: overlaps with ${activeDragConflicts.join(", ")}`,
             { duration: 5000 },
           );
         }
         // MBP-0111: Toast skill warnings
-        if (dragSkillWarnings.length > 0) {
+        if (activeDragSkillWarnings.length > 0) {
           toast.warning(
-            `Skill gap: ${dragSkillWarnings.length} tech(s) missing required training`,
+            `Skill gap: ${activeDragSkillWarnings.length} tech(s) missing required training`,
             { duration: 5000 },
           );
         }
@@ -519,8 +664,6 @@ export function GanttBoard({
     techTrainingMap,
     woRequiredTraining,
     woAssignedTechIds,
-    dragConflicts,
-    dragSkillWarnings,
   ]);
 
   const moveBayRow = useCallback(
@@ -559,6 +702,18 @@ export function GanttBoard({
   }, [days]);
 
   const timelineWidth = days.length * cellWidth;
+
+  const weekendIndexes = useMemo(() => {
+    if (viewMode !== "day") return [] as number[];
+    const indexes: number[] = [];
+    for (let i = 0; i < days.length; i++) {
+      const day = days[i];
+      if (day.getDay() === 0 || day.getDay() === 6) {
+        indexes.push(i);
+      }
+    }
+    return indexes;
+  }, [days, viewMode]);
 
   useEffect(() => {
     if (!onTimelineConfigChange || days.length === 0) return;
@@ -607,6 +762,33 @@ export function GanttBoard({
     }
     return headers;
   }, [days, viewMode]);
+
+  const handleTimelineViewportScroll = useCallback(
+    (event: UIEvent<HTMLDivElement>) => {
+      const nextLeft = event.currentTarget.scrollLeft;
+      const nextTop = event.currentTarget.scrollTop;
+      onTimelineScroll?.(nextLeft);
+      setTimelineScrollTop(nextTop);
+
+      const labelNode = labelScrollRef.current;
+      if (labelNode && Math.abs(labelNode.scrollTop - nextTop) > 1) {
+        labelNode.scrollTop = nextTop;
+      }
+    },
+    [onTimelineScroll],
+  );
+
+  const handleLabelScroll = useCallback(
+    (event: UIEvent<HTMLDivElement>) => {
+      const nextTop = event.currentTarget.scrollTop;
+      setTimelineScrollTop(nextTop);
+      const timelineNode = timelineScrollRef.current;
+      if (timelineNode && Math.abs(timelineNode.scrollTop - nextTop) > 1) {
+        timelineNode.scrollTop = nextTop;
+      }
+    },
+    [timelineScrollRef],
+  );
 
   // ── Empty state ────────────────────────────────────────────────────────
   if (workOrders.length === 0) {
@@ -713,6 +895,15 @@ export function GanttBoard({
         </div>
       )}
 
+      {blockedActionBanner && (
+        <div
+          className="border-b border-amber-500/40 bg-amber-500/10 px-4 py-1.5 text-xs text-amber-200"
+          data-testid="gantt-blocked-action-banner"
+        >
+          {blockedActionBanner}
+        </div>
+      )}
+
       {/* ── Conflict warnings banner ──────────────────────────────────────── */}
       {showConflicts && conflicts && conflicts.length > 0 && (
         <div className="border-b border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-950/30 px-4 py-2 flex-shrink-0 overflow-y-auto max-h-32">
@@ -734,8 +925,10 @@ export function GanttBoard({
       <div className="flex flex-1 overflow-hidden">
         {/* Left sticky labels */}
         <div
+          ref={labelScrollRef}
           className="flex-shrink-0 bg-background border-r border-border/40 z-10 overflow-y-auto"
-          style={{ width: LABEL_WIDTH }}
+          style={{ width: isCompactLayout ? COMPACT_LABEL_WIDTH : LABEL_WIDTH }}
+          onScroll={handleLabelScroll}
         >
           <div
             className="border-b border-border/40 bg-muted/30 flex items-center px-3 sticky top-0"
@@ -745,7 +938,10 @@ export function GanttBoard({
               {bays && bays.length > 0 ? "Bay" : "Aircraft / WO"}
             </span>
           </div>
-          {rows.map((row) => (
+          {shouldVirtualizeRows && topVirtualSpacerHeight > 0 && (
+            <div style={{ height: topVirtualSpacerHeight }} />
+          )}
+          {visibleRows.map((row) => (
             <div
               key={row.id}
               className={`border-b border-border/30 hover:bg-muted/20 transition-colors ${
@@ -762,8 +958,13 @@ export function GanttBoard({
                   <span className="text-[11px] font-semibold text-foreground truncate block">
                     {row.label}
                   </span>
-                  <span className="text-[10px] font-mono text-muted-foreground truncate block">
-                    {row.sublabel} {bays && row.wos.length > 0 ? `• ${row.wos.length} WO` : ""}
+                  <span
+                    className={`font-mono text-muted-foreground truncate block ${
+                      isCompactLayout ? "text-[9px]" : "text-[10px]"
+                    }`}
+                  >
+                    {row.sublabel}
+                    {bays && row.wos.length > 0 ? ` • ${row.wos.length} WO` : ""}
                   </span>
                 </div>
                 {bays && bays.length > 0 && (
@@ -784,11 +985,11 @@ export function GanttBoard({
                     <button
                       type="button"
                       className="h-4 w-4 rounded border border-border/60 text-muted-foreground hover:bg-muted/50 disabled:opacity-30"
-                      disabled={isEditMode || magicSelectionMode}
                       onClick={(event) => {
                         event.stopPropagation();
                         void moveBayRow(row.id, 1);
                       }}
+                      disabled={isEditMode || magicSelectionMode}
                       aria-label={`Move ${row.label} down`}
                       data-testid={`bay-row-down-${row.id}`}
                     >
@@ -799,14 +1000,18 @@ export function GanttBoard({
               </div>
             </div>
           ))}
+          {shouldVirtualizeRows && bottomVirtualSpacerHeight > 0 && (
+            <div style={{ height: bottomVirtualSpacerHeight }} />
+          )}
         </div>
 
         {/* Right scrollable timeline */}
         <div
           ref={timelineScrollRef}
           className="flex-1 overflow-auto"
-          onScroll={(e) => onTimelineScroll?.(e.currentTarget.scrollLeft)}
+          onScroll={handleTimelineViewportScroll}
           data-testid="gantt-timeline-scroll"
+          data-virtualized-rows={shouldVirtualizeRows ? "true" : "false"}
         >
           <div
             ref={timelineCanvasRef}
@@ -900,7 +1105,13 @@ export function GanttBoard({
             </div>
 
             {/* WO rows */}
-            {rows.map((row) => (
+            {shouldVirtualizeRows && topVirtualSpacerHeight > 0 && (
+              <div
+                style={{ height: topVirtualSpacerHeight, width: timelineWidth }}
+                data-testid="gantt-virtual-top-spacer"
+              />
+            )}
+            {visibleRows.map((row) => (
               <div
                 key={row.id}
                 className={`relative border-b border-border/30 ${
@@ -909,8 +1120,14 @@ export function GanttBoard({
                 style={{ height: ROW_HEIGHT, width: timelineWidth }}
                 data-testid={`gantt-lane-${row.id}`}
                 onDragOver={(event) => {
-                  if (isEditMode || magicSelectionMode) return;
-                  if (!bays || bays.length === 0) return;
+                  if (isEditMode || magicSelectionMode) {
+                    notifyBlockedAction("Exit board edit/selection mode before scheduling by drag-drop.");
+                    return;
+                  }
+                  if (!bays || bays.length === 0) {
+                    notifyBlockedAction("Backlog drag-drop requires bay lanes.");
+                    return;
+                  }
                   const payload =
                     parseBacklogPayload(
                       event.dataTransfer.getData("application/x-athelon-work-order"),
@@ -930,8 +1147,14 @@ export function GanttBoard({
                   setLaneDropTargetId(null);
                 }}
                 onDrop={async (event) => {
-                  if (isEditMode || magicSelectionMode) return;
-                  if (!bays || bays.length === 0) return;
+                  if (isEditMode || magicSelectionMode) {
+                    notifyBlockedAction("Drop blocked while board edit/selection mode is active.");
+                    return;
+                  }
+                  if (!bays || bays.length === 0) {
+                    notifyBlockedAction("Drop blocked because bay lanes are not available.");
+                    return;
+                  }
                   event.preventDefault();
                   setLaneDropTargetId(null);
                   const payload =
@@ -977,17 +1200,13 @@ export function GanttBoard({
               >
                 {/* Weekend column shading (day view only) */}
                 {viewMode === "day" &&
-                  days.map((day, i) => {
-                    const isWeekend = day.getDay() === 0 || day.getDay() === 6;
-                    if (!isWeekend) return null;
-                    return (
-                      <div
-                        key={i}
-                        className="absolute top-0 bottom-0 bg-muted/10 pointer-events-none"
-                        style={{ left: i * cellWidth, width: cellWidth }}
-                      />
-                    );
-                  })}
+                  weekendIndexes.map((dayIdx) => (
+                    <div
+                      key={dayIdx}
+                      className="absolute top-0 bottom-0 bg-muted/10 pointer-events-none"
+                      style={{ left: dayIdx * cellWidth, width: cellWidth }}
+                    />
+                  ))}
 
                 {/* MBP-0116: Baseline ghost bars */}
                 {baselinePositions && row.wos.map((wo) => {
@@ -1084,7 +1303,12 @@ export function GanttBoard({
                         touchAction: "none",
                       }}
                       onPointerDown={(e) => {
-                        if (interactionPaused) return;
+                        if (interactionPaused) {
+                          notifyBlockedAction(
+                            "Drag/resize is currently blocked. Exit edit or board-selection mode first.",
+                          );
+                          return;
+                        }
                         handlePointerDown(e, wo, "move");
                       }}
                       onClick={(e) => {
@@ -1094,7 +1318,12 @@ export function GanttBoard({
                         onToggleMagicWorkOrder?.(wo.workOrderId);
                       }}
                       onDoubleClick={() => {
-                        if (interactionPaused || magicSelectionMode) return;
+                        if (interactionPaused || magicSelectionMode) {
+                          notifyBlockedAction(
+                            "Open work order is blocked while board edit/selection mode is active.",
+                          );
+                          return;
+                        }
                         navigate(`/work-orders/${wo.workOrderId}`);
                       }}
                       title={`${wo.workOrderNumber} — ${wo.aircraft?.currentRegistration ?? ""} — ${wo.description}${wo.quoteNumber ? ` — ${wo.quoteNumber}` : ""}`}
@@ -1251,9 +1480,17 @@ export function GanttBoard({
                 })}
               </div>
             ))}
+            {shouldVirtualizeRows && bottomVirtualSpacerHeight > 0 && (
+              <div
+                style={{ height: bottomVirtualSpacerHeight, width: timelineWidth }}
+                data-testid="gantt-virtual-bottom-spacer"
+              />
+            )}
           </div>
         </div>
       </div>
     </div>
   );
-}
+});
+
+GanttBoard.displayName = "GanttBoard";

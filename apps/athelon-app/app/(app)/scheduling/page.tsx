@@ -273,6 +273,14 @@ export default function SchedulingPage() {
     api.tatEstimation.getEstimates,
     orgId ? { organizationId: orgId } : "skip",
   );
+  const techTrainingMap = useMemo(
+    () => (techTrainingByOrg as Record<string, string[]>) ?? {},
+    [techTrainingByOrg],
+  );
+  const tatEstimateRows = useMemo(
+    () => (tatEstimates as TATEstimate[]) ?? [],
+    [tatEstimates],
+  );
   const scheduleSnapshots = useQuery(
     api.scheduleSnapshots.listSnapshots,
     orgId ? { organizationId: orgId } : "skip",
@@ -711,6 +719,28 @@ export default function SchedulingPage() {
     [syncTimelineScroll],
   );
 
+  const handleTimelineConfigChange = useCallback(
+    (next: {
+      timelineStartMs: number;
+      totalDays: number;
+      cellWidth: number;
+      todayIndex: number;
+    }) => {
+      setTimelineConfig((prev) => {
+        if (
+          prev.timelineStartMs === next.timelineStartMs &&
+          prev.totalDays === next.totalDays &&
+          prev.cellWidth === next.cellWidth &&
+          prev.todayIndex === next.todayIndex
+        ) {
+          return prev;
+        }
+        return next;
+      });
+    },
+    [],
+  );
+
   useEffect(() => {
     if (!ganttScrollRef.current) return;
     syncTimelineScroll(ganttScrollRef.current.scrollLeft);
@@ -1113,7 +1143,7 @@ export default function SchedulingPage() {
         availableHoursPerDay: hours,
         efficiencyMultiplier: tech.efficiencyMultiplier ?? 1,
         assignedHours: tech.estimatedRemainingHours ?? 0,
-        training: ((techTrainingByOrg as Record<string, string[]>) ?? {})[String(tech.technicianId)] ?? [],
+        training: techTrainingMap[String(tech.technicianId)] ?? [],
       };
     });
 
@@ -1596,7 +1626,7 @@ export default function SchedulingPage() {
       availableHoursPerDay: Math.max(1, (tech.endHour ?? 17) - (tech.startHour ?? 9)),
       efficiencyMultiplier: tech.efficiencyMultiplier ?? 1,
       assignedHours: tech.estimatedRemainingHours ?? 0,
-      training: ((techTrainingByOrg as Record<string, string[]>) ?? {})[String(tech.technicianId)] ?? [],
+      training: techTrainingMap[String(tech.technicianId)] ?? [],
     }));
 
     const assignments = magicSchedule(orderedJobs, bayList, techPool, { autoMode: false });
@@ -1719,7 +1749,7 @@ export default function SchedulingPage() {
     >
       {/* Sub-nav toolbar */}
       {!isFullscreen && (
-        <div className="flex items-center gap-2 px-2 sm:px-4 py-2 border-b border-border/30 bg-muted/20 flex-shrink-0">
+        <div className="flex items-center gap-1.5 px-2 sm:px-4 py-2 border-b border-border/30 bg-muted/20 flex-shrink-0 overflow-x-auto [&>*]:shrink-0">
         <Button variant="secondary" size="sm" className="text-xs h-7" asChild>
           <Link to="/scheduling">Gantt Board</Link>
         </Button>
@@ -1739,7 +1769,7 @@ export default function SchedulingPage() {
           <Link to="/scheduling/financial-planning">Financial Planning</Link>
         </Button>
 
-        <div className="flex-1" />
+        <div className="hidden lg:block flex-1" />
 
         <div className="hidden lg:flex items-center gap-1">
           <Badge variant="outline" className="h-6 text-[10px]">
@@ -2053,11 +2083,11 @@ export default function SchedulingPage() {
               conflicts={conflicts}
               scrollRef={ganttScrollRef}
               onTimelineScroll={handleTimelineScroll}
-              onTimelineConfigChange={setTimelineConfig}
-              techTrainingMap={(techTrainingByOrg as Record<string, string[]>) ?? {}}
+              onTimelineConfigChange={handleTimelineConfigChange}
+              techTrainingMap={techTrainingMap}
               woRequiredTraining={woRequiredTraining}
               woAssignedTechIds={woAssignedTechIds}
-              tatEstimates={(tatEstimates as TATEstimate[]) ?? []}
+              tatEstimates={tatEstimateRows}
               baselinePositions={baselinePositions}
             />
           </div>

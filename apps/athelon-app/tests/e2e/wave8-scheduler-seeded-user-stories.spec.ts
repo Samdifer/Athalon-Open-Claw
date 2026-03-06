@@ -217,6 +217,30 @@ test.describe("Wave 8: Seeded scheduler user stories", () => {
     await expect(page).not.toHaveURL(/view=fullscreen/);
   });
 
+  test("location switching updates scheduler scope and persists across reload", async ({
+    page,
+  }) => {
+    await openScheduling(page, { dismissOnboarding: true });
+
+    const trigger = page.getByTestId("location-switcher-trigger");
+    await expect(trigger).toBeVisible({ timeout: 15_000 });
+    await trigger.click();
+
+    const options = page.locator('[data-testid^="location-switcher-option-"]');
+    const optionCount = await options.count();
+    if (optionCount < 2) {
+      test.skip(true, "No scoped location options available to validate switching.");
+    }
+
+    const firstScopedOption = options.nth(1);
+    const scopedLocationLabel = (await firstScopedOption.innerText()).trim().split("\n")[0] ?? "";
+    await firstScopedOption.click();
+
+    await expect(trigger).toContainText(scopedLocationLabel, { timeout: 10_000 });
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await expect(trigger).toContainText(scopedLocationLabel, { timeout: 15_000 });
+  });
+
   test("scheduler toggles analytics and roster panels and supports popout", async ({
     page,
   }) => {
@@ -267,6 +291,39 @@ test.describe("Wave 8: Seeded scheduler user stories", () => {
     await expect(
       page.getByRole("heading", { name: "Scheduling Command Center" }),
     ).toBeHidden({ timeout: 15_000 });
+  });
+
+  test("command center inline technician edits enforce blocked validations and save", async ({
+    page,
+  }) => {
+    await openScheduling(page, { dismissOnboarding: true });
+
+    await page.getByTestId("toggle-command-center").click();
+    await expect(
+      page.getByRole("heading", { name: "Scheduling Command Center" }),
+    ).toBeVisible({ timeout: 15_000 });
+
+    const editShiftButtons = page.getByRole("button", { name: "Edit Shift" });
+    if ((await editShiftButtons.count()) === 0) {
+      test.skip(true, "No editable technician records are available in seeded org.");
+    }
+
+    await editShiftButtons.first().click();
+
+    const startHourInput = page.getByLabel("Start Hour").first();
+    const endHourInput = page.getByLabel("End Hour").first();
+    await startHourInput.fill("16");
+    await endHourInput.fill("15");
+    await page.getByRole("button", { name: "Save" }).first().click();
+    await expect(page.getByText("Shift end hour must be after start hour")).toBeVisible({
+      timeout: 10_000,
+    });
+
+    await startHourInput.fill("6");
+    await endHourInput.fill("14");
+    await page.getByLabel("Efficiency").first().fill("1.05");
+    await page.getByRole("button", { name: "Save" }).first().click();
+    await expect(page.getByText("Technician shift updated")).toBeVisible({ timeout: 15_000 });
   });
 
   test("scheduler first-run onboarding supports setup defaults and completion", async ({
@@ -367,6 +424,54 @@ test.describe("Wave 8: Seeded scheduler user stories", () => {
     await page.keyboard.press("Escape");
     await expect(page.getByTestId("gantt-edit-mode-banner")).toBeHidden({
       timeout: 15_000,
+    });
+  });
+
+  test("edit mode blocks direct assignment interactions with visible feedback", async ({
+    page,
+  }) => {
+    await openScheduling(page, { dismissOnboarding: true });
+    await waitForSchedulerHydration(page);
+
+    const unscheduledButton = page
+      .locator("button")
+      .filter({ hasText: /unscheduled/i })
+      .first();
+    try {
+      await expect(unscheduledButton).toBeVisible({ timeout: 8_000 });
+    } catch {
+      test.skip(true, "Seeded org has no unscheduled work orders.");
+    }
+
+    await page.getByTestId("toggle-schedule-edit-mode").click();
+    await expect(page.getByTestId("gantt-edit-mode-banner")).toBeVisible({ timeout: 10_000 });
+
+    await unscheduledButton.click();
+    const firstBacklogCard = page.locator('[data-testid^="backlog-card-"]').first();
+    const targetLane = page.locator('[data-testid^="gantt-lane-"]').first();
+    await expect(firstBacklogCard).toBeVisible({ timeout: 10_000 });
+    await expect(targetLane).toBeVisible({ timeout: 10_000 });
+
+    const laneBox = await targetLane.boundingBox();
+    if (!laneBox) {
+      test.skip(true, "Could not resolve lane bounds for blocked drop test.");
+    }
+
+    const dataTransfer = await page.evaluateHandle(() => new DataTransfer());
+    await firstBacklogCard.dispatchEvent("dragstart", { dataTransfer });
+    await targetLane.dispatchEvent("dragover", {
+      dataTransfer,
+      clientX: laneBox!.x + 8,
+      clientY: laneBox!.y + laneBox!.height / 2,
+    });
+    await targetLane.dispatchEvent("drop", {
+      dataTransfer,
+      clientX: laneBox!.x + 8,
+      clientY: laneBox!.y + laneBox!.height / 2,
+    });
+
+    await expect(page.getByTestId("gantt-blocked-action-banner")).toBeVisible({
+      timeout: 10_000,
     });
   });
 
