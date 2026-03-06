@@ -6,6 +6,7 @@ import { TopBar } from "@/components/TopBar";
 import { CommandPalette } from "@/components/CommandPalette";
 import { KeyboardShortcuts } from "@/components/KeyboardShortcuts";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
+import { OfflineStatusBanner } from "@/components/OfflineStatusBanner";
 import { Skeleton } from "@/components/ui/skeleton";
 
 function RouteContentFallback() {
@@ -26,6 +27,7 @@ export function AppLayout() {
       <AppSidebar />
       <div className="flex flex-col flex-1 min-h-screen min-w-0">
         <TopBar />
+        <OfflineStatusBanner />
         <main className="flex-1 p-2 sm:p-4 md:p-6 overflow-auto">
           <Suspense fallback={<RouteContentFallback />}>
             <Outlet />

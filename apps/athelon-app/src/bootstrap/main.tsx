@@ -6,7 +6,10 @@ import { ConvexClientProvider } from "@/components/ConvexClientProvider";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { Toaster } from "@/components/ui/sonner";
 import App from "@/App";
+import { registerServiceWorker } from "@/src/bootstrap/registerServiceWorker";
 import "@/app/globals.css";
+
+registerServiceWorker();
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>

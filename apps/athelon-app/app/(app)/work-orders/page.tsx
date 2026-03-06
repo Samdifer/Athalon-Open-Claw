@@ -35,6 +35,7 @@ import {
 } from "@/lib/mro-constants";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import { usePagePrereqs } from "@/hooks/usePagePrereqs";
+import { useOfflineSnapshot } from "@/src/shared/hooks/useOfflineSnapshot";
 import { ExportCSVButton } from "@/src/shared/components/ExportCSVButton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -141,7 +142,7 @@ function filterWorkOrders(rows: WorkOrderRow[], tab: FilterTab) {
 export default function WorkOrdersPage() {
   const { orgId, isLoaded } = useCurrentOrg();
   const [filterLocationId, setFilterLocationId] = useState<string>("all");
-  const raw = useQuery(
+  const rawLive = useQuery(
     api.workOrders.getWorkOrdersWithScheduleRisk,
     orgId
       ? {
@@ -152,6 +153,10 @@ export default function WorkOrdersPage() {
               : (filterLocationId as Id<"shopLocations">),
         }
       : "skip",
+  );
+  const { value: raw, fromCache: rawFromCache } = useOfflineSnapshot(
+    `offline:work-orders:list:${orgId ?? "unknown"}:${filterLocationId}`,
+    rawLive,
   );
   const shopLocations = useQuery(
     api.shopLocations.list,
@@ -320,6 +325,11 @@ export default function WorkOrdersPage() {
           <p className="text-sm text-muted-foreground mt-0.5">
             {workOrders.length} total · {counts.active} active
           </p>
+          {rawFromCache && (
+            <Badge variant="outline" className="mt-2 text-[10px] border-amber-500/40 text-amber-300">
+              Offline snapshot
+            </Badge>
+          )}
         </div>
         <div className="flex gap-2 w-full sm:w-auto">
           <Button

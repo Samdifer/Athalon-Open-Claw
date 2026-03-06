@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
+import { useOfflineSnapshot } from "@/src/shared/hooks/useOfflineSnapshot";
 import type { FunctionReturnType } from "convex/server";
 import {
   AlertTriangle,
@@ -915,14 +916,23 @@ export default function DashboardPage() {
 
   // Shared queries — lifted here so both LiveKPICards and LiveActiveWorkOrders
   // receive the same data without duplicate subscriptions.
-  const workOrdersWithRisk = useQuery(
+  const workOrdersWithRiskLive = useQuery(
     api.workOrders.getWorkOrdersWithScheduleRisk,
     orgId ? { organizationId: orgId } : "skip",
   );
 
-  const fleetAd = useQuery(
+  const fleetAdLive = useQuery(
     api.adCompliance.getFleetAdSummary,
     orgId ? { organizationId: orgId } : "skip",
+  );
+
+  const { value: workOrdersWithRisk, fromCache: workOrdersFromCache } = useOfflineSnapshot(
+    `offline:dashboard:workOrders:${orgId ?? "unknown"}`,
+    workOrdersWithRiskLive,
+  );
+  const { value: fleetAd, fromCache: fleetAdFromCache } = useOfflineSnapshot(
+    `offline:dashboard:fleetAd:${orgId ?? "unknown"}`,
+    fleetAdLive,
   );
 
   // BUG-SM-HUNT-019: todayLabel was memoized with no deps `useMemo(fn, [])`,
@@ -950,6 +960,11 @@ export default function DashboardPage() {
           <p className="text-sm text-muted-foreground mt-0.5">
             {org?.name ?? "MRO Dashboard"} — {todayLabel}
           </p>
+          {(workOrdersFromCache || fleetAdFromCache) && (
+            <Badge variant="outline" className="mt-2 text-[10px] border-amber-500/40 text-amber-300">
+              Showing cached offline snapshot
+            </Badge>
+          )}
         </div>
         <Button asChild size="sm" className="w-full sm:w-auto">
           <Link to="/work-orders/new">
