@@ -830,6 +830,11 @@ export default function PartsPage() {
     orgId ? { organizationId: orgId } : "skip",
   );
 
+  const reorderAlerts = useQuery(
+    api.inventoryAlerts.getReorderAlerts,
+    orgId ? { organizationId: orgId } : "skip",
+  );
+
   // Load self technician for inspections / reservations
   const selfTech = useQuery(
     api.technicians.getSelf,
@@ -952,6 +957,8 @@ export default function PartsPage() {
     };
   }, [parts, pendingInspectionParts, partsRequests.length]);
 
+  const criticalReorderCount = (reorderAlerts ?? []).filter((a: any) => a.severity === "critical").length;
+
   const exportRows = useMemo(
     () =>
       filtered.map((p) => ({
@@ -1047,6 +1054,24 @@ export default function PartsPage() {
           </Button>
         </div>
       </div>
+
+      {(reorderAlerts?.length ?? 0) > 0 && (
+        <Card className="border-amber-500/30 bg-amber-500/5">
+          <CardContent className="py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div className="text-sm">
+              <p className="font-medium text-amber-700 dark:text-amber-300">
+                {reorderAlerts?.length} part number{(reorderAlerts?.length ?? 0) === 1 ? "" : "s"} below reorder threshold
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {criticalReorderCount} critical · replenish stock to prevent execution delays.
+              </p>
+            </div>
+            <Button asChild size="sm" variant="outline" className="border-amber-500/40">
+              <Link to="/parts/alerts?tab=reorder">Review reorder alerts</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Tabs + Search */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">

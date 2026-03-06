@@ -14,6 +14,7 @@ const WorkOrdersDashboardPage = lazy(
   () => import("@/app/(app)/work-orders/dashboard/page"),
 );
 const WorkOrdersLeadPage = lazy(() => import("@/app/(app)/work-orders/lead/page"));
+const WorkOrdersHandoffPage = lazy(() => import("@/app/(app)/work-orders/handoff/page"));
 const LeadDashboardPage = lazy(() => import("@/app/(app)/lead/page"));
 const WorkOrderDetailPage = lazy(() => import("@/app/(app)/work-orders/[id]/page"));
 const NewWorkOrderPage = lazy(() => import("@/app/(app)/work-orders/new/page"));
@@ -195,6 +196,7 @@ export function protectedAppRoutes() {
             <Route path="/work-orders" element={<WorkOrdersPage />} />
             <Route path="/work-orders/dashboard" element={<WorkOrdersDashboardPage />} />
             <Route path="/work-orders/lead" element={<WorkOrdersLeadPage />} />
+            <Route path="/work-orders/handoff" element={<WorkOrdersHandoffPage />} />
             <Route path="/lead" element={<LeadDashboardPage />} />
             <Route path="/work-orders/kanban" element={<KanbanPage />} />
             <Route path="/work-orders/new" element={<NewWorkOrderPage />} />

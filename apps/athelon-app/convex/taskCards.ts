@@ -1442,6 +1442,155 @@ export const addHandoffNote = mutation({
   },
 });
 
+export const getShiftHandoffDashboard = query({
+  args: {
+    organizationId: v.id("organizations"),
+    reportDate: v.optional(v.string()), // YYYY-MM-DD (UTC)
+    shift: v.optional(v.union(v.literal("all"), v.literal("day"), v.literal("swing"), v.literal("night"))),
+    technicianId: v.optional(v.id("technicians")),
+    teamName: v.optional(v.string()),
+    unresolvedOnly: v.optional(v.boolean()),
+  },
+  handler: async (ctx, args) => {
+    const callerUserId = await requireAuth(ctx);
+
+    const callerTech = await ctx.db
+      .query("technicians")
+      .withIndex("by_organization", (q) => q.eq("organizationId", args.organizationId))
+      .filter((q) => q.eq(q.field("userId"), callerUserId))
+      .first();
+
+    if (!callerTech || callerTech.status !== "active") {
+      throw new Error("ACCESS_DENIED: Active technician profile required.");
+    }
+
+    const date = (args.reportDate ?? new Date().toISOString().slice(0, 10)).trim();
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      throw new Error(`Invalid reportDate \"${args.reportDate}\". Expected YYYY-MM-DD.`);
+    }
+
+    const windowStart = new Date(`${date}T00:00:00.000Z`).getTime();
+    const windowEnd = windowStart + 24 * 60 * 60 * 1000;
+
+    const teamFilter = args.teamName?.trim().toLowerCase();
+    const shiftFilter = args.shift ?? "all";
+
+    const workOrders = await ctx.db
+      .query("workOrders")
+      .withIndex("by_organization", (q) => q.eq("organizationId", args.organizationId))
+      .collect();
+
+    const workOrderById = new Map(workOrders.map((wo) => [String(wo._id), wo]));
+
+    const leadAssignments = await ctx.db
+      .query("leadAssignments")
+      .withIndex("by_org_entity", (q) => q.eq("organizationId", args.organizationId))
+      .collect();
+
+    const teamByWorkOrderId = new Map<string, string>();
+    for (const assignment of leadAssignments) {
+      if (!assignment.isActive || assignment.entityType !== "work_order" || !assignment.workOrderId) continue;
+      teamByWorkOrderId.set(String(assignment.workOrderId), assignment.assignedTeamName?.trim() || "Unassigned Team");
+    }
+
+    const cards = await ctx.db
+      .query("taskCards")
+      .withIndex("by_organization", (q) => q.eq("organizationId", args.organizationId))
+      .collect();
+
+    const handoffRows: Array<any> = [];
+
+    for (const card of cards) {
+      if (!card.handoffNotes || card.handoffNotes.length === 0) continue;
+
+      const workOrder = workOrderById.get(String(card.workOrderId));
+      const teamName = teamByWorkOrderId.get(String(card.workOrderId)) ?? "Unassigned Team";
+
+      for (const note of card.handoffNotes) {
+        if (note.createdAt < windowStart || note.createdAt >= windowEnd) continue;
+
+        const hour = new Date(note.createdAt).getUTCHours();
+        const inferredShift = hour >= 6 && hour < 14 ? "day" : hour >= 14 && hour < 22 ? "swing" : "night";
+
+        if (shiftFilter !== "all" && inferredShift !== shiftFilter) continue;
+        if (args.technicianId && String(note.technicianId) !== String(args.technicianId)) continue;
+        if (teamFilter && teamName.toLowerCase() !== teamFilter) continue;
+
+        const unresolved = card.status !== "complete" && card.status !== "voided";
+        if (args.unresolvedOnly && !unresolved) continue;
+
+        handoffRows.push({
+          taskCardId: card._id,
+          taskCardNumber: card.taskCardNumber,
+          taskCardTitle: card.title,
+          workOrderId: card.workOrderId,
+          workOrderNumber: workOrder?.workOrderNumber ?? "—",
+          workOrderStatus: workOrder?.status ?? "unknown",
+          teamName,
+          technicianId: note.technicianId,
+          technicianName: note.technicianName,
+          note: note.note,
+          createdAt: note.createdAt,
+          shift: inferredShift,
+          unresolved,
+        });
+      }
+    }
+
+    handoffRows.sort((a, b) => b.createdAt - a.createdAt);
+
+    const totalsByShift = { day: 0, swing: 0, night: 0 };
+    const unresolvedByShift = { day: 0, swing: 0, night: 0 };
+    const totalsByTeam = new Map<string, { notes: number; unresolved: number }>();
+    const totalsByTechnician = new Map<string, { technicianName: string; notes: number; unresolved: number }>();
+
+    for (const row of handoffRows) {
+      totalsByShift[row.shift as "day" | "swing" | "night"] += 1;
+      if (row.unresolved) {
+        unresolvedByShift[row.shift as "day" | "swing" | "night"] += 1;
+      }
+
+      const teamAgg = totalsByTeam.get(row.teamName) ?? { notes: 0, unresolved: 0 };
+      teamAgg.notes += 1;
+      if (row.unresolved) teamAgg.unresolved += 1;
+      totalsByTeam.set(row.teamName, teamAgg);
+
+      const techKey = String(row.technicianId);
+      const techAgg = totalsByTechnician.get(techKey) ?? {
+        technicianName: row.technicianName,
+        notes: 0,
+        unresolved: 0,
+      };
+      techAgg.notes += 1;
+      if (row.unresolved) techAgg.unresolved += 1;
+      totalsByTechnician.set(techKey, techAgg);
+    }
+
+    return {
+      reportDate: date,
+      filters: {
+        shift: shiftFilter,
+        technicianId: args.technicianId,
+        teamName: args.teamName?.trim() || "",
+        unresolvedOnly: !!args.unresolvedOnly,
+      },
+      summary: {
+        totalNotes: handoffRows.length,
+        unresolvedCount: handoffRows.filter((row) => row.unresolved).length,
+        shiftBreakdown: totalsByShift,
+        unresolvedByShift,
+      },
+      teamBreakdown: Array.from(totalsByTeam.entries())
+        .map(([teamName, agg]) => ({ teamName, notes: agg.notes, unresolved: agg.unresolved }))
+        .sort((a, b) => b.notes - a.notes),
+      technicianBreakdown: Array.from(totalsByTechnician.entries())
+        .map(([technicianId, agg]) => ({ technicianId, ...agg }))
+        .sort((a, b) => b.notes - a.notes),
+      notes: handoffRows,
+    };
+  },
+});
+
 // ═══════════════════════════════════════════════════════════════════════════
 // LIST TASK CARDS FOR TECHNICIAN  (Gap 3: "My Work" view)
 // ═══════════════════════════════════════════════════════════════════════════

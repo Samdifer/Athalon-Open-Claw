@@ -38,7 +38,10 @@ interface ReorderAlertItem {
   currentStock: number;
   reorderPoint: number | undefined;
   minStockLevel: number | undefined;
+  threshold: number;
+  thresholdSource: "reorder_point" | "min_stock";
   deficit: number;
+  severity: "critical" | "warning";
 }
 
 interface CalibrationAlertItem {
@@ -363,6 +366,7 @@ export default function AlertsPage() {
                   <TableHead className="text-right">Reorder Point</TableHead>
                   <TableHead className="text-right">Min Stock</TableHead>
                   <TableHead className="text-right">Deficit</TableHead>
+                  <TableHead>Severity</TableHead>
                   <TableHead className="text-right">Action</TableHead>
                 </TableRow>
               </TableHeader>
@@ -380,6 +384,16 @@ export default function AlertsPage() {
                     </TableCell>
                     <TableCell className="text-right">
                       <span className="text-red-400 font-semibold">-{item.deficit}</span>
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant="outline"
+                        className={item.severity === "critical"
+                          ? "border-red-500/30 text-red-400 bg-red-500/10"
+                          : "border-amber-500/30 text-amber-400 bg-amber-500/10"}
+                      >
+                        {item.severity === "critical" ? "Critical" : "Warning"}
+                      </Badge>
                     </TableCell>
                     <TableCell className="text-right">
                       <Button variant="outline" size="sm" asChild>

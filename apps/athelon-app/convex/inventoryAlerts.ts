@@ -113,7 +113,10 @@ interface ReorderAlertItem {
   currentStock: number;
   reorderPoint: number | undefined;
   minStockLevel: number | undefined;
+  threshold: number;
+  thresholdSource: "reorder_point" | "min_stock";
   deficit: number;
+  severity: "critical" | "warning";
 }
 
 export const getReorderAlerts = query({
@@ -170,13 +173,19 @@ export const getReorderAlerts = query({
       if (threshold === undefined) continue;
       if (group.inventoryCount >= threshold) continue;
 
+      const deficit = threshold - group.inventoryCount;
+      const thresholdSource = group.reorderPoint !== undefined ? "reorder_point" : "min_stock";
+
       alerts.push({
         partNumber,
         partName: group.partName,
         currentStock: group.inventoryCount,
         reorderPoint: group.reorderPoint,
         minStockLevel: group.minStockLevel,
-        deficit: threshold - group.inventoryCount,
+        threshold,
+        thresholdSource,
+        deficit,
+        severity: deficit >= 5 ? "critical" : "warning",
       });
     }
 

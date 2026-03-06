@@ -24,6 +24,7 @@ import {
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
+import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 
 function timeAgo(timestamp: number): string {
   const seconds = Math.floor((Date.now() - timestamp) / 1000);
@@ -55,8 +56,13 @@ export function TopBar() {
   const [notifOpen, setNotifOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
+  const { orgId } = useCurrentOrg();
 
   const unreadCount = useQuery(api.notifications.countUnread) ?? 0;
+  const reorderAlerts = useQuery(
+    api.inventoryAlerts.getReorderAlerts,
+    orgId ? { organizationId: orgId } : "skip",
+  ) ?? [];
   const notifications = useQuery(api.notifications.listMyNotifications, { limit: 20 }) ?? [];
   const markAsRead = useMutation(api.notifications.markAsRead);
   const markAllRead = useMutation(api.notifications.markAllRead);
@@ -169,6 +175,30 @@ export function TopBar() {
                 )}
               </div>
               <div className="overflow-y-auto max-h-[calc(70vh-56px)]">
+                {reorderAlerts.length > 0 && (
+                  <button
+                    onClick={() => {
+                      setNotifOpen(false);
+                      navigate("/parts/alerts");
+                    }}
+                    className="w-full text-left px-4 py-3 border-b border-border/30 hover:bg-muted/50 transition-colors flex gap-3 items-start bg-amber-500/5"
+                  >
+                    <div className="mt-0.5 p-1.5 rounded-full shrink-0 bg-amber-500/15 text-amber-600 dark:text-amber-400">
+                      <Package className="w-3.5 h-3.5" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-medium truncate">Reorder alert</span>
+                        <Badge variant="outline" className="text-[10px] border-amber-500/30 text-amber-600 dark:text-amber-400">
+                          {reorderAlerts.length}
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
+                        Parts are below reorder threshold. Open inventory alerts to review critical deficits.
+                      </p>
+                    </div>
+                  </button>
+                )}
                 {notifications.length === 0 ? (
                   <div className="px-4 py-8 text-center text-sm text-muted-foreground">
                     No notifications yet

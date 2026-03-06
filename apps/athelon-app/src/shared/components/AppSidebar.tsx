@@ -130,6 +130,7 @@ const mainNav: NavEntry[] = [
     section: "work-orders",
     children: [
       { title: "Lead Workspace", href: "/work-orders/lead" },
+      { title: "Shift Handoff", href: "/work-orders/handoff" },
       { title: "Dashboard", href: "/work-orders/dashboard" },
       { title: "Kanban", href: "/work-orders/kanban" },
     ],
