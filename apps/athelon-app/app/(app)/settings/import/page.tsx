@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useMemo } from "react";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import { toast } from "sonner";
-import { Upload, FileSpreadsheet, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Upload, FileSpreadsheet, CheckCircle2, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -28,6 +28,10 @@ import {
 
 type ImportType = "aircraft" | "parts" | "customers";
 
+type CsvValidationError = { row: number; message: string };
+
+type ImportResult = { row: number; success: boolean; error?: string };
+
 const FIELD_MAPS: Record<ImportType, { required: string[]; optional: string[] }> = {
   aircraft: {
     required: ["tailNumber", "make", "model", "serialNumber"],
@@ -43,14 +47,76 @@ const FIELD_MAPS: Record<ImportType, { required: string[]; optional: string[] }>
   },
 };
 
+const TEMPLATE_ROWS: Record<ImportType, string[]> = {
+  aircraft: [
+    "tailNumber,make,model,serialNumber,year,totalTimeHours,totalCycles",
+    "N123AB,Cessna,172S,172S-8390,2008,3450,5230",
+  ],
+  parts: [
+    "partNumber,partName,description,serialNumber,condition,location",
+    "CH48108-1,Spark Plug,Massive electrode plug,SN-0001,new,inventory",
+  ],
+  customers: [
+    "name,email,phone,address,notes",
+    "Acme Air Charter,ops@acme-air.example,+1-555-0100,123 Hangar Rd,Priority account",
+  ],
+};
+
 function parseCSV(text: string): { headers: string[]; rows: string[][] } {
-  const lines = text.split(/\r?\n/).filter((l) => l.trim());
-  if (lines.length === 0) return { headers: [], rows: [] };
-  const headers = lines[0].split(",").map((h) => h.trim().replace(/^"|"$/g, ""));
-  const rows = lines.slice(1).map((line) =>
-    line.split(",").map((c) => c.trim().replace(/^"|"$/g, "")),
-  );
-  return { headers, rows };
+  const rows: string[][] = [];
+  let cell = "";
+  let row: string[] = [];
+  let inQuotes = false;
+
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+    const next = text[i + 1];
+
+    if (char === '"') {
+      if (inQuotes && next === '"') {
+        cell += '"';
+        i++;
+      } else {
+        inQuotes = !inQuotes;
+      }
+      continue;
+    }
+
+    if (char === "," && !inQuotes) {
+      row.push(cell.trim());
+      cell = "";
+      continue;
+    }
+
+    if ((char === "\n" || char === "\r") && !inQuotes) {
+      if (char === "\r" && next === "\n") i++;
+      row.push(cell.trim());
+      cell = "";
+
+      const hasContent = row.some((c) => c.trim().length > 0);
+      if (hasContent) rows.push(row.map((c) => c.replace(/^"|"$/g, "")));
+      row = [];
+      continue;
+    }
+
+    cell += char;
+  }
+
+  if (cell.length > 0 || row.length > 0) {
+    row.push(cell.trim());
+    const hasContent = row.some((c) => c.trim().length > 0);
+    if (hasContent) rows.push(row.map((c) => c.replace(/^"|"$/g, "")));
+  }
+
+  if (rows.length === 0) return { headers: [], rows: [] };
+  const [headers, ...dataRows] = rows;
+  return { headers, rows: dataRows };
+}
+
+function toNumberOrUndefined(value: string | undefined) {
+  if (!value) return undefined;
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? numeric : undefined;
 }
 
 export default function ImportPage() {
@@ -61,7 +127,7 @@ export default function ImportPage() {
   const [columnMapping, setColumnMapping] = useState<Record<string, string>>({});
   const [importing, setImporting] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [results, setResults] = useState<{ row: number; success: boolean; error?: string }[] | null>(null);
+  const [results, setResults] = useState<ImportResult[] | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const importAircraft = useMutation(api.bulkImport.importAircraft);
@@ -70,6 +136,68 @@ export default function ImportPage() {
 
   const fields = FIELD_MAPS[importType];
   const allFields = [...fields.required, ...fields.optional];
+
+  const validationErrors = useMemo(() => {
+    const errors: CsvValidationError[] = [];
+
+    for (const req of fields.required) {
+      if (!columnMapping[req]) {
+        errors.push({ row: 0, message: `Missing mapping for required field: ${req}` });
+      }
+    }
+
+    for (let i = 0; i < csvRows.length; i++) {
+      for (const req of fields.required) {
+        const col = columnMapping[req];
+        const idx = col ? csvHeaders.indexOf(col) : -1;
+        const value = idx >= 0 ? csvRows[i][idx]?.trim() : "";
+        if (!value) {
+          errors.push({ row: i + 1, message: `Required field \"${req}\" is empty.` });
+        }
+      }
+    }
+
+    return errors;
+  }, [csvRows, csvHeaders, columnMapping, fields.required]);
+
+  const mappedPreview = useMemo(() => {
+    return csvRows.slice(0, 5).map((row) => {
+      const obj: Record<string, string | number | undefined> = {};
+      for (const field of allFields) {
+        const col = columnMapping[field];
+        const idx = col ? csvHeaders.indexOf(col) : -1;
+        const raw = idx >= 0 ? row[idx]?.trim() : undefined;
+        if (!raw) continue;
+        if (["year", "totalTimeHours", "totalCycles"].includes(field)) {
+          obj[field] = toNumberOrUndefined(raw);
+        } else {
+          obj[field] = raw;
+        }
+      }
+      return obj;
+    });
+  }, [allFields, columnMapping, csvHeaders, csvRows]);
+
+  const summary = useMemo(() => {
+    if (!results) return null;
+    const successCount = results.filter((r) => r.success).length;
+    const failureCount = results.length - successCount;
+    return { total: results.length, successCount, failureCount };
+  }, [results]);
+
+  const downloadTemplate = () => {
+    const blob = new Blob([`${TEMPLATE_ROWS[importType].join("\n")}\n`], {
+      type: "text/csv;charset=utf-8",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${importType}-import-template.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  };
 
   const handleFile = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -82,12 +210,9 @@ export default function ImportPage() {
         const { headers, rows } = parseCSV(text);
         setCsvHeaders(headers);
         setCsvRows(rows);
-        // Auto-map by exact name match
         const mapping: Record<string, string> = {};
         for (const field of allFields) {
-          const match = headers.find(
-            (h) => h.toLowerCase() === field.toLowerCase(),
-          );
+          const match = headers.find((h) => h.toLowerCase() === field.toLowerCase());
           if (match) mapping[field] = match;
         }
         setColumnMapping(mapping);
@@ -97,31 +222,13 @@ export default function ImportPage() {
     [allFields],
   );
 
-  const validationErrors = useCallback(() => {
-    const errors: { row: number; message: string }[] = [];
-    for (let i = 0; i < csvRows.length; i++) {
-      for (const req of fields.required) {
-        const col = columnMapping[req];
-        if (!col) {
-          errors.push({ row: i, message: `Missing mapping for required field: ${req}` });
-          continue;
-        }
-        const idx = csvHeaders.indexOf(col);
-        if (idx === -1 || !csvRows[i][idx]?.trim()) {
-          errors.push({ row: i, message: `Row ${i + 1}: empty required field "${req}"` });
-        }
-      }
-    }
-    return errors;
-  }, [csvRows, csvHeaders, columnMapping, fields.required]);
-
   const handleImport = async () => {
     if (!orgId) return;
-    const errors = validationErrors();
-    if (errors.length > 0) {
-      toast.error(`${errors.length} validation error(s). Fix them before importing.`);
+    if (validationErrors.length > 0) {
+      toast.error(`${validationErrors.length} validation error(s). Fix them before importing.`);
       return;
     }
+
     setImporting(true);
     setProgress(10);
 
@@ -135,7 +242,7 @@ export default function ImportPage() {
           const val = idx >= 0 ? row[idx]?.trim() : undefined;
           if (!val) continue;
           if (["year", "totalTimeHours", "totalCycles"].includes(field)) {
-            obj[field] = Number(val) || undefined;
+            obj[field] = toNumberOrUndefined(val);
           } else {
             obj[field] = val;
           }
@@ -143,8 +250,8 @@ export default function ImportPage() {
         return obj;
       });
 
-      setProgress(30);
-      let res: { row: number; success: boolean; error?: string }[];
+      setProgress(40);
+      let res: ImportResult[];
 
       if (importType === "aircraft") {
         res = await importAircraft({
@@ -165,8 +272,15 @@ export default function ImportPage() {
 
       setProgress(100);
       setResults(res);
+
       const successCount = res.filter((r) => r.success).length;
-      toast.success(`Imported ${successCount} of ${res.length} rows.`);
+      const failureCount = res.length - successCount;
+
+      if (failureCount > 0) {
+        toast.warning(`Imported ${successCount}/${res.length}. ${failureCount} rows failed.`);
+      } else {
+        toast.success(`Imported ${successCount}/${res.length} rows successfully.`);
+      }
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : "Import failed");
     } finally {
@@ -179,10 +293,10 @@ export default function ImportPage() {
   }
 
   return (
-    <div className="space-y-4 max-w-4xl">
+    <div className="space-y-4 max-w-5xl">
       <div className="flex items-center gap-2">
         <FileSpreadsheet className="w-5 h-5 text-primary" />
-        <h1 className="text-lg font-semibold">Import Data</h1>
+        <h1 className="text-lg font-semibold">Bulk CSV Import</h1>
       </div>
 
       <Card className="border-border/60">
@@ -210,13 +324,13 @@ export default function ImportPage() {
                 <SelectItem value="customers">Customers</SelectItem>
               </SelectContent>
             </Select>
-            <Button
-              variant="outline"
-              onClick={() => fileRef.current?.click()}
-              className="gap-2"
-            >
+            <Button variant="outline" onClick={() => fileRef.current?.click()} className="gap-2">
               <Upload className="w-4 h-4" />
               Upload CSV
+            </Button>
+            <Button variant="ghost" onClick={downloadTemplate} className="gap-2">
+              <Download className="w-4 h-4" />
+              Download Template
             </Button>
             <input
               ref={fileRef}
@@ -235,7 +349,6 @@ export default function ImportPage() {
 
       {csvHeaders.length > 0 && (
         <>
-          {/* Column mapping */}
           <Card className="border-border/60">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm">2. Map columns</CardTitle>
@@ -246,15 +359,11 @@ export default function ImportPage() {
                   <div key={field} className="flex items-center gap-2">
                     <span className="text-xs w-32 truncate">
                       {field}
-                      {fields.required.includes(field) && (
-                        <span className="text-red-500 ml-0.5">*</span>
-                      )}
+                      {fields.required.includes(field) && <span className="text-red-500 ml-0.5">*</span>}
                     </span>
                     <Select
                       value={columnMapping[field] ?? ""}
-                      onValueChange={(v) =>
-                        setColumnMapping((prev) => ({ ...prev, [field]: v }))
-                      }
+                      onValueChange={(v) => setColumnMapping((prev) => ({ ...prev, [field]: v }))}
                     >
                       <SelectTrigger className="h-8 text-xs flex-1">
                         <SelectValue placeholder="Select column..." />
@@ -273,12 +382,55 @@ export default function ImportPage() {
             </CardContent>
           </Card>
 
-          {/* Preview */}
           <Card className="border-border/60">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm">
-                3. Preview ({csvRows.length} rows)
-              </CardTitle>
+              <CardTitle className="text-sm">3. Validation &amp; preview</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex flex-wrap gap-2 text-xs">
+                <Badge variant="secondary">Rows: {csvRows.length}</Badge>
+                <Badge variant={validationErrors.length ? "destructive" : "secondary"}>
+                  Validation errors: {validationErrors.length}
+                </Badge>
+                {summary && (
+                  <>
+                    <Badge variant="secondary">Imported: {summary.successCount}</Badge>
+                    <Badge variant={summary.failureCount ? "destructive" : "secondary"}>
+                      Failed: {summary.failureCount}
+                    </Badge>
+                  </>
+                )}
+              </div>
+
+              {validationErrors.length > 0 && (
+                <div className="rounded-md border border-destructive/40 bg-destructive/5 p-3">
+                  <p className="text-xs font-medium mb-1">Fix validation errors before import:</p>
+                  <ul className="text-xs space-y-1 max-h-32 overflow-auto">
+                    {validationErrors.slice(0, 12).map((error, idx) => (
+                      <li key={`${error.row}-${idx}`}>
+                        {error.row > 0 ? `Row ${error.row}: ` : ""}
+                        {error.message}
+                      </li>
+                    ))}
+                    {validationErrors.length > 12 && (
+                      <li className="text-muted-foreground">+{validationErrors.length - 12} more</li>
+                    )}
+                  </ul>
+                </div>
+              )}
+
+              <div className="rounded-md border border-border/60 bg-muted/20 p-3">
+                <p className="text-xs font-medium mb-2">Mapped object preview (first 5 rows)</p>
+                <pre className="text-[10px] whitespace-pre-wrap break-all text-muted-foreground">
+                  {JSON.stringify(mappedPreview, null, 2)}
+                </pre>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-border/60">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm">4. Raw CSV preview ({csvRows.length} rows)</CardTitle>
             </CardHeader>
             <CardContent className="overflow-x-auto">
               <Table>
@@ -318,9 +470,7 @@ export default function ImportPage() {
                 </TableBody>
               </Table>
               {csvRows.length > 50 && (
-                <p className="text-xs text-muted-foreground mt-2">
-                  Showing first 50 of {csvRows.length} rows
-                </p>
+                <p className="text-xs text-muted-foreground mt-2">Showing first 50 of {csvRows.length} rows</p>
               )}
             </CardContent>
           </Card>
@@ -328,7 +478,11 @@ export default function ImportPage() {
           {importing && <Progress value={progress} className="h-2" />}
 
           <div className="flex justify-end">
-            <Button onClick={handleImport} disabled={importing} className="gap-2">
+            <Button
+              onClick={handleImport}
+              disabled={importing || csvRows.length === 0 || validationErrors.length > 0}
+              className="gap-2"
+            >
               {importing ? "Importing..." : `Import ${csvRows.length} rows`}
             </Button>
           </div>

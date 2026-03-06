@@ -3,7 +3,71 @@
 
 import { mutation } from "./_generated/server";
 import { v } from "convex/values";
+import type { Id } from "./_generated/dataModel";
 import { requireAuth } from "./lib/authHelpers";
+
+type ImportRole =
+  | "admin"
+  | "shop_manager"
+  | "lead_technician"
+  | "billing_manager"
+  | "parts_clerk";
+
+const AIRCRAFT_IMPORT_ROLES: ImportRole[] = ["admin", "shop_manager", "lead_technician"];
+const PARTS_IMPORT_ROLES: ImportRole[] = ["admin", "shop_manager", "lead_technician", "parts_clerk"];
+const CUSTOMERS_IMPORT_ROLES: ImportRole[] = ["admin", "shop_manager", "lead_technician", "billing_manager"];
+
+const VALID_PART_CONDITIONS = new Set([
+  "new",
+  "overhauled",
+  "serviceable",
+  "repaired",
+  "unserviceable",
+  "quarantine",
+  "scrapped",
+] as const);
+
+const VALID_PART_LOCATIONS = new Set([
+  "inventory",
+  "installed",
+  "quarantine",
+  "scrapped",
+  "pending_inspection",
+  "removed_pending_disposition",
+  "returned_to_vendor",
+] as const);
+
+async function requireImportPermission(
+  ctx: any,
+  organizationId: Id<"organizations">,
+  allowedRoles: ImportRole[],
+) {
+  const userId = await requireAuth(ctx);
+  const technician = await ctx.db
+    .query("technicians")
+    .withIndex("by_user", (q: any) => q.eq("userId", userId))
+    .filter((q: any) => q.eq(q.field("organizationId"), organizationId))
+    .first();
+
+  if (!technician) {
+    throw new Error("ACCESS_DENIED: technician profile required for this organization.");
+  }
+  if (technician.status !== "active") {
+    throw new Error("ACCESS_DENIED: technician must be active to perform imports.");
+  }
+  if (!technician.role || !allowedRoles.includes(technician.role)) {
+    throw new Error(
+      `ACCESS_DENIED: requires one of roles [${allowedRoles.join(", ")}].`,
+    );
+  }
+
+  return { userId, technicianId: technician._id, role: technician.role };
+}
+
+function trimOrUndefined(value: string | undefined) {
+  const trimmed = value?.trim();
+  return trimmed ? trimmed : undefined;
+}
 
 export const importAircraft = mutation({
   args: {
@@ -21,26 +85,43 @@ export const importAircraft = mutation({
     ),
   },
   handler: async (ctx, args) => {
-    await requireAuth(ctx);
+    const { userId, technicianId, role } = await requireImportPermission(
+      ctx,
+      args.organizationId,
+      AIRCRAFT_IMPORT_ROLES,
+    );
+
     const results: { row: number; success: boolean; error?: string }[] = [];
     for (let i = 0; i < args.rows.length; i++) {
       const row = args.rows[i];
       try {
-        // Check for duplicate registration
-        const existing = await ctx.db
-          .query("aircraft")
-          .withIndex("by_registration", (q) => q.eq("currentRegistration", row.tailNumber))
-          .first();
-        if (existing) {
-          results.push({ row: i, success: false, error: `Duplicate tail: ${row.tailNumber}` });
+        const tailNumber = trimOrUndefined(row.tailNumber)?.toUpperCase();
+        const make = trimOrUndefined(row.make);
+        const model = trimOrUndefined(row.model);
+        const serialNumber = trimOrUndefined(row.serialNumber);
+
+        if (!tailNumber || !make || !model || !serialNumber) {
+          results.push({ row: i, success: false, error: "Required fields are missing." });
           continue;
         }
+
+        const existing = await ctx.db
+          .query("aircraft")
+          .withIndex("by_registration", (q: any) => q.eq("currentRegistration", tailNumber))
+          .filter((q: any) => q.eq(q.field("operatingOrganizationId"), args.organizationId))
+          .first();
+
+        if (existing) {
+          results.push({ row: i, success: false, error: `Duplicate tail: ${tailNumber}` });
+          continue;
+        }
+
         const now = Date.now();
-        await ctx.db.insert("aircraft", {
-          currentRegistration: row.tailNumber,
-          make: row.make,
-          model: row.model,
-          serialNumber: row.serialNumber,
+        const createdId = await ctx.db.insert("aircraft", {
+          currentRegistration: tailNumber,
+          make,
+          model,
+          serialNumber,
           yearOfManufacture: row.year,
           status: "airworthy",
           operatingOrganizationId: args.organizationId,
@@ -53,6 +134,27 @@ export const importAircraft = mutation({
           createdAt: now,
           updatedAt: now,
         });
+
+        await ctx.db.insert("auditLog", {
+          organizationId: args.organizationId,
+          eventType: "record_created",
+          tableName: "aircraft",
+          recordId: String(createdId),
+          userId,
+          technicianId,
+          fieldName: "bulkImport",
+          newValue: JSON.stringify({
+            row: i + 1,
+            role,
+            tailNumber,
+            make,
+            model,
+            serialNumber,
+          }),
+          notes: "Bulk CSV import: aircraft row created",
+          timestamp: now,
+        });
+
         results.push({ row: i, success: true });
       } catch (e: unknown) {
         results.push({ row: i, success: false, error: e instanceof Error ? e.message : "Unknown error" });
@@ -77,24 +179,56 @@ export const importParts = mutation({
     ),
   },
   handler: async (ctx, args) => {
-    await requireAuth(ctx);
+    const { userId, technicianId, role } = await requireImportPermission(
+      ctx,
+      args.organizationId,
+      PARTS_IMPORT_ROLES,
+    );
+
     const results: { row: number; success: boolean; error?: string }[] = [];
     for (let i = 0; i < args.rows.length; i++) {
       const row = args.rows[i];
       try {
+        const partNumber = trimOrUndefined(row.partNumber);
+        const partName = trimOrUndefined(row.partName);
+        if (!partNumber || !partName) {
+          results.push({ row: i, success: false, error: "Required fields are missing." });
+          continue;
+        }
+
         const now = Date.now();
-        const condition = (["new", "overhauled", "serviceable", "repaired", "unserviceable", "quarantine", "scrapped"].includes(row.condition ?? ""))
-          ? (row.condition as "new" | "overhauled" | "serviceable" | "repaired" | "unserviceable" | "quarantine" | "scrapped")
+        const normalizedCondition = trimOrUndefined(row.condition)?.toLowerCase() as
+          | "new"
+          | "overhauled"
+          | "serviceable"
+          | "repaired"
+          | "unserviceable"
+          | "quarantine"
+          | "scrapped"
+          | undefined;
+        const condition = normalizedCondition && VALID_PART_CONDITIONS.has(normalizedCondition)
+          ? normalizedCondition
           : "new";
-        const location = (["inventory", "installed", "quarantine", "scrapped", "pending_inspection", "removed_pending_disposition", "returned_to_vendor"].includes(row.location ?? ""))
-          ? (row.location as "inventory" | "installed" | "quarantine" | "scrapped" | "pending_inspection" | "removed_pending_disposition" | "returned_to_vendor")
+
+        const normalizedLocation = trimOrUndefined(row.location)?.toLowerCase() as
+          | "inventory"
+          | "installed"
+          | "quarantine"
+          | "scrapped"
+          | "pending_inspection"
+          | "removed_pending_disposition"
+          | "returned_to_vendor"
+          | undefined;
+        const location = normalizedLocation && VALID_PART_LOCATIONS.has(normalizedLocation)
+          ? normalizedLocation
           : "inventory";
-        await ctx.db.insert("parts", {
-          partNumber: row.partNumber,
-          partName: row.partName,
-          description: row.description,
-          serialNumber: row.serialNumber,
-          isSerialized: !!row.serialNumber,
+
+        const createdId = await ctx.db.insert("parts", {
+          partNumber,
+          partName,
+          description: trimOrUndefined(row.description),
+          serialNumber: trimOrUndefined(row.serialNumber),
+          isSerialized: !!trimOrUndefined(row.serialNumber),
           isLifeLimited: false,
           hasShelfLifeLimit: false,
           condition,
@@ -104,6 +238,27 @@ export const importParts = mutation({
           createdAt: now,
           updatedAt: now,
         });
+
+        await ctx.db.insert("auditLog", {
+          organizationId: args.organizationId,
+          eventType: "record_created",
+          tableName: "parts",
+          recordId: String(createdId),
+          userId,
+          technicianId,
+          fieldName: "bulkImport",
+          newValue: JSON.stringify({
+            row: i + 1,
+            role,
+            partNumber,
+            partName,
+            condition,
+            location,
+          }),
+          notes: "Bulk CSV import: part row created",
+          timestamp: now,
+        });
+
         results.push({ row: i, success: true });
       } catch (e: unknown) {
         results.push({ row: i, success: false, error: e instanceof Error ? e.message : "Unknown error" });
@@ -127,24 +282,54 @@ export const importCustomers = mutation({
     ),
   },
   handler: async (ctx, args) => {
-    await requireAuth(ctx);
+    const { userId, technicianId, role } = await requireImportPermission(
+      ctx,
+      args.organizationId,
+      CUSTOMERS_IMPORT_ROLES,
+    );
+
     const results: { row: number; success: boolean; error?: string }[] = [];
     for (let i = 0; i < args.rows.length; i++) {
       const row = args.rows[i];
       try {
+        const name = trimOrUndefined(row.name);
+        if (!name) {
+          results.push({ row: i, success: false, error: "Required field \"name\" is missing." });
+          continue;
+        }
+
         const now = Date.now();
-        await ctx.db.insert("customers", {
+        const createdId = await ctx.db.insert("customers", {
           organizationId: args.organizationId,
-          name: row.name,
-          email: row.email,
-          phone: row.phone,
-          address: row.address,
-          notes: row.notes,
+          name,
+          email: trimOrUndefined(row.email),
+          phone: trimOrUndefined(row.phone),
+          address: trimOrUndefined(row.address),
+          notes: trimOrUndefined(row.notes),
           customerType: "company",
           active: true,
           createdAt: now,
           updatedAt: now,
         });
+
+        await ctx.db.insert("auditLog", {
+          organizationId: args.organizationId,
+          eventType: "record_created",
+          tableName: "customers",
+          recordId: String(createdId),
+          userId,
+          technicianId,
+          fieldName: "bulkImport",
+          newValue: JSON.stringify({
+            row: i + 1,
+            role,
+            name,
+            email: trimOrUndefined(row.email),
+          }),
+          notes: "Bulk CSV import: customer row created",
+          timestamp: now,
+        });
+
         results.push({ row: i, success: true });
       } catch (e: unknown) {
         results.push({ row: i, success: false, error: e instanceof Error ? e.message : "Unknown error" });
