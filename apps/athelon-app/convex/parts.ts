@@ -236,6 +236,9 @@ export const receivePart = mutation({
 
     notes: v.optional(v.string()),
     callerIpAddress: v.optional(v.string()),
+
+    // v11: Relational warehouse location
+    binLocationId: v.optional(v.id("warehouseBins")),
   },
 
   handler: async (ctx, args): Promise<{ partId: Id<"parts">; eightOneThirtyId?: Id<"eightOneThirtyRecords"> }> => {
@@ -447,6 +450,7 @@ export const receivePart = mutation({
       purchaseOrderNumber: args.purchaseOrderNumber?.trim(),
       isOwnerSupplied: args.isOwnerSupplied,
       notes: args.notes,
+      binLocationId: args.binLocationId,
       createdAt: now,
       updatedAt: now,
     });
@@ -1328,6 +1332,8 @@ export const createPart = mutation({
     quantity: v.number(),
     supplier: v.optional(v.string()),
     workOrderId: v.optional(v.id("workOrders")),
+    // v11: Relational warehouse location
+    binLocationId: v.optional(v.id("warehouseBins")),
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
@@ -1353,6 +1359,7 @@ export const createPart = mutation({
         isOwnerSupplied: false,
         supplier: args.supplier,
         receivingWorkOrderId: args.workOrderId,
+        binLocationId: args.binLocationId,
         createdAt: now,
         updatedAt: now,
       });

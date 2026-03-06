@@ -31,6 +31,7 @@ export const updateLineEconomics = mutation({
     markupMultiplier: v.optional(v.number()),
     fixedPriceOverride: v.optional(v.number()),
     pricingMode: v.optional(v.union(v.literal("derived"), v.literal("override"))),
+    isMarkupOverride: v.optional(v.boolean()),
   },
   handler: async (ctx, args): Promise<void> => {
     const item = await ctx.db.get(args.lineItemId);
@@ -41,6 +42,7 @@ export const updateLineEconomics = mutation({
     if (args.markupMultiplier !== undefined) updates.markupMultiplier = args.markupMultiplier;
     if (args.fixedPriceOverride !== undefined) updates.fixedPriceOverride = args.fixedPriceOverride;
     if (args.pricingMode !== undefined) updates.pricingMode = args.pricingMode;
+    if (args.isMarkupOverride !== undefined) updates.isMarkupOverride = args.isMarkupOverride;
 
     // If override mode and fixed price provided, update unitPrice and total
     const mode = args.pricingMode ?? item.pricingMode;

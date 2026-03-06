@@ -343,3 +343,53 @@ export const getDocumentCount = query({
     return docs.length;
   },
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// QUERY: getPhotoThumbnailsForParts
+//
+// Batch query that returns a featured/first photo CDN URL for each part ID.
+// Used by the tile view to render thumbnails without N+1 queries.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const getPhotoThumbnailsForParts = query({
+  args: {
+    partIds: v.array(v.string()),
+  },
+  handler: async (
+    ctx,
+    args,
+  ): Promise<Record<string, string | null>> => {
+    const result: Record<string, string | null> = {};
+
+    for (const partId of args.partIds) {
+      const docs = await ctx.db
+        .query("documents")
+        .withIndex("by_attachment", (q) =>
+          q
+            .eq("attachedToTable", "parts")
+            .eq("attachedToId", partId),
+        )
+        .collect();
+
+      const photos = docs.filter(
+        (d) =>
+          d.documentType === "photo" &&
+          d.mimeType.startsWith("image/"),
+      );
+
+      if (photos.length === 0) {
+        result[partId] = null;
+        continue;
+      }
+
+      const featured = photos.find((d) =>
+        (d.description ?? "").toLowerCase().includes("[featured]"),
+      );
+      const pick = featured ?? photos[0];
+      const url = await ctx.storage.getUrl(pick.storageId);
+      result[partId] = url;
+    }
+
+    return result;
+  },
+});

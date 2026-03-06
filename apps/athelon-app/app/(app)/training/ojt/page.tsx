@@ -34,6 +34,8 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 type Jacket = Doc<"ojtJackets">;
 
+const EMPTY_CURRICULA: Doc<"ojtCurricula">[] = [];
+
 type CurriculumWithStats = Doc<"ojtCurricula"> & {
   activeJacketsCount: number;
   taskCount: number;
@@ -44,8 +46,7 @@ export default function OjtDashboardPage() {
   const { orgId, techId } = useCurrentOrg();
   const convex = useConvex();
 
-  const curriculaRaw = useQuery(api.ojt.listCurricula, orgId ? { organizationId: orgId } : "skip");
-  const curricula = useMemo(() => curriculaRaw ?? [], [curriculaRaw]);
+  const curricula = useQuery(api.ojt.listCurricula, orgId ? { organizationId: orgId } : "skip") ?? EMPTY_CURRICULA;
   const createCurriculum = useMutation(api.ojt.createCurriculum);
 
   const [aircraftFilter, setAircraftFilter] = useState("all");
@@ -62,8 +63,6 @@ export default function OjtDashboardPage() {
     let cancelled = false;
     async function loadStats() {
       if (curricula.length === 0) {
-        setTaskCountMap(new Map());
-        setJacketCountMap(new Map());
         return;
       }
       const taskMap = new Map<string, number>();
@@ -198,9 +197,14 @@ export default function OjtDashboardPage() {
             </TabsList>
           </Tabs>
 
-          <Button variant="outline" asChild className="md:ml-auto">
-            <Link to="/training/ojt/jackets">View Jackets</Link>
-          </Button>
+          <div className="md:ml-auto flex gap-2">
+            <Button variant="outline" asChild>
+              <Link to="/training/ojt/roster">View Roster</Link>
+            </Button>
+            <Button variant="outline" asChild>
+              <Link to="/training/ojt/jackets">View Jackets</Link>
+            </Button>
+          </div>
         </CardContent>
       </Card>
 

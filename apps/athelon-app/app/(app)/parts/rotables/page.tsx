@@ -31,6 +31,10 @@ import {
 import { toast } from "sonner";
 import { formatDate, formatCurrency } from "@/lib/format";
 import { ActionableEmptyState } from "@/components/zero-state/ActionableEmptyState";
+import {
+  PartNumberCombobox,
+  type PartSelection,
+} from "@/src/shared/components/PartNumberCombobox";
 
 type RotableFilter = "all" | "installed" | "serviceable" | "in_shop" | "at_vendor" | "condemned" | "loaned_out";
 
@@ -180,6 +184,7 @@ export default function RotablesPage() {
   const [search, setSearch] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
+  const [partSelection, setPartSelection] = useState<PartSelection | null>(null);
   const [condemnTarget, setCondemnTarget] = useState<{ id: Id<"rotables">; partNumber: string; serialNumber: string } | null>(null);
   const [removeTarget, setRemoveTarget] = useState<{ id: Id<"rotables">; partNumber: string; serialNumber: string } | null>(null);
   const [installTarget, setInstallTarget] = useState<{ id: Id<"rotables">; partNumber: string; serialNumber: string } | null>(null);
@@ -297,6 +302,7 @@ export default function RotablesPage() {
         notes: form.notes || undefined,
       });
       setCreateOpen(false);
+      setPartSelection(null);
       setForm({ partNumber: "", serialNumber: "", description: "", status: "serviceable", condition: "serviceable", tsnHours: "", tsoHours: "", tboHours: "", purchasePrice: "", currentValue: "", coreValue: "", notes: "" });
       toast.success("Rotable created");
     } catch {
@@ -356,7 +362,8 @@ export default function RotablesPage() {
         <Dialog open={createOpen} onOpenChange={(v) => {
           if (isCreatingRotable) return; // BUG-PC-087: don't close mid-submit
           if (!v) {
-            setForm({ partNumber: "", serialNumber: "", description: "", status: "serviceable", condition: "serviceable", tsnHours: "", tsoHours: "", tboHours: "", purchasePrice: "", currentValue: "", coreValue: "", notes: "" });
+            setPartSelection(null);
+      setForm({ partNumber: "", serialNumber: "", description: "", status: "serviceable", condition: "serviceable", tsnHours: "", tsoHours: "", tboHours: "", purchasePrice: "", currentValue: "", coreValue: "", notes: "" });
           }
           setCreateOpen(v);
         }}>
@@ -367,7 +374,19 @@ export default function RotablesPage() {
             <DialogHeader><DialogTitle>Add Rotable Component</DialogTitle></DialogHeader>
             <form onSubmit={handleCreate} className="space-y-4">
               <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2"><Label>Part Number *</Label><Input value={form.partNumber} onChange={(e) => setForm({ ...form, partNumber: e.target.value.slice(0, 50) })} maxLength={50} required /></div>
+                <div className="space-y-2"><Label>Part Number *</Label>{orgId ? (
+                  <PartNumberCombobox
+                    organizationId={orgId}
+                    onSelect={(sel) => {
+                      setPartSelection(sel);
+                      setForm({ ...form, partNumber: sel.partNumber, description: form.description || sel.partName });
+                    }}
+                    value={partSelection}
+                    sourceContext="rotable_create"
+                  />
+                ) : (
+                  <Input value={form.partNumber} onChange={(e) => setForm({ ...form, partNumber: e.target.value.slice(0, 50) })} maxLength={50} required />
+                )}</div>
                 <div className="space-y-2"><Label>Serial Number *</Label><Input value={form.serialNumber} onChange={(e) => setForm({ ...form, serialNumber: e.target.value.slice(0, 50) })} maxLength={50} required /></div>
               </div>
               <div className="space-y-2"><Label>Description *</Label><Input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value.slice(0, 200) })} maxLength={200} required /></div>
@@ -404,7 +423,8 @@ export default function RotablesPage() {
               <div className="space-y-2"><Label>Notes</Label><Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value.slice(0, 500) })} rows={2} maxLength={500} /></div>
               <div className="flex justify-end gap-2">
                 <Button type="button" variant="ghost" onClick={() => {
-                  setForm({ partNumber: "", serialNumber: "", description: "", status: "serviceable", condition: "serviceable", tsnHours: "", tsoHours: "", tboHours: "", purchasePrice: "", currentValue: "", coreValue: "", notes: "" });
+                  setPartSelection(null);
+      setForm({ partNumber: "", serialNumber: "", description: "", status: "serviceable", condition: "serviceable", tsnHours: "", tsoHours: "", tboHours: "", purchasePrice: "", currentValue: "", coreValue: "", notes: "" });
                   setCreateOpen(false);
                 }}>Cancel</Button>
                 <Button type="submit" disabled={isCreatingRotable} className="min-w-[80px] gap-1.5">

@@ -230,7 +230,7 @@ export default function OjtJacketsPage() {
                 <TableRow
                   key={jacket._id}
                   className="cursor-pointer"
-                  onClick={() => navigate(`/training/ojt/${jacket.curriculumId}?jacketId=${jacket._id}`)}
+                  onClick={() => navigate(`/training/ojt/jackets/${jacket._id}`)}
                 >
                   <TableCell>{techMap.get(jacket.technicianId) ?? "Unknown"}</TableCell>
                   <TableCell>{curriculumMap.get(jacket.curriculumId) ?? "Unknown"}</TableCell>

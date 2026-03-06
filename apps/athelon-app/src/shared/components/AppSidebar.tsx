@@ -26,6 +26,10 @@ import {
   TrendingUp,
   ClipboardCheck,
   Trophy,
+  Contact2,
+  MessageSquare,
+  BarChart3,
+  Warehouse,
 } from "lucide-react";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import {
@@ -109,6 +113,15 @@ const mainNav: NavEntry[] = [
     href: "/my-work",
     icon: Hammer,
     section: "my-work",
+    children: [
+      { title: "My Time", href: "/my-work/time" },
+    ],
+  },
+  {
+    title: "Lead Center",
+    href: "/lead",
+    icon: Shield,
+    section: "work-orders",
   },
   {
     title: "Fleet",
@@ -162,6 +175,8 @@ const mainNav: NavEntry[] = [
       { title: "Rotables", href: "/parts/rotables" },
       { title: "Loaners", href: "/parts/loaners" },
       { title: "Lots & Batches", href: "/parts/lots" },
+      { title: "Warehouse Locations", href: "/parts/warehouse", icon: Warehouse },
+      { title: "Tags", href: "/parts/tags" },
       { title: "Alerts", href: "/parts/alerts" },
     ],
   },
@@ -195,10 +210,17 @@ const mainNav: NavEntry[] = [
   },
   {
     title: "CRM",
-    href: "/crm/pipeline",
+    href: "/crm/dashboard",
     icon: TrendingUp,
     section: "crm",
-    children: [{ title: "Sales Pipeline", href: "/crm/pipeline", icon: TrendingUp }],
+    children: [
+      { title: "Dashboard", href: "/crm/dashboard", icon: LayoutDashboard },
+      { title: "Accounts", href: "/crm/accounts", icon: Users },
+      { title: "Contacts", href: "/crm/contacts", icon: Contact2 },
+      { title: "Interactions", href: "/crm/interactions", icon: MessageSquare },
+      { title: "Sales Pipeline", href: "/crm/pipeline", icon: TrendingUp },
+      { title: "Analytics", href: "/crm/analytics", icon: BarChart3 },
+    ],
   },
   {
     title: "Compliance",
@@ -238,7 +260,7 @@ const bottomNav: NavEntry[] = [
     section: "personnel",
     children: [
       { title: "Training", href: "/personnel/training" },
-      { title: "Lead Dashboard", href: "/lead" },
+      { title: "Time Management", href: "/personnel/time-management" },
     ],
   },
   {
@@ -280,7 +302,7 @@ const ROLE_SECTION_ACCESS: Partial<Record<MroRole, NavSection[]>> = {
   ],
   qcm_inspector: ["compliance", "fleet", "work-orders", "personnel", "reports"],
   billing_manager: ["billing", "crm", "work-orders", "reports"],
-  lead_technician: ["work-orders", "scheduling", "fleet", "personnel", "parts"],
+  lead_technician: ["my-work", "work-orders", "scheduling", "fleet", "personnel", "parts"],
   technician: ["my-work", "work-orders", "parts", "fleet"],
   parts_clerk: ["parts", "billing"],
   read_only: ["dashboard", "fleet", "reports"],
@@ -321,11 +343,9 @@ function filterChildrenForRole(
   let scoped = children;
 
   // Keep sidebar route visibility aligned with page RBAC for lead workspaces.
-  // Without this, non-lead roles saw links that immediately rendered
-  // "access required" pages.
   if (!LEAD_WORKSPACE_ROLES.has(role)) {
     scoped = scoped.filter(
-      (child) => child.href !== "/work-orders/lead" && child.href !== "/lead",
+      (child) => child.href !== "/work-orders/lead",
     );
   }
 
@@ -438,6 +458,13 @@ function NavSection({
 }) {
   const filteredEntries: NavEntry[] = entries
     .filter((entry) => canAccessSection(role, entry.section))
+    .filter((entry) => {
+      // Hide Lead Center from non-lead roles
+      if (!isGroup(entry) && entry.href === "/lead" && role && !LEAD_WORKSPACE_ROLES.has(role)) {
+        return false;
+      }
+      return true;
+    })
     .map((entry) => {
       if (!isGroup(entry)) return entry;
       const children = filterChildrenForRole(role, entry.href, entry.children);

@@ -11,6 +11,7 @@ import { usePagePrereqs } from "@/hooks/usePagePrereqs";
 import { ActionableEmptyState } from "@/components/zero-state/ActionableEmptyState";
 import { QuoteNewEditor } from "@/components/quote-workspace/QuoteNewEditor";
 import { QuoteDetailEditor } from "@/components/quote-workspace/QuoteDetailEditor";
+import { QuoteBuilderLayout } from "@/components/quote-workspace/QuoteBuilderLayout";
 import QuoteListPanel from "@/components/quote-workspace/QuoteListPanel";
 import type {
   QuoteWorkspaceMode,
@@ -592,35 +593,33 @@ export function QuoteWorkspaceShell({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-[320px_minmax(0,1fr)]">
-          <aside className="hidden lg:block min-h-[620px]" data-testid="quote-workspace-rail">
-            {rail}
-          </aside>
-
-          <section className="min-w-0" data-testid="quote-workspace-editor">
-            {mode === "detail" && activeQuoteId ? (
-              <QuoteDetailEditor
-                quoteId={activeQuoteId}
-                hideBackButton
-                fullWidth
-                onBack={clearSelection}
-                onQuoteNavigate={handleQuoteNavigated}
-              />
-            ) : mode === "new" ? (
-              <QuoteNewEditor
-                prefillWorkOrderId={selectedWorkOrder?._id}
-                hideBackButton
-                fullWidth
-                onCancel={clearSelection}
-                onQuoteCreated={handleQuoteCreated}
-              />
-            ) : (
+        {mode === "list" ? (
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-[320px_minmax(0,1fr)]">
+            <aside className="hidden lg:block min-h-[620px]" data-testid="quote-workspace-rail">
+              {rail}
+            </aside>
+            <section className="min-w-0" data-testid="quote-workspace-editor">
               <div className="rounded-2xl border border-dashed border-border/60 bg-card p-4">
                 <QuoteListPanel />
               </div>
-            )}
-          </section>
-        </div>
+            </section>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-[320px_minmax(0,1fr)]">
+            <aside className="hidden lg:block min-h-[620px]" data-testid="quote-workspace-rail">
+              {rail}
+            </aside>
+            <section className="min-w-0" data-testid="quote-workspace-editor">
+              <QuoteBuilderLayout
+                mode={mode === "detail" ? "detail" : "new"}
+                quoteId={activeQuoteId}
+                prefillWorkOrderId={selectedWorkOrder?._id}
+                onBack={clearSelection}
+                onQuoteCreated={handleQuoteCreated}
+              />
+            </section>
+          </div>
+        )}
       </div>
 
       <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border/50 bg-background/95 p-2 backdrop-blur md:hidden">

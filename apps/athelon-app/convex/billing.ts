@@ -244,6 +244,11 @@ export const createQuote = mutation({
     createdByTechId: v.id("technicians"),
     expiresAt: v.optional(v.number()),
     notes: v.optional(v.string()),
+    // Quote builder metadata (scheduler feature parity)
+    projectTitle: v.optional(v.string()),
+    priority: v.optional(v.union(v.literal("routine"), v.literal("urgent"), v.literal("aog"))),
+    requestedStartDate: v.optional(v.number()),
+    requestedEndDate: v.optional(v.number()),
   },
 
   handler: async (ctx, args): Promise<Id<"quotes">> => {
@@ -272,6 +277,11 @@ export const createQuote = mutation({
       quoteNumber,
       createdByTechId: args.createdByTechId,
       expiresAt: args.expiresAt,
+      notes: args.notes,
+      projectTitle: args.projectTitle,
+      priority: args.priority,
+      requestedStartDate: args.requestedStartDate,
+      requestedEndDate: args.requestedEndDate,
       laborTotal: 0,
       partsTotal: 0,
       subtotal: 0,
@@ -292,6 +302,43 @@ export const createQuote = mutation({
     });
 
     return quoteId;
+  },
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MUTATION: updateQuoteMetadata
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Updates quote-level metadata (title, priority, dates, notes) on DRAFT quotes. */
+export const updateQuoteMetadata = mutation({
+  args: {
+    orgId: v.id("organizations"),
+    quoteId: v.id("quotes"),
+    projectTitle: v.optional(v.string()),
+    priority: v.optional(v.union(v.literal("routine"), v.literal("urgent"), v.literal("aog"))),
+    requestedStartDate: v.optional(v.number()),
+    requestedEndDate: v.optional(v.number()),
+    notes: v.optional(v.string()),
+  },
+  handler: async (ctx, args): Promise<void> => {
+    const now = Date.now();
+    await requireAuth(ctx);
+
+    const quote = await ctx.db.get(args.quoteId);
+    if (!quote) throw new Error(`Quote ${args.quoteId} not found.`);
+    if (quote.orgId !== args.orgId) throw new Error(`Quote does not belong to org.`);
+    if (quote.status !== "DRAFT") {
+      throw new Error(`Quote ${args.quoteId} is in status "${quote.status}". Metadata can only be updated on DRAFT quotes.`);
+    }
+
+    const updates: Record<string, unknown> = { updatedAt: now };
+    if (args.projectTitle !== undefined) updates.projectTitle = args.projectTitle;
+    if (args.priority !== undefined) updates.priority = args.priority;
+    if (args.requestedStartDate !== undefined) updates.requestedStartDate = args.requestedStartDate;
+    if (args.requestedEndDate !== undefined) updates.requestedEndDate = args.requestedEndDate;
+    if (args.notes !== undefined) updates.notes = args.notes;
+
+    await ctx.db.patch(args.quoteId, updates);
   },
 });
 

@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
+import type { Id } from "@/convex/_generated/dataModel";
 import {
   Card,
   CardContent,
@@ -26,13 +27,28 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PipelineKanban } from "../_components/PipelineKanban";
+import { CreateOpportunityDialog } from "../_components/CreateOpportunityDialog";
 import type {
   PipelineOpportunity,
   PipelineStatus,
 } from "../_components/OpportunityCard";
-import { Building2, DollarSign, Percent, Target } from "lucide-react";
+import {
+  Building2,
+  DollarSign,
+  Percent,
+  Target,
+  Plus,
+  TrendingUp,
+  Award,
+  XCircle,
+  Calendar,
+} from "lucide-react";
+
+// ─── Constants ───────────────────────────────────────────────────────────────
 
 const LOOKAHEAD_OPTIONS = [30, 60, 90, 180] as const;
 
@@ -55,6 +71,39 @@ const STATUS_BADGES: Record<PipelineStatus, string> = {
   won: "bg-emerald-500/15 text-emerald-500 border-emerald-500/30",
   lost: "bg-red-500/15 text-red-500 border-red-500/30",
 };
+
+type ManualStage = "prospecting" | "qualification" | "proposal" | "negotiation" | "won" | "lost";
+
+const MANUAL_STAGE_LABELS: Record<ManualStage, string> = {
+  prospecting: "Prospecting",
+  qualification: "Qualification",
+  proposal: "Proposal",
+  negotiation: "Negotiation",
+  won: "Won",
+  lost: "Lost",
+};
+
+const MANUAL_STAGE_BADGES: Record<ManualStage, string> = {
+  prospecting: "bg-blue-500/15 text-blue-500 border-blue-500/30",
+  qualification: "bg-cyan-500/15 text-cyan-500 border-cyan-500/30",
+  proposal: "bg-purple-500/15 text-purple-500 border-purple-500/30",
+  negotiation: "bg-amber-500/15 text-amber-500 border-amber-500/30",
+  won: "bg-emerald-500/15 text-emerald-500 border-emerald-500/30",
+  lost: "bg-red-500/15 text-red-500 border-red-500/30",
+};
+
+const SOURCE_LABELS: Record<string, string> = {
+  prediction: "Prediction",
+  referral: "Referral",
+  walk_in: "Walk-in",
+  phone: "Phone",
+  website: "Website",
+  trade_show: "Trade Show",
+  existing_customer: "Existing Customer",
+  other: "Other",
+};
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function formatMoney(value: number) {
   return new Intl.NumberFormat("en-US", {
@@ -98,10 +147,14 @@ function deriveStatus(predictionStatus: string, hasOpenWo: boolean): PipelineSta
   return "new";
 }
 
+// ─── Component ───────────────────────────────────────────────────────────────
+
 export default function CrmPipelinePage() {
   const { orgId } = useCurrentOrg();
   const [lookaheadDays, setLookaheadDays] = useState<number>(90);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
+  // Prediction pipeline data
   const predictions = useQuery(
     api.predictions.list,
     orgId ? { organizationId: orgId } : "skip",
@@ -119,7 +172,21 @@ export default function CrmPipelinePage() {
     orgId ? { organizationId: orgId } : "skip",
   );
 
+  // Manual pipeline data
+  const manualOpportunities = useQuery(
+    api.crm.listOpportunities,
+    orgId ? { organizationId: orgId as Id<"organizations"> } : "skip",
+  );
+
+  // Customer list for name resolution in manual pipeline
+  const allCustomers = useQuery(
+    api.billingV4.listAllCustomers,
+    orgId ? { organizationId: orgId as Id<"organizations"> } : "skip",
+  );
+
   const isLoading = !orgId || !predictions || !aircraft || !customers || !workOrders;
+
+  // ─── Prediction pipeline memos ───────────────────────────────────────
 
   const opportunities = useMemo<PipelineOpportunity[]>(() => {
     if (!predictions || !aircraft || !customers || !workOrders) return [];
@@ -173,6 +240,56 @@ export default function CrmPipelinePage() {
     return { total, pipelineValue, conversionRate };
   }, [opportunities]);
 
+  // ─── Manual pipeline memos ───────────────────────────────────────────
+
+  const customerNameMap = useMemo(() => {
+    if (!allCustomers) return new Map<string, string>();
+    return new Map(allCustomers.map((c) => [c._id, c.name]));
+  }, [allCustomers]);
+
+  const manualGrouped = useMemo(() => {
+    if (!manualOpportunities) return null;
+    const stages: ManualStage[] = ["prospecting", "qualification", "proposal", "negotiation", "won", "lost"];
+    const groups: Record<ManualStage, typeof manualOpportunities> = {
+      prospecting: [],
+      qualification: [],
+      proposal: [],
+      negotiation: [],
+      won: [],
+      lost: [],
+    };
+
+    for (const opp of manualOpportunities) {
+      const stage = opp.stage as ManualStage;
+      if (groups[stage]) {
+        groups[stage].push(opp);
+      }
+    }
+
+    return { stages, groups };
+  }, [manualOpportunities]);
+
+  const manualSummary = useMemo(() => {
+    if (!manualOpportunities) return null;
+    const wonOpps = manualOpportunities.filter((o) => o.stage === "won");
+    const lostOpps = manualOpportunities.filter((o) => o.stage === "lost");
+    const totalWonValue = wonOpps.reduce((sum, o) => sum + o.estimatedValue, 0);
+    const totalClosed = wonOpps.length + lostOpps.length;
+    const winRate = totalClosed > 0 ? (wonOpps.length / totalClosed) * 100 : 0;
+    const avgDealSize =
+      wonOpps.length > 0 ? totalWonValue / wonOpps.length : 0;
+
+    return {
+      wonCount: wonOpps.length,
+      wonValue: totalWonValue,
+      lostCount: lostOpps.length,
+      winRate,
+      avgDealSize,
+    };
+  }, [manualOpportunities]);
+
+  // ─── Loading state ───────────────────────────────────────────────────
+
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -187,8 +304,11 @@ export default function CrmPipelinePage() {
     );
   }
 
+  // ─── Render ──────────────────────────────────────────────────────────
+
   return (
     <div className="space-y-5">
+      {/* Header */}
       <div className="flex items-start justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-lg sm:text-xl md:text-2xl font-semibold">Sales Pipeline</h1>
@@ -198,6 +318,14 @@ export default function CrmPipelinePage() {
         </div>
 
         <div className="flex items-center gap-2">
+          <Button
+            onClick={() => setCreateDialogOpen(true)}
+            variant="default"
+            className="gap-1.5"
+          >
+            <Plus className="w-4 h-4" />
+            Create Opportunity
+          </Button>
           <span className="text-xs text-muted-foreground">Lookahead</span>
           <Select
             value={String(lookaheadDays)}
@@ -217,6 +345,7 @@ export default function CrmPipelinePage() {
         </div>
       </div>
 
+      {/* Summary Cards */}
       <div className="grid gap-3 md:grid-cols-3">
         <Card>
           <CardHeader className="pb-1">
@@ -256,63 +385,234 @@ export default function CrmPipelinePage() {
         </Card>
       </div>
 
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base">Opportunity Table</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto rounded-md border border-border/60">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/30 hover:bg-muted/30">
-                  <TableHead>Aircraft</TableHead>
-                  <TableHead>Customer</TableHead>
-                  <TableHead>Predicted Maintenance</TableHead>
-                  <TableHead>Due Date</TableHead>
-                  <TableHead className="text-right">Est. Labor Hrs</TableHead>
-                  <TableHead className="text-right">Est. Revenue</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {opportunities.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center text-sm text-muted-foreground py-10">
-                      No pipeline opportunities in this lookahead window.
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  opportunities.map((opp) => (
-                    <TableRow key={opp.id} className="hover:bg-muted/20">
-                      <TableCell className="font-medium">{opp.aircraftTail}</TableCell>
-                      <TableCell>
-                        <span className="inline-flex items-center gap-1.5 text-muted-foreground">
-                          <Building2 className="w-3 h-3" />
-                          {opp.customerName}
-                        </span>
-                      </TableCell>
-                      <TableCell className="max-w-[420px] truncate">{opp.maintenanceType}</TableCell>
-                      <TableCell>{formatDate(opp.dueDate)}</TableCell>
-                      <TableCell className="text-right">{opp.estimatedLaborHours}</TableCell>
-                      <TableCell className="text-right font-medium">
-                        {formatMoney(opp.estimatedValue)}
-                      </TableCell>
-                      <TableCell>
-                        <Badge className={STATUS_BADGES[opp.status]}>{STATUS_LABELS[opp.status]}</Badge>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Tabbed View */}
+      <Tabs defaultValue="prediction" className="w-full">
+        <TabsList>
+          <TabsTrigger value="prediction">Prediction Pipeline</TabsTrigger>
+          <TabsTrigger value="manual">Manual Pipeline</TabsTrigger>
+        </TabsList>
 
-      <div>
-        <h2 className="text-base font-semibold mb-2">Pipeline Kanban</h2>
-        <PipelineKanban opportunities={opportunities} />
-      </div>
+        {/* ── Prediction Pipeline Tab ────────────────────────────────────── */}
+        <TabsContent value="prediction" className="space-y-5 mt-4">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">Opportunity Table</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto rounded-md border border-border/60">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/30 hover:bg-muted/30">
+                      <TableHead>Aircraft</TableHead>
+                      <TableHead>Customer</TableHead>
+                      <TableHead>Predicted Maintenance</TableHead>
+                      <TableHead>Due Date</TableHead>
+                      <TableHead className="text-right">Est. Labor Hrs</TableHead>
+                      <TableHead className="text-right">Est. Revenue</TableHead>
+                      <TableHead>Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {opportunities.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={7} className="text-center text-sm text-muted-foreground py-10">
+                          No pipeline opportunities in this lookahead window.
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      opportunities.map((opp) => (
+                        <TableRow key={opp.id} className="hover:bg-muted/20">
+                          <TableCell className="font-medium">{opp.aircraftTail}</TableCell>
+                          <TableCell>
+                            <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+                              <Building2 className="w-3 h-3" />
+                              {opp.customerName}
+                            </span>
+                          </TableCell>
+                          <TableCell className="max-w-[420px] truncate">{opp.maintenanceType}</TableCell>
+                          <TableCell>{formatDate(opp.dueDate)}</TableCell>
+                          <TableCell className="text-right">{opp.estimatedLaborHours}</TableCell>
+                          <TableCell className="text-right font-medium">
+                            {formatMoney(opp.estimatedValue)}
+                          </TableCell>
+                          <TableCell>
+                            <Badge className={STATUS_BADGES[opp.status]}>{STATUS_LABELS[opp.status]}</Badge>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+
+          <div>
+            <h2 className="text-base font-semibold mb-2">Pipeline Kanban</h2>
+            <PipelineKanban opportunities={opportunities} />
+          </div>
+        </TabsContent>
+
+        {/* ── Manual Pipeline Tab ────────────────────────────────────────── */}
+        <TabsContent value="manual" className="space-y-5 mt-4">
+          {manualOpportunities === undefined ? (
+            <div className="space-y-3">
+              <Skeleton className="h-64" />
+            </div>
+          ) : (
+            <>
+              {/* Manual Pipeline Table */}
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base">Manual Opportunities</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="overflow-x-auto rounded-md border border-border/60">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="bg-muted/30 hover:bg-muted/30">
+                          <TableHead>Title</TableHead>
+                          <TableHead>Customer</TableHead>
+                          <TableHead>Stage</TableHead>
+                          <TableHead className="text-right">Value</TableHead>
+                          <TableHead className="text-right">Probability</TableHead>
+                          <TableHead>Expected Close</TableHead>
+                          <TableHead>Source</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {manualOpportunities.length === 0 ? (
+                          <TableRow>
+                            <TableCell
+                              colSpan={7}
+                              className="text-center text-sm text-muted-foreground py-10"
+                            >
+                              No manual opportunities yet. Click "Create Opportunity" to add one.
+                            </TableCell>
+                          </TableRow>
+                        ) : (
+                          manualGrouped?.stages.map((stage) =>
+                            manualGrouped.groups[stage].map((opp) => (
+                              <TableRow key={opp._id} className="hover:bg-muted/20">
+                                <TableCell className="font-medium max-w-[240px] truncate">
+                                  {opp.title}
+                                </TableCell>
+                                <TableCell>
+                                  <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+                                    <Building2 className="w-3 h-3" />
+                                    {customerNameMap.get(opp.customerId) ?? "Unknown"}
+                                  </span>
+                                </TableCell>
+                                <TableCell>
+                                  <Badge className={MANUAL_STAGE_BADGES[stage]}>
+                                    {MANUAL_STAGE_LABELS[stage]}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell className="text-right font-medium">
+                                  {formatMoney(opp.estimatedValue)}
+                                </TableCell>
+                                <TableCell className="text-right">
+                                  {opp.probability != null ? `${opp.probability}%` : "--"}
+                                </TableCell>
+                                <TableCell>
+                                  {opp.expectedCloseDate ? (
+                                    <span className="inline-flex items-center gap-1 text-sm">
+                                      <Calendar className="w-3 h-3 text-muted-foreground" />
+                                      {formatDate(opp.expectedCloseDate)}
+                                    </span>
+                                  ) : (
+                                    <span className="text-muted-foreground text-xs">--</span>
+                                  )}
+                                </TableCell>
+                                <TableCell>
+                                  {opp.source ? (
+                                    <span className="text-sm">
+                                      {SOURCE_LABELS[opp.source] ?? opp.source}
+                                    </span>
+                                  ) : (
+                                    <span className="text-muted-foreground text-xs">--</span>
+                                  )}
+                                </TableCell>
+                              </TableRow>
+                            )),
+                          )
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Win/Loss Summary Cards */}
+              {manualSummary && (
+                <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
+                  <Card className="border-emerald-500/30">
+                    <CardHeader className="pb-1">
+                      <CardTitle className="text-sm font-medium text-emerald-600 flex items-center gap-2">
+                        <Award className="w-4 h-4" />
+                        Total Won
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-2xl font-semibold text-emerald-600">
+                        {manualSummary.wonCount}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {formatMoney(manualSummary.wonValue)}
+                      </p>
+                    </CardContent>
+                  </Card>
+                  <Card className="border-red-500/30">
+                    <CardHeader className="pb-1">
+                      <CardTitle className="text-sm font-medium text-red-600 flex items-center gap-2">
+                        <XCircle className="w-4 h-4" />
+                        Total Lost
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-2xl font-semibold text-red-600">
+                        {manualSummary.lostCount}
+                      </p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardHeader className="pb-1">
+                      <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                        <TrendingUp className="w-4 h-4" />
+                        Win Rate
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-2xl font-semibold">
+                        {manualSummary.winRate.toFixed(1)}%
+                      </p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardHeader className="pb-1">
+                      <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                        <DollarSign className="w-4 h-4" />
+                        Avg Deal Size
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-2xl font-semibold">
+                        {formatMoney(manualSummary.avgDealSize)}
+                      </p>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+            </>
+          )}
+        </TabsContent>
+      </Tabs>
+
+      {/* Create Opportunity Dialog */}
+      <CreateOpportunityDialog
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+      />
     </div>
   );
 }

@@ -32,6 +32,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
   SelectContent,
@@ -628,48 +629,226 @@ export default function WorkOrderLeadWorkspacePage() {
                   key={String(taskCard._id)}
                   className="border border-border/50 rounded-md p-2.5 flex flex-col xl:flex-row xl:items-center xl:justify-between gap-2"
                 >
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-mono text-xs">{taskCard.workOrderNumber}</span>
-                      <span className="text-xs text-muted-foreground">{taskCard.taskCardNumber}</span>
-                      {/* BUG-LT-HUNT-107: Same raw-status fix for task cards. */}
+                  {count}
+                </Badge>
+              )}
+              {indicator === "amber" && (
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+              )}
+              {indicator === "green" && (
+                <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
+              )}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+
+        <TabsContent value="ownership" className="mt-0">
+          <Card className="border-border/60">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <Users className="w-4 h-4" />
+                Work Order Ownership
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {workspace?.workOrders.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No active work orders.</p>
+              ) : (
+                workspace?.workOrders.map((workOrder) => (
+                  <div
+                    key={String(workOrder._id)}
+                    className="border border-border/50 rounded-md p-3 space-y-2"
+                  >
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="font-mono text-sm font-semibold">
+                        {workOrder.workOrderNumber}
+                      </span>
+                      {/* BUG-LT-HUNT-107: Was showing raw snake_case status
+                          value (e.g. "in_progress") instead of the human-readable
+                          label ("In Progress"). Applied WO_STATUS_LABEL lookup
+                          and WO_STATUS_STYLES color coding to match the WO list
+                          page and detail page patterns. */}
                       <Badge
                         variant="outline"
-                        className={`text-[10px] border ${TASK_STATUS_STYLES[taskCard.status as TaskStatus] ?? "border-border/50 text-muted-foreground"}`}
+                        className={`text-[10px] border ${WO_STATUS_STYLES[workOrder.status as WoStatus] ?? "border-border/50 text-muted-foreground"}`}
                       >
-                        {TASK_STATUS_LABEL[taskCard.status as TaskStatus] ?? taskCard.status}
+                        {WO_STATUS_LABEL[workOrder.status as WoStatus] ?? workOrder.status}
                       </Badge>
+                      <span className="text-xs text-muted-foreground">
+                        {workOrder.promisedDeliveryDate
+                          ? `RTS ${formatDate(workOrder.promisedDeliveryDate)}`
+                          : "No RTS date"}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        Today: {minutesToHours(workOrder.assignedMinutesToday)}
+                      </span>
                     </div>
-                    <p className="text-sm font-medium truncate">{taskCard.title}</p>
-                    <p className="text-[11px] text-muted-foreground">
-                      Pending steps: {taskCard.pendingSteps}/{taskCard.totalSteps}
-                    </p>
+                    <div className="grid grid-cols-1 lg:grid-cols-[180px_1fr_auto] gap-2">
+                      <Select
+                        value={workOrderAssigneeDrafts[String(workOrder._id)] ?? "unassigned"}
+                        onValueChange={(value) =>
+                          setWorkOrderAssigneeDrafts((prev) => ({
+                            ...prev,
+                            [String(workOrder._id)]: value,
+                          }))
+                        }
+                      >
+                        <SelectTrigger className="h-8 text-xs">
+                          <SelectValue placeholder="Lead owner" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="unassigned">Unassigned</SelectItem>
+                          {workspace?.technicians.map((technician) => (
+                            <SelectItem key={String(technician._id)} value={String(technician._id)}>
+                              {technician.legalName}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Input
+                        value={workOrderTeamDrafts[String(workOrder._id)] ?? ""}
+                        onChange={(event) =>
+                          setWorkOrderTeamDrafts((prev) => ({
+                            ...prev,
+                            [String(workOrder._id)]: event.target.value,
+                          }))
+                        }
+                        placeholder="Team name (e.g. Airframe Day Shift)"
+                        className="h-8 text-xs"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-8 text-xs"
+                        onClick={() => handleSaveWorkOrderAssignment(String(workOrder._id))}
+                        disabled={assigningKey === `wo-${String(workOrder._id)}`}
+                      >
+                        {assigningKey === `wo-${String(workOrder._id)}` ? "Saving..." : "Save"}
+                      </Button>
+                    </div>
                   </div>
-                  <div className="w-full xl:w-[220px]">
-                    <Select
-                      value={selectedAssignee}
-                      onValueChange={(value) => handleAssignTaskCard(String(taskCard._id), value)}
+                ))
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="tasks" className="mt-0">
+          <Card className="border-border/60">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium">Task Assignment Feed</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {workspace?.taskCards.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No active task cards found.</p>
+              ) : (
+                /* BUG-LT-HUNT-108: slice(0, 30) previously had no overflow
+                   indicator. With 31+ task cards, the lead had no way to know
+                   tasks beyond 30 were silently hidden — they could assign 30
+                   tasks and believe the queue was fully staffed while tasks 31+
+                   remained unassigned. Added "Showing X of Y" label and a
+                   "View all" link to the work orders list when overflow exists. */
+                <>
+                {(workspace?.taskCards.length ?? 0) > 30 && (
+                  <div className="flex items-center justify-between text-[11px] text-muted-foreground mb-1">
+                    <span>Showing 30 of {workspace?.taskCards.length} task cards</span>
+                    <Link to="/work-orders" className="text-primary hover:underline">
+                      View all in Work Orders →
+                    </Link>
+                  </div>
+                )}
+                {workspace?.taskCards.slice(0, 30).map((taskCard) => {
+                  const assignment = taskCardAssignmentById.get(String(taskCard._id));
+                  const selectedAssignee =
+                    taskCard.assignedToTechnicianId
+                      ? String(taskCard.assignedToTechnicianId)
+                      : assignment?.assignedToTechnicianId
+                        ? String(assignment.assignedToTechnicianId)
+                        : "unassigned";
+
+                  return (
+                    <div
+                      key={String(taskCard._id)}
+                      className="border border-border/50 rounded-md p-2.5 flex flex-col xl:flex-row xl:items-center xl:justify-between gap-2"
                     >
-                      <SelectTrigger className="h-8 text-xs">
-                        <SelectValue placeholder="Assign technician" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="unassigned">Unassigned</SelectItem>
-                        {workspace?.technicians.map((technician) => (
-                          <SelectItem key={String(technician._id)} value={String(technician._id)}>
-                            {technician.legalName}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-mono text-xs">{taskCard.workOrderNumber}</span>
+                          <span className="text-xs text-muted-foreground">{taskCard.taskCardNumber}</span>
+                          {/* BUG-LT-HUNT-107: Same raw-status fix for task cards. */}
+                          <Badge
+                            variant="outline"
+                            className={`text-[10px] border ${TASK_STATUS_STYLES[taskCard.status as TaskStatus] ?? "border-border/50 text-muted-foreground"}`}
+                          >
+                            {TASK_STATUS_LABEL[taskCard.status as TaskStatus] ?? taskCard.status}
+                          </Badge>
+                        </div>
+                        <p className="text-sm font-medium truncate">{taskCard.title}</p>
+                        <p className="text-[11px] text-muted-foreground">
+                          Pending steps: {taskCard.pendingSteps}/{taskCard.totalSteps}
+                        </p>
+                      </div>
+                      <div className="w-full xl:w-[220px]">
+                        <Select
+                          value={selectedAssignee}
+                          onValueChange={(value) => handleAssignTaskCard(String(taskCard._id), value)}
+                        >
+                          <SelectTrigger className="h-8 text-xs">
+                            <SelectValue placeholder="Assign technician" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="unassigned">Unassigned</SelectItem>
+                            {workspace?.technicians.map((technician) => (
+                              <SelectItem key={String(technician._id)} value={String(technician._id)}>
+                                {technician.legalName}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  );
+                })}
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="turnover" className="mt-0">
+          <Card className="border-border/60" data-testid="turnover-editor">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium">Turnover Report Editor</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  Work Orders Included
+                </p>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
+                  {workspace?.workOrders.map((workOrder) => {
+                    const workOrderId = String(workOrder._id);
+                    const checked = selectedWorkOrderIds.includes(workOrderId);
+                    return (
+                      <label
+                        key={workOrderId}
+                        className="border border-border/50 rounded-md p-2 flex items-start gap-2 cursor-pointer"
+                      >
+                        <Checkbox
+                          checked={checked}
+                          onCheckedChange={(value) => toggleWorkOrderSelection(workOrderId, Boolean(value))}
+                          className="mt-0.5"
+                        />
+                        <span className="text-xs">
+                          <span className="font-mono font-semibold">{workOrder.workOrderNumber}</span>{" "}
+                          <span className="text-muted-foreground">{workOrder.description}</span>
+                        </span>
+                      </label>
+                    );
+                  })}
                 </div>
-              );
-            })}
-            </>
-          )}
-        </CardContent>
-      </Card>
+              </div>
 
       <Card className="border-border/60">
         <CardHeader className="pb-3">
@@ -831,60 +1010,139 @@ export default function WorkOrderLeadWorkspacePage() {
                 Per-Work-Order Notes
               </p>
               <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
-                {selectedWorkOrderIds.map((workOrderId) => (
-                  <div key={workOrderId} className="space-y-1">
-                    <p className="text-xs font-mono text-foreground">
-                      {workOrderNumberById.get(workOrderId) ?? workOrderId}
-                    </p>
-                    <Textarea
-                      value={workOrderNotes[workOrderId] ?? ""}
-                      onChange={(event) =>
-                        setWorkOrderNotes((prev) => ({
-                          ...prev,
-                          [workOrderId]: event.target.value,
-                        }))
-                      }
-                      rows={3}
-                      className="text-xs"
-                      disabled={reportIsSubmitted}
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card className="border-border/60" data-testid="turnover-history">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-medium">Submitted History</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          {workspace?.history.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No submitted turnover reports yet.</p>
-          ) : (
-            workspace?.history.map((report) => (
-              <div
-                key={String(report._id)}
-                className="border border-border/50 rounded-md p-2.5 flex flex-wrap items-center justify-between gap-2"
-              >
-                <div>
-                  <p className="text-sm font-medium">{report.reportDate}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {report.leadName} · {minutesToHours(report.timeAppliedMinutes)} total ·{" "}
-                    {minutesToHours(report.shopWorkOrderMinutes)} WO ·{" "}
-                    {report.selectedWorkOrderCount} work orders
-                  </p>
+                <div className="space-y-1.5">
+                  <p className="text-xs font-medium text-muted-foreground">AI Draft Summary</p>
+                  <Textarea
+                    value={aiDraftSummary}
+                    onChange={(event) => setAiDraftSummary(event.target.value)}
+                    rows={4}
+                    placeholder="AI-assisted draft summary of completed work..."
+                    className="text-xs"
+                    disabled={reportIsSubmitted}
+                  />
                 </div>
-                <Badge variant="outline" className="text-[10px] border-green-500/30 text-green-600 dark:text-green-400">
-                  Submitted {report.submittedAt ? formatDate(report.submittedAt) : ""}
-                </Badge>
+                <div className="space-y-1.5">
+                  <p className="text-xs font-medium text-muted-foreground">Lead Final Summary</p>
+                  <Textarea
+                    value={summaryText}
+                    onChange={(event) => setSummaryText(event.target.value)}
+                    rows={4}
+                    placeholder="Final turnover summary..."
+                    className="text-xs"
+                    disabled={reportIsSubmitted}
+                  />
+                </div>
               </div>
-            ))
-          )}
-        </CardContent>
-      </Card>
+
+              <div className="space-y-1.5">
+                <p className="text-xs font-medium text-muted-foreground">Lead Notes</p>
+                <Textarea
+                  value={leadNotes}
+                  onChange={(event) => setLeadNotes(event.target.value)}
+                  rows={3}
+                  placeholder="Shift handoff context, blockers, staffing notes..."
+                  className="text-xs"
+                  disabled={reportIsSubmitted}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 xl:grid-cols-3 gap-3">
+                <div className="space-y-1.5">
+                  <p className="text-xs font-medium text-muted-foreground">Upcoming Deadlines</p>
+                  <Textarea
+                    value={upcomingDeadlinesNotes}
+                    onChange={(event) => setUpcomingDeadlinesNotes(event.target.value)}
+                    rows={3}
+                    className="text-xs"
+                    disabled={reportIsSubmitted}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <p className="text-xs font-medium text-muted-foreground">Parts Ordered</p>
+                  <Textarea
+                    value={partsOrderedSummary}
+                    onChange={(event) => setPartsOrderedSummary(event.target.value)}
+                    rows={3}
+                    className="text-xs"
+                    disabled={reportIsSubmitted}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <p className="text-xs font-medium text-muted-foreground">Parts Received</p>
+                  <Textarea
+                    value={partsReceivedSummary}
+                    onChange={(event) => setPartsReceivedSummary(event.target.value)}
+                    rows={3}
+                    className="text-xs"
+                    disabled={reportIsSubmitted}
+                  />
+                </div>
+              </div>
+
+              {selectedWorkOrderIds.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                    Per-Work-Order Notes
+                  </p>
+                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
+                    {selectedWorkOrderIds.map((workOrderId) => (
+                      <div key={workOrderId} className="space-y-1">
+                        <p className="text-xs font-mono text-foreground">
+                          {workOrderNumberById.get(workOrderId) ?? workOrderId}
+                        </p>
+                        <Textarea
+                          value={workOrderNotes[workOrderId] ?? ""}
+                          onChange={(event) =>
+                            setWorkOrderNotes((prev) => ({
+                              ...prev,
+                              [workOrderId]: event.target.value,
+                            }))
+                          }
+                          rows={3}
+                          className="text-xs"
+                          disabled={reportIsSubmitted}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="history" className="mt-0">
+          <Card className="border-border/60" data-testid="turnover-history">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium">Submitted History</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {workspace?.history.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No submitted turnover reports yet.</p>
+              ) : (
+                workspace?.history.map((report) => (
+                  <div
+                    key={String(report._id)}
+                    className="border border-border/50 rounded-md p-2.5 flex flex-wrap items-center justify-between gap-2"
+                  >
+                    <div>
+                      <p className="text-sm font-medium">{report.reportDate}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {report.leadName} · {minutesToHours(report.timeAppliedMinutes)} total ·{" "}
+                        {minutesToHours(report.shopWorkOrderMinutes)} WO ·{" "}
+                        {report.selectedWorkOrderCount} work orders
+                      </p>
+                    </div>
+                    <Badge variant="outline" className="text-[10px] border-green-500/30 text-green-600 dark:text-green-400">
+                      Submitted {report.submittedAt ? formatDate(report.submittedAt) : ""}
+                    </Badge>
+                  </div>
+                ))
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

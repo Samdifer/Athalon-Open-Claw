@@ -21,9 +21,15 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  PartNumberCombobox,
+  type PartSelection,
+} from "@/src/shared/components/PartNumberCombobox";
 
 interface DraftLineItem {
   id: string;
+  partSelection: PartSelection | null;
+  partId?: string;
   description: string;
   qty: string;
   unitPrice: string;
@@ -51,7 +57,7 @@ export default function NewPOPage() {
   const [vendorId, setVendorId] = useState<string>("");
   const [notes, setNotes] = useState("");
   const [lineItems, setLineItems] = useState<DraftLineItem[]>([
-    { id: crypto.randomUUID(), description: "", qty: "1", unitPrice: "0" },
+    { id: crypto.randomUUID(), partSelection: null, description: "", qty: "1", unitPrice: "0" },
   ]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -59,7 +65,7 @@ export default function NewPOPage() {
   const isLoading = !isLoaded || vendors === undefined;
 
   const addLineItem = useCallback(() => {
-    setLineItems((prev) => [...prev, { id: crypto.randomUUID(), description: "", qty: "1", unitPrice: "0" }]);
+    setLineItems((prev) => [...prev, { id: crypto.randomUUID(), partSelection: null, description: "", qty: "1", unitPrice: "0" }]);
   }, []);
 
   const removeLineItem = useCallback((id: string) => {
@@ -68,6 +74,19 @@ export default function NewPOPage() {
 
   const updateLineItem = useCallback((id: string, field: keyof DraftLineItem, value: string) => {
     setLineItems((prev) => prev.map((item) => item.id === id ? { ...item, [field]: value } : item));
+  }, []);
+
+  const handleLinePartSelect = useCallback((lineId: string, sel: PartSelection) => {
+    setLineItems((prev) => prev.map((item) =>
+      item.id === lineId
+        ? {
+            ...item,
+            partSelection: sel,
+            partId: sel.type === "inventory" ? sel.partId : undefined,
+            description: sel.partName,
+          }
+        : item,
+    ));
   }, []);
 
   const subtotal = lineItems.reduce((sum, item) => sum + calcTotal(item.qty, item.unitPrice), 0);
@@ -98,6 +117,7 @@ export default function NewPOPage() {
         await addPOLineItem({
           orgId,
           purchaseOrderId: poId,
+          partId: item.partId as Id<"parts"> | undefined,
           description: item.description.trim(),
           qty: parseFloat(item.qty),
           unitPrice: parseFloat(item.unitPrice),
@@ -196,44 +216,73 @@ export default function NewPOPage() {
               <p className="text-xs text-muted-foreground text-center py-4">No line items. Add one above.</p>
             ) : (
               <>
-                <div className="overflow-x-auto"><div className="min-w-[400px]"><div className="grid grid-cols-[1fr_100px_100px_36px] gap-2 px-1">
-                  <span className="text-[10px] font-medium text-muted-foreground uppercase">Description / Part</span>
-                  <span className="text-[10px] font-medium text-muted-foreground uppercase text-right">Qty</span>
-                  <span className="text-[10px] font-medium text-muted-foreground uppercase text-right">Unit $</span>
-                  <span />
-                </div>
+                <div className="space-y-3">
                 {lineItems.map((item) => (
-                  <div key={item.id} className="grid grid-cols-[1fr_100px_100px_36px] gap-2 items-center">
-                    <Input
-                      value={item.description}
-                      onChange={(e) => updateLineItem(item.id, "description", e.target.value)}
-                      placeholder="Part number / description"
-                      className="h-8 text-xs border-border/60"
-                    />
-                    <Input
-                      value={item.qty}
-                      onChange={(e) => updateLineItem(item.id, "qty", e.target.value)}
-                      type="number" min="1" step="1"
-                      className="h-8 text-xs border-border/60 text-right"
-                    />
-                    <Input
-                      value={item.unitPrice}
-                      onChange={(e) => updateLineItem(item.id, "unitPrice", e.target.value)}
-                      type="number" min="0" step="0.01"
-                      className="h-8 text-xs border-border/60 text-right"
-                    />
-                    <Button
-                      type="button" variant="ghost" size="icon"
-                      onClick={() => removeLineItem(item.id)}
-                      disabled={lineItems.length === 1}
-                      title={lineItems.length === 1 ? "Cannot remove the only line item" : "Remove item"}
-                      className="h-8 w-8 text-muted-foreground hover:text-red-400 disabled:opacity-30 disabled:cursor-not-allowed"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </Button>
+                  <div key={item.id} className="rounded-md border border-border/40 p-3 space-y-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1 space-y-1.5">
+                        <span className="text-[10px] font-medium text-muted-foreground uppercase">Part / Description</span>
+                        {orgId ? (
+                          <PartNumberCombobox
+                            organizationId={orgId}
+                            onSelect={(sel) => handleLinePartSelect(item.id, sel)}
+                            value={item.partSelection}
+                            sourceContext="purchase_order"
+                            placeholder="Search part number..."
+                          />
+                        ) : (
+                          <Input
+                            value={item.description}
+                            onChange={(e) => updateLineItem(item.id, "description", e.target.value)}
+                            placeholder="Part number / description"
+                            className="h-8 text-xs border-border/60"
+                          />
+                        )}
+                      </div>
+                      <Button
+                        type="button" variant="ghost" size="icon"
+                        onClick={() => removeLineItem(item.id)}
+                        disabled={lineItems.length === 1}
+                        title={lineItems.length === 1 ? "Cannot remove the only line item" : "Remove item"}
+                        className="h-8 w-8 text-muted-foreground hover:text-red-400 disabled:opacity-30 disabled:cursor-not-allowed mt-4"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
+                    {item.partSelection && (
+                      <div className="space-y-1.5">
+                        <span className="text-[10px] font-medium text-muted-foreground uppercase">Description</span>
+                        <Input
+                          value={item.description}
+                          onChange={(e) => updateLineItem(item.id, "description", e.target.value)}
+                          placeholder="Description"
+                          className="h-8 text-xs border-border/60"
+                        />
+                      </div>
+                    )}
+                    <div className="grid grid-cols-[1fr_1fr] gap-2">
+                      <div className="space-y-1">
+                        <span className="text-[10px] font-medium text-muted-foreground uppercase">Qty</span>
+                        <Input
+                          value={item.qty}
+                          onChange={(e) => updateLineItem(item.id, "qty", e.target.value)}
+                          type="number" min="1" step="1"
+                          className="h-8 text-xs border-border/60"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <span className="text-[10px] font-medium text-muted-foreground uppercase">Unit $</span>
+                        <Input
+                          value={item.unitPrice}
+                          onChange={(e) => updateLineItem(item.id, "unitPrice", e.target.value)}
+                          type="number" min="0" step="0.01"
+                          className="h-8 text-xs border-border/60"
+                        />
+                      </div>
+                    </div>
                   </div>
                 ))}
-                </div></div>
+                </div>
                 <div className="flex justify-end pt-2 border-t border-border/40">
                   <div className="flex items-center gap-8 text-xs">
                     <span className="text-muted-foreground">Subtotal</span>

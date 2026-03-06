@@ -28,6 +28,7 @@ test.describe("Wave 13 — Lead Workspace + Turnover", () => {
       page.getByRole("heading", { name: /Lead Workspace/i }),
     ).toBeVisible();
     await expect(page.getByText(/Work Order Ownership/i).first()).toBeVisible();
+    await page.getByRole("tab", { name: /Turnover Report/i }).click();
     await expect(page.getByTestId("turnover-editor")).toBeVisible();
     await expect(page.getByRole("button", { name: /Save Draft/i })).toBeVisible();
     await expect(page.getByRole("button", { name: /Submit/i })).toBeVisible();

@@ -69,15 +69,25 @@ const LoanersPage = lazy(() => import("@/app/(app)/parts/loaners/page"));
 const AlertsPage = lazy(() => import("@/app/(app)/parts/alerts/page"));
 const LotsPage = lazy(() => import("@/app/(app)/parts/lots/page"));
 const POReceivingPage = lazy(() => import("@/app/(app)/parts/receiving/po/page"));
+const WarehouseLocationsPage = lazy(
+  () => import("@/app/(app)/parts/warehouse/page"),
+);
+const PartsTagsPage = lazy(() => import("@/app/(app)/parts/tags/page"));
 
 const SquawksPage = lazy(() => import("@/app/(app)/squawks/page"));
 const PersonnelPage = lazy(() => import("@/app/(app)/personnel/page"));
+const PersonnelTimeManagementPage = lazy(
+  () => import("@/app/(app)/personnel/time-management/page"),
+);
 const TrainingPage = lazy(() => import("@/app/(app)/personnel/training/page"));
 const TechnicianTrainingPage = lazy(() => import("@/app/(app)/personnel/[id]/training/page"));
 const OjtDashboardPage = lazy(() => import("@/app/(app)/training/ojt/page"));
 const OjtCurriculumDetailPage = lazy(() => import("@/app/(app)/training/ojt/[curriculumId]/page"));
+const OjtJacketDetailPage = lazy(() => import("@/app/(app)/training/ojt/jackets/[jacketId]/page"));
 const OjtJacketsPage = lazy(() => import("@/app/(app)/training/ojt/jackets/page"));
+const OjtRosterPage = lazy(() => import("@/app/(app)/training/ojt/roster/page"));
 const MyWorkPage = lazy(() => import("@/app/(app)/my-work/page"));
+const MyTimePage = lazy(() => import("@/app/(app)/my-work/time/page"));
 
 const CompliancePage = lazy(() => import("@/app/(app)/compliance/page"));
 const QcmReviewPage = lazy(() => import("@/app/(app)/compliance/qcm-review/page"));
@@ -167,6 +177,14 @@ const RoutingTemplatesPage = lazy(
 const CapabilitiesListPage = lazy(() => import("@/app/(app)/settings/capabilities/page"));
 const AdsbSettingsPage = lazy(() => import("@/app/(app)/settings/adsb/page"));
 
+const CrmPipelinePage = lazy(() => import("@/app/(app)/crm/pipeline/page"));
+const CrmDashboardPage = lazy(() => import("@/app/(app)/crm/dashboard/page"));
+const CrmAccountsPage = lazy(() => import("@/app/(app)/crm/accounts/page"));
+const CrmAccountDetailPage = lazy(() => import("@/app/(app)/crm/accounts/[id]/page"));
+const CrmContactsPage = lazy(() => import("@/app/(app)/crm/contacts/page"));
+const CrmInteractionsPage = lazy(() => import("@/app/(app)/crm/interactions/page"));
+const CrmAnalyticsPage = lazy(() => import("@/app/(app)/crm/analytics/page"));
+
 const AppNotFoundPage = lazy(() => import("@/app/(app)/not-found/page"));
 
 function ProtectedAppContext() {
@@ -235,15 +253,21 @@ export function protectedAppRoutes() {
             <Route path="/parts/alerts" element={<AlertsPage />} />
             <Route path="/parts/lots" element={<LotsPage />} />
             <Route path="/parts/receiving/po" element={<POReceivingPage />} />
+            <Route path="/parts/warehouse" element={<WarehouseLocationsPage />} />
+            <Route path="/parts/tags" element={<PartsTagsPage />} />
 
             <Route path="/squawks" element={<SquawksPage />} />
             <Route path="/personnel" element={<PersonnelPage />} />
+            <Route path="/personnel/time-management" element={<PersonnelTimeManagementPage />} />
             <Route path="/personnel/training" element={<TrainingPage />} />
             <Route path="/personnel/:id/training" element={<TechnicianTrainingPage />} />
             <Route path="/training/ojt" element={<OjtDashboardPage />} />
             <Route path="/training/ojt/:curriculumId" element={<OjtCurriculumDetailPage />} />
+            <Route path="/training/ojt/jackets/:jacketId" element={<OjtJacketDetailPage />} />
             <Route path="/training/ojt/jackets" element={<OjtJacketsPage />} />
+            <Route path="/training/ojt/roster" element={<OjtRosterPage />} />
             <Route path="/my-work" element={<MyWorkPage />} />
+            <Route path="/my-work/time" element={<MyTimePage />} />
 
             <Route path="/compliance" element={<CompliancePage />} />
             <Route path="/compliance/qcm-review" element={<QcmReviewPage />} />
@@ -286,6 +310,15 @@ export function protectedAppRoutes() {
             <Route path="/billing/otc" element={<OTCSalesPage />} />
             <Route path="/billing/warranty" element={<WarrantyPage />} />
             <Route path="/billing/labor-kits" element={<LaborKitsPage />} />
+
+            <Route path="/crm" element={<Navigate to="/crm/dashboard" replace />} />
+            <Route path="/crm/dashboard" element={<CrmDashboardPage />} />
+            <Route path="/crm/accounts" element={<CrmAccountsPage />} />
+            <Route path="/crm/accounts/:id" element={<CrmAccountDetailPage />} />
+            <Route path="/crm/contacts" element={<CrmContactsPage />} />
+            <Route path="/crm/interactions" element={<CrmInteractionsPage />} />
+            <Route path="/crm/pipeline" element={<CrmPipelinePage />} />
+            <Route path="/crm/analytics" element={<CrmAnalyticsPage />} />
 
             <Route path="/scheduling" element={<SchedulingPage />} />
             <Route path="/scheduling/bays" element={<BaysPage />} />

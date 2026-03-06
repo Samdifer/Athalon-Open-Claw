@@ -1383,6 +1383,64 @@ export const getActiveTimerForTechnician = query({
   },
 });
 
+// ─────────────────────────────────────────────────────────────────────────────
+// QUERY: getLaborSummaryForActiveWorkOrders
+//
+// Batch query that returns consumed labor hours grouped by work order ID.
+// Used by the dashboard to compute labor-based completion % for all active WO
+// tiles in a single subscription, avoiding N+1 per-WO queries.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const getLaborSummaryForActiveWorkOrders = query({
+  args: {
+    orgId: v.id("organizations"),
+  },
+  handler: async (ctx, args) => {
+    await requireAuth(ctx);
+
+    const entries = await ctx.db
+      .query("timeEntries")
+      .withIndex("by_org", (q) => q.eq("orgId", args.orgId))
+      .collect();
+
+    const byWorkOrder: Record<
+      string,
+      { totalMinutes: number; totalHours: number; openTimerCount: number }
+    > = {};
+
+    const now = Date.now();
+
+    for (const entry of entries) {
+      if (!entry.workOrderId) continue;
+      const key = String(entry.workOrderId);
+
+      if (!byWorkOrder[key]) {
+        byWorkOrder[key] = { totalMinutes: 0, totalHours: 0, openTimerCount: 0 };
+      }
+
+      const record = byWorkOrder[key]!;
+
+      if (entry.durationMinutes != null) {
+        record.totalMinutes += entry.durationMinutes;
+      } else if (!entry.clockOutAt) {
+        // Open timer — compute elapsed from clock-in, minus paused time
+        const elapsed = Math.max(0, now - entry.clockInAt);
+        const pausedMs = (entry.totalPausedMinutes ?? 0) * 60_000;
+        record.totalMinutes += Math.round(Math.max(0, elapsed - pausedMs) / 60_000);
+        record.openTimerCount += 1;
+      }
+    }
+
+    // Compute hours from minutes
+    for (const key of Object.keys(byWorkOrder)) {
+      byWorkOrder[key]!.totalHours =
+        Math.round((byWorkOrder[key]!.totalMinutes / 60) * 100) / 100;
+    }
+
+    return byWorkOrder;
+  },
+});
+
 export const listTimeEntrySegments = query({
   args: {
     orgId: v.id("organizations"),

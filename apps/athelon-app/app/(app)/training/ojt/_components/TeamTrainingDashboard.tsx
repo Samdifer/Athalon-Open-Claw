@@ -62,13 +62,15 @@ export function TeamTrainingDashboard() {
           convex.query(api.ojt.listJacketsByCurriculum, { curriculumId: curriculum._id }),
         ]);
 
+        const isRepetition = curriculum.signOffModel === "repetition_5col";
+        const maxPerTask = isRepetition ? 5 : 4;
         const taskSection = new Map(tasks.map((task) => [String(task._id), task.sectionId]));
 
         for (const jacket of jackets) {
           const events = await convex.query(api.ojt.listStageEvents, { jacketId: jacket._id });
           const techKey = String(jacket.technicianId);
           const base = perTech.get(techKey) ?? { signed: 0, signedPrev: 0, possible: 0 };
-          base.possible += tasks.length * 4;
+          base.possible += tasks.length * maxPerTask;
 
           for (const event of events) {
             if (!event.trainerSignedAt) continue;
@@ -93,7 +95,7 @@ export function TeamTrainingDashboard() {
 
         for (const section of sections) {
           const sec = perSection.get(section.name) ?? { signed: 0, possible: 0 };
-          sec.possible += tasks.filter((t) => t.sectionId === section._id).length * 4 * jackets.length;
+          sec.possible += tasks.filter((t) => t.sectionId === section._id).length * maxPerTask * jackets.length;
           perSection.set(section.name, sec);
         }
       }

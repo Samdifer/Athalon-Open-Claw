@@ -296,12 +296,31 @@ export const listStageEventsByTask = query({
 export const getTaskScore = query({
   args: { jacketId: v.id("ojtJackets"), taskId: v.id("ojtTasks") },
   handler: async (ctx, args) => {
+    const jacket = await ctx.db.get(args.jacketId);
+    const curriculum = jacket ? await ctx.db.get(jacket.curriculumId) : null;
+    const isRepetition = curriculum?.signOffModel === "repetition_5col";
+
     const events = await ctx.db
       .query("ojtStageEvents")
       .withIndex("by_jacket_task", (q) =>
         q.eq("jacketId", args.jacketId).eq("taskId", args.taskId)
       )
       .collect();
+
+    if (isRepetition) {
+      const completedColumns = new Set(
+        events
+          .filter((e) => e.trainerSignedAt && e.columnNumber)
+          .map((e) => e.columnNumber)
+      );
+      return {
+        score: completedColumns.size,
+        maxScore: 5,
+        completedStages: Array.from(completedColumns).map(String),
+        completedColumns: Array.from(completedColumns) as number[],
+        events,
+      };
+    }
 
     const completedStages = new Set(
       events
@@ -519,6 +538,10 @@ export const getRadarData = query({
     const jacket = await ctx.db.get(args.jacketId);
     if (!jacket) return null;
 
+    const curriculum = await ctx.db.get(jacket.curriculumId);
+    const isRepetition = curriculum?.signOffModel === "repetition_5col";
+    const maxPerTask = isRepetition ? 5 : 4;
+
     const sections = await ctx.db
       .query("ojtCurriculumSections")
       .withIndex("by_curriculum", (q) => q.eq("curriculumId", jacket.curriculumId))
@@ -536,23 +559,27 @@ export const getRadarData = query({
 
     return sections.map((section) => {
       const sectionTasks = allTasks.filter((t) => t.sectionId === section._id);
-      const totalPossible = sectionTasks.length * 4; // 4 stages per task
+      const totalPossible = sectionTasks.length * maxPerTask;
 
       const sectionEvents = allEvents.filter((e) =>
         sectionTasks.some((t) => t._id === e.taskId) && e.trainerSignedAt
       );
 
-      // Count unique stage completions per task
-      const taskStages = new Map<string, Set<string>>();
+      // Count unique completions per task (stages for progression, columns for repetition)
+      const taskCompletions = new Map<string, Set<string | number>>();
       for (const event of sectionEvents) {
         const key = event.taskId;
-        if (!taskStages.has(key)) taskStages.set(key, new Set());
-        taskStages.get(key)!.add(event.stage);
+        if (!taskCompletions.has(key)) taskCompletions.set(key, new Set());
+        if (isRepetition && event.columnNumber) {
+          taskCompletions.get(key)!.add(event.columnNumber);
+        } else {
+          taskCompletions.get(key)!.add(event.stage);
+        }
       }
 
       let totalScore = 0;
-      for (const stages of taskStages.values()) {
-        totalScore += stages.size;
+      for (const items of taskCompletions.values()) {
+        totalScore += items.size;
       }
 
       return {
@@ -563,10 +590,124 @@ export const getRadarData = query({
         percentage: totalPossible > 0 ? Math.round((totalScore / totalPossible) * 100) : 0,
         taskCount: sectionTasks.length,
         completedTasks: sectionTasks.filter((t) => {
-          const stages = taskStages.get(t._id);
-          return stages && stages.size === 4;
+          const items = taskCompletions.get(t._id);
+          return items && items.size === maxPerTask;
         }).length,
       };
     });
+  },
+});
+
+// ==========================================
+// 5-COLUMN REPETITION MODEL (Avex/TBM style)
+// ==========================================
+
+export const recordColumnSignOff = mutation({
+  args: {
+    organizationId: v.string(),
+    jacketId: v.id("ojtJackets"),
+    taskId: v.id("ojtTasks"),
+    technicianId: v.id("technicians"),
+    columnNumber: v.number(), // 1-5
+    trainerId: v.id("technicians"),
+    trainerCertificateSnapshot: v.optional(v.string()),
+    trainingMethod: v.optional(v.string()),
+    actualMinutes: v.optional(v.number()),
+    notes: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    if (args.columnNumber < 1 || args.columnNumber > 5) {
+      throw new Error("Column number must be between 1 and 5");
+    }
+    if (args.trainerId === args.technicianId) {
+      throw new Error("Trainer cannot sign off their own training");
+    }
+
+    // Validate sequential columns
+    const existingEvents = await ctx.db
+      .query("ojtStageEvents")
+      .withIndex("by_jacket_task", (q) =>
+        q.eq("jacketId", args.jacketId).eq("taskId", args.taskId)
+      )
+      .collect();
+
+    const completedColumns = new Set(
+      existingEvents.filter((e) => e.trainerSignedAt && e.columnNumber).map((e) => e.columnNumber)
+    );
+
+    if (completedColumns.has(args.columnNumber)) {
+      throw new Error(`Column ${args.columnNumber} already signed off`);
+    }
+
+    // Must complete prior columns first
+    for (let i = 1; i < args.columnNumber; i++) {
+      if (!completedColumns.has(i)) {
+        throw new Error(`Cannot sign off column ${args.columnNumber} — column ${i} not yet completed`);
+      }
+    }
+
+    const now = Date.now();
+    const isAuth = args.columnNumber === 5;
+    const eventId = await ctx.db.insert("ojtStageEvents", {
+      organizationId: args.organizationId,
+      jacketId: args.jacketId,
+      taskId: args.taskId,
+      technicianId: args.technicianId,
+      stage: isAuth ? "authorization_test" : "instructor_completion",
+      trainerId: args.trainerId,
+      trainerCertificateSnapshot: args.trainerCertificateSnapshot,
+      trainingMethod: args.trainingMethod,
+      actualMinutes: args.actualMinutes,
+      columnNumber: args.columnNumber,
+      isAuthorizationSignOff: isAuth,
+      techSignedAt: now,
+      trainerSignedAt: now,
+      notes: args.notes,
+      createdAt: now,
+    });
+
+    // Auto-update jacket status
+    const jacket = await ctx.db.get(args.jacketId);
+    if (jacket && jacket.status === "not_started") {
+      await ctx.db.patch(args.jacketId, { status: "in_progress", startedAt: now, updatedAt: now });
+    }
+
+    return eventId;
+  },
+});
+
+export const getJacketColumnProgress = query({
+  args: { jacketId: v.id("ojtJackets") },
+  handler: async (ctx, args) => {
+    const events = await ctx.db
+      .query("ojtStageEvents")
+      .withIndex("by_jacket", (q) => q.eq("jacketId", args.jacketId))
+      .collect();
+
+    // Group by taskId -> array of column completions
+    const progress: Record<string, Array<{
+      columnNumber: number;
+      trainerId: string;
+      trainerSignedAt: number | undefined;
+      isAuthorizationSignOff: boolean | undefined;
+      notes: string | undefined;
+      createdAt: number;
+    }>> = {};
+
+    for (const event of events) {
+      if (!event.columnNumber || !event.trainerSignedAt) continue;
+      const taskId = event.taskId;
+      if (!progress[taskId]) progress[taskId] = [];
+      progress[taskId].push({
+        columnNumber: event.columnNumber,
+        trainerId: event.trainerId,
+        trainerSignedAt: event.trainerSignedAt,
+        isAuthorizationSignOff: event.isAuthorizationSignOff,
+        notes: event.notes,
+        createdAt: event.createdAt,
+      });
+    }
+
+    return progress;
   },
 });
