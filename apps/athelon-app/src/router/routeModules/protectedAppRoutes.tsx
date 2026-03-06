@@ -72,6 +72,7 @@ const POReceivingPage = lazy(() => import("@/app/(app)/parts/receiving/po/page")
 const SquawksPage = lazy(() => import("@/app/(app)/squawks/page"));
 const PersonnelPage = lazy(() => import("@/app/(app)/personnel/page"));
 const TrainingPage = lazy(() => import("@/app/(app)/personnel/training/page"));
+const TechnicianTrainingPage = lazy(() => import("@/app/(app)/personnel/[id]/training/page"));
 const OjtDashboardPage = lazy(() => import("@/app/(app)/training/ojt/page"));
 const OjtCurriculumDetailPage = lazy(() => import("@/app/(app)/training/ojt/[curriculumId]/page"));
 const OjtJacketsPage = lazy(() => import("@/app/(app)/training/ojt/jackets/page"));
@@ -236,6 +237,7 @@ export function protectedAppRoutes() {
             <Route path="/squawks" element={<SquawksPage />} />
             <Route path="/personnel" element={<PersonnelPage />} />
             <Route path="/personnel/training" element={<TrainingPage />} />
+            <Route path="/personnel/:id/training" element={<TechnicianTrainingPage />} />
             <Route path="/training/ojt" element={<OjtDashboardPage />} />
             <Route path="/training/ojt/:curriculumId" element={<OjtCurriculumDetailPage />} />
             <Route path="/training/ojt/jackets" element={<OjtJacketsPage />} />

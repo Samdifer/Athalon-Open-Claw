@@ -52,6 +52,27 @@ export const addTraining = mutation({
   },
 });
 
+export const updateTraining = mutation({
+  args: {
+    trainingId: v.id("technicianTraining"),
+    trainingType: v.string(),
+    completedAt: v.number(),
+    expiresAt: v.optional(v.number()),
+    certificateRef: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const record = await ctx.db.get(args.trainingId);
+    if (!record) throw new Error("Training record not found");
+
+    await ctx.db.patch(args.trainingId, {
+      trainingType: args.trainingType,
+      completedAt: args.completedAt,
+      expiresAt: args.expiresAt,
+      certificateRef: args.certificateRef,
+    });
+  },
+});
+
 export const removeTraining = mutation({
   args: { trainingId: v.id("technicianTraining") },
   handler: async (ctx, args) => {

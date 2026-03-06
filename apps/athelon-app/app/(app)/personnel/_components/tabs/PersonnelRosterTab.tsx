@@ -427,7 +427,7 @@ export function PersonnelRosterTab({
                             className="h-6 text-[11px] px-2 text-muted-foreground hover:text-foreground"
                             asChild
                           >
-                            <Link to="/personnel/training">
+                            <Link to={`/personnel/${tech._id}/training`}>
                               <GraduationCap className="w-3 h-3 mr-1" />
                               Training
                             </Link>
