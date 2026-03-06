@@ -1,5 +1,41 @@
 # Master Build List
 
+## CAMP Systems Competitive Program (NEW — 2026-03-06)
+
+Source plan: `knowledge/plans/2026-03-06-camp-maintenance-tracking-research-and-implementation-plan.md`
+Research corpus: `knowledge/research/camp-systems/`
+
+### CAMP-P0 — Foundation (Next)
+- [ ] **C1.1** Compliance event ledger (append-only due/compliance transitions)
+- [ ] **C1.2** Unified due-engine contract (days/hours/cycles recurrence rules)
+- [ ] **C1.3** AD/SB state machine hardening with explicit transition guards
+- [ ] **C1.4** Counter source-of-truth policy (airframe/engine/APU) + reconciliation rules
+
+### CAMP-P0 — Planning + Traceability
+- [ ] **C2.1** Due-list workbench (grouped events, horizon filters)
+- [ ] **C2.2** Monthly plan generator from due list (draft WO/task packages)
+- [ ] **C2.3** Recurring projection + conflict markers
+- [ ] **C3.1** Records bundle model per completed task (hash + provenance)
+- [ ] **C3.2** AD/SB closure package generation
+- [ ] **C3.3** RTS preflight integrity checker (hard-block + explainability)
+
+### CAMP-P1 — Integration Parity Layer
+- [ ] **C4.1** External sync gateway (counters + due-list exchange contract)
+- [ ] **C4.2** Tail-level integration enablement + health dashboard
+- [ ] **C4.3** Reconciliation queue for ID/counter mismatch conflicts
+- [ ] **C4.4** Operator↔MRO handoff API contract MVP
+
+### CAMP-P1 — Mobile + Adoption Advantage
+- [ ] **C5.1** Task-card mobile execution parity checklist
+- [ ] **C5.2** Offline read + deterministic write-guard UX completion
+- [ ] **C5.3** Role-specific onboarding pathways (planner/lead/QC/parts)
+- [ ] **C5.4** Adoption telemetry dashboard (usage + friction)
+
+### CAMP-P2 — Commercial Differentiation
+- [ ] **C6.1** Transparent feature-tier matrix tooling
+- [ ] **C6.2** Migration toolkit (quality checks + dry-run report)
+- [ ] **C6.3** Competitive switch implementation playbook artifacts
+
 ## Bug Hunter Fixes
 
 ### Cycle 1 — Parts Clerk (2026-03-05)
