@@ -191,3 +191,100 @@ Program complete when:
 - at least one external sync contract operational (C4 MVP),
 - mobile/adoption telemetry shows measurable UX advantage (C5),
 - migration toolkit + transparent packaging are shippable (C6).
+
+---
+
+## 7) Expanded Regulatory Edge-Case Framework (FAR-Focused)
+
+Primary objective remains AMM Chapter 4/5 DO-item handling (see Section 8), but we will harden for regulatory edge cases across applicable FAA contexts.
+
+### Regulatory lenses to explicitly test against
+- **14 CFR Part 43** (maintenance record/sign-off requirements)
+- **14 CFR Part 91.417** (maintenance records retention/transfer)
+- **14 CFR Part 135.439 / 135.443 / 135.445** (maintenance records and status continuity in ops context)
+- **14 CFR Part 145.209 / 145.211 / 145.219** (repair station procedures, manuals, and records)
+
+### FAR edge-case test classes
+1. **Deferred vs overdue boundary** (due now, grace logic, no silent auto-compliance)
+2. **Counter corrections/reversals** (bad flight-hour uploads, engine swap effects)
+3. **Ownership transfer record integrity** (continuing status package completeness)
+4. **Sign-off chain integrity** (role/rating/inspection prerequisites)
+5. **Document mutation after sign-off** (immutability + supersession policy)
+6. **Split responsibility events** (operator-provided data vs shop-entered compliance)
+
+### Required output artifacts
+- `knowledge/plans/ops/far-edge-case-matrix-camp.md` (new)
+- `knowledge/plans/ops/far-control-mapping-athelon.md` (new)
+
+---
+
+## 8) Primary Core Focus — AMM Chapter 4/5 DO-Item Handling (ATA-Coded)
+
+This is the core research/implementation axis:
+
+### Problem statement
+Support simple, reliable handling of a wide variety of **DO items** originating from AMM Chapter 4/5 planning sections, tied to ATA coding and currently tracked in CAMP-style due/compliance systems.
+
+### Canonical DO-item model (Athelon target)
+Each DO item should support:
+1. `ataChapter` / `ataSubchapter`
+2. `sourceRef` (AMM chapter-section-task reference)
+3. `intervalType` (hours/cycles/calendar/event)
+4. `threshold` + `repeat`
+5. `lastDoneAt` + `nextDueAt` + `nextDueCounter`
+6. `complianceMethod` (performed/deferred/not-applicable/superseded)
+7. `evidenceBundleId` (records and sign-off linkage)
+8. `authorityContext` (operator, shop, mixed-source provenance)
+9. `status` (`planned`, `due_soon`, `overdue`, `complied`, `blocked`, `deferred`)
+
+### Core workflow to build and validate
+1. Import/author ATA-coded DO-item definitions from planning source
+2. Normalize into unified due-engine contract
+3. Render in due-list workbench grouped by urgency + ATA
+4. Generate monthly execution plan and WO/task seeds
+5. Execute + sign off with evidence linkage
+6. Recompute next due deterministically with full audit trail
+
+### CAMP comparative research objective (targeted)
+For each above step, produce:
+- what CAMP appears to do,
+- what data objects it likely depends on,
+- what operator/shop failure modes appear in practice,
+- Athelon implementation choice and rationale.
+
+Required artifact:
+- `knowledge/research/camp-systems/CAMP-DO-ITEMS-ATA-CH4-CH5-COMPARATIVE.md` (new)
+
+---
+
+## 9) Implementation Addendum — New Waves for DO-Item Parity
+
+### Wave C0-DO (Research-to-spec bridge, immediate)
+1. Define DO-item schema extension and ATA normalization rules
+2. Build mapping table: AMM Ch4/5 references -> internal DO-item contract
+3. Produce CAMP comparative matrix for each lifecycle stage
+
+### Wave C1.5-DO (Engine extension)
+1. Add DO-item recurrence evaluator (calendar + usage + mixed)
+2. Add supersession/alternate-method handling
+3. Add blocked-state reasons (missing evidence, invalid counters, role gate)
+
+### Wave C2.5-DO (Planner UX extension)
+1. Due-list filters by ATA and source chapter
+2. Bulk-plan by ATA family (e.g., 21/24/27 groups)
+3. Conflict heatmap by aircraft + ATA workload density
+
+### Wave C3.5-DO (Records and audit)
+1. DO-item closure packet template
+2. Continuity report: last-done to next-due evidence chain
+3. Exportable DO status report suitable for operator/share context
+
+---
+
+## 10) Updated Immediate Next Steps
+
+1. Execute **C0-DO** as a short research+spec sprint (before broad C4/C5 expansion).
+2. Integrate DO-item schema into C1/C2 foundations already underway.
+3. Build FAR edge-case matrix in parallel and bind it to CI/regression tests.
+4. Prioritize simple, deterministic workflow over advanced automation during initial rollout.
+

@@ -6,6 +6,9 @@ Source plan: `knowledge/plans/2026-03-06-camp-maintenance-tracking-research-and-
 Research corpus: `knowledge/research/camp-systems/`
 
 ### CAMP-P0 — Foundation (Next)
+- [ ] **C0-DO.1** AMM Ch4/Ch5 DO-item schema + ATA normalization spec
+- [ ] **C0-DO.2** CAMP comparative matrix for DO-item lifecycle (track/plan/execute/close)
+- [ ] **C0-DO.3** FAR edge-case matrix (Part 43/91/135/145 controls)
 - [ ] **C1.1** Compliance event ledger (append-only due/compliance transitions)
 - [ ] **C1.2** Unified due-engine contract (days/hours/cycles recurrence rules)
 - [ ] **C1.3** AD/SB state machine hardening with explicit transition guards
