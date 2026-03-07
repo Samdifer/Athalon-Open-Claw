@@ -117,12 +117,12 @@ function KPIStrip({
       alert: kpis.overdueAds > 0,
     },
     {
-      label: "Open Squawks",
+      label: "Open Findings",
       value: kpis.openDiscrepancies,
       icon: AlertTriangle,
       color: "text-purple-400",
       bg: "bg-purple-500/10",
-      href: "/squawks",
+      href: "/findings",
       alert: false,
     },
     {
@@ -235,19 +235,19 @@ function CompactAttentionQueue({ workOrders }: { workOrders: WorkOrdersWithRisk 
       });
     }
 
-    const squawkWOs = workOrders.filter(
+    const findingWOs = workOrders.filter(
       (wo) =>
         wo.priority !== "aog" &&
         (wo.openDiscrepancyCount ?? 0) > 0 &&
         !["closed", "voided", "cancelled"].includes(wo.status),
     );
-    if (squawkWOs.length > 0) {
-      const totalSquawks = squawkWOs.reduce((sum, wo) => sum + (wo.openDiscrepancyCount ?? 0), 0);
+    if (findingWOs.length > 0) {
+      const totalFindings = findingWOs.reduce((sum, wo) => sum + (wo.openDiscrepancyCount ?? 0), 0);
       result.push({
-        id: "squawks",
+        id: "findings",
         severity: "warning",
-        title: `${totalSquawks} open squawk${totalSquawks !== 1 ? "s" : ""} across ${squawkWOs.length} WO${squawkWOs.length !== 1 ? "s" : ""}`,
-        href: "/squawks",
+        title: `${totalFindings} open finding${totalFindings !== 1 ? "s" : ""} across ${findingWOs.length} WO${findingWOs.length !== 1 ? "s" : ""}`,
+        href: "/findings",
       });
     }
 

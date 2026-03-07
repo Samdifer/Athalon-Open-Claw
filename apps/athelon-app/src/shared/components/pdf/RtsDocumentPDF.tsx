@@ -124,10 +124,10 @@ export function RtsDocumentPDF({
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Work Performed (Completed Task Cards)</Text>
+          <Text style={styles.sectionTitle}>Work Performed (Completed Work Cards)</Text>
           <View style={styles.tableHeader}><Text style={{ width: "20%" }}>Card #</Text><Text style={{ width: "80%" }}>Title</Text></View>
           {completedCards.length === 0 ? (
-            <View style={styles.tableRow}><Text>No completed task cards recorded.</Text></View>
+            <View style={styles.tableRow}><Text>No completed work cards recorded.</Text></View>
           ) : (
             completedCards.map((card, idx) => (
               <View style={styles.tableRow} key={`${card.taskCardNumber ?? "tc"}-${idx}`}>
@@ -139,10 +139,10 @@ export function RtsDocumentPDF({
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Discrepancies Found & Resolved</Text>
+          <Text style={styles.sectionTitle}>Findings Found & Resolved</Text>
           <View style={styles.tableHeader}><Text style={{ width: "18%" }}>Number</Text><Text style={{ width: "50%" }}>Description</Text><Text style={{ width: "32%" }}>Status / Disposition</Text></View>
           {discrepancies.length === 0 ? (
-            <View style={styles.tableRow}><Text>No discrepancies recorded.</Text></View>
+            <View style={styles.tableRow}><Text>No findings recorded.</Text></View>
           ) : (
             discrepancies.map((d, idx) => (
               <View style={styles.tableRow} key={`${d.discrepancyNumber ?? "disc"}-${idx}`}>

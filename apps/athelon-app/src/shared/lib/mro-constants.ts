@@ -124,7 +124,7 @@ export const WO_STATUS_LABEL: Record<WoStatus, string> = {
   on_hold: "On Hold",
   pending_inspection: "Pending Inspection",
   pending_signoff: "Pending Sign-Off",
-  open_discrepancies: "Open Discrepancies",
+  open_discrepancies: "Open Findings",
   closed: "Closed",
   cancelled: "Cancelled",
   voided: "Voided",

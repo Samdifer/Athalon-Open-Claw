@@ -1,14 +1,14 @@
 /**
  * wave5-discrepancy-disposition.spec.ts
  *
- * AI-019: Interaction tests for the DiscrepancyDispositionDialog.
+ * AI-019: Interaction tests for the FindingDispositionDialog.
  *
  * Tests the AI-015 fix — MEL deferral was previously non-functional
  * (threw toast.error and returned). Now it renders full MEL fields and
  * calls api.discrepancies.deferDiscrepancy with signatureAuthEventId.
  *
  * Strategy:
- * - Navigate to /squawks and check if any open rows exist
+ * - Navigate to /findings and check if any open finding rows exist
  * - If rows exist, click "Disposition" and test dialog interactions
  * - If no rows, verify empty-state renders correctly (not a crash)
  * - UI-only assertions: dialog fields render, validation enforces required fields
@@ -19,12 +19,12 @@ import { test, expect, type Page } from "@playwright/test";
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
-async function waitForSquawksPage(page: Page) {
-  await page.goto("/squawks", { waitUntil: "domcontentloaded", timeout: 30_000 });
+async function waitForFindingsPage(page: Page) {
+  await page.goto("/findings", { waitUntil: "domcontentloaded", timeout: 30_000 });
   // Wait for either data rows or empty-state indicator
   await page
     .locator(
-      "table tbody tr, [data-testid='squawks-empty'], .text-muted-foreground",
+      "table tbody tr, [data-testid='findings-empty'], .text-muted-foreground",
     )
     .first()
     .waitFor({ timeout: 15_000 })
@@ -33,29 +33,29 @@ async function waitForSquawksPage(page: Page) {
 
 // ─── Tests ───────────────────────────────────────────────────────────────────
 
-test.describe("Squawks — Page Structure", () => {
-  test("squawks page renders with correct heading", async ({ page }) => {
-    await waitForSquawksPage(page);
+test.describe("Findings — Page Structure", () => {
+  test("findings page renders with correct heading", async ({ page }) => {
+    await waitForFindingsPage(page);
     await expect(
-      page.getByRole("heading", { name: /Squawks\s*&\s*Discrepancies/i }),
+      page.getByRole("heading", { name: /Findings/i }),
     ).toBeVisible({ timeout: 15_000 });
   });
 
-  test("squawks page has status filter tabs", async ({ page }) => {
-    await waitForSquawksPage(page);
+  test("findings page has status filter tabs", async ({ page }) => {
+    await waitForFindingsPage(page);
     // Tabs: All, Open, Deferred, Resolved
     await expect(page.getByRole("tab", { name: /all/i }).first()).toBeVisible({ timeout: 10_000 });
   });
 
-  test("squawks page has search input", async ({ page }) => {
-    await waitForSquawksPage(page);
+  test("findings page has search input", async ({ page }) => {
+    await waitForFindingsPage(page);
     await expect(page.locator("input[placeholder*='Search'], input[type='search']").first()).toBeVisible({
       timeout: 10_000,
     });
   });
 
   test("KPI summary cards render (Open, Critical, Deferred)", async ({ page }) => {
-    await waitForSquawksPage(page);
+    await waitForFindingsPage(page);
     // Assert KPI labels directly instead of relying on style-class selectors.
     await expect(page.getByText("Total Open").first()).toBeVisible({ timeout: 10_000 });
     await expect(page.getByText("Critical").first()).toBeVisible({ timeout: 10_000 });
@@ -63,9 +63,9 @@ test.describe("Squawks — Page Structure", () => {
   });
 });
 
-test.describe("Squawks — Disposition Dialog (MEL Path)", () => {
-  test("disposition button appears on open squawk rows", async ({ page }) => {
-    await waitForSquawksPage(page);
+test.describe("Findings — Disposition Dialog (MEL Path)", () => {
+  test("disposition button appears on open finding rows", async ({ page }) => {
+    await waitForFindingsPage(page);
 
     // Check if any rows are present in the table
     const rows = page.locator("tbody tr, [role='row']");
@@ -76,12 +76,12 @@ test.describe("Squawks — Disposition Dialog (MEL Path)", () => {
       const body = await page.locator("body").textContent();
       expect(body).not.toContain("TypeError");
       expect(body).not.toContain("Cannot read");
-      test.skip(true, "No squawks in org — skipping interaction tests");
+      test.skip(true, "No findings in org — skipping interaction tests");
       return;
     }
 
     // Find a row that has the Disposition (Gavel) button
-    // The button appears only on open/under_evaluation squawks
+    // The button appears only on open/under_evaluation findings
     const dispositionBtn = page
       .locator("button")
       .filter({ hasText: /Disposit/i })
@@ -89,7 +89,7 @@ test.describe("Squawks — Disposition Dialog (MEL Path)", () => {
     const hasDispo = await dispositionBtn.isVisible().catch(() => false);
 
     if (!hasDispo) {
-      test.skip(true, "No dispositionable squawks in org — skipping dialog tests");
+      test.skip(true, "No dispositionable findings in org — skipping dialog tests");
       return;
     }
 
@@ -101,7 +101,7 @@ test.describe("Squawks — Disposition Dialog (MEL Path)", () => {
   });
 
   test("disposition dialog has all 5 disposition options", async ({ page }) => {
-    await waitForSquawksPage(page);
+    await waitForFindingsPage(page);
 
     const dispositionBtn = page
       .locator("button")
@@ -110,7 +110,7 @@ test.describe("Squawks — Disposition Dialog (MEL Path)", () => {
 
     const hasDispo = await dispositionBtn.isVisible({ timeout: 5_000 }).catch(() => false);
     if (!hasDispo) {
-      test.skip(true, "No dispositionable squawks available");
+      test.skip(true, "No dispositionable findings available");
       return;
     }
 
@@ -133,7 +133,7 @@ test.describe("Squawks — Disposition Dialog (MEL Path)", () => {
   });
 
   test("MEL path shows amber warning + required MEL fields", async ({ page }) => {
-    await waitForSquawksPage(page);
+    await waitForFindingsPage(page);
 
     const dispositionBtn = page
       .locator("button")
@@ -142,7 +142,7 @@ test.describe("Squawks — Disposition Dialog (MEL Path)", () => {
 
     const hasDispo = await dispositionBtn.isVisible({ timeout: 5_000 }).catch(() => false);
     if (!hasDispo) {
-      test.skip(true, "No dispositionable squawks available");
+      test.skip(true, "No dispositionable findings available");
       return;
     }
 
@@ -178,7 +178,7 @@ test.describe("Squawks — Disposition Dialog (MEL Path)", () => {
   });
 
   test("MEL path: Submit is disabled until all required fields are filled", async ({ page }) => {
-    await waitForSquawksPage(page);
+    await waitForFindingsPage(page);
 
     const dispositionBtn = page
       .locator("button")
@@ -187,7 +187,7 @@ test.describe("Squawks — Disposition Dialog (MEL Path)", () => {
 
     const hasDispo = await dispositionBtn.isVisible({ timeout: 5_000 }).catch(() => false);
     if (!hasDispo) {
-      test.skip(true, "No dispositionable squawks available");
+      test.skip(true, "No dispositionable findings available");
       return;
     }
 
@@ -211,7 +211,7 @@ test.describe("Squawks — Disposition Dialog (MEL Path)", () => {
   });
 
   test("Corrected path: Submit requires corrective action text", async ({ page }) => {
-    await waitForSquawksPage(page);
+    await waitForFindingsPage(page);
 
     const dispositionBtn = page
       .locator("button")
@@ -220,7 +220,7 @@ test.describe("Squawks — Disposition Dialog (MEL Path)", () => {
 
     const hasDispo = await dispositionBtn.isVisible({ timeout: 5_000 }).catch(() => false);
     if (!hasDispo) {
-      test.skip(true, "No dispositionable squawks available");
+      test.skip(true, "No dispositionable findings available");
       return;
     }
 
@@ -247,7 +247,7 @@ test.describe("Squawks — Disposition Dialog (MEL Path)", () => {
   });
 
   test("dialog Cancel button closes without side effects", async ({ page }) => {
-    await waitForSquawksPage(page);
+    await waitForFindingsPage(page);
 
     const dispositionBtn = page
       .locator("button")
@@ -256,7 +256,7 @@ test.describe("Squawks — Disposition Dialog (MEL Path)", () => {
 
     const hasDispo = await dispositionBtn.isVisible({ timeout: 5_000 }).catch(() => false);
     if (!hasDispo) {
-      test.skip(true, "No dispositionable squawks available");
+      test.skip(true, "No dispositionable findings available");
       return;
     }
 
@@ -272,7 +272,7 @@ test.describe("Squawks — Disposition Dialog (MEL Path)", () => {
 
     // Page should still be intact — no crash
     await expect(
-      page.getByRole("heading", { name: /Squawks\s*&\s*Discrepancies/i }),
+      page.getByRole("heading", { name: /Findings/i }),
     ).toBeVisible({ timeout: 10_000 });
   });
 });

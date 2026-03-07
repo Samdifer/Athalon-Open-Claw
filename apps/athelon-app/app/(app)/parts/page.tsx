@@ -872,6 +872,22 @@ export default function PartsPage() {
     orgId ? { organizationId: orgId } : "skip",
   );
 
+  // Tag filter: get part IDs matching the selected tag
+  const tagFilteredParts = useQuery(
+    api.partTags.getPartsByTag,
+    orgId && tagFilter?.tagId
+      ? {
+          organizationId: orgId,
+          tagId: tagFilter.tagId as Id<"tags">,
+          subtagId: tagFilter.subtagId as Id<"subtags"> | undefined,
+        }
+      : "skip",
+  );
+  const tagFilterPartIds = useMemo(() => {
+    if (!tagFilter?.tagId || tagFilteredParts === undefined) return null;
+    return new Set(tagFilteredParts);
+  }, [tagFilter, tagFilteredParts]);
+
   // Load self technician for inspections / reservations
   const selfTech = useQuery(
     api.technicians.getSelf,

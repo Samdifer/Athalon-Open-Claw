@@ -106,8 +106,8 @@ const MODULE_ROUTES: RouteEntry[] = [
   { path: "/compliance/audit-trail", label: "Compliance audit trail" },
   { path: "/compliance/certificates", label: "Compliance certificates alias" },
 
-  // Squawks
-  { path: "/squawks", label: "Squawks" },
+  // Findings
+  { path: "/findings", label: "Findings" },
 
   // Settings
   { path: "/settings/shop", label: "Settings shop" },

@@ -220,7 +220,7 @@ function TaskComplianceSection({
         {rows.length === 0 ? (
           <div className="py-8 text-center">
             <p className="text-sm text-muted-foreground">
-              No task cards on this work order. Add task cards to track
+              No work cards on this work order. Add work cards to track
               compliance items.
             </p>
           </div>
@@ -775,14 +775,14 @@ function ReturnToServiceSection({
   const checkItems: CheckItem[] = [
     {
       id: "task_cards",
-      label: `All task cards complete (${summary.completedTaskCards}/${summary.totalTaskCards})`,
+      label: `All work cards complete (${summary.completedTaskCards}/${summary.totalTaskCards})`,
       complete:
         summary.completedTaskCards === summary.totalTaskCards &&
         summary.totalTaskCards > 0,
     },
     {
       id: "discrepancies",
-      label: `No open squawks/discrepancies (${summary.openDiscrepancies} open)`,
+      label: `No open findings (${summary.openDiscrepancies} open)`,
       complete: summary.openDiscrepancies === 0,
     },
     {

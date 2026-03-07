@@ -97,7 +97,7 @@ function ActiveWOTile({
             <div className="flex items-center gap-2">
               {wo.openDiscrepancyCount > 0 && (
                 <Badge className="bg-red-500/15 text-red-400 border-red-500/30 text-[8px] h-3.5 px-1">
-                  {wo.openDiscrepancyCount} squawk{wo.openDiscrepancyCount === 1 ? "" : "s"}
+                  {wo.openDiscrepancyCount} finding{wo.openDiscrepancyCount === 1 ? "" : "s"}
                 </Badge>
               )}
             </div>

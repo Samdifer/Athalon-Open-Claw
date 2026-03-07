@@ -1221,9 +1221,9 @@ export function QuoteDetailEditor({
                                 {quote.workOrderId && discrepancyId ? (
                                   <Link
                                     className="underline underline-offset-2"
-                                    to={`/work-orders/${quote.workOrderId}#squawk-${discrepancyId}`}
+                                    to={`/work-orders/${quote.workOrderId}#finding-${discrepancyId}`}
                                   >
-                                    linked squawk
+                                    linked finding
                                   </Link>
                                 ) : null}
                               </div>

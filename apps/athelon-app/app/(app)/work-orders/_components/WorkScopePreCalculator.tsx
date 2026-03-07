@@ -104,7 +104,7 @@ export function WorkScopePreCalculator({
       </CardHeader>
       <CardContent className="space-y-3">
         <p className="text-xs text-muted-foreground">
-          Predicted task cards due within {lookAheadHours} flight hours or {lookAheadDays} days based on active maintenance programs.
+          Predicted work cards due within {lookAheadHours} flight hours or {lookAheadDays} days based on active maintenance programs.
         </p>
 
         {!aircraftType ? (
@@ -155,7 +155,7 @@ export function WorkScopePreCalculator({
           >
             Add Selected ({selectedRows.length})
           </Button>
-          <Label className="text-xs text-muted-foreground ml-auto">{suggestions.length} suggested task card(s)</Label>
+          <Label className="text-xs text-muted-foreground ml-auto">{suggestions.length} suggested work card(s)</Label>
         </div>
       </CardContent>
     </Card>

@@ -36,7 +36,7 @@ export function StepReferences({ orgId, workOrderId, taskCardId, steps, readOnly
       <CardContent className="pt-0 space-y-3">
         {steps.length === 0 ? (
           <p className="text-xs text-muted-foreground italic">
-            No steps available for reference attachments on this task card.
+            No steps available for reference attachments on this work card.
           </p>
         ) : (
           steps

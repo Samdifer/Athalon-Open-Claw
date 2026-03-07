@@ -561,7 +561,7 @@ export default function QcmReviewPage() {
                     <div className="grid grid-cols-[80px_120px_1fr_60px_1fr_100px_100px] gap-2 px-3 py-2 bg-muted/30 text-[10px] font-semibold text-muted-foreground uppercase tracking-wide min-w-[700px]">
                       <span>WO #</span>
                       <span>Aircraft</span>
-                      <span>Task Card</span>
+                      <span>Work Card</span>
                       <span>Step</span>
                       <span>Description</span>
                       <span>Status</span>

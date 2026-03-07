@@ -1,12 +1,12 @@
 /**
  * Ground Aerospace Simulation — Wave 2: Inspection & Discrepancy Management
- * Tests task cards, squawks, and WO detail views with live data
+ * Tests work cards, findings, and WO detail views with live data
  */
 import { test, expect } from "@playwright/test";
 
-test.describe("Simulation Wave 2: Inspections & Squawks", () => {
-  test("squawks page shows discrepancies", async ({ page }) => {
-    await page.goto("/squawks", { waitUntil: "networkidle", timeout: 30_000 });
+test.describe("Simulation Wave 2: Inspections & Findings", () => {
+  test("findings page shows discrepancies", async ({ page }) => {
+    await page.goto("/findings", { waitUntil: "networkidle", timeout: 30_000 });
     await expect(page.locator("h1, h2, h3").first()).toBeVisible({ timeout: 15_000 });
     await page.waitForTimeout(3000);
     const body = await page.locator("body").innerText();

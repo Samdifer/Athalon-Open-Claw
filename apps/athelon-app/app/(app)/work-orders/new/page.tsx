@@ -368,13 +368,13 @@ export default function NewWorkOrderPage() {
                 </p>
               </div>
 
-              {/* Pilot-Reported Squawks */}
+              {/* Pilot-Reported Findings */}
               <div>
                 <Label
                   htmlFor="squawks"
                   className="text-xs font-medium mb-1.5 block"
                 >
-                  Pilot-Reported Squawks{" "}
+                  Pilot-Reported Findings{" "}
                   <span className="text-muted-foreground font-normal">
                     (optional)
                   </span>
@@ -536,7 +536,7 @@ export default function NewWorkOrderPage() {
                   className="h-9 text-sm bg-muted/30 border-border/60"
                 />
                 <p className="text-[11px] text-muted-foreground mt-1">
-                  Top-level estimate. Leave blank to auto-sum from task card estimates as they are created.
+                  Top-level estimate. Leave blank to auto-sum from work card estimates as they are created.
                 </p>
               </div>
             </CardContent>

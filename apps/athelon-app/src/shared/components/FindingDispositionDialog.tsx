@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * DiscrepancyDispositionDialog — AI-015
+ * FindingDispositionDialog — AI-015
  *
  * AI-015: Fixed MEL deferral path that was completely non-functional.
  * Previous code showed toast.error("MEL deferral requires pre-signing
@@ -55,7 +55,7 @@ type Disposition =
   | "no_fault_found_could_not_reproduce"
   | "deferred_mel";
 
-interface DiscrepancyDispositionDialogProps {
+interface FindingDispositionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   discrepancyId: Id<"discrepancies">;
@@ -83,13 +83,13 @@ type FindingHistoryEntry = {
 
 // ─── Component ──────────────────────────────────────────────────────────────
 
-export function DiscrepancyDispositionDialog({
+export function FindingDispositionDialog({
   open,
   onOpenChange,
   discrepancyId,
   discrepancyNumber,
   workOrderId,
-}: DiscrepancyDispositionDialogProps) {
+}: FindingDispositionDialogProps) {
   const { orgId, techId } = useCurrentOrg();
 
   // Shared fields
@@ -202,7 +202,7 @@ export function DiscrepancyDispositionDialog({
           ? ` Expires: ${new Date(result.melExpiryDate).toLocaleDateString("en-US", { timeZone: "UTC", year: "numeric", month: "short", day: "numeric" })}.`
           : "";
         toast.success(
-          `Discrepancy ${discrepancyNumber} deferred under MEL ${melItemNumber} (Cat ${melCategory}).${expiryStr}`,
+          `Finding ${discrepancyNumber} deferred under MEL ${melItemNumber} (Cat ${melCategory}).${expiryStr}`,
         );
         appendHistory({
           status: "deferred_mel",
@@ -237,7 +237,7 @@ export function DiscrepancyDispositionDialog({
         });
 
         toast.success(
-          `Discrepancy ${discrepancyNumber} dispositioned as "${disposition.replace(/_/g, " ")}"`,
+          `Finding ${discrepancyNumber} dispositioned as "${disposition.replace(/_/g, " ")}"`,
         );
         appendHistory({
           status: disposition,
@@ -278,7 +278,7 @@ export function DiscrepancyDispositionDialog({
         <DialogHeader>
           <DialogTitle>Disposition {discrepancyNumber}</DialogTitle>
           <DialogDescription>
-            Record the resolution for this discrepancy.
+            Record the resolution for this finding.
           </DialogDescription>
         </DialogHeader>
 

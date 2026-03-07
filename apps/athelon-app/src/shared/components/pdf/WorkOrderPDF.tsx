@@ -112,7 +112,7 @@ export function WorkOrderPDF({
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Task Cards & Completion Status</Text>
+          <Text style={styles.sectionTitle}>Work Cards & Completion Status</Text>
           <View style={styles.th}><Text style={{ width: "20%" }}>Card #</Text><Text style={{ width: "48%" }}>Title</Text><Text style={{ width: "14%" }}>Status</Text><Text style={{ width: "18%" }}>Sign-offs</Text></View>
           {taskCards.map((tc, idx) => (
             <View key={`${tc.taskCardNumber ?? "card"}-${idx}`}>
@@ -132,11 +132,11 @@ export function WorkOrderPDF({
               ))}
             </View>
           ))}
-          {taskCards.length === 0 && <Text style={styles.muted}>No task cards.</Text>}
+          {taskCards.length === 0 && <Text style={styles.muted}>No work cards.</Text>}
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Discrepancies & Corrective Actions</Text>
+          <Text style={styles.sectionTitle}>Findings & Corrective Actions</Text>
           <View style={styles.th}><Text style={{ width: "16%" }}>Number</Text><Text style={{ width: "38%" }}>Description</Text><Text style={{ width: "18%" }}>Status</Text><Text style={{ width: "28%" }}>Corrective Action</Text></View>
           {discrepancies.map((d, idx) => (
             <View style={styles.tr} key={`${d.discrepancyNumber ?? "disc"}-${idx}`}>
@@ -146,7 +146,7 @@ export function WorkOrderPDF({
               <Text style={{ width: "28%" }}>{d.correctiveAction ?? d.disposition ?? "—"}</Text>
             </View>
           ))}
-          {discrepancies.length === 0 && <Text style={styles.muted}>No discrepancies.</Text>}
+          {discrepancies.length === 0 && <Text style={styles.muted}>No findings.</Text>}
         </View>
 
         <View style={styles.section}>

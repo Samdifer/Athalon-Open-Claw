@@ -1,8 +1,8 @@
 "use client";
 
 /**
- * LogSquawkDialog.tsx
- * AI-006 — Dialog for logging a new squawk (discrepancy) against a work order.
+ * LogFindingDialog.tsx
+ * AI-006 — Dialog for logging a new finding against a work order.
  *
  * Calls api.discrepancies.openDiscrepancy and toasts on success/failure.
  */
@@ -57,7 +57,7 @@ type AircraftSystem =
   | "electrical"
   | "other";
 
-export interface LogSquawkDialogProps {
+export interface LogFindingDialogProps {
   open: boolean;
   onClose: () => void;
   workOrderId: Id<"workOrders">;
@@ -95,14 +95,14 @@ const AIRCRAFT_SYSTEM_OPTIONS: { value: AircraftSystem; label: string }[] = [
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export function LogSquawkDialog({
+export function LogFindingDialog({
   open,
   onClose,
   workOrderId,
   orgId,
   techId,
   aircraftCurrentHours,
-}: LogSquawkDialogProps) {
+}: LogFindingDialogProps) {
   const openDiscrepancy = useMutation(api.discrepancies.openDiscrepancy);
 
   // ── Form state ───────────────────────────────────────────────────────────
@@ -144,7 +144,7 @@ export function LogSquawkDialog({
       return;
     }
     if (!foundDuring) {
-      setError("Please select when this squawk was found.");
+      setError("Please select when this finding was discovered.");
       return;
     }
 
@@ -162,12 +162,12 @@ export function LogSquawkDialog({
         notes: notes.trim() || undefined,
         squawkOrigin: "inspection_finding",
       });
-      toast.success("Squawk logged successfully.");
+      toast.success("Finding logged successfully.");
       resetForm();
       onClose();
     } catch (err) {
       const message =
-        err instanceof Error ? err.message : "Failed to log squawk.";
+        err instanceof Error ? err.message : "Failed to log finding.";
       setError(message);
       toast.error(message);
     } finally {
@@ -181,7 +181,7 @@ export function LogSquawkDialog({
     <Dialog open={open} onOpenChange={(v) => { if (!v) handleClose(); }}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle className="text-base">Log Squawk</DialogTitle>
+          <DialogTitle className="text-base">Log Finding</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 py-1">
@@ -190,12 +190,12 @@ export function LogSquawkDialog({
             <Label htmlFor="sq-description" className="text-xs">
               Description <span className="text-red-400">*</span>
             </Label>
-            {/* BUG-LT5-003: Missing maxLength on squawk description. A tech
+            {/* BUG-LT5-003: Missing maxLength on finding description. A tech
                 who pastes a long write-up would get a cryptic mutation error
-                on submit. Cap at 1000 chars — generous for a squawk entry. */}
+                on submit. Cap at 1000 chars — generous for a finding entry. */}
             <Textarea
               id="sq-description"
-              placeholder="Describe the discrepancy found…"
+              placeholder="Describe the finding…"
               value={description}
               onChange={(e) => setDescription(e.target.value.slice(0, 1000))}
               rows={3}
@@ -276,7 +276,7 @@ export function LogSquawkDialog({
               Notes
               <span className="text-muted-foreground ml-1">(optional)</span>
             </Label>
-            {/* BUG-LT5-003: Missing maxLength on squawk notes. */}
+            {/* BUG-LT5-003: Missing maxLength on finding notes. */}
             <Textarea
               id="sq-notes"
               placeholder="Additional notes or observations…"
@@ -311,7 +311,7 @@ export function LogSquawkDialog({
               size="sm"
               disabled={isSubmitting || !description.trim() || !foundDuring}
             >
-              {isSubmitting ? "Logging…" : "Log Squawk"}
+              {isSubmitting ? "Logging…" : "Log Finding"}
             </Button>
           </DialogFooter>
         </form>

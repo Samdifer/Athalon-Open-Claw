@@ -18,10 +18,13 @@ const WorkOrdersHandoffPage = lazy(() => import("@/app/(app)/work-orders/handoff
 const LeadDashboardPage = lazy(() => import("@/app/(app)/lead/page"));
 const WorkOrderDetailPage = lazy(() => import("@/app/(app)/work-orders/[id]/page"));
 const NewWorkOrderPage = lazy(() => import("@/app/(app)/work-orders/new/page"));
-const TaskCardPage = lazy(
+const WorkCardPage = lazy(
   () => import("@/app/(app)/work-orders/[id]/tasks/[cardId]/page"),
 );
-const NewTaskCardPage = lazy(
+const FindingDetailPage = lazy(
+  () => import("@/app/(app)/work-orders/[id]/findings/[discrepancyId]/page"),
+);
+const NewWorkCardPage = lazy(
   () => import("@/app/(app)/work-orders/[id]/tasks/new/page"),
 );
 const MaintenanceRecordsPage = lazy(
@@ -74,7 +77,7 @@ const WarehouseLocationsPage = lazy(
 );
 const PartsTagsPage = lazy(() => import("@/app/(app)/parts/tags/page"));
 
-const SquawksPage = lazy(() => import("@/app/(app)/squawks/page"));
+const FindingsPage = lazy(() => import("@/app/(app)/findings/page"));
 const PersonnelPage = lazy(() => import("@/app/(app)/personnel/page"));
 const PersonnelTimeManagementPage = lazy(
   () => import("@/app/(app)/personnel/time-management/page"),
@@ -231,8 +234,9 @@ export function protectedAppRoutes() {
             <Route path="/work-orders/new" element={<NewWorkOrderPage />} />
             <Route path="/work-orders/templates" element={<WorkOrderTemplatesPage />} />
             <Route path="/work-orders/:id" element={<WorkOrderDetailPage />} />
-            <Route path="/work-orders/:id/tasks/new" element={<NewTaskCardPage />} />
-            <Route path="/work-orders/:id/tasks/:cardId" element={<TaskCardPage />} />
+            <Route path="/work-orders/:id/tasks/new" element={<NewWorkCardPage />} />
+            <Route path="/work-orders/:id/tasks/:cardId" element={<WorkCardPage />} />
+            <Route path="/work-orders/:id/findings/:discrepancyId" element={<FindingDetailPage />} />
             <Route path="/work-orders/:id/records" element={<MaintenanceRecordsPage />} />
             <Route path="/work-orders/:id/rts" element={<RtsPage />} />
             <Route path="/work-orders/:id/release" element={<ReleaseAircraftPage />} />
@@ -267,7 +271,8 @@ export function protectedAppRoutes() {
             <Route path="/parts/warehouse" element={<WarehouseLocationsPage />} />
             <Route path="/parts/tags" element={<PartsTagsPage />} />
 
-            <Route path="/squawks" element={<SquawksPage />} />
+            <Route path="/findings" element={<FindingsPage />} />
+            <Route path="/squawks" element={<Navigate to="/findings" replace />} />
             <Route path="/personnel" element={<PersonnelPage />} />
             <Route path="/personnel/time-management" element={<PersonnelTimeManagementPage />} />
             <Route path="/personnel/training" element={<TrainingPage />} />

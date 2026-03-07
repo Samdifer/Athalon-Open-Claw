@@ -280,7 +280,7 @@ export default function NewTaskCardPage() {
   // ── Validation ──────────────────────────────────────────────────────────────
 
   function validate(): string | null {
-    if (!taskCardNumber.trim()) return "Task card number is required.";
+    if (!taskCardNumber.trim()) return "Work card number is required.";
     if (!title.trim()) return "Title is required.";
     if (!approvedDataSource.trim())
       return "Approved data source is required (14 CFR 43.9(a)(1)).";
@@ -347,7 +347,7 @@ export default function NewTaskCardPage() {
       router.push(`/work-orders/${workOrderId}/tasks/${cardId}`);
     } catch (err) {
       setSubmitError(
-        err instanceof Error ? err.message : "Failed to create task card.",
+        err instanceof Error ? err.message : "Failed to create work card.",
       );
       setIsSubmitting(false);
     }
@@ -399,10 +399,10 @@ export default function NewTaskCardPage() {
       <div className="max-w-2xl mx-auto py-12 text-center">
         <AlertCircle className="w-8 h-8 text-amber-400/60 mx-auto mb-3" />
         <p className="text-sm font-medium text-foreground">
-          Cannot add task cards
+          Cannot add work cards
         </p>
         <p className="text-xs text-muted-foreground mt-1">
-          Work order is in status &quot;{woData.status}&quot;. Task cards can
+          Work order is in status &quot;{woData.status}&quot;. Work cards can
           only be added to open, in-progress, open discrepancies, or pending
           inspection work orders.
         </p>
@@ -428,7 +428,7 @@ export default function NewTaskCardPage() {
           <div className="flex-1">
             <h1 className="text-base font-semibold text-foreground flex items-center gap-2">
               <ClipboardList className="w-4 h-4 text-muted-foreground" />
-              New Task Card
+              New Work Card
             </h1>
             <p className="text-xs text-muted-foreground mt-0.5">
               WO {woData.workOrderNumber} ·{" "}
@@ -465,7 +465,7 @@ export default function NewTaskCardPage() {
           </CardContent>
         </Card>
 
-        {/* Task Card Details Form */}
+        {/* Work Card Details Form */}
         <TaskCardForm
           taskCardNumber={taskCardNumber}
           onTaskCardNumberChange={setTaskCardNumber}
@@ -515,7 +515,7 @@ export default function NewTaskCardPage() {
                   Logged as BACKEND-NEEDED so the field can be wired up when
                   the schema is extended. */}
               <p className="text-[10px] text-amber-400/80 mt-1">
-                ⚠ Not saved — for local planning only. Hours won't appear on the task card.
+                ⚠ Not saved — for local planning only. Hours won't appear on the work card.
               </p>
             </div>
           </CardContent>
@@ -561,7 +561,7 @@ export default function NewTaskCardPage() {
             ) : (
               <>
                 <Plus className="w-3.5 h-3.5 mr-1.5" />
-                Create Task Card
+                Create Work Card
               </>
             )}
           </Button>

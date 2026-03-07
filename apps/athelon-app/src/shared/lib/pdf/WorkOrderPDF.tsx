@@ -96,7 +96,7 @@ export function WorkOrderPDF(props: WorkOrderPDFProps) {
         />
 
         {/* Task Cards */}
-        <Text style={baseStyles.sectionTitle}>Task Cards ({taskCards.length})</Text>
+        <Text style={baseStyles.sectionTitle}>Work Cards ({taskCards.length})</Text>
         <TableHeader
           columns={[
             { label: "Card #", width: "15%" },
@@ -118,13 +118,13 @@ export function WorkOrderPDF(props: WorkOrderPDFProps) {
           />
         ))}
         {taskCards.length === 0 && (
-          <Text style={{ fontSize: 9, color: COLORS.textMuted, padding: 8 }}>No task cards.</Text>
+          <Text style={{ fontSize: 9, color: COLORS.textMuted, padding: 8 }}>No work cards.</Text>
         )}
 
         {/* Discrepancies */}
         {discrepancies && discrepancies.length > 0 && (
           <View>
-            <Text style={baseStyles.sectionTitle}>Discrepancies ({discrepancies.length})</Text>
+            <Text style={baseStyles.sectionTitle}>Findings ({discrepancies.length})</Text>
             <TableHeader
               columns={[
                 { label: "Description", width: "55%" },

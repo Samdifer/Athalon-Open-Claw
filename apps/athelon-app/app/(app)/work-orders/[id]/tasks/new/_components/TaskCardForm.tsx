@@ -123,7 +123,7 @@ export function TaskCardForm({
       <CardHeader className="pb-3">
         <CardTitle className="text-sm font-semibold flex items-center gap-2">
           <Wrench className="w-4 h-4 text-muted-foreground" />
-          Task Card Details
+          Work Card Details
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">

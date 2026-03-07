@@ -110,7 +110,7 @@ export function TurnoverNotes({ organizationId, workOrderId, taskCardId, readOnl
       </CardHeader>
       <CardContent className="pt-0 space-y-3">
         {entries.length === 0 ? (
-          <p className="text-xs text-muted-foreground italic">No turnover notes for this task card yet.</p>
+          <p className="text-xs text-muted-foreground italic">No turnover notes for this work card yet.</p>
         ) : (
           <div className="space-y-2">
             {entries.map((entry) => (

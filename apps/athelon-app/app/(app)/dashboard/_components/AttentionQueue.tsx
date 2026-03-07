@@ -57,23 +57,23 @@ export function AttentionQueue({ workOrders }: { workOrders: WorkOrdersWithRisk 
       });
     }
 
-    // WOs with open squawks
-    const squawkWOs = workOrders.filter(
+    // WOs with open findings
+    const findingWOs = workOrders.filter(
       (wo) =>
         wo.priority !== "aog" &&
         (wo.openDiscrepancyCount ?? 0) > 0 &&
         !["closed", "voided", "cancelled"].includes(wo.status),
     );
-    for (const wo of squawkWOs.slice(0, 2)) {
+    for (const wo of findingWOs.slice(0, 2)) {
       const tail = wo.aircraft?.currentRegistration ?? "Unknown";
       const count = wo.openDiscrepancyCount ?? 0;
       result.push({
-        id: `squawk-${wo._id}`,
+        id: `finding-${wo._id}`,
         severity: "warning",
-        title: "Open Squawk(s) Requiring Disposition",
-        description: `${count} open squawk${count !== 1 ? "s" : ""} on ${wo.workOrderNumber} (${tail})`,
+        title: "Open Finding(s) Requiring Disposition",
+        description: `${count} open finding${count !== 1 ? "s" : ""} on ${wo.workOrderNumber} (${tail})`,
         action: "View",
-        href: "/squawks",
+        href: "/findings",
         icon: AlertTriangle,
       });
     }

@@ -166,7 +166,7 @@ export function CommandPalette() {
             )}
 
             {searchResults.taskCards.length > 0 && (
-              <CommandGroup heading="Task Cards">
+              <CommandGroup heading="Work Cards">
                 {searchResults.taskCards.map((tc) => (
                   <CommandItem
                     key={tc._id}

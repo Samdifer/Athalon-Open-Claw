@@ -98,7 +98,7 @@ type WorkOrderRow = {
   promisedDeliveryDate: number | null;
   tasksComplete: number;
   tasksTotal: number;
-  openSquawks: number;
+  openFindings: number;
   partsOnOrder: number;
   openedAt: number;
 };
@@ -202,7 +202,7 @@ export default function WorkOrdersPage() {
       promisedDeliveryDate: wo.promisedDeliveryDate ?? null,
       tasksComplete: wo.completedTaskCardCount ?? 0,
       tasksTotal: wo.taskCardCount ?? 0,
-      openSquawks: wo.openDiscrepancyCount ?? 0,
+      openFindings: wo.openDiscrepancyCount ?? 0,
       partsOnOrder: wo.pendingPartCount ?? 0,
       openedAt: wo.openedAt ?? Date.now(),
     }));
@@ -820,12 +820,12 @@ export default function WorkOrdersPage() {
                         >
                           {wo.typeLabel}
                         </Badge>
-                        {/* BUG-SM-HUNT-031: Badge always showed singular "squawk"
-                            even when count > 1 (e.g. "3 squawk"). Fixed to pluralize. */}
-                        {wo.openSquawks > 0 && (
+                        {/* BUG-SM-HUNT-031: Badge always showed singular "finding"
+                            even when count > 1 (e.g. "3 finding"). Fixed to pluralize. */}
+                        {wo.openFindings > 0 && (
                           <Badge className="bg-red-500/15 text-red-400 border border-red-500/30 text-[9px] gap-0.5">
                             <AlertTriangle className="w-2.5 h-2.5" />
-                            {wo.openSquawks} squawk{wo.openSquawks !== 1 ? "s" : ""}
+                            {wo.openFindings} finding{wo.openFindings !== 1 ? "s" : ""}
                           </Badge>
                         )}
                         {wo.partsOnOrder > 0 && (

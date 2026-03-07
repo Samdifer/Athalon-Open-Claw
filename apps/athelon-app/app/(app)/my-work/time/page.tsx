@@ -79,7 +79,7 @@ function getEntryContextLabel(entry: {
 }): string {
   const entryType = entry.entryType ?? "work_order";
   if (entryType === "shop") return entry.shopActivityCode ? `Shop \u00B7 ${entry.shopActivityCode}` : "Shop";
-  if (entryType === "task") return "Task Card";
+  if (entryType === "task") return "Work Card";
   if (entryType === "step") return "Task Step";
   if (entryType === "shift") return "Shift";
   if (entryType === "break") return "Break";
@@ -266,7 +266,7 @@ export default function MyTimePage() {
       return;
     }
     if ((contextType === "task" || contextType === "step") && !selectedTaskCardId) {
-      setError("Select a task card.");
+      setError("Select a work card.");
       return;
     }
     if (contextType === "step" && !selectedStepId) {
@@ -542,7 +542,7 @@ export default function MyTimePage() {
                 <SelectContent>
                   <SelectItem value="shop">Shop / Internal</SelectItem>
                   <SelectItem value="work_order">Work Order</SelectItem>
-                  <SelectItem value="task">Task Card</SelectItem>
+                  <SelectItem value="task">Work Card</SelectItem>
                   <SelectItem value="step">Task Step</SelectItem>
                 </SelectContent>
               </Select>
@@ -590,7 +590,7 @@ export default function MyTimePage() {
             {/* Task card select */}
             {(contextType === "task" || contextType === "step") && (
               <div className="space-y-1.5">
-                <Label className="text-xs">Task Card *</Label>
+                <Label className="text-xs">Work Card *</Label>
                 <Select
                   value={selectedTaskCardId}
                   onValueChange={(value) => {
@@ -600,7 +600,7 @@ export default function MyTimePage() {
                   disabled={!selectedWOId}
                 >
                   <SelectTrigger className="h-9 text-sm">
-                    <SelectValue placeholder={selectedWOId ? "Select task card" : "Select work order first"} />
+                    <SelectValue placeholder={selectedWOId ? "Select work card" : "Select work order first"} />
                   </SelectTrigger>
                   <SelectContent>
                     {(Array.isArray(taskCardsForSelectedWO) ? taskCardsForSelectedWO : []).map(
@@ -625,7 +625,7 @@ export default function MyTimePage() {
                   disabled={!selectedTaskCardId}
                 >
                   <SelectTrigger className="h-9 text-sm">
-                    <SelectValue placeholder={selectedTaskCardId ? "Select step" : "Select task card first"} />
+                    <SelectValue placeholder={selectedTaskCardId ? "Select step" : "Select work card first"} />
                   </SelectTrigger>
                   <SelectContent>
                     {availableSteps.map((step: { _id: string; stepNumber: number; description: string }) => (

@@ -334,7 +334,7 @@ export function RaiseFindingDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-base">
             <AlertTriangle className="w-4 h-4 text-amber-400" />
-            Raise Finding / Squawk
+            Raise Finding
           </DialogTitle>
         </DialogHeader>
 

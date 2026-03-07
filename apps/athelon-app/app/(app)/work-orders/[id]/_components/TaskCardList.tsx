@@ -3,8 +3,8 @@
 /**
  * TaskCardList.tsx
  * Extracted from work-orders/[id]/page.tsx (TD-009).
- * Renders the "Task Cards" tab content: list of task cards with progress,
- * and the "Add Task Card" CTA button.
+ * Renders the "Work Cards" tab content: list of work cards with progress,
+ * and the "Add Work Card" CTA button.
  */
 
 import { Link } from "react-router-dom";
@@ -66,10 +66,10 @@ export interface TaskCardListProps {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function TaskCardList({ taskCards, workOrderId, workOrderStatus }: TaskCardListProps) {
-  // BUG-LT-HUNT-008: Gate the "Add Task Card" CTA to statuses where task card
+  // BUG-LT-HUNT-008: Gate the "Add Work Card" CTA to statuses where work card
   // creation is actually permitted. Previously the button was always rendered,
   // so clicking it on a closed, voided, or cancelled WO navigated to the form
-  // which immediately showed a "Cannot add task cards" error screen — with no
+  // which immediately showed a "Cannot add work cards" error screen — with no
   // indication at the list level that the WO was locked. The tech would think
   // the button was broken. Now the button is suppressed entirely for terminal
   // statuses and replaced with a lock icon label for closed WOs.
@@ -82,10 +82,10 @@ export function TaskCardList({ taskCards, workOrderId, workOrderStatus }: TaskCa
           <CardContent className="py-10 text-center">
             <ClipboardList className="w-6 h-6 text-muted-foreground/40 mx-auto mb-2" />
             <p className="text-sm text-muted-foreground">
-              No task cards on this work order
+              No work cards on this work order
             </p>
             <p className="text-xs text-muted-foreground/60 mt-1">
-              Add task cards to begin maintenance work.
+              Add work cards to begin maintenance work.
             </p>
           </CardContent>
         </Card>
@@ -180,7 +180,7 @@ export function TaskCardList({ taskCards, workOrderId, workOrderStatus }: TaskCa
         })
       )}
 
-      {/* BUG-LT-HUNT-008: Only show Add Task Card CTA for editable WO statuses */}
+      {/* BUG-LT-HUNT-008: Only show Add Work Card CTA for editable WO statuses */}
       {canAddCards && (
         <Button
           asChild
@@ -190,14 +190,14 @@ export function TaskCardList({ taskCards, workOrderId, workOrderStatus }: TaskCa
         >
           <Link to={`/work-orders/${workOrderId}/tasks/new`}>
             <Wrench className="w-3.5 h-3.5" />
-            Add Task Card
+            Add Work Card
           </Link>
         </Button>
       )}
       {!canAddCards && (
         <div className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground/50 py-2">
           <Lock className="w-3 h-3" />
-          Work order is locked — no new task cards can be added
+          Work order is locked — no new work cards can be added
         </div>
       )}
     </div>

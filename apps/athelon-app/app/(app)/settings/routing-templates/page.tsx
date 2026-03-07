@@ -213,7 +213,7 @@ export default function RoutingTemplatesPage() {
                           </Badge>
                         </div>
                         <p className="text-[11px] text-muted-foreground mt-1">
-                          {template.taskCards.length} task cards
+                          {template.taskCards.length} work cards
                         </p>
                       </button>
 

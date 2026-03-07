@@ -16,9 +16,9 @@ const NOTIFICATION_TYPES = [
   { key: "quote_declined", label: "Quote Declined", description: "When a customer declines a quote" },
   { key: "invoice_overdue", label: "Invoice Overdue", description: "When an invoice becomes overdue" },
   { key: "invoice_paid", label: "Invoice Paid", description: "When an invoice is fully paid" },
-  { key: "discrepancy_critical", label: "Critical Discrepancies", description: "When a mandatory/critical discrepancy is opened" },
+  { key: "discrepancy_critical", label: "Critical Findings", description: "When a mandatory/critical finding is opened" },
   { key: "part_received", label: "Parts Received", description: "When ordered parts are received" },
-  { key: "task_completed", label: "Task Completed", description: "When a task card is completed" },
+  { key: "task_completed", label: "Task Completed", description: "When a work card is completed" },
   { key: "rts_ready", label: "Return to Service", description: "When aircraft is released to customer" },
   { key: "system", label: "System Notifications", description: "General system updates and alerts" },
 ] as const;

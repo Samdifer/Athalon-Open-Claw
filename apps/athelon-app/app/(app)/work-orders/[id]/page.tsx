@@ -54,7 +54,7 @@ import { InDockRtsEvidenceTab } from "@/app/(app)/work-orders/[id]/_components/I
 import { CloseReadinessPanel } from "@/components/CloseReadinessPanel";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import { ActivityTimeline } from "@/app/(app)/work-orders/[id]/_components/ActivityTimeline";
-import { DiscrepancyList } from "@/app/(app)/work-orders/[id]/_components/DiscrepancyList";
+import { FindingList } from "@/app/(app)/work-orders/[id]/_components/FindingList";
 import { DeferredMaintenanceCaptureDialog } from "@/app/(app)/work-orders/[id]/_components/DeferredMaintenanceCaptureDialog";
 import { VoiceNotesPanel } from "@/components/VoiceNotesPanel";
 import { WOHeaderKPI } from "@/app/(app)/work-orders/[id]/_components/WOHeaderKPI";
@@ -97,7 +97,7 @@ type WorkOrderStageFlow = {
   label: string;
   statusMappings: string[];
 };
-type WorkOrderTab = "squawks" | "compliance" | "parts" | "cost" | "evidence" | "documents" | "notes";
+type WorkOrderTab = "tasks" | "compliance" | "parts" | "cost" | "evidence" | "documents" | "notes";
 type PartsTabView = "list" | "board";
 type PartLifecycleStatus =
   | "requested_not_ordered"
@@ -105,7 +105,7 @@ type PartLifecycleStatus =
   | "received_not_installed"
   | "installed"
   | "returned_to_stock";
-type LinkedSquawk = { id: string; number: string };
+type LinkedFinding = { id: string; number: string };
 type PartLifecycleItem = {
   id: string;
   partNumber: string;
@@ -117,7 +117,7 @@ type PartLifecycleItem = {
   status: PartLifecycleStatus;
   requestStatus?: PartsRequestRecord["status"];
   location?: string;
-  linkedSquawks: LinkedSquawk[];
+  linkedFindings: LinkedFinding[];
 };
 type WorkOrderPart = {
   _id: Id<"parts">;
@@ -255,8 +255,8 @@ export default function WorkOrderDetailPage() {
   const { id: routeRef = "" } = useParams<{ id: string }>();
   const { orgId, techId, isLoaded } = useCurrentOrg();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<WorkOrderTab>("squawks");
-  const [pendingSquawkId, setPendingSquawkId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<WorkOrderTab>("tasks");
+  const [pendingFindingId, setPendingFindingId] = useState<string | null>(null);
   const [timerActionLoading, setTimerActionLoading] = useState<"start" | "stop" | null>(null);
   const [deferredCaptureOpen, setDeferredCaptureOpen] = useState(false);
   const [voiceNotes, setVoiceNotes] = useState<StoredVoiceNote[]>([]);
@@ -279,8 +279,8 @@ export default function WorkOrderDetailPage() {
   }, [legacyResolution?.workOrderId, routeRef]);
 
   useEffect(() => {
-    setActiveTab("squawks");
-    setPendingSquawkId(null);
+    setActiveTab("tasks");
+    setPendingFindingId(null);
     setPartsTabView("list");
   }, [workOrderId]);
 
@@ -306,16 +306,16 @@ export default function WorkOrderDetailPage() {
   }, [orgId, workOrderId]);
 
   useEffect(() => {
-    if (activeTab !== "squawks" || !pendingSquawkId) return;
+    if (activeTab !== "tasks" || !pendingFindingId) return;
     const timeoutId = window.setTimeout(() => {
-      document.getElementById(`squawk-${pendingSquawkId}`)?.scrollIntoView({
+      document.getElementById(`finding-${pendingFindingId}`)?.scrollIntoView({
         behavior: "smooth",
         block: "center",
       });
-      setPendingSquawkId(null);
+      setPendingFindingId(null);
     }, 120);
     return () => window.clearTimeout(timeoutId);
-  }, [activeTab, pendingSquawkId]);
+  }, [activeTab, pendingFindingId]);
 
   const data = useQuery(
     api.workOrders.getWorkOrder,
@@ -373,6 +373,277 @@ export default function WorkOrderDetailPage() {
     isWorkOrderNumberRef(routeRef) && orgId && legacyResolution === undefined;
   const isDataLoading = Boolean(orgId && workOrderId && data === undefined);
 
+  // --- Unconditional data extraction (safe with undefined) ---
+  // These must live above early returns so hooks below always execute.
+  const wo = data?.workOrder;
+  const aircraft = data?.aircraft;
+  const taskCards = data?.taskCards ?? [];
+  const discrepancies = data?.discrepancies ?? [];
+  const auditEvents = data?.auditEvents ?? [];
+
+  // --- Hoisted useMemo hooks (must run unconditionally per Rules of Hooks) ---
+
+  // BUG-SM-HUNT-032: memoized parts filter for this work order
+  const partsForThisWorkOrder = useMemo(
+    () =>
+      ((allParts ?? []) as WorkOrderPart[]).filter(
+        (part) =>
+          part.receivingWorkOrderId === workOrderId ||
+          part.reservedForWorkOrderId === workOrderId ||
+          part.installedByWorkOrderId === workOrderId ||
+          part.installedOnWorkOrderId === workOrderId ||
+          part.removedByWorkOrderId === workOrderId,
+      ),
+    [allParts, workOrderId],
+  );
+
+  const requestsForThisWorkOrder = useMemo(() => {
+    const workOrderRefTokens = new Set(
+      [wo?.workOrderNumber, workOrderId ? String(workOrderId) : "", routeRef]
+        .map((value) => normalizeRefToken(value))
+        .filter(Boolean),
+    );
+    return partsRequests.filter((request) =>
+      workOrderRefTokens.has(normalizeRefToken(request.workOrderRef)),
+    );
+  }, [partsRequests, routeRef, wo?.workOrderNumber, workOrderId]);
+
+  const partLinkedFindings = useMemo(() => {
+    const linkedByKey = new Map<string, Map<string, LinkedFinding>>();
+    const discrepancyById = new Map(
+      discrepancies.map((discrepancy: any) => [String(discrepancy._id), discrepancy]),
+    );
+
+    const upsertFindingLinks = (keys: string[], findings: any[]) => {
+      for (const key of keys) {
+        if (!key) continue;
+        if (!linkedByKey.has(key)) {
+          linkedByKey.set(key, new Map<string, LinkedFinding>());
+        }
+        const bucket = linkedByKey.get(key);
+        if (!bucket) continue;
+        for (const finding of findings) {
+          const findingId = String(finding._id);
+          bucket.set(findingId, {
+            id: findingId,
+            number: finding.discrepancyNumber ?? findingId,
+          });
+        }
+      }
+    };
+
+    for (const taskCard of taskCards as any[]) {
+      for (const step of (taskCard.steps ?? []) as any[]) {
+        const findingsForStep = ((step.discrepancyIds ?? []) as any[])
+          .map((discrepancyId) => discrepancyById.get(String(discrepancyId)))
+          .filter(Boolean);
+        if (findingsForStep.length === 0) continue;
+        const stepParts = [
+          ...((step.partsInstalled ?? []) as any[]),
+          ...((step.partsRemoved ?? []) as any[]),
+        ];
+        for (const stepPart of stepParts) {
+          const partNumber = normalizePartToken(stepPart.partNumber);
+          const serialNumber = normalizePartToken(stepPart.serialNumber);
+          upsertFindingLinks(
+            [
+              stepPart.partId ? `id:${String(stepPart.partId)}` : "",
+              partNumber ? `pn:${partNumber}` : "",
+              partNumber && serialNumber ? `pn:${partNumber}|sn:${serialNumber}` : "",
+            ],
+            findingsForStep as any[],
+          );
+        }
+      }
+    }
+
+    for (const discrepancy of discrepancies as any[]) {
+      const componentPartNumber = normalizePartToken(discrepancy.componentPartNumber);
+      const componentSerialNumber = normalizePartToken(discrepancy.componentSerialNumber);
+      if (!componentPartNumber) continue;
+      upsertFindingLinks(
+        [
+          `pn:${componentPartNumber}`,
+          componentSerialNumber ? `pn:${componentPartNumber}|sn:${componentSerialNumber}` : "",
+        ],
+        [discrepancy],
+      );
+    }
+
+    return linkedByKey;
+  }, [discrepancies, taskCards]);
+
+  const partsLifecycleItems = useMemo<PartLifecycleItem[]>(() => {
+    const resolveFindings = (
+      partNumber?: string,
+      serialNumber?: string,
+      partId?: string,
+    ): LinkedFinding[] => {
+      const links = new Map<string, LinkedFinding>();
+      const normalizedPartNumber = normalizePartToken(partNumber);
+      const normalizedSerialNumber = normalizePartToken(serialNumber);
+      const keys = [
+        partId ? `id:${partId}` : "",
+        normalizedPartNumber ? `pn:${normalizedPartNumber}` : "",
+        normalizedPartNumber && normalizedSerialNumber
+          ? `pn:${normalizedPartNumber}|sn:${normalizedSerialNumber}`
+          : "",
+      ].filter(Boolean);
+      for (const key of keys) {
+        const bucket = partLinkedFindings.get(key);
+        if (!bucket) continue;
+        for (const [findingId, linked] of bucket) {
+          links.set(findingId, linked);
+        }
+      }
+      return Array.from(links.values()).sort((a, b) =>
+        a.number.localeCompare(b.number, undefined, { numeric: true, sensitivity: "base" }),
+      );
+    };
+
+    if (!workOrderId) return [];
+
+    const installedPartNumbers = new Set(
+      partsForThisWorkOrder
+        .filter((part) => mapPartToLifecycle(part, workOrderId) === "installed")
+        .map((part) => normalizePartToken(part.partNumber))
+        .filter(Boolean),
+    );
+
+    const requestItems = requestsForThisWorkOrder
+      .filter((request) => {
+        const requestLifecycle = mapRequestStatusToLifecycle(request.status);
+        if (requestLifecycle !== "received_not_installed") return true;
+        return !installedPartNumbers.has(normalizePartToken(request.partNumber));
+      })
+      .map(
+        (request): PartLifecycleItem => ({
+          id: `request:${request.id}`,
+          partNumber: request.partNumber,
+          partName: request.description,
+          supplier: request.manufacturer,
+          quantity: request.quantity,
+          source: "request",
+          status: mapRequestStatusToLifecycle(request.status),
+          requestStatus: request.status,
+          linkedFindings: resolveFindings(request.partNumber),
+        }),
+      );
+
+    const inventoryItems = partsForThisWorkOrder.map(
+      (part): PartLifecycleItem => ({
+        id: `inventory:${String(part._id)}`,
+        partNumber: part.partNumber,
+        partName: part.partName,
+        serialNumber: part.serialNumber,
+        supplier: part.supplier,
+        quantity:
+          typeof part.quantityOnHand === "number"
+            ? part.quantityOnHand
+            : typeof part.quantity === "number"
+              ? part.quantity
+              : undefined,
+        source: "inventory",
+        status: mapPartToLifecycle(part, workOrderId),
+        location: part.location,
+        linkedFindings: resolveFindings(part.partNumber, part.serialNumber, String(part._id)),
+      }),
+    );
+
+    return [...requestItems, ...inventoryItems].sort((a, b) =>
+      a.partNumber.localeCompare(b.partNumber, undefined, { sensitivity: "base" }),
+    );
+  }, [partLinkedFindings, partsForThisWorkOrder, requestsForThisWorkOrder, workOrderId]);
+
+  const lifecycleItemsByStatus = useMemo(() => {
+    return PARTS_LIFECYCLE_ORDER.reduce<Record<PartLifecycleStatus, PartLifecycleItem[]>>(
+      (acc, status) => {
+        acc[status] = partsLifecycleItems.filter((item) => item.status === status);
+        return acc;
+      },
+      {
+        requested_not_ordered: [],
+        ordered_not_received: [],
+        received_not_installed: [],
+        installed: [],
+        returned_to_stock: [],
+      },
+    );
+  }, [partsLifecycleItems]);
+
+  const partsBoardItems = useMemo(
+    () =>
+      partsLifecycleItems.map((item) => ({
+        id: item.id,
+        partNumber: item.partNumber,
+        partName: item.partName,
+        serialNumber: item.serialNumber,
+        supplier: item.supplier,
+        quantity: item.quantity,
+        status: mapLifecycleToBoardStatus(item.status),
+      })),
+    [partsLifecycleItems],
+  );
+
+  const workOrderStageFlow = useMemo<WorkOrderStageFlow[]>(() => {
+    if (!configuredStageFlow || configuredStageFlow.length === 0) {
+      return DEFAULT_WORK_ORDER_STAGE_FLOW;
+    }
+    const mapped = configuredStageFlow
+      .map((stage, idx) => ({
+        key: stage.id || `stage-${idx + 1}`,
+        label: stage.label || `Stage ${idx + 1}`,
+        statusMappings: stage.statusMappings ?? [],
+        sortOrder: stage.sortOrder ?? idx,
+      }))
+      .sort((a, b) => a.sortOrder - b.sortOrder)
+      .map(({ key, label, statusMappings }) => ({ key, label, statusMappings }));
+    return mapped.length > 0 ? mapped : DEFAULT_WORK_ORDER_STAGE_FLOW;
+  }, [configuredStageFlow]);
+
+  const activeStageIndex = useMemo(
+    () => mapStatusToStageIndex(wo?.status ?? "draft", workOrderStageFlow),
+    [wo?.status, workOrderStageFlow],
+  );
+
+  const workItems: WorkItem[] = useMemo(() => [
+    ...taskCards.map(
+      (tc): TaskCardItem => ({
+        kind: "task",
+        id: String(tc._id),
+        number: tc.taskCardNumber,
+        title: tc.title,
+        status: tc.status,
+        taskType: tc.taskType,
+        stepCount: tc.stepCount ?? tc.steps.length,
+        completedStepCount:
+          tc.completedStepCount ??
+          tc.steps.filter((s) => s.status === "completed" || s.status === "na").length,
+        aircraftSystem: tc.aircraftSystem,
+        isInspectionItem: tc.isInspectionItem,
+        isCustomerReported: tc.isCustomerReported,
+      }),
+    ),
+    ...discrepancies.map(
+      (sq): DiscrepancyItem => ({
+        kind: "finding",
+        id: String(sq._id),
+        number: sq.discrepancyNumber,
+        description: sq.description,
+        status: normalizeDiscrepancyStatus(sq.status, sq.disposition),
+        disposition: sq.disposition,
+        foundBy: sq.foundByTechnicianId,
+        foundDate: formatDate(sq.foundAt),
+        aircraftSystem: sq.aircraftSystem,
+        squawkOrigin: sq.squawkOrigin,
+        isCustomerReported: sq.isCustomerReported,
+        foundDuringRts: sq.foundDuringRts,
+      }),
+    ),
+  ], [taskCards, discrepancies]);
+
+  // --- Early returns (all hooks are above this point) ---
+
   if (!isLoaded || isLegacyRefResolving || isDataLoading) {
     return (
       <div className="space-y-4">
@@ -410,7 +681,7 @@ export default function WorkOrderDetailPage() {
     );
   }
 
-  if (!data) {
+  if (!data || !wo) {
     return (
       <Card className="border-border/60">
         <CardContent className="py-10 text-center">
@@ -426,254 +697,9 @@ export default function WorkOrderDetailPage() {
     );
   }
 
-  const wo = data.workOrder;
-  const aircraft = data.aircraft;
-  const taskCards = data.taskCards ?? [];
-  const discrepancies = data.discrepancies ?? [];
-  const auditEvents = data.auditEvents ?? [];
-
   const isTerminalStatus = ["closed", "voided", "cancelled"].includes(wo.status);
 
   const riskLevel = getScheduleRiskLevel(wo.promisedDeliveryDate);
-
-  const workItems: WorkItem[] = [
-    ...taskCards.map(
-      (tc): TaskCardItem => ({
-        kind: "task",
-        id: String(tc._id),
-        number: tc.taskCardNumber,
-        title: tc.title,
-        status: tc.status,
-        taskType: tc.taskType,
-        stepCount: tc.stepCount ?? tc.steps.length,
-        completedStepCount:
-          tc.completedStepCount ??
-          tc.steps.filter((s) => s.status === "completed" || s.status === "na").length,
-        aircraftSystem: tc.aircraftSystem,
-        isInspectionItem: tc.isInspectionItem,
-        isCustomerReported: tc.isCustomerReported,
-      }),
-    ),
-    ...discrepancies.map(
-      (sq): DiscrepancyItem => ({
-        kind: "finding",
-        id: String(sq._id),
-        number: sq.discrepancyNumber,
-        description: sq.description,
-        status: normalizeDiscrepancyStatus(sq.status, sq.disposition),
-        disposition: sq.disposition,
-        foundBy: sq.foundByTechnicianId,
-        foundDate: formatDate(sq.foundAt),
-        aircraftSystem: sq.aircraftSystem,
-        squawkOrigin: sq.squawkOrigin,
-        isCustomerReported: sq.isCustomerReported,
-        foundDuringRts: sq.foundDuringRts,
-      }),
-    ),
-  ];
-
-  // BUG-SM-HUNT-032: Was not wrapped in useMemo — recalculated on every render
-  // because `allParts` is a Convex live query that updates frequently. For orgs
-  // with thousands of parts, this filter ran needlessly on every state change
-  // (tab switch, timer tick, keystroke). Now memoized on the two real dependencies.
-  const partsForThisWorkOrder = useMemo(
-    () =>
-      ((allParts ?? []) as WorkOrderPart[]).filter(
-        (part) =>
-          part.receivingWorkOrderId === workOrderId ||
-          part.reservedForWorkOrderId === workOrderId ||
-          part.installedByWorkOrderId === workOrderId ||
-          part.installedOnWorkOrderId === workOrderId ||
-          part.removedByWorkOrderId === workOrderId,
-      ),
-    [allParts, workOrderId],
-  );
-
-  const requestsForThisWorkOrder = useMemo(() => {
-    const workOrderRefTokens = new Set(
-      [wo.workOrderNumber, String(workOrderId), routeRef]
-        .map((value) => normalizeRefToken(value))
-        .filter(Boolean),
-    );
-    return partsRequests.filter((request) =>
-      workOrderRefTokens.has(normalizeRefToken(request.workOrderRef)),
-    );
-  }, [partsRequests, routeRef, wo.workOrderNumber, workOrderId]);
-
-  const partLinkedSquawks = useMemo(() => {
-    const linkedByKey = new Map<string, Map<string, LinkedSquawk>>();
-    const discrepancyById = new Map(
-      discrepancies.map((discrepancy: any) => [String(discrepancy._id), discrepancy]),
-    );
-
-    const upsertSquawkLinks = (keys: string[], squawks: any[]) => {
-      for (const key of keys) {
-        if (!key) continue;
-        if (!linkedByKey.has(key)) {
-          linkedByKey.set(key, new Map<string, LinkedSquawk>());
-        }
-        const bucket = linkedByKey.get(key);
-        if (!bucket) continue;
-        for (const squawk of squawks) {
-          const squawkId = String(squawk._id);
-          bucket.set(squawkId, {
-            id: squawkId,
-            number: squawk.discrepancyNumber ?? squawkId,
-          });
-        }
-      }
-    };
-
-    for (const taskCard of taskCards as any[]) {
-      for (const step of (taskCard.steps ?? []) as any[]) {
-        const squawksForStep = ((step.discrepancyIds ?? []) as any[])
-          .map((discrepancyId) => discrepancyById.get(String(discrepancyId)))
-          .filter(Boolean);
-        if (squawksForStep.length === 0) continue;
-        const stepParts = [
-          ...((step.partsInstalled ?? []) as any[]),
-          ...((step.partsRemoved ?? []) as any[]),
-        ];
-        for (const stepPart of stepParts) {
-          const partNumber = normalizePartToken(stepPart.partNumber);
-          const serialNumber = normalizePartToken(stepPart.serialNumber);
-          upsertSquawkLinks(
-            [
-              stepPart.partId ? `id:${String(stepPart.partId)}` : "",
-              partNumber ? `pn:${partNumber}` : "",
-              partNumber && serialNumber ? `pn:${partNumber}|sn:${serialNumber}` : "",
-            ],
-            squawksForStep as any[],
-          );
-        }
-      }
-    }
-
-    for (const discrepancy of discrepancies as any[]) {
-      const componentPartNumber = normalizePartToken(discrepancy.componentPartNumber);
-      const componentSerialNumber = normalizePartToken(discrepancy.componentSerialNumber);
-      if (!componentPartNumber) continue;
-      upsertSquawkLinks(
-        [
-          `pn:${componentPartNumber}`,
-          componentSerialNumber ? `pn:${componentPartNumber}|sn:${componentSerialNumber}` : "",
-        ],
-        [discrepancy],
-      );
-    }
-
-    return linkedByKey;
-  }, [discrepancies, taskCards]);
-
-  const partsLifecycleItems = useMemo<PartLifecycleItem[]>(() => {
-    const resolveSquawks = (
-      partNumber?: string,
-      serialNumber?: string,
-      partId?: string,
-    ): LinkedSquawk[] => {
-      const links = new Map<string, LinkedSquawk>();
-      const normalizedPartNumber = normalizePartToken(partNumber);
-      const normalizedSerialNumber = normalizePartToken(serialNumber);
-      const keys = [
-        partId ? `id:${partId}` : "",
-        normalizedPartNumber ? `pn:${normalizedPartNumber}` : "",
-        normalizedPartNumber && normalizedSerialNumber
-          ? `pn:${normalizedPartNumber}|sn:${normalizedSerialNumber}`
-          : "",
-      ].filter(Boolean);
-      for (const key of keys) {
-        const bucket = partLinkedSquawks.get(key);
-        if (!bucket) continue;
-        for (const [squawkId, linked] of bucket) {
-          links.set(squawkId, linked);
-        }
-      }
-      return Array.from(links.values()).sort((a, b) =>
-        a.number.localeCompare(b.number, undefined, { numeric: true, sensitivity: "base" }),
-      );
-    };
-
-    const installedPartNumbers = new Set(
-      partsForThisWorkOrder
-        .filter((part) => mapPartToLifecycle(part, workOrderId) === "installed")
-        .map((part) => normalizePartToken(part.partNumber))
-        .filter(Boolean),
-    );
-
-    const requestItems = requestsForThisWorkOrder
-      .filter((request) => {
-        const requestLifecycle = mapRequestStatusToLifecycle(request.status);
-        if (requestLifecycle !== "received_not_installed") return true;
-        return !installedPartNumbers.has(normalizePartToken(request.partNumber));
-      })
-      .map(
-        (request): PartLifecycleItem => ({
-          id: `request:${request.id}`,
-          partNumber: request.partNumber,
-          partName: request.description,
-          supplier: request.manufacturer,
-          quantity: request.quantity,
-          source: "request",
-          status: mapRequestStatusToLifecycle(request.status),
-          requestStatus: request.status,
-          linkedSquawks: resolveSquawks(request.partNumber),
-        }),
-      );
-
-    const inventoryItems = partsForThisWorkOrder.map(
-      (part): PartLifecycleItem => ({
-        id: `inventory:${String(part._id)}`,
-        partNumber: part.partNumber,
-        partName: part.partName,
-        serialNumber: part.serialNumber,
-        supplier: part.supplier,
-        quantity:
-          typeof part.quantityOnHand === "number"
-            ? part.quantityOnHand
-            : typeof part.quantity === "number"
-              ? part.quantity
-              : undefined,
-        source: "inventory",
-        status: mapPartToLifecycle(part, workOrderId),
-        location: part.location,
-        linkedSquawks: resolveSquawks(part.partNumber, part.serialNumber, String(part._id)),
-      }),
-    );
-
-    return [...requestItems, ...inventoryItems].sort((a, b) =>
-      a.partNumber.localeCompare(b.partNumber, undefined, { sensitivity: "base" }),
-    );
-  }, [partLinkedSquawks, partsForThisWorkOrder, requestsForThisWorkOrder, workOrderId]);
-
-  const lifecycleItemsByStatus = useMemo(() => {
-    return PARTS_LIFECYCLE_ORDER.reduce<Record<PartLifecycleStatus, PartLifecycleItem[]>>(
-      (acc, status) => {
-        acc[status] = partsLifecycleItems.filter((item) => item.status === status);
-        return acc;
-      },
-      {
-        requested_not_ordered: [],
-        ordered_not_received: [],
-        received_not_installed: [],
-        installed: [],
-        returned_to_stock: [],
-      },
-    );
-  }, [partsLifecycleItems]);
-
-  const partsBoardItems = useMemo(
-    () =>
-      partsLifecycleItems.map((item) => ({
-        id: item.id,
-        partNumber: item.partNumber,
-        partName: item.partName,
-        serialNumber: item.serialNumber,
-        supplier: item.supplier,
-        quantity: item.quantity,
-        status: mapLifecycleToBoardStatus(item.status),
-      })),
-    [partsLifecycleItems],
-  );
 
   const readinessBlockers = closeReadiness?.blockers ?? [];
   const canClose = closeReadiness?.canClose ?? false;
@@ -683,27 +709,6 @@ export default function WorkOrderDetailPage() {
     activeTimerEntry &&
     (activeTimerEntry.entryType ?? "work_order") === "work_order" &&
     activeTimerEntry.workOrderId === workOrderId;
-
-  const workOrderStageFlow = useMemo<WorkOrderStageFlow[]>(() => {
-    if (!configuredStageFlow || configuredStageFlow.length === 0) {
-      return DEFAULT_WORK_ORDER_STAGE_FLOW;
-    }
-    const mapped = configuredStageFlow
-      .map((stage, idx) => ({
-        key: stage.id || `stage-${idx + 1}`,
-        label: stage.label || `Stage ${idx + 1}`,
-        statusMappings: stage.statusMappings ?? [],
-        sortOrder: stage.sortOrder ?? idx,
-      }))
-      .sort((a, b) => a.sortOrder - b.sortOrder)
-      .map(({ key, label, statusMappings }) => ({ key, label, statusMappings }));
-    return mapped.length > 0 ? mapped : DEFAULT_WORK_ORDER_STAGE_FLOW;
-  }, [configuredStageFlow]);
-
-  const activeStageIndex = useMemo(
-    () => mapStatusToStageIndex(wo.status, workOrderStageFlow),
-    [wo.status, workOrderStageFlow],
-  );
 
   const handleStartWorkOrderTimer = async () => {
     if (!orgId || !techId || !workOrderId) return;
@@ -740,9 +745,9 @@ export default function WorkOrderDetailPage() {
     }
   };
 
-  const handleJumpToSquawk = (squawkId: string) => {
-    setActiveTab("squawks");
-    setPendingSquawkId(squawkId);
+  const handleJumpToFinding = (findingId: string) => {
+    setActiveTab("tasks");
+    setPendingFindingId(findingId);
   };
 
   // AI-003: Compute live compliance indicator for the Compliance tab badge.
@@ -1036,7 +1041,7 @@ export default function WorkOrderDetailPage() {
       )}
 
       {/* BUG-SM-HUNT-026: Tabs was uncontrolled (defaultValue) while
-          handleJumpToSquawk + workOrderId reset called setActiveTab expecting
+          handleJumpToFinding + workOrderId reset called setActiveTab expecting
           to programmatically switch the visible tab. Since the component was
           uncontrolled, those calls only updated React state but the UI stayed
           on whatever tab the user last clicked. Switch to controlled mode so
@@ -1045,7 +1050,7 @@ export default function WorkOrderDetailPage() {
         <TabsList className="h-9 bg-muted/40 p-0.5 mb-4 overflow-x-auto max-w-full flex-wrap">
           {(
             [
-              { value: "squawks", label: "Tasks & Findings", Icon: AlertTriangle, count: workItems.length, indicator: null as "red" | "amber" | "green" | null },
+              { value: "tasks", label: "Tasks", Icon: AlertTriangle, count: workItems.length, indicator: null as "red" | "amber" | "green" | null },
               { value: "compliance", label: "Compliance", Icon: ShieldCheck, count: null, indicator: complianceIndicator },
               { value: "parts", label: "Parts", Icon: Package, count: partsForThisWorkOrder.length, indicator: null as "red" | "amber" | "green" | null },
               { value: "cost", label: "Cost Estimate", Icon: CheckCircle2, count: null, indicator: null as "red" | "amber" | "green" | null },
@@ -1076,8 +1081,8 @@ export default function WorkOrderDetailPage() {
           ))}
         </TabsList>
 
-        <TabsContent value="squawks" className="mt-0">
-          {/* AI-053/054: Pass org/tech context for Log Squawk + FindingRow disposition */}
+        <TabsContent value="tasks" className="mt-0">
+          {/* AI-053/054: Pass org/tech context for Log Finding + FindingRow disposition */}
           <WorkItemsList
             items={workItems}
             workOrderId={String(workOrderId)}
@@ -1088,7 +1093,7 @@ export default function WorkOrderDetailPage() {
             workOrderStatus={wo.status}
           />
           <div className="mt-4">
-            <DiscrepancyList
+            <FindingList
               discrepancies={discrepancies}
               orgId={orgId}
               techId={techId}

@@ -12,6 +12,7 @@ import {
   TrendingUp,
   Package,
 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 
@@ -87,6 +88,31 @@ export default function DashboardPage() {
   const fleetAdLive = useQuery(
     api.adCompliance.getFleetAdSummary,
     orgId ? { organizationId: orgId } : "skip",
+  );
+
+  const laborByWO = useQuery(
+    api.timeClock.getLaborSummaryForActiveWorkOrders,
+    orgId ? { orgId } : "skip",
+  );
+
+  const capacityUtil = useQuery(
+    api.capacity.getCapacityUtilization,
+    orgId ? { organizationId: orgId, periodWeeks: 1 } : "skip",
+  );
+
+  const bays = useQuery(
+    api.hangarBays.listBays,
+    orgId ? { organizationId: orgId } : "skip",
+  );
+
+  const roster = useQuery(
+    api.schedulerRoster.getRosterWorkspace,
+    orgId ? { organizationId: orgId } : "skip",
+  );
+
+  const activeTimers = useQuery(
+    api.timeClock.listActiveTimers,
+    orgId ? { orgId } : "skip",
   );
 
   const { value: workOrdersWithRisk, fromCache: workOrdersFromCache } = useOfflineSnapshot(

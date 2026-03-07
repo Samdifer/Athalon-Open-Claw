@@ -533,7 +533,7 @@ export default function TemplatesPage() {
             Inspection Templates
           </h1>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Reusable step libraries for task card creation.
+            Reusable step libraries for work card creation.
           </p>
         </div>
         {orgId && (
@@ -561,7 +561,7 @@ export default function TemplatesPage() {
           <div>
             <p className="text-sm font-medium text-foreground">No templates yet</p>
             <p className="text-xs text-muted-foreground mt-1">
-              Create your first inspection template to speed up task card creation.
+              Create your first inspection template to speed up work card creation.
             </p>
           </div>
           {orgId && (

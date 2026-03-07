@@ -459,6 +459,31 @@ export default function WorkOrderLeadWorkspacePage() {
         </Card>
       </div>
 
+      <Card className="border-border/60">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm font-medium">Team Insights</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {(workspace?.teamInsights?.length ?? 0) === 0 ? (
+            <p className="text-sm text-muted-foreground">No team assignment insights yet.</p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2">
+              {workspace?.teamInsights?.map((team: any) => (
+                <div key={team.teamName} className="border border-border/50 rounded-md p-2.5">
+                  <p className="text-xs font-semibold truncate">{team.teamName}</p>
+                  <p className="text-[11px] text-muted-foreground mt-1">
+                    {minutesToHours(team.assignedMinutes)} assigned · {team.assignmentCount} assignment(s)
+                  </p>
+                  <p className="text-[11px] text-muted-foreground">
+                    {team.workOrderCount} WO(s) · {team.technicianCount} technician(s)
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       <Tabs defaultValue="ownership" className="space-y-4">
         <TabsList className="h-9 bg-muted/40 p-0.5 overflow-x-auto max-w-full flex-wrap">
           {([
@@ -474,6 +499,13 @@ export default function WorkOrderLeadWorkspacePage() {
               label: "Task Feed",
               Icon: ClipboardList,
               count: workspace?.taskCards.length ?? null,
+              indicator: null as "amber" | "green" | null,
+            },
+            {
+              value: "steps",
+              label: "Steps",
+              Icon: ClipboardList,
+              count: workspace?.taskSteps?.length ?? null,
               indicator: null as "amber" | "green" | null,
             },
             {
@@ -619,7 +651,7 @@ export default function WorkOrderLeadWorkspacePage() {
             </CardHeader>
             <CardContent className="space-y-2">
               {workspace?.taskCards.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No active task cards found.</p>
+                <p className="text-sm text-muted-foreground">No active work cards found.</p>
               ) : (
                 /* BUG-LT-HUNT-108: slice(0, 30) previously had no overflow
                    indicator. With 31+ task cards, the lead had no way to know
@@ -630,7 +662,7 @@ export default function WorkOrderLeadWorkspacePage() {
                 <>
                 {(workspace?.taskCards.length ?? 0) > 30 && (
                   <div className="flex items-center justify-between text-[11px] text-muted-foreground mb-1">
-                    <span>Showing 30 of {workspace?.taskCards.length} task cards</span>
+                    <span>Showing 30 of {workspace?.taskCards.length} work cards</span>
                     <Link to="/work-orders" className="text-primary hover:underline">
                       View all in Work Orders →
                     </Link>
@@ -689,6 +721,59 @@ export default function WorkOrderLeadWorkspacePage() {
                   );
                 })}
                 </>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="steps" className="mt-0">
+          <Card className="border-border/60">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium">Subtask (Step) Assignment Feed</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {(workspace?.taskSteps?.length ?? 0) === 0 ? (
+                <p className="text-sm text-muted-foreground">No pending task steps found.</p>
+              ) : (
+                workspace?.taskSteps?.slice(0, 40).map((step: any) => {
+                  const selectedAssignee = step.assignedToTechnicianId
+                    ? String(step.assignedToTechnicianId)
+                    : "unassigned";
+
+                  return (
+                    <div
+                      key={String(step._id)}
+                      className="border border-border/50 rounded-md p-2.5 flex flex-col xl:flex-row xl:items-center xl:justify-between gap-2"
+                    >
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <span className="font-mono text-foreground">{step.workOrderNumber}</span>
+                          <span>{step.taskCardNumber}</span>
+                          <span>Step {step.stepNumber ?? "—"}</span>
+                        </div>
+                        <p className="text-sm truncate">{step.description}</p>
+                      </div>
+                      <div className="w-full xl:w-[220px]">
+                        <Select
+                          value={selectedAssignee}
+                          onValueChange={(value) => handleAssignTaskStep(String(step._id), value)}
+                        >
+                          <SelectTrigger className="h-8 text-xs">
+                            <SelectValue placeholder="Assign technician" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="unassigned">Unassigned</SelectItem>
+                            {workspace?.technicians.map((technician) => (
+                              <SelectItem key={String(technician._id)} value={String(technician._id)}>
+                                {technician.legalName}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  );
+                })
               )}
             </CardContent>
           </Card>

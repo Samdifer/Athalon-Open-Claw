@@ -77,6 +77,9 @@ import {
   TASK_STATUS_LABEL,
   TASK_STATUS_STYLES,
 } from "@/lib/mro-constants";
+import { WorkItemHeader } from "@/app/(app)/work-orders/[id]/_components/WorkItemHeader";
+import { WriteUpTimeline } from "@/app/(app)/work-orders/[id]/_components/WriteUpTimeline";
+import { Separator } from "@/components/ui/separator";
 
 // ─── Compliance types & constants ─────────────────────────────────────────────
 
@@ -199,7 +202,7 @@ function fmtElapsed(ms: number): string {
 
 function TaskCardSkeleton() {
   return (
-    <div className="space-y-5" role="status" aria-label="Loading task card">
+    <div className="space-y-5" role="status" aria-label="Loading work card">
       <Skeleton className="h-7 w-24" />
       <div className="space-y-2">
         <Skeleton className="h-7 w-64" />
@@ -392,6 +395,14 @@ export default function TaskCardPage() {
   const currentAircraftHours =
     workOrderResult?.aircraft?.totalTimeAirframeHours ?? 0;
 
+  // ── Write-up history entries for parent-level task card ─────────────────
+  const parentWriteUpEntries = useQuery(
+    api.workItemEntries.listEntriesForTaskCard,
+    cardId ? { taskCardId: cardId as Id<"taskCards"> } : "skip",
+  );
+  const addEntryMutation = useMutation(api.workItemEntries.addEntry);
+  const [writeUpSubmitting, setWriteUpSubmitting] = useState(false);
+
   // BUG-TECH-003: React Rules of Hooks violation — useMemo, useState, and
   // useEffect were previously called AFTER conditional early returns (isLoading,
   // !taskCards, !taskCard). React requires all hooks to be called unconditionally
@@ -460,7 +471,7 @@ export default function TaskCardPage() {
   if (!taskCard) {
     return (
       <div className="text-center py-20">
-        <p className="text-sm text-muted-foreground">Task card not found</p>
+        <p className="text-sm text-muted-foreground">Work card not found</p>
         <Button asChild variant="ghost" size="sm" className="mt-4">
           <Link to={`/work-orders/${workOrderId}`}>← Back to Work Order</Link>
         </Button>
@@ -645,6 +656,38 @@ export default function TaskCardPage() {
       toast.error(err instanceof Error ? err.message : "Failed to start step timer.");
     } finally {
       setTimerActionLoading(null);
+    }
+  }
+
+  // ── Write-up entry handler ─────────────────────────────────────────────
+  async function handleAddWriteUpEntry(
+    entryType: "discrepancy_writeup" | "corrective_action",
+    text: string,
+    targetTaskCardStepId?: string,
+  ) {
+    if (!orgId || !techId) return;
+    setWriteUpSubmitting(true);
+    try {
+      await addEntryMutation({
+        organizationId: orgId,
+        workOrderId: workOrderId as Id<"workOrders">,
+        taskCardId: targetTaskCardStepId ? undefined : (cardId as Id<"taskCards">),
+        taskCardStepId: targetTaskCardStepId
+          ? (targetTaskCardStepId as Id<"taskCardSteps">)
+          : undefined,
+        entryType,
+        text,
+        technicianId: techId,
+      });
+      toast.success(
+        entryType === "discrepancy_writeup"
+          ? "Finding write-up added"
+          : "Corrective action added",
+      );
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to add entry");
+    } finally {
+      setWriteUpSubmitting(false);
     }
   }
 
@@ -876,17 +919,83 @@ export default function TaskCardPage() {
         </CardContent>
       </Card>
 
+      {/* Work Item Header — OP-1003 fields */}
+      <Card className="border-border/60">
+        <CardContent className="p-4">
+          <WorkItemHeader
+            kind="task_card"
+            taskCardNumber={taskCard.taskCardNumber}
+            title={taskCard.title}
+            status={taskCard.status}
+            taskType={taskCard.taskType}
+            approvedDataSource={taskCard.approvedDataSource}
+            approvedDataRevision={taskCard.approvedDataRevision}
+            aircraftSystem={taskCard.aircraftSystem}
+            isInspectionItem={taskCard.isInspectionItem}
+            estimatedHours={taskCard.estimatedHours}
+            stepCount={totalSteps}
+            completedStepCount={completedCount}
+          />
+        </CardContent>
+      </Card>
+
       {/* Voided banner */}
       {cardIsVoided && (
         <Card className="border-slate-500/30 bg-slate-500/5">
           <CardContent className="p-3">
             <p className="text-xs text-muted-foreground flex items-center gap-1.5">
               <AlertTriangle className="w-3.5 h-3.5" />
-              This task card has been voided and cannot be modified.
+              This work card has been voided and cannot be modified.
             </p>
           </CardContent>
         </Card>
       )}
+
+      {/* ─── Discrepancy Write-Up & Corrective Action (stacked) ──────── */}
+      <Card className="border-border/60">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+            Write-Up
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-0 space-y-4">
+          <WriteUpTimeline
+            entries={(parentWriteUpEntries ?? [])
+              .filter((e) => e.entryType === "discrepancy_writeup")
+              .map((e) => ({
+                _id: e._id,
+                text: e.text,
+                technicianName: e.technicianName,
+                certificateNumber: e.certificateNumber,
+                createdAt: e.createdAt,
+                entryType: e.entryType as "discrepancy_writeup",
+              }))}
+            entryType="discrepancy_writeup"
+            onAddEntry={(text) => handleAddWriteUpEntry("discrepancy_writeup", text)}
+            readOnly={cardIsVoided || cardIsComplete}
+            isSubmitting={writeUpSubmitting}
+          />
+
+          <Separator className="opacity-30" />
+
+          <WriteUpTimeline
+            entries={(parentWriteUpEntries ?? [])
+              .filter((e) => e.entryType === "corrective_action")
+              .map((e) => ({
+                _id: e._id,
+                text: e.text,
+                technicianName: e.technicianName,
+                certificateNumber: e.certificateNumber,
+                createdAt: e.createdAt,
+                entryType: e.entryType as "corrective_action",
+              }))}
+            entryType="corrective_action"
+            onAddEntry={(text) => handleAddWriteUpEntry("corrective_action", text)}
+            readOnly={cardIsVoided || cardIsComplete}
+            isSubmitting={writeUpSubmitting}
+          />
+        </CardContent>
+      </Card>
 
       {/* Steps (extracted via TaskStepRow) */}
       <Card className="border-border/60">
@@ -899,7 +1008,7 @@ export default function TaskCardPage() {
         <CardContent className="pt-0 space-y-0" aria-live="polite" aria-label="Task steps">
           {taskCard.steps.length === 0 ? (
             <p className="text-xs text-muted-foreground italic py-1">
-              No itemized steps on this task card. Use card-level sign-off when work is complete.
+              No itemized steps on this work card. Use card-level sign-off when work is complete.
             </p>
           ) : (
             taskCard.steps
@@ -1029,7 +1138,7 @@ export default function TaskCardPage() {
           {taskDocuments === undefined ? (
             <p className="text-xs text-muted-foreground">Loading attachments…</p>
           ) : taskAttachments.length === 0 ? (
-            <p className="text-xs text-muted-foreground italic">No attachments for this task card.</p>
+            <p className="text-xs text-muted-foreground italic">No attachments for this work card.</p>
           ) : (
             <div className="space-y-2">
               {taskAttachments.map((doc) => (
@@ -1917,7 +2026,7 @@ export default function TaskCardPage() {
                   {cardIsComplete ? (
                     <>
                       <CheckCircle2 className="w-4 h-4 text-green-600 dark:text-green-400" />
-                      Task Card Signed &amp; Complete
+                      Work Card Signed &amp; Complete
                     </>
                   ) : complianceBlocksSignOff && allStepsDone ? (
                     <>
@@ -1938,7 +2047,7 @@ export default function TaskCardPage() {
                 </p>
                 <p className="text-xs text-muted-foreground mt-0.5">
                   {cardIsComplete
-                    ? "This task card has been certified per 14 CFR 43.9."
+                    ? "This work card has been certified per 14 CFR 43.9."
                     : complianceBlocksSignOff && allStepsDone
                     ? `${blockingComplianceItems.length} compliance item${blockingComplianceItems.length !== 1 ? "s" : ""} require resolution before this card can be signed. Resolve all non-compliant and pending items above.`
                     : vendorServicesBlockSignOff && allStepsDone

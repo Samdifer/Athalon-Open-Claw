@@ -19,7 +19,7 @@ import {
   Eye,
   Gavel,
 } from "lucide-react";
-import { DiscrepancyDispositionDialog } from "@/components/DiscrepancyDispositionDialog";
+import { FindingDispositionDialog } from "@/components/FindingDispositionDialog";
 import { Link } from "react-router-dom";
 import type { Id } from "@/convex/_generated/dataModel";
 import { ActionableEmptyState } from "@/components/zero-state/ActionableEmptyState";
@@ -40,7 +40,7 @@ const STATUS_TABS = [
 
 type StatusFilter = (typeof STATUS_TABS)[number]["value"];
 
-export default function SquawksPage() {
+export default function FindingsPage() {
   const { orgId, isLoaded } = useCurrentOrg();
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [search, setSearch] = useState("");
@@ -124,8 +124,8 @@ export default function SquawksPage() {
   if (prereq.state === "missing_context") {
     return (
       <ActionableEmptyState
-        title="Discrepancy tracking requires organization setup"
-        missingInfo="Complete onboarding before viewing and managing squawks."
+        title="Finding tracking requires organization setup"
+        missingInfo="Complete onboarding before viewing and managing findings."
         primaryActionLabel="Complete Setup"
         primaryActionType="link"
         primaryActionTarget="/onboarding"
@@ -189,16 +189,16 @@ export default function SquawksPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-lg sm:text-xl md:text-2xl font-semibold text-foreground">
-            Squawks & Discrepancies
+            Findings
           </h1>
           <p className="text-muted-foreground mt-1">
-            Manage aircraft discrepancies and findings
+            Manage aircraft findings and corrective actions
           </p>
         </div>
-        <Button className="gap-2" asChild title="Squawks are logged from within a Work Order">
+        <Button className="gap-2" asChild title="Findings are logged from within a Work Order">
           <Link to="/work-orders">
             <Plus className="w-4 h-4" />
-            Log from Work Order
+            Log Finding from Work Order
           </Link>
         </Button>
       </div>
@@ -267,7 +267,7 @@ export default function SquawksPage() {
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
-            placeholder="Search squawks…"
+            placeholder="Search findings…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-10"
@@ -275,12 +275,12 @@ export default function SquawksPage() {
         </div>
       </div>
 
-      {/* Discrepancy List */}
+      {/* Finding List */}
       {filtered.length === 0 ? (
         discrepancies.length === 0 ? (
           <ActionableEmptyState
-            title="No discrepancies found"
-            missingInfo="Squawks are created from work orders during inspections and maintenance."
+            title="No findings found"
+            missingInfo="Findings are created from work orders during inspections and maintenance."
             primaryActionLabel="Open Work Orders"
             primaryActionType="link"
             primaryActionTarget="/work-orders"
@@ -289,7 +289,7 @@ export default function SquawksPage() {
           <Card className="border-border/60">
             <CardContent className="py-12 text-center" data-testid="empty-state">
               <Eye className="w-8 h-8 text-muted-foreground/30 mx-auto mb-3" />
-              <p className="text-muted-foreground">No discrepancies match your filters.</p>
+              <p className="text-muted-foreground">No findings match your filters.</p>
             </CardContent>
           </Card>
         )
@@ -389,7 +389,7 @@ export default function SquawksPage() {
 
       {/* Disposition Dialog */}
       {dispositionTarget && (
-        <DiscrepancyDispositionDialog
+        <FindingDispositionDialog
           open={!!dispositionTarget}
           onOpenChange={(v) => { if (!v) setDispositionTarget(null); }}
           discrepancyId={dispositionTarget.id}

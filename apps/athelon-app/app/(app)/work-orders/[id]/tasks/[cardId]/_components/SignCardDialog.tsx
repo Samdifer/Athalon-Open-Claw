@@ -151,12 +151,12 @@ export function SignCardDialog({
 
       setPin("");
       setStatement("");
-      toast.success("Task card signed & locked");
+      toast.success("Work card signed & locked");
       onSuccess();
       onClose();
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Failed to sign task card",
+        err instanceof Error ? err.message : "Failed to sign work card",
       );
     } finally {
       setIsSubmitting(false);
@@ -206,7 +206,7 @@ export function SignCardDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-base">
             <Lock className="w-4 h-4 text-green-400" aria-hidden="true" />
-            Sign Task Card
+            Sign Work Card
           </DialogTitle>
         </DialogHeader>
 
@@ -275,7 +275,7 @@ export function SignCardDialog({
               id="sign-card-statement"
               value={statement}
               onChange={(e) => setStatement(e.target.value.slice(0, 2000))}
-              placeholder="I certify that the work identified in this task card was performed in accordance with [approved data reference] and that the aircraft/component is approved for return to service..."
+              placeholder="I certify that the work identified in this work card was performed in accordance with [approved data reference] and that the aircraft/component is approved for return to service..."
               rows={4}
               maxLength={2000}
               className="text-sm bg-muted/30 border-border/60 resize-none"

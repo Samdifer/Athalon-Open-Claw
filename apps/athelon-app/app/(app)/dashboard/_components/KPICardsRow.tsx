@@ -76,12 +76,12 @@ export function KPICardsRow({
       alert: kpis.overdueAds > 0,
     },
     {
-      title: "Open Discrepancies",
+      title: "Open Findings",
       value: kpis.openDiscrepancies,
       spark: [1, 2, 1, 3, kpis.openDiscrepancies, 2, kpis.openDiscrepancies],
       color: "#a78bfa",
       trend: null,
-      href: "/squawks",
+      href: "/findings",
     },
   ];
 

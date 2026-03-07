@@ -60,7 +60,7 @@ const DEFAULT_COMPLIANCE_ITEMS = [
   "Required incoming visual inspection complete",
   "Damage mapping documented",
   "Logbooks and records reviewed",
-  "Customer squawks reconciled",
+  "Customer findings reconciled",
 ];
 
 function createDefaultState(): InDockEvidenceState {

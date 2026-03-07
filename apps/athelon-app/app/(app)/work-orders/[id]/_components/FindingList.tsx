@@ -1,14 +1,14 @@
 "use client";
 
 /**
- * DiscrepancyList.tsx
+ * FindingList.tsx
  * Extracted from work-orders/[id]/page.tsx (TD-009).
- * Renders the "Squawks / Discrepancies" tab content.
+ * Renders the Findings section within the Tasks tab.
  *
- * Phase D: OP-1003 alignment — displays discrepancy type, system type,
+ * Phase D: OP-1003 alignment — displays finding type, system type,
  * RII flag, customer approval status, labor estimates, and discovered-when.
  *
- * AI-006: Wired "Log Squawk" button — opens LogSquawkDialog when
+ * AI-006: Wired "Log Finding" button — opens LogFindingDialog when
  * orgId, techId, and workOrderId props are provided. Without them the
  * button is hidden (read-only portal mode).
  */
@@ -20,7 +20,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatDate } from "@/lib/format";
 import type { Id } from "@/convex/_generated/dataModel";
-import { LogSquawkDialog } from "./LogSquawkDialog";
+import { LogFindingDialog } from "./LogFindingDialog";
 
 // ─── Prop types ───────────────────────────────────────────────────────────────
 
@@ -44,9 +44,9 @@ interface Discrepancy {
   mhActual?: number;
 }
 
-export interface DiscrepancyListProps {
+export interface FindingListProps {
   discrepancies: Discrepancy[];
-  /** Required to enable the Log Squawk button. Without these, button is hidden. */
+  /** Required to enable the Log Finding button. Without these, button is hidden. */
   orgId?: Id<"organizations">;
   techId?: Id<"technicians">;
   workOrderId?: Id<"workOrders">;
@@ -70,7 +70,7 @@ const SYSTEM_TYPE_LABEL: Record<string, string> = {
 };
 
 // BUG-LT-26-001: Raw database status values ("under_evaluation", "dispositioned")
-// were displayed directly in the status badge. A tech reviewing squawks on a WO
+// were displayed directly in the status badge. A tech reviewing findings on a WO
 // would see "under_evaluation" or "dispositioned" as badge text — not readable.
 const DISCREPANCY_STATUS_LABEL: Record<string, string> = {
   open: "Open",
@@ -86,7 +86,7 @@ const DISCREPANCY_STATUS_STYLE: Record<string, string> = {
 
 // BUG-LT-26-001: Raw disposition values ("deferred_mel", "no_defect") were shown
 // directly in the disposition badge. A tech can't parse "deferred_mel" or
-// "repaired_and_approved" while reviewing squawks.
+// "repaired_and_approved" while reviewing findings.
 const DISPOSITION_LABEL: Record<string, string> = {
   deferred_mel: "MEL Deferred",
   deferred_grounded: "Grounded/Deferred",
@@ -113,7 +113,7 @@ const APPROVAL_STATUS_BADGE: Record<string, { label: string; className: string }
   denied: { label: "Denied", className: "bg-red-500/15 text-red-400 border-red-500/30" },
 };
 
-function toStableSquawkId(rawNumber?: string, fallbackOrdinal = 1): string {
+function toStableFindingId(rawNumber?: string, fallbackOrdinal = 1): string {
   if (rawNumber) {
     const matched = rawNumber.match(/(\d+)$/);
     if (matched) return `SQ-${matched[1].padStart(3, "0")}`;
@@ -121,7 +121,7 @@ function toStableSquawkId(rawNumber?: string, fallbackOrdinal = 1): string {
   return `SQ-${String(fallbackOrdinal).padStart(3, "0")}`;
 }
 
-function getSquawkOriginTag(discrepancy: Discrepancy): string {
+function getFindingOriginTag(discrepancy: Discrepancy): string {
   if (discrepancy.foundDuringRts) return "rts-found";
   if (discrepancy.isCustomerReported) return "customer-reported";
   const map: Record<string, string> = {
@@ -140,25 +140,25 @@ function getSquawkOriginTag(discrepancy: Discrepancy): string {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export function DiscrepancyList({
+export function FindingList({
   discrepancies,
   orgId,
   techId,
   workOrderId,
   aircraftCurrentHours,
-}: DiscrepancyListProps) {
-  const [logSquawkOpen, setLogSquawkOpen] = useState(false);
+}: FindingListProps) {
+  const [logFindingOpen, setLogFindingOpen] = useState(false);
 
   // Sum of mhEstimate across actionable discrepancies only.
   // BUG-LT-HUNT-090: Previous filter only excluded "dispositioned" status —
-  // customer-denied squawks (customerApprovalStatus === "denied") were still
-  // included in the labor estimate. A denied squawk is one the customer
+  // customer-denied findings (customerApprovalStatus === "denied") were still
+  // included in the labor estimate. A denied finding is one the customer
   // explicitly declined to have repaired; including its MH estimate in the
-  // "Open discrepancies est" total inflated the labor forecast with hours that
+  // "Open findings est" total inflated the labor forecast with hours that
   // will never be performed. A shop manager scheduling techs would see, say,
   // "4.0h" when the actual authorized work is only "2.5h" — causing over-
   // scheduling against a non-existent work scope. Fix: also exclude denied
-  // squawks from the labor estimate total.
+  // findings from the labor estimate total.
   const totalMhEstimate = discrepancies
     .filter(
       (d) =>
@@ -167,7 +167,7 @@ export function DiscrepancyList({
     )
     .reduce((sum, d) => sum + (d.mhEstimate ?? 0), 0);
 
-  const canLogSquawk = Boolean(orgId && techId && workOrderId);
+  const canLogFinding = Boolean(orgId && techId && workOrderId);
 
   return (
     <div className="space-y-2">
@@ -176,7 +176,7 @@ export function DiscrepancyList({
         <div className="flex items-center gap-2 px-1 pb-1">
           <Clock className="w-3.5 h-3.5 text-muted-foreground" />
           <span className="text-xs text-muted-foreground">
-            Open discrepancies est: <span className="font-medium text-foreground">{totalMhEstimate.toFixed(1)}h</span>
+            Open findings est: <span className="font-medium text-foreground">{totalMhEstimate.toFixed(1)}h</span>
           </span>
         </div>
       )}
@@ -186,7 +186,7 @@ export function DiscrepancyList({
           <CardContent className="py-10 text-center">
             <CheckCircle2 className="w-6 h-6 text-green-400/60 mx-auto mb-2" />
             <p className="text-sm text-muted-foreground">
-              No squawks on this work order
+              No findings on this work order
             </p>
           </CardContent>
         </Card>
@@ -195,13 +195,13 @@ export function DiscrepancyList({
           const isDenied = sq.customerApprovalStatus === "denied";
           const typeBadge = sq.discrepancyType ? DISCREPANCY_TYPE_BADGE[sq.discrepancyType] : null;
           const approvalBadge = sq.customerApprovalStatus ? APPROVAL_STATUS_BADGE[sq.customerApprovalStatus] : null;
-          const stableSquawkId = toStableSquawkId(sq.discrepancyNumber, idx + 1);
-          const originTag = getSquawkOriginTag(sq);
+          const stableFindingId = toStableFindingId(sq.discrepancyNumber, idx + 1);
+          const originTag = getFindingOriginTag(sq);
 
-          // BUG-QCM-C10: Previously all non-denied squawks used border-l-red-500
+          // BUG-QCM-C10: Previously all non-denied findings used border-l-red-500
           // regardless of status. A QCM reviewing a WO with 5 dispositioned
-          // discrepancies saw all 5 with red left borders — same visual weight as
-          // open squawks that still need action. The inspector couldn't glance at
+          // findings saw all 5 with red left borders — same visual weight as
+          // open findings that still need action. The inspector couldn't glance at
           // the list and know the WO is clean. Now: open=red, under_evaluation=amber,
           // dispositioned=green (subtle), denied=muted/dimmed.
           const borderColor =
@@ -224,7 +224,7 @@ export function DiscrepancyList({
           return (
             <Card
               key={sq._id}
-              id={`squawk-${sq._id}`}
+              id={`finding-${sq._id}`}
               className={`border-l-4 border-border/60 ${borderColor}`}
             >
               <CardContent className="p-4">
@@ -234,7 +234,7 @@ export function DiscrepancyList({
                     {/* Row 1: Number + badges */}
                     <div className="flex items-center gap-2 mb-1 flex-wrap">
                       <span className="font-mono text-xs text-muted-foreground">
-                        {stableSquawkId}
+                        {stableFindingId}
                       </span>
                       {/* Status badge */}
                       <Badge
@@ -314,24 +314,24 @@ export function DiscrepancyList({
         })
       )}
 
-      {/* Log Squawk button — hidden in read-only (portal) mode */}
-      {canLogSquawk && (
+      {/* Log Finding button — hidden in read-only (portal) mode */}
+      {canLogFinding && (
         <Button
           variant="outline"
           size="sm"
           className="w-full h-9 text-xs border-border/60 border-dashed gap-1.5 mt-2"
-          onClick={() => setLogSquawkOpen(true)}
+          onClick={() => setLogFindingOpen(true)}
         >
           <AlertTriangle className="w-3.5 h-3.5" />
-          Log Squawk
+          Log Finding
         </Button>
       )}
 
-      {/* Log Squawk Dialog */}
-      {canLogSquawk && orgId && techId && workOrderId && (
-        <LogSquawkDialog
-          open={logSquawkOpen}
-          onClose={() => setLogSquawkOpen(false)}
+      {/* Log Finding Dialog */}
+      {canLogFinding && orgId && techId && workOrderId && (
+        <LogFindingDialog
+          open={logFindingOpen}
+          onClose={() => setLogFindingOpen(false)}
           workOrderId={workOrderId}
           orgId={orgId}
           techId={techId}

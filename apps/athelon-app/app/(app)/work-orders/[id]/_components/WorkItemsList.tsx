@@ -2,8 +2,8 @@
 
 /**
  * WorkItemsList.tsx
- * AI-053: Wire "Log Squawk" button to LogSquawkDialog (was dead/no onClick).
- * AI-054: Make FindingRow clickable — open DiscrepancyDispositionDialog inline.
+ * AI-053: Wire "Log Finding" button to LogFindingDialog (was dead/no onClick).
+ * AI-054: Make FindingRow clickable — open FindingDispositionDialog inline.
  */
 
 import { useState } from "react";
@@ -28,8 +28,8 @@ import {
 } from "@/components/ui/select";
 import { CheckCircle2, Circle } from "lucide-react";
 import type { Id } from "@/convex/_generated/dataModel";
-import { LogSquawkDialog } from "./LogSquawkDialog";
-import { DiscrepancyDispositionDialog } from "@/components/DiscrepancyDispositionDialog";
+import { LogFindingDialog } from "./LogFindingDialog";
+import { FindingDispositionDialog } from "@/components/FindingDispositionDialog";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -46,7 +46,7 @@ type AircraftSystem =
   | "electrical"
   | "other";
 
-type SquawkOrigin =
+type FindingOrigin =
   | "inspection_finding"
   | "customer_reported"
   | "rts_finding"
@@ -78,7 +78,7 @@ export type DiscrepancyItem = {
   foundBy?: string;
   foundDate?: string;
   aircraftSystem?: AircraftSystem;
-  squawkOrigin?: SquawkOrigin;
+  squawkOrigin?: FindingOrigin;
   isCustomerReported?: boolean;
   foundDuringRts?: boolean;
 };
@@ -90,7 +90,7 @@ export interface WorkItemsListProps {
   workOrderId: string;
   /** AI-053/054: Optional Convex-typed WO ID for dialog integrations */
   workOrderIdTyped?: Id<"workOrders">;
-  /** AI-053: Props required to open LogSquawkDialog */
+  /** AI-053: Props required to open LogFindingDialog */
   orgId?: Id<"organizations">;
   techId?: Id<"technicians">;
   aircraftCurrentHours?: number | null;
@@ -116,7 +116,7 @@ const SYSTEM_LABELS: Record<AircraftSystem, string> = {
   other: "Other",
 };
 
-const ORIGIN_LABELS: Record<SquawkOrigin, string> = {
+const ORIGIN_LABELS: Record<FindingOrigin, string> = {
   inspection_finding: "Inspection Finding",
   customer_reported: "Customer Reported",
   rts_finding: "RTS Finding",
@@ -171,10 +171,10 @@ export function WorkItemsList({
   const [systemFilter, setSystemFilter] = useState<string>("all");
   const [originFilter, setOriginFilter] = useState<string>("all");
 
-  // AI-053: Log Squawk dialog state
-  const [logSquawkOpen, setLogSquawkOpen] = useState(false);
+  // AI-053: Log Finding dialog state
+  const [logFindingOpen, setLogFindingOpen] = useState(false);
 
-  // AI-054: Disposition dialog state — tracks which finding is being actioned
+  // AI-054: Finding disposition dialog state — tracks which finding is being actioned
   const [dispositionFinding, setDispositionFinding] = useState<{
     id: string;
     description: string;
@@ -251,7 +251,7 @@ export function WorkItemsList({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Sources</SelectItem>
-            {(Object.entries(ORIGIN_LABELS) as [SquawkOrigin, string][]).map(
+            {(Object.entries(ORIGIN_LABELS) as [FindingOrigin, string][]).map(
               ([value, label]) => (
                 <SelectItem key={value} value={value}>
                   {label}
@@ -288,6 +288,7 @@ export function WorkItemsList({
               <FindingRow
                 key={item.id}
                 item={item}
+                workOrderId={workOrderId}
                 onDisposition={
                   workOrderIdTyped
                     ? () =>
@@ -315,23 +316,23 @@ export function WorkItemsList({
           >
             <Link to={`/work-orders/${workOrderId}/tasks/new`}>
               <Wrench className="w-3.5 h-3.5" />
-              Add Task Card
+              Add Work Card
             </Link>
           </Button>
         ) : (
           <div className="flex-1 flex items-center justify-center gap-1.5 text-xs text-muted-foreground/50 h-9 border border-border/30 border-dashed rounded-md">
             <Lock className="w-3 h-3" />
-            Locked — no new task cards
+            Locked — no new work cards
           </div>
         )}
-        {/* AI-053: Wire Log Squawk button to LogSquawkDialog */}
+        {/* AI-053: Wire Log Finding button to LogFindingDialog */}
         <Button
           variant="outline"
           size="sm"
           className="flex-1 h-9 text-xs border-border/60 border-dashed gap-1.5"
           onClick={
             orgId && techId && workOrderIdTyped
-              ? () => setLogSquawkOpen(true)
+              ? () => setLogFindingOpen(true)
               : undefined
           }
           disabled={!orgId || !techId || !workOrderIdTyped}
@@ -342,15 +343,15 @@ export function WorkItemsList({
           }
         >
           <AlertTriangle className="w-3.5 h-3.5" />
-          Log Squawk
+          Log Finding
         </Button>
       </div>
 
-      {/* AI-053: LogSquawkDialog — wired when org/tech context is available */}
+      {/* AI-053: LogFindingDialog — wired when org/tech context is available */}
       {orgId && techId && workOrderIdTyped && (
-        <LogSquawkDialog
-          open={logSquawkOpen}
-          onClose={() => setLogSquawkOpen(false)}
+        <LogFindingDialog
+          open={logFindingOpen}
+          onClose={() => setLogFindingOpen(false)}
           workOrderId={workOrderIdTyped}
           orgId={orgId}
           techId={techId}
@@ -358,9 +359,9 @@ export function WorkItemsList({
         />
       )}
 
-      {/* AI-054: DiscrepancyDispositionDialog — opens when a FindingRow is clicked */}
+      {/* AI-054: FindingDispositionDialog — opens when a FindingRow is clicked */}
       {dispositionFinding && workOrderIdTyped && (
-        <DiscrepancyDispositionDialog
+        <FindingDispositionDialog
           open={Boolean(dispositionFinding)}
           onOpenChange={(o) => { if (!o) setDispositionFinding(null); }}
           discrepancyId={dispositionFinding.id as Id<"discrepancies">}
@@ -399,7 +400,7 @@ function TaskRow({
             variant="outline"
             className="text-[10px] font-medium bg-sky-500/10 text-sky-400 border-sky-500/30"
           >
-            TASK
+            WORK CARD
           </Badge>
           {item.aircraftSystem && (
             <Badge
@@ -472,15 +473,15 @@ function TaskRow({
   );
 }
 
-// ── Finding / Discrepancy Row ────────────────────────────────────────────────
+// ── Finding Row ─────────────────────────────────────────────────────────────
 
 /**
  * AI-054: FindingRow now accepts an optional `onDisposition` callback.
  * When provided, the row becomes interactive — clicking it opens the
- * DiscrepancyDispositionDialog so a tech can act on the finding without
+ * FindingDispositionDialog so a tech can act on the finding without
  * navigating away from the work order detail page.
  */
-function toStableSquawkId(raw: string): string {
+function toStableFindingId(raw: string): string {
   const matched = raw.match(/(\d+)$/);
   if (matched) return `SQ-${matched[1].padStart(3, "0")}`;
   return raw.startsWith("SQ-") ? raw : `SQ-${raw.slice(-3).padStart(3, "0")}`;
@@ -488,9 +489,11 @@ function toStableSquawkId(raw: string): string {
 
 function FindingRow({
   item,
+  workOrderId,
   onDisposition,
 }: {
   item: DiscrepancyItem;
+  workOrderId: string;
   onDisposition?: () => void;
 }) {
   const statusStyle =
@@ -501,44 +504,22 @@ function FindingRow({
     ? SEVERITY_STYLES[item.severity] ?? "text-muted-foreground border-border/40"
     : null;
 
-  // Dispositioned findings (corrected/deferred) are read-only — no action needed
-  const isActionable = onDisposition && item.status === "open";
-
   return (
-    <div
-      className={`flex items-start gap-3 py-3 px-1 ${
-        isActionable
-          ? "hover:bg-muted/20 transition-colors cursor-pointer group"
-          : ""
-      }`}
-      onClick={isActionable ? onDisposition : undefined}
-      role={isActionable ? "button" : undefined}
-      tabIndex={isActionable ? 0 : undefined}
-      onKeyDown={
-        isActionable
-          ? (e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                onDisposition();
-              }
-            }
-          : undefined
-      }
-      aria-label={
-        isActionable ? `Disposition finding ${item.number}: ${item.description}` : undefined
-      }
+    <Link
+      to={`/work-orders/${workOrderId}/findings/${item.id}`}
+      className="flex items-start gap-3 py-3 px-1 hover:bg-muted/20 transition-colors cursor-pointer group no-underline text-inherit"
     >
       <AlertTriangle className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-0.5 flex-wrap">
           <span className="font-mono text-xs text-muted-foreground font-medium">
-            {toStableSquawkId(item.number)}
+            {toStableFindingId(item.number)}
           </span>
           <Badge
             variant="outline"
             className="text-[10px] font-medium bg-amber-500/10 text-amber-400 border-amber-500/30"
           >
-            SQUAWK
+            FINDING
           </Badge>
           {item.squawkOrigin && (
             <Badge variant="outline" className="text-[10px] border-border/50 lowercase">
@@ -579,10 +560,7 @@ function FindingRow({
           </p>
         )}
       </div>
-      {/* AI-054: Chevron hint for actionable open findings */}
-      {isActionable && (
-        <ChevronRight className="w-4 h-4 text-muted-foreground/40 group-hover:text-muted-foreground transition-colors flex-shrink-0 mt-0.5 self-center" />
-      )}
-    </div>
+      <ChevronRight className="w-4 h-4 text-muted-foreground/40 group-hover:text-muted-foreground transition-colors flex-shrink-0 mt-0.5 self-center" />
+    </Link>
   );
 }

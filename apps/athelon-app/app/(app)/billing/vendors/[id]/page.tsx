@@ -537,7 +537,7 @@ export default function VendorDetailPage() {
               <CardContent className="py-12 text-center">
                 <Wrench className="w-6 h-6 text-muted-foreground/40 mx-auto mb-2" />
                 <p className="text-xs text-muted-foreground">
-                  No services defined for this vendor. Add a service to make it available for task card attachment.
+                  No services defined for this vendor. Add a service to make it available for work card attachment.
                 </p>
               </CardContent>
             </Card>

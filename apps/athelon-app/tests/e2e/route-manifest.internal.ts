@@ -35,7 +35,7 @@ export const INTERNAL_ROUTE_MANIFEST: InternalRoute[] = [
   { label: "QCM Review", path: "/compliance/qcm-review" },
   { label: "Audit Trail", path: "/compliance/audit-trail" },
   { label: "AD/SB", path: "/compliance/ad-sb" },
-  { label: "Squawks", path: "/squawks" },
+  { label: "Findings", path: "/findings" },
 
   { label: "Customers", path: "/billing/customers" },
   { label: "Invoices", path: "/billing/invoices" },

@@ -200,6 +200,7 @@ import type * as vendors from "../vendors.js";
 import type * as voiceNotes from "../voiceNotes.js";
 import type * as warehouseLocations from "../warehouseLocations.js";
 import type * as warranty from "../warranty.js";
+import type * as workItemEntries from "../workItemEntries.js";
 import type * as workOrderParts from "../workOrderParts.js";
 import type * as workOrders from "../workOrders.js";
 
@@ -402,6 +403,7 @@ declare const fullApi: ApiFromModules<{
   voiceNotes: typeof voiceNotes;
   warehouseLocations: typeof warehouseLocations;
   warranty: typeof warranty;
+  workItemEntries: typeof workItemEntries;
   workOrderParts: typeof workOrderParts;
   workOrders: typeof workOrders;
 }>;

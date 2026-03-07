@@ -113,7 +113,7 @@ export function GlobalTimerWidget() {
       return;
     }
     if ((contextType === "task" || contextType === "step") && !taskCardId) {
-      toast.error("Select a task card.");
+      toast.error("Select a work card.");
       return;
     }
     if (contextType === "step" && !stepId) {
@@ -284,7 +284,7 @@ export function GlobalTimerWidget() {
                 <SelectContent>
                   <SelectItem value="shop">Shop / Internal</SelectItem>
                   <SelectItem value="work_order">Work Order</SelectItem>
-                  <SelectItem value="task">Task Card</SelectItem>
+                  <SelectItem value="task">Work Card</SelectItem>
                   <SelectItem value="step">Task Step</SelectItem>
                 </SelectContent>
               </Select>
@@ -329,7 +329,7 @@ export function GlobalTimerWidget() {
 
             {(contextType === "task" || contextType === "step") && (
               <div className="space-y-1.5">
-                <Label className="text-xs">Task Card *</Label>
+                <Label className="text-xs">Work Card *</Label>
                 <Select
                   value={taskCardId}
                   onValueChange={(value) => {
@@ -339,7 +339,7 @@ export function GlobalTimerWidget() {
                   disabled={!workOrderId}
                 >
                   <SelectTrigger className="h-9 text-sm">
-                    <SelectValue placeholder={workOrderId ? "Select task card" : "Select work order first"} />
+                    <SelectValue placeholder={workOrderId ? "Select work card" : "Select work order first"} />
                   </SelectTrigger>
                   <SelectContent>
                     {(Array.isArray(taskCards) ? taskCards : []).map((taskCard) => (
@@ -357,7 +357,7 @@ export function GlobalTimerWidget() {
                 <Label className="text-xs">Step *</Label>
                 <Select value={stepId} onValueChange={setStepId} disabled={!taskCardId}>
                   <SelectTrigger className="h-9 text-sm">
-                    <SelectValue placeholder={taskCardId ? "Select step" : "Select task card first"} />
+                    <SelectValue placeholder={taskCardId ? "Select step" : "Select work card first"} />
                   </SelectTrigger>
                   <SelectContent>
                     {availableSteps.map((step) => (

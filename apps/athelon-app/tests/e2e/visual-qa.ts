@@ -35,7 +35,7 @@ const PAGES = [
   { path: "/personnel", label: "Personnel" },
   { path: "/compliance", label: "Compliance" },
   { path: "/compliance/audit-trail", label: "Audit Trail" },
-  { path: "/squawks", label: "Squawks" },
+  { path: "/findings", label: "Findings" },
   { path: "/settings/shop", label: "Settings Shop" },
 ];
 

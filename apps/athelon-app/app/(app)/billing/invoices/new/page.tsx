@@ -86,7 +86,7 @@ function WorkSummaryPanel({
           <div className="text-center p-2 rounded-md bg-background/60 border border-border/40">
             <div className="flex items-center justify-center gap-1 mb-1">
               <CheckCircle2 className="w-3.5 h-3.5 text-green-600 dark:text-green-400" />
-              <p className="text-[10px] text-muted-foreground">Task Cards</p>
+              <p className="text-[10px] text-muted-foreground">Work Cards</p>
             </div>
             <p className="text-lg font-bold text-foreground">
               {summary.completedCards}

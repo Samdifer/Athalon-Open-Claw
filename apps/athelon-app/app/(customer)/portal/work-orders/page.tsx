@@ -172,7 +172,7 @@ function WorkOrderDetail({ woId, customerId, onBack }: {
             </div>
           </div>
 
-          {/* Task Cards */}
+          {/* Work Cards */}
           {detail.taskSummaries.length > 0 && (
             <div>
               <p className="text-sm font-medium text-gray-700 mb-2">Task Progress</p>

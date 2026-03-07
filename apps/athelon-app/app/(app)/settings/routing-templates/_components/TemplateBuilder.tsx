@@ -226,7 +226,7 @@ export function TemplateBuilder({
 
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm font-medium">Task Cards</p>
+            <p className="text-sm font-medium">Work Cards</p>
             <p className="text-xs text-muted-foreground">
               Ordered sequence used during work order creation.
             </p>
@@ -251,7 +251,7 @@ export function TemplateBuilder({
         <div className="space-y-2">
           {selectedTemplate.taskCards.length === 0 ? (
             <p className="text-xs text-muted-foreground italic">
-              No task cards in this template yet.
+              No work cards in this template yet.
             </p>
           ) : (
             selectedTemplate.taskCards.map((taskCard, index) => {

@@ -217,7 +217,7 @@ export function PartsRequestForm({
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs">Destination / Task Step</Label>
-            <Textarea value={destination} onChange={(e) => setDestination(e.target.value)} rows={2} className="text-xs" placeholder="Which task card step needs this part" />
+            <Textarea value={destination} onChange={(e) => setDestination(e.target.value)} rows={2} className="text-xs" placeholder="Which work card step needs this part" />
           </div>
           <Button size="sm" className="h-8 text-xs" onClick={submitRequest}>
             <Send className="w-3.5 h-3.5 mr-1.5" />

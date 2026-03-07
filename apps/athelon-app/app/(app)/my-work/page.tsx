@@ -74,7 +74,7 @@ export default function MyWorkPage() {
       <div className="space-y-5">
         <div>
           <h1 className="text-lg sm:text-xl md:text-2xl font-semibold text-foreground">My Work</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">Your assigned task cards</p>
+          <p className="text-sm text-muted-foreground mt-0.5">Your assigned work cards</p>
         </div>
         <Card className="border-border/60">
           <CardContent className="py-16 text-center" data-testid="empty-state">
@@ -150,7 +150,7 @@ export default function MyWorkPage() {
           <p className="text-sm text-muted-foreground mt-0.5">
             {tech?.legalName
               ? `Assigned to ${tech.legalName}`
-              : "Your assigned task cards"}
+              : "Your assigned work cards"}
           </p>
         </div>
         {/* BUG-031: Active-only filter toggle */}
@@ -174,7 +174,7 @@ export default function MyWorkPage() {
               Total Assigned
             </p>
             <p className="text-2xl font-bold text-foreground">{cards.length}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">task cards</p>
+            <p className="text-xs text-muted-foreground mt-0.5">work cards</p>
           </CardContent>
         </Card>
 
@@ -203,20 +203,20 @@ export default function MyWorkPage() {
         </Card>
       </div>
 
-      {/* Task card list */}
+      {/* Work card list */}
       {displayedCards.length === 0 ? (
         <Card className="border-border/60">
           <CardContent className="py-16 text-center" data-testid="empty-state">
             <ClipboardCheck className="w-8 h-8 text-muted-foreground/40 mx-auto mb-3" />
             <p className="text-sm font-medium text-muted-foreground">
               {activeOnly
-                ? "No active task cards"
-                : "No task cards assigned to you"}
+                ? "No active work cards"
+                : "No work cards assigned to you"}
             </p>
             <p className="text-xs text-muted-foreground/60 mt-1">
               {activeOnly
                 ? `All ${hiddenCount} card${hiddenCount !== 1 ? "s" : ""} are completed or voided. Toggle "All cards" to see history.`
-                : "Task cards assigned to you by your supervisor will appear here."}
+                : "Work cards assigned to you by your supervisor will appear here."}
             </p>
             {activeOnly && hiddenCount > 0 && (
               <Button
@@ -259,7 +259,7 @@ export default function MyWorkPage() {
             // and has no visual cue that they need to open the card and sign it.
             //
             // BUG-LT-075: Original condition required `card.totalSteps > 0` —
-            // zero-step task cards (valid for certain task types, e.g. a
+            // zero-step work cards (valid for certain task types, e.g. a
             // documentation-only card with no procedural steps) would never
             // show "Awaiting Sign-Off" in My Work even though the card still
             // requires a card-level sign-off before it can be closed. The task

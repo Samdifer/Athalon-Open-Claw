@@ -1677,6 +1677,10 @@ export default defineSchema({
     isInspectionItem: v.optional(v.boolean()),
     isCustomerReported: v.optional(v.boolean()),
 
+    // Parent-level write-up summaries (latest entry text, patched by workItemEntries.addEntry)
+    discrepancySummary: v.optional(v.string()),
+    correctiveActionSummary: v.optional(v.string()),
+
     createdAt: v.number(),
     updatedAt: v.number(),
   })
@@ -1798,6 +1802,10 @@ export default defineSchema({
       description: v.string(),
       quantity: v.number(),
     }))),
+
+    // Step-level write-up summaries (latest entry text, patched by workItemEntries.addEntry)
+    stepDiscrepancySummary: v.optional(v.string()),
+    stepCorrectiveActionSummary: v.optional(v.string()),
 
     createdAt: v.number(),
     updatedAt: v.number(),
@@ -5794,4 +5802,44 @@ export default defineSchema({
     .index("by_org_category", ["organizationId", "categoryId"])
     .index("by_part_category", ["partId", "categoryId"])
     .index("by_org_part", ["organizationId", "partId"]),
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // WORK ITEM ENTRIES
+  //
+  // Append-only audit trail for discrepancy write-ups and corrective actions.
+  // Each entry is immutable once created (FAA compliance — no updatedAt).
+  //
+  // Supports parent-level entries on discrepancies and task cards, as well as
+  // step-level entries on individual taskCardSteps. Exactly one of the three
+  // polymorphic parent IDs must be set per entry.
+  // ═══════════════════════════════════════════════════════════════════════════
+  workItemEntries: defineTable({
+    organizationId: v.id("organizations"),
+    workOrderId: v.id("workOrders"),
+
+    // Polymorphic parent — exactly one is set per entry:
+    discrepancyId: v.optional(v.id("discrepancies")),
+    taskCardId: v.optional(v.id("taskCards")),
+    taskCardStepId: v.optional(v.id("taskCardSteps")),
+
+    entryType: v.union(
+      v.literal("discrepancy_writeup"),
+      v.literal("corrective_action"),
+      v.literal("note"),
+      v.literal("status_change"),
+    ),
+
+    text: v.string(),
+
+    // Attribution — snapshot at write time for immutable audit trail
+    technicianId: v.id("technicians"),
+    technicianName: v.string(),
+    certificateNumber: v.optional(v.string()),
+
+    createdAt: v.number(),
+  })
+    .index("by_discrepancy", ["discrepancyId", "createdAt"])
+    .index("by_task_card", ["taskCardId", "createdAt"])
+    .index("by_task_card_step", ["taskCardStepId", "createdAt"])
+    .index("by_work_order", ["workOrderId", "createdAt"]),
 });

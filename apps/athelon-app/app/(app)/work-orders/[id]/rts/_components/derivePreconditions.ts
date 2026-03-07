@@ -178,8 +178,8 @@ export function derivePreconditions(
     },
     {
       id: "pre-4",
-      label: "All Task Cards Complete",
-      description: `${report.taskCards.filter((tc: { isBlocking: boolean }) => tc.isBlocking).length} of ${report.taskCards.length} task cards still require attention.`,
+      label: "All Work Cards Complete",
+      description: `${report.taskCards.filter((tc: { isBlocking: boolean }) => tc.isBlocking).length} of ${report.taskCards.length} work cards still require attention.`,
       status: pre4Status,
       failureMessage: pre4Blocker?.description,
     },

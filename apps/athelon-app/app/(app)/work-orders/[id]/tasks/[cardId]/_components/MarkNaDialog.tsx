@@ -164,7 +164,7 @@ export function MarkNaDialog({
               id="na-reason"
               value={reason}
               onChange={(e) => setReason(e.target.value.slice(0, 500))}
-              placeholder="e.g. Not applicable — aircraft does not have this system installed. See task card note for details."
+              placeholder="e.g. Not applicable — aircraft does not have this system installed. See work card note for details."
               rows={3}
               maxLength={500}
               className="text-sm bg-muted/30 border-border/60 resize-none"

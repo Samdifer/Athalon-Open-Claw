@@ -17,7 +17,7 @@ const ALL_PAGES = [
   "/scheduling", "/scheduling/bays", "/scheduling/capacity", "/scheduling/financial-planning", "/scheduling/quotes",
   "/personnel", "/personnel/training",
   "/compliance", "/compliance/audit-trail", "/compliance/qcm-review", "/compliance/ad-sb",
-  "/squawks", "/my-work", "/reports",
+  "/findings", "/my-work", "/reports",
   "/settings/shop", "/settings/users", "/settings/notifications",
   "/settings/locations", "/settings/import", "/settings/email-log", "/settings/quickbooks",
   "/portal", "/portal/work-orders", "/portal/quotes", "/portal/invoices", "/portal/fleet",

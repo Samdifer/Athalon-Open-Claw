@@ -66,9 +66,9 @@ const PERMISSION_ROLES = {
   archiveRecords: ["dom"],
   /** Export org data — DOM only */
   exportData: ["dom"],
-  /** Authorize a squawk for repair — DOM only */
+  /** Authorize a finding for repair — DOM only */
   authorizeSquawk: ["dom"],
-  /** Add task cards to a work order */
+  /** Add work cards to a work order */
   addTaskCard: ["dom", "supervisor", "inspector", "amt"],
   /** View personnel records of other users */
   viewPersonnel: ["dom", "supervisor", "inspector"],

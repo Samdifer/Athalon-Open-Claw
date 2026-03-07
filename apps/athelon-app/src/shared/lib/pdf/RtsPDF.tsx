@@ -107,7 +107,7 @@ export function RtsPDF(props: RtsPDFProps) {
         />
 
         {/* Task Cards */}
-        <Text style={baseStyles.sectionTitle}>Completed Task Cards</Text>
+        <Text style={baseStyles.sectionTitle}>Completed Work Cards</Text>
         <TableHeader
           columns={[
             { label: "Card #", width: "15%" },
@@ -138,7 +138,7 @@ export function RtsPDF(props: RtsPDFProps) {
         {/* Discrepancies */}
         {discrepancies && discrepancies.length > 0 && (
           <View>
-            <Text style={baseStyles.sectionTitle}>Discrepancies</Text>
+            <Text style={baseStyles.sectionTitle}>Findings</Text>
             <TableHeader
               columns={[
                 { label: "Description", width: "45%" },

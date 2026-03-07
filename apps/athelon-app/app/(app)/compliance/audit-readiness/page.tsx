@@ -218,10 +218,10 @@ export default function AuditReadinessPage() {
     },
     {
       key: "disc",
-      label: "Open Discrepancies",
+      label: "Open Findings",
       value: String(openDiscrepancies.length),
       score: discrepancyScore,
-      href: "/squawks",
+      href: "/findings",
       tone: toneFromScore(discrepancyScore),
       trend: trendFromScore(discrepancyScore),
       detail: openDiscrepancies.length > 0 ? `Oldest open: ${oldestOpenDays} day(s)` : "No open discrepancies",
@@ -265,7 +265,7 @@ export default function AuditReadinessPage() {
     { group: "AD/SB Status" as const, title: "No overdue or pending AD determinations", compliant: adScore >= 90, actionHref: "/compliance/ad-sb" },
     { group: "QCM Reviews" as const, title: "IA sign-off queue within threshold", compliant: qcmScore >= 90, actionHref: "/compliance/qcm-review" },
     { group: "Documentation" as const, title: "Station config / documentation warnings cleared", compliant: rsmScore >= 90, actionHref: "/settings/station-config" },
-    { group: "Documentation" as const, title: "Open discrepancies aged and dispositioned", compliant: discrepancyScore >= 90, actionHref: "/squawks" },
+    { group: "Documentation" as const, title: "Open findings aged and dispositioned", compliant: discrepancyScore >= 90, actionHref: "/findings" },
   ];
 
   return (

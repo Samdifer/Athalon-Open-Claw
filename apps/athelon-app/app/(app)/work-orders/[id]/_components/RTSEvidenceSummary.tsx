@@ -37,8 +37,8 @@ export function RTSEvidenceSummary({
   hideRtsLink?: boolean;
 }) {
   const checks: ReadinessCheck[] = [
-    { label: "All task cards complete", passed: taskCardsComplete },
-    { label: "All discrepancies resolved", passed: discrepanciesResolved },
+    { label: "All work cards complete", passed: taskCardsComplete },
+    { label: "All findings resolved", passed: discrepanciesResolved },
     { label: "All required inspections done", passed: requiredInspectionsDone },
     { label: "Parts traceability complete", passed: partsTraceabilityComplete },
     { label: "Required documents uploaded", passed: requiredDocsUploaded },

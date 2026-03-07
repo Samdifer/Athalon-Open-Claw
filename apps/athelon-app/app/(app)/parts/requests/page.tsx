@@ -801,7 +801,7 @@ export default function PartsRequestsPage() {
         <CardContent>
           {returnQueue.length === 0 ? (
             <p className="text-xs text-muted-foreground italic">
-              No parts pending return. Technicians can initiate returns from task card steps.
+              No parts pending return. Technicians can initiate returns from work card steps.
             </p>
           ) : (
             <div className="space-y-2">
