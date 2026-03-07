@@ -53,6 +53,8 @@ export function QuoteProfitabilityPanel({
   collapsed = false,
   onToggleCollapse,
 }: QuoteProfitabilityPanelProps) {
+  // shopRate = billout rate charged to customers (per hour).
+  // averageHourlyCost = internal blended labor cost used for GP calculation.
   const metrics = useMemo(() => {
     const laborLines = lineItems.filter((l) => l.type === "labor");
     const partLines = lineItems.filter((l) => l.type === "part");
@@ -171,8 +173,8 @@ export function QuoteProfitabilityPanel({
               value={`$${fmt(metrics.estimatedLaborCost)}`}
               sub={
                 <span className="ml-1 text-[10px] text-muted-foreground">
-                  ({metrics.totalLaborHours.toFixed(1)} hrs x $
-                  {fmt(averageHourlyCost)}/hr)
+                  ({metrics.totalLaborHours.toFixed(1)} hrs × $
+                  {fmt(averageHourlyCost)}/hr cost · ${fmt(shopRate)}/hr bill)
                 </span>
               }
             />

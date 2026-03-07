@@ -774,7 +774,7 @@ export const getAccountSummary = query({
       lastInteraction: interactions[0] ?? null,
       healthScore: healthSnapshots[0] ?? null,
       activeOpportunities: activeOpps.length,
-      pipelineValue: activeOpps.reduce((sum: number, o: any) => sum + o.estimatedValue, 0),
+      pipelineValue: activeOpps.reduce((sum: number, o: any) => sum + (o.estimatedValue ?? 0), 0),
     };
   },
 });
@@ -916,7 +916,8 @@ export const getCrmDashboardData = query({
     }
     const revenueByType: Record<string, number> = {};
     for (const inv of invoices) {
-      if (inv.customerId) {
+      // Exclude VOID invoices — they do not represent real revenue
+      if (inv.customerId && inv.status !== "VOID") {
         const type = customerTypeMap.get(inv.customerId) ?? "company";
         revenueByType[type] = (revenueByType[type] ?? 0) + (inv.total ?? 0);
       }
@@ -925,7 +926,8 @@ export const getCrmDashboardData = query({
     // Top 10 customers by revenue
     const revenueByCustomer = new Map<string, number>();
     for (const inv of invoices) {
-      if (inv.customerId) {
+      // Exclude VOID invoices — consistent with getAnalyticsSummary
+      if (inv.customerId && inv.status !== "VOID") {
         revenueByCustomer.set(
           inv.customerId,
           (revenueByCustomer.get(inv.customerId) ?? 0) + (inv.total ?? 0),
@@ -965,7 +967,7 @@ export const getCrmDashboardData = query({
     return {
       totalAccounts: activeCustomers.length,
       activeOpportunities: activeOpps.length,
-      pipelineValue: activeOpps.reduce((sum: number, o: any) => sum + o.estimatedValue, 0),
+      pipelineValue: activeOpps.reduce((sum: number, o: any) => sum + (o.estimatedValue ?? 0), 0),
       monthlyRevenue: recentRevenue,
       avgHealthScore: Math.round(avgHealth),
       recentInteractions: interactions,

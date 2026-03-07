@@ -89,14 +89,15 @@ export default function SalesDashboardPage() {
     ? wonDeals.reduce((sum, d) => sum + (d.estimatedValue ?? 0), 0) / wonDeals.length
     : 0;
 
-  const newCustomers = Math.max(
-    1,
-    wonDeals.length || Math.round((crmDashboard.activeOpportunities || 0) * DEFAULTS.closeRate),
-  );
+  // newCustomers: use won deal count; fall back to projected wins from pipeline.
+  // Do NOT force a minimum of 1 — if there are genuinely zero new customers,
+  // CAC should be $0 (undefined / not computable), not artificially computed
+  // against a phantom denominator of 1.
+  const newCustomers =
+    wonDeals.length || Math.round((crmDashboard.activeOpportunities || 0) * DEFAULTS.closeRate);
 
-  const actualCAC = newCustomers > 0
-    ? (activeQuotes.reduce((sum, q) => sum + (q.total ?? 0), 0) * 0.08) / newCustomers
-    : 0;
+  const quoteProxySpend = activeQuotes.reduce((sum, q) => sum + (q.total ?? 0), 0) * 0.08;
+  const actualCAC = newCustomers > 0 ? quoteProxySpend / newCustomers : 0;
 
   const annualChurnRate = DEFAULTS.churnAnnualPct;
   const avgGrossMargin = DEFAULTS.grossMarginPct;
@@ -105,7 +106,10 @@ export default function SalesDashboardPage() {
     : 0;
 
   const ltvCac = actualCAC > 0 ? annualizedLtv / actualCAC : 0;
-  const projectedEbitda = projectedRevenue * (1 - DEFAULTS.overheadPct) - projectedRevenue * (1 - avgGrossMargin);
+  // EBITDA = Revenue × (Gross Margin % − Overhead %)
+  // Simplified from the original complex form: rev*(1-overhead) - rev*(1-margin)
+  // which is algebraically identical but harder to audit.
+  const projectedEbitda = projectedRevenue * (avgGrossMargin - DEFAULTS.overheadPct);
 
   const ownershipMap = new Map<string, { owner: string; count: number; value: number }>();
   for (const deal of openDeals) {
@@ -124,10 +128,16 @@ export default function SalesDashboardPage() {
     { name: "Assigned deal owner", count: opportunities.filter((d) => !!d.assignedToUserId || !!d.assignedToName).length, min: 1 },
   ];
 
-  const qualityScore = Math.round(
-    coverageChecks.reduce((sum, check) => sum + Math.min(1, check.count / check.min), 0)
-      / coverageChecks.length * 100,
-  );
+  // Guard: if check.min is 0 treat as fully satisfied (avoid division by zero / NaN).
+  // Guard: if coverageChecks is somehow empty, default to 100.
+  const qualityScore = coverageChecks.length > 0
+    ? Math.round(
+        coverageChecks.reduce(
+          (sum, check) => sum + Math.min(1, check.min > 0 ? check.count / check.min : 1),
+          0,
+        ) / coverageChecks.length * 100,
+      )
+    : 100;
   const quality = qualityBadge(qualityScore);
 
   const missingInputs = coverageChecks.filter((check) => check.count < check.min);
@@ -257,8 +267,8 @@ export default function SalesDashboardPage() {
                 </div>
                 <div className="rounded border p-3">
                   <p className="font-medium">Projected EBITDA</p>
-                  <p className="text-muted-foreground">Projected revenue × (gross margin − overhead load)</p>
-                  <p className="mt-1">{fmtMoney(projectedRevenue)} × ({Math.round(DEFAULTS.grossMarginPct * 100)}% - {Math.round(DEFAULTS.overheadPct * 100)}%) = <span className="font-semibold">{fmtMoney(projectedEbitda)}</span></p>
+                  <p className="text-muted-foreground">Projected revenue × (gross margin % − overhead %)</p>
+                  <p className="mt-1">{fmtMoney(projectedRevenue)} × ({Math.round(DEFAULTS.grossMarginPct * 100)}% − {Math.round(DEFAULTS.overheadPct * 100)}%) = <span className="font-semibold">{fmtMoney(projectedEbitda)}</span></p>
                 </div>
               </CardContent>
             </Card>
@@ -274,7 +284,7 @@ export default function SalesDashboardPage() {
                   <Progress value={qualityScore} className="h-2" />
                 </div>
                 {coverageChecks.map((check) => {
-                  const pct = Math.round(Math.min(100, (check.count / check.min) * 100));
+                  const pct = Math.round(Math.min(100, check.min > 0 ? (check.count / check.min) * 100 : 100));
                   return (
                     <div key={check.name} className="rounded border p-3">
                       <div className="flex items-center justify-between text-sm">
