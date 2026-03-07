@@ -14,6 +14,8 @@ const ROLE_BADGE_STYLES: Record<MroRole, string> = {
   lead_technician: "bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border-indigo-500/30",
   technician: "bg-sky-500/15 text-sky-700 dark:text-sky-300 border-sky-500/30",
   parts_clerk: "bg-orange-500/15 text-orange-700 dark:text-orange-300 border-orange-500/30",
+  sales_rep: "bg-pink-500/15 text-pink-700 dark:text-pink-300 border-pink-500/30",
+  sales_manager: "bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/30",
   read_only: "bg-gray-500/15 text-gray-700 dark:text-gray-300 border-gray-500/30",
 };
 

@@ -15,6 +15,7 @@ import {
   type AircraftExperienceRow,
 } from "../../_components/AircraftExperienceTable";
 import { ATAChapterHeatmap } from "../../_components/ATAChapterHeatmap";
+import { isTechnicalRole } from "@/src/shared/lib/personnelRoles";
 
 const STAGES = ["observe", "assist", "supervised", "evaluated"] as const;
 
@@ -180,6 +181,8 @@ export default function CareerProfilePage() {
     );
   }
 
+  const technicalRole = isTechnicalRole(technician.role);
+
   return (
     <div className="space-y-5">
       <div>
@@ -187,13 +190,15 @@ export default function CareerProfilePage() {
         <p className="text-sm text-muted-foreground">Technician experience dashboard and OJT progression.</p>
       </div>
 
-      <ExperienceSummaryCard {...summary} />
+      {technicalRole ? (
+        <>
+          <ExperienceSummaryCard {...summary} />
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Certifications</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2 text-sm">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Certifications</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2 text-sm">
           <p>
             <span className="text-muted-foreground">A&amp;P Numbers:</span>{" "}
             {certSummary.numbers.length ? certSummary.numbers.join(", ") : "Not recorded"}
@@ -260,9 +265,9 @@ export default function CareerProfilePage() {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Employment History</CardTitle>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Employment History</CardTitle>
         </CardHeader>
         <CardContent className="text-sm space-y-2">
           <div className="rounded-md border p-3">
@@ -275,7 +280,18 @@ export default function CareerProfilePage() {
             Detailed position timeline is not currently captured in a dedicated history table.
           </p>
         </CardContent>
-      </Card>
+          </Card>
+        </>
+      ) : (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Role Profile</CardTitle>
+          </CardHeader>
+          <CardContent className="text-sm text-muted-foreground">
+            This is a non-technical role. A&amp;P/IA certification and technical OJT metrics are suppressed.
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

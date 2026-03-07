@@ -56,6 +56,8 @@ export const MRO_ROLES = [
   "lead_technician",
   "technician",
   "parts_clerk",
+  "sales_rep",
+  "sales_manager",
   "read_only",
 ] as const;
 
@@ -69,6 +71,8 @@ export const ROLE_LABELS: Record<MroRole, string> = {
   lead_technician: "Lead Technician",
   technician: "Technician",
   parts_clerk: "Parts Clerk",
+  sales_rep: "Sales Representative",
+  sales_manager: "Sales Manager",
   read_only: "Read Only",
 };
 
@@ -80,6 +84,8 @@ export const ROLE_DESCRIPTIONS: Record<MroRole, string> = {
   lead_technician: "Leads execution teams and coordinates technical work.",
   technician: "Performs assigned maintenance tasks and record sign-offs.",
   parts_clerk: "Manages parts receiving, inventory, and issue control.",
+  sales_rep: "Owns quoting pipeline and customer sales execution.",
+  sales_manager: "Leads sales execution, pricing strategy, and deal ownership.",
   read_only: "View-only access for oversight without edit permissions.",
 };
 
@@ -91,6 +97,8 @@ export const ROLE_BADGE_STYLES: Record<MroRole, string> = {
   lead_technician: "bg-indigo-500/15 text-indigo-400 border-indigo-500/30",
   technician: "bg-sky-500/15 text-sky-400 border-sky-500/30",
   parts_clerk: "bg-orange-500/15 text-orange-400 border-orange-500/30",
+  sales_rep: "bg-pink-500/15 text-pink-400 border-pink-500/30",
+  sales_manager: "bg-rose-500/15 text-rose-400 border-rose-500/30",
   read_only: "bg-slate-500/15 text-slate-400 border-slate-500/30",
 };
 
@@ -102,7 +110,9 @@ export const ROLE_HIERARCHY: Record<MroRole, number> = {
   lead_technician: 4,
   technician: 5,
   parts_clerk: 6,
-  read_only: 7,
+  sales_rep: 7,
+  sales_manager: 8,
+  read_only: 9,
 };
 
 // ─── Work Order status → display label ───────────────────────────────────────

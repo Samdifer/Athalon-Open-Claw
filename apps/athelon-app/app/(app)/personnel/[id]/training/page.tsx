@@ -22,6 +22,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { isTechnicalRole } from "@/src/shared/lib/personnelRoles";
 
 function toDateInput(ms?: number) {
   if (!ms) return "";
@@ -179,6 +180,8 @@ export default function TechnicianTrainingPage() {
     );
   }
 
+  const technicalRole = isTechnicalRole(technician.role);
+
   return (
     <div className="space-y-5 max-w-4xl">
       <div className="flex items-center justify-between gap-3">
@@ -195,7 +198,11 @@ export default function TechnicianTrainingPage() {
             <GraduationCap className="w-5 h-5 text-muted-foreground" />
             {technician.legalName}
           </h1>
-          <p className="text-sm text-muted-foreground">Manage technician-specific qualification and recurrent training records.</p>
+          <p className="text-sm text-muted-foreground">
+            {technicalRole
+              ? "Manage technician-specific qualification and recurrent training records."
+              : "Non-technical role: certification and technical compliance requirements are suppressed."}
+          </p>
         </div>
 
         {canEdit && (
@@ -262,10 +269,12 @@ export default function TechnicianTrainingPage() {
                       ? new Date(record.expiresAt).toLocaleDateString("en-US", { timeZone: "UTC" })
                       : "No expiry"}
                   </p>
-                  <p>
-                    <span className="text-muted-foreground">Certificate:</span>{" "}
-                    {record.certificateRef || "Not provided"}
-                  </p>
+                  {technicalRole && (
+                    <p>
+                      <span className="text-muted-foreground">Certificate:</span>{" "}
+                      {record.certificateRef || "Not provided"}
+                    </p>
+                  )}
 
                   {canEdit && (
                     <div className="flex items-center gap-2 pt-2">
@@ -332,14 +341,16 @@ export default function TechnicianTrainingPage() {
               </div>
             </div>
 
-            <div className="space-y-1.5">
-              <Label>Certificate Reference (optional)</Label>
-              <Input
-                value={certificateRef}
-                onChange={(e) => setCertificateRef(e.target.value)}
-                placeholder="Certificate number, doc ref, or storage key"
-              />
-            </div>
+            {technicalRole && (
+              <div className="space-y-1.5">
+                <Label>Certificate Reference (optional)</Label>
+                <Input
+                  value={certificateRef}
+                  onChange={(e) => setCertificateRef(e.target.value)}
+                  placeholder="Certificate number, doc ref, or storage key"
+                />
+              </div>
+            )}
           </div>
 
           <DialogFooter>

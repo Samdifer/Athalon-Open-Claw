@@ -15,6 +15,7 @@ import { PersonnelTeamsShiftsTab } from "./tabs/PersonnelTeamsShiftsTab";
 import { PersonnelRolesTab } from "./tabs/PersonnelRolesTab";
 import { PersonnelHolidaysTab } from "./tabs/PersonnelHolidaysTab";
 import { PersonnelAnalysisTab } from "./tabs/PersonnelAnalysisTab";
+import { isTechnicalRole } from "@/src/shared/lib/personnelRoles";
 
 // ─── Valid tab keys ──────────────────────────────────────────────────────────
 
@@ -122,7 +123,9 @@ export function PersonnelCommandTabs() {
     [rosterWorkspace],
   );
 
-  const expiringCount = (expiringCerts ?? []).length;
+  const expiringCount = (expiringCerts ?? []).filter((entry) =>
+    isTechnicalRole(entry.technician?.role),
+  ).length;
 
   // ── Subtitle ───────────────────────────────────────────────────────────────
 

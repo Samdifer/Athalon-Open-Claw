@@ -16,6 +16,8 @@ const roleValidator = v.union(
   v.literal("lead_technician"),
   v.literal("technician"),
   v.literal("parts_clerk"),
+  v.literal("sales_rep"),
+  v.literal("sales_manager"),
   v.literal("read_only"),
 );
 
@@ -27,6 +29,8 @@ type TechnicianRole =
   | "lead_technician"
   | "technician"
   | "parts_clerk"
+  | "sales_rep"
+  | "sales_manager"
   | "read_only";
 
 async function countActiveAdminsInOrg(

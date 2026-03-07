@@ -31,7 +31,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { Link, useSearchParams } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { isEligibleDealOwnerRole } from "@/lib/personnelRoles";
+import { isEligibleDealOwnerRole } from "@/src/shared/lib/personnelRoles";
 
 type LineItemType = "labor" | "part" | "external_service";
 

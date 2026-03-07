@@ -39,6 +39,7 @@ import {
 import type { WorkloadEntry } from "../shared/rosterConstants";
 import { ShiftEditor } from "../shared/ShiftEditor";
 import { ExportCSVButton } from "@/src/shared/components/ExportCSVButton";
+import { isTechnicalRole } from "@/src/shared/lib/personnelRoles";
 
 // ─── Props ──────────────────────────────────────────────────────────────────
 
@@ -85,13 +86,17 @@ export function PersonnelRosterTab({
     api.schedulerRoster.clearTechnicianRosterTeam,
   );
 
+  const technicalExpiringCerts = expiringCerts.filter((e) =>
+    isTechnicalRole(e.technician?.role),
+  );
+
   // Build lookup sets for expiring certs
   const expiringTechIds = new Set(
-    expiringCerts.map((e) => e.technician?._id).filter(Boolean),
+    technicalExpiringCerts.map((e) => e.technician?._id).filter(Boolean),
   );
 
   const expiringCertMap = new Map(
-    expiringCerts.map((e) => [
+    technicalExpiringCerts.map((e) => [
       e.technician?._id,
       {
         iaExpiryDate: e.cert.iaExpiryDate,
@@ -131,14 +136,14 @@ export function PersonnelRosterTab({
   return (
     <div className="space-y-4">
       {/* ── IA Cert Expiry Banner ──────────────────────────────────────────── */}
-      {expiringCerts.length > 0 &&
+      {technicalExpiringCerts.length > 0 &&
         (() => {
-          const hasExpired = expiringCerts.some(
+          const hasExpired = technicalExpiringCerts.some(
             (e) =>
               e.cert.iaExpiryDate !== undefined &&
               e.cert.iaExpiryDate < Date.now(),
           );
-          const hasCritical = expiringCerts.some(
+          const hasCritical = technicalExpiringCerts.some(
             (e) =>
               e.cert.iaExpiryDate !== undefined &&
               Math.ceil(
@@ -174,7 +179,7 @@ export function PersonnelRosterTab({
                 </span>
               </div>
               <div className="space-y-2">
-                {expiringCerts.map((e) => {
+                {technicalExpiringCerts.map((e) => {
                   const days =
                     e.cert.iaExpiryDate !== undefined
                       ? Math.ceil(

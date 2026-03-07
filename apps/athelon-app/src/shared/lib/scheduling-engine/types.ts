@@ -23,6 +23,8 @@ export type TechnicianRole =
   | "lead_technician"
   | "technician"
   | "parts_clerk"
+  | "sales_rep"
+  | "sales_manager"
   | "read_only";
 
 export type TaskCardType =

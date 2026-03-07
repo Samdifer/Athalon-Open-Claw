@@ -266,6 +266,25 @@ export const createQuote = mutation({
     const aircraft = await ctx.db.get(args.aircraftId);
     if (!aircraft) throw new Error(`Aircraft ${args.aircraftId} not found.`);
 
+    const ownerTech = await ctx.db.get(args.createdByTechId);
+    if (!ownerTech || ownerTech.organizationId !== args.orgId) {
+      throw new Error("Deal owner technician not found in this organization.");
+    }
+    if (ownerTech.status !== "active") {
+      throw new Error("Deal owner must be active.");
+    }
+    const eligibleOwnerRoles = new Set([
+      "admin",
+      "shop_manager",
+      "billing_manager",
+      "sales_rep",
+      "sales_manager",
+      "lead_technician",
+    ]);
+    if (!ownerTech.role || !eligibleOwnerRoles.has(ownerTech.role)) {
+      throw new Error("Selected deal owner role is not eligible for quote ownership.");
+    }
+
     const quoteNumber = await getNextNumber(ctx, args.orgId, "quote", "Q");
 
     const quoteId = await ctx.db.insert("quotes", {

@@ -753,6 +753,8 @@ export default defineSchema({
       v.literal("lead_technician"),
       v.literal("technician"),
       v.literal("parts_clerk"),
+      v.literal("sales_rep"),
+      v.literal("sales_manager"),
       v.literal("read_only"),
     )),
 
