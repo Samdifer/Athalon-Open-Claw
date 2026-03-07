@@ -334,24 +334,6 @@ export default function WorkOrderLeadWorkspacePage() {
     }
   };
 
-  const handleAssignTaskStep = async (taskStepId: string, nextTechId: string) => {
-    setAssigningKey(`step-${taskStepId}`);
-    try {
-      await assignEntity({
-        organizationId: orgId,
-        entityType: "task_step",
-        taskStepId: taskStepId as Id<"taskCardSteps">,
-        assignedToTechnicianId:
-          nextTechId === "unassigned" ? undefined : (nextTechId as Id<"technicians">),
-      });
-      toast.success("Step assignment updated.");
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to assign step.");
-    } finally {
-      setAssigningKey(null);
-    }
-  };
-
   const handleSaveWorkOrderAssignment = async (workOrderId: string) => {
     setAssigningKey(`wo-${workOrderId}`);
     try {
@@ -477,157 +459,53 @@ export default function WorkOrderLeadWorkspacePage() {
         </Card>
       </div>
 
-      <Card className="border-border/60">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-medium">Team Insights</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {(workspace?.teamInsights?.length ?? 0) === 0 ? (
-            <p className="text-sm text-muted-foreground">No team assignment insights yet.</p>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2">
-              {workspace?.teamInsights?.map((team: any) => (
-                <div key={team.teamName} className="border border-border/50 rounded-md p-2.5">
-                  <p className="text-xs font-semibold truncate">{team.teamName}</p>
-                  <p className="text-[11px] text-muted-foreground mt-1">
-                    {minutesToHours(team.assignedMinutes)} assigned · {team.assignmentCount} assignment(s)
-                  </p>
-                  <p className="text-[11px] text-muted-foreground">
-                    {team.workOrderCount} WO(s) · {team.technicianCount} technician(s)
-                  </p>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card className="border-border/60">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-medium flex items-center gap-2">
-            <Users className="w-4 h-4" />
-            Work Order Ownership
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {workspace?.workOrders.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No active work orders.</p>
-          ) : (
-            workspace?.workOrders.map((workOrder) => (
-              <div
-                key={String(workOrder._id)}
-                className="border border-border/50 rounded-md p-3 space-y-2"
-              >
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="font-mono text-sm font-semibold">
-                    {workOrder.workOrderNumber}
-                  </span>
-                  {/* BUG-LT-HUNT-107: Was showing raw snake_case status
-                      value (e.g. "in_progress") instead of the human-readable
-                      label ("In Progress"). Applied WO_STATUS_LABEL lookup
-                      and WO_STATUS_STYLES color coding to match the WO list
-                      page and detail page patterns. */}
-                  <Badge
-                    variant="outline"
-                    className={`text-[10px] border ${WO_STATUS_STYLES[workOrder.status as WoStatus] ?? "border-border/50 text-muted-foreground"}`}
-                  >
-                    {WO_STATUS_LABEL[workOrder.status as WoStatus] ?? workOrder.status}
-                  </Badge>
-                  <span className="text-xs text-muted-foreground">
-                    {workOrder.promisedDeliveryDate
-                      ? `RTS ${formatDateUTC(workOrder.promisedDeliveryDate)}`
-                      : "No RTS date"}
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    Today: {minutesToHours(workOrder.assignedMinutesToday)}
-                  </span>
-                </div>
-                <div className="grid grid-cols-1 lg:grid-cols-[180px_1fr_auto] gap-2">
-                  <Select
-                    value={workOrderAssigneeDrafts[String(workOrder._id)] ?? "unassigned"}
-                    onValueChange={(value) =>
-                      setWorkOrderAssigneeDrafts((prev) => ({
-                        ...prev,
-                        [String(workOrder._id)]: value,
-                      }))
-                    }
-                  >
-                    <SelectTrigger className="h-8 text-xs">
-                      <SelectValue placeholder="Lead owner" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="unassigned">Unassigned</SelectItem>
-                      {workspace?.technicians.map((technician) => (
-                        <SelectItem key={String(technician._id)} value={String(technician._id)}>
-                          {technician.legalName}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Input
-                    value={workOrderTeamDrafts[String(workOrder._id)] ?? ""}
-                    onChange={(event) =>
-                      setWorkOrderTeamDrafts((prev) => ({
-                        ...prev,
-                        [String(workOrder._id)]: event.target.value,
-                      }))
-                    }
-                    placeholder="Team name (e.g. Airframe Day Shift)"
-                    className="h-8 text-xs"
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="h-8 text-xs"
-                    onClick={() => handleSaveWorkOrderAssignment(String(workOrder._id))}
-                    disabled={assigningKey === `wo-${String(workOrder._id)}`}
-                  >
-                    {assigningKey === `wo-${String(workOrder._id)}` ? "Saving..." : "Save"}
-                  </Button>
-                </div>
-              </div>
-            ))
-          )}
-        </CardContent>
-      </Card>
-
-      <Card className="border-border/60">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-medium">Task Assignment Feed</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          {workspace?.taskCards.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No active task cards found.</p>
-          ) : (
-            /* BUG-LT-HUNT-108: slice(0, 30) previously had no overflow
-               indicator. With 31+ task cards, the lead had no way to know
-               tasks beyond 30 were silently hidden — they could assign 30
-               tasks and believe the queue was fully staffed while tasks 31+
-               remained unassigned. Added "Showing X of Y" label and a
-               "View all" link to the work orders list when overflow exists. */
-            <>
-            {(workspace?.taskCards.length ?? 0) > 30 && (
-              <div className="flex items-center justify-between text-[11px] text-muted-foreground mb-1">
-                <span>Showing 30 of {workspace?.taskCards.length} task cards</span>
-                <Link to="/work-orders" className="text-primary hover:underline">
-                  View all in Work Orders →
-                </Link>
-              </div>
-            )}
-            {workspace?.taskCards.slice(0, 30).map((taskCard) => {
-              const assignment = taskCardAssignmentById.get(String(taskCard._id));
-              const selectedAssignee =
-                taskCard.assignedToTechnicianId
-                  ? String(taskCard.assignedToTechnicianId)
-                  : assignment?.assignedToTechnicianId
-                    ? String(assignment.assignedToTechnicianId)
-                    : "unassigned";
-
-              return (
-                <div
-                  key={String(taskCard._id)}
-                  className="border border-border/50 rounded-md p-2.5 flex flex-col xl:flex-row xl:items-center xl:justify-between gap-2"
+      <Tabs defaultValue="ownership" className="space-y-4">
+        <TabsList className="h-9 bg-muted/40 p-0.5 overflow-x-auto max-w-full flex-wrap">
+          {([
+            {
+              value: "ownership",
+              label: "Ownership",
+              Icon: Users,
+              count: workspace?.workOrders.length ?? null,
+              indicator: null as "amber" | "green" | null,
+            },
+            {
+              value: "tasks",
+              label: "Task Feed",
+              Icon: ClipboardList,
+              count: workspace?.taskCards.length ?? null,
+              indicator: null as "amber" | "green" | null,
+            },
+            {
+              value: "turnover",
+              label: "Turnover Report",
+              Icon: FileText,
+              count: null,
+              indicator: reportIsSubmitted
+                ? ("green" as const)
+                : (summaryText || leadNotes || aiDraftSummary)
+                  ? ("amber" as const)
+                  : null,
+            },
+            {
+              value: "history",
+              label: "History",
+              Icon: CalendarDays,
+              count: workspace?.history.length || null,
+              indicator: null as "amber" | "green" | null,
+            },
+          ] as const).map(({ value, label, Icon, count, indicator }) => (
+            <TabsTrigger
+              key={value}
+              value={value}
+              className="h-8 px-3.5 text-xs gap-1.5 data-[state=active]:bg-background"
+            >
+              <Icon className="w-3.5 h-3.5" />
+              {label}
+              {count !== null && (
+                <Badge
+                  variant="secondary"
+                  className="h-4 min-w-[16px] px-1 text-[9px] bg-muted-foreground/20 text-muted-foreground"
                 >
                   {count}
                 </Badge>
@@ -850,165 +728,6 @@ export default function WorkOrderLeadWorkspacePage() {
                 </div>
               </div>
 
-      <Card className="border-border/60">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-medium">Subtask (Step) Assignment Feed</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          {(workspace?.taskSteps?.length ?? 0) === 0 ? (
-            <p className="text-sm text-muted-foreground">No pending task steps found.</p>
-          ) : (
-            workspace?.taskSteps?.slice(0, 40).map((step: any) => {
-              const selectedAssignee = step.assignedToTechnicianId
-                ? String(step.assignedToTechnicianId)
-                : "unassigned";
-
-              return (
-                <div
-                  key={String(step._id)}
-                  className="border border-border/50 rounded-md p-2.5 flex flex-col xl:flex-row xl:items-center xl:justify-between gap-2"
-                >
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <span className="font-mono text-foreground">{step.workOrderNumber}</span>
-                      <span>{step.taskCardNumber}</span>
-                      <span>Step {step.stepNumber ?? "—"}</span>
-                    </div>
-                    <p className="text-sm truncate">{step.description}</p>
-                  </div>
-                  <div className="w-full xl:w-[220px]">
-                    <Select
-                      value={selectedAssignee}
-                      onValueChange={(value) => handleAssignTaskStep(String(step._id), value)}
-                    >
-                      <SelectTrigger className="h-8 text-xs">
-                        <SelectValue placeholder="Assign technician" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="unassigned">Unassigned</SelectItem>
-                        {workspace?.technicians.map((technician) => (
-                          <SelectItem key={String(technician._id)} value={String(technician._id)}>
-                            {technician.legalName}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              );
-            })
-          )}
-        </CardContent>
-      </Card>
-
-      <Card className="border-border/60" data-testid="turnover-editor">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-medium">Turnover Report Editor</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-              Work Orders Included
-            </p>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
-              {workspace?.workOrders.map((workOrder) => {
-                const workOrderId = String(workOrder._id);
-                const checked = selectedWorkOrderIds.includes(workOrderId);
-                return (
-                  <label
-                    key={workOrderId}
-                    className="border border-border/50 rounded-md p-2 flex items-start gap-2 cursor-pointer"
-                  >
-                    <Checkbox
-                      checked={checked}
-                      onCheckedChange={(value) => toggleWorkOrderSelection(workOrderId, Boolean(value))}
-                      className="mt-0.5"
-                    />
-                    <span className="text-xs">
-                      <span className="font-mono font-semibold">{workOrder.workOrderNumber}</span>{" "}
-                      <span className="text-muted-foreground">{workOrder.description}</span>
-                    </span>
-                  </label>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <p className="text-xs font-medium text-muted-foreground">AI Draft Summary</p>
-              <Textarea
-                value={aiDraftSummary}
-                onChange={(event) => setAiDraftSummary(event.target.value)}
-                rows={4}
-                placeholder="AI-assisted draft summary of completed work..."
-                className="text-xs"
-                disabled={reportIsSubmitted}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <p className="text-xs font-medium text-muted-foreground">Lead Final Summary</p>
-              <Textarea
-                value={summaryText}
-                onChange={(event) => setSummaryText(event.target.value)}
-                rows={4}
-                placeholder="Final turnover summary..."
-                className="text-xs"
-                disabled={reportIsSubmitted}
-              />
-            </div>
-          </div>
-
-          <div className="space-y-1.5">
-            <p className="text-xs font-medium text-muted-foreground">Lead Notes</p>
-            <Textarea
-              value={leadNotes}
-              onChange={(event) => setLeadNotes(event.target.value)}
-              rows={3}
-              placeholder="Shift handoff context, blockers, staffing notes..."
-              className="text-xs"
-              disabled={reportIsSubmitted}
-            />
-          </div>
-
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-3">
-            <div className="space-y-1.5">
-              <p className="text-xs font-medium text-muted-foreground">Upcoming Deadlines</p>
-              <Textarea
-                value={upcomingDeadlinesNotes}
-                onChange={(event) => setUpcomingDeadlinesNotes(event.target.value)}
-                rows={3}
-                className="text-xs"
-                disabled={reportIsSubmitted}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <p className="text-xs font-medium text-muted-foreground">Parts Ordered</p>
-              <Textarea
-                value={partsOrderedSummary}
-                onChange={(event) => setPartsOrderedSummary(event.target.value)}
-                rows={3}
-                className="text-xs"
-                disabled={reportIsSubmitted}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <p className="text-xs font-medium text-muted-foreground">Parts Received</p>
-              <Textarea
-                value={partsReceivedSummary}
-                onChange={(event) => setPartsReceivedSummary(event.target.value)}
-                rows={3}
-                className="text-xs"
-                disabled={reportIsSubmitted}
-              />
-            </div>
-          </div>
-
-          {selectedWorkOrderIds.length > 0 && (
-            <div className="space-y-2">
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                Per-Work-Order Notes
-              </p>
               <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <p className="text-xs font-medium text-muted-foreground">AI Draft Summary</p>

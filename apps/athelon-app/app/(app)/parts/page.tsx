@@ -900,6 +900,9 @@ export default function PartsPage() {
   const parts = (allParts ?? []) as PartDoc[];
   const technicianId = selfTech?._id ?? null;
 
+  // Tag filtering data source is not yet wired in this branch; keep null-safe fallback.
+  const tagFilterPartIds = useMemo<Set<Id<"parts">> | null>(() => null, [tagFilter]);
+
   useEffect(() => {
     if (!orgId) {
       setPartsRequests([]);

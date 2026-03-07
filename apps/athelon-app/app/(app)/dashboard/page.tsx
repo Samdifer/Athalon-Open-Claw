@@ -31,6 +31,7 @@ import { RevenueTrendChart } from "./_components/RevenueTrendChart";
 import { TATChart } from "./_components/TATChart";
 import { TechUtilizationChart } from "./_components/TechUtilizationChart";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { WelcomeModal } from "./_components/WelcomeModal";
 
 // ─── Collapsible Section ─────────────────────────────────────────────────────
@@ -96,6 +97,14 @@ export default function DashboardPage() {
     `offline:dashboard:fleetAd:${orgId ?? "unknown"}`,
     fleetAdLive,
   );
+
+  // NOTE: these datasets are optional inputs for the command center/boards.
+  // Keep undefined-safe defaults so dashboard remains renderable when queries are deferred.
+  const capacityUtil = undefined;
+  const bays = undefined;
+  const roster = undefined;
+  const activeTimers = undefined;
+  const laborByWO = undefined;
 
   // BUG-SM-HUNT-019: todayLabel was memoized with no deps `useMemo(fn, [])`,
   // so it computed once on mount. A shop manager who leaves the dashboard open

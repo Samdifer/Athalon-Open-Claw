@@ -180,17 +180,19 @@ export default function ImportPage() {
   }, [allFields, columnMapping, csvHeaders, csvRows]);
 
   const campMappingRows = useMemo(() => {
-    if (importType !== "aircraft") return [] as { campAircraftId: string; campTailNumber?: string; serialNumber?: string }[];
-    return csvRows.flatMap((row) => {
-      const campIdHeader = columnMapping.campAircraftId;
-      const campTailHeader = columnMapping.campTailNumber;
-      const serialHeader = columnMapping.serialNumber;
-      const campId = campIdHeader ? row[csvHeaders.indexOf(campIdHeader)]?.trim() : "";
-      const campTailNumber = campTailHeader ? row[csvHeaders.indexOf(campTailHeader)]?.trim() : "";
-      const serialNumber = serialHeader ? row[csvHeaders.indexOf(serialHeader)]?.trim() : "";
-      if (!campId) return [];
-      return [{ campAircraftId: campId, campTailNumber: campTailNumber || undefined, serialNumber: serialNumber || undefined }];
-    });
+    if (importType !== "aircraft") return [];
+    return csvRows
+      .map((row) => {
+        const campIdHeader = columnMapping.campAircraftId;
+        const campTailHeader = columnMapping.campTailNumber;
+        const serialHeader = columnMapping.serialNumber;
+        const campId = campIdHeader ? row[csvHeaders.indexOf(campIdHeader)]?.trim() : "";
+        const campTailNumber = campTailHeader ? row[csvHeaders.indexOf(campTailHeader)]?.trim() : "";
+        const serialNumber = serialHeader ? row[csvHeaders.indexOf(serialHeader)]?.trim() : "";
+        if (!campId) return null;
+        return { campAircraftId: campId, campTailNumber: campTailNumber || undefined, serialNumber: serialNumber || undefined };
+      })
+      .filter((row): row is { campAircraftId: string; campTailNumber?: string; serialNumber?: string } => Boolean(row));
   }, [importType, csvRows, csvHeaders, columnMapping]);
 
   const campPreview = useQuery(
@@ -319,19 +321,15 @@ export default function ImportPage() {
     }
 
     try {
-      const mappings = autoResolvable
-        .filter((row): row is typeof row & { selectedAircraftId: string } => Boolean(row.selectedAircraftId))
-        .map((row) => ({
+      const result = await applyCampMappings({
+        organizationId: orgId,
+        mappings: autoResolvable.map((row) => ({
           aircraftId: row.selectedAircraftId,
           campAircraftId: row.campAircraftId,
           campTailNumber: row.campTailNumber,
           linkageConfidence: row.linkageConfidence,
           confirmRelink: false,
-        }));
-
-      const result = await applyCampMappings({
-        organizationId: orgId,
-        mappings,
+        })),
       });
       const successCount = result.filter((item) => item.success).length;
       const failCount = result.length - successCount;

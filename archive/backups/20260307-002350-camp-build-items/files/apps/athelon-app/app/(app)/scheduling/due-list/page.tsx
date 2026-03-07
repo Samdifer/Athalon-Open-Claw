@@ -138,7 +138,13 @@ export default function SchedulingDueListPage() {
   }
 
   if (prereq.state !== "ready") {
-    return <MissingPrereqBanner kind={prereq.missingKind ?? "needs_org_context"} />;
+    return (
+      <MissingPrereqBanner
+        title={prereq.title}
+        message={prereq.message}
+        required={prereq.required}
+      />
+    );
   }
 
   if (!dueData || dueData.events.length === 0) {
@@ -146,9 +152,8 @@ export default function SchedulingDueListPage() {
       <ActionableEmptyState
         title="Due-list workbench is clear"
         missingInfo="No events fell within the selected horizon. Expand horizon or verify maintenance intervals."
-        primaryActionLabel="Set 180-day horizon"
-        primaryActionType="button"
-        primaryActionTarget={() => setHorizonDays(180)}
+        actionLabel="Set 180-day horizon"
+        onAction={() => setHorizonDays(180)}
       />
     );
   }

@@ -1,0 +1,4 @@
+Backup updated: /home/sam_sandifer1/.openclaw/workspace/simulation/athelon/archive/backups/20260307-002350-camp-build-items
+Total requested paths: 26
+Total backed up files: 26
+SHA manifest: /home/sam_sandifer1/.openclaw/workspace/simulation/athelon/archive/backups/20260307-002350-camp-build-items/sha256sum.txt
