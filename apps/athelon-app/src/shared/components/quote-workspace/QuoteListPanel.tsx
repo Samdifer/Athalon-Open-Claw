@@ -22,7 +22,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { formatDate } from "@/lib/format";
+import { formatDate, formatCurrency } from "@/lib/format";
 
 type QuoteStatus = "DRAFT" | "SENT" | "APPROVED" | "CONVERTED" | "DECLINED" | "all";
 
@@ -59,9 +59,13 @@ export default function QuotesPage() {
   const [search, setSearch] = useState("");
   const { orgId, isLoaded } = useCurrentOrg();
 
+  // BUG-001 fix: always fetch all quotes and filter client-side so that tab
+  // badge counts are accurate regardless of which tab is active.  If we pass a
+  // status filter here the API returns only that subset, making every other
+  // tab's badge count read 0.
   const quotes = useQuery(
     api.billing.listQuotes,
-    orgId ? { orgId, status: activeTab === "all" ? undefined : activeTab } : "skip",
+    orgId ? { orgId } : "skip",
   );
 
   const customers = useQuery(
@@ -76,18 +80,23 @@ export default function QuotesPage() {
     return m;
   }, [customers]);
 
-  const isLoading = !isLoaded || quotes === undefined;
+  // BUG-006 fix: include customers in the loading gate so that customer names
+  // are never hidden mid-render (customerMap.size === 0 while quotes are live).
+  const isLoading = !isLoaded || quotes === undefined || customers === undefined;
 
   const filtered = useMemo(() => {
     if (!quotes) return [];
-    if (!search.trim()) return quotes;
+    // BUG-001 fix: apply tab status filter client-side (API no longer pre-filters).
+    const byTab =
+      activeTab === "all" ? quotes : quotes.filter((q) => q.status === activeTab);
+    if (!search.trim()) return byTab;
     const q = search.toLowerCase();
-    return quotes.filter(
+    return byTab.filter(
       (quote) =>
         quote.quoteNumber.toLowerCase().includes(q) ||
         (customerMap.get(quote.customerId as string) ?? "").toLowerCase().includes(q),
     );
-  }, [quotes, search, customerMap]);
+  }, [quotes, activeTab, search, customerMap]);
 
   const all = quotes ?? [];
   const counts: Record<QuoteStatus, number> = {
@@ -212,7 +221,7 @@ export default function QuotesPage() {
       ) : (
         <div className="space-y-2" aria-live="polite" aria-label={`Quotes list, ${filtered.length} result${filtered.length !== 1 ? "s" : ""}`}>
           {filtered.map((quote) => (
-            <Link key={quote._id} to={`/sales/quotes/${quote._id}`} aria-label={`Quote ${quote.quoteNumber} — ${quote.status} — $${quote.total.toLocaleString("en-US", { minimumFractionDigits: 2 })}`}>
+            <Link key={quote._id} to={`/sales/quotes/${quote._id}`} aria-label={`Quote ${quote.quoteNumber} — ${quote.status} — ${formatCurrency(quote.total, quote.currency ?? "USD")}`}>
               <Card className="border-border/60 hover:border-primary/30 hover:bg-card/80 transition-all cursor-pointer">
                 <CardContent className="p-4">
                   <div className="flex items-start gap-4">
@@ -228,11 +237,11 @@ export default function QuotesPage() {
                           {quote.status}
                         </Badge>
                       </div>
-                      {customerMap.size > 0 && (
-                        <p className="text-sm font-medium text-foreground truncate">
-                          {customerMap.get(quote.customerId as string) ?? "Unknown Customer"}
-                        </p>
-                      )}
+                      {/* BUG-006 fix: always render customer name; isLoading guard above
+                          ensures customerMap is populated before this renders */}
+                      <p className="text-sm font-medium text-foreground truncate">
+                        {customerMap.get(quote.customerId as string) ?? "Unknown Customer"}
+                      </p>
                       <div className="flex items-center gap-3 mt-0.5">
                         <span className="text-xs text-muted-foreground">
                           Created {formatDate(quote.createdAt)}
@@ -245,8 +254,9 @@ export default function QuotesPage() {
                       </div>
                     </div>
                     <div className="flex items-center gap-3 flex-shrink-0">
+                      {/* BUG-002 fix: use formatCurrency to respect per-quote currency code */}
                       <span className="text-sm font-semibold text-foreground">
-                        ${quote.total.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                        {formatCurrency(quote.total, quote.currency ?? "USD")}
                       </span>
                       <ChevronRight className="w-4 h-4 text-muted-foreground/50" />
                     </div>

@@ -8,7 +8,7 @@ import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { formatDate } from "@/lib/format";
+import { formatDate, formatCurrency } from "@/lib/format";
 
 type QuoteStatus = "DRAFT" | "SENT" | "APPROVED" | "CONVERTED" | "DECLINED";
 
@@ -132,7 +132,10 @@ export default function SalesOpsPage() {
                   No quotes in this stage.
                 </p>
               ) : (
-                bucket.items.slice(0, 8).map((quote) => (
+                // BUG-005 fix: render capped list then show "N more" link so
+                // users know the bucket has more quotes than are displayed.
+                <>
+                {bucket.items.slice(0, 8).map((quote) => (
                   <Link
                     key={String(quote._id)}
                     to={`/sales/quotes/${quote._id}`}
@@ -141,14 +144,23 @@ export default function SalesOpsPage() {
                   >
                     <div className="flex items-center justify-between gap-2">
                       <span className="font-mono text-xs text-muted-foreground">{quote.quoteNumber}</span>
-                      <Badge variant="outline">{STATUS_LABELS[quote.status as QuoteStatus]}</Badge>
+                      {/* BUG-004 fix: fallback to raw status string so badge is never empty */}
+                      <Badge variant="outline">
+                        {STATUS_LABELS[quote.status as QuoteStatus] ?? quote.status}
+                      </Badge>
                     </div>
-                    <p className="mt-1 text-sm font-medium truncate">
-                      {customerMap.get(String(quote.customerId)) ?? "Unknown customer"}
-                    </p>
+                    <div className="mt-1 flex items-center justify-between gap-2">
+                      <p className="text-sm font-medium truncate">
+                        {customerMap.get(String(quote.customerId)) ?? "Unknown customer"}
+                      </p>
+                      {/* BUG-003 fix: show quote total so ops staff can triage by value */}
+                      <span className="text-sm font-semibold tabular-nums flex-shrink-0">
+                        {formatCurrency(quote.total, quote.currency ?? "USD")}
+                      </span>
+                    </div>
                     <div className="mt-1 text-xs text-muted-foreground space-y-0.5">
                       <p>
-                        Owner: {technicianMap.get(String(quote.createdByTechId)) ?? "Unknown owner"}
+                        Owner: {technicianMap.get(String(quote.createdByTechId)) ?? "Unassigned"}
                       </p>
                       <p>
                         Created: {formatDate(quote.createdAt)}
@@ -157,7 +169,17 @@ export default function SalesOpsPage() {
                       </p>
                     </div>
                   </Link>
-                ))
+                ))}
+                {bucket.items.length > 8 && (
+                  <Link
+                    to={`/sales/quotes?status=${bucket.statuses[0]}`}
+                    className="block text-center text-xs text-muted-foreground hover:text-primary py-1"
+                    data-testid={`${bucket.testId}-show-more`}
+                  >
+                    +{bucket.items.length - 8} more — view all →
+                  </Link>
+                )}
+                </>
               )}
             </CardContent>
           </Card>

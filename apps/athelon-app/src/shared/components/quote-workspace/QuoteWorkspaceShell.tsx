@@ -46,7 +46,7 @@ type LinkageFilter = "all" | "linked" | "unlinked";
 type PriorityFilter = "all" | "aog" | "urgent" | "routine";
 
 export type QuoteWorkspaceShellProps = {
-  surface: "billing" | "scheduling";
+  surface: "billing" | "scheduling" | "sales";
   forceMode?: "auto" | "new";
   forceQuoteId?: Id<"quotes">;
 };
@@ -278,7 +278,9 @@ export function QuoteWorkspaceShell({
     () => workOrders.filter((wo) => wo.quoteStatus === "SENT").length,
     [workOrders],
   );
-  // BUG-BH-012: Attention queue should count unique WOs needing action, not double-count AOG+SENT rows.
+  // Attention queue: counts WOs that need immediate action — AOG priority OR sent quote awaiting response.
+  // Array.filter with OR returns each WO at most once, so no double-counting occurs.
+  // (A prior comment incorrectly flagged this as BUG-BH-012; the implementation is correct.)
   const attentionCount = useMemo(
     () => workOrders.filter((wo) => wo.priority === "aog" || wo.quoteStatus === "SENT").length,
     [workOrders],
@@ -555,7 +557,11 @@ export function QuoteWorkspaceShell({
           <div className="min-w-0">
             <p className="flex items-center gap-1.5 text-sm font-semibold">
               <Sparkles className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
-              {surface === "scheduling" ? "Scheduling Quote Workspace" : "Billing Quote Workspace"}
+              {surface === "scheduling"
+                ? "Scheduling Quote Workspace"
+                : surface === "sales"
+                  ? "Sales Quote Workspace"
+                  : "Billing Quote Workspace"}
             </p>
             <p className="truncate text-xs text-muted-foreground">
               {selectedWorkOrder
