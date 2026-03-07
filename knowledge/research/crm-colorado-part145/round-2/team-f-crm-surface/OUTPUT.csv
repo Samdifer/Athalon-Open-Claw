@@ -1,0 +1,23 @@
+mapping_id,source_package,source_field,target_table,target_field,transform_rule,required,confidence,notes
+MAP-001,team-e-or-r1,candidate_name|legal_name,customers,name,trim,yes,medium,Team E empty; fallback to Round 1 naming fields
+MAP-002,team-e-or-r1,dba_name,customers,companyName,trim|null_if_empty,no,medium,Preserve DBA branding
+MAP-003,team-e-or-r1,address_line_1|city|state|postal_code,customers,address,concat_single_line,no,medium,
+MAP-004,team-e-or-r1,phone,customers,phone,normalize_phone,no,medium,
+MAP-005,team-e-or-r1,email,customers,email,lowercase,no,medium,
+MAP-006,team-e-or-r1,shop_size_class,customers,shopSizeClass,enum_map,no,high,small|medium|large|unknown
+MAP-007,team-e-or-r1,shop_size_confidence,customers,shopSizeConfidence,enum_map,no,high,high|medium|low
+MAP-008,team-e-or-r1,aircraft_worked_on,customers,aircraftFocusTags,split_semicolon,no,high,
+MAP-009,team-e-or-r1,profile_archetype,customers,profileArchetype,passthrough,no,high,
+MAP-010,team-e-or-r1,certificate_hints|cert_no,customers,regulatoryCertNumber,extract_cert_token,no,medium,
+MAP-011,team-e-derived,part145_status,customers,regulatoryPart145Status,derive_from_evidence_and_confidence,yes,medium,verified|likely|unknown|conflict
+MAP-012,team-e-or-r1,part145_evidence_confidence,customers,regulatoryCertConfidence,enum_map,no,high,
+MAP-013,team-e-or-r1,nearest_airport_name,customers,nearestAirportName,trim,no,high,
+MAP-014,team-e-or-r1,nearest_faa|nearest_icao|nearest_iata,customers,nearestAirportCode,prefer_faa_then_icao_then_iata,no,high,
+MAP-015,team-e-or-r1,distance_band,customers,airportDistanceBand,enum_map,no,high,on-airport|near-airport|metro-remote|unknown
+MAP-016,team-e-or-r1,web_observability_signals,customers,observabilitySignals,split_semicolon,no,high,
+MAP-017,team-e-derived,web_observability_score,customers,observabilityScore,score_v1_0_to_100,no,low,Algorithm version pending Team E canonical pack
+MAP-018,team-e-derived,web_presence_tier,customers,observabilityTier,bucket_from_score,no,low,low|medium|high
+MAP-019,team-e-or-r1,source_refs,customers,researchProvenanceRefs,split_semicolon,yes,high,Minimum traceability on account
+MAP-020,team-e-import-meta,sourceRound|sourceTeam|importedAt,customers,researchRound|researchTeam|researchLastImportedAt,set_from_import_context,yes,high,
+MAP-021,team-e-or-r1,source_refs|provenance,crmProspectIntelligenceSnapshots,sourceLogRefs|rawFindingRefs|transformNoteRefs,resolve_refs_to_ids,yes,medium,Immutable snapshot traceability payload
+MAP-022,team-e-derived,issue_codes|issue_summary,customers,researchIssueFlag|researchIssueSummary,derive_flag_and_summary,no,medium,
