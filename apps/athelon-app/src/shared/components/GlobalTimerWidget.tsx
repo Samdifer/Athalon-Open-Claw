@@ -214,6 +214,7 @@ export function GlobalTimerWidget() {
               onClick={handleResume}
               disabled={loadingAction === "resume"}
               title="Resume timer"
+              aria-label="Resume timer"
             >
               <Play className="w-4 h-4" />
             </Button>
@@ -225,6 +226,7 @@ export function GlobalTimerWidget() {
               onClick={handlePause}
               disabled={loadingAction === "pause"}
               title="Pause timer"
+              aria-label="Pause timer"
             >
               <Pause className="w-4 h-4" />
             </Button>
@@ -236,6 +238,7 @@ export function GlobalTimerWidget() {
             onClick={handleStop}
             disabled={loadingAction === "stop"}
             title="Stop timer"
+            aria-label="Stop timer"
           >
             <Square className="w-4 h-4" />
           </Button>

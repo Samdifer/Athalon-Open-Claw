@@ -25,17 +25,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
-
-function timeAgo(timestamp: number): string {
-  const seconds = Math.floor((Date.now() - timestamp) / 1000);
-  if (seconds < 60) return "just now";
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes}m ago`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  return `${days}d ago`;
-}
+import { formatRelativeTime } from "@/lib/format";
 
 const NOTIFICATION_ICONS: Record<string, typeof Bell> = {
   wo_status_change: Wrench,
@@ -85,7 +75,17 @@ export function TopBar() {
   // Cmd+K opens command palette
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+      const target = e.target;
+      const isEditableTarget =
+        target instanceof HTMLElement
+        && (target.isContentEditable
+          || target.tagName === "INPUT"
+          || target.tagName === "TEXTAREA"
+          || target.tagName === "SELECT");
+
+      if (isEditableTarget) return;
+
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
         setCommandOpen((prev) => !prev);
       }
@@ -177,11 +177,13 @@ export function TopBar() {
               <div className="overflow-y-auto max-h-[calc(70vh-56px)]">
                 {reorderAlerts.length > 0 && (
                   <button
+                    type="button"
                     onClick={() => {
                       setNotifOpen(false);
                       navigate("/parts/alerts");
                     }}
                     className="w-full text-left px-4 py-3 border-b border-border/30 hover:bg-muted/50 transition-colors flex gap-3 items-start bg-amber-500/5"
+                    aria-label={`Reorder alerts (${reorderAlerts.length})`}
                   >
                     <div className="mt-0.5 p-1.5 rounded-full shrink-0 bg-amber-500/15 text-amber-600 dark:text-amber-400">
                       <Package className="w-3.5 h-3.5" />
@@ -209,10 +211,12 @@ export function TopBar() {
                     return (
                       <button
                         key={notif._id}
+                        type="button"
                         onClick={() => handleNotificationClick(notif)}
                         className={`w-full text-left px-4 py-3 border-b border-border/30 hover:bg-muted/50 transition-colors flex gap-3 items-start ${
                           !notif.read ? "bg-primary/5" : ""
                         }`}
+                        aria-label={`${notif.title}${!notif.read ? ", unread" : ""}`}
                       >
                         <div className={`mt-0.5 p-1.5 rounded-full shrink-0 ${
                           notif.type === "discrepancy_critical" || notif.type === "invoice_overdue"
@@ -232,7 +236,7 @@ export function TopBar() {
                             {notif.message}
                           </p>
                           <span className="text-[10px] text-muted-foreground/60 mt-1 block">
-                            {timeAgo(notif.createdAt)}
+                            {formatRelativeTime(notif.createdAt)}
                           </span>
                         </div>
                       </button>

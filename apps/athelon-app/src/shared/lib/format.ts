@@ -107,6 +107,27 @@ export function formatRelativeDay(ms: number): string {
   return `In ${futureDays} days`;
 }
 
+/**
+ * Format a Unix timestamp (ms) as a short relative time label.
+ *
+ * @example formatRelativeTime(Date.now() - 15_000)   → "just now"
+ * @example formatRelativeTime(Date.now() - 120_000)  → "2m ago"
+ * @example formatRelativeTime(Date.now() - 7_200_000) → "2h ago"
+ */
+export function formatRelativeTime(ms: number): string {
+  const diffSeconds = Math.floor((Date.now() - ms) / 1000);
+
+  if (diffSeconds < 60) return "just now";
+  const minutes = Math.floor(diffSeconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
+}
+
 // ─── Currency formatting ──────────────────────────────────────────────────────
 
 const currencyFormatterCache = new Map<string, Intl.NumberFormat>();

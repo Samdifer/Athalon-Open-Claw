@@ -54,7 +54,10 @@ export default defineConfig({
         ],
       },
       workbox: {
+        cleanupOutdatedCaches: true,
         navigateFallback: "/index.html",
+        // Keep large vendor chunks (e.g. react-pdf) eligible for precache.
+        maximumFileSizeToCacheInBytes: 3_000_000,
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
         runtimeCaching: [
           {
@@ -101,7 +104,7 @@ export default defineConfig({
           if (id.includes('node_modules/@clerk')) return 'vendor-clerk';
           if (id.includes('node_modules/recharts') || id.includes('node_modules/d3-')) return 'vendor-charts';
           if (id.includes('node_modules/@radix-ui') || id.includes('node_modules/radix-ui')) return 'vendor-radix';
-          if (id.includes('node_modules/@react-pdf')) return 'vendor-pdf';
+          if (id.includes('node_modules/html5-qrcode')) return 'vendor-scanner';
         },
       },
     },
