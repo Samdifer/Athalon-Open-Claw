@@ -6,6 +6,8 @@ export const MRO_ROLES = [
   "lead_technician",
   "technician",
   "parts_clerk",
+  "sales_rep",
+  "sales_manager",
   "read_only",
 ] as const;
 
@@ -35,6 +37,8 @@ export const ROLE_DISPLAY_NAMES: Record<MroRole, string> = {
   lead_technician: "Lead Technician",
   technician: "Technician",
   parts_clerk: "Parts Clerk",
+  sales_rep: "Sales Representative",
+  sales_manager: "Sales Manager",
   read_only: "Read Only",
 };
 
@@ -46,6 +50,8 @@ export const ROLE_DESCRIPTIONS: Record<MroRole, string> = {
   lead_technician: "Leads execution and coordination of technical work.",
   technician: "Performs assigned work and updates task progress.",
   parts_clerk: "Inventory, receiving, and parts logistics ownership.",
+  sales_rep: "Owns quoting pipeline and customer sales execution.",
+  sales_manager: "Leads sales execution, pricing strategy, and deal ownership.",
   read_only: "Read-only visibility across all modules.",
 };
 
@@ -57,6 +63,8 @@ export const ROLE_BADGE_COLORS: Record<MroRole, string> = {
   lead_technician: "bg-amber-500/15 text-amber-300 border-amber-500/30",
   technician: "bg-slate-500/15 text-slate-300 border-slate-500/30",
   parts_clerk: "bg-orange-500/15 text-orange-300 border-orange-500/30",
+  sales_rep: "bg-pink-500/15 text-pink-300 border-pink-500/30",
+  sales_manager: "bg-rose-500/15 text-rose-300 border-rose-500/30",
   read_only: "bg-zinc-500/15 text-zinc-300 border-zinc-500/30",
 };
 
@@ -113,6 +121,19 @@ const ROLE_PERMISSIONS: Record<MroRole, PermissionPattern[]> = {
     "fleet.view",
     "reports.view",
   ],
+  sales_rep: [
+    "billing.view",
+    "billing.create",
+    "billing.update",
+    "fleet.view",
+    "reports.view",
+  ],
+  sales_manager: [
+    "billing.*",
+    "fleet.view",
+    "reports.*",
+    "personnel.view",
+  ],
   read_only: [
     "billing.view",
     "parts.view",
@@ -128,6 +149,7 @@ const ROLE_PERMISSIONS: Record<MroRole, PermissionPattern[]> = {
 
 const ROUTE_PERMISSION_MAP: Array<{ prefix: string; permission: Permission }> = [
   { prefix: "/billing", permission: "billing.view" },
+  { prefix: "/sales", permission: "billing.view" },
   { prefix: "/parts", permission: "parts.view" },
   { prefix: "/fleet", permission: "fleet.view" },
   { prefix: "/work-orders", permission: "work_orders.view" },
