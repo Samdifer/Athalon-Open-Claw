@@ -16,7 +16,7 @@
 
 ### Constraints
 - Current app CRM is built on `customers` + `crm*` tables (`crmContacts`, `crmInteractions`, `crmOpportunities`, `crmHealthSnapshots`) and pages under `app/(app)/crm/*`.
-- Team E packaging artifact (`round-2/team-e-qa-packaging/OUTPUT.csv`) is currently empty, so import contract is defined with a **provisional fallback mapping** from Round 1 fields.
+- Team E packaging artifact (`round-2/team-e-qa-packaging/OUTPUT.csv`) is now populated and validated (v2 remediation), so import contract is based on packaged fields with fallback mapping retained only for resilience.
 - Convex has no joins; denormalization/indexes are required for filterable UI.
 
 ---
@@ -322,7 +322,7 @@ Add tab: **Research Traceability**
 
 ## 5) Migration/import mapping (Team E package → app schema)
 
-> Team E `OUTPUT.csv` is currently empty in this run. Mapping below is a provisional implementation contract using expected packaged fields and Round 1 fields as fallback.
+> Team E `OUTPUT.csv` is populated in the current run (71 entities). Mapping below is the active implementation contract; Round 1 fallback columns remain as defensive compatibility.
 
 | Team-E / package field | Target table | Target field | Transform | Required | Notes |
 |---|---|---|---|---|---|
@@ -398,9 +398,9 @@ Add tab: **Research Traceability**
 
 ## 7) Risks and fallback paths
 
-1. **Upstream package missing/empty (current state for Team E OUTPUT.csv)**  
-   - *Risk:* import contract cannot be finalized from canonical package.  
-   - *Fallback:* ship provisional mapping (this spec) using Round 1 fields; keep adapter layer configurable.
+1. **Upstream package quality drift (Team E OUTPUT schema/quality changes)**  
+   - *Risk:* importer receives records that fail quality gates or schema expectations.  
+   - *Fallback:* enforce import preflight checks + keep configurable Round 1 fallback mapping in adapter.
 
 2. **Schema bloat in `customers`**  
    - *Risk:* account object grows and impacts read performance.  
