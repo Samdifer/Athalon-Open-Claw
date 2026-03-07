@@ -766,6 +766,7 @@ export default defineSchema({
   })
     .index("by_organization", ["organizationId"])
     .index("by_user", ["userId"])
+    .index("by_org_user", ["organizationId", "userId"])
     .index("by_status", ["organizationId", "status"])
     .index("by_org_location", ["organizationId", "primaryShopLocationId"])
     .index("by_org_roster_team", ["organizationId", "rosterTeamId"]),

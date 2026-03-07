@@ -10,6 +10,7 @@ import {
   resolveEffectiveShift,
   type ShiftLike,
 } from "./lib/rosterHelpers";
+import { requireOrgScopedTechnician } from "./shared/helpers/accessControl";
 
 const DEFAULT_SETTINGS = {
   capacityBufferPercent: 15,
@@ -62,30 +63,14 @@ const holidayMutationValidator = {
   notes: v.optional(v.string()),
 } as const;
 
-function requireAuth(identity: { subject: string } | null): string {
-  if (!identity) throw new Error("Not authenticated");
-  return identity.subject;
-}
-
 async function getCallerTech(ctx: any, organizationId: Id<"organizations">) {
-  const identity = await ctx.auth.getUserIdentity();
-  const userId = requireAuth(identity);
+  const { identity, technician } = await requireOrgScopedTechnician(ctx, {
+    organizationId,
+    requireActive: true,
+    operation: "roster workspace updates",
+  });
 
-  const callerTech = await ctx.db
-    .query("technicians")
-    .withIndex("by_organization", (q: any) => q.eq("organizationId", organizationId))
-    .filter((q: any) => q.eq(q.field("userId"), userId))
-    .first();
-
-  if (!callerTech) {
-    throw new Error("No technician profile found for this organization");
-  }
-
-  if (callerTech.status !== "active") {
-    throw new Error("Inactive technician profiles cannot update roster workspace");
-  }
-
-  return { callerTech, userId };
+  return { callerTech: technician, userId: identity.subject };
 }
 
 function requireRosterManager(role?: string) {

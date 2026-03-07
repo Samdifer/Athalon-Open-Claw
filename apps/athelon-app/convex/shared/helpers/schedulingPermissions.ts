@@ -1,4 +1,5 @@
 import type { Id } from "../../_generated/dataModel";
+import { requireOrgScopedTechnician } from "./accessControl";
 
 export const SCHEDULING_MANAGER_ROLES = new Set([
   "admin",
@@ -17,20 +18,11 @@ export async function requireSchedulingManager(
     operation?: string;
   },
 ): Promise<{ userId: string; technicianId: Id<"technicians">; role?: string }> {
-  const identity = await ctx.auth.getUserIdentity();
-  if (!identity) {
-    throw new Error("Not authenticated");
-  }
-
-  const technician = await ctx.db
-    .query("technicians")
-    .withIndex("by_organization", (q: any) => q.eq("organizationId", args.organizationId))
-    .filter((q: any) => q.eq(q.field("userId"), identity.subject))
-    .first();
-
-  if (!technician) {
-    throw new Error("No technician profile found for this organization");
-  }
+  const { identity, technician } = await requireOrgScopedTechnician(ctx, {
+    organizationId: args.organizationId,
+    requireActive: true,
+    operation: args.operation,
+  });
 
   if (!hasSchedulingManagerRole(technician.role)) {
     const context = args.operation ? ` to ${args.operation}` : "";
