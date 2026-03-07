@@ -184,7 +184,7 @@ const mainNav: NavEntry[] = [
   },
   {
     title: "Sales",
-    href: "/sales/dashboard",
+    href: "/sales",
     icon: TrendingUp,
     section: "sales",
     children: [
@@ -321,6 +321,8 @@ const ROLE_SECTION_ACCESS: Partial<Record<MroRole, NavSection[]>> = {
   lead_technician: ["my-work", "work-orders", "scheduling", "fleet", "personnel", "parts"],
   technician: ["my-work", "work-orders", "parts", "fleet"],
   parts_clerk: ["parts", "billing", "sales"],
+  sales_rep: ["dashboard", "sales", "crm"],
+  sales_manager: ["dashboard", "sales", "crm", "reports"],
   read_only: ["dashboard", "fleet", "reports"],
 };
 

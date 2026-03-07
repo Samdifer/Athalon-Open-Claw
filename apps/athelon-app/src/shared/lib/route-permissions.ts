@@ -18,7 +18,14 @@ export const ROUTE_PERMISSION_MAP: ReadonlyArray<{
   },
   {
     pattern: "/sales/*",
-    allowedRoles: ["admin", "shop_manager", "billing_manager", "parts_clerk"],
+    allowedRoles: [
+      "admin",
+      "shop_manager",
+      "billing_manager",
+      "parts_clerk",
+      "sales_rep",
+      "sales_manager",
+    ],
   },
   {
     pattern: "/compliance/*",

@@ -139,6 +139,9 @@ const QuoteTemplatesPage = lazy(() => import("@/app/(app)/billing/quotes/templat
 const SalesDashboardPage = lazy(() => import("@/app/(app)/sales/dashboard/page"));
 const SalesOpsPage = lazy(() => import("@/app/(app)/sales/ops/page"));
 const SalesTrainingPage = lazy(() => import("@/app/(app)/sales/training/page"));
+const SalesQuotesPage = lazy(() => import("@/app/(app)/sales/quotes/page"));
+const SalesNewQuotePage = lazy(() => import("@/app/(app)/sales/quotes/new/page"));
+const SalesQuoteDetailPage = lazy(() => import("@/app/(app)/sales/quotes/[id]/page"));
 
 const SchedulingPage = lazy(() => import("@/app/(app)/scheduling/page"));
 const CapacityPage = lazy(() => import("@/app/(app)/scheduling/capacity/page"));
@@ -301,10 +304,10 @@ export function protectedAppRoutes() {
             <Route path="/sales/dashboard" element={<SalesDashboardPage />} />
             <Route path="/sales/ops" element={<SalesOpsPage />} />
             <Route path="/sales/training" element={<SalesTrainingPage />} />
-            <Route path="/sales/quotes" element={<QuotesPage />} />
-            <Route path="/sales/quotes/new" element={<NewQuotePage />} />
+            <Route path="/sales/quotes" element={<SalesQuotesPage />} />
+            <Route path="/sales/quotes/new" element={<SalesNewQuotePage />} />
             <Route path="/sales/quotes/templates" element={<QuoteTemplatesPage />} />
-            <Route path="/sales/quotes/:id" element={<QuoteDetailPage />} />
+            <Route path="/sales/quotes/:id" element={<SalesQuoteDetailPage />} />
 
             <Route path="/billing/quotes" element={<Navigate to="/sales/quotes" replace />} />
             <Route path="/billing/quotes/new" element={<Navigate to="/sales/quotes/new" replace />} />
