@@ -1,0 +1,28 @@
+queue_reason,entity_id,legal_name,cert_no,missing_fields,contact_completeness,overall_confidence,selected_source
+no_contact_channels,QMLR253U,AIR METHODS LLC,QMLR253U,,none,0.75,team-h
+no_contact_channels,VMIR360T,AIRCAM NATIONAL HELICOPTER SERVICES INC,VMIR360T,,none,0.85,team-h
+no_contact_channels,H51R588Y,AIRCRAFT MAINTENANCE AND MANAGEMENT COMPANY,H51R588Y,,none,0.98,team-h
+no_contact_channels,AAVR958D,ALLEN AVIATION LLC,AAVR958D,,none,0.75,team-h
+no_contact_channels,3AXR823B,AVTRONICS INC,3AXR823B,,none,0.75,team-h
+no_contact_channels,J7BD555Y,BODE AVIATION INC,J7BD555Y,,none,0.75,team-h
+no_contact_channels,3DOR530B,CAE USA INC,3DOR530B,,none,0.75,team-h
+no_contact_channels,HA6R580N,COLORADO AIRWORKS LLC,HA6R580N,,none,0.75,team-h
+no_contact_channels,FMSR378E,DIRECT MX AVIATION LLC,FMSR378E,,none,0.75,team-h
+no_contact_channels,FDBR221K,FREEDOM AVIONICS,FDBR221K,,none,0.75,team-h
+no_contact_channels,7GSR084O,"GLOBAL SUPERTANKER AVIATION, LLC.",7GSR084O,,none,0.75,team-h
+no_contact_channels,HRSR322E,HAYES AVIATION RS,HRSR322E,,none,0.75,team-h
+no_contact_channels,9HQR621C,HQ HELIWORKS LLC,9HQR621C,,none,0.75,team-h
+no_contact_channels,KY7R882H,KEY LIME AIR CORPORATION,KY7R882H,,none,0.98,team-h
+no_contact_channels,MQWR059K,M E K LTD,MQWR059K,,none,0.75,team-h
+no_contact_channels,TJJR625X,MOBILE TRANSPONDER SERVICES LLC,TJJR625X,,none,0.75,team-h
+no_contact_channels,RYHR519X,ROCKY MOUNTAIN HOT AIR LLC,RYHR519X,,none,0.75,team-h
+no_contact_channels,3MTR418B,SABER AIRCRAFT SERVICES LLC,3MTR418B,,none,0.75,team-h
+no_contact_channels,VIB4368K,STEVENS AEROSPACE AND DEFENSE SYSTEMS LLC,VIB4368K,,none,0.75,team-h
+no_contact_channels,QMKR800X,"TRINE AEROSPACE, LLC",QMKR800X,,none,0.75,team-h
+no_contact_channels,SCIR012A,TWIN OTTER INTERNATIONAL LTD,SCIR012A,,none,0.75,team-h
+no_contact_channels,WTXR173J,"WEST STAR AVIATION, LLC",WTXR173J,,none,0.99,team-g
+no_contact_channels,W33R587X,WESTERN AERO REPAIR INC,W33R587X,,none,0.75,team-h
+no_contact_channels,122R933C,WESTERN PLAINS AVIATION LLC,122R933C,,none,0.75,team-h
+no_contact_channels,1B6R708C,WESTERN SKYWAYS TURBINE INC,1B6R708C,,none,0.75,team-h
+no_contact_channels,ZW8R398Y,WESTPAC PROPELLER SERVICES INC,ZW8R398Y,,none,0.75,team-h
+no_contact_channels,XDWR042L,WOODWARD HRT INC,XDWR042L,,none,0.75,team-h
