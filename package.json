@@ -12,7 +12,9 @@
     "build:athelon": "pnpm --dir apps/athelon-app build",
     "build:demo": "pnpm --dir apps/athelon-demo build",
     "typecheck:athelon": "pnpm --dir apps/athelon-app typecheck",
-    "typecheck:demo": "pnpm --dir apps/athelon-demo typecheck"
+    "typecheck:demo": "pnpm --dir apps/athelon-demo typecheck",
+    "vercel:build": "pnpm --filter athelon-app run build",
+    "vercel:build:ci": "pnpm install --frozen-lockfile && pnpm run vercel:build"
   },
   "devDependencies": {
     "turbo": "^2.5.6"

@@ -1,6 +1,7 @@
 {
-  "buildCommand": "pnpm install --frozen-lockfile && pnpm --filter athelon-app build",
+  "framework": null,
+  "installCommand": "pnpm install --frozen-lockfile",
+  "buildCommand": "pnpm --filter athelon-app run build",
   "outputDirectory": "apps/athelon-app/dist",
-  "rewrites": [{ "source": "/(.*)", "destination": "/" }],
-  "framework": null
+  "rewrites": [{ "source": "/(.*)", "destination": "/" }]
 }

@@ -443,7 +443,7 @@ export const ensureRosterWorkspaceBootstrap = mutation({
       "record_updated",
       "schedulingSettings",
       String(settings?._id ?? "init"),
-      `Roster workspace bootstrap completed by ${callerTech.legalName}`,
+      `Roster workspace bootstrap completed by ${callerTech.userId ?? callerTech._id}`,
     );
 
     return {
