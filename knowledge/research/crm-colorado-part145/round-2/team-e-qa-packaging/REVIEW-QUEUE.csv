@@ -1,0 +1,64 @@
+queue_reason,entity_id,legal_name,missing_fields,overall_confidence
+ambiguous_identity,,Blackhawk Performance Center (Blackhawk Group),not confidently matched to team-a legal entity,0.40
+missing_critical_fields,27OD157C,ADVANCED AEROTECHNOLOGIES GROUP LLC,shop_size_class|aircraft_worked_on,0.85
+missing_critical_fields,3FOR298C,AEROFIELD SERVICES LLC,shop_size_class|aircraft_worked_on,0.85
+missing_critical_fields,KP7R699J,"AIR COMM CORPORATION, LLC",shop_size_class|aircraft_worked_on|observability_score,0.75
+missing_critical_fields,QMLR253U,AIR METHODS LLC,shop_size_class|aircraft_worked_on,0.85
+missing_critical_fields,VMIR360T,AIRCAM NATIONAL HELICOPTER SERVICES INC,shop_size_class|aircraft_worked_on,0.85
+missing_critical_fields,AAVR958D,ALLEN AVIATION LLC,shop_size_class|aircraft_worked_on,0.85
+missing_critical_fields,ALWR453E,ALLOY METALWORKS LLC,shop_size_class|aircraft_worked_on,0.85
+missing_critical_fields,O0AR682Y,AOG-ASAP AVIONICS INC,shop_size_class|aircraft_worked_on|observability_score,0.75
+missing_critical_fields,ZL6R006Y,ARAPAHOE AERO AVIONICS,shop_size_class|aircraft_worked_on,0.85
+missing_critical_fields,X1IR595Y,"AVEX AVIATION, LLC",shop_size_class|aircraft_worked_on|observability_score,0.75
+missing_critical_fields,VW6R328Y,AVIATION WINDOW SERVICES,shop_size_class|aircraft_worked_on,0.85
+missing_critical_fields,3AXR823B,AVTRONICS INC,shop_size_class|aircraft_worked_on,0.85
+missing_critical_fields,B4CR228J,BAE SYSTEMS SPACE & MISSION SYSTEMS INC,shop_size_class|aircraft_worked_on|observability_score,0.75
+missing_critical_fields,BX4R092M,BEEGLES AIRCRAFT SERVICE LLC,shop_size_class|aircraft_worked_on,0.85
+missing_critical_fields,J7BD555Y,BODE AVIATION INC,shop_size_class|aircraft_worked_on,0.85
+missing_critical_fields,NW6R094J,"C7 AEROWERKS, LLC",shop_size_class|aircraft_worked_on|observability_score,0.75
+missing_critical_fields,3DOR530B,CAE USA INC,shop_size_class|aircraft_worked_on,0.85
+missing_critical_fields,DYHR613K,CENTENNIAL AIRCRAFT INTERIORS CORPORATION,shop_size_class|aircraft_worked_on,0.85
+missing_critical_fields,5LBR346D,CENTRI-LUBE TECHNOLOGIES LLC,shop_size_class|aircraft_worked_on|observability_score,0.75
+missing_critical_fields,PN5R125N,CENTURY HELICOPTERS INC,shop_size_class|aircraft_worked_on,0.85
+missing_critical_fields,HA6R580N,COLORADO AIRWORKS LLC,shop_size_class|aircraft_worked_on,0.85
+missing_critical_fields,4JDR353D,D & J AVIATION INC,shop_size_class|aircraft_worked_on|observability_score,0.75
+missing_critical_fields,GM6R566N,DEPOT AVIONICS INC,shop_size_class|aircraft_worked_on,0.85
+missing_critical_fields,FMSR378E,DIRECT MX AVIATION LLC,shop_size_class|aircraft_worked_on,0.85
+missing_critical_fields,6DNR881C,DNT AVIONICS,shop_size_class|aircraft_worked_on,0.85
+missing_critical_fields,FDBR221K,FREEDOM AVIONICS,shop_size_class|aircraft_worked_on,0.85
+missing_critical_fields,F42R979Y,FRONT RANGE TRANSPONDER SERVICE,shop_size_class|aircraft_worked_on,0.85
+missing_critical_fields,7GSR084O,"GLOBAL SUPERTANKER AVIATION, LLC.",shop_size_class|aircraft_worked_on|observability_score,0.75
+missing_critical_fields,X8CR828N,"GOGO BUSINESS AVIATION, LLC.",shop_size_class|aircraft_worked_on|observability_score,0.75
+missing_critical_fields,HRSR322E,HAYES AVIATION RS,shop_size_class|aircraft_worked_on,0.85
+missing_critical_fields,VX3R935L,HELIARC WELDING SERVICE,shop_size_class|aircraft_worked_on,0.85
+missing_critical_fields,9HQR621C,HQ HELIWORKS LLC,shop_size_class|aircraft_worked_on,0.85
+missing_critical_fields,FS6R104E,"INTERMOUNTAIN TESTING COMPANY, LLC",shop_size_class|aircraft_worked_on|observability_score,0.75
+missing_critical_fields,IG0R976N,"INTERNATIONAL GOVERNOR SERVICES, LLC",shop_size_class|aircraft_worked_on|observability_score,0.75
+missing_critical_fields,ZYJR157B,JETTECH LLC,shop_size_class|aircraft_worked_on,0.85
+missing_critical_fields,76YR726D,LEGACY AIR,shop_size_class|aircraft_worked_on,0.85
+missing_critical_fields,LCBR329X,LIFE CYCLE BALLOON REPAIR,shop_size_class|aircraft_worked_on,0.85
+missing_critical_fields,MQWR059K,M E K LTD,shop_size_class|aircraft_worked_on,0.85
+missing_critical_fields,T3RR881N,MEEKER AIRPORT INC,shop_size_class|aircraft_worked_on,0.85
+missing_critical_fields,TJJR625X,MOBILE TRANSPONDER SERVICES LLC,shop_size_class|aircraft_worked_on,0.85
+missing_critical_fields,PMSR554E,PEGASUS AEROSPACE MISSION SYSTEMS,shop_size_class|aircraft_worked_on,0.85
+missing_critical_fields,N3KR215O,"PHOENIX TURBINE OVERHAUL AND REPAIR, LLC.",shop_size_class|aircraft_worked_on|observability_score,0.75
+missing_critical_fields,ZP8R849Y,PILATUS AIRCRAFT USA LTD.,shop_size_class|aircraft_worked_on|observability_score,0.75
+missing_critical_fields,PTIR407E,POSITECH INTERNATIONAL LLC,shop_size_class|aircraft_worked_on,0.85
+missing_critical_fields,PE5R116N,PRECISION AIRCRAFT & ENGINE SERVICES INC,shop_size_class|aircraft_worked_on|observability_score,0.75
+missing_critical_fields,7F6R102D,PRO POLISH LLC,shop_size_class|aircraft_worked_on,0.85
+missing_critical_fields,R62R296Y,REDLINE AVIATION,shop_size_class|aircraft_worked_on,0.85
+missing_critical_fields,RYHR519X,ROCKY MOUNTAIN HOT AIR LLC,shop_size_class|aircraft_worked_on,0.85
+missing_critical_fields,FR6R545N,ROCKY MOUNTAIN PROPELLERS INC,shop_size_class|aircraft_worked_on,0.85
+missing_critical_fields,3MTR418B,SABER AIRCRAFT SERVICES LLC,shop_size_class|aircraft_worked_on,0.85
+missing_critical_fields,3SDR529B,"SIERRA NEVADA COMPANY, LLC",shop_size_class|aircraft_worked_on|observability_score,0.75
+missing_critical_fields,VIB4368K,STEVENS AEROSPACE AND DEFENSE SYSTEMS LLC,shop_size_class|aircraft_worked_on,0.85
+missing_critical_fields,VW0R441Y,TRANS AERO LLC,shop_size_class|aircraft_worked_on,0.85
+missing_critical_fields,QMKR800X,"TRINE AEROSPACE, LLC",shop_size_class|aircraft_worked_on|observability_score,0.75
+missing_critical_fields,SCIR012A,TWIN OTTER INTERNATIONAL LTD,shop_size_class|aircraft_worked_on,0.85
+missing_critical_fields,W8VR768Y,"UNILODE AVIATION SOLUTIONS US, INC",shop_size_class|aircraft_worked_on|observability_score,0.75
+missing_critical_fields,W33R587X,WESTERN AERO REPAIR INC,shop_size_class|aircraft_worked_on,0.85
+missing_critical_fields,122R933C,WESTERN PLAINS AVIATION LLC,shop_size_class|aircraft_worked_on,0.85
+missing_critical_fields,WS9R575J,WESTERN SKYWAYS INC,shop_size_class|aircraft_worked_on,0.85
+missing_critical_fields,1B6R708C,WESTERN SKYWAYS TURBINE INC,shop_size_class|aircraft_worked_on,0.85
+missing_critical_fields,ZW8R398Y,WESTPAC PROPELLER SERVICES INC,shop_size_class|aircraft_worked_on,0.85
+missing_critical_fields,XDWR042L,WOODWARD HRT INC,shop_size_class|aircraft_worked_on,0.85
