@@ -86,9 +86,9 @@ export function SchedulingQuoteWorkspaceDialog({
 
   const iframeSrc = selectedWorkOrder
     ? selectedWorkOrder.sourceQuoteId
-      ? `/billing/quotes/${selectedWorkOrder.sourceQuoteId}?workOrderId=${selectedWorkOrder._id}`
-      : `/billing/quotes/new?workOrderId=${selectedWorkOrder._id}`
-    : "/billing/quotes";
+      ? `/sales/quotes/${selectedWorkOrder.sourceQuoteId}?workOrderId=${selectedWorkOrder._id}`
+      : `/sales/quotes/new?workOrderId=${selectedWorkOrder._id}`
+    : "/sales/quotes";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

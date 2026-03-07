@@ -892,7 +892,7 @@ export default function CustomerDetailPage() {
                 variant="outline"
                 size="sm"
                 className="h-7 text-xs"
-                onClick={() => router.push(`/billing/quotes/new?customerId=${customerId}`)}
+                onClick={() => router.push(`/sales/quotes/new?customerId=${customerId}`)}
               >
                 <Plus className="w-3 h-3 mr-1" />
                 New Quote
@@ -931,7 +931,7 @@ export default function CustomerDetailPage() {
                         <TableRow
                           key={q._id as string}
                           className="cursor-pointer"
-                          onClick={() => router.push(`/billing/quotes/${q._id as string}`)}
+                          onClick={() => router.push(`/sales/quotes/${q._id as string}`)}
                         >
                           <TableCell className="font-mono text-xs font-medium">
                             {q.quoteNumber as string}

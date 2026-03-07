@@ -335,7 +335,7 @@ export default function CrmDashboardPage() {
               </Link>
             </Button>
             <Button asChild variant="outline">
-              <Link to="/billing/quotes/new">
+              <Link to="/sales/quotes/new">
                 <DollarSign className="w-4 h-4 mr-1.5" />
                 Create Quote
               </Link>

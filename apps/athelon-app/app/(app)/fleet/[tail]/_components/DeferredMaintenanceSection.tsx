@@ -140,7 +140,7 @@ export function DeferredMaintenanceSection({ aircraftId }: DeferredMaintenanceSe
                     className="h-7 text-xs gap-1"
                     onClick={() =>
                       navigate(
-                        `/billing/quotes/new?aircraftId=${encodeURIComponent(String(aircraftId))}&carryForwardId=${encodeURIComponent(item._id)}`,
+                        `/sales/quotes/new?aircraftId=${encodeURIComponent(String(aircraftId))}&carryForwardId=${encodeURIComponent(item._id)}`,
                       )
                     }
                   >

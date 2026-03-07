@@ -462,7 +462,7 @@ export function QuoteDetailEditor({
       if (onQuoteNavigate) {
         onQuoteNavigate(newQuoteId);
       } else {
-        router.push(`/billing/quotes/${newQuoteId}`);
+        router.push(`/sales/quotes/${newQuoteId}`);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create revision.");

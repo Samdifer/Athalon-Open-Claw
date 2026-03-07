@@ -69,6 +69,7 @@ type NavSection =
   | "scheduling"
   | "parts"
   | "billing"
+  | "sales"
   | "crm"
   | "compliance"
   | "personnel"
@@ -182,13 +183,25 @@ const mainNav: NavEntry[] = [
     ],
   },
   {
+    title: "Sales",
+    href: "/sales/dashboard",
+    icon: TrendingUp,
+    section: "sales",
+    children: [
+      { title: "Dashboard", href: "/sales/dashboard", icon: LayoutDashboard },
+      { title: "Sales Ops", href: "/sales/ops", icon: BarChart3 },
+      { title: "Quotes", href: "/sales/quotes", icon: ReceiptText },
+      { title: "Training", href: "/sales/training", icon: GraduationCap },
+      { title: "CRM Pipeline", href: "/crm/pipeline", icon: TrendingUp },
+    ],
+  },
+  {
     title: "Billing",
     href: "/billing/invoices",
     icon: ReceiptText,
     section: "billing",
     children: [
       { title: "Invoices", href: "/billing/invoices" },
-      { title: "Quotes", href: "/billing/quotes" },
       { title: "Customers", href: "/billing/customers" },
       { title: "Vendors", href: "/billing/vendors" },
       { title: "AR Dashboard", href: "/billing/ar-dashboard" },
@@ -221,6 +234,7 @@ const mainNav: NavEntry[] = [
       { title: "Interactions", href: "/crm/interactions", icon: MessageSquare },
       { title: "Sales Pipeline", href: "/crm/pipeline", icon: TrendingUp },
       { title: "Analytics", href: "/crm/analytics", icon: BarChart3 },
+      { title: "Sales Training", href: "/sales/training", icon: GraduationCap },
     ],
   },
   {
@@ -296,16 +310,17 @@ const ROLE_SECTION_ACCESS: Partial<Record<MroRole, NavSection[]>> = {
     "scheduling",
     "parts",
     "billing",
+    "sales",
     "crm",
     "compliance",
     "reports",
     "personnel",
   ],
   qcm_inspector: ["compliance", "fleet", "work-orders", "personnel", "reports"],
-  billing_manager: ["billing", "crm", "work-orders", "reports"],
+  billing_manager: ["billing", "sales", "crm", "work-orders", "reports"],
   lead_technician: ["my-work", "work-orders", "scheduling", "fleet", "personnel", "parts"],
   technician: ["my-work", "work-orders", "parts", "fleet"],
-  parts_clerk: ["parts", "billing"],
+  parts_clerk: ["parts", "billing", "sales"],
   read_only: ["dashboard", "fleet", "reports"],
 };
 

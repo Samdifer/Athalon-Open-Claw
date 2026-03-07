@@ -210,7 +210,7 @@ function LostQuotesTab() {
         createdByTechId: techId as Id<"technicians">,
       });
       toast.success("Quote cloned as new draft");
-      navigate(`/billing/quotes/${newQuoteId}`);
+      navigate(`/sales/quotes/${newQuoteId}`);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to clone quote");
     } finally {
@@ -256,7 +256,7 @@ function LostQuotesTab() {
               {cloningId === q._id ? "Cloning..." : "Retry"}
             </Button>
             <Button asChild variant="ghost" size="sm" className="h-6 px-2 text-[10px]">
-              <Link to={`/billing/quotes/${q._id}`}>View</Link>
+              <Link to={`/sales/quotes/${q._id}`}>View</Link>
             </Button>
           </div>
         </li>

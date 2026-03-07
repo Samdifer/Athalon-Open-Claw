@@ -611,7 +611,7 @@ export default function AnalyticsPage() {
                   {recentConversions.map((q) => (
                     <TableRow key={q._id} className="border-border/40">
                       <TableCell>
-                        <Link to={`/billing/quotes/${q._id}`} className="font-mono text-xs text-primary hover:underline">
+                        <Link to={`/sales/quotes/${q._id}`} className="font-mono text-xs text-primary hover:underline">
                           {q.quoteNumber}
                         </Link>
                       </TableCell>

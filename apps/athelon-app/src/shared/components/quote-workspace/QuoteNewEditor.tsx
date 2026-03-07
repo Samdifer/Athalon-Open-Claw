@@ -31,6 +31,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { Link, useSearchParams } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { isEligibleDealOwnerRole } from "@/lib/personnelRoles";
 
 type LineItemType = "labor" | "part" | "external_service";
 
@@ -179,6 +180,10 @@ export function QuoteNewEditor({
     api.laborKits.listLaborKits,
     orgId ? { orgId } : "skip",
   );
+  const technicians = useQuery(
+    api.technicians.list,
+    orgId ? { organizationId: orgId } : "skip",
+  );
   const prefillWorkOrder = useQuery(
     api.workOrders.getWorkOrder,
     orgId && prefillWorkOrderId
@@ -194,6 +199,7 @@ export function QuoteNewEditor({
   const computePrice = useAction(api.pricing.computePrice);
 
   const [customerId, setCustomerId] = useState<string>("");
+  const [ownerTechId, setOwnerTechId] = useState<string>("");
   const [pricingLoading, setPricingLoading] = useState<string | null>(null);
   const [aircraftId, setAircraftId] = useState<string>("");
   const [kitSearch, setKitSearch] = useState("");
@@ -209,7 +215,27 @@ export function QuoteNewEditor({
     customers === undefined ||
     aircraft === undefined ||
     laborKits === undefined ||
+    technicians === undefined ||
     (prefillWorkOrderId ? prefillWorkOrder === undefined : false);
+
+  const eligibleOwners = useMemo(
+    () =>
+      (technicians ?? [])
+        .filter((tech) => tech.status === "active" && isEligibleDealOwnerRole(tech.role))
+        .sort((a, b) => a.legalName.localeCompare(b.legalName)),
+    [technicians],
+  );
+
+  useEffect(() => {
+    if (ownerTechId) return;
+    if (techId && eligibleOwners.some((tech) => tech._id === techId)) {
+      setOwnerTechId(techId);
+      return;
+    }
+    if (eligibleOwners.length > 0) {
+      setOwnerTechId(eligibleOwners[0]._id);
+    }
+  }, [ownerTechId, techId, eligibleOwners]);
 
   const addLineItem = useCallback(() => {
     setLineItems((prev) => [
@@ -407,7 +433,7 @@ export function QuoteNewEditor({
     e.preventDefault();
     setError(null);
 
-    if (!orgId || !techId) { setError("Organization or technician not loaded."); return; }
+    if (!orgId || !ownerTechId) { setError("Organization or deal owner not loaded."); return; }
     if (!customerId) { setError("Please select a customer."); return; }
     if (!aircraftId) { setError("Please select an aircraft."); return; }
     if (lineItems.length === 0) { setError("Add at least one line item."); return; }
@@ -431,7 +457,7 @@ export function QuoteNewEditor({
         customerId: customerId as Id<"customers">,
         aircraftId: aircraftId as Id<"aircraft">,
         workOrderId: prefillWorkOrderId,
-        createdByTechId: techId as Id<"technicians">,
+        createdByTechId: ownerTechId as Id<"technicians">,
         notes: notes.trim() || undefined,
       });
 
@@ -452,7 +478,7 @@ export function QuoteNewEditor({
       if (onQuoteCreated) {
         onQuoteCreated(quoteId);
       } else {
-        router.push(`/billing/quotes/${quoteId}`);
+        router.push(`/sales/quotes/${quoteId}`);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create quote.");
@@ -547,6 +573,22 @@ export function QuoteNewEditor({
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium">Deal Owner *</Label>
+              <Select value={ownerTechId} onValueChange={setOwnerTechId}>
+                <SelectTrigger className="h-9 text-sm border-border/60">
+                  <SelectValue placeholder="Select deal owner" />
+                </SelectTrigger>
+                <SelectContent>
+                  {eligibleOwners.map((tech) => (
+                    <SelectItem key={tech._id} value={tech._id}>
+                      {tech.legalName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-1.5">

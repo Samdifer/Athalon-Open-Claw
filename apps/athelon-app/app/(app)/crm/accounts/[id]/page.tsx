@@ -482,7 +482,7 @@ export default function AccountDetailPage() {
             Log Interaction
           </Button>
           <Button size="sm" variant="outline" asChild>
-            <Link to="/billing/quotes/new">
+            <Link to="/sales/quotes/new">
               <Receipt className="w-3.5 h-3.5 mr-1.5" />
               Create Quote
             </Link>

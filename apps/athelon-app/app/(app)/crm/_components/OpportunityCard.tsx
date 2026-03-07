@@ -109,7 +109,7 @@ export function OpportunityCard({ opportunity }: { opportunity: PipelineOpportun
             Dismiss
           </Button>
           <Button asChild size="sm" variant="link" className="h-7 text-[11px] px-1">
-            <Link to="/billing/quotes/new">Open Quotes</Link>
+            <Link to="/sales/quotes/new">Open Quotes</Link>
           </Button>
         </div>
       </CardContent>

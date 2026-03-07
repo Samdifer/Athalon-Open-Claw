@@ -1,5 +1,5 @@
 import { lazy } from "react";
-import { Navigate, Outlet, Route } from "react-router-dom";
+import { Navigate, Outlet, Route, useParams } from "react-router-dom";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { OnboardingGate } from "@/components/OnboardingGate";
 import { OrgContextProvider } from "@/components/OrgContextProvider";
@@ -136,6 +136,10 @@ const WarrantyPage = lazy(() => import("@/app/(app)/billing/warranty/page"));
 const LaborKitsPage = lazy(() => import("@/app/(app)/billing/labor-kits/page"));
 const QuoteTemplatesPage = lazy(() => import("@/app/(app)/billing/quotes/templates/page"));
 
+const SalesDashboardPage = lazy(() => import("@/app/(app)/sales/dashboard/page"));
+const SalesOpsPage = lazy(() => import("@/app/(app)/sales/ops/page"));
+const SalesTrainingPage = lazy(() => import("@/app/(app)/sales/training/page"));
+
 const SchedulingPage = lazy(() => import("@/app/(app)/scheduling/page"));
 const CapacityPage = lazy(() => import("@/app/(app)/scheduling/capacity/page"));
 const BaysPage = lazy(() => import("@/app/(app)/scheduling/bays/page"));
@@ -187,6 +191,12 @@ const CrmInteractionsPage = lazy(() => import("@/app/(app)/crm/interactions/page
 const CrmAnalyticsPage = lazy(() => import("@/app/(app)/crm/analytics/page"));
 
 const AppNotFoundPage = lazy(() => import("@/app/(app)/not-found/page"));
+
+
+function BillingQuoteIdRedirect() {
+  const { id } = useParams<{ id: string }>();
+  return <Navigate to={id ? `/sales/quotes/${id}` : "/sales/quotes"} replace />;
+}
 
 function ProtectedAppContext() {
   return (
@@ -287,10 +297,19 @@ export function protectedAppRoutes() {
             <Route path="/billing/invoices" element={<InvoicesPage />} />
             <Route path="/billing/invoices/new" element={<NewInvoicePage />} />
             <Route path="/billing/invoices/:id" element={<InvoiceDetailPage />} />
-            <Route path="/billing/quotes" element={<QuotesPage />} />
-            <Route path="/billing/quotes/new" element={<NewQuotePage />} />
-            <Route path="/billing/quotes/templates" element={<QuoteTemplatesPage />} />
-            <Route path="/billing/quotes/:id" element={<QuoteDetailPage />} />
+            <Route path="/sales" element={<Navigate to="/sales/dashboard" replace />} />
+            <Route path="/sales/dashboard" element={<SalesDashboardPage />} />
+            <Route path="/sales/ops" element={<SalesOpsPage />} />
+            <Route path="/sales/training" element={<SalesTrainingPage />} />
+            <Route path="/sales/quotes" element={<QuotesPage />} />
+            <Route path="/sales/quotes/new" element={<NewQuotePage />} />
+            <Route path="/sales/quotes/templates" element={<QuoteTemplatesPage />} />
+            <Route path="/sales/quotes/:id" element={<QuoteDetailPage />} />
+
+            <Route path="/billing/quotes" element={<Navigate to="/sales/quotes" replace />} />
+            <Route path="/billing/quotes/new" element={<Navigate to="/sales/quotes/new" replace />} />
+            <Route path="/billing/quotes/templates" element={<Navigate to="/sales/quotes/templates" replace />} />
+            <Route path="/billing/quotes/:id" element={<BillingQuoteIdRedirect />} />
             <Route path="/billing/purchase-orders" element={<PurchaseOrdersPage />} />
             <Route path="/billing/purchase-orders/new" element={<NewPOPage />} />
             <Route path="/billing/purchase-orders/:id" element={<PODetailPage />} />

@@ -185,7 +185,7 @@ export function CostEstimationPanel({
 
       window.localStorage.setItem(estimateStorageKey(String(orgId), String(workOrderId)), JSON.stringify(payload));
       toast.success("Estimate staged. Opening quote builder...");
-      navigate(`/billing/quotes/new?workOrderId=${String(workOrderId)}`);
+      navigate(`/sales/quotes/new?workOrderId=${String(workOrderId)}`);
     } catch {
       toast.error("Unable to stage estimate for quote generation.");
     }

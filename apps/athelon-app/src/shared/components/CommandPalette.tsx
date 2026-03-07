@@ -43,7 +43,10 @@ const NAV_ITEMS = [
   { label: "Roster & Teams", path: "/scheduling/roster", icon: Users },
   { label: "Quote Workspace", path: "/scheduling/quotes", icon: FileText },
   { label: "Invoices", path: "/billing/invoices", icon: ReceiptText },
-  { label: "Quotes", path: "/billing/quotes", icon: FileText },
+  { label: "Sales Dashboard", path: "/sales/dashboard", icon: FileBarChart },
+  { label: "Sales Ops", path: "/sales/ops", icon: FileBarChart },
+  { label: "Quotes", path: "/sales/quotes", icon: FileText },
+  { label: "Sales Training", path: "/sales/training", icon: Users },
   { label: "Customers", path: "/billing/customers", icon: Users },
   { label: "Vendors", path: "/billing/vendors", icon: Users },
   { label: "Purchase Orders", path: "/billing/purchase-orders", icon: FileText },
@@ -60,7 +63,7 @@ const NAV_ITEMS = [
 const ACTION_ITEMS = [
   { label: "New Work Order", path: "/work-orders/new", icon: Plus },
   { label: "New Invoice", path: "/billing/invoices/new", icon: Plus },
-  { label: "New Quote", path: "/billing/quotes/new", icon: Plus },
+  { label: "New Quote", path: "/sales/quotes/new", icon: Plus },
   { label: "New Part", path: "/parts/new", icon: Plus },
   { label: "Time Clock", path: "/billing/time-clock", icon: Clock },
 ];

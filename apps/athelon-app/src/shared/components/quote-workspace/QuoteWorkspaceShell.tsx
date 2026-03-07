@@ -476,7 +476,7 @@ export function QuoteWorkspaceShell({
         primaryActionType="link"
         primaryActionTarget="/work-orders/new"
         secondaryActionLabel={surface === "scheduling" ? "Open Gantt Board" : "Open Quotes List"}
-        secondaryActionTarget={surface === "scheduling" ? "/scheduling" : "/billing/quotes"}
+        secondaryActionTarget={surface === "scheduling" ? "/scheduling" : "/sales/quotes"}
       />
     );
   }
