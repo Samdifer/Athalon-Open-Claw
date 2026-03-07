@@ -3,6 +3,11 @@ import { mutation, query } from "./_generated/server";
 import type { Id } from "./_generated/dataModel";
 import { requireSchedulingManager } from "./shared/helpers/schedulingPermissions";
 import { reserveNextWorkOrderNumber } from "./lib/workOrderNumber";
+import {
+  daysBetween,
+  formatAircraftLabel,
+  getAircraftTypeTokens,
+} from "./lib/dueListPlanningHelpers";
 
 type DueSource = "maintenance_program" | "ad_compliance";
 
@@ -24,31 +29,6 @@ type DueEvent = {
 };
 
 const DAY_MS = 86_400_000;
-
-function toUtcDayStart(ts: number): number {
-  const date = new Date(ts);
-  return Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
-}
-
-function daysBetween(startTs: number, endTs: number): number {
-  return Math.ceil((toUtcDayStart(endTs) - toUtcDayStart(startTs)) / DAY_MS);
-}
-
-function formatAircraftLabel(aircraft: any): string {
-  return (
-    aircraft.currentRegistration ??
-    `${aircraft.make} ${aircraft.model} (${aircraft.serialNumber})`
-  );
-}
-
-function getAircraftTypeTokens(aircraft: any): string[] {
-  const tokens = [
-    `${aircraft.make} ${aircraft.model}`,
-    `${aircraft.make} ${aircraft.model} ${aircraft.series ?? ""}`.trim(),
-    aircraft.model,
-  ];
-  return Array.from(new Set(tokens.map((t) => t.trim()).filter(Boolean)));
-}
 
 export const dueListWorkbench = query({
   args: {

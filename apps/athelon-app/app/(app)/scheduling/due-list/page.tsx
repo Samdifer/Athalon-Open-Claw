@@ -172,6 +172,7 @@ export default function SchedulingDueListPage() {
                 key={days}
                 variant={horizonDays === days ? "default" : "outline"}
                 size="sm"
+                data-testid={`due-list-horizon-${days}`}
                 onClick={() => setHorizonDays(days)}
               >
                 {days}-day horizon
@@ -192,11 +193,16 @@ export default function SchedulingDueListPage() {
             <div className="flex items-center gap-2">
               <input
                 className="rounded-md border border-input bg-background px-2 py-1.5 text-sm"
+                data-testid="due-list-month-picker"
                 type="month"
                 value={monthIso}
                 onChange={(e) => setMonthIso(e.target.value)}
               />
-              <Button onClick={handleGeneratePlan} disabled={isGenerating || selectedItems.length === 0}>
+              <Button
+                data-testid="due-list-generate-plan"
+                onClick={handleGeneratePlan}
+                disabled={isGenerating || selectedItems.length === 0}
+              >
                 {isGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CalendarClock className="mr-2 h-4 w-4" />}
                 Generate monthly plan
               </Button>
@@ -223,6 +229,7 @@ export default function SchedulingDueListPage() {
                 <Button
                   variant="ghost"
                   size="sm"
+                  data-testid={`due-list-select-all-${group.key}`}
                   onClick={() => selectGroup(group.items, true)}
                   disabled={group.items.length === 0}
                 >
@@ -231,6 +238,7 @@ export default function SchedulingDueListPage() {
                 <Button
                   variant="ghost"
                   size="sm"
+                  data-testid={`due-list-clear-${group.key}`}
                   onClick={() => selectGroup(group.items, false)}
                   disabled={group.items.length === 0}
                 >
@@ -255,6 +263,7 @@ export default function SchedulingDueListPage() {
                       <div className="flex items-start gap-3">
                         <Checkbox
                           checked={!!selected[item.dueKey]}
+                          data-testid={`due-list-select-${item.dueKey}`}
                           onCheckedChange={() => toggleKey(item.dueKey)}
                           aria-label={`Select ${item.title}`}
                         />

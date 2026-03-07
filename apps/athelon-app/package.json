@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "build:prod": "tsc --noEmit && vite build",
+    "vercel:build": "pnpm run build:prod",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "seed:e2e:scheduler-stories": "node scripts/seed-scheduler-stories.mjs",
@@ -33,7 +35,9 @@
     "agentic:queue:list": "node scripts/agentic/queue.mjs list",
     "agentic:queue:complete": "node scripts/agentic/queue.mjs complete",
     "test:agentic": "node --test scripts/agentic/tests/*.test.mjs",
-    "test:camp-linkage": "node --test scripts/camp-linkage/*.test.mjs"
+    "test:camp-linkage": "node --test scripts/camp-linkage/*.test.mjs",
+    "test:scheduling-helpers": "node --test scripts/scheduling/*.test.mjs",
+    "test:due-list-helpers": "node --test scripts/due-list/*.test.mjs"
   },
   "dependencies": {
     "@clerk/clerk-react": "^5.61.1",

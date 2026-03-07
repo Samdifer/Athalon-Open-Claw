@@ -17,9 +17,12 @@ The dev server runs on `http://localhost:3000`.
 ## Validation
 
 ```bash
-pnpm typecheck
-pnpm build
+npx tsc --noEmit
+NODE_OPTIONS=--max-old-space-size=4096 npx vite build
 pnpm test:agentic
+pnpm test:camp-linkage
+pnpm test:scheduling-helpers
+pnpm test:due-list-helpers
 ```
 
 For backend schema/function changes, also run:
@@ -42,3 +45,12 @@ npx convex codegen
 - [Master Feature Crosswalk (Derived)](docs/plans/MASTER-FEATURE-CROSSWALK.md)
 - [Master Build Plan (Derived)](docs/plans/MASTER-BUILD-PLAN.md)
 - [Agentic Build System Runbook](docs/ops/agentic-build-system/README.md)
+- [Deployment Troubleshooting Runbook](docs/ops/DEPLOYMENT-TROUBLESHOOTING-RUNBOOK.md)
+
+## Deploy Parity Command
+
+From repository root:
+
+```bash
+pnpm run vercel:build:ci
+```
