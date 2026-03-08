@@ -93,6 +93,7 @@ const CompliancePage = lazy(() => import("@/app/(app)/compliance/page"));
 const QcmReviewPage = lazy(() => import("@/app/(app)/compliance/qcm-review/page"));
 const AuditTrailPage = lazy(() => import("@/app/(app)/compliance/audit-trail/page"));
 const AdSbCompliancePage = lazy(() => import("@/app/(app)/compliance/ad-sb/page"));
+const UnaccountedTasksPage = lazy(() => import("@/app/(app)/maintenance/unaccounted/page"));
 const AuditReadinessPage = lazy(() => import("@/app/(app)/compliance/audit-readiness/page"));
 const DiamondAwardPage = lazy(() => import("@/app/(app)/compliance/diamond-award/page"));
 
@@ -282,6 +283,8 @@ export function protectedAppRoutes() {
             <Route path="/training/ojt/roster" element={<OjtRosterPage />} />
             <Route path="/my-work" element={<MyWorkPage />} />
             <Route path="/my-work/time" element={<MyTimePage />} />
+
+            <Route path="/maintenance/unaccounted" element={<UnaccountedTasksPage />} />
 
             <Route path="/compliance" element={<CompliancePage />} />
             <Route path="/compliance/qcm-review" element={<QcmReviewPage />} />

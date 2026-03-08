@@ -135,6 +135,7 @@ const mainNav: NavEntry[] = [
       { title: "Maintenance Programs", href: "/fleet/maintenance-programs", icon: CalendarDays },
       { title: "Life-Limited Parts", href: "/fleet/llp", icon: Shield },
       { title: "ADS-B Tracking", href: "/settings/adsb", icon: Plane },
+      { title: "Unaccounted Tasks", href: "/maintenance/unaccounted", icon: ClipboardCheck },
     ],
   },
   {
