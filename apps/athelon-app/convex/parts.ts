@@ -288,7 +288,11 @@ export const receivePart = mutation({
     }
 
     // ── G5: LLP hard block — parts at or beyond life limit go to quarantine ───
-    let receivingLocation: "inventory" | "quarantine" = "inventory";
+    // BUG-PC-10 fix: Per INV-23 (schema v3), parts received at the dock must go
+    // to "pending_inspection" — NOT directly to "inventory". They become issuable
+    // only after receiving inspection is completed via completeReceivingInspection.
+    // Exception: quarantine for life-expired parts (below).
+    let receivingLocation: "pending_inspection" | "quarantine" = "pending_inspection";
     if (args.isLifeLimited && args.lifeLimitHours != null && args.hoursAccumulatedBeforeInstall != null) {
       if (args.hoursAccumulatedBeforeInstall >= args.lifeLimitHours) {
         // Hard block: this part has exhausted its life limit.
@@ -1377,5 +1381,21 @@ export const createPart = mutation({
     });
 
     return ids;
+  },
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// QUERY: getPart
+//
+// Returns a single part by ID. Used by the /parts/:id detail page for
+// deep-link navigation. Returns null if the part does not exist.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const getPart = query({
+  args: {
+    partId: v.id("parts"),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db.get(args.partId);
   },
 });

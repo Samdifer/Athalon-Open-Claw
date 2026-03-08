@@ -97,10 +97,41 @@ export const cancelRequest = mutation({
       );
     }
 
+    const now = Date.now();
+
     await ctx.db.patch(args.requestId, {
       status: "cancelled",
-      updatedAt: Date.now(),
+      updatedAt: now,
     });
+
+    // BUG-PC-11 fix: If the request linked to a specific part and that part has
+    // a reservation pointing to this work order, release it on cancellation.
+    // Previously, cancelling a request that had triggered a "reserved" partHistory
+    // event left a dangling soft-reservation with no corresponding release.
+    if (record.partId) {
+      const part = await ctx.db.get(record.partId);
+      if (
+        part &&
+        part.reservedForWorkOrderId &&
+        String(part.reservedForWorkOrderId) === String(record.workOrderId)
+      ) {
+        await ctx.db.patch(record.partId, {
+          reservedForWorkOrderId: undefined,
+          reservedByTechnicianId: undefined,
+          reservedAt: undefined,
+          updatedAt: now,
+        });
+
+        await ctx.runMutation(internal.partHistory.recordEvent, {
+          organizationId: record.organizationId,
+          partId: record.partId,
+          workOrderId: record.workOrderId,
+          eventType: "reservation_released",
+          performedByUserId: "system",
+          notes: `Reservation released — part request cancelled`,
+        });
+      }
+    }
   },
 });
 
@@ -134,16 +165,53 @@ export const issuePart = mutation({
     if (!part) {
       throw new Error("Part not found in inventory.");
     }
+
+    // BUG-PC-03 fix: Guard against parts still in pending_inspection (INV-23).
+    // Parts must pass receiving inspection before issuance.
+    if (part.location === "pending_inspection") {
+      throw new Error(
+        `PART_NOT_INSPECTED: Part ${args.partId} is in "pending_inspection" and ` +
+        `cannot be issued until receiving inspection is completed (INV-23). ` +
+        `Complete the receiving inspection first via completeReceivingInspection.`,
+      );
+    }
+
     if (part.location !== "inventory") {
       throw new Error(
         `Part is not available for issuance — current location is "${part.location}".`,
       );
     }
 
+    // BUG-PC-04 fix: Prevent issuing a part already reserved for a DIFFERENT work order.
+    if (
+      part.reservedForWorkOrderId &&
+      String(part.reservedForWorkOrderId) !== String(record.workOrderId)
+    ) {
+      throw new Error(
+        `PART_RESERVED_ELSEWHERE: Part ${args.partId} is already reserved for ` +
+        `work order ${part.reservedForWorkOrderId}. Release the reservation first ` +
+        `or select a different part.`,
+      );
+    }
+
+    // BUG-PC-05 fix (idempotency): If this request already has this partId issued,
+    // silently succeed to prevent double-issue from rapid clicks.
+    if (record.status === "issued" && String(record.partId) === String(args.partId)) {
+      return; // Already issued with same part — idempotent no-op
+    }
+
     const now = Date.now();
     const previousLocation = part.location;
 
-    // Update the inventory part: reserve for this work order
+    // BUG-PC-01 fix: Actually transition location from "inventory" to "issued"
+    // so the part is no longer available for other work orders. Previously only
+    // reservedForWorkOrderId was set, leaving location as "inventory" — meaning
+    // the part could be double-issued to multiple WOs.
+    //
+    // Note: "issued" is not a valid location in the parts schema enum. We use a
+    // two-field approach: location stays "inventory" but reservedForWorkOrderId
+    // acts as the issued lock. The real fix is the reservation conflict guard
+    // above (BUG-PC-04) which prevents double-issue.
     await ctx.db.patch(args.partId, {
       reservedForWorkOrderId: record.workOrderId,
       reservedByTechnicianId: args.issuedByTechnicianId,
@@ -208,16 +276,28 @@ export const returnPart = mutation({
       throw new Error("Cannot return part — no inventory part linked to this request.");
     }
 
+    // BUG-PC-08 fix: Validate return quantity doesn't exceed issued quantity.
+    if (args.quantityReturned <= 0) {
+      throw new Error("quantityReturned must be > 0.");
+    }
+    const totalReturned = (record.quantityReturned ?? 0) + args.quantityReturned;
+    if (totalReturned > record.quantityIssued) {
+      throw new Error(
+        `RETURN_EXCEEDS_ISSUED: Cannot return ${args.quantityReturned} units — ` +
+        `total returned (${totalReturned}) would exceed issued quantity (${record.quantityIssued}). ` +
+        `Already returned: ${record.quantityReturned ?? 0}.`,
+      );
+    }
+
     const part = await ctx.db.get(record.partId);
     if (!part) {
       throw new Error("Linked inventory part not found.");
     }
 
     const now = Date.now();
-    const totalReturned = (record.quantityReturned ?? 0) + args.quantityReturned;
-    const fullyReturned = totalReturned >= record.quantityRequested;
+    const fullyReturned = totalReturned >= record.quantityIssued;
 
-    // Restore part to inventory
+    // Restore part to inventory — clear reservation fields
     await ctx.db.patch(record.partId, {
       location: "inventory",
       reservedForWorkOrderId: undefined,
@@ -271,6 +351,11 @@ export const markInstalled = mutation({
       );
     }
 
+    // BUG-PC-06 fix (idempotency): If already installed, silently succeed.
+    if (record.status === "installed") {
+      return;
+    }
+
     const now = Date.now();
 
     await ctx.db.patch(args.requestId, {
@@ -283,10 +368,23 @@ export const markInstalled = mutation({
     if (record.partId) {
       const part = await ctx.db.get(record.partId);
       if (part) {
+        // BUG-PC-07 fix: Clear reservation fields on install and set the
+        // work order reference on installedByWorkOrderId (consistent with
+        // parts.ts installPart). Also fetch the WO to get the aircraftId
+        // so currentAircraftId is populated (previously omitted, creating
+        // inconsistency between this path and parts.ts installPart).
+        const workOrder = await ctx.db.get(record.workOrderId);
         await ctx.db.patch(record.partId, {
           location: "installed",
           installedOnWorkOrderId: record.workOrderId,
+          installedByWorkOrderId: record.workOrderId,
           installedAt: now,
+          // Propagate aircraft reference from the work order (if available)
+          currentAircraftId: workOrder?.aircraftId,
+          // Clear reservation fields — part is now installed, not reserved
+          reservedForWorkOrderId: undefined,
+          reservedByTechnicianId: undefined,
+          reservedAt: undefined,
           updatedAt: now,
         });
       }

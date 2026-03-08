@@ -37,6 +37,7 @@
     "test:agentic": "node --test scripts/agentic/tests/*.test.mjs",
     "test:camp-linkage": "node --test scripts/camp-linkage/*.test.mjs",
     "test:scheduling-helpers": "node --test scripts/scheduling/*.test.mjs",
+    "test:parts-clerk": "node --test scripts/parts-clerk/*.test.mjs",
     "test:due-list-helpers": "node --test scripts/due-list/*.test.mjs",
     "test:parts-clerk-bughunter": "node --test scripts/parts-clerk-bughunter/*.test.mjs"
   },

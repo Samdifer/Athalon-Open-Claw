@@ -42,18 +42,24 @@ export const startCount = mutation({
       )
       .collect();
 
-    // Group by partNumber to get quantities
+    // Group by partNumber to get quantities.
+    // BUG-PC-09 fix: For non-serialized (batch) parts, use quantityOnHand
+    // instead of counting each record as 1 unit. A single batch parts record
+    // with quantityOnHand=50 was previously counted as 1, producing wildly
+    // incorrect expected counts for physical inventory.
     const partGroups = new Map<string, { partName: string; partNumber: string; count: number; partId: string }>();
     for (const part of parts) {
       const key = part.partNumber;
+      // For batch parts, use quantityOnHand; for serialized parts, count as 1
+      const qty = part.isSerialized ? 1 : (part.quantityOnHand ?? 1);
       const existing = partGroups.get(key);
       if (existing) {
-        existing.count += 1;
+        existing.count += qty;
       } else {
         partGroups.set(key, {
           partName: part.partName,
           partNumber: part.partNumber,
-          count: 1,
+          count: qty,
           partId: part._id as string,
         });
       }
