@@ -2911,6 +2911,9 @@ export default defineSchema({
       v.literal("access_denied"),
       v.literal("system_event"),
       v.literal("qcm_reviewed"), // v3 — REQ-LP-05 (Linda Paredes, QCM)
+      v.literal("finding_status_changed"),   // opus-a — maintenance findings lifecycle
+      v.literal("finding_wo_linked"),        // opus-a — finding linked to work order
+      v.literal("finding_wo_unlinked"),      // opus-a — finding unlinked from work order
     ),
 
     tableName: v.string(),
@@ -5794,4 +5797,94 @@ export default defineSchema({
     .index("by_org_category", ["organizationId", "categoryId"])
     .index("by_part_category", ["partId", "categoryId"])
     .index("by_org_part", ["organizationId", "partId"]),
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // MAINTENANCE FINDINGS (Unaccounted Tasks)
+  // Unified tracking for AD, SB, and predictive-maintenance findings that are
+  // not yet associated with a work order. Once triaged and approved, findings
+  // can be linked to a work order for execution.
+  //
+  // Schema addition: opus-a (2026-03-08)
+  // Author:     Devraj Anand
+  // Regulatory: Marcus Webb
+  // ═══════════════════════════════════════════════════════════════════════════
+  maintenanceFindings: defineTable({
+    // Core identity
+    findingNumber: v.string(),            // Human-readable, org-scoped (e.g., FND-0042)
+    organizationId: v.id("organizations"),
+    aircraftId: v.id("aircraft"),
+
+    // Finding classification
+    type: v.union(
+      v.literal("AD"),
+      v.literal("SB"),
+      v.literal("PREDICTED"),
+    ),
+
+    // Source & description
+    sourceRef: v.string(),                // e.g., AD 2024-15-06, SB 72-1045, ML model ID
+    title: v.string(),
+    description: v.string(),
+
+    // Priority & scheduling
+    severity: v.union(
+      v.literal("critical"),
+      v.literal("major"),
+      v.literal("minor"),
+      v.literal("informational"),
+    ),
+    priority: v.union(
+      v.literal("aog"),
+      v.literal("urgent"),
+      v.literal("routine"),
+      v.literal("deferred"),
+    ),
+    dueAt: v.optional(v.number()),        // Calendar deadline (epoch ms)
+    dueCounter: v.optional(v.number()),   // Hours / cycles counter limit
+
+    // Lifecycle status
+    status: v.union(
+      v.literal("new"),
+      v.literal("triaged"),
+      v.literal("approved"),
+      v.literal("linked_to_wo"),
+      v.literal("deferred"),
+      v.literal("completed"),
+      v.literal("dismissed"),
+    ),
+
+    // Work-order linkage (nullable — set when status == linked_to_wo)
+    workOrderId: v.optional(v.id("workOrders")),
+    linkedAt: v.optional(v.number()),
+    linkedByUserId: v.optional(v.string()),
+    unlinkedReason: v.optional(v.string()),
+
+    // Predictive confidence (nullable — only for PREDICTED type)
+    confidenceScore: v.optional(v.number()), // 0.0 – 1.0
+
+    // Provenance
+    provenance: v.optional(v.string()),   // JSON: origin system, import batch, model version, etc.
+
+    // Audit metadata
+    createdAt: v.number(),
+    createdByUserId: v.string(),
+    updatedAt: v.optional(v.number()),
+    updatedByUserId: v.optional(v.string()),
+
+    // Deferral metadata
+    deferredReason: v.optional(v.string()),
+    deferredUntil: v.optional(v.number()),
+    dismissedReason: v.optional(v.string()),
+
+    // Notes / additional context
+    notes: v.optional(v.string()),
+  })
+    .index("by_org", ["organizationId"])
+    .index("by_org_status", ["organizationId", "status"])
+    .index("by_org_aircraft", ["organizationId", "aircraftId"])
+    .index("by_org_type", ["organizationId", "type"])
+    .index("by_org_aircraft_status", ["organizationId", "aircraftId", "status"])
+    .index("by_workOrder", ["workOrderId"])
+    .index("by_org_severity", ["organizationId", "severity"])
+    .index("by_findingNumber", ["organizationId", "findingNumber"]),
 });
