@@ -181,7 +181,7 @@ async function signCurrentStep(
 }
 
 async function signCurrentCard(page: Page, statement: string) {
-  await page.getByRole("button", { name: /^Sign Card$/i }).click();
+  await page.getByRole("button", { name: /^Sign Card\b/i }).click();
   await expect(
     page.getByRole("heading", { name: /Sign Work Card/i }),
   ).toBeVisible({ timeout: 5_000 });
@@ -308,18 +308,22 @@ test.describe("History timeline playback", () => {
       });
       await waitForLoad(page);
 
-      await page.getByRole("button", { name: /^Log Finding$/i }).click();
-      await expect(
-        page.getByRole("heading", { name: /Log Finding/i }),
-      ).toBeVisible({ timeout: 5_000 });
+      await page
+        .getByRole("button", { name: /^Log Finding$/i })
+        .first()
+        .click();
+      const findingDialog = page.getByRole("dialog").filter({
+        has: page.getByRole("heading", { name: /Log Finding/i }),
+      });
+      await expect(findingDialog).toBeVisible({ timeout: 5_000 });
 
-      await page.locator("#sq-description").fill(findingDescriptionV1);
+      await findingDialog.locator("#sq-description").fill(findingDescriptionV1);
       await selectOption(
         page,
-        page.locator("#sq-found-during"),
+        findingDialog.locator("#sq-found-during"),
         /Annual Inspection/i,
       );
-      await page.getByRole("button", { name: /^Log Finding$/i }).click();
+      await findingDialog.getByRole("button", { name: /^Log Finding$/i }).click();
 
       const findingLink = page
         .locator(`a[href^="/work-orders/${workOrderId}/findings/"]`)

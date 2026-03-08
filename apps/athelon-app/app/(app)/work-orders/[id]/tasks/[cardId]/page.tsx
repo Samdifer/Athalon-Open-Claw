@@ -536,6 +536,10 @@ export default function TaskCardPage() {
     taskCard.steps.every((s) => s.status === "completed" || s.status === "na");
   const cardIsComplete = taskCard.status === "complete";
   const cardIsVoided = taskCard.status === "voided";
+  const cardHasRecordedSignOff = Boolean(
+    taskCard.signedAt ||
+      taskCard.signedCertificateNumber,
+  );
   const activeTimerEntry = activeTimer?.entry;
   const activeTaskTimerForThisCard =
     activeTimerEntry &&
@@ -804,7 +808,7 @@ export default function TaskCardPage() {
               {cardIsComplete && (
                 <CheckCircle2 className="w-2.5 h-2.5 mr-1" />
               )}
-              {cardIsComplete
+              {cardHasRecordedSignOff
                 ? "Signed & Complete"
                 : TASK_STATUS_LABEL[taskCard.status as TaskStatus] ?? taskCard.status}
             </Badge>
@@ -2034,7 +2038,7 @@ export default function TaskCardPage() {
       {!cardIsVoided && (
         <Card
           className={`border ${
-            cardIsComplete
+            cardHasRecordedSignOff
               ? "border-green-500/30 bg-green-500/5"
               : (complianceBlocksSignOff || vendorServicesBlockSignOff) && allStepsDone
               ? "border-amber-500/30 bg-amber-500/5"
@@ -2047,7 +2051,7 @@ export default function TaskCardPage() {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
                 <p className="text-sm font-medium text-foreground flex items-center gap-2">
-                  {cardIsComplete ? (
+                  {cardHasRecordedSignOff ? (
                     <>
                       <CheckCircle2 className="w-4 h-4 text-green-600 dark:text-green-400" />
                       Work Card Signed &amp; Complete
@@ -2070,7 +2074,7 @@ export default function TaskCardPage() {
                   )}
                 </p>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  {cardIsComplete
+                  {cardHasRecordedSignOff
                     ? "This work card has been certified per 14 CFR 43.9."
                     : complianceBlocksSignOff && allStepsDone
                     ? `${blockingComplianceItems.length} compliance item${blockingComplianceItems.length !== 1 ? "s" : ""} require resolution before this card can be signed. Resolve all non-compliant and pending items above.`
@@ -2086,7 +2090,7 @@ export default function TaskCardPage() {
                 </p>
               </div>
 
-              {!cardIsComplete && orgId && techId && (
+              {!cardHasRecordedSignOff && orgId && techId && (
                 <Button
                   variant={allStepsDone && !complianceBlocksSignOff && !vendorServicesBlockSignOff ? "default" : "outline"}
                   size="sm"
