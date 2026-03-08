@@ -11,7 +11,25 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Building2, Link2 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
+
+const AVIATION_TIMEZONES = [
+  { value: "America/New_York", label: "Eastern (ET) - America/New_York" },
+  { value: "America/Chicago", label: "Central (CT) - America/Chicago" },
+  { value: "America/Denver", label: "Mountain (MT) - America/Denver" },
+  { value: "America/Phoenix", label: "Mountain (no DST) - America/Phoenix" },
+  { value: "America/Los_Angeles", label: "Pacific (PT) - America/Los_Angeles" },
+  { value: "America/Anchorage", label: "Alaska (AKT) - America/Anchorage" },
+  { value: "Pacific/Honolulu", label: "Hawaii (HST) - Pacific/Honolulu" },
+  { value: "UTC", label: "UTC / Zulu" },
+] as const;
 
 export default function OnboardingPage() {
   const navigate = useNavigate();
@@ -28,6 +46,7 @@ export default function OnboardingPage() {
   const [city, setCity] = useState("");
   const [state, setState] = useState("");
   const [country, setCountry] = useState("US");
+  const [timezone, setTimezone] = useState("America/Denver");
   const [submitting, setSubmitting] = useState(false);
   const [linkingSelectedOrganization, setLinkingSelectedOrganization] =
     useState(false);
@@ -42,8 +61,8 @@ export default function OnboardingPage() {
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    if (!organizationName.trim() || !city.trim() || !state.trim() || !country.trim()) {
-      toast.error("Organization name, city, state, and country are required.");
+    if (!organizationName.trim() || !city.trim() || !state.trim() || !country.trim() || !timezone) {
+      toast.error("Organization name, city, state, country, and timezone are required.");
       return;
     }
 
@@ -55,6 +74,7 @@ export default function OnboardingPage() {
         city: city.trim(),
         state: state.trim(),
         country: country.trim(),
+        timezone,
       });
       toast.success("Organization setup complete.");
       navigate("/dashboard", { replace: true });
@@ -208,6 +228,22 @@ export default function OnboardingPage() {
                   placeholder="Grand Junction"
                 />
               </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="timezone">Timezone *</Label>
+              <Select value={timezone} onValueChange={setTimezone}>
+                <SelectTrigger id="timezone" aria-label="Timezone">
+                  <SelectValue placeholder="Select timezone" />
+                </SelectTrigger>
+                <SelectContent>
+                  {AVIATION_TIMEZONES.map((entry) => (
+                    <SelectItem key={entry.value} value={entry.value}>
+                      {entry.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <Button type="submit" className="w-full" disabled={submitting}>

@@ -15,6 +15,8 @@ import {
   Pencil,
   Trash2,
   MapPin,
+  Phone,
+  Mail,
 } from "lucide-react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -25,6 +27,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import {
   Dialog,
   DialogContent,
@@ -50,6 +53,17 @@ const CERT_TYPES = [
   { value: "part_121", label: "Part 121" },
   { value: "part_91", label: "Part 91" },
 ];
+
+const AVIATION_TIMEZONES = [
+  { value: "America/New_York", label: "Eastern (ET) - America/New_York" },
+  { value: "America/Chicago", label: "Central (CT) - America/Chicago" },
+  { value: "America/Denver", label: "Mountain (MT) - America/Denver" },
+  { value: "America/Phoenix", label: "Mountain (no DST) - America/Phoenix" },
+  { value: "America/Los_Angeles", label: "Pacific (PT) - America/Los_Angeles" },
+  { value: "America/Anchorage", label: "Alaska (AKT) - America/Anchorage" },
+  { value: "Pacific/Honolulu", label: "Hawaii (HST) - Pacific/Honolulu" },
+  { value: "UTC", label: "UTC / Zulu" },
+] as const;
 
 const BAY_TYPES: { value: BayType; label: string }[] = [
   { value: "hangar", label: "Hangar" },
@@ -107,8 +121,11 @@ export default function FacilitiesAndBaysTab() {
   const [locCity, setLocCity] = useState("");
   const [locState, setLocState] = useState("");
   const [locZip, setLocZip] = useState("");
+  const [locPhone, setLocPhone] = useState("");
+  const [locEmail, setLocEmail] = useState("");
   const [locCertNumber, setLocCertNumber] = useState("");
   const [locCertType, setLocCertType] = useState("");
+  const [locTimezone, setLocTimezone] = useState("");
   const [locCapabilities, setLocCapabilities] = useState("");
   const [locIsPrimary, setLocIsPrimary] = useState(false);
 
@@ -144,8 +161,11 @@ export default function FacilitiesAndBaysTab() {
     setLocCity("");
     setLocState("");
     setLocZip("");
+    setLocPhone("");
+    setLocEmail("");
     setLocCertNumber("");
     setLocCertType("");
+    setLocTimezone("");
     setLocCapabilities("");
     setLocIsPrimary(false);
   }, []);
@@ -192,8 +212,11 @@ export default function FacilitiesAndBaysTab() {
     setLocCity(location.city ?? "");
     setLocState(location.state ?? "");
     setLocZip(location.zip ?? "");
-    setLocCertNumber(location.certificateNumber ?? "");
+    setLocPhone(location.phone ?? "");
+    setLocEmail(location.email ?? "");
+    setLocCertNumber(location.repairStationCertificateNumber ?? location.certificateNumber ?? "");
     setLocCertType(location.certificateType ?? "");
+    setLocTimezone(location.timezone ?? "");
     setLocCapabilities((location.capabilities ?? []).join(", "));
     setLocIsPrimary(location.isPrimary ?? false);
     setLocDialogOpen(true);
@@ -213,10 +236,13 @@ export default function FacilitiesAndBaysTab() {
       city: locCity.trim() || undefined,
       state: locState.trim() || undefined,
       zip: locZip.trim() || undefined,
+      phone: locPhone.trim() || undefined,
+      email: locEmail.trim() || undefined,
       certificateNumber: locCertNumber.trim() || undefined,
       certificateType: locCertType
         ? (locCertType as "part_145" | "part_135" | "part_121" | "part_91")
         : undefined,
+      timezone: locTimezone || undefined,
       capabilities: locCapabilities
         .split(",")
         .map((capability) => capability.trim())
@@ -460,6 +486,12 @@ export default function FacilitiesAndBaysTab() {
                   </Badge>
                 ))}
 
+                {location.timezone && (
+                  <Badge variant="outline" className="text-[10px] px-1.5 py-0 text-muted-foreground">
+                    {location.timezone}
+                  </Badge>
+                )}
+
                 <div className="flex-1" />
 
                 <span className="text-xs text-muted-foreground">
@@ -500,6 +532,29 @@ export default function FacilitiesAndBaysTab() {
 
             {isExpanded && (
               <CardContent className="pt-0 px-4 pb-3">
+                <div className="mb-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                  {location.address && (
+                    <span className="inline-flex items-center gap-1">
+                      <MapPin className="h-3 w-3" />
+                      {[location.address, location.city, location.state, location.zip]
+                        .filter(Boolean)
+                        .join(", ")}
+                    </span>
+                  )}
+                  {location.phone && (
+                    <span className="inline-flex items-center gap-1">
+                      <Phone className="h-3 w-3" />
+                      {location.phone}
+                    </span>
+                  )}
+                  {location.email && (
+                    <span className="inline-flex items-center gap-1">
+                      <Mail className="h-3 w-3" />
+                      {location.email}
+                    </span>
+                  )}
+                </div>
+
                 {locationBays.length === 0 ? (
                   <p className="text-xs text-muted-foreground italic py-2">
                     No bays configured for this location.
@@ -638,6 +693,24 @@ export default function FacilitiesAndBaysTab() {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
+                <Label className="text-xs">Phone</Label>
+                <Input
+                  className="h-8 text-sm"
+                  value={locPhone}
+                  onChange={(event) => setLocPhone(event.target.value)}
+                />
+              </div>
+              <div>
+                <Label className="text-xs">Email</Label>
+                <Input
+                  className="h-8 text-sm"
+                  value={locEmail}
+                  onChange={(event) => setLocEmail(event.target.value)}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
                 <Label className="text-xs">Certificate #</Label>
                 <Input
                   className="h-8 text-sm font-mono"
@@ -663,6 +736,25 @@ export default function FacilitiesAndBaysTab() {
               </div>
             </div>
             <div>
+              <Label className="text-xs">Timezone</Label>
+              <Select
+                value={locTimezone || "none"}
+                onValueChange={(value) => setLocTimezone(value === "none" ? "" : value)}
+              >
+                <SelectTrigger className="h-8 text-sm">
+                  <SelectValue placeholder="Select timezone" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Use organization default</SelectItem>
+                  {AVIATION_TIMEZONES.map((timezone) => (
+                    <SelectItem key={timezone.value} value={timezone.value}>
+                      {timezone.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
               <Label className="text-xs">Capabilities (comma-separated)</Label>
               <Input
                 className="h-8 text-sm"
@@ -671,17 +763,20 @@ export default function FacilitiesAndBaysTab() {
                 placeholder="Airframe, Powerplant, Avionics"
               />
             </div>
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
+            <div className="flex items-center justify-between rounded-md border border-border/60 px-3 py-2">
+              <div className="space-y-0.5">
+                <Label htmlFor="loc-primary" className="text-xs">
+                  Primary location
+                </Label>
+                <p className="text-[11px] text-muted-foreground">
+                  Use this location as the default operating station.
+                </p>
+              </div>
+              <Switch
                 id="loc-primary"
                 checked={locIsPrimary}
-                onChange={(event) => setLocIsPrimary(event.target.checked)}
-                className="rounded border-input"
+                onCheckedChange={setLocIsPrimary}
               />
-              <Label htmlFor="loc-primary" className="text-xs">
-                Primary location
-              </Label>
             </div>
           </div>
           <DialogFooter>

@@ -383,6 +383,7 @@ export const bootstrapOrganizationAndAdmin = mutation({
     city: v.string(),
     state: v.string(),
     country: v.string(),
+    timezone: v.string(),
   },
   handler: async (ctx, args) => {
     const identity = await requireAuth(ctx);
@@ -408,8 +409,9 @@ export const bootstrapOrganizationAndAdmin = mutation({
     const city = args.city.trim();
     const state = args.state.trim().toUpperCase();
     const country = args.country.trim().toUpperCase();
-    if (!city || !state || !country) {
-      throw new Error("City, state, and country are required.");
+    const timezone = args.timezone.trim();
+    if (!city || !state || !country || !timezone) {
+      throw new Error("City, state, country, and timezone are required.");
     }
 
     const legalName =
@@ -453,6 +455,7 @@ export const bootstrapOrganizationAndAdmin = mutation({
       city,
       state,
       country,
+      timezone,
       isActive: true,
       isPrimary: true,
       createdAt: now,

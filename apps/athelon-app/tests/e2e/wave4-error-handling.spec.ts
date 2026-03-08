@@ -1,6 +1,13 @@
 import { test, expect } from "@playwright/test";
 
 test.describe("Error handling", () => {
+  test("explicit not-found route renders recovery UI", async ({ page }) => {
+    const resp = await page.goto("/not-found", { waitUntil: "domcontentloaded", timeout: 30_000 });
+    if (resp) expect(resp.status()).toBeLessThan(500);
+    await expect(page.getByText("The page you requested could not be found.")).toBeVisible();
+    await expect(page.getByRole("link", { name: /back to dashboard/i })).toBeVisible();
+  });
+
   test("unknown route doesn't crash", async ({ page }) => {
     const resp = await page.goto("/this-does-not-exist-xyz", { waitUntil: "domcontentloaded", timeout: 30_000 });
     if (resp) expect(resp.status()).toBeLessThan(500);

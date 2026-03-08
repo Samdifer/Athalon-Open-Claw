@@ -28,6 +28,8 @@ test("onboarding bootstrap completes and routes user to dashboard", async ({ pag
   await page.getByLabel(/country/i).fill("US");
   await page.getByLabel(/state/i).fill("CO");
   await page.getByLabel(/city/i).fill("Denver");
+  await page.getByRole("combobox", { name: /timezone/i }).click();
+  await page.getByRole("option", { name: /mountain \(mt\) - america\/denver/i }).click();
 
   await page.getByRole("button", { name: /complete setup/i }).click();
   await expect(page).toHaveURL(/\/dashboard$/, { timeout: 25_000 });

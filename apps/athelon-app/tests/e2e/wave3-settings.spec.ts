@@ -7,6 +7,7 @@ const SETTINGS_PAGES = [
   { path: "/settings/notifications", label: "Notifications" },
   { path: "/settings/locations", label: "Locations" },
   { path: "/settings/import", label: "Import" },
+  { path: "/settings/routing-templates", label: "Routing Templates" },
   { path: "/settings/email-log", label: "Email Log" },
   { path: "/settings/quickbooks", label: "QuickBooks" },
 ];

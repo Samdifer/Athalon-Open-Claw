@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
+import { usePagePrereqs } from "@/hooks/usePagePrereqs";
 import { api } from "@/convex/_generated/api";
 import { toast } from "sonner";
 import {
@@ -34,6 +35,7 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ActionableEmptyState } from "@/components/zero-state/ActionableEmptyState";
 
 // Common IANA timezones for aviation/MRO shops in North America
 const AVIATION_TIMEZONES = [
@@ -58,7 +60,7 @@ const AVIATION_TIMEZONES = [
 ] as const;
 
 export default function ShopSettingsPage() {
-  const { orgId } = useCurrentOrg();
+  const { orgId, isLoaded } = useCurrentOrg();
 
   const shops = useQuery(
     api.shopLocations.list,
@@ -86,6 +88,10 @@ export default function ShopSettingsPage() {
   });
 
   const [saving, setSaving] = useState(false);
+  const prereq = usePagePrereqs({
+    requiresOrg: true,
+    isDataLoading: !isLoaded || shops === undefined,
+  });
 
   // Populate form when shop data loads
   useEffect(() => {
@@ -158,7 +164,7 @@ export default function ShopSettingsPage() {
     }
   }
 
-  if (shops === undefined) {
+  if (prereq.state === "loading_context" || prereq.state === "loading_data") {
     return (
       <div className="space-y-5 max-w-2xl">
         <Skeleton className="h-7 w-40" />
@@ -166,6 +172,20 @@ export default function ShopSettingsPage() {
       </div>
     );
   }
+
+  if (prereq.state === "missing_context") {
+    return (
+      <ActionableEmptyState
+        title="Shop settings require organization setup"
+        missingInfo="Complete onboarding before configuring your primary repair-station profile."
+        primaryActionLabel="Complete Setup"
+        primaryActionType="link"
+        primaryActionTarget="/onboarding"
+      />
+    );
+  }
+
+  if (!orgId) return null;
 
   return (
     <div className="space-y-5 max-w-2xl">

@@ -71,6 +71,7 @@ export const INTERNAL_ROUTE_MANIFEST: InternalRoute[] = [
   { label: "Settings Notifications", path: "/settings/notifications" },
   { label: "Settings Locations", path: "/settings/locations" },
   { label: "Settings Import", path: "/settings/import" },
+  { label: "Settings Routing Templates", path: "/settings/routing-templates" },
   { label: "Settings Email Log", path: "/settings/email-log" },
   { label: "Settings QuickBooks", path: "/settings/quickbooks" },
 ];

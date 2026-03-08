@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { LayoutList, Plus, Route } from "lucide-react";
 import { toast } from "sonner";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
+import { usePagePrereqs } from "@/hooks/usePagePrereqs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,6 +16,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ActionableEmptyState } from "@/components/zero-state/ActionableEmptyState";
 import {
   TemplateBuilder,
   loadRoutingTemplatesFromStorage,
@@ -35,6 +38,10 @@ function createTemplateDraft(): RoutingTemplate {
 
 export default function RoutingTemplatesPage() {
   const { orgId, isLoaded } = useCurrentOrg();
+  const prereq = usePagePrereqs({
+    requiresOrg: true,
+    isDataLoading: !isLoaded,
+  });
 
   const [templates, setTemplates] = useState<RoutingTemplate[]>([]);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
@@ -102,26 +109,28 @@ export default function RoutingTemplatesPage() {
     });
   }, [aircraftFilter, search, templates]);
 
-  if (!isLoaded) {
+  if (prereq.state === "loading_context" || prereq.state === "loading_data") {
     return (
       <div className="space-y-4">
-        <div className="h-8 w-48 rounded-md bg-muted/50" />
-        <div className="h-56 w-full rounded-md bg-muted/40" />
+        <Skeleton className="h-8 w-48" />
+        <Skeleton className="h-56 w-full" />
       </div>
     );
   }
 
-  if (!orgId) {
+  if (prereq.state === "missing_context") {
     return (
-      <Card className="border-border/60">
-        <CardContent className="p-6">
-          <p className="text-sm text-muted-foreground">
-            Select an organization to manage routing templates.
-          </p>
-        </CardContent>
-      </Card>
+      <ActionableEmptyState
+        title="Routing templates require organization setup"
+        missingInfo="Complete onboarding before managing standard work-order routing templates."
+        primaryActionLabel="Complete Setup"
+        primaryActionType="link"
+        primaryActionTarget="/onboarding"
+      />
     );
   }
+
+  if (!orgId) return null;
 
   return (
     <div className="space-y-6">

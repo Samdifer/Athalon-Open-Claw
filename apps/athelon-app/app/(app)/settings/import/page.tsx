@@ -4,12 +4,14 @@ import { useState, useCallback, useRef, useMemo } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
+import { usePagePrereqs } from "@/hooks/usePagePrereqs";
 import { toast } from "sonner";
 import { Upload, FileSpreadsheet, CheckCircle2, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
   SelectContent,
@@ -25,6 +27,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { ActionableEmptyState } from "@/components/zero-state/ActionableEmptyState";
 
 type ImportType = "aircraft" | "parts" | "customers";
 
@@ -120,7 +123,7 @@ function toNumberOrUndefined(value: string | undefined) {
 }
 
 export default function ImportPage() {
-  const { orgId } = useCurrentOrg();
+  const { orgId, isLoaded } = useCurrentOrg();
   const [importType, setImportType] = useState<ImportType>("aircraft");
   const [csvHeaders, setCsvHeaders] = useState<string[]>([]);
   const [csvRows, setCsvRows] = useState<string[][]>([]);
@@ -134,6 +137,10 @@ export default function ImportPage() {
   const importParts = useMutation(api.bulkImport.importParts);
   const importCustomers = useMutation(api.bulkImport.importCustomers);
   const applyCampMappings = useMutation(api.bulkImport.applyCampAircraftMappings);
+  const prereq = usePagePrereqs({
+    requiresOrg: true,
+    isDataLoading: !isLoaded,
+  });
 
   const fields = FIELD_MAPS[importType];
   const allFields = [...fields.required, ...fields.optional];
@@ -345,9 +352,29 @@ export default function ImportPage() {
     }
   };
 
-  if (!orgId) {
-    return <div className="p-6 text-muted-foreground">Select an organization first.</div>;
+  if (prereq.state === "loading_context" || prereq.state === "loading_data") {
+    return (
+      <div className="space-y-4 max-w-5xl" data-testid="page-loading-state">
+        <Skeleton className="h-8 w-48" />
+        <Skeleton className="h-36 w-full" />
+        <Skeleton className="h-52 w-full" />
+      </div>
+    );
   }
+
+  if (prereq.state === "missing_context") {
+    return (
+      <ActionableEmptyState
+        title="Bulk import requires organization setup"
+        missingInfo="Complete onboarding before importing aircraft, parts, or customers."
+        primaryActionLabel="Complete Setup"
+        primaryActionType="link"
+        primaryActionTarget="/onboarding"
+      />
+    );
+  }
+
+  if (!orgId) return null;
 
   return (
     <div className="space-y-4 max-w-5xl">

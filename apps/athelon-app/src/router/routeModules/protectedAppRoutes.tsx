@@ -390,6 +390,7 @@ export function protectedAppRoutes() {
             />
             <Route path="/settings/capabilities" element={<CapabilitiesListPage />} />
             <Route path="/settings/adsb" element={<AdsbSettingsPage />} />
+            <Route path="/not-found" element={<AppNotFoundPage />} />
 
             <Route path="*" element={<AppNotFoundPage />} />
           </Route>

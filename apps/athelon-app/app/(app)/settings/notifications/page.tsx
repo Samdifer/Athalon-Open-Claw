@@ -2,12 +2,14 @@
 
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { useOrgContext } from "@/components/OrgContextProvider";
+import { useCurrentOrg } from "@/hooks/useCurrentOrg";
+import { usePagePrereqs } from "@/hooks/usePagePrereqs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { MissingPrereqBanner } from "@/components/zero-state/MissingPrereqBanner";
+import { ActionableEmptyState } from "@/components/zero-state/ActionableEmptyState";
 
 const NOTIFICATION_TYPES = [
   { key: "wo_status_change", label: "Work Order Status Changes", description: "When a work order changes status (opened, closed, etc.)" },
@@ -24,14 +26,18 @@ const NOTIFICATION_TYPES = [
 ] as const;
 
 export default function NotificationPreferencesPage() {
-  const { orgId } = useOrgContext();
+  const { orgId, isLoaded } = useCurrentOrg();
   const prefs = useQuery(api.notifications.getPreferences);
   const updatePreferences = useMutation(api.notifications.updatePreferences);
+  const prereq = usePagePrereqs({
+    requiresOrg: true,
+    isDataLoading: !isLoaded || prefs === undefined,
+  });
 
   const disabledTypes = prefs?.disabledTypes ?? [];
 
   const handleToggle = async (type: string, enabled: boolean) => {
-    if (!orgId) {
+    if (prereq.state !== "ready" || !orgId) {
       toast.error("Complete setup before updating notification preferences.");
       return;
     }
@@ -47,6 +53,30 @@ export default function NotificationPreferencesPage() {
     }
   };
 
+  if (prereq.state === "loading_context" || prereq.state === "loading_data") {
+    return (
+      <div className="max-w-2xl mx-auto p-6 space-y-6" data-testid="page-loading-state">
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-64" />
+          <Skeleton className="h-4 w-80" />
+        </div>
+        <Skeleton className="h-72 w-full" />
+      </div>
+    );
+  }
+
+  if (prereq.state === "missing_context") {
+    return (
+      <ActionableEmptyState
+        title="Notification preferences require organization setup"
+        missingInfo="Complete onboarding before configuring operational notifications."
+        primaryActionLabel="Complete Setup"
+        primaryActionType="link"
+        primaryActionTarget="/onboarding"
+      />
+    );
+  }
+
   return (
     <div className="max-w-2xl mx-auto p-6 space-y-6">
       <div>
@@ -55,14 +85,6 @@ export default function NotificationPreferencesPage() {
           Choose which notifications you want to receive.
         </p>
       </div>
-
-      {!orgId && (
-        <MissingPrereqBanner
-          kind="needs_org_context"
-          actionLabel="Complete Setup"
-          actionTarget="/onboarding"
-        />
-      )}
 
       <Card>
         <CardHeader>
