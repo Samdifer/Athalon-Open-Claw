@@ -79,6 +79,10 @@ import {
 } from "@/lib/mro-constants";
 import { WorkItemHeader } from "@/app/(app)/work-orders/[id]/_components/WorkItemHeader";
 import { WriteUpTimeline } from "@/app/(app)/work-orders/[id]/_components/WriteUpTimeline";
+import {
+  ActivityTimeline,
+  type ActivityTimelineEvent,
+} from "@/app/(app)/work-orders/[id]/_components/ActivityTimeline";
 import { Separator } from "@/components/ui/separator";
 
 // ─── Compliance types & constants ─────────────────────────────────────────────
@@ -399,6 +403,12 @@ export default function TaskCardPage() {
   const parentWriteUpEntries = useQuery(
     api.workItemEntries.listEntriesForTaskCard,
     cardId ? { taskCardId: cardId as Id<"taskCards"> } : "skip",
+  );
+  const taskHistoryEvents = useQuery(
+    api.taskCards.getTaskCardHistory,
+    orgId && cardId
+      ? { taskCardId: cardId as Id<"taskCards">, organizationId: orgId }
+      : "skip",
   );
   const addEntryMutation = useMutation(api.workItemEntries.addEntry);
   const [writeUpSubmitting, setWriteUpSubmitting] = useState(false);
@@ -993,6 +1003,20 @@ export default function TaskCardPage() {
             onAddEntry={(text) => handleAddWriteUpEntry("corrective_action", text)}
             readOnly={cardIsVoided || cardIsComplete}
             isSubmitting={writeUpSubmitting}
+          />
+        </CardContent>
+      </Card>
+
+      <Card className="border-border/60">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+            Task History
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-0">
+          <ActivityTimeline
+            events={(taskHistoryEvents ?? []) as ActivityTimelineEvent[]}
+            testId="task-history-timeline"
           />
         </CardContent>
       </Card>

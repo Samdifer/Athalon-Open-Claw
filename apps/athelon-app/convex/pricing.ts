@@ -553,7 +553,7 @@ export const computePrice = action({
 
     // Filter to active rules at atDate
     const activeRules = allRules.filter(
-      (r) =>
+      (r: (typeof allRules)[number]) =>
         r.effectiveDate <= atDate &&
         (r.expiryDate === undefined || r.expiryDate > atDate),
     );
@@ -572,7 +572,7 @@ export const computePrice = action({
     }
 
     // Filter: exclude rules whose selectors explicitly don't match this context
-    const matchingRules = activeRules.filter((r) => {
+    const matchingRules = activeRules.filter((r: (typeof activeRules)[number]) => {
       if (r.partId !== undefined && r.partId !== args.partId) return false;
       if (r.partClass !== undefined && r.partClass !== args.partClass) return false;
       if (r.techCertLevel !== undefined && r.techCertLevel !== args.techCertLevel) return false;
@@ -581,11 +581,16 @@ export const computePrice = action({
     });
 
     // Sort: specificity DESC, then priority ASC
-    matchingRules.sort((a, b) => {
+    matchingRules.sort(
+      (
+        a: (typeof matchingRules)[number],
+        b: (typeof matchingRules)[number],
+      ) => {
       const specDiff = specificity(b) - specificity(a);
       if (specDiff !== 0) return specDiff;
       return a.priority - b.priority;
-    });
+      },
+    );
 
     let unitPrice = args.baseCost;
     let ruleApplied: string | null = null;

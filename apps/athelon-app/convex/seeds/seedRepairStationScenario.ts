@@ -59,6 +59,66 @@ const TECHNICIAN_SEED = [
   { employeeId: "KA-TBM-TECH-010", legalName: "Maya Cortez", role: "billing_manager", locationCode: "COS" },
 ] as const;
 
+type TechnicianCertificateSeed = {
+  employeeId: string;
+  certificateType: "A&P" | "IA";
+  certificateNumber: string;
+  hasIaAuthorization: boolean;
+  iaExpiryDate?: number;
+};
+
+const TECHNICIAN_CERTIFICATE_SEED: TechnicianCertificateSeed[] = [
+  {
+    employeeId: "KA-TBM-TECH-001",
+    certificateType: "A&P" as const,
+    certificateNumber: "AP-2020-145001",
+    hasIaAuthorization: false,
+  },
+  {
+    employeeId: "KA-TBM-TECH-002",
+    certificateType: "IA" as const,
+    certificateNumber: "IA-2024-CO-145002",
+    hasIaAuthorization: true,
+    iaExpiryDate: BASE_ANCHOR_MS + 360 * DAY_MS,
+  },
+  {
+    employeeId: "KA-TBM-TECH-003",
+    certificateType: "A&P" as const,
+    certificateNumber: "AP-2018-145003",
+    hasIaAuthorization: false,
+  },
+  {
+    employeeId: "KA-TBM-TECH-004",
+    certificateType: "A&P" as const,
+    certificateNumber: "AP-2021-145004",
+    hasIaAuthorization: false,
+  },
+  {
+    employeeId: "KA-TBM-TECH-005",
+    certificateType: "A&P" as const,
+    certificateNumber: "AP-2019-145005",
+    hasIaAuthorization: false,
+  },
+  {
+    employeeId: "KA-TBM-TECH-006",
+    certificateType: "A&P" as const,
+    certificateNumber: "AP-2017-145006",
+    hasIaAuthorization: false,
+  },
+  {
+    employeeId: "KA-TBM-TECH-007",
+    certificateType: "A&P" as const,
+    certificateNumber: "AP-2022-145007",
+    hasIaAuthorization: false,
+  },
+  {
+    employeeId: "KA-TBM-TECH-008",
+    certificateType: "A&P" as const,
+    certificateNumber: "AP-2023-145008",
+    hasIaAuthorization: false,
+  },
+];
+
 const AIRCRAFT_SEED = [
   { tail: "N2KA01", make: "Beechcraft", model: "King Air B200", serial: "BB-2201", engineCount: 2, tt: 7420 },
   { tail: "N2KA02", make: "Beechcraft", model: "King Air 250", serial: "BY-4402", engineCount: 2, tt: 6941 },
@@ -1224,6 +1284,61 @@ export const seedKingAirTbmRepairStation = mutation({
       }
 
       technicianIdsByEmployeeId[tech.employeeId] = techId;
+    }
+
+    for (const certSeed of TECHNICIAN_CERTIFICATE_SEED) {
+      const technicianId = technicianIdsByEmployeeId[certSeed.employeeId];
+      if (!technicianId) continue;
+
+      const existingCertificates = await ctx.db
+        .query("certificates")
+        .withIndex("by_technician", (q) => q.eq("technicianId", technicianId))
+        .collect();
+      const existingCertificate = existingCertificates.find(
+        (certificate) =>
+          certificate.certificateNumber === certSeed.certificateNumber,
+      );
+
+      const payload = {
+        technicianId,
+        certificateType: certSeed.certificateType,
+        certificateNumber: certSeed.certificateNumber,
+        issueDate: BASE_ANCHOR_MS - 365 * DAY_MS,
+        ratings: ["airframe", "powerplant"] as Array<
+          "airframe" | "powerplant"
+        >,
+        hasIaAuthorization: certSeed.hasIaAuthorization,
+        iaExpiryDate: certSeed.iaExpiryDate,
+        iaRenewalActivities: certSeed.hasIaAuthorization
+          ? [
+              {
+                date: BASE_ANCHOR_MS - 45 * DAY_MS,
+                activityType: "inspection_performed" as const,
+                notes: `Scenario ${scenarioKey} recurrent activity`,
+              },
+            ]
+          : [],
+        lastExercisedDate: BASE_ANCHOR_MS - 14 * DAY_MS,
+        repairStationAuthorizations: [
+          {
+            organizationId: orgId,
+            authorizedWorkScope:
+              "Airframe and powerplant maintenance per Part 145 repair station authority",
+            effectiveDate: BASE_ANCHOR_MS - 365 * DAY_MS,
+          },
+        ],
+        active: true,
+        updatedAt: now,
+      };
+
+      if (existingCertificate) {
+        await ctx.db.patch(existingCertificate._id, payload);
+      } else {
+        await ctx.db.insert("certificates", {
+          ...payload,
+          createdAt: now,
+        });
+      }
     }
 
     await ctx.db.patch(orgId, {

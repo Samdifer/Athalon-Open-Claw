@@ -334,6 +334,24 @@ export default function WorkOrderLeadWorkspacePage() {
     }
   };
 
+  const handleAssignTaskStep = async (taskStepId: string, nextTechId: string) => {
+    setAssigningKey(`step-${taskStepId}`);
+    try {
+      await assignEntity({
+        organizationId: orgId,
+        entityType: "task_step",
+        taskStepId: taskStepId as Id<"taskCardSteps">,
+        assignedToTechnicianId:
+          nextTechId === "unassigned" ? undefined : (nextTechId as Id<"technicians">),
+      });
+      toast.success("Task step assignment updated.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to assign task step.");
+    } finally {
+      setAssigningKey(null);
+    }
+  };
+
   const handleSaveWorkOrderAssignment = async (workOrderId: string) => {
     setAssigningKey(`wo-${workOrderId}`);
     try {

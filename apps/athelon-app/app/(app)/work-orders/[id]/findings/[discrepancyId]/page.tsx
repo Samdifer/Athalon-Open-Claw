@@ -19,6 +19,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { WorkItemHeader } from "../../_components/WorkItemHeader";
 import { WriteUpTimeline } from "../../_components/WriteUpTimeline";
+import {
+  ActivityTimeline,
+  type ActivityTimelineEvent,
+} from "../../_components/ActivityTimeline";
 
 // ─── Loading skeleton ─────────────────────────────────────────────────────────
 
@@ -57,6 +61,15 @@ export default function DiscrepancyDetailPage() {
     api.workItemEntries.listEntriesForDiscrepancy,
     discrepancyId
       ? { discrepancyId: discrepancyId as Id<"discrepancies"> }
+      : "skip",
+  );
+  const historyEvents = useQuery(
+    api.discrepancies.getDiscrepancyHistory,
+    orgId && discrepancyId
+      ? {
+          discrepancyId: discrepancyId as Id<"discrepancies">,
+          organizationId: orgId,
+        }
       : "skip",
   );
 
@@ -199,6 +212,20 @@ export default function DiscrepancyDetailPage() {
             onAddEntry={(text) => handleAddEntry("corrective_action", text)}
             readOnly={isDispositioned}
             isSubmitting={writeUpSubmitting}
+          />
+        </CardContent>
+      </Card>
+
+      <Card className="border-border/60">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+            Finding History
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-0">
+          <ActivityTimeline
+            events={(historyEvents ?? []) as ActivityTimelineEvent[]}
+            testId="finding-history-timeline"
           />
         </CardContent>
       </Card>

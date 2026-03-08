@@ -40,6 +40,7 @@
     "test:due-list-helpers": "node --test scripts/due-list/*.test.mjs"
   },
   "dependencies": {
+    "@clerk/backend": "^2.33.0",
     "@clerk/clerk-react": "^5.61.1",
     "@clerk/themes": "^2.4.55",
     "@hookform/resolvers": "^5.2.2",
@@ -65,8 +66,8 @@
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.5.0",
     "vaul": "^1.1.2",
-    "zod": "^4.3.6",
-    "workbox-window": "^7.3.0"
+    "workbox-window": "^7.3.0",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@clerk/testing": "^1.14.1",

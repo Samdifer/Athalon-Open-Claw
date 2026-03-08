@@ -4,3 +4,7 @@ node_modules/
 **/.turbo/
 __pycache__/
 **/__pycache__/
+.playwright-cli/
+**/.playwright-cli/
+**/output/
+**/tests/output/

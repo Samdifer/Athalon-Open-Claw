@@ -3,35 +3,11 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
+import { mroRoleValidator, type MroRole } from "./lib/mroAccessValidators";
 import {
   getOrgScopedTechnicianByUserId,
   requireAuthIdentity,
 } from "./shared/helpers/accessControl";
-
-const roleValidator = v.union(
-  v.literal("admin"),
-  v.literal("shop_manager"),
-  v.literal("qcm_inspector"),
-  v.literal("billing_manager"),
-  v.literal("lead_technician"),
-  v.literal("technician"),
-  v.literal("parts_clerk"),
-  v.literal("sales_rep"),
-  v.literal("sales_manager"),
-  v.literal("read_only"),
-);
-
-type TechnicianRole =
-  | "admin"
-  | "shop_manager"
-  | "qcm_inspector"
-  | "billing_manager"
-  | "lead_technician"
-  | "technician"
-  | "parts_clerk"
-  | "sales_rep"
-  | "sales_manager"
-  | "read_only";
 
 async function countActiveAdminsInOrg(
   ctx: any,
@@ -166,7 +142,7 @@ export const listRoles = query({
 export const assignRole = mutation({
   args: {
     technicianId: v.id("technicians"),
-    role: roleValidator,
+    role: mroRoleValidator,
   },
   handler: async (ctx, args) => {
     const tech = await ctx.db.get(args.technicianId);
@@ -185,7 +161,7 @@ export const assignRole = mutation({
     if (
       tech.status === "active" &&
       tech.role === "admin" &&
-      (args.role as TechnicianRole) !== "admin"
+      args.role !== "admin"
     ) {
       const activeAdminCount = await countActiveAdminsInOrg(ctx, tech.organizationId);
       if (activeAdminCount <= 1) {
@@ -208,7 +184,7 @@ export const assignRole = mutation({
       technicianId: caller._id,
       recordId: tech._id,
       oldValue: tech.role,
-      newValue: args.role as TechnicianRole,
+      newValue: args.role as MroRole,
       notes: bootstrapMode
         ? "Bootstrap role assignment"
         : "Technician role updated",

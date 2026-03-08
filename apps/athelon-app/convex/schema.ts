@@ -38,6 +38,10 @@
 
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
+import {
+  accessAuthorizationArrayValidator,
+  mroRoleValidator,
+} from "./lib/mroAccessValidators";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SHARED VALIDATOR TYPES
@@ -745,18 +749,8 @@ export default defineSchema({
     phone: v.optional(v.string()),
 
     // MRO role for RBAC — see lib/roles.ts
-    role: v.optional(v.union(
-      v.literal("admin"),
-      v.literal("shop_manager"),
-      v.literal("qcm_inspector"),
-      v.literal("billing_manager"),
-      v.literal("lead_technician"),
-      v.literal("technician"),
-      v.literal("parts_clerk"),
-      v.literal("sales_rep"),
-      v.literal("sales_manager"),
-      v.literal("read_only"),
-    )),
+    role: v.optional(mroRoleValidator),
+    accessAuthorizations: v.optional(accessAuthorizationArrayValidator),
 
     // v3: PIN hash for signature re-authentication (TD: PIN security)
     // Stored as SHA-256 hex digest. Set via setPin mutation.
@@ -5620,6 +5614,56 @@ export default defineSchema({
     .index("by_organization", ["organizationId"])
     .index("by_customer", ["customerId"])
     .index("by_organization_and_customer", ["organizationId", "customerId"]),
+
+  crmProspectCampaignAssessments: defineTable({
+    organizationId: v.id("organizations"),
+    prospectEntityId: v.string(),
+    prospectLegalName: v.string(),
+    campaignKey: v.string(),
+    campaignName: v.string(),
+    campaignFit: v.union(
+      v.literal("high"),
+      v.literal("medium"),
+      v.literal("low"),
+      v.literal("unknown"),
+    ),
+    qualificationStatus: v.union(
+      v.literal("unreviewed"),
+      v.literal("qualified"),
+      v.literal("nurture"),
+      v.literal("research"),
+      v.literal("disqualified"),
+    ),
+    fitScore: v.optional(v.number()),
+    contactStrategy: v.optional(v.union(
+      v.literal("call_first"),
+      v.literal("email_first"),
+      v.literal("multi_touch"),
+      v.literal("warm_intro"),
+      v.literal("research_first"),
+      v.literal("site_visit"),
+      v.literal("other"),
+    )),
+    notes: v.optional(v.string()),
+    nextStep: v.optional(v.string()),
+    selectedOutreachTier: v.optional(v.union(
+      v.literal("A"),
+      v.literal("B"),
+      v.literal("C"),
+    )),
+    promotedCustomerId: v.optional(v.id("customers")),
+    promotedAt: v.optional(v.number()),
+    lastReviewedAt: v.number(),
+    reviewedByUserId: v.string(),
+    reviewedByName: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_organization", ["organizationId"])
+    .index("by_org_campaign", ["organizationId", "campaignKey"])
+    .index("by_org_prospect", ["organizationId", "prospectEntityId"])
+    .index("by_org_prospect_campaign", ["organizationId", "prospectEntityId", "campaignKey"])
+    .index("by_org_status", ["organizationId", "qualificationStatus"]),
 
   // ═══════════════════════════════════════════════════════════════════════════
   // WAREHOUSE LOCATION HIERARCHY  (v11)

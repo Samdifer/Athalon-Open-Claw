@@ -53,7 +53,10 @@ import { DocumentsPanel } from "@/app/(app)/work-orders/[id]/_components/Documen
 import { InDockRtsEvidenceTab } from "@/app/(app)/work-orders/[id]/_components/InDockRtsEvidenceTab";
 import { CloseReadinessPanel } from "@/components/CloseReadinessPanel";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
-import { ActivityTimeline } from "@/app/(app)/work-orders/[id]/_components/ActivityTimeline";
+import {
+  ActivityTimeline,
+  type ActivityTimelineEvent,
+} from "@/app/(app)/work-orders/[id]/_components/ActivityTimeline";
 import { FindingList } from "@/app/(app)/work-orders/[id]/_components/FindingList";
 import { DeferredMaintenanceCaptureDialog } from "@/app/(app)/work-orders/[id]/_components/DeferredMaintenanceCaptureDialog";
 import { VoiceNotesPanel } from "@/components/VoiceNotesPanel";
@@ -68,17 +71,6 @@ import {
   writeVoiceNotesForWorkOrder,
   type StoredVoiceNote,
 } from "@/lib/voiceNotes";
-
-type AuditEventForTimeline = {
-  _id: string;
-  eventType: string;
-  notes?: string | null;
-  userId?: string | null;
-  timestamp: number;
-  fieldName?: string | null;
-  oldValue?: string | null;
-  newValue?: string | null;
-};
 
 /** Shape of a workOrderParts record from the live query. */
 type WoPartLiveRecord = {
@@ -321,6 +313,12 @@ export default function WorkOrderDetailPage() {
     api.workOrders.getWorkOrder,
     orgId && workOrderId ? { workOrderId, organizationId: orgId } : "skip",
   );
+  const historyEvents = useQuery(
+    api.workOrders.getWorkOrderHistory,
+    orgId && workOrderId
+      ? { workOrderId, organizationId: orgId }
+      : "skip",
+  );
 
   // BUG-FD-001: Front desk needs to see the customer name on a work order and
   // click through to their profile. The WO doesn't store customerId directly —
@@ -379,7 +377,7 @@ export default function WorkOrderDetailPage() {
   const aircraft = data?.aircraft;
   const taskCards = data?.taskCards ?? [];
   const discrepancies = data?.discrepancies ?? [];
-  const auditEvents = data?.auditEvents ?? [];
+  const workOrderHistory = historyEvents ?? [];
 
   // --- Hoisted useMemo hooks (must run unconditionally per Rules of Hooks) ---
 
@@ -1056,7 +1054,7 @@ export default function WorkOrderDetailPage() {
               { value: "cost", label: "Cost Estimate", Icon: CheckCircle2, count: null, indicator: null as "red" | "amber" | "green" | null },
               { value: "evidence", label: "Evidence", Icon: Video, count: null, indicator: null as "red" | "amber" | "green" | null },
               { value: "documents", label: "Documents", Icon: Paperclip, count: null, indicator: null as "red" | "amber" | "green" | null },
-              { value: "notes", label: "Notes & Activity", Icon: FileText, count: auditEvents.length + voiceNotes.length, indicator: null as "red" | "amber" | "green" | null },
+              { value: "notes", label: "Notes & Activity", Icon: FileText, count: workOrderHistory.length + voiceNotes.length, indicator: null as "red" | "amber" | "green" | null },
             ]
           ).map(({ value, label, Icon, count, indicator }) => (
             <TabsTrigger
@@ -1295,7 +1293,10 @@ export default function WorkOrderDetailPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-0">
-              <ActivityTimeline events={auditEvents as AuditEventForTimeline[]} />
+              <ActivityTimeline
+                events={workOrderHistory as ActivityTimelineEvent[]}
+                testId="work-order-activity-timeline"
+              />
             </CardContent>
           </Card>
         </TabsContent>

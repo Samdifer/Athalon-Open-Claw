@@ -9,6 +9,15 @@
  * TD-004 + TD-008 fix — Team A debt remediation 2026-02-24.
  */
 
+import {
+  MRO_ROLES as SHARED_MRO_ROLES,
+  ROLE_BADGE_STYLES as SHARED_ROLE_BADGE_STYLES,
+  ROLE_DESCRIPTIONS as SHARED_ROLE_DESCRIPTIONS,
+  ROLE_HIERARCHY as SHARED_ROLE_HIERARCHY,
+  ROLE_LABELS as SHARED_ROLE_LABELS,
+  type MroRole,
+} from "@/src/shared/lib/mro-access";
+
 // ─── Domain string-literal union types ───────────────────────────────────────
 // Derived from convex/schema.ts workOrderStatus / workOrderType / taskCard.status.
 // These are duplicated here (rather than imported from schema validators) because
@@ -48,72 +57,17 @@ export type TaskStatus =
 
 // ─── MRO role definitions ────────────────────────────────────────────────────
 
-export const MRO_ROLES = [
-  "admin",
-  "shop_manager",
-  "qcm_inspector",
-  "billing_manager",
-  "lead_technician",
-  "technician",
-  "parts_clerk",
-  "sales_rep",
-  "sales_manager",
-  "read_only",
-] as const;
+export { type MroRole };
 
-export type MroRole = typeof MRO_ROLES[number];
+export const MRO_ROLES = SHARED_MRO_ROLES;
 
-export const ROLE_LABELS: Record<MroRole, string> = {
-  admin: "Administrator",
-  shop_manager: "Shop Manager",
-  qcm_inspector: "QCM Inspector",
-  billing_manager: "Billing Manager",
-  lead_technician: "Lead Technician",
-  technician: "Technician",
-  parts_clerk: "Parts Clerk",
-  sales_rep: "Sales Representative",
-  sales_manager: "Sales Manager",
-  read_only: "Read Only",
-};
+export const ROLE_LABELS: Record<MroRole, string> = SHARED_ROLE_LABELS;
 
-export const ROLE_DESCRIPTIONS: Record<MroRole, string> = {
-  admin: "Full system access across all modules and settings.",
-  shop_manager: "Oversees shop operations, staffing, and work order flow.",
-  qcm_inspector: "Manages quality control inspections and compliance signoff.",
-  billing_manager: "Handles quotes, invoicing, and billing workflows.",
-  lead_technician: "Leads execution teams and coordinates technical work.",
-  technician: "Performs assigned maintenance tasks and record sign-offs.",
-  parts_clerk: "Manages parts receiving, inventory, and issue control.",
-  sales_rep: "Owns quoting pipeline and customer sales execution.",
-  sales_manager: "Leads sales execution, pricing strategy, and deal ownership.",
-  read_only: "View-only access for oversight without edit permissions.",
-};
+export const ROLE_DESCRIPTIONS: Record<MroRole, string> = SHARED_ROLE_DESCRIPTIONS;
 
-export const ROLE_BADGE_STYLES: Record<MroRole, string> = {
-  admin: "bg-purple-500/15 text-purple-400 border-purple-500/30",
-  shop_manager: "bg-blue-500/15 text-blue-400 border-blue-500/30",
-  qcm_inspector: "bg-amber-500/15 text-amber-400 border-amber-500/30",
-  billing_manager: "bg-green-500/15 text-green-400 border-green-500/30",
-  lead_technician: "bg-indigo-500/15 text-indigo-400 border-indigo-500/30",
-  technician: "bg-sky-500/15 text-sky-400 border-sky-500/30",
-  parts_clerk: "bg-orange-500/15 text-orange-400 border-orange-500/30",
-  sales_rep: "bg-pink-500/15 text-pink-400 border-pink-500/30",
-  sales_manager: "bg-rose-500/15 text-rose-400 border-rose-500/30",
-  read_only: "bg-slate-500/15 text-slate-400 border-slate-500/30",
-};
+export const ROLE_BADGE_STYLES: Record<MroRole, string> = SHARED_ROLE_BADGE_STYLES;
 
-export const ROLE_HIERARCHY: Record<MroRole, number> = {
-  admin: 0,
-  shop_manager: 1,
-  qcm_inspector: 2,
-  billing_manager: 3,
-  lead_technician: 4,
-  technician: 5,
-  parts_clerk: 6,
-  sales_rep: 7,
-  sales_manager: 8,
-  read_only: 9,
-};
+export const ROLE_HIERARCHY: Record<MroRole, number> = SHARED_ROLE_HIERARCHY;
 
 // ─── Work Order status → display label ───────────────────────────────────────
 

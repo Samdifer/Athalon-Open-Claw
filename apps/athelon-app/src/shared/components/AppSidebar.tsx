@@ -29,6 +29,7 @@ import {
   Contact2,
   MessageSquare,
   BarChart3,
+  Target,
   Warehouse,
 } from "lucide-react";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
@@ -37,6 +38,7 @@ import {
   ROLE_LABELS,
   type MroRole,
 } from "@/lib/mro-constants";
+import { canRoleAccessPath } from "@/lib/route-permissions";
 import {
   Sidebar,
   SidebarContent,
@@ -190,6 +192,7 @@ const mainNav: NavEntry[] = [
     children: [
       { title: "Dashboard", href: "/sales/dashboard", icon: LayoutDashboard },
       { title: "Sales Ops", href: "/sales/ops", icon: BarChart3 },
+      { title: "Prospect Intelligence", href: "/crm/prospects/intelligence", icon: Target },
       { title: "Quotes", href: "/sales/quotes", icon: ReceiptText },
       { title: "Training", href: "/sales/training", icon: GraduationCap },
       { title: "CRM Pipeline", href: "/crm/pipeline", icon: TrendingUp },
@@ -230,6 +233,7 @@ const mainNav: NavEntry[] = [
     children: [
       { title: "Dashboard", href: "/crm/dashboard", icon: LayoutDashboard },
       { title: "Accounts", href: "/crm/accounts", icon: Users },
+      { title: "Prospect Intelligence", href: "/crm/prospects/intelligence", icon: Target },
       { title: "Contacts", href: "/crm/contacts", icon: Contact2 },
       { title: "Interactions", href: "/crm/interactions", icon: MessageSquare },
       { title: "Sales Pipeline", href: "/crm/pipeline", icon: TrendingUp },
@@ -316,7 +320,7 @@ const ROLE_SECTION_ACCESS: Partial<Record<MroRole, NavSection[]>> = {
     "reports",
     "personnel",
   ],
-  qcm_inspector: ["compliance", "fleet", "work-orders", "personnel", "reports"],
+  qcm_inspector: ["compliance", "fleet", "work-orders", "reports"],
   billing_manager: ["billing", "sales", "crm", "work-orders", "reports"],
   lead_technician: ["my-work", "work-orders", "scheduling", "fleet", "personnel", "parts"],
   technician: ["my-work", "work-orders", "parts", "fleet"],
@@ -356,7 +360,7 @@ function filterChildrenForRole(
 ) {
   if (!role) return children;
 
-  let scoped = children;
+  let scoped = children.filter((child) => canRoleAccessPath(role, child.href));
 
   // Keep sidebar route visibility aligned with page RBAC for lead workspaces.
   if (!LEAD_WORKSPACE_ROLES.has(role)) {
@@ -474,19 +478,26 @@ function NavSection({
 }) {
   const filteredEntries: NavEntry[] = entries
     .filter((entry) => canAccessSection(role, entry.section))
-    .filter((entry) => {
-      // Hide Lead Center from non-lead roles
-      if (!isGroup(entry) && entry.href === "/lead" && role && !LEAD_WORKSPACE_ROLES.has(role)) {
-        return false;
-      }
-      return true;
-    })
     .map((entry) => {
-      if (!isGroup(entry)) return entry;
+      if (!isGroup(entry)) {
+        if (role && !canRoleAccessPath(role, entry.href)) {
+          return null;
+        }
+        return entry;
+      }
+
       const children = filterChildrenForRole(role, entry.href, entry.children);
-      return { ...entry, children };
+      if (children.length === 0) {
+        return null;
+      }
+
+      const href = role && !canRoleAccessPath(role, entry.href)
+        ? children[0].href
+        : entry.href;
+
+      return { ...entry, href, children };
     })
-    .filter((entry) => !isGroup(entry) || entry.children.length > 0);
+    .filter((entry): entry is NavEntry => entry !== null);
 
   return (
     <>

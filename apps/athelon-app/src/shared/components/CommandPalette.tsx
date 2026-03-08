@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
+import type { MroRole } from "@/lib/mro-constants";
+import { canRoleAccessPath } from "@/lib/route-permissions";
 import {
   CommandDialog,
   CommandEmpty,
@@ -27,6 +29,7 @@ import {
   Plus,
   Clock,
   FileText,
+  Target,
 } from "lucide-react";
 
 const NAV_ITEMS = [
@@ -45,6 +48,7 @@ const NAV_ITEMS = [
   { label: "Invoices", path: "/billing/invoices", icon: ReceiptText },
   { label: "Sales Dashboard", path: "/sales/dashboard", icon: FileBarChart },
   { label: "Sales Ops", path: "/sales/ops", icon: FileBarChart },
+  { label: "Prospect Intelligence", path: "/crm/prospects/intelligence", icon: Target },
   { label: "Quotes", path: "/sales/quotes", icon: FileText },
   { label: "Sales Training", path: "/sales/training", icon: Users },
   { label: "Customers", path: "/billing/customers", icon: Users },
@@ -81,9 +85,18 @@ export function CommandPalette() {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const navigate = useNavigate();
-  const { orgId } = useCurrentOrg();
+  const { orgId, tech } = useCurrentOrg();
+  const role = (tech?.role as MroRole | null | undefined) ?? null;
 
   const debouncedSearch = useDebounce(search, 300);
+  const visibleNavItems = useMemo(
+    () => NAV_ITEMS.filter((item) => canRoleAccessPath(role, item.path)),
+    [role],
+  );
+  const visibleActionItems = useMemo(
+    () => ACTION_ITEMS.filter((item) => canRoleAccessPath(role, item.path)),
+    [role],
+  );
 
   const searchResults = useQuery(
     api.gapFixes.globalSearch,
@@ -186,7 +199,7 @@ export function CommandPalette() {
         )}
 
         <CommandGroup heading="Navigation">
-          {NAV_ITEMS.map((item) => (
+          {visibleNavItems.map((item) => (
             <CommandItem
               key={item.path}
               value={`navigate ${item.label}`}
@@ -200,7 +213,7 @@ export function CommandPalette() {
         </CommandGroup>
         <CommandSeparator />
         <CommandGroup heading="Actions">
-          {ACTION_ITEMS.map((item) => (
+          {visibleActionItems.map((item) => (
             <CommandItem
               key={item.path}
               value={`action ${item.label}`}

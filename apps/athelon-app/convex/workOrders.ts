@@ -30,6 +30,10 @@ import { paginationOptsValidator } from "convex/server";
 import type { Id } from "./_generated/dataModel";
 import { createNotificationHelper } from "./notifications";
 import { reserveNextWorkOrderNumber } from "./lib/workOrderNumber";
+import {
+  buildHistoryTimelineEvents,
+  collectAuditRowsForRecords,
+} from "./lib/workOrderHistory";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // INTERNAL HELPER TYPES
@@ -393,6 +397,9 @@ export const createWorkOrder = mutation({
       recordId: workOrderId,
       userId: callerUserId,
       ipAddress: args.callerIpAddress,
+      fieldName: "description",
+      oldValue: JSON.stringify(null),
+      newValue: JSON.stringify(args.description.trim()),
       notes:
         `Work order ${workOrderNumber} created in draft status. ` +
         `Aircraft: ${aircraft.make} ${aircraft.model} S/N ${aircraft.serialNumber}. ` +
@@ -1301,6 +1308,69 @@ export const getWorkOrder = query({
       auditEvents,
       assignedRosterTeam,
     };
+  },
+});
+
+export const getWorkOrderHistory = query({
+  args: {
+    workOrderId: v.id("workOrders"),
+    organizationId: v.id("organizations"),
+  },
+  handler: async (ctx, args) => {
+    await requireAuth(ctx);
+
+    const workOrder = await ctx.db.get(args.workOrderId);
+    if (!workOrder) return [];
+    if (workOrder.organizationId !== args.organizationId) {
+      throw new Error(
+        `Access denied: Work order ${args.workOrderId} does not belong to organization ${args.organizationId}.`,
+      );
+    }
+
+    const [taskCards, taskCardSteps, discrepancies, workItemEntries] = await Promise.all([
+      ctx.db
+        .query("taskCards")
+        .withIndex("by_work_order", (q) => q.eq("workOrderId", args.workOrderId))
+        .collect(),
+      ctx.db
+        .query("taskCardSteps")
+        .withIndex("by_work_order", (q) => q.eq("workOrderId", args.workOrderId))
+        .collect(),
+      ctx.db
+        .query("discrepancies")
+        .withIndex("by_work_order", (q) => q.eq("workOrderId", args.workOrderId))
+        .collect(),
+      ctx.db
+        .query("workItemEntries")
+        .withIndex("by_work_order", (q) => q.eq("workOrderId", args.workOrderId))
+        .collect(),
+    ]);
+
+    const auditRows = await collectAuditRowsForRecords(ctx, [
+      { tableName: "workOrders", recordId: String(workOrder._id) },
+      ...taskCards.map((taskCard) => ({
+        tableName: "taskCards",
+        recordId: String(taskCard._id),
+      })),
+      ...taskCardSteps.map((step) => ({
+        tableName: "taskCardSteps",
+        recordId: String(step._id),
+      })),
+      ...discrepancies.map((discrepancy) => ({
+        tableName: "discrepancies",
+        recordId: String(discrepancy._id),
+      })),
+    ]);
+
+    return await buildHistoryTimelineEvents(ctx, {
+      organizationId: args.organizationId,
+      workOrder,
+      taskCards,
+      taskCardSteps,
+      discrepancies,
+      auditRows,
+      workItemEntries,
+    });
   },
 });
 

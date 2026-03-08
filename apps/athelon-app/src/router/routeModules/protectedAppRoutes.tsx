@@ -189,6 +189,9 @@ const CrmPipelinePage = lazy(() => import("@/app/(app)/crm/pipeline/page"));
 const CrmDashboardPage = lazy(() => import("@/app/(app)/crm/dashboard/page"));
 const CrmAccountsPage = lazy(() => import("@/app/(app)/crm/accounts/page"));
 const CrmAccountDetailPage = lazy(() => import("@/app/(app)/crm/accounts/[id]/page"));
+const CrmProspectIntelligencePage = lazy(
+  () => import("@/app/(app)/crm/prospects/intelligence/page"),
+);
 const CrmContactsPage = lazy(() => import("@/app/(app)/crm/contacts/page"));
 const CrmInteractionsPage = lazy(() => import("@/app/(app)/crm/interactions/page"));
 const CrmAnalyticsPage = lazy(() => import("@/app/(app)/crm/analytics/page"));
@@ -340,6 +343,7 @@ export function protectedAppRoutes() {
             <Route path="/crm/dashboard" element={<CrmDashboardPage />} />
             <Route path="/crm/accounts" element={<CrmAccountsPage />} />
             <Route path="/crm/accounts/:id" element={<CrmAccountDetailPage />} />
+            <Route path="/crm/prospects/intelligence" element={<CrmProspectIntelligencePage />} />
             <Route path="/crm/contacts" element={<CrmContactsPage />} />
             <Route path="/crm/interactions" element={<CrmInteractionsPage />} />
             <Route path="/crm/pipeline" element={<CrmPipelinePage />} />

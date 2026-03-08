@@ -14,6 +14,9 @@ importers:
 
   apps/athelon-app:
     dependencies:
+      '@clerk/backend':
+        specifier: ^2.33.0
+        version: 2.33.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@clerk/clerk-react':
         specifier: ^5.61.1
         version: 5.61.3(react-dom@19.2.3(react@19.2.3))(react@19.2.3)

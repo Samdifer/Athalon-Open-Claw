@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Users, Briefcase, Shield, Calendar, BarChart3 } from "lucide-react";
+import { Users, Briefcase, Calendar, BarChart3 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQuery } from "convex/react";
@@ -12,14 +12,13 @@ import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import type { WorkloadEntry } from "./shared/rosterConstants";
 import { PersonnelRosterTab } from "./tabs/PersonnelRosterTab";
 import { PersonnelTeamsShiftsTab } from "./tabs/PersonnelTeamsShiftsTab";
-import { PersonnelRolesTab } from "./tabs/PersonnelRolesTab";
 import { PersonnelHolidaysTab } from "./tabs/PersonnelHolidaysTab";
 import { PersonnelAnalysisTab } from "./tabs/PersonnelAnalysisTab";
 import { isTechnicalRole } from "@/src/shared/lib/personnelRoles";
 
 // ─── Valid tab keys ──────────────────────────────────────────────────────────
 
-const TAB_KEYS = ["roster", "teams-shifts", "roles", "holidays", "analysis"] as const;
+const TAB_KEYS = ["roster", "teams-shifts", "holidays", "analysis"] as const;
 type TabKey = (typeof TAB_KEYS)[number];
 
 function isValidTab(value: string | null): value is TabKey {
@@ -72,6 +71,11 @@ export function PersonnelCommandTabs() {
     orgId ? { organizationId: orgId } : "skip",
   );
 
+  const rosterProfiles = useQuery(
+    api.userManagement.listProfilesForRoster,
+    orgId ? { organizationId: orgId } : "skip",
+  );
+
   const expiringCerts = useQuery(
     api.technicians.listWithExpiringCerts,
     orgId ? { organizationId: orgId, withinDays: 30 } : "skip",
@@ -96,7 +100,7 @@ export function PersonnelCommandTabs() {
 
   // ── Derived data ───────────────────────────────────────────────────────────
 
-  const isLoading = technicians === undefined;
+  const isLoading = technicians === undefined || rosterProfiles === undefined;
 
   const canManageRoster = new Set([
     "admin",
@@ -104,7 +108,8 @@ export function PersonnelCommandTabs() {
     "lead_technician",
   ]).has(myRole ?? "");
 
-  const canManageRoles = myRole === "admin";
+  const canManageProfiles = new Set(["admin", "shop_manager"]).has(myRole ?? "");
+  const canArchiveProfiles = myRole === "admin";
 
   const workloadMap = useMemo(
     () =>
@@ -171,10 +176,6 @@ export function PersonnelCommandTabs() {
               <Briefcase className="h-3.5 w-3.5" />
               Teams &amp; Shifts
             </TabsTrigger>
-            <TabsTrigger value="roles" data-testid="personnel-tab-roles">
-              <Shield className="h-3.5 w-3.5" />
-              Roles
-            </TabsTrigger>
             <TabsTrigger value="holidays" data-testid="personnel-tab-holidays">
               <Calendar className="h-3.5 w-3.5" />
               Holidays
@@ -188,11 +189,13 @@ export function PersonnelCommandTabs() {
           {/* ── Tab 1: Roster ───────────────────────────────────────────── */}
           <TabsContent value="roster" className="mt-4">
             <PersonnelRosterTab
-              technicians={technicians ?? []}
+              profiles={rosterProfiles ?? []}
               expiringCerts={expiringCerts ?? []}
               workloadMap={workloadMap}
               rosterTeams={rosterTeams}
               canManageRoster={canManageRoster}
+              canManageProfiles={canManageProfiles}
+              canArchiveProfiles={canArchiveProfiles}
               orgId={orgId as string | null}
             />
           </TabsContent>
@@ -229,16 +232,7 @@ export function PersonnelCommandTabs() {
             />
           </TabsContent>
 
-          {/* ── Tab 3: Roles ────────────────────────────────────────────── */}
-          <TabsContent value="roles" className="mt-4">
-            <PersonnelRolesTab
-              technicians={technicians ?? []}
-              canManageRoles={canManageRoles}
-              orgId={orgId as string | null}
-            />
-          </TabsContent>
-
-          {/* ── Tab 4: Holidays ─────────────────────────────────────────── */}
+          {/* ── Tab 3: Holidays ─────────────────────────────────────────── */}
           <TabsContent value="holidays" className="mt-4">
             <PersonnelHolidaysTab
               holidays={(rosterWorkspace?.holidays ?? []).map((h) => ({
@@ -253,7 +247,7 @@ export function PersonnelCommandTabs() {
             />
           </TabsContent>
 
-          {/* ── Tab 5: Analysis ─────────────────────────────────────────── */}
+          {/* ── Tab 4: Analysis ─────────────────────────────────────────── */}
           <TabsContent value="analysis" className="mt-4">
             <PersonnelAnalysisTab
               analysis={rosterWorkspace?.analysis ?? null}

@@ -29,6 +29,9 @@ export const addEntry = mutation({
     technicianId: v.id("technicians"),
   },
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    const callerUserId = identity?.subject;
+
     // Validate exactly one polymorphic parent is set
     const parentCount = [args.discrepancyId, args.taskCardId, args.taskCardStepId]
       .filter((id) => id !== undefined)
@@ -58,6 +61,97 @@ export const addEntry = mutation({
     const certificateNumber = activeCert?.certificateNumber;
 
     const now = Date.now();
+
+    let auditTableName: "discrepancies" | "taskCards" | "taskCardSteps";
+    let auditRecordId: string;
+    let auditFieldName: string | undefined;
+    let auditOldValue: string | undefined;
+    let auditNotes: string;
+
+    if (args.discrepancyId) {
+      const discrepancy = await ctx.db.get(args.discrepancyId);
+      if (!discrepancy) {
+        throw new Error("Discrepancy not found");
+      }
+
+      auditTableName = "discrepancies";
+      auditRecordId = String(args.discrepancyId);
+
+      if (args.entryType === "discrepancy_writeup") {
+        auditFieldName = "description";
+        auditOldValue = JSON.stringify(discrepancy.description ?? null);
+        auditNotes = `Finding description updated on ${discrepancy.discrepancyNumber}.`;
+      } else if (args.entryType === "corrective_action") {
+        auditFieldName = "correctiveAction";
+        auditOldValue = JSON.stringify(discrepancy.correctiveAction ?? null);
+        auditNotes = `Corrective action updated on ${discrepancy.discrepancyNumber}.`;
+      } else if (args.entryType === "status_change") {
+        auditFieldName = "statusNote";
+        auditOldValue = undefined;
+        auditNotes = `Status note added on ${discrepancy.discrepancyNumber}.`;
+      } else {
+        auditFieldName = "note";
+        auditOldValue = undefined;
+        auditNotes = `Note added on ${discrepancy.discrepancyNumber}.`;
+      }
+    } else if (args.taskCardStepId) {
+      const step = await ctx.db.get(args.taskCardStepId);
+      if (!step) {
+        throw new Error("Task card step not found");
+      }
+
+      const taskCard = await ctx.db.get(step.taskCardId);
+      const stepLabel = taskCard
+        ? `${taskCard.taskCardNumber} step ${step.stepNumber}`
+        : `step ${step.stepNumber}`;
+
+      auditTableName = "taskCardSteps";
+      auditRecordId = String(args.taskCardStepId);
+
+      if (args.entryType === "discrepancy_writeup") {
+        auditFieldName = "stepDiscrepancySummary";
+        auditOldValue = JSON.stringify(step.stepDiscrepancySummary ?? null);
+        auditNotes = `Step discrepancy summary updated on ${stepLabel}.`;
+      } else if (args.entryType === "corrective_action") {
+        auditFieldName = "stepCorrectiveActionSummary";
+        auditOldValue = JSON.stringify(step.stepCorrectiveActionSummary ?? null);
+        auditNotes = `Step corrective action summary updated on ${stepLabel}.`;
+      } else if (args.entryType === "status_change") {
+        auditFieldName = "statusNote";
+        auditOldValue = undefined;
+        auditNotes = `Status note added on ${stepLabel}.`;
+      } else {
+        auditFieldName = "note";
+        auditOldValue = undefined;
+        auditNotes = `Note added on ${stepLabel}.`;
+      }
+    } else {
+      const taskCard = await ctx.db.get(args.taskCardId!);
+      if (!taskCard) {
+        throw new Error("Task card not found");
+      }
+
+      auditTableName = "taskCards";
+      auditRecordId = String(args.taskCardId!);
+
+      if (args.entryType === "discrepancy_writeup") {
+        auditFieldName = "discrepancySummary";
+        auditOldValue = JSON.stringify(taskCard.discrepancySummary ?? null);
+        auditNotes = `Task discrepancy summary updated on ${taskCard.taskCardNumber}.`;
+      } else if (args.entryType === "corrective_action") {
+        auditFieldName = "correctiveActionSummary";
+        auditOldValue = JSON.stringify(taskCard.correctiveActionSummary ?? null);
+        auditNotes = `Task corrective action summary updated on ${taskCard.taskCardNumber}.`;
+      } else if (args.entryType === "status_change") {
+        auditFieldName = "statusNote";
+        auditOldValue = undefined;
+        auditNotes = `Status note added on ${taskCard.taskCardNumber}.`;
+      } else {
+        auditFieldName = "note";
+        auditOldValue = undefined;
+        auditNotes = `Note added on ${taskCard.taskCardNumber}.`;
+      }
+    }
 
     // Insert immutable entry
     const entryId = await ctx.db.insert("workItemEntries", {
@@ -94,6 +188,20 @@ export const addEntry = mutation({
         await ctx.db.patch(args.discrepancyId, { [patchField]: args.text.trim() });
       }
     }
+
+    await ctx.db.insert("auditLog", {
+      organizationId: args.organizationId,
+      eventType: "record_updated",
+      tableName: auditTableName,
+      recordId: auditRecordId,
+      userId: callerUserId,
+      technicianId: args.technicianId,
+      fieldName: auditFieldName,
+      oldValue: auditOldValue,
+      newValue: JSON.stringify(args.text.trim()),
+      notes: `${auditNotes} Entry recorded by ${technicianName}.`,
+      timestamp: now,
+    });
 
     return entryId;
   },

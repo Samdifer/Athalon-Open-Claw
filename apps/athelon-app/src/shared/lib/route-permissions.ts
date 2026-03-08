@@ -36,6 +36,10 @@ export const ROUTE_PERMISSION_MAP: ReadonlyArray<{
   { pattern: "/my-work/*", allowedRoles: ALL_ROLES },
   { pattern: "/lead", allowedRoles: ["admin", "shop_manager", "lead_technician"] },
   {
+    pattern: "/work-orders/lead",
+    allowedRoles: ["admin", "shop_manager", "lead_technician"],
+  },
+  {
     pattern: "/parts/*",
     allowedRoles: ["admin", "shop_manager", "parts_clerk", "lead_technician"],
   },
@@ -56,4 +60,16 @@ export function getAllowedRolesForPath(pathname: string): ReadonlyArray<MroRole>
   }
 
   return undefined;
+}
+
+export function canRoleAccessPath(
+  role: string | null | undefined,
+  pathname: string,
+): boolean {
+  if (!role) return true;
+
+  const allowedRoles = getAllowedRolesForPath(pathname);
+  if (!allowedRoles || allowedRoles.length === 0) return true;
+
+  return allowedRoles.includes(role as MroRole);
 }

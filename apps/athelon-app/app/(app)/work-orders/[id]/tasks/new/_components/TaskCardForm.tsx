@@ -67,6 +67,9 @@ export const AIRCRAFT_SYSTEM_OPTIONS: { value: AircraftSystem; label: string }[]
   { value: "other", label: "Other" },
 ];
 
+const AIRCRAFT_SYSTEM_NONE_VALUE = "__none__";
+const ASSIGNED_TECH_NONE_VALUE = "__unassigned__";
+
 interface Technician {
   _id: string;
   legalName: string;
@@ -186,7 +189,14 @@ export function TaskCardForm({
             >
               Aircraft system
             </Label>
-            <Select value={aircraftSystem} onValueChange={onAircraftSystemChange}>
+            <Select
+              value={aircraftSystem}
+              onValueChange={(value) =>
+                onAircraftSystemChange(
+                  value === AIRCRAFT_SYSTEM_NONE_VALUE ? "" : value,
+                )
+              }
+            >
               <SelectTrigger
                 id="aircraftSystem"
                 className="h-9 text-sm border-border/60"
@@ -194,7 +204,7 @@ export function TaskCardForm({
                 <SelectValue placeholder="None selected" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">None</SelectItem>
+                <SelectItem value={AIRCRAFT_SYSTEM_NONE_VALUE}>None</SelectItem>
                 {AIRCRAFT_SYSTEM_OPTIONS.map((opt) => (
                   <SelectItem key={opt.value} value={opt.value}>
                     {opt.label}
@@ -297,7 +307,14 @@ export function TaskCardForm({
             >
               Assigned technician
             </Label>
-            <Select value={assignedTechId} onValueChange={onAssignedTechIdChange}>
+            <Select
+              value={assignedTechId}
+              onValueChange={(value) =>
+                onAssignedTechIdChange(
+                  value === ASSIGNED_TECH_NONE_VALUE ? "" : value,
+                )
+              }
+            >
               <SelectTrigger
                 id="assignedTech"
                 className="h-9 text-sm border-border/60"
@@ -305,7 +322,9 @@ export function TaskCardForm({
                 <SelectValue placeholder="Unassigned" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Unassigned</SelectItem>
+                <SelectItem value={ASSIGNED_TECH_NONE_VALUE}>
+                  Unassigned
+                </SelectItem>
                 {(technicians ?? [])
                   .filter((t) => t.status === "active")
                   .map((t) => (

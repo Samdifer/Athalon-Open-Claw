@@ -303,6 +303,18 @@ export const getBootstrapStatus = query({
     const technician = resolved?.tech ?? null;
 
     if (!technician) {
+      const selectedOrg = await resolveSelectedOrganization(
+        ctx,
+        args.preferredClerkOrganizationId,
+        args.preferredOrganizationName,
+      );
+      if (selectedOrg) {
+        return {
+          status: "awaiting_profile_link" as const,
+          orgId: selectedOrg._id,
+        };
+      }
+
       return { status: "needs_bootstrap" as const };
     }
 
@@ -351,31 +363,15 @@ export const linkUserToSelectedOrganization = mutation({
         organizationId: existingInSelected.organizationId,
         technicianId: existingInSelected._id,
         linked: false,
+        awaitingProfileLink: false,
       };
     }
 
-    const legalName =
-      args.legalName?.trim() ||
-      identity.name?.trim() ||
-      identity.email?.split("@")[0] ||
-      "Administrator";
-    const now = Date.now();
-
-    const technicianId = await ctx.db.insert("technicians", {
-      organizationId: selectedOrg._id,
-      userId: identity.subject,
-      legalName,
-      email: identity.email ?? undefined,
-      status: "active",
-      role: "admin",
-      createdAt: now,
-      updatedAt: now,
-    });
-
     return {
       organizationId: selectedOrg._id,
-      technicianId,
-      linked: true,
+      technicianId: null,
+      linked: false,
+      awaitingProfileLink: true,
     };
   },
 });

@@ -5,17 +5,19 @@ import { useMutation } from "convex/react";
 import { useOrganization, useUser } from "@clerk/clerk-react";
 import { useNavigate } from "react-router-dom";
 import { api } from "@/convex/_generated/api";
+import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Building2 } from "lucide-react";
+import { Building2, Link2 } from "lucide-react";
 import { toast } from "sonner";
 
 export default function OnboardingPage() {
   const navigate = useNavigate();
   const { user } = useUser();
   const { organization } = useOrganization();
+  const { bootstrapStatus, org } = useCurrentOrg();
   const bootstrap = useMutation(api.onboarding.bootstrapOrganizationAndAdmin);
   const linkToSelectedOrganization = useMutation(
     api.onboarding.linkUserToSelectedOrganization,
@@ -71,18 +73,54 @@ export default function OnboardingPage() {
 
     setLinkingSelectedOrganization(true);
     try {
-      await linkToSelectedOrganization({
+      const result = await linkToSelectedOrganization({
         preferredClerkOrganizationId: organization.id,
         preferredOrganizationName: organization.name,
         legalName: (legalName.trim() || legalNameFallback).trim(),
       });
-      toast.success(`Linked to ${organization.name}.`);
-      navigate("/dashboard", { replace: true });
+      if (result.awaitingProfileLink) {
+        toast.success(`Joined ${organization.name}. Your admin still needs to link your personnel profile.`);
+        navigate("/onboarding", { replace: true });
+      } else {
+        toast.success(`Linked to ${organization.name}.`);
+        navigate("/dashboard", { replace: true });
+      }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to link account.");
     } finally {
       setLinkingSelectedOrganization(false);
     }
+  }
+
+  if (bootstrapStatus === "awaiting_profile_link") {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <Card className="w-full max-w-lg border-border/60">
+          <CardHeader>
+            <CardTitle className="text-xl flex items-center gap-2">
+              <Link2 className="w-5 h-5" />
+              Waiting For Profile Link
+            </CardTitle>
+            <CardDescription>
+              Your organization account has been joined, but an administrator still needs to map it to your personnel profile before internal pages unlock.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="rounded-md border border-border/60 bg-muted/30 p-4 space-y-2">
+              <p className="text-sm font-medium text-foreground">
+                Organization: {organization?.name ?? org?.name ?? "Selected organization"}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Ask an administrator to open Settings &gt; Users, link your account to an existing personnel profile, and assign your access role.
+              </p>
+            </div>
+            <Button className="w-full" variant="secondary" onClick={() => window.location.reload()}>
+              Refresh Status
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   return (

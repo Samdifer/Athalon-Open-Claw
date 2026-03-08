@@ -2,7 +2,7 @@ import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 
 export function OnboardingGate() {
-  const { isLoaded, bootstrapStatus, needsBootstrap } = useCurrentOrg();
+  const { isLoaded, bootstrapStatus, needsBootstrap, awaitingProfileLink } = useCurrentOrg();
   const { pathname } = useLocation();
 
   if (!isLoaded || bootstrapStatus === "loading") {
@@ -22,7 +22,11 @@ export function OnboardingGate() {
     return <Navigate to="/onboarding" replace />;
   }
 
-  if (!needsBootstrap && isOnboardingRoute) {
+  if (awaitingProfileLink && !isOnboardingRoute) {
+    return <Navigate to="/onboarding" replace />;
+  }
+
+  if (!needsBootstrap && !awaitingProfileLink && isOnboardingRoute) {
     return <Navigate to="/dashboard" replace />;
   }
 

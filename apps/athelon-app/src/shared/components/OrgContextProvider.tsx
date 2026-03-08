@@ -22,8 +22,9 @@ export interface OrgContextValue {
   orgId: Id<"organizations"> | undefined;
   techId: Id<"technicians"> | undefined;
   isLoaded: boolean;
-  bootstrapStatus: "loading" | "needs_bootstrap" | "ready";
+  bootstrapStatus: "loading" | "needs_bootstrap" | "awaiting_profile_link" | "ready";
   needsBootstrap: boolean;
+  awaitingProfileLink: boolean;
   tech: NonNullable<ReturnType<typeof useQuery<typeof api.technicians.getMyContext>>>["tech"] | null;
   org: NonNullable<ReturnType<typeof useQuery<typeof api.technicians.getMyContext>>>["org"] | null;
 }
@@ -61,6 +62,7 @@ export function OrgContextProvider({ children }: { children: React.ReactNode }) 
 
   const bootstrapStatus = bootstrap?.status ?? "loading";
   const needsBootstrap = bootstrapStatus === "needs_bootstrap";
+  const awaitingProfileLink = bootstrapStatus === "awaiting_profile_link";
   const isLoaded =
     bootstrap !== undefined &&
     (bootstrapStatus !== "ready" || ctx !== undefined);
@@ -71,6 +73,7 @@ export function OrgContextProvider({ children }: { children: React.ReactNode }) 
     isLoaded,
     bootstrapStatus,
     needsBootstrap,
+    awaitingProfileLink,
     tech: ctx?.tech ?? null,
     org: ctx?.org ?? null,
   };

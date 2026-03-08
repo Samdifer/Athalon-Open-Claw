@@ -73,7 +73,7 @@ export default function SalesOpsPage() {
   const technicianMap = useMemo(() => {
     const map = new Map<string, string>();
     for (const tech of technicians ?? []) {
-      map.set(String(tech._id), tech.legalName || tech.employeeNumber || "Unknown Owner");
+      map.set(String(tech._id), tech.legalName || tech.employeeId || "Unknown Owner");
     }
     return map;
   }, [technicians]);

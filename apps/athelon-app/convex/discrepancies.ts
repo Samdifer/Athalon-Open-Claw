@@ -45,6 +45,10 @@ import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import { createNotificationHelper } from "./notifications";
+import {
+  buildHistoryTimelineEvents,
+  collectAuditRowsForRecords,
+} from "./lib/workOrderHistory";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // MEL CATEGORY EXPIRY INTERVALS
@@ -327,6 +331,9 @@ export const openDiscrepancy = mutation({
       userId: callerUserId,
       technicianId: args.foundByTechnicianId,
       ipAddress: args.callerIpAddress,
+      fieldName: "description",
+      oldValue: JSON.stringify(null),
+      newValue: JSON.stringify(args.description.trim()),
       notes:
         `Discrepancy ${discrepancyNumber} opened on work order ${workOrder.workOrderNumber}. ` +
         `Found during: ${args.foundDuring}. ` +
@@ -925,6 +932,47 @@ export const deferDiscrepancy = mutation({
       discrepancyId: args.discrepancyId,
       melExpiryDate,
     };
+  },
+});
+
+export const getDiscrepancyHistory = query({
+  args: {
+    discrepancyId: v.id("discrepancies"),
+    organizationId: v.id("organizations"),
+  },
+  handler: async (ctx, args) => {
+    await requireAuth(ctx);
+
+    const discrepancy = await ctx.db.get(args.discrepancyId);
+    if (!discrepancy) return [];
+    if (discrepancy.organizationId !== args.organizationId) {
+      throw new Error("Access denied: discrepancy does not belong to this organization.");
+    }
+
+    const workOrder = await ctx.db.get(discrepancy.workOrderId);
+    if (!workOrder) {
+      throw new Error("Linked work order not found for discrepancy history.");
+    }
+
+    const [auditRows, workItemEntries] = await Promise.all([
+      collectAuditRowsForRecords(ctx, [
+        { tableName: "discrepancies", recordId: String(discrepancy._id) },
+      ]),
+      ctx.db
+        .query("workItemEntries")
+        .withIndex("by_discrepancy", (q) => q.eq("discrepancyId", args.discrepancyId))
+        .collect(),
+    ]);
+
+    return await buildHistoryTimelineEvents(ctx, {
+      organizationId: args.organizationId,
+      workOrder,
+      taskCards: [],
+      taskCardSteps: [],
+      discrepancies: [discrepancy],
+      auditRows,
+      workItemEntries,
+    });
   },
 });
 

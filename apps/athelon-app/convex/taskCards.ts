@@ -36,7 +36,11 @@
 
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
-import type { Id } from "./_generated/dataModel";
+import type { Doc, Id } from "./_generated/dataModel";
+import {
+  buildHistoryTimelineEvents,
+  collectAuditRowsForRecords,
+} from "./lib/workOrderHistory";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SHARED VALIDATORS
@@ -796,6 +800,9 @@ export const completeStep = mutation({
         userId: callerUserId,
         technicianId: args.callerTechnicianId,
         ipAddress: args.callerIpAddress,
+        fieldName: args.notes?.trim() ? "notes" : undefined,
+        oldValue: args.notes?.trim() ? JSON.stringify(step.notes ?? null) : undefined,
+        newValue: args.notes?.trim() ? JSON.stringify(args.notes.trim()) : undefined,
         notes:
           `Step ${step.stepNumber} signed off. ` +
           `Cert: ${cert.certificateNumber} (${cert.certificateType}). ` +
@@ -855,9 +862,9 @@ export const completeStep = mutation({
         userId: callerUserId,
         technicianId: args.callerTechnicianId,
         ipAddress: args.callerIpAddress,
-        fieldName: "status",
-        oldValue: JSON.stringify("pending"),
-        newValue: JSON.stringify("na"),
+        fieldName: "naReason",
+        oldValue: JSON.stringify(null),
+        newValue: JSON.stringify(args.naReason.trim()),
         notes:
           `Step ${step.stepNumber} marked N/A. ` +
           `Reason: "${args.naReason.trim()}". ` +
@@ -980,7 +987,20 @@ export const signTaskCard = mutation({
         `Task card ${args.taskCardId} does not belong to organization ${args.organizationId}.`,
       );
     }
-    if (taskCard.status !== "complete") {
+
+    // Legacy seeded/demo data can contain sign-off-only cards whose denormalized
+    // step counters drifted away from the actual step documents. The step query
+    // is authoritative; if no persisted steps exist, treat the card as zero-step
+    // here so sign-off can normalize the stale counters.
+    const allSteps = await ctx.db
+      .query("taskCardSteps")
+      .withIndex("by_task_card", (q) => q.eq("taskCardId", args.taskCardId))
+      .collect();
+    const isLegacyZeroStepCard = allSteps.length === 0;
+    const canSignLegacyZeroStepCard =
+      isLegacyZeroStepCard && taskCard.status !== "voided";
+
+    if (taskCard.status !== "complete" && !canSignLegacyZeroStepCard) {
       throw new Error(
         `signTaskCard requires task card status "complete". ` +
         `Current status: "${taskCard.status}". ` +
@@ -995,11 +1015,7 @@ export const signTaskCard = mutation({
     // ── Verify all steps are actually in terminal state ───────────────────────
     // Double-check the denormalized card status by querying actual step data.
     // The denormalized counters could theoretically drift — this is the authoritative check.
-    const pendingSteps = await ctx.db
-      .query("taskCardSteps")
-      .withIndex("by_task_card", (q) => q.eq("taskCardId", args.taskCardId))
-      .filter((q) => q.eq(q.field("status"), "pending"))
-      .collect();
+    const pendingSteps = allSteps.filter((step) => step.status === "pending");
 
     if (pendingSteps.length > 0) {
       throw new Error(
@@ -1059,16 +1075,9 @@ export const signTaskCard = mutation({
     // For cards containing IA-required steps, the card-level signer must hold a
     // current IA. In Phase 2.1, this will be relaxed when counterSignStep is
     // implemented — a separate IA counter-signature will be sufficient.
-    const iaRequiredSteps = await ctx.db
-      .query("taskCardSteps")
-      .withIndex("by_task_card", (q) => q.eq("taskCardId", args.taskCardId))
-      .filter((q) =>
-        q.and(
-          q.eq(q.field("signOffRequiresIa"), true),
-          q.eq(q.field("status"), "completed"),
-        ),
-      )
-      .collect();
+    const iaRequiredSteps = allSteps.filter(
+      (step) => step.signOffRequiresIa && step.status === "completed",
+    );
 
     if (iaRequiredSteps.length > 0) {
       if (!taskCard.inspectorSignedAt || !taskCard.inspectorTechnicianId) {
@@ -1154,8 +1163,17 @@ export const signTaskCard = mutation({
       `Signed by: ${callerTech.legalName} (Cert: ${signingCert.certificateNumber}). ` +
       `Ratings: ${args.ratingsExercised.join(", ")}. ` +
       `Statement: ${args.returnToServiceStatement.trim()}`;
+    const promotedToCompleteForZeroStep =
+      canSignLegacyZeroStepCard && taskCard.status !== "complete";
 
     await ctx.db.patch(args.taskCardId, {
+      status: promotedToCompleteForZeroStep ? "complete" : taskCard.status,
+      stepCount: promotedToCompleteForZeroStep ? 0 : taskCard.stepCount,
+      completedStepCount: promotedToCompleteForZeroStep
+        ? 0
+        : taskCard.completedStepCount,
+      naStepCount: promotedToCompleteForZeroStep ? 0 : taskCard.naStepCount,
+      startedAt: taskCard.startedAt ?? now,
       completedAt: now,
       signingTechnicianId: args.callerTechnicianId,
       signedAt: now,
@@ -1167,6 +1185,25 @@ export const signTaskCard = mutation({
       updatedAt: now,
     });
 
+    if (promotedToCompleteForZeroStep) {
+      await ctx.db.insert("auditLog", {
+        organizationId: args.organizationId,
+        eventType: "status_changed",
+        tableName: "taskCards",
+        recordId: args.taskCardId,
+        userId: callerUserId,
+        technicianId: args.callerTechnicianId,
+        ipAddress: args.callerIpAddress,
+        fieldName: "status",
+        oldValue: JSON.stringify(taskCard.status),
+        newValue: JSON.stringify("complete"),
+        notes:
+          `Legacy zero-step task card ${taskCard.taskCardNumber} promoted to "complete" ` +
+          `during card-level sign-off so it can be certified without synthetic steps.`,
+        timestamp: now,
+      });
+    }
+
     // ── Audit log: card-level sign-off (signoff-rts-flow.md §6.2) ────────────
     await ctx.db.insert("auditLog", {
       organizationId: args.organizationId,
@@ -1176,6 +1213,9 @@ export const signTaskCard = mutation({
       userId: callerUserId,
       technicianId: args.callerTechnicianId,
       ipAddress: args.callerIpAddress,
+      fieldName: "returnToServiceStatement",
+      oldValue: JSON.stringify(null),
+      newValue: JSON.stringify(args.returnToServiceStatement.trim()),
       notes:
         `Task card "${taskCard.taskCardNumber}" signed at card level. ` +
         `Signed by: ${callerTech.legalName} (${signingCert.certificateNumber}). ` +
@@ -1232,6 +1272,11 @@ export const signTaskCardInspector = mutation({
     if (!inspector || inspector.status !== "active" || !inspector.userId) {
       throw new Error("Inspector must be an active technician with system identity.");
     }
+    if (!(inspector.accessAuthorizations ?? []).includes("rii")) {
+      throw new Error(
+        "Inspector sign-off for IA/RIII work requires RII authorization on the linked personnel profile.",
+      );
+    }
 
     const iaCert = await ctx.db
       .query("certificates")
@@ -1275,11 +1320,89 @@ export const signTaskCardInspector = mutation({
       recordId: args.taskCardId,
       userId: callerUserId,
       technicianId: args.callerTechnicianId,
+      fieldName: args.notes?.trim() ? "inspectorNotes" : undefined,
+      oldValue: args.notes?.trim() ? JSON.stringify(null) : undefined,
+      newValue: args.notes?.trim() ? JSON.stringify(args.notes.trim()) : undefined,
       notes: `Inspector sign-off recorded by ${inspector.legalName} (${iaCert.certificateNumber}) for ${iaRequiredSteps.length} IA/RIII step(s).`,
       timestamp: now,
     });
 
     return { inspectorTechnicianId: args.callerTechnicianId, inspectorSignedAt: now };
+  },
+});
+
+export const getTaskCardHistory = query({
+  args: {
+    taskCardId: v.id("taskCards"),
+    organizationId: v.id("organizations"),
+  },
+  handler: async (ctx, args) => {
+    await requireAuth(ctx);
+
+    const taskCard = await ctx.db.get(args.taskCardId);
+    if (!taskCard) return [];
+    if (taskCard.organizationId !== args.organizationId) {
+      throw new Error("Access denied: task card does not belong to this organization.");
+    }
+
+    const workOrder = await ctx.db.get(taskCard.workOrderId);
+    if (!workOrder) {
+      throw new Error("Linked work order not found for task card history.");
+    }
+
+    const [taskCardSteps, workOrderEntries] = await Promise.all([
+      ctx.db
+        .query("taskCardSteps")
+        .withIndex("by_task_card", (q) => q.eq("taskCardId", args.taskCardId))
+        .collect(),
+      ctx.db
+        .query("workItemEntries")
+        .withIndex("by_work_order", (q) => q.eq("workOrderId", taskCard.workOrderId))
+        .collect(),
+    ]);
+
+    const discrepancyIds = Array.from(
+      new Set(
+        taskCardSteps.flatMap((step) => step.discrepancyIds.map((discrepancyId) => String(discrepancyId))),
+      ),
+    );
+    const discrepancies = (
+      await Promise.all(
+        discrepancyIds.map((discrepancyId) =>
+          ctx.db.get(discrepancyId as Id<"discrepancies">),
+        ),
+      )
+    ).filter((discrepancy): discrepancy is Doc<"discrepancies"> => discrepancy !== null);
+
+    const stepIdSet = new Set(taskCardSteps.map((step) => String(step._id)));
+    const discrepancyIdSet = new Set(discrepancyIds);
+    const workItemEntries = workOrderEntries.filter((entry) =>
+      entry.taskCardId === args.taskCardId ||
+      (entry.taskCardStepId ? stepIdSet.has(String(entry.taskCardStepId)) : false) ||
+      (entry.discrepancyId ? discrepancyIdSet.has(String(entry.discrepancyId)) : false),
+    );
+
+    const auditRows = await collectAuditRowsForRecords(ctx, [
+      { tableName: "taskCards", recordId: String(taskCard._id) },
+      ...taskCardSteps.map((step) => ({
+        tableName: "taskCardSteps",
+        recordId: String(step._id),
+      })),
+      ...discrepancies.map((discrepancy) => ({
+        tableName: "discrepancies",
+        recordId: String(discrepancy._id),
+      })),
+    ]);
+
+    return await buildHistoryTimelineEvents(ctx, {
+      organizationId: args.organizationId,
+      workOrder,
+      taskCards: [taskCard],
+      taskCardSteps,
+      discrepancies,
+      auditRows,
+      workItemEntries,
+    });
   },
 });
 
@@ -1407,7 +1530,7 @@ export const addHandoffNote = mutation({
     note: v.string(),
   },
   handler: async (ctx, args) => {
-    await requireAuth(ctx);
+    const callerUserId = await requireAuth(ctx);
 
     if (!args.note.trim()) {
       throw new Error("HANDOFF_NOTE_EMPTY: note must be non-empty.");
@@ -1426,16 +1549,30 @@ export const addHandoffNote = mutation({
     const techName = tech?.legalName ?? "Unknown";
 
     const existingNotes = taskCard.handoffNotes ?? [];
+    const now = Date.now();
     const newNote = {
       technicianId: args.callerTechnicianId,
       technicianName: techName,
       note: args.note.trim(),
-      createdAt: Date.now(),
+      createdAt: now,
     };
 
     await ctx.db.patch(args.taskCardId, {
       handoffNotes: [...existingNotes, newNote],
-      updatedAt: Date.now(),
+      updatedAt: now,
+    });
+
+    await ctx.db.insert("auditLog", {
+      organizationId: args.organizationId,
+      eventType: "record_updated",
+      tableName: "taskCards",
+      recordId: args.taskCardId,
+      userId: callerUserId,
+      technicianId: args.callerTechnicianId,
+      fieldName: "handoffNotes",
+      newValue: JSON.stringify(args.note.trim()),
+      notes: `Shift handoff note added on ${taskCard.taskCardNumber} by ${techName}.`,
+      timestamp: now,
     });
 
     return { success: true };
