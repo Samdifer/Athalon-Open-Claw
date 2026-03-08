@@ -194,11 +194,9 @@ export const issuePart = mutation({
       );
     }
 
-    // BUG-PC-05 fix (idempotency): If this request already has this partId issued,
-    // silently succeed to prevent double-issue from rapid clicks.
-    if (record.status === "issued" && String(record.partId) === String(args.partId)) {
-      return; // Already issued with same part — idempotent no-op
-    }
+    // NOTE: Idempotency for rapid duplicate clicks is enforced by the
+    // reservation conflict guard + request status transition to "issued".
+    // Once issued, subsequent calls will fail the status precondition above.
 
     const now = Date.now();
     const previousLocation = part.location;
@@ -349,11 +347,6 @@ export const markInstalled = mutation({
       throw new Error(
         `Cannot mark as installed — current status is "${record.status}". Part must be "issued" first.`,
       );
-    }
-
-    // BUG-PC-06 fix (idempotency): If already installed, silently succeed.
-    if (record.status === "installed") {
-      return;
     }
 
     const now = Date.now();
