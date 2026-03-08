@@ -107,9 +107,12 @@ export function PartsIssueDialog({
 
     setSubmitting(true);
     try {
+      // BUG-PC-T2-04: workOrderId was not passed to the issuePart mutation,
+      // so the backend couldn't properly associate the issued part with its WO.
       await issuePart({
         requestId,
         partId: selectedPartId,
+        workOrderId,
         issuedByTechnicianId: technicianId,
         performedByUserId,
       });

@@ -9,6 +9,7 @@ type PartStatus =
   | "pending_inspection"
   | "issued"
   | "installed"
+  | "removed_pending_disposition"
   | "returned"
   | "quarantine"
   | "scrapped";
@@ -48,6 +49,13 @@ const STATUS_META: Record<PartStatus, { label: string; className: string }> = {
     label: "Installed",
     className: "bg-green-600 text-white border-green-700/70",
   },
+  // BUG-PC-T2-01: removed_pending_disposition was mapped to "issued" which
+  // hid the actual disposition-pending state from users. Parts awaiting
+  // disposition after removal need a distinct visual status.
+  removed_pending_disposition: {
+    label: "Pending Disposition",
+    className: "bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-600/40",
+  },
   returned: {
     label: "Returned",
     className: "bg-slate-500/15 text-slate-600 dark:text-slate-400 border-slate-500/30",
@@ -66,7 +74,8 @@ function mapRawStatus(status: string): PartStatus {
   if (status === "requested" || status === "ordered" || status === "shipped" || status === "received") {
     return status;
   }
-  if (status === "issued" || status === "removed_pending_disposition") return "issued";
+  if (status === "issued") return "issued";
+  if (status === "removed_pending_disposition") return "removed_pending_disposition";
   if (status === "installed") return "installed";
   if (status === "pending_inspection") return "pending_inspection";
   // Keep "inventory" distinct from "received" for clearer UX.

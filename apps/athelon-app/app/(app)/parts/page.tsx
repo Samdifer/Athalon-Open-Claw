@@ -39,6 +39,8 @@ import { PartTagBadges } from "./_components/PartTagBadges";
 import { PartLocationCell } from "./_components/PartLocationCell";
 import { TagFilterDropdown } from "./_components/TagFilterDropdown";
 import { DocumentAttachmentPanel } from "@/app/(app)/work-orders/[id]/_components/DocumentAttachmentPanel";
+import { PartHistoryTimeline } from "./_components/PartHistoryTimeline";
+import { ConformityDocumentPanel } from "./_components/ConformityDocumentPanel";
 import { QrCode, Grid3X3, LayoutList, Rows3 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -768,6 +770,31 @@ function PartDetailSheet({ part, organizationId, onClose }: PartDetailSheetProps
             </>
           )}
 
+          {/* Part History Timeline — BUG-PC-T2-02: was missing from detail sheet */}
+          <Separator className="opacity-30" />
+          <div>
+            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+              Transaction History
+            </p>
+            <PartHistoryTimeline partId={part._id} />
+          </div>
+
+          {/* Conformity Documents — BUG-PC-T2-03: was missing from detail sheet */}
+          {organizationId && (
+            <>
+              <Separator className="opacity-30" />
+              <div>
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                  Conformity Documents
+                </p>
+                <ConformityDocumentPanel
+                  organizationId={organizationId}
+                  partId={part._id}
+                />
+              </div>
+            </>
+          )}
+
           {/* Photos & Documents */}
           {organizationId && (
             <>
@@ -1280,7 +1307,11 @@ export default function PartsPage() {
                 </thead>
                 <tbody className="divide-y divide-border/40">
                   {filtered.map((part) => (
-                    <tr key={part._id} className="hover:bg-muted/10 transition-colors">
+                    <tr
+                      key={part._id}
+                      className="hover:bg-muted/10 transition-colors cursor-pointer"
+                      onClick={() => setDetailPart(part)}
+                    >
                       <td className="px-4 py-3 font-mono text-xs font-semibold">{part.partNumber}</td>
                       <td className="px-4 py-3 text-xs text-foreground">{part.partName}</td>
                       <td className="px-4 py-3 font-mono text-xs text-muted-foreground">
@@ -1321,7 +1352,7 @@ export default function PartsPage() {
                           size="sm"
                           variant="outline"
                           className="h-7 text-xs gap-1.5 border-amber-500/40 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10"
-                          onClick={() => setInspectPart(part)}
+                          onClick={(e) => { e.stopPropagation(); setInspectPart(part); }}
                         >
                           <ClipboardCheck className="w-3.5 h-3.5" />
                           Inspect

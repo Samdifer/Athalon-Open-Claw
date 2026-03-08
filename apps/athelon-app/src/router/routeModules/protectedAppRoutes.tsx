@@ -55,6 +55,7 @@ const AircraftLogbookPage = lazy(() => import("@/app/(app)/fleet/[tail]/logbook/
 const AircraftAdsbPage = lazy(() => import("@/app/(app)/fleet/[tail]/adsb/page"));
 
 const PartsPage = lazy(() => import("@/app/(app)/parts/page"));
+const PartDetailPage = lazy(() => import("@/app/(app)/parts/[id]/page"));
 const NewPartPage = lazy(() => import("@/app/(app)/parts/new/page"));
 const PartsRequestsPage = lazy(() => import("@/app/(app)/parts/requests/page"));
 const PartsReceivingPage = lazy(() => import("@/app/(app)/parts/receiving/page"));
@@ -270,6 +271,7 @@ export function protectedAppRoutes() {
             <Route path="/parts/receiving/po" element={<POReceivingPage />} />
             <Route path="/parts/warehouse" element={<WarehouseLocationsPage />} />
             <Route path="/parts/tags" element={<PartsTagsPage />} />
+            <Route path="/parts/:id" element={<PartDetailPage />} />
 
             <Route path="/squawks" element={<SquawksPage />} />
             <Route path="/personnel" element={<PersonnelPage />} />

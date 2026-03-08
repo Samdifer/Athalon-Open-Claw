@@ -25,6 +25,8 @@ export type PartsBoardItem = {
   supplier?: string;
   quantity?: number;
   status: PartsBoardColumn;
+  /** Part inventory ID for navigation to detail view */
+  partId?: string;
 };
 
 /** Shape of a workOrderParts record returned by the query. */
@@ -72,9 +74,11 @@ interface PartsLifecycleBoardProps {
   items?: PartsBoardItem[];
   /** When provided, fetches live data from the workOrderParts table */
   workOrderId?: Id<"workOrders">;
+  /** Callback when a board item is clicked for detail view */
+  onItemClick?: (item: PartsBoardItem) => void;
 }
 
-export function PartsLifecycleBoard({ items, workOrderId }: PartsLifecycleBoardProps) {
+export function PartsLifecycleBoard({ items, workOrderId, onItemClick }: PartsLifecycleBoardProps) {
   const [statusFilter, setStatusFilter] = useState<"all" | PartsBoardColumn>("all");
 
   // Fetch live data when workOrderId is provided.
@@ -170,7 +174,11 @@ export function PartsLifecycleBoard({ items, workOrderId }: PartsLifecycleBoardP
                   <p className="text-[11px] text-muted-foreground">No parts</p>
                 ) : (
                   columnItems.map((item) => (
-                    <div key={item.id} className="rounded-md border border-border/60 bg-background p-2.5 space-y-1">
+                    <div
+                      key={item.id}
+                      className={`rounded-md border border-border/60 bg-background p-2.5 space-y-1 ${onItemClick ? "cursor-pointer hover:border-primary/40 hover:bg-card/80 transition-all" : ""}`}
+                      onClick={onItemClick ? () => onItemClick(item) : undefined}
+                    >
                       <div className="flex items-center justify-between gap-2">
                         <span className="font-mono text-[11px] font-semibold truncate">{item.partNumber}</span>
                         <PartStatusBadge status={item.status} />

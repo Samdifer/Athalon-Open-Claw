@@ -5,7 +5,7 @@ import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { toast } from "sonner";
-import { Camera, CheckCircle2, ClipboardCheck, XCircle } from "lucide-react";
+import { Camera, CheckCircle2, ClipboardCheck, XCircle, Info } from "lucide-react";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -21,6 +21,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import {
   Table,
   TableBody,
   TableCell,
@@ -28,6 +34,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { PartHistoryTimeline } from "./PartHistoryTimeline";
+import { ConformityDocumentPanel } from "./ConformityDocumentPanel";
+import { DocumentAttachmentPanel } from "@/app/(app)/work-orders/[id]/_components/DocumentAttachmentPanel";
+import { PartStatusBadge } from "@/src/shared/components/PartStatusBadge";
 
 type VisualCondition = "acceptable" | "damaged" | "rejected";
 type Decision = "accepted" | "rejected" | "accepted_with_deviation";
@@ -84,6 +94,10 @@ export function ReceivingInspection() {
   const [conformityDocumentIdsRaw, setConformityDocumentIdsRaw] = useState("");
   const [log, setLog] = useState<LogItem[]>([]);
   const [saving, setSaving] = useState(false);
+  // BUG-PC-T2-05: Part detail was inaccessible from the receiving queue.
+  // Adding a detail sheet so clerks can view part info, history, and docs
+  // before or after inspection without leaving the receiving page.
+  const [detailPart, setDetailPart] = useState<PendingPart | null>(null);
 
   const quantityMatches = Number(expectedQty || 0) === Number(receivedQty || 0);
 
@@ -246,10 +260,21 @@ export function ReceivingInspection() {
                     {part.serialNumber ?? "—"}
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => setSelectedPart(part)}>
-                      <ClipboardCheck className="w-3.5 h-3.5 mr-1" />
-                      Inspect
-                    </Button>
+                    <div className="flex items-center justify-end gap-1.5">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-7 w-7 p-0 text-muted-foreground hover:text-primary"
+                        title="View part details"
+                        onClick={() => setDetailPart(part)}
+                      >
+                        <Info className="w-3.5 h-3.5" />
+                      </Button>
+                      <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => setSelectedPart(part)}>
+                        <ClipboardCheck className="w-3.5 h-3.5 mr-1" />
+                        Inspect
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))
@@ -283,6 +308,56 @@ export function ReceivingInspection() {
           </div>
         )}
       </div>
+
+      {/* Part Detail Sheet — accessible from receiving queue */}
+      <Sheet open={!!detailPart} onOpenChange={(v) => !v && setDetailPart(null)}>
+        <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
+          <SheetHeader className="pb-4">
+            <SheetTitle className="text-base font-semibold">Part Detail</SheetTitle>
+          </SheetHeader>
+          {detailPart && (
+            <div className="space-y-4">
+              <div className="bg-muted/20 rounded-md border border-border/40 px-3 py-2 space-y-1">
+                <p className="font-mono text-sm font-semibold">{detailPart.partNumber}</p>
+                <p className="text-sm text-muted-foreground">{detailPart.partName ?? detailPart.description ?? ""}</p>
+                {detailPart.serialNumber && <p className="text-xs text-muted-foreground">S/N: {detailPart.serialNumber}</p>}
+                {detailPart.purchaseOrderNumber && <p className="text-xs text-muted-foreground">PO: {detailPart.purchaseOrderNumber}</p>}
+                <PartStatusBadge status="pending_inspection" />
+              </div>
+
+              <div>
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                  Transaction History
+                </p>
+                <PartHistoryTimeline partId={detailPart._id} />
+              </div>
+
+              {orgId && (
+                <>
+                  <div>
+                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                      Conformity Documents
+                    </p>
+                    <ConformityDocumentPanel organizationId={orgId} partId={detailPart._id} />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                      Photos &amp; Documents
+                    </p>
+                    <DocumentAttachmentPanel
+                      organizationId={orgId}
+                      attachedToTable="parts"
+                      attachedToId={String(detailPart._id)}
+                      allowedTypes={["photo", "parts_8130", "vendor_invoice", "other"]}
+                      canDelete
+                    />
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
 
       <Dialog open={!!selectedPart} onOpenChange={(open) => !open && !saving && resetDialogState()}>
         <DialogContent className="max-w-lg">
