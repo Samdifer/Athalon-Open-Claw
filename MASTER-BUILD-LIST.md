@@ -22,6 +22,49 @@ Research corpus: `knowledge/research/camp-systems/`
 - [ ] **C3.2** AD/SB closure package generation
 - [ ] **C3.3** RTS preflight integrity checker (hard-block + explainability)
 
+### CAMP-P0.5 — Unaccounted Maintenance Findings (NEW — opus-c)
+
+Source spec: `knowledge/plans/maintenance-findings-unaccounted-spec.md`
+Rollout plan: `knowledge/plans/maintenance-findings-rollout.md`
+
+#### Phase 1 — Data Foundation + Triage MVP
+- [ ] **MF-1.1** `maintenanceFindings` table schema (Convex defineTable)
+- [ ] **MF-1.2** `maintenanceFindingEvents` append-only audit table
+- [ ] **MF-1.3** Core mutations: createFinding, triageFinding, resolveFinding
+- [ ] **MF-1.4** State machine transition guards (dueEngine pattern)
+- [ ] **MF-1.5** Auto-generated findingNumber (MF-YYYY-NNNN)
+- [ ] **MF-1.6** `/compliance/findings` list page with filters
+- [ ] **MF-1.7** `/compliance/findings/[id]` detail page with timeline
+- [ ] **MF-1.8** Finding creation from AD/SB tracking page
+- [ ] **MF-1.9** Finding count badge on compliance dashboard nav
+- [ ] **MF-1.10** Seed data for dev/QA
+
+#### Phase 2 — Integration + Automation
+- [ ] **MF-2.1** Auto-create finding from high-severity maintenancePrediction
+- [ ] **MF-2.2** Bidirectional prediction ↔ finding status sync
+- [ ] **MF-2.3** Bridge carryForwardItems → findings on WO close
+- [ ] **MF-2.4** Overdue finding check in returnToService preconditions (RTS hard block)
+- [ ] **MF-2.5** `getUnaccountedBacklog` query (count + age distribution)
+- [ ] **MF-2.6** `getOverdueFindings` query with live aircraft hours
+- [ ] **MF-2.7** Dashboard KPI widget (unaccounted + overdue counts)
+- [ ] **MF-2.8** Findings tab on aircraft detail page
+- [ ] **MF-2.9** AD supersession → auto-supersede linked findings
+- [ ] **MF-2.10** Deferral expiry scheduled job (auto-escalation)
+- [ ] **MF-2.11** Triage SLA deadline computation
+- [ ] **MF-2.12** Overdue notification events (30d/14d/7d/0d)
+
+#### Phase 3 — Dashboarding + Observability
+- [ ] **MF-3.1** `/compliance/findings/dashboard` KPI page
+- [ ] **MF-3.2** Aging distribution chart (0-7d / 7-30d / 30-90d / 90d+)
+- [ ] **MF-3.3** Findings by type breakdown chart
+- [ ] **MF-3.4** Predicted-to-WO conversion rate metric
+- [ ] **MF-3.5** Triage SLA compliance rate metric
+- [ ] **MF-3.6** Closure cycle time metric (median discovered→closed)
+- [ ] **MF-3.7** Integrate findings backlog into audit readiness score
+- [ ] **MF-3.8** Findings CSV export
+- [ ] **MF-3.9** Findings section in pre-audit checklist generator
+- [ ] **MF-3.10** Compliance cross-navigation update for Findings page
+
 ### CAMP-P1 — Integration Parity Layer
 - [ ] **C4.1** External sync gateway (counters + due-list exchange contract)
 - [ ] **C4.2** Tail-level integration enablement + health dashboard
