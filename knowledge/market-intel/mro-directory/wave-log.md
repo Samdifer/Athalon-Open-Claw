@@ -709,3 +709,92 @@ All three Wave 6 workers (w6-tulsa-ok, w6-wichita-ks, w6-ny-metro) timed out mid
 - Consider shorter-scope tasks (10 shops max per worker) to avoid timeout
 - Wichita, NY Metro, Tulsa remain on enrichment backlog
 
+
+
+---
+
+## Wave 7 — 2026-03-09 (10:00 UTC)
+
+**Focus:** EBIS contact discovery + scoring algorithm fix + Wichita/Tulsa/NY Metro enrichment  
+**Operator:** Autonomous (Opus orchestrator + 3 Sonnet workers)
+
+### Actions Taken
+
+1. **EBIS contact discovery** — Researched all 18 confirmed EBIS customers and found:
+   - 14 of 18 now have verified phone numbers
+   - 8 of 18 have verified email addresses
+   - 15 of 18 have website URLs identified
+   - Created `ebis-contacts-enriched.csv` with complete contact dossier
+
+2. **Scoring algorithm fix** — Found and fixed critical bug in `rescore_heuristics.py`:
+   - EBIS ERP bonus increased from +25 to +40 (reflects Veryon acquisition churn urgency)
+   - Fixed score guard that prevented existing scores from being upgraded (only allowed downgrades to be blocked)
+   - Fixed skip condition that excluded enriched EBIS records from rescore
+   - Net result: OCR Aviation 55→70, Clemens 55→70, Appalachian Aero 48→63, Apex Aviation 10→60, Plane Place 48→63
+
+3. **Wichita cluster enrichment** (Sonnet worker → 10 shops):
+   - Clemens Aviation is actually 50-130 employees and an EBIS *reference customer* (not just a user)
+   - Global Aviation Tech: 28-34 emp, in-house engineering/manufacturing, dual Wichita+Elmira locations — top ERP prospect
+   - LJ Aviation: 30-50 emp, 16 maintenance techs, 40+ managed aircraft fleet
+   - Tech-Aire Instruments: outdated static HTML site from ~2000s — prime $5-10k website redesign
+   - 2 shops (Kansas Aviation Services, Excel Aircraft Service) not found online — may be defunct
+
+4. **Tulsa/OKC cluster enrichment** (Sonnet worker → 10 shops):
+   - NORDAM Group: 2,500 employees — enterprise, exclude from target lists
+   - Aero-Mach Labs: $26M revenue, 100+ emp, recently unified 3 brands — possible mid-market ERP
+   - Tulsa Avionics Services: circa-2005 HTML site, 30+ years — prime $5-8k website redesign
+   - PowerMaster Inc: circa-2008 HTML site — prime website redesign
+   - 3 shops not found online (Airlift Helicopters, Oklahoma Aircraft Sales, Southwest Helicopters)
+
+5. **NY Metro cluster enrichment** (Sonnet worker → 10 shops):
+   - **Keystone Helicopter Corp** (West Chester PA): TOP FINDING. 50-100 emp, PE-backed (Ranger Aerospace), Part 145+135+91, air medical. ZERO website. Cross-sell score 85 — highest in entire database ($15-25k website + ERP)
+   - Islip Avionics: founder passed 2024, sons running — leadership transition = buying window
+   - Meridian (Teterboro): CLOSED Part 145 in 2020 — remove from target lists
+   - Ventura Air Services: 51-200 emp, Est. 1955 — larger enterprise prospect
+   - Empire Avionics: likely closed per Yelp
+
+6. **Rebuilt hot-leads priority file** — Now 31 prioritized leads (was 59) with:
+   - 15 EBIS churn targets (5 matched to FAA + 10 with contacts found)
+   - 5 new discoveries from enrichment (Keystone, Global Aviation Tech, LJ Aviation, Ventura, Aero-Mach)
+   - 7 website prospects (Tulsa Avionics, PowerMaster, Tech-Aire, Islip + existing top prospects)
+   - 4 entities flagged for removal
+
+### Wave 7 Data Quality Summary
+
+| Metric | Wave 6 | Wave 7 | Change |
+|--------|--------|--------|--------|
+| Total records | 2,792 | 2,792 | — |
+| EBIS contacts with phone | ~5 | 14 | +9 |
+| EBIS contacts with email | ~3 | 8 | +5 |
+| EBIS contacts with website | ~3 | 15 | +12 |
+| Enriched profiles (total) | 183 | 213 | +30 (Wichita+Tulsa+NY) |
+| Hot leads prioritized | 59 | 31 | -28 (higher quality, deduped) |
+| Entities flagged for removal | 0 | 4 | +4 |
+| New top ERP prospects | — | 5 | +5 (Keystone, GATECH, LJ, Ventura, Aero-Mach) |
+
+### Key New Opportunities
+
+**#1 Keystone Helicopter Corp** (West Chester PA) — 50-100 emp, PE-backed, Part 145+135+91, helicopter MRO/air medical. ZERO website. Cross-sell score 85.0 — highest in entire database. Immediate dual pitch: $15-25k website + ERP.
+
+**#2 Islip Avionics** (Ronkonkoma NY) — Family shop since 1986 at KISP MacArthur. Founder passed 2024; sons Rick & Steven running it now. Leadership transition = ideal buying window for website refresh + ERP.
+
+**#3 Salty Pelican Aviation** (New Braunfels TX) — Confirmed EBIS user with full contact info. Cirrus ASC, 11 emp. Phone: 830-837-0823. Ready for warm ERP outreach.
+
+**#4 Global Aviation Tech** (Wichita KS) — 28-34 emp MRO with in-house engineering/manufacturing. Growing company with complex ops needing ERP. Phone: 316-425-0999.
+
+**#5 Platinum Sky Maintenance** (Fort Lauderdale FL) — Confirmed EBIS user. AOG specialist at FXE. Wix-era website needs redesign. Dual pitch: $10-15k website + ERP churn. Phone: 786-717-1606.
+
+### Scripts Updated
+- `rescore_heuristics.py` — EBIS bonus +25→+40; fixed score upgrade guard; fixed skip condition for confirmed EBIS
+
+### Remaining Gaps
+- 3 EBIS users still need phone discovery (Apex Aviation NV, Jet Services AL, CharterJet Solutions)
+- 13 EBIS customers still unmatched to FAA cert_nos (trade name ≠ legal name)
+- FL massively under-enriched (20 of 641 shops)
+- Smyrna TN cluster not enriched
+- Keystone Helicopter needs contact discovery (phone/email/decision-maker)
+- 4 entities need to be flagged/removed from master list
+
+### Next Wave Focus
+- **Wave 8:** Keystone Helicopter deep-dive + contact discovery; Smyrna TN cluster; remove closed/enterprise entities; FL 2nd enrichment pass; EBIS cert_no reconciliation
+

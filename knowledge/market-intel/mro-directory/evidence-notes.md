@@ -404,3 +404,69 @@ Sourced directly from ebiscloud.com case studies and customer showcase pages:
 - **Columbus Aero Service** (Columbus OH): Wix site — credibility problem, prime redesign pitch
 - **Midwest Malibu Center** (Hutchinson KS): piston specialist, poor web presence, underserved by enterprise software
 
+
+## Wave 7 Update — 2026-03-09 (10:00 UTC)
+
+### EBIS Contact Discovery — 18 Confirmed Users Enriched
+
+All 18 confirmed EBIS customers from waves 3-6 now have contact information:
+- **14 of 18** have verified phone numbers
+- **8 of 18** have verified email addresses
+- **15 of 18** have website URLs identified
+- **3 entities** still need phone discovery: Apex Aviation (NV), Jet Services Maintenance (AL), CharterJet Solutions (unknown location)
+
+Key contact intelligence:
+- **Salty Pelican Aviation** (New Braunfels TX): 830-837-0823, office@saltypelicanaviation.com — Cirrus ASC, 11 employees, AEA member since 2023
+- **Platinum Sky Maintenance** (Fort Lauderdale FL): 786-717-1606, aogpsm.com — AOG specialist at FXE, Wix-era site = website redesign + ERP dual opportunity
+- **Basin Aviation** (Midland TX): 432-685-7000, basinaviation.com — FBO+Part 135+MRO, Lear Jets/King Airs, founded 1970s
+- **My Jet DOM** (McDonough GA): 470-359-4600, support@myjetdom.com — aircraft management, 10 jets, professional site
+- **Midwest Corporate Air** (Bellefontaine OH): 937-504-6982 (maintenance dept, Amy Kerns), midwestcorporateair.com
+- **WAir Aviation** (Wheeling IL): 847-773-1382, wairaviation.com — 8 employees, Cessna fleet, KPWK
+- **Oracle Aviation** (Omaha NE): 402-934-5300, oracleaviation.com — full-service FBO + Part 145 avionics
+- **Qmulus Aviation** (Caldwell ID): 208-459-2360, qmulusaviation.com, contact: Mark Hankinson — 12k sq ft new facility
+
+### Clemens Aviation — EBIS Reference Customer Intelligence
+- NOT a churn target — they are an EBIS *reference customer* featured in case study
+- Much larger than expected: 50-130 employees (was listed as unknown/small)
+- Family-owned, Stearman Field Benton KS, expanding to OKC
+- Beechjet 400A core plus managed fleet (jet sales + management + maintenance + FBO)
+- Valuable competitive intelligence but unlikely to switch near-term
+
+### Wichita Cluster Deep-Dive (10 shops)
+- **Global Aviation Tech** (28-34 emp): TOP ERP prospect. In-house engineering + manufacturing + STC. Dual Wichita + Elmira NY locations. Modern site. Phone: 316-425-0999.
+- **LJ Aviation** (30-50 emp): Charter + aircraft management + Part 145. 16 full-time maintenance techs. 40+ managed aircraft. Modern site.
+- **Tech-Aire Instruments**: Outdated static HTML site from ~2000s. FAA+EASA approved instrument repair. AEA member since 1990. Joseph DeFalco contact. Phone: 316-262-4020.
+- **Midwest Malibu Center**: PA-46 exclusive specialist. Functional but dated site. Hutchinson KS. Phone: 620-728-1356.
+- **Air Capital Interiors**: Clean modern site. Interior specialist. 10-25 emp. Low redesign need.
+- **Bevan Aviation**: Recently redesigned modern site. Est. 1954. Low redesign need.
+- **2 shops not found online**: Kansas Aviation Services, Excel Aircraft Service — may be defunct or operating under different names
+
+### NY Metro Deep-Dive (10 shops)
+- **Keystone Helicopter Corp** (West Chester PA): TOP DUAL PROSPECT. 50-100 employees. PE-backed (Ranger Aerospace). Part 145+135+91. Air medical helicopters. ZERO website. $15-25k website + ERP = highest cross-sell score found (85.0).
+- **Islip Avionics** (Ronkonkoma NY): Family shop since 1986 at KISP. Founder passed 2024; sons Rick & Steven now running. LEADERSHIP TRANSITION = buying window for both website + ERP. AEA member since 1987.
+- **Ventura Air Services** (Farmingdale NY): 51-200 employees. Est. 1955. Charter + MRO at KFRG. Professional site. Larger enterprise ERP target.
+- **Meridian** (Teterboro NJ): **CLOSED Part 145 in 2020** — remove from target lists. FBO-only now.
+- **Empire Avionics** (White Plains NY): Likely CLOSED per Yelp. Verify before pursuing.
+- **Linden Airport Management** (Linden NJ): Airport operator with bundled maintenance. Basic Squarespace site.
+
+### Tulsa/OKC Deep-Dive (10 shops)
+- **NORDAM Group**: Enterprise (2,500 employees) — exclude from target lists.
+- **Aero-Mach Labs** ($26M revenue, 100+ emp): Recently unified 3 brands. 2025 supply chain award. Possible mid-market ERP prospect but likely has existing systems.
+- **JetSet FBO** (Bethany/KPWA): Clean modern site. 20-50 emp. FBO with secondary maintenance. Already has decent web presence.
+- **Tulsa Avionics Services**: Dated circa-2005 HTML site. Prime $5-8k website redesign. 30+ years in business.
+- **PowerMaster Inc**: Dated circa-2008 HTML site. Owner-operated piston engine overhaul. Prime $5-8k redesign.
+- **Aircraft Propeller Service**: May actually be Aircraft Accessories of Oklahoma. Functional but basic site. Since 1959.
+- **3 shops not found**: Airlift Helicopters, Oklahoma Aircraft Sales, Southwest Helicopters — may be defunct
+
+### Scoring Algorithm Fix
+- EBIS confirmed users ERP bonus increased from +25 to +40 (reflects Veryon churn window value)
+- Fixed scoring guard that prevented EBIS users from getting score upgrades
+- Fixed skip condition that excluded enriched EBIS records from rescore
+- OCR Aviation: 55→70, Clemens Aviation: 55→70, Appalachian Aero: 48→63, Apex Aviation: 10→60, Plane Place: 48→63
+
+### Entities to Remove from Target Lists
+1. **Meridian** (Teterboro NJ) — closed Part 145 in 2020
+2. **NORDAM Group** (Tulsa OK) — enterprise, 2500 employees
+3. **Tulsa Air and Space Museum** — not commercial MRO
+4. **Empire Avionics** (White Plains NY) — likely closed
+

@@ -73,7 +73,7 @@ export default function SalesOpsPage() {
   const technicianMap = useMemo(() => {
     const map = new Map<string, string>();
     for (const tech of technicians ?? []) {
-      map.set(String(tech._id), tech.legalName || tech.employeeNumber || "Unknown Owner");
+      map.set(String(tech._id), tech.legalName || tech.employeeId || "Unknown Owner");
     }
     return map;
   }, [technicians]);
@@ -109,6 +109,15 @@ export default function SalesOpsPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-semibold" data-testid={`${bucket.testId}-count`}>{count}</div>
+                {count > 0 && (
+                  <p className="text-xs text-muted-foreground mt-1" data-testid={`${bucket.testId}-value`}>
+                    {formatCurrency(
+                      (stats?.items ?? []).reduce((sum, q) => sum + (q.total ?? 0), 0),
+                      "USD",
+                    )}{" "}
+                    total value
+                  </p>
+                )}
               </CardContent>
             </Card>
           );
@@ -118,11 +127,7 @@ export default function SalesOpsPage() {
       <div className="grid gap-4 xl:grid-cols-3">
         {buckets.map((bucket) => (
           <Card key={bucket.key} className="border-border/60" data-testid={bucket.testId}>
-            <CardHeader>
-              <CardTitle className="text-base">{bucket.title}</CardTitle>
-              <CardDescription>{bucket.description}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-3 pt-4">
               {isLoading ? (
                 Array.from({ length: 3 }).map((_, index) => (
                   <Skeleton key={`${bucket.key}-sk-${index}`} className="h-20 w-full" />
@@ -172,7 +177,7 @@ export default function SalesOpsPage() {
                 ))}
                 {bucket.items.length > 8 && (
                   <Link
-                    to={`/sales/quotes?status=${bucket.statuses[0]}`}
+                    to={`/sales/quotes?status=${bucket.statuses.join(",")}`}
                     className="block text-center text-xs text-muted-foreground hover:text-primary py-1"
                     data-testid={`${bucket.testId}-show-more`}
                   >

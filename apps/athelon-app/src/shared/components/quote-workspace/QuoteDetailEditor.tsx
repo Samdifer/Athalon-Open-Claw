@@ -1433,6 +1433,7 @@ export function QuoteDetailEditor({
               >
                 <option value="approved">Accepted</option>
                 <option value="declined">Declined</option>
+                <option value="deferred">Deferred</option>
               </select>
             </div>
             <div className="space-y-1.5">

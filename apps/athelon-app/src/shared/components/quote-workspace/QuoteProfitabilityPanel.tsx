@@ -115,12 +115,13 @@ export function QuoteProfitabilityPanel({
           <button
             type="button"
             onClick={onToggleCollapse}
+            aria-label={collapsed ? "Expand profitability panel" : "Collapse profitability panel"}
             className="rounded p-0.5 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
           >
             {collapsed ? (
-              <ChevronDown className="h-4 w-4" />
+              <ChevronDown className="h-4 w-4" aria-hidden />
             ) : (
-              <ChevronUp className="h-4 w-4" />
+              <ChevronUp className="h-4 w-4" aria-hidden />
             )}
           </button>
         )}
