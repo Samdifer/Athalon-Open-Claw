@@ -504,3 +504,81 @@ No direct evidence found in this wave. Shops in this batch are predominantly sma
 - Dedicated Wichita cluster deep-dive (57 shops; Tech-Aire + Midwest Malibu + Air Capital Interiors)
 - Smyrna TN cluster (Stevens Aerospace, Nitetrain, AMI Aviation)
 
+
+---
+
+## Wave 5 — 2026-03-09 (09:00 UTC)
+
+**Focus:** Scoring differentiation + 4-state expansion (OK/NY/NC/IL) + EBIS customer manual import + Houston/Phoenix enrichment  
+**Operator:** Autonomous (Opus orchestrator + 3 Sonnet workers)
+
+### Actions Taken
+
+1. **Advanced heuristic rescoring** — Created `rescore_heuristics.py` that uses name-based keyword detection, email domain analysis, metro city classification, and DBA presence to differentiate 2,224 previously flat-scored records. Before: 1,738 records with identical wfs=50/erp=20. After: continuous distribution from 15-80 (wfs) and 8-90 (erp).
+   - **624 shop archetypes detected from names:** avionics (262), engine-specialist (169), component-specialist (112), helicopter-mro (57), structural-specialist (41), interior-specialist (36), paint (14), FBO (7)
+   - **1,866 custom email domains extracted** as website proxies
+   - Metro city bonus applied to shops in major aviation hubs
+   - DBA/brand name presence flagged as marketing awareness indicator
+
+2. **Expanded to 4 new states** — OK (123), NY (86), NC (75), IL (96) extracted from FAA directory. Master list: 2,409 → **2,795 records across 16 states**.
+
+3. **Manual EBIS customer import** — Added 6 confirmed EBIS customers that weren't matchable via FAA cert_no (business names differ from FAA legal names): Salty Pelican (TX), Basin Aviation (TX), Platinum Sky (FL), My Jet DOM (GA), Midwest Corporate Air (OH), Skyview Aviation (CA). Total confirmed EBIS: 10 in master list.
+
+4. **Elevate MRO exclusion fix** — Properly flagged all Elevate MRO entries as "self" to exclude from outreach.
+
+5. **Houston cluster enrichment** (Sonnet worker) — In progress; targeting top 20 Houston metro Part 145 shops.
+
+6. **Phoenix cluster enrichment** (Sonnet worker) — In progress; targeting top 20 Phoenix metro Part 145 shops.
+
+### Wave 5 Data Quality Summary
+
+| Metric | Wave 4 | Wave 5 | Change |
+|--------|--------|--------|--------|
+| Total records | 2,412 | 2,795 | +383 |
+| States covered | 12 | 16 | +4 (OK, NY, NC, IL) |
+| SMB targets | 2,317 | 2,701 | +384 |
+| Archetype-detected shops | ~0 (bulk) | 624 | +624 |
+| Score differentiation | 1,738 flat | 0 flat | all records differentiated |
+| EBIS confirmed in master | 4 | 10 | +6 (manual import) |
+| Corridor verified | 7 | 7 | — |
+| Email domain discoveries | 0 | 1,866 | +1,866 |
+
+### Key New Opportunities
+
+**Oklahoma (Tulsa MRO Alley):**
+- PowerMaster Inc (Tulsa) — engine specialist, wfs=56, erp=47
+- JetSet Inc (Bethany/OKC) — FBO-MRO, wfs=68, erp=30
+- Tulsa Avionics Services (Tulsa) — avionics specialist, wfs=53, erp=42
+
+**New York (Business Aviation Corridor):**
+- Islip Avionics (Ronkonkoma/Long Island) — avionics, near KISP
+- Empire Avionics (White Plains) — near KHPN, corporate jet hub
+- Ventura Avionics (Farmingdale) — near Republic Airport KFRG
+
+**North Carolina:**
+- Aero Avionics Inc (Sanford) — avionics, wfs=56, erp=47
+- Carolina Avionics Group (Salisbury) — avionics, wfs=65
+- Appalachian Aero Group (Hickory) — **confirmed EBIS user**, warm churn target
+
+**Illinois:**
+- Waukegan Aviation Services — avionics, wfs=63, erp=35
+- Avionics Place (Rockford) — avionics, near KRFD cargo hub
+- WAIR Aviation (Wheeling) — **confirmed EBIS user**, immediate churn target
+
+### Scripts Created/Updated
+
+- `rescore_heuristics.py` — Advanced multi-signal scoring using name keywords, email domains, metro cities, DBA presence (NEW)
+
+### Remaining Gaps
+
+- Houston and Phoenix enrichment workers still running (will complete into enrichment-results CSV files)
+- Tulsa cluster not enriched yet (high priority for wave 6 — major US MRO hub)
+- NY Teterboro/White Plains cluster not enriched
+- EBIS customer DBA-to-FAA reconciliation incomplete (many EBIS customers have different trade names vs FAA legal names)
+- No employee count or revenue proxy data
+- ~2,050 records still classified as "general-mro" (name-based detection has limits)
+
+### Next Wave Focus
+
+- **Wave 6:** Merge Houston/Phoenix enrichment results; Tulsa MRO Alley deep-dive; NY biz-jet corridor enrichment; EBIS customer contact discovery (phone/email for warm outreach); outreach template drafting; Wichita deep-dive
+
