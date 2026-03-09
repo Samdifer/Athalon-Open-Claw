@@ -325,3 +325,51 @@ Ranked by: repair station density × private jet activity × competitive gap × 
 
 **Athelon's sweet spot:** Independent Part 145 shops with 5-50 employees doing business jet/turboprop maintenance. Too small for Corridor, too sophisticated for spreadsheets, and currently experiencing EBIS uncertainty.
 
+
+---
+
+## Wave 3 — 2026-03-09
+
+### EBIS Confirmed Customer List (19 shops)
+
+Sourced directly from ebiscloud.com case studies and customer showcase pages:
+
+| Company | City | State | Confidence | Context |
+|---------|------|-------|------------|---------|
+| Appalachian Aero Group | Hickory | NC | High | Case study |
+| Apex Aviation | Henderson | NV | High | Case study (dual NV+CA locations) |
+| OCR Aviation | Long Beach | CA | High | Customer page |
+| Oracle Aviation | Omaha | NE | High | Customer page |
+| Jet Services Maintenance | Mobile | AL | High | Customer page |
+| My Jet DOM (Cole Aviation) | McDonough | GA | High | Case study |
+| Flightcraft | Lincoln | NE | Medium | Customer page |
+| Qmulus Aviation | Caldwell | ID | High | Case study |
+| Salty Pelican Aviation | New Braunfels | TX | High | Case study |
+| Platinum Sky Maintenance | Fort Lauderdale | FL | High | Case study |
+| Cove Aviation | California | CA | Medium | Case study |
+| Plane Place Aviation | Dallas | TX | High | Case study |
+| Midwest Corporate Air | Bellefontaine | OH | High | Case study |
+| WAir Aviation | Wheeling | IL | High | Case study |
+| Basin Aviation | Midland | TX | High | Case study |
+| NEBA | Unknown | Unknown | Low | Case study |
+| CharterJet Solutions | Unknown | Unknown | Medium | Case study |
+| Clemens Aviation | Benton | KS | High | Blog feature |
+| SkyView Aviation | Tracy | CA | Medium | Customer page |
+
+**Takeaway for Athelon sales:** These shops represent the EBIS churn opportunity. Post-Veryon acquisition (Nov 2025), approaching these shops with a modern alternative and migration assistance is the highest-ROI ERP outreach strategy.
+
+### Corridor Confirmed Users (partial list)
+- ACI Jet MRO (Van Nuys CA) — confirmed in Corridor case study
+- Clay Lacy Aviation (Van Nuys CA) — long-term enterprise customer
+- West Star Aviation (CO/TN) — enterprise chain, not a realistic Athelon target
+
+### CA High-Value Discoveries
+- **Threshold Aviation Group** (Chino CA): 90+ employees, multi-cert, no public ERP mention — largest independent Athelon ERP prospect identified to date
+- **Thornton Aviation** (Van Nuys/Burbank): 61+ FAA-approved types, dual location, no software mentioned
+- **3 CA shops with zero web presence:** Cal-Air Aviation (Oakland), Corporate Air Technology (Oakland), Pacific Aircraft Maintenance (San Diego)
+
+### OH/KS Discoveries  
+- **Tech-Aire Instruments** (Wichita): HTML-relic site from early 2000s — extreme website redesign candidate
+- **Columbus Aero Service** (Columbus OH): Wix site — credibility problem, prime redesign pitch
+- **Midwest Malibu Center** (Hutchinson KS): piston specialist, poor web presence, underserved by enterprise software
+

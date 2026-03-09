@@ -309,3 +309,56 @@ No direct evidence found in this wave. Shops in this batch are predominantly sma
 
 - **Wave 4:** Cross-reference EBIS customers into master list with special flags; extract TN/NV/CT states; run 2nd enrichment pass on FL (top 20 Opa Locka/FLL) and CA (next 20 Van Nuys/Burbank); begin airport ICAO mapping for new states; geographic cluster-specific mini-lists for outreach
 
+
+## Wave 3 — 2026-03-09
+**Focus:** CA/OH/KS enrichment + EBIS customer evidence dossier
+**Operator:** Autonomous (Opus orchestrator + Sonnet workers)
+
+### Actions Taken
+- Enriched 20 California Part 145 shops (Van Nuys/Burbank, Oakland/San Jose, San Diego, SoCal)
+- Enriched 20 Ohio/Kansas Part 145 shops (Dayton/Columbus/Cincinnati; Wichita cluster)
+- Built EBIS customer evidence CSV: 19 confirmed EBIS users with public case-study evidence
+
+### Wave 3 Data Quality
+
+| State | Shops | No Website | Poor/Basic Site | Top ERP Prospects |
+|-------|-------|------------|-----------------|-------------------|
+| CA | 20 | 3 | 4 | Thornton Aviation, Threshold Aviation Group (90+ emp), KaiserAir |
+| OH | 10 | 0 | 4 (basic) | Columbus Aero Service, Signature Engines, Waypoint Aviation, CAM |
+| KS | 10 | 0 | 3 (poor) | Tech-Aire Instruments, Midwest Malibu Center, Midwest Aircraft Services |
+
+### EBIS Customer Intelligence — Key Findings
+- **19 confirmed EBIS users** found via case studies and customer showcase pages on ebiscloud.com
+- Geographic spread: TX (3), CA (3), NE (2), OH (1), IL (1), NV (1), NC (1), FL (1), GA (1), AL (1), ID (1), KS (1)
+- **Core EBIS customer profile:** 4–30 employees, started on paper/spreadsheets, Part 145 cert-motivated
+- **Recurring pattern:** Owner/DOM carried brand loyalty from prior employer (EBIS 3.2 experience)
+- **Athelon counter-message needed:** Strong onboarding, migration tools, and modern UX story to break loyalty
+- **KS confirmed EBIS user:** Clemens Aviation (Benton KS) — near Wichita cluster
+- **TX confirmed EBIS users:** Salty Pelican (New Braunfels), Plane Place Aviation (Dallas), Basin Aviation (Midland)
+- **FL confirmed:** Platinum Sky Maintenance (Fort Lauderdale) — prime Athelon target in Wave 4
+
+### CA Notable Findings
+- Clay Lacy Aviation: large enterprise, already has Corridor — do not target for ERP
+- ACI Jet MRO: confirmed Corridor user (mentioned in Corridor case study) — track for churn
+- Thornton Aviation: 61 FAA-approved types, dual KVNY/KBUR locations, no software mentioned — top CA ERP prospect
+- Threshold Aviation Group (Chino): 90+ employees — largest independent ERP prospect found so far
+- 3 shops with NO website: Cal-Air Aviation Services (Oakland), Corporate Air Technology (Oakland), Pacific Aircraft Maintenance (San Diego) — immediate outreach for website build
+
+### OH/KS Notable Findings
+- Wichita cluster: Tech-Aire Instruments has outdated HTML-relic website, perfect redesign + ERP combo
+- Midwest Malibu Center (Hutchinson KS): poor web presence, specialty piston MRO — underserved
+- Columbus Aero Service: Wix site (lowest-credibility builder) — strong website redesign pitch
+- Signature Engines (Cincinnati): basic site, turbine engine shop — ERP + website cross-sell
+
+### Gaps Remaining
+- CA enrichment covers only 20 of estimated 475 shops
+- No Corridor customer list equivalent found (unlike EBIS which published case studies)
+- OH/KS need FAA registry pull for full coverage
+- NV, TN, WA states not yet started
+
+### Next Wave Focus
+- Pull full FAA registry data for CA (475 est.) and add to master-target-list.csv
+- Update corridor_ebis_likelihood = "confirmed_ebis" for the 19 known EBIS users in master list
+- Target Platinum Sky Maintenance (Fort Lauderdale) and other confirmed-EBIS shops as priority ERP outreach
+- Begin NV enrichment (Las Vegas business aviation cluster)
+
