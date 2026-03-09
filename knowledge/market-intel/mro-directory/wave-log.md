@@ -582,3 +582,90 @@ No direct evidence found in this wave. Shops in this batch are predominantly sma
 
 - **Wave 6:** Merge Houston/Phoenix enrichment results; Tulsa MRO Alley deep-dive; NY biz-jet corridor enrichment; EBIS customer contact discovery (phone/email for warm outreach); outreach template drafting; Wichita deep-dive
 
+
+
+---
+
+## Wave 6 — 2026-03-09 (09:30 UTC)
+
+**Focus:** Houston/Phoenix enrichment merge + hot leads priority file + Tulsa/NY/Wichita deep-dive enrichment + data quality  
+**Operator:** Autonomous (Opus orchestrator + 3 Sonnet workers)
+
+### Actions Taken
+
+1. **Merged Houston + Phoenix enrichment** — Ran rebuild_master.py and rescore_heuristics.py to integrate 40 new enrichment records from Wave 5 workers. 58 records gained website data through enrichment merge. Master list fully rescored with archetype detection (700 shops categorized) and email domain analysis (2,219 custom domains extracted).
+
+2. **Created hot-leads-priority.csv** — New high-value file combining:
+   - 5 confirmed EBIS churn targets (matched to FAA master) 
+   - 13 confirmed EBIS churn targets (unmatched — need FAA reconciliation)
+   - 7 enriched high-ERP prospects (verified medium+ shops with ERP fit ≥55)
+   - 25 top website prospects (no web presence, reachable by phone, specialty shops)
+   - 9 cross-sell opportunities (both website + ERP scores high)
+
+3. **EBIS-to-master reconciliation analysis** — Identified 14 of 19 EBIS customers that don't match FAA records by name. Root causes: trade name ≠ legal name (e.g., "Salty Pelican Aviation" is likely registered under a different LLC), and 5 shops in states not yet extracted (AL, ID, NE). Documented in evidence-notes.md.
+
+4. **Houston metro highlights** (from Wave 5 worker data):
+   - InTech Aerospace (erp=75) — business jet interior/completions, medium shop
+   - Harco Aviation (erp=75) — helicopter engine overhaul, medium
+   - Western Airways (erp=72) — FBO-MRO, medium
+   - 4 shops with NO website and high wfs: Brazos Avionics (82), MexxAm Aircraft (80), Von's Avionics (80), South Air Helicopters (78)
+
+5. **Phoenix metro highlights** (from Wave 5 worker data):
+   - Air Transport Components (erp=65, wfs=75, NO WEBSITE, medium) — **top dual prospect**
+   - Executive Aircraft Maintenance (erp=60, wfs=85, NO WEBSITE, medium) — **top dual prospect**
+   - Heliponents Inc (erp=70) — helicopter component specialist, medium
+   - SawyerMX (erp=65) — largest MRO at busiest US bizav airport (KSDL)
+
+6. **Spawned 3 Sonnet workers for cluster enrichment:**
+   - w6-tulsa-ok: 20 Tulsa/OKC shops (MRO Alley, #2 US MRO hub)
+   - w6-ny-metro: 20 NY/NJ biz-jet corridor shops (KTEB/KHPN/KFRG)
+   - w6-wichita-ks: 20 Wichita shops (Air Capital, all-no-website cluster)
+
+7. **Killed stale Wave 5 workers** — w5-houston-enrichment and w5-state-expansion had timed out but already produced their CSV output files. Freed resources for Wave 6 workers.
+
+### Wave 6 Data Quality Summary
+
+| Metric | Wave 5 | Wave 6 | Change |
+|--------|--------|--------|--------|
+| Total records | 2,795 | 2,792 | -3 (dedup) |
+| States covered | 16 | 16 | — |
+| SMB targets | 2,701 | 2,682 | -19 (enterprise detection improved) |
+| Enterprise flagged | ~95 | 109 | +14 |
+| With website (enrichment-merged) | ~38 | 58 | +20 |
+| Enriched profiles (total) | ~143 | 183 | +40 (Houston + Phoenix) |
+| EBIS confirmed in master | 10 | 5 | corrected (strict matching) |
+| EBIS confirmed total (inc. unmatched) | — | 18 | documented in evidence |
+| Hot leads prioritized | 0 | 59 | NEW file |
+| Archetype-detected shops | 624 | 700 | +76 |
+| Custom email domains | 1,866 | 2,219 | +353 |
+
+### Key New Opportunities
+
+**Phoenix Dual Prospects (Website + ERP):**
+- Air Transport Components (Gilbert AZ) — medium component shop, NO website, erp=65, wfs=75. Ideal for $15k website + ERP package pitch.
+- Executive Aircraft Maintenance (Scottsdale AZ) — medium shop, NO website, erp=60, wfs=85. Light through mid-size jets at KSDL.
+
+**Houston ERP Targets:**
+- InTech Aerospace — medium business jet completions, erp=75. Professional site but needs operational software.
+- Harco Aviation — medium helicopter engine overhaul, erp=75.
+- Western Airways — medium FBO-MRO at Sugar Land, erp=72.
+
+**Cluster Enrichment In Progress (workers pending):**
+- Tulsa MRO Alley — 124 OK shops, richest concentration of non-OEM MRO outside FL
+- NY Biz-Jet Corridor — Teterboro/White Plains, busiest private jet airspace in world
+- Wichita — 57 shops, ALL without website, ALL reachable, aviation heritage city
+
+### Scripts Created/Updated
+- No new scripts this wave; used existing pipeline (rebuild_master.py → rescore_heuristics.py)
+- Created hot-leads-priority.csv generation script (inline)
+
+### Remaining Gaps
+- 14 EBIS customers unmatched to FAA records — need manual cert_no lookup
+- Tulsa/NY/Wichita enrichment pending (workers running)
+- FL still massively under-enriched (20 of 641 shops profiled)
+- No AL, ID, NE, MN, IN states extracted yet (need for full EBIS customer coverage)
+- No employee count data for unenriched shops
+- Outreach email templates not yet drafted
+
+### Next Wave Focus
+- **Wave 7:** Merge Tulsa/NY/Wichita enrichment; extract AL/NE/ID states for EBIS customer matching; FL 2nd enrichment pass (next 20 Opa Locka shops); begin outreach template drafting; CAMP Systems mapping; job posting analysis for growth signals

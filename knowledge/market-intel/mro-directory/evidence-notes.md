@@ -1,5 +1,36 @@
 # Evidence Notes — MRO Market Intelligence
 
+## Wave 6 Update — 2026-03-09 (09:30 UTC)
+
+### Houston Metro Enrichment Highlights (20 shops)
+- **InTech Aerospace LLC** (Houston) — erp=75, medium shop, professional site. Business jet interior/completions MRO. Top ERP prospect.
+- **Harco Aviation LLC** (Houston) — erp=75, medium shop, professional site. Helicopter engine overhaul specialist. Top ERP prospect.
+- **Western Airways LLC** (Sugar Land) — erp=72, medium FBO-MRO. Multiple aircraft types, charter + maintenance.
+- **Helicopter Services Inc** (Spring/KDWH) — erp=65, medium shop. Only Gulf States Robinson overhaul cert. Niche monopoly.
+- **AV8 MRO LLC** (Houston) — erp=65, small, moderate site. Growing operation.
+- **No-website standouts**: Brazos Avionics (wfs=82), MexxAm Aircraft (wfs=80), Von's Avionics (wfs=80), South Air Helicopters (wfs=78)
+
+### Phoenix Metro Enrichment Highlights (20 shops)
+- **Air Transport Components (ATC)** (Gilbert) — erp=65, wfs=75, medium shop, NO WEBSITE. Component specialist. **Dual opportunity: website + ERP.**
+- **Executive Aircraft Maintenance** (Scottsdale) — erp=60, wfs=85, medium shop, NO WEBSITE. Light through mid-size jets. **Top dual prospect.**
+- **Heliponents Inc** (Mesa) — erp=70, medium, moderate site. Helicopter component specialist.
+- **SawyerMX** (Scottsdale/KSDL) — erp=65, medium. Largest MRO staff at busiest bizav airport in US.
+- **Spectrum Aerospace** (Tempe) — erp=65, medium, professional site. Established operator.
+- **Jet MX** (Goodyear) — erp=65, medium, moderate site. Business jet specialist.
+- **No-website standouts**: KBM Aviation (wfs=80), Lycon Inc (wfs=70, poor site — redesign candidate)
+
+### EBIS-to-Master Reconciliation Gap Analysis
+- 5 of 19 EBIS customers matched to FAA master (OCR Aviation, Clemens, Appalachian Aero, Apex Aviation, Plane Place)
+- 14 unmatched: likely registered under different legal names or in states not yet extracted (AL, ID, NE)
+- Key unmatched: Salty Pelican Aviation (TX), Basin Aviation (TX), Platinum Sky Maintenance (FL), My Jet DOM (GA)
+- **Action needed**: Manual FAA cert lookup for these 14 shops to reconcile legal name → trade name
+
+### Hot Leads File Created
+- 59 prioritized leads across 5 categories: EBIS churn (5 matched + 13 unmatched), high-ERP enriched (7), website prospects (25), cross-sell (9)
+- New file: `hot-leads-priority.csv`
+
+---
+
 ## Wave 1 — 2026-03-09
 
 ---
