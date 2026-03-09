@@ -137,3 +137,60 @@
 ---
 
 <!-- Future waves append below this line -->
+
+## Wave 2 — 2026-03-09
+**Focus:** Expand to TX + FL + CO web-discovery pass (60 new shops enriched)
+**Operator:** Autonomous (Opus orchestrator + Sonnet workers)
+
+### Actions Taken
+- Enriched 20 Texas Part 145 shops with website discovery, size classification, and profile archetype
+- Enriched 20 Florida Part 145 shops with website discovery and profiling
+- Enriched 20 additional Colorado shops (web discovery pass for previously unresearched records)
+- Results staged in enrichment-results-tx.csv, enrichment-results-fl.csv, enrichment-results-co.csv
+
+### Wave 2 Data Quality Summary
+
+| State | Shops | Websites Found | No Website | Large | Medium | Small |
+|-------|-------|----------------|------------|-------|--------|-------|
+| TX | 20 | 16 (80%) | 4 | 2 | 3 | 15 |
+| FL | 20 | 8 (40%) | 12 | 1 | 2 | 17 |
+| CO (new) | 20 | 9 (45%) | 11 | 0 | 2 | 18 |
+
+### Notable Finds
+
+**Texas:**
+- AeroBrigham (Decatur) — 60,000 sq ft full helicopter MRO + paint + completions; professional web; top ERP prospect
+- L2 Aviation (Dripping Springs) — 51-200 employees, fleet avionics specialist; strong ERP fit
+- Excel Aviation (Gainesville) — Dassault/Bombardier OEM service center; medium shop
+- STS Line Maintenance (Irving) — enterprise chain (47 global stations); not a primary ERP target
+- 4 shops with zero web presence: Galaxy Aviation, Thrust Avionics, San Antonio Aviation, Hill Country Helicopters → immediate website redesign prospects
+
+**Florida:**
+- Kaman Aerospace (Jacksonville) — large defense aerostructures; too enterprise for Athelon ERP
+- AMETEK/Avtech (Boca Raton cert/Miami) — 18 employees, specialty avionics; good ERP prospect
+- 13 of 20 FL shops have NO web presence → very high website redesign opportunity density
+- No Corridor/EBIS evidence found in any shop (small shops unlikely to use enterprise software)
+
+**Colorado (web pass):**
+- Aerofield Services — found aerofieldservices.com (commercial engine/APU) — too large/commercial for target
+- StandardAero Business Aviation — enterprise; not a target
+- 11 of 20 shops remain with no web presence → enrich backlog
+
+### Key Insight
+FL shops have the lowest web presence rate (40% with sites) — highest density of website redesign prospects per state sampled so far. TX shops are larger on average with higher ERP potential (AeroBrigham, L2 Aviation).
+
+### Corridor/EBIS Evidence
+No direct evidence found in this wave. Shops in this batch are predominantly small specialty operations unlikely to currently run enterprise MRO software — which creates the opening for Athelon.
+
+### Gaps Remaining
+- Only ~60 shops researched across TX/FL/CO out of estimated 1,175+ in those states
+- No AZ, GA, KS, TN data yet
+- Need to merge enrichment results into master-target-list.csv
+- Need to score new TX/FL records with website-fit and ERP-fit
+
+### Next Wave Focus
+- Merge TX/FL enrichment into master-target-list.csv with scores
+- Expand TX/FL enrichment (next 20 shops each)
+- Begin AZ enrichment (Scottsdale/Phoenix Deer Valley cluster)
+- Target Corridor customer evidence search (web scraping for software mentions)
+
