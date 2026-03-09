@@ -25,6 +25,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { AirportPickerCombobox } from "@/src/shared/components/AirportPickerCombobox";
+import type { FaaAirportRecord } from "@/src/shared/data/faaAirportTypes";
 
 type CustomerType =
   | "individual"
@@ -63,6 +65,7 @@ export function CreateCustomerDialog({
   const [taxExempt, setTaxExempt] = useState(false);
   const [defaultPaymentTerms, setDefaultPaymentTerms] = useState("");
   const [defaultPaymentTermsDays, setDefaultPaymentTermsDays] = useState("");
+  const [selectedAirport, setSelectedAirport] = useState<FaaAirportRecord | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   function resetForm() {
@@ -76,6 +79,7 @@ export function CreateCustomerDialog({
     setTaxExempt(false);
     setDefaultPaymentTerms("");
     setDefaultPaymentTermsDays("");
+    setSelectedAirport(null);
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -96,6 +100,12 @@ export function CreateCustomerDialog({
         address: address.trim() || undefined,
         phone: phone.trim() || undefined,
         email: email.trim() || undefined,
+        homeAirportFaaLocId: selectedAirport?.faaLocId || undefined,
+        homeAirportIcao: selectedAirport?.icaoId || undefined,
+        homeAirportName: selectedAirport?.facilityName || undefined,
+        homeAirportCity: selectedAirport
+          ? `${selectedAirport.city}, ${selectedAirport.state}`
+          : undefined,
         notes: notes.trim() || undefined,
         taxExempt,
         defaultPaymentTerms: defaultPaymentTerms.trim() || undefined,
@@ -175,6 +185,15 @@ export function CreateCustomerDialog({
               value={address}
               onChange={(e) => setAddress(e.target.value)}
               placeholder="Street, city, state, ZIP"
+            />
+          </div>
+
+          {/* Home Airport */}
+          <div className="space-y-1.5">
+            <Label>Home Airport</Label>
+            <AirportPickerCombobox
+              value={selectedAirport?.faaLocId}
+              onChange={setSelectedAirport}
             />
           </div>
 

@@ -47,6 +47,7 @@ import {
   coloradoPart145ResearchPack,
 } from "@/src/shared/data/coloradoPart145Research";
 import type { ColoradoProspectRecord } from "@/src/shared/data/coloradoPart145Research";
+import { AirportRepairServiceBadge } from "@/app/(app)/crm/_components/AirportRepairServiceBadge";
 
 type CampaignFit = "high" | "medium" | "low" | "unknown";
 type QualificationStatus =
@@ -412,9 +413,12 @@ function ProspectTileCard(props: {
         <ProspectContactAvailability prospect={prospect} />
 
         <div className="mt-auto flex items-center justify-between gap-3">
-          <div className="text-xs text-muted-foreground">
-            {prospect.nearestAirportIcao ?? "No airport code"}
-            {prospect.nearestAirportName ? ` · ${prospect.nearestAirportName}` : ""}
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <span>
+              {prospect.nearestAirportIcao ?? "No airport code"}
+              {prospect.nearestAirportName ? ` · ${prospect.nearestAirportName}` : ""}
+            </span>
+            <AirportRepairServiceBadge airportCode={prospect.nearestAirportIcao} />
           </div>
           <ProspectPrimaryActions prospect={prospect} detailHref={detailHref} compact />
         </div>
@@ -969,6 +973,14 @@ export default function CrmProspectIntelligencePage() {
                   value={websiteUrl ?? "Website not verified in current research pack"}
                 />
               </div>
+
+              {/* FAA Airport Repair Service Cross-Reference */}
+              {selectedProspect.nearestAirportIcao && (
+                <AirportRepairServiceBadge
+                  airportCode={selectedProspect.nearestAirportIcao}
+                  variant="detail"
+                />
+              )}
 
               {selectedProspect.manualReviewFlag ? (
                 <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-700 dark:text-red-300">

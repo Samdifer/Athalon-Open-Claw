@@ -49,6 +49,7 @@ const NAV_ITEMS = [
   { label: "Sales Dashboard", path: "/sales/dashboard", icon: FileBarChart },
   { label: "Sales Ops", path: "/sales/ops", icon: FileBarChart },
   { label: "Prospect Intelligence", path: "/crm/prospects/intelligence", icon: Target },
+  { label: "Part 135 Operators", path: "/crm/prospects/part135", icon: PlaneTakeoff },
   { label: "Quotes", path: "/sales/quotes", icon: FileText },
   { label: "Sales Training", path: "/sales/training", icon: Users },
   { label: "Customers", path: "/billing/customers", icon: Users },

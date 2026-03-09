@@ -30,3 +30,22 @@ export const getCustomer = query({
     return ctx.db.get(args.customerId);
   },
 });
+
+/** Lists all active customers associated with a specific airport. */
+export const getCustomersByAirport = query({
+  args: {
+    orgId: v.id("organizations"),
+    faaLocId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    return ctx.db
+      .query("customers")
+      .withIndex("by_org_airport", (q) =>
+        q
+          .eq("organizationId", args.orgId)
+          .eq("homeAirportFaaLocId", args.faaLocId)
+          .eq("active", true)
+      )
+      .collect();
+  },
+});

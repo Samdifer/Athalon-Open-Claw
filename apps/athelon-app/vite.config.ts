@@ -59,6 +59,7 @@ export default defineConfig({
         // Keep large vendor chunks (e.g. react-pdf) eligible for precache.
         maximumFileSizeToCacheInBytes: 3_000_000,
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+        globIgnores: ["**/faaAirports-*.js"],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/.*\.convex\.cloud\/.*$/i,

@@ -56,6 +56,7 @@ import {
   FaaLookupButton,
   type FaaLookupResult,
 } from "@/components/faa/FaaLookupButton";
+import { AirportPickerCombobox } from "@/src/shared/components/AirportPickerCombobox";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -817,14 +818,17 @@ export function AddAircraftWizard({
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="wiz-base">Base Location (ICAO)</Label>
-                  <Input
-                    id="wiz-base"
-                    value={formData.baseLocation}
-                    onChange={(e) =>
-                      updateField("baseLocation", e.target.value)
+                  <Label>Base Location</Label>
+                  <AirportPickerCombobox
+                    value={formData.baseLocation || null}
+                    onChange={(record) =>
+                      updateField(
+                        "baseLocation",
+                        record?.icaoId ?? record?.faaLocId ?? ""
+                      )
                     }
-                    placeholder="e.g. KJFK"
+                    facilityType="AIRPORT"
+                    placeholder="Search airport..."
                   />
                 </div>
                 <div className="space-y-1.5">

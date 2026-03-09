@@ -63,16 +63,22 @@ function buildProspectAddress(args: {
 
 function buildPromotionNotes(args: {
   certNo?: string;
+  certificateDesignator?: string;
   nearestAirportName?: string;
   nearestAirportIcao?: string;
+  faaDistrictOffice?: string;
   selectedOutreachTier?: "A" | "B" | "C";
   profileArchetype?: string;
+  fleetSize?: number;
   campaignName: string;
   sourceRefs: string[];
 }) {
   const lines = [
-    "Colorado Part 145 prospect promoted from CRM Prospect Intelligence.",
+    `Prospect promoted from CRM Prospect Intelligence.`,
     args.certNo ? `Repair station certificate: ${args.certNo}.` : null,
+    args.certificateDesignator ? `Part 135 certificate designator: ${args.certificateDesignator}.` : null,
+    args.fleetSize ? `Fleet size: ${args.fleetSize} aircraft.` : null,
+    args.faaDistrictOffice ? `FAA district office: ${args.faaDistrictOffice}.` : null,
     args.selectedOutreachTier ? `Research outreach tier: ${args.selectedOutreachTier}.` : null,
     args.profileArchetype ? `Profile archetype: ${args.profileArchetype}.` : null,
     args.nearestAirportIcao || args.nearestAirportName
@@ -150,7 +156,7 @@ export const upsertCampaignAssessment = mutation({
     const { userId, name } = await requireAuth(ctx);
     await requireOrgMembership(ctx, userId, args.organizationId);
 
-    const campaignName = args.campaignName.trim() || "Colorado Part 145 Outreach";
+    const campaignName = args.campaignName.trim() || "Prospect Outreach";
     const campaignKey = normalizeCampaignKey(campaignName);
     const prospectLegalName = args.prospectLegalName.trim();
 
@@ -241,6 +247,16 @@ export const promoteProspectToCustomer = mutation({
     nearestAirportName: v.optional(v.string()),
     nearestAirportIcao: v.optional(v.string()),
     profileArchetype: v.optional(v.string()),
+    customerType: v.optional(v.union(
+      v.literal("company"),
+      v.literal("charter_operator"),
+      v.literal("flight_school"),
+      v.literal("government"),
+      v.literal("individual"),
+    )),
+    certificateDesignator: v.optional(v.string()),
+    faaDistrictOffice: v.optional(v.string()),
+    fleetSize: v.optional(v.number()),
     selectedOutreachTier: outreachTierValidator,
     sourceRefs: v.array(v.string()),
   },
@@ -290,17 +306,20 @@ export const promoteProspectToCustomer = mutation({
         organizationId: args.organizationId,
         name: legalName,
         companyName: args.dbaName?.trim() || undefined,
-        customerType: "company",
+        customerType: args.customerType ?? "company",
         address: buildProspectAddress(args),
         phone: args.phone?.trim() || undefined,
         email: args.email?.trim().toLowerCase() || undefined,
         notes: buildPromotionNotes({
           certNo: args.certNo,
+          certificateDesignator: args.certificateDesignator,
           nearestAirportName: args.nearestAirportName,
           nearestAirportIcao: args.nearestAirportIcao,
+          faaDistrictOffice: args.faaDistrictOffice,
           selectedOutreachTier: args.selectedOutreachTier,
           profileArchetype: args.profileArchetype,
-          campaignName: args.campaignName.trim() || "Colorado Part 145 Outreach",
+          fleetSize: args.fleetSize,
+          campaignName: args.campaignName.trim() || "Prospect Outreach",
           sourceRefs: args.sourceRefs,
         }),
         active: true,
@@ -314,12 +333,12 @@ export const promoteProspectToCustomer = mutation({
         tableName: "customers",
         recordId: customerId,
         userId,
-        notes: `Customer profile created from Colorado prospect research for ${legalName}.`,
+        notes: `Customer profile created from prospect research for ${legalName}.`,
         timestamp: now,
       });
     }
 
-    const campaignName = args.campaignName.trim() || "Colorado Part 145 Outreach";
+    const campaignName = args.campaignName.trim() || "Prospect Outreach";
     const campaignKey = normalizeCampaignKey(campaignName);
     const existingAssessment = await ctx.db
       .query("crmProspectCampaignAssessments")

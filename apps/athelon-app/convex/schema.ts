@@ -332,6 +332,11 @@ export default defineSchema({
 
     rsmRevision: v.optional(v.string()), // Repair Station Manual current revision
 
+    // v12: Airport association — FAA NFDC reference data linkage
+    homeAirportFaaLocId: v.optional(v.string()),  // FAA Location Identifier (e.g. "DEN")
+    homeAirportIcao: v.optional(v.string()),       // ICAO code (e.g. "KDEN")
+    homeAirportName: v.optional(v.string()),        // Denormalized display name
+
     subscriptionTier: v.union(
       v.literal("starter"),
       v.literal("professional"),
@@ -2792,6 +2797,21 @@ export default defineSchema({
     phone: v.optional(v.string()),
     email: v.optional(v.string()),
 
+    // v12: Structured address fields
+    city: v.optional(v.string()),
+    state: v.optional(v.string()),
+    zip: v.optional(v.string()),
+    country: v.optional(v.string()),
+
+    // v12: Airport association — FAA NFDC reference data linkage
+    homeAirportFaaLocId: v.optional(v.string()),  // FAA Location Identifier (primary key)
+    homeAirportIcao: v.optional(v.string()),       // ICAO code (when available)
+    homeAirportName: v.optional(v.string()),        // Denormalized display name
+    homeAirportCity: v.optional(v.string()),        // Denormalized for fast display
+
+    // v12: Repair station cert for Part 145 customers
+    part145CertNo: v.optional(v.string()),
+
     // v2: aircraftIds removed (QA-005). Query: aircraft.by_customer(customerId)
     notes: v.optional(v.string()),
 
@@ -2805,7 +2825,8 @@ export default defineSchema({
     updatedAt: v.number(),
   })
     .index("by_organization", ["organizationId"])
-    .index("by_name", ["organizationId", "name"]),
+    .index("by_name", ["organizationId", "name"])
+    .index("by_org_airport", ["organizationId", "homeAirportFaaLocId", "active"]),
 
   // ═══════════════════════════════════════════════════════════════════════════
   // CUSTOMER NOTES
@@ -5653,6 +5674,16 @@ export default defineSchema({
     )),
     promotedCustomerId: v.optional(v.id("customers")),
     promotedAt: v.optional(v.number()),
+
+    // v12: Airport repair service validation signal from FAA NFDC cross-reference
+    airportRepairSignal: v.optional(v.union(
+      v.literal("on_airport_major"),
+      v.literal("on_airport_minor"),
+      v.literal("off_airport"),
+      v.literal("airport_not_found"),
+      v.literal("not_reviewed"),
+    )),
+
     lastReviewedAt: v.number(),
     reviewedByUserId: v.string(),
     reviewedByName: v.optional(v.string()),

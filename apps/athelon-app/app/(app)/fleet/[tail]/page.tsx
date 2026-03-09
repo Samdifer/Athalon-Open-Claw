@@ -1,5 +1,5 @@
 import { Link, useParams, useSearchParams } from "react-router-dom";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
@@ -41,6 +41,8 @@ import {
 import { AircraftAdComplianceTab } from "./_components/AircraftAdComplianceTab";
 import { DeferredMaintenanceSection } from "./_components/DeferredMaintenanceSection";
 import { LogbookTab } from "./_components/LogbookTab";
+import type { FaaAirportRecord } from "@/src/shared/data/faaAirportTypes";
+import { getAirport } from "@/src/shared/data/faaAirportIndex";
 
 // ─── Status helpers ───────────────────────────────────────────────────────────
 
@@ -457,7 +459,7 @@ export default function AircraftDetailPage() {
                     label="Max Gross Weight"
                     value={aircraft!.maxGrossWeightLbs ? `${aircraft!.maxGrossWeightLbs.toLocaleString()} lbs` : "—"}
                   />
-                  <FieldRow label="Base Location" value={aircraft!.baseLocation ?? "—"} mono />
+                  <BaseLocationField baseLocation={aircraft!.baseLocation} />
                   <div />
                   <Separator className="col-span-full opacity-40" />
                   <FieldRow label="Owner Name" value={aircraft!.ownerName ?? "—"} />
@@ -1110,6 +1112,43 @@ function FieldRow({
       >
         {value}
       </p>
+    </div>
+  );
+}
+
+function BaseLocationField({ baseLocation }: { baseLocation?: string }) {
+  const [airport, setAirport] = useState<FaaAirportRecord | null>(null);
+
+  useEffect(() => {
+    if (!baseLocation) return;
+    getAirport(baseLocation).then((r) => setAirport(r ?? null));
+  }, [baseLocation]);
+
+  if (!baseLocation) return <FieldRow label="Base Location" value="—" />;
+
+  return (
+    <div>
+      <p className="text-[11px] text-muted-foreground uppercase tracking-wide font-medium">
+        Base Location
+      </p>
+      <p className="text-sm text-foreground mt-0.5 font-mono font-semibold">
+        {baseLocation}
+      </p>
+      {airport && (
+        <p className="text-[11px] text-muted-foreground mt-0.5">
+          {airport.facilityName} — {airport.city}, {airport.state}
+          {airport.airframeRepair && airport.airframeRepair !== "NONE" && (
+            <span className="ml-2 text-green-600 dark:text-green-400">
+              AF: {airport.airframeRepair}
+            </span>
+          )}
+          {airport.powerPlantRepair && airport.powerPlantRepair !== "NONE" && (
+            <span className="ml-1 text-green-600 dark:text-green-400">
+              PP: {airport.powerPlantRepair}
+            </span>
+          )}
+        </p>
+      )}
     </div>
   );
 }
