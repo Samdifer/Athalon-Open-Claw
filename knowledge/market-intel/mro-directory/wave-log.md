@@ -798,3 +798,54 @@ All three Wave 6 workers (w6-tulsa-ok, w6-wichita-ks, w6-ny-metro) timed out mid
 ### Next Wave Focus
 - **Wave 8:** Keystone Helicopter deep-dive + contact discovery; Smyrna TN cluster; remove closed/enterprise entities; FL 2nd enrichment pass; EBIS cert_no reconciliation
 
+
+## Wave 7 — 2026-03-09
+**Focus:** Wichita/KS + Tulsa/OK + NY Metro enrichment (skeleton-first approach)
+**Operator:** Autonomous (Opus orchestrator + Sonnet workers)
+
+### Actions Taken
+- Enriched 10 Wichita/KS shops (saved enrichment-results-ks-wichita.csv)
+- Enriched 10 Tulsa/OK shops (saved enrichment-results-ok-tulsa.csv)
+- Enriched 10 NY Metro shops (saved enrichment-results-ny-metro.csv)
+- Skeleton-first approach worked — all 3 CSVs complete, no timeouts
+
+### Data Quality Improvement
+- NY Metro: 4 of 10 researched shops confirmed defunct/mislocated/unverifiable — removed from active targets
+  - Meridian Teterboro: closed Part 145 in 2020, FBO-only now
+  - Empire Avionics: Yelp shows CLOSED
+  - International Turbine Service: mislocated (actually in Grapevine TX)
+  - Executive Flyers Maintenance: entity could not be verified
+- **Lesson:** NY Metro has high shop turnover; always cross-ref against FAA registry for active cert status
+- Clemens Aviation (Wichita): re-confirmed as EBIS customer (case study: scaled 3→130 employees); not a prospect, valuable competitor ref
+
+### Wave 7 Top Finds
+
+**Wichita KS:**
+- **Tech-Aire Instruments** — AEA member since 1990, outdated HTML site, $5-10k redesign candidate. Contact: Joseph DeFalco, 316-262-4020. Ready for outreach.
+- **Global Aviation Tech (GATECH)** — 28-34 employees, full-service MRO + engineering + STCs + dual locations (Wichita + Elmira NY). Top Wichita ERP prospect.
+- **LJ Aviation** — 16 full-time maintenance techs, 40+ aircraft under management, charter + Part 145. Medium-high ERP fit.
+- **Kansas Aviation Services / Excel Aircraft Service** — zero web presence, need FAA cert verification before outreach.
+
+**Tulsa/OKC OK:**
+- **Tulsa Avionics Services** — circa-2005 website, prime $5-10k redesign target.
+- **PowerMaster Engines** — dated SigmaTek-built static HTML, another redesign slam dunk.
+- **Aero-Mach Labs** — $26M revenue, 100+ staff, recently rebranded; potential ERP conversation.
+- NORDAM Group disqualified (2,500 employees — enterprise tier).
+
+**NY Metro:**
+- **Keystone Helicopter** (West Chester PA) — PE-backed helicopter MRO (Keystone Ranger Holdings), ZERO web presence, 50-100 employees, Part 145+135+91 operations. Best lead in batch: $15-25k website + ERP dual-sale.
+- **Islip Avionics** (Ronkonkoma NY, KISP) — family shop in succession (founder passed 2024, sons running it); WordPress site needs refresh. First Garmin dealer. Buying window open.
+- **Ventura Air Services** (Farmingdale NY) — 51-200 employees, charter+maintenance, professional website already; ERP-only conversation.
+
+### Cumulative Database State
+- Total enrichment CSV files: 12 state/metro batches + 1 EBIS evidence file
+- Master target list: ~2,400 records
+- Confirmed EBIS users: 19+ (warmest ERP leads)
+- Active enrichment backlog: Wichita OK/NY now done; remaining: CA full pull, WA/TN, score uplift
+
+### Next Wave Focus
+- EBIS user contact discovery (19 shops: find phone/email for warm outreach)
+- Smyrna TN cluster (Stevens Aerospace independents)
+- Score uplift pass on TX/FL/AZ/GA bulk records
+- Prepare outreach-ready slice: Top 25 with phone/email + no website + ERP score ≥40
+
