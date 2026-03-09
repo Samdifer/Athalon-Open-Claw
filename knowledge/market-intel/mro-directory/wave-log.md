@@ -849,3 +849,66 @@ All three Wave 6 workers (w6-tulsa-ok, w6-wichita-ks, w6-ny-metro) timed out mid
 - Score uplift pass on TX/FL/AZ/GA bulk records
 - Prepare outreach-ready slice: Top 25 with phone/email + no website + ERP score ≥40
 
+
+## Wave 8 — 2026-03-09
+**Focus:** Data quality overhaul + score uplift + contact discovery + Keystone deep-dive
+**Operator:** Autonomous (Opus orchestrator + Sonnet workers)
+
+### Actions Taken
+- Cleaned master list: removed 4 hot air balloon entities, deduped
+- Score uplift: re-scored 2,733 FAA bulk records with name-based heuristics (specialty/full-service/enterprise keywords)
+  - WFS: avg 50→56.9, range 30-80 (was flat 50 for most)
+  - ERP: avg 20→29.0, range 0-75 (was flat 20 for most)
+- Rebuilt all tiered lists (website/ERP/cross-sell/no-website) with updated scores
+- Contact discovery for Keystone Helicopter + 3 EBIS contact gaps
+- enrichment-results-w8-contacts.csv: 4 companies profiled
+
+### Critical Finding: Keystone Helicopter NOT an Independent Prospect
+- Keystone Helicopter Corp was acquired by Sikorsky/United Technologies in November 2005 (~$500M)
+- Now operates as Sikorsky Global Helicopters / Sikorsky Aerospace Services under Lockheed Martin
+- keystonehelicopter.com redirects to Lockheed Martin
+- **Removed from active prospect pipeline.** Any ERP/software decisions made at enterprise level.
+- Previous cross-sell score of 85 was based on outdated data assuming independence.
+
+### EBIS Contact Updates
+- **Apex Aviation (Henderson NV):** Phone (702) 735-2739, cert 9VNR950B + 9VND950B (dual location), DOM named Jaime, professional website, confirmed EBIS 5 current user
+- **Jet Services Maintenance (Mobile AL):** Phone (251) 300-6600, cert JSMR213E, President Sean Marks, Part 145 awarded summer 2023, family-owned since 1971, professional website, confirmed EBIS user
+- **CharterJet Solutions:** Unable to locate — no website, no public phone, no FAA cert found. Part 135 charter with in-house maintenance (8 jets, 30 employees, 3 techs). Likely a DBA or private holding.
+
+### Updated Database State
+| Metric | Value |
+|--------|-------|
+| Master records | 2,729 (cleaned) |
+| States covered | 16 |
+| No website | 2,585 (95%) |
+| Confirmed EBIS users | 19 |
+| Cross-sell top 25 threshold | 67.5+ |
+| WFS top 50 threshold | 70+ |
+| ERP top 50 threshold | 50+ |
+
+### New Cross-Sell Top 5
+1. New Tech Aircraft Services (Hawthorne CA) — wfs=80, erp=65, cs=72.5
+2. HM Aeronautics (San Diego CA) — wfs=80, erp=65, cs=72.5
+3. Orlando Avionics Corp (Orlando FL) — wfs=80, erp=65, cs=72.5
+4. Turbine Aircraft Services (Bethany OK) — wfs=80, erp=65, cs=72.5
+5. Ferrer Aviation Services (Fort Worth TX) — wfs=80, erp=65, cs=72.5
+
+### New ERP Top 5
+1. KP Aviation MRO 1 (Gilbert AZ) — erp=75
+2. GC Aviation Services-1 (Miamisburg OH) — erp=75
+3. Southwest Turbine (Phoenix AZ) — erp=65
+4. New Tech Aircraft Services (Hawthorne CA) — erp=65
+5. RTS Aviation Services (Van Nuys CA) — erp=65
+
+### Gaps Remaining
+- 2,585 shops (95%) still have no website — massive pipeline but undifferentiated
+- No employee count data for bulk FAA records — limits ERP scoring accuracy
+- Corridor customer list still unknown (EBIS churn list is much better documented)
+- CA, FL, TX have hundreds of unenriched records
+
+### Next Wave Focus
+- Second FL enrichment pass (Opa Locka/Tamiami cluster — 20 shops)
+- Smyrna TN cluster (Stevens Aerospace neighborhood)
+- Corridor customer evidence search (corridor.aero case studies)
+- Website quality classification for the 144 shops with has_website=yes
+
