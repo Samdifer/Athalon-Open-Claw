@@ -1095,3 +1095,105 @@ All 15 shops are independent SMBs:
 - Additional Corridor smaller-shop evidence (Victory Lane, WarDaddy — look for more)
 - WA state enrichment (Boeing Field cluster — 97 records unenriched)
 
+
+
+## Wave 10 — 2026-03-09
+**Focus:** FL Fort Lauderdale/WPB enrichment, CA Van Nuys/LA Basin enrichment, metro cluster normalization, scoring overhaul, website quality audit (in progress)
+**Operator:** Autonomous (Opus orchestrator + 3 Sonnet workers)
+
+### Actions Taken
+
+1. **FL Fort Lauderdale / West Palm Beach / Stuart cluster — 20 shops enriched:**
+   - Enrichment CSV: `enrichment-results-fl-ftl-w10.csv`
+   - Key findings:
+     - **Banyan Air Services** (FXE) — Premier FBO+MRO, medium (51-200 employees), independently owned, #1 PRASE-ranked, expanding to St. Augustine. High-value ERP prospect.
+     - **Certified Engines Unlimited** (Pembroke Pines) — Small engine specialist, custom domain ceu.aero, good ERP fit
+     - **Precision Jet Service + Precision Jet Avionics** (Stuart) — Co-located pair at KSUA, same ownership family, combined website+ERP deal opportunity
+     - **East Coast Aviation Service** (Stuart) — Independent, 11 years, full-service GA, good SMB ERP fit
+     - **IMX Aerospace** (FLL) — Small component specialist, Part 145 + FAA-PMA, landing gear/hydraulics
+     - **Real-Time Laboratories** (Boca Raton) — Avionics repair specialist, test equipment calibration
+   - 3 enterprises identified and excluded: Turbocombustor Technology (Pursuit Aerospace subsidiary), Orbit Communication Systems (Israeli defense), Jet Access Maintenance (FlyJA fleet operation)
+   - Website coverage: 13/20 have websites (65%), well above average
+
+2. **CA Van Nuys / Burbank / Long Beach cluster — 20 shops enriched:**
+   - Enrichment CSV: `enrichment-results-ca-vanNuys-w10.csv`
+   - Key findings:
+     - **OCR Aviation** (Long Beach) — CONFIRMED EBIS customer, FBO+MRO at KLGB, small, now has website
+     - **Helinet Aviation Services** (Van Nuys) — Helicopter MRO + aerial filming fleet, medium (50-100), independent
+     - **SoCal Jets** (Van Nuys) — Small biz-jet MRO at KVNY, good ERP fit
+     - **Jet Tech Ltd** (Van Nuys) — Small general MRO, long-established at KVNY
+     - **Seat Air Systems** (Van Nuys) — Interior specialist, airline seat repair/overhaul
+     - **Extraord-N-Air** (Van Nuys) — Interior specialist, leather refurbishment, mobile service
+     - **EON Instrumentation** (Van Nuys) — Avionics/instrument specialist
+   - 4 enterprises identified and excluded: EDN Aviation (Precision Aviation Group subsidiary), IPECO Inc (UK parent), Velocity Aerospace (Burbank), CSAFE LLC (pharma ULD containers, not real MRO)
+   - Van Nuys (KVNY) confirmed as densest single-airport MRO cluster in CA: 10+ independent shops at one field
+
+3. **Metro cluster normalization — NEW FIELD added to master list:**
+   - Created `metro_normalize.py` script mapping 150+ city names → 35 metro clusters
+   - 1,373 of 2,729 records (50%) now have metro_cluster assignments
+   - Top clusters by density: Miami-Dade (245), DFW (135), Phoenix Metro (100), LA Basin (86), Broward (82)
+   - Enables geographic campaign planning: target all shops in a metro cluster at once
+
+4. **Scoring engine overhaul — `merge_wave10.py`:**
+   - New score computation with size-based multipliers (micro/small/medium/large)
+   - Full-service keyword bonuses for ERP scoring
+   - EBIS churn bonus (+20 ERP) and Corridor penalty (-10 ERP)
+   - Multi-location group bonuses (+10 WFS, +15 ERP)
+   - All 2,729 records rescored
+
+5. **Tiered lists rebuilt:**
+   - `website-targets-tiered.csv`: expanded to 150 records (was 100)
+   - `erp-targets-tiered.csv`: expanded to 150 records (was 100)
+   - `no-website-priority.csv`: 2,316 records
+   - `cross-sell-top25.csv`: 25 records
+   - `hot-leads-priority.csv`: 289 qualified leads, top 50 written
+
+6. **Website quality audit + EBIS customer additions (in progress):**
+   - Worker agent still running — auditing 15 existing websites for quality classification
+   - Also researching 12 EBIS case study companies to add to database
+   - Results will be incorporated when worker completes
+
+### Top New FL Leads (Wave 10)
+| Company | City | Size | Type | Opportunity |
+|---------|------|------|------|------------|
+| Banyan Air Services | Fort Lauderdale | Medium | FBO+MRO | ERP $15-25k, expanding ops |
+| Certified Engines Unlimited | Pembroke Pines | Small | Engine | Website+ERP combo |
+| Precision Jet Service/Avionics | Stuart | Small | GA+Avionics | Pair deal, website+ERP |
+| IMX Aerospace | Fort Lauderdale | Small | Component | ERP for landing gear workflow |
+| East Coast Aviation Service | Stuart | Small | GA MRO | Full ERP fit |
+
+### Top New CA Leads (Wave 10)
+| Company | City | Size | Type | Opportunity |
+|---------|------|------|------|------------|
+| OCR Aviation | Long Beach | Small | FBO+MRO | EBIS churn — warm ERP outreach |
+| Helinet Aviation Services | Van Nuys | Medium | Helicopter | ERP for fleet+MRO ops |
+| SoCal Jets | Van Nuys | Small | Biz-jet MRO | Website+ERP combo |
+| EON Instrumentation | Van Nuys | Small | Avionics | Website+ERP |
+| Seat Air Systems | Van Nuys | Small | Interior | Niche ERP for seat shop |
+
+### Updated Database State
+| Metric | Wave 9 | Wave 10 | Change |
+|--------|--------|---------|--------|
+| Total records | 2,729 | 2,729 | — |
+| Enterprise (excluded) | 311 | 318 | +7 |
+| SMB targets | 2,418 | 2,411 | -7 (cleaner) |
+| Enriched (shop_size known) | ~80 | 123 | +43 |
+| With website | 70 | 102 | +32 |
+| Metro clusters assigned | 0 | 1,373 | +1,373 (NEW) |
+| Hot leads (qualified) | 263 | 289 | +26 |
+| Enrichment CSVs | 16 | 18 | +2 |
+
+### Gaps Remaining
+- Website quality audit pending (worker still running)
+- 12 EBIS case study companies still to be added (worker still running)
+- FL still 38/637 enriched (6.0%) — need more passes
+- CA now 26/513 enriched (5.1%) — Van Nuys done, need other clusters
+- GA, OK, WA, IL, NY, CT, NC all at 0% enrichment
+- Employee count data still missing for ~95% of unenriched records
+
+### Next Wave Focus
+- Incorporate website quality audit results when worker completes
+- Add EBIS case study companies to master list
+- TX DFW cluster follow-up (135 records, high density)
+- GA Atlanta cluster enrichment (27 records in metro cluster, 0% enriched)
+- Build outreach-ready final slices with contact info for top 25 each category

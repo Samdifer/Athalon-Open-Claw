@@ -524,3 +524,34 @@ Key contact intelligence:
 - Tennessee Aircraft Services: 50+ year family business, Cirrus ASC
 - Horizon Avionics: AEA member since 1989, 30+ years
 - Stevens Aerospace confirmed 3 locations (CO, GA, TN) — Corridor customer
+
+---
+
+## Wave 10 Evidence — 2026-03-09
+
+### FL Fort Lauderdale / WPB / Stuart Cluster
+- **Banyan Air Services** (FXE, Fort Lauderdale): Premier independently-owned FBO+MRO. Ranked #1 by Professional Pilot PRASE. Full heavy maintenance, turbine engine, interior mods, avionics, aircraft management/sales. ~51-200 employees. Expanding with satellite MRO at KSGJ St. Augustine. LinkedIn 6,700+ followers. Contact: Bob Tuttle (rtuttle@banyanair.com). Website: banyanair.com (likely professional, established brand). → High-value ERP prospect, could also benefit from a modern website if theirs is dated.
+- **Certified Engines Unlimited** (Pembroke Pines): Small engine specialist shop. Custom domain ceu.aero. FAA Part 145. Focus on piston and turbine engine overhaul. → Good ERP+website cross-sell target.
+- **Precision Jet Service + Precision Jet Avionics** (Stuart, KSUA): Two related companies at same field, same ownership family (John and Jack). PJS does airframe maintenance, PJA does avionics. Both small. Website: precisionjet.com. → Package deal opportunity for website redesign + ERP covering both entities.
+- **IMX Aerospace** (Fort Lauderdale): Small component MRO. Landing gear, hydraulics, flight controls. Part 145 + FAA-PMA parts manufacturing. Website: imxaerospace.com. Contact: D. Cuesta. → ERP fit for component tracking workflows.
+- **Big Sky Aviation** (West Palm Beach, PBI): Family-owned since 2000. Has 5 mobile repair trucks servicing all FL airports. Full A&P services. Website: bigskyaviation.org. → Interesting mobile MRO model, may need field-friendly ERP solution.
+- **Presidential Aviation** (FXE, Fort Lauderdale): FBO+MRO at FXE. Medium size. Part 135/91K charter + maintenance. Website: presidential-aviation.com. Contact: A. Boodhai. → Charter+MRO combo could benefit from integrated ERP.
+- **Toledo Jet Center** (Fort Lauderdale): Small jet MRO with locations in both Toledo OH and FLL. Contact: Eric Zientek. Website: toledojet.com. → Multi-location deal potential.
+
+### CA Van Nuys / LA Basin Cluster  
+- **Van Nuys Airport (KVNY)** is the densest single-airport MRO cluster in the LA Basin, with 10+ independent Part 145 shops. Key aviation hub for biz-jet maintenance in Southern California.
+- **OCR Aviation** (Long Beach, KLGB): CONFIRMED EBIS customer (previously known). Now has website (ocraviation.com). Small FBO+MRO. Contact: Bobby. → Priority EBIS churn outreach target.
+- **Helinet Aviation Services** (Van Nuys): Helicopter MRO + aerial filming fleet (TV news helicopters). Medium (50-100 employees). Has sophisticated fleet operations → likely already has some software, but helicopter MRO operations management could fit Athelon ERP.
+- **SoCal Jets** (Van Nuys): Small biz-jet MRO, general maintenance on corporate jets. Website: socaljets.aero. Contact: Dale. → Clean website+ERP combo prospect.
+- **Extraord-N-Air** (Van Nuys): Interior specialist — leather refurbishment, seat repair, carpet/headliner. Mobile service available. Contact: Todd. → Niche but steady business, website could attract more clients.
+- **Seat Air Systems** (Van Nuys): Airline seat repair/overhaul specialist. Larger workflow complexity → ERP fit. Contact: Pierre. Website: seatairsystems.com. → Component-specialist workflow for ERP.
+- **EON Instrumentation** (Van Nuys): Avionics/instrument repair specialist. Small. Contact: Jate. → Website+ERP cross-sell.
+- **ENTERPRISE exclusions this wave:** EDN Aviation (PAG subsidiary), IPECO Inc (UK parent Safran group), Velocity Aerospace Burbank (medium PE-backed), CSAFE LLC (pharma containers, not real MRO)
+
+### Metro Clustering Analysis
+New geographic clustering reveals top commercial opportunity zones:
+1. **Miami-Dade** (245 records) — Dominated by component specialists. Heavy on hydraulic, landing gear, engine accessory shops. Different pitch than GA shops.
+2. **DFW** (135 records) — Mix of GA, biz-jet, and component. Already partially enriched. High density around Addison Airport.
+3. **Phoenix Metro** (100 records) — Interesting mix of engine overhaul (Southwest Turbine, Copper State/TAE) and component shops. Deer Valley + Scottsdale airports.
+4. **LA Basin** (86 records) — Van Nuys is the center. Biz-jet + component focus. Good website + ERP territory.
+5. **Broward** (82 records) — Fort Lauderdale Executive (FXE) is the anchor. Banyan Air is the marquee prospect.
