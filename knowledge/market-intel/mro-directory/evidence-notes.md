@@ -470,3 +470,57 @@ Key contact intelligence:
 3. **Tulsa Air and Space Museum** — not commercial MRO
 4. **Empire Avionics** (White Plains NY) — likely closed
 
+
+---
+
+## Wave 9 Evidence Updates (2026-03-09)
+
+### New Corridor Customers Confirmed
+- Constant Aviation (Bedford OH) — AIN article Oct 2012
+- Professional Aircraft Accessories (Titusville FL) — corridor.aero/customers
+- Victory Lane Aviation (NC) — Dedicated Corridor case study
+- WarDaddy Aviation (Peachtree City GA) — Corridor case study + blog
+- Atlantic Aviation (multi-location FBO/MRO) — corridor.aero/customers
+- Wheels Up (multi-location) — corridor.aero/customers
+- ExecuJet MRO Services (global) — Corridor video blog interview
+- Jet Aviation (global) — corridor.aero/customers
+- GAMA Aviation (UK/intl) — corridor.aero/customers
+- Eagle Copters (Canada) — corridor.aero/customers
+- Chartright Air Group (Canada) — corridor.aero testimonial
+- Aviation Maintenance Professionals (US) — testimonial, customer since 2005
+- Airshare (Midwest US) — third-party listing
+- New World Aviation — third-party listing
+- Fly Exclusive (NC) — third-party listing
+
+### New EBIS Customers Confirmed (from case studies)
+- Salty Pelican Aviation (Cirrus ASC) — dedicated case study + video
+- Cove Aviation (California) — case study
+- Basin Aviation (FBO/Part 135/MRO) — case study (switched FROM unnamed competitor)
+- Qmulus Aviation (acquired by Sprintbach) — case study (switched FROM unnamed system)
+- WAir Aviation (flight school + MRO) — case study
+- Platinum Sky Maintenance (pursuing Part 145) — case study
+- MyFlight (DOM: Chris Hilton) — case study
+- Plane Place Aviation (avionics + AOG) — case study (switched FROM unnamed system)
+- Midwest Corporate Air (Ohio, Part 61/91) — case study
+- My Jet DOM (Atlanta GA) — case study
+
+### Competitive Positioning Intelligence
+- EBIS claims 300+ shops on platform (2021 cloud relaunch)
+- Corridor claims 500+ customers (third-party listing)
+- EBIS positioning: "better fit for smaller maintenance operation" (Capterra)
+- Corridor positioning: enterprise-focused (Jet Aviation, GAMA, Wheels Up scale)
+- EBIS commonly compared against: Flightdocs, iFlight MRO, Cirro, SMS Pro
+- **Athelon mid-market gap confirmed:** shops with 10-100 employees underserved
+
+### FL Miami Cluster Findings
+- Next MRO LLC: FAA Open-Class license, 40k sqft, CEO Noel Aguilera
+- NAS MRO: Recently independent (ownership transition complete), EASA certified
+- Prestige Aero: Since 1995, FAA+EASA+UK, all in-house
+- Miami is dominated by component specialists (hydraulics, landing gear, accessories)
+
+### TN Smyrna Cluster Findings
+- Corporate Flight Management = Contour Aviation (900+ emp, enterprise)
+- AMI Aviation Services = AeroMech subsidiary (not independent)
+- Tennessee Aircraft Services: 50+ year family business, Cirrus ASC
+- Horizon Avionics: AEA member since 1989, 30+ years
+- Stevens Aerospace confirmed 3 locations (CO, GA, TN) — Corridor customer

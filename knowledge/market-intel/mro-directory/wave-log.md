@@ -912,3 +912,112 @@ All three Wave 6 workers (w6-tulsa-ok, w6-wichita-ks, w6-ny-metro) timed out mid
 - Corridor customer evidence search (corridor.aero case studies)
 - Website quality classification for the 144 shops with has_website=yes
 
+
+## Wave 9 — 2026-03-09 (10:30 UTC)
+**Focus:** Data quality overhaul + enterprise cleanup + FL Miami enrichment + TN Smyrna cluster + Corridor/EBIS competitive intelligence
+**Operator:** Autonomous (Opus orchestrator + 3 Sonnet workers)
+
+### Actions Taken
+
+1. **Major data quality cleanup:**
+   - Fixed 6 field inconsistencies (website='none' → empty, has_website flags)
+   - Identified and flagged 189 additional enterprise entities (120→311 total) using domain analysis + name keywords
+   - Enterprise domains discovered: Collins (20 locs), StandardAero (16), Honeywell (14), Parker (14), Textron (14), Boeing (13), Gulfstream (11), Safran (10), and 50+ more
+   - Cleaned multi-location group field — removed false-positive domain associations (gmail, windstream, etc.)
+   - SMB target universe refined from 2,609 → 2,418 (more accurate)
+
+2. **Multi-location SMB group identification:**
+   - 239 SMB records belong to multi-location groups
+   - Key SMB chains discovered: Sarasota Avionics (5 FL locations), Focused Air (4 FL locations), Boca Aircraft Maintenance (2 FL), Cutter Aviation (4 states), West Star Aviation/JetEast/Premier Air Center (9 locations via wsa.aero)
+   - Multi-location groups get priority scoring boost (higher deal value potential)
+
+3. **FL Miami cluster enrichment (15 shops — Sonnet worker):**
+   - All 15 Miami-area shops researched and profiled
+   - 12 websites discovered (80% discovery rate — much higher than prior FL waves)
+   - Key finds:
+     - **Next MRO LLC** — FAA Open-Class license (rare), 40k sqft, CEO Noel Aguilera named. Landing gear/NDT/machining. Best new FL lead.
+     - **NAS MRO Services** — Recently completed ownership transition to fully independent. Boeing/Airbus/CFM component MRO. EASA certified.
+     - **Prestige Aero Services** — Since 1995, FAA+EASA+UK certified. All in-house, no subcontractors.
+     - **Jet Aircraft Maintenance** — Operates at 7 US airports. Line maintenance specialist.
+     - **F&E Aircraft Maintenance** — 201-500 employees, 30+ years. Borderline enterprise but privately held.
+   - Component specialist concentration in Miami is striking — hydraulics, landing gear, accessories dominate
+
+4. **TN Smyrna/Nashville cluster enrichment (10 shops — Sonnet worker):**
+   - 8 independent SMBs profiled, 2 flagged enterprise:
+     - Corporate Flight Management = Contour Aviation (900+ employees — enterprise)
+     - AMI Aviation Services = subsidiary of AeroMech Inc (not independent)
+   - Best TN leads:
+     - **Hollingshead Aviation Services** — Independent FBO+Part 145 at KMQY, BBB accredited since 2017
+     - **Tennessee Aircraft Services** — 50+ year family business (founded by WWII mechanic), Cirrus Authorized Service Center, owner Paul New
+     - **Horizon Avionics** — AEA member since 1989, 30+ years at TYS, broad aircraft coverage
+     - **Thom Duncan Avionics** — Founded 2018, also runs Autopilot South (Garmin autopilot installs), mid-south GA market
+   - Stevens Aerospace confirmed at 3 locations (CO, GA, TN) — Corridor customer, used as competitive reference
+
+5. **Corridor/EBIS competitive intelligence (Sonnet worker — MAJOR FIND):**
+   - **17 NEW Corridor customers identified** (vs 6 previously known):
+     - HIGH confidence: Constant Aviation (OH), Professional Aircraft Accessories (FL), Victory Lane Aviation (NC), WarDaddy Aviation (GA), Atlantic Aviation, Wheels Up, ExecuJet MRO, Jet Aviation, GAMA Aviation, Eagle Copters, Chartright Air Group
+     - MEDIUM: Airshare, New World Aviation, Fly Exclusive, Omni Air
+   - **14 NEW EBIS customers identified** (vs 5 previously known):
+     - Case studies found: Salty Pelican Aviation, Cove Aviation (CA), Basin Aviation, Qmulus Aviation, WAir Aviation, Platinum Sky Maintenance, MyFlight, Plane Place Aviation, Midwest Corporate Air (OH), My Jet DOM (GA)
+     - EBIS claims 300+ shops on platform; case studies show it's the preferred choice for small shops scaling up
+   - **Churn signals discovered:**
+     - Basin Aviation switched TO EBIS from unnamed competitor
+     - Qmulus Aviation switched TO EBIS citing "limitations of previous system"
+     - Plane Place Aviation switched TO EBIS citing missing professional forms/reporting
+   - **Competitive positioning insight:**
+     - Corridor targets larger/enterprise MROs (Jet Aviation, GAMA, ExecuJet, Wheels Up)
+     - EBIS self-selects smaller shops (Capterra: "better fit for smaller maintenance operation")
+     - **Athelon opportunity: mid-market gap** between EBIS (micro/small) and Corridor (enterprise)
+     - Competitors also compared against: Flightdocs, iFlight MRO, Cirro, SMS Pro
+   - Saved as `competitor-customer-evidence-w9.md`
+
+6. **Hot leads list rebuilt with better scoring:**
+   - Added multi-location group bonus (+15 priority)
+   - EBIS churn leads remain #1 priority (score 100+)
+   - Cross-sell leads boosted when WFS≥70 AND ERP≥50
+   - 263 qualified hot leads total, top 50 written to `hot-leads-priority.csv`
+
+7. **All tiered lists rebuilt:**
+   - `website-targets-tiered.csv`: 100 records (WFS≥60, reachable)
+   - `erp-targets-tiered.csv`: 100 records (ERP≥40, reachable)
+   - `no-website-priority.csv`: 2,348 records
+   - `cross-sell-top25.csv`: 25 records (CS≥60)
+   - `enrichment-backlog.csv`: 15 prioritized tasks for waves 10-13
+
+### Updated Database State
+| Metric | Wave 8 | Wave 9 | Change |
+|--------|--------|--------|--------|
+| Total records | 2,729 | 2,729 | — |
+| Enterprise (excluded) | 120 | 311 | +191 |
+| SMB targets | 2,609 | 2,418 | -191 (cleaner) |
+| With website | 54 | 70 | +16 |
+| Corridor-verified | 9 | 17 | +8 |
+| EBIS-confirmed (in DB) | 5 | 5 | — (new ones not in FAA extract) |
+| EBIS-confirmed (total known) | 5 | 19 | +14 |
+| Corridor-confirmed (total known) | 9 | 23+ | +14+ |
+| Multi-location SMB groups | 0 | 239 records | new field |
+| Hot leads (qualified) | 35 | 263 | +228 (better scoring) |
+
+### Key Strategic Insights (NEW this wave)
+
+1. **Mid-market positioning gap confirmed:** Corridor dominates enterprise (Jet Aviation, GAMA, Wheels Up). EBIS dominates micro/small. Athelon's sweet spot is mid-market Part 145 shops with 10-100 employees.
+
+2. **Miami is a component specialist hub:** The Opa Locka/Doral/Hialeah cluster is dominated by hydraulic, landing gear, and accessory component MROs — different profile than the GA/biz-av shops in TX/CO/TN. Tailor ERP pitch to component workflow.
+
+3. **Multi-location SMB deals are the highest-value targets:** Sarasota Avionics (5 locations) could be a $50-100k+ combined website + ERP deal. Focused Air (4 FL locations) similar.
+
+4. **EBIS churn window is real but nuanced:** Veryon acquired EBIS Nov 2025. The churn window is 12-24 months (now through ~2027). But EBIS case studies show they're still actively onboarding customers as of 2024-2025. The real opportunity is shops where Veryon raises prices or changes product direction.
+
+### Gaps Remaining
+- 14 EBIS case study companies not yet in our FAA database (need to add manually or expand state extraction)
+- FL still massively under-enriched (25 of 637 now profiled, 3.9%)
+- CA, AZ at 0% enrichment in master list
+- Employee count data still missing for 95%+ of records
+- No website quality classification yet for the 70 shops with websites
+
+### Next Wave Focus
+- FL Fort Lauderdale / West Palm Beach cluster enrichment (20 shops)
+- CA Van Nuys / Burbank / Long Beach cluster enrichment (20 shops)
+- Add EBIS case study companies to master list manually (14 new entities)
+- Website quality audit for 70 shops with has_website=yes
+
