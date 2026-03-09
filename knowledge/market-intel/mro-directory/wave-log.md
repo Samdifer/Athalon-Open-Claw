@@ -453,3 +453,54 @@ No direct evidence found in this wave. Shops in this batch are predominantly sma
 
 - **Wave 5:** Re-run CT/WA enrichment (timed out); extract OK/NY/NC/IL states; Houston cluster enrichment (20 shops); Phoenix enrichment (20 shops); improve enrichment matching (fuzzy name matching); begin outreach template creation
 
+
+## Wave 4 — 2026-03-09
+**Focus:** NV/TN/CT/WA/FL-South enrichment + metro-based outreach segmentation + data quality fixes
+**Operator:** Autonomous (Opus orchestrator + Sonnet workers)
+
+### Actions Taken
+- Enriched 20 Nevada/Tennessee shops (NV: Las Vegas/Reno; TN: Nashville/Smyrna/Memphis)
+- Enriched 20 Connecticut/Washington shops (CT: Groton/Bridgeport; WA: Renton/Boeing Field/Spokane)
+- Enriched 20 South Florida shops with focus on confirmed EBIS users (Fort Lauderdale/Opa-Locka/Miami)
+- Generated metro-based outreach files (10 metro clusters, 991 shops segmented)
+- Fixed critical data quality issue: CO enriched records (round-3) were overwritten by lower-quality FAA bulk data; restored 71 properly-scored CO records
+- Rebuilt cross-sell-top25.csv with correct scoring and EBIS priority weighting
+- Rebuilt erp-targets-tiered.csv and website-targets-tiered.csv with deduped, non-enterprise records
+
+### Blocker: Worker Timeouts
+- w4-worker-nv-tn timed out during follow-up lookups; **all 20 data rows were already written** — data intact
+- w4-worker-fl-south timed out similarly; enrichment-results-fl-south.csv complete (20 rows)
+- **Mitigation:** Files were committed before timeout; no data lost. Future workers should write CSV earlier and search after.
+
+### Wave 4 Data Quality
+- Master target list: 2,409 records across CO/TX/FL/AZ/GA + enrichment samples (NV/TN/CT/WA/CA/OH/KS)
+- CO records restored to proper enrichment scores (erp up to 80, wfs up to 80)
+- EBIS confirmed users updated: Apex Aviation (Henderson NV) confirmed with enrichment data
+
+### Notable NV/TN/CT/WA Finds
+- **Apex Aviation (Henderson NV)** — CONFIRMED EBIS user, 25,000 sq ft at KHND, turbine/rotorcraft/piston. Warm ERP churn target.
+- **Platinum Sky Maintenance (Fort Lauderdale FL)** — CONFIRMED EBIS, AOG corporate jet shop, functional Wix-era site → website redesign + ERP both viable
+- **Columbia Air Services (Groton CT)** — Daher TBM authorized service center, AEA member, 20-50 employees, good ERP prospect
+- **Threshold Aviation Group (Chino CA)** — Largest independent prospect found: 90+ employees. Still no ERP software visible in public web presence.
+- **Nashville cluster:** Smyrna (KMQY) has Stevens Aerospace + Nitetrain Aviation + AMI Aviation cluster — worth a dedicated Smyrna metro file
+
+### Metro Outreach Segments Built
+| Metro | Shops |
+|-------|-------|
+| South Florida (KOPF/KFXE/KPBI/KFLL) | 328 |
+| Los Angeles Basin (KVNY/KBUR/KLAX) | 155 |
+| DFW Metroplex (KADS/KFTW/KDAL/KDTO) | 134 |
+| Phoenix Metro (KSDL/KDVT/KGYR) | 101 |
+| Seattle/Puget Sound (KBFI/KPAE/KGEG) | 49 |
+| Houston (KHOU/KDWH/KSGR) | 43 |
+| Denver Front Range (KAPA/KBJC/KFTG/KCOS) | 42 |
+| San Antonio/Austin (KSAT/KAUS/KFTW) | 41 |
+| Atlanta Metro (KPDK/KFTY/KSAV) | 41 |
+| Wichita (KICT/KAAO) | 57 |
+
+### Next Wave Focus
+- Score remaining non-CO records with enriched heuristics (TX/FL/AZ/GA have low default scores)
+- Contact discovery pass for confirmed EBIS users (find phone/email for warm ERP outreach)
+- Dedicated Wichita cluster deep-dive (57 shops; Tech-Aire + Midwest Malibu + Air Capital Interiors)
+- Smyrna TN cluster (Stevens Aerospace, Nitetrain, AMI Aviation)
+
