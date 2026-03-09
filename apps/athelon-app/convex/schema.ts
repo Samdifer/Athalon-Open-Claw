@@ -5887,4 +5887,69 @@ export default defineSchema({
     .index("by_workOrder", ["workOrderId"])
     .index("by_org_severity", ["organizationId", "severity"])
     .index("by_findingNumber", ["organizationId", "findingNumber"]),
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // MARKET INTEL — Target Prospect Enrichment (additive, sales/ops internal)
+  // Added: 2026-03-09 — OPUS Team F (app-market-intel)
+  // Purpose: Store enriched repair-station targeting data for sales filtering.
+  // This table is independent of CRM and does NOT affect compliance surfaces.
+  // ═══════════════════════════════════════════════════════════════════════════
+  targetProspects: defineTable({
+    organizationId: v.id("organizations"),
+
+    // FAA identifiers
+    certNumber: v.string(),       // FAA Part 145 certificate number (unique key)
+    designatorCode: v.optional(v.string()),
+    legalName: v.string(),
+    dbaName: v.optional(v.string()),
+
+    // Location
+    city: v.optional(v.string()),
+    state: v.optional(v.string()),
+    country: v.optional(v.string()),
+    postalCode: v.optional(v.string()),
+
+    // Contact
+    phone: v.optional(v.string()),
+    email: v.optional(v.string()),
+    website: v.optional(v.string()),
+
+    // Enrichment scoring fields
+    websiteRedesignFitScore: v.optional(v.number()),     // 0.0–1.0
+    erpCorridorLikelihood: v.optional(v.number()),       // 0.0–1.0
+    erpEbisLikelihood: v.optional(v.number()),           // 0.0–1.0
+    targetSegment: v.optional(v.union(
+      v.literal("website"),
+      v.literal("erp"),
+      v.literal("both"),
+      v.literal("none"),
+    )),
+    confidenceScore: v.optional(v.number()),             // 0.0–1.0
+    confidenceLabel: v.optional(v.string()),             // "high", "medium", "low"
+    evidenceNotes: v.optional(v.string()),               // free-text evidence/reasoning
+
+    // Existing scoring from prominence pipeline
+    prominenceScore: v.optional(v.number()),
+    prominenceTier: v.optional(v.string()),
+    clientFocusGuess: v.optional(v.string()),
+    outreachTier: v.optional(v.string()),
+
+    // Ratings summary (from FAA data)
+    ratingAirframe: v.optional(v.string()),
+    ratingPowerplant: v.optional(v.string()),
+    ratingAccessory: v.optional(v.string()),
+    ratingInstrument: v.optional(v.string()),
+    ratingRadio: v.optional(v.string()),
+    ratingPropeller: v.optional(v.string()),
+
+    // Import metadata
+    importBatchId: v.optional(v.string()),
+    importedAt: v.number(),
+    updatedAt: v.optional(v.number()),
+  })
+    .index("by_org", ["organizationId"])
+    .index("by_org_cert", ["organizationId", "certNumber"])
+    .index("by_org_segment", ["organizationId", "targetSegment"])
+    .index("by_org_outreach", ["organizationId", "outreachTier"])
+    .index("by_org_prominence", ["organizationId", "prominenceScore"]),
 });

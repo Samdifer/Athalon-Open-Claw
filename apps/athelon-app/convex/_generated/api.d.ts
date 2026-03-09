@@ -125,6 +125,7 @@ import type * as lib_workOrderNumber from "../lib/workOrderNumber.js";
 import type * as loaners from "../loaners.js";
 import type * as logbook from "../logbook.js";
 import type * as lots from "../lots.js";
+import type * as maintenanceFindings from "../maintenanceFindings.js";
 import type * as maintenancePrograms from "../maintenancePrograms.js";
 import type * as maintenanceRecords from "../maintenanceRecords.js";
 import type * as notifications from "../notifications.js";
@@ -327,6 +328,7 @@ declare const fullApi: ApiFromModules<{
   loaners: typeof loaners;
   logbook: typeof logbook;
   lots: typeof lots;
+  maintenanceFindings: typeof maintenanceFindings;
   maintenancePrograms: typeof maintenancePrograms;
   maintenanceRecords: typeof maintenanceRecords;
   notifications: typeof notifications;

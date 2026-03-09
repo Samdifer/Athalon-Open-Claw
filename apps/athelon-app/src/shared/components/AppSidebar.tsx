@@ -30,6 +30,7 @@ import {
   MessageSquare,
   BarChart3,
   Warehouse,
+  Target,
 } from "lucide-react";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import {
@@ -235,6 +236,7 @@ const mainNav: NavEntry[] = [
       { title: "Interactions", href: "/crm/interactions", icon: MessageSquare },
       { title: "Sales Pipeline", href: "/crm/pipeline", icon: TrendingUp },
       { title: "Analytics", href: "/crm/analytics", icon: BarChart3 },
+      { title: "Target Prospects", href: "/crm/target-prospects", icon: Target },
       { title: "Sales Training", href: "/sales/training", icon: GraduationCap },
     ],
   },
