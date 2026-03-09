@@ -1197,3 +1197,8 @@ All 15 shops are independent SMBs:
 - TX DFW cluster follow-up (135 records, high density)
 - GA Atlanta cluster enrichment (27 records in metro cluster, 0% enriched)
 - Build outreach-ready final slices with contact info for top 25 each category
+
+### Wave 10 Addendum
+- **ca-vanNuys-enrichment-w10** worker timed out at 10min but CSV was already written and merged. No data loss.
+- **website-audit-ebis-w10** worker timed out at 10min. Output files NOT written. Will retry in Wave 11 with longer timeout (900s).
+- **Blocker:** 600s timeout insufficient for workers doing 27+ web lookups (15 websites + 12 EBIS companies). Mitigation: split into 2 separate workers, increase timeout to 900s.
