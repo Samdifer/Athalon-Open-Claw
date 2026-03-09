@@ -34,6 +34,10 @@ import {
 } from "lucide-react";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import {
+  ROLE_SECTION_ACCESS,
+  type AccessSection,
+} from "@/lib/access-policy";
+import {
   ROLE_BADGE_STYLES,
   ROLE_LABELS,
   type MroRole,
@@ -64,20 +68,7 @@ import { LocationSwitcher } from "@/components/LocationSwitcher";
 
 import type React from "react";
 
-type NavSection =
-  | "dashboard"
-  | "fleet"
-  | "work-orders"
-  | "scheduling"
-  | "parts"
-  | "billing"
-  | "sales"
-  | "crm"
-  | "compliance"
-  | "personnel"
-  | "my-work"
-  | "reports"
-  | "settings";
+type NavSection = AccessSection;
 
 type NavItem = {
   title: string;
@@ -304,39 +295,12 @@ const bottomNav: NavEntry[] = [
   },
 ];
 
-const ROLE_SECTION_ACCESS: Partial<Record<MroRole, NavSection[]>> = {
-  admin: undefined,
-  shop_manager: [
-    "dashboard",
-    "my-work",
-    "fleet",
-    "work-orders",
-    "scheduling",
-    "parts",
-    "billing",
-    "sales",
-    "crm",
-    "compliance",
-    "reports",
-    "personnel",
-  ],
-  qcm_inspector: ["compliance", "fleet", "work-orders", "reports"],
-  billing_manager: ["billing", "sales", "crm", "work-orders", "reports"],
-  lead_technician: ["my-work", "work-orders", "scheduling", "fleet", "personnel", "parts"],
-  technician: ["my-work", "work-orders", "parts", "fleet"],
-  parts_clerk: ["parts", "billing", "sales"],
-  read_only: ["dashboard", "fleet", "reports"],
-};
-
 const ROLE_CHILD_ACCESS: Partial<Record<MroRole, Record<string, string[]>>> = {
   qcm_inspector: {
     "/personnel": ["/personnel/training"],
   },
   technician: {
     "/parts": ["/parts/requests"],
-  },
-  parts_clerk: {
-    "/billing/invoices": ["/billing/purchase-orders"],
   },
 };
 
@@ -349,7 +313,6 @@ const LEAD_WORKSPACE_ROLES = new Set<MroRole>([
 function canAccessSection(role: MroRole | null | undefined, section: NavSection) {
   if (!role) return true;
   const allowed = ROLE_SECTION_ACCESS[role];
-  if (!allowed) return true;
   return allowed.includes(section);
 }
 

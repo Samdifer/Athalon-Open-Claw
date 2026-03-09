@@ -7,6 +7,7 @@ export type InternalRoute = {
 export const INTERNAL_ROUTE_MANIFEST: InternalRoute[] = [
   { label: "Dashboard", path: "/dashboard" },
   { label: "My Work", path: "/my-work" },
+  { label: "Lead Center", path: "/lead" },
 
   { label: "Fleet", path: "/fleet" },
   { label: "Fleet Calendar", path: "/fleet/calendar" },
@@ -55,6 +56,19 @@ export const INTERNAL_ROUTE_MANIFEST: InternalRoute[] = [
   { label: "OTC Sales", path: "/billing/otc" },
   { label: "Warranty", path: "/billing/warranty" },
   { label: "Labor Kits", path: "/billing/labor-kits" },
+
+  { label: "Sales Dashboard", path: "/sales/dashboard" },
+  { label: "Sales Ops", path: "/sales/ops" },
+  { label: "Sales Quotes", path: "/sales/quotes" },
+  { label: "Sales Training", path: "/sales/training" },
+
+  { label: "CRM Dashboard", path: "/crm/dashboard" },
+  { label: "CRM Accounts", path: "/crm/accounts" },
+  { label: "CRM Prospect Intelligence", path: "/crm/prospects/intelligence" },
+  { label: "CRM Contacts", path: "/crm/contacts" },
+  { label: "CRM Interactions", path: "/crm/interactions" },
+  { label: "CRM Pipeline", path: "/crm/pipeline" },
+  { label: "CRM Analytics", path: "/crm/analytics" },
 
   { label: "Scheduling", path: "/scheduling" },
   { label: "Scheduling Bays", path: "/scheduling/bays" },

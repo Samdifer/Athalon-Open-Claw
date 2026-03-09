@@ -344,6 +344,7 @@ export function protectedAppRoutes() {
             <Route path="/crm/accounts" element={<CrmAccountsPage />} />
             <Route path="/crm/accounts/:id" element={<CrmAccountDetailPage />} />
             <Route path="/crm/prospects/intelligence" element={<CrmProspectIntelligencePage />} />
+            <Route path="/crm/prospects/intelligence/:prospectId" element={<CrmProspectIntelligencePage />} />
             <Route path="/crm/contacts" element={<CrmContactsPage />} />
             <Route path="/crm/interactions" element={<CrmInteractionsPage />} />
             <Route path="/crm/pipeline" element={<CrmPipelinePage />} />

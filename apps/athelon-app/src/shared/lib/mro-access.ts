@@ -1,3 +1,8 @@
+import {
+  ROLE_SECTION_ACCESS,
+  type AccessSection,
+} from "@/lib/access-policy";
+
 export const MRO_ROLES = [
   "admin",
   "shop_manager",
@@ -93,13 +98,18 @@ export const ACCESS_AUTHORIZATION_DESCRIPTIONS: Record<AccessAuthorization, stri
 
 export type PermissionCategory =
   | "billing"
+  | "sales"
+  | "crm"
   | "parts"
   | "fleet"
   | "work_orders"
+  | "my_work"
+  | "lead"
   | "compliance"
   | "personnel"
   | "scheduling"
   | "settings"
+  | "dashboard"
   | "reports";
 
 export type PermissionAction =
@@ -117,7 +127,10 @@ type PermissionPattern = Permission | `${PermissionCategory}.*` | "*";
 export const ROLE_PERMISSION_GRANTS: Record<MroRole, PermissionPattern[]> = {
   admin: ["*"],
   shop_manager: [
+    "dashboard.view",
     "work_orders.*",
+    "my_work.view",
+    "lead.*",
     "fleet.*",
     "parts.*",
     "personnel.*",
@@ -125,10 +138,13 @@ export const ROLE_PERMISSION_GRANTS: Record<MroRole, PermissionPattern[]> = {
     "reports.*",
     "billing.view",
     "billing.approve",
+    "sales.view",
+    "crm.view",
     "compliance.view",
     "settings.view",
   ],
   qcm_inspector: [
+    "dashboard.view",
     "compliance.*",
     "work_orders.view",
     "work_orders.approve",
@@ -136,13 +152,20 @@ export const ROLE_PERMISSION_GRANTS: Record<MroRole, PermissionPattern[]> = {
     "reports.view",
   ],
   billing_manager: [
+    "dashboard.view",
     "billing.*",
+    "sales.view",
+    "crm.view",
     "reports.*",
     "work_orders.view",
     "fleet.view",
     "parts.view",
   ],
   lead_technician: [
+    "dashboard.view",
+    "my_work.view",
+    "my_work.update",
+    "lead.*",
     "work_orders.view",
     "work_orders.update",
     "work_orders.approve",
@@ -150,43 +173,43 @@ export const ROLE_PERMISSION_GRANTS: Record<MroRole, PermissionPattern[]> = {
     "parts.update",
     "fleet.view",
     "scheduling.view",
-    "compliance.view",
-    "reports.view",
   ],
   technician: [
+    "dashboard.view",
+    "my_work.view",
+    "my_work.update",
     "work_orders.view",
     "work_orders.update",
     "parts.view",
     "fleet.view",
-    "scheduling.view",
-    "compliance.view",
   ],
   parts_clerk: [
+    "dashboard.view",
     "parts.*",
     "work_orders.view",
     "fleet.view",
-    "reports.view",
   ],
   sales_rep: [
-    "billing.view",
-    "billing.create",
-    "billing.update",
+    "dashboard.view",
+    "sales.view",
+    "sales.create",
+    "sales.update",
+    "crm.view",
+    "crm.create",
+    "crm.update",
+    "fleet.view",
+  ],
+  sales_manager: [
+    "dashboard.view",
+    "sales.*",
+    "crm.*",
     "fleet.view",
     "reports.view",
   ],
-  sales_manager: [
-    "billing.*",
-    "fleet.view",
-    "reports.*",
-  ],
   read_only: [
-    "billing.view",
-    "parts.view",
+    "dashboard.view",
     "fleet.view",
     "work_orders.view",
-    "compliance.view",
-    "scheduling.view",
-    "settings.view",
     "reports.view",
   ],
 };
@@ -198,87 +221,36 @@ export type RoutePermissionRule = {
 
 export const ROUTE_PERMISSION_RULES: ReadonlyArray<RoutePermissionRule> = [
   { prefix: "/billing", permission: "billing.view" },
-  { prefix: "/sales", permission: "billing.view" },
-  { prefix: "/crm", permission: "billing.view" },
+  { prefix: "/billing/quotes", permission: "sales.view" },
+  { prefix: "/sales", permission: "sales.view" },
+  { prefix: "/crm", permission: "crm.view" },
   { prefix: "/parts", permission: "parts.view" },
   { prefix: "/fleet", permission: "fleet.view" },
   { prefix: "/work-orders", permission: "work_orders.view" },
-  { prefix: "/my-work", permission: "work_orders.view" },
+  { prefix: "/work-orders/lead", permission: "lead.view" },
+  { prefix: "/my-work", permission: "my_work.view" },
   { prefix: "/compliance", permission: "compliance.view" },
   { prefix: "/personnel", permission: "personnel.view" },
-  { prefix: "/lead", permission: "reports.view" },
+  { prefix: "/lead", permission: "lead.view" },
   { prefix: "/scheduling", permission: "scheduling.view" },
   { prefix: "/settings", permission: "settings.view" },
   { prefix: "/reports", permission: "reports.view" },
-  { prefix: "/dashboard", permission: "reports.view" },
+  { prefix: "/dashboard", permission: "dashboard.view" },
 ];
 
-export type NavSection =
-  | "dashboard"
-  | "fleet"
-  | "work-orders"
-  | "scheduling"
-  | "parts"
-  | "billing"
-  | "compliance"
-  | "findings"
-  | "personnel"
-  | "my-work"
-  | "customers"
-  | "reports"
-  | "settings";
+export type NavSection = AccessSection;
 
 export const ROLE_NAV_ACCESS: Record<MroRole, NavSection[]> = {
-  admin: [
-    "dashboard",
-    "fleet",
-    "work-orders",
-    "scheduling",
-    "parts",
-    "billing",
-    "compliance",
-    "findings",
-    "personnel",
-    "my-work",
-    "customers",
-    "reports",
-    "settings",
-  ],
-  shop_manager: [
-    "dashboard",
-    "fleet",
-    "work-orders",
-    "scheduling",
-    "parts",
-    "billing",
-    "compliance",
-    "findings",
-    "personnel",
-    "my-work",
-    "customers",
-    "reports",
-    "settings",
-  ],
-  qcm_inspector: ["dashboard", "work-orders", "compliance", "fleet", "findings"],
-  billing_manager: ["dashboard", "billing", "customers", "reports"],
-  lead_technician: ["dashboard", "my-work", "work-orders", "parts", "findings"],
-  technician: ["dashboard", "my-work", "work-orders", "parts", "findings"],
-  parts_clerk: ["dashboard", "parts", "work-orders"],
-  sales_rep: ["dashboard", "customers", "reports"],
-  sales_manager: ["dashboard", "customers", "reports"],
-  read_only: [
-    "dashboard",
-    "fleet",
-    "work-orders",
-    "scheduling",
-    "parts",
-    "billing",
-    "compliance",
-    "findings",
-    "my-work",
-    "customers",
-    "reports",
-  ],
+  admin: [...ROLE_SECTION_ACCESS.admin],
+  shop_manager: [...ROLE_SECTION_ACCESS.shop_manager],
+  qcm_inspector: [...ROLE_SECTION_ACCESS.qcm_inspector],
+  billing_manager: [...ROLE_SECTION_ACCESS.billing_manager],
+  lead_technician: [...ROLE_SECTION_ACCESS.lead_technician],
+  technician: [...ROLE_SECTION_ACCESS.technician],
+  parts_clerk: [...ROLE_SECTION_ACCESS.parts_clerk],
+  sales_rep: [...ROLE_SECTION_ACCESS.sales_rep],
+  sales_manager: [...ROLE_SECTION_ACCESS.sales_manager],
+  read_only: [...ROLE_SECTION_ACCESS.read_only],
 };
 
 export function isMroRole(value: string | null | undefined): value is MroRole {

@@ -5,6 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import { useUserRole } from "@/hooks/useUserRole";
 import type { MroRole } from "@/lib/mro-constants";
+import { hasPermission } from "@/lib/rbac";
 import { ALL_ROLES, getAllowedRolesForPath } from "@/lib/route-permissions";
 
 interface RouteGuardProps {
@@ -13,18 +14,15 @@ interface RouteGuardProps {
   children: ReactNode;
 }
 
-const PERMISSION_ROLE_MAP: Record<string, ReadonlyArray<MroRole>> = {
-  settings: ["admin"],
-  billing: ["admin", "shop_manager", "billing_manager"],
-  compliance: ["admin", "shop_manager", "qcm_inspector"],
-  scheduling: ["admin", "shop_manager", "lead_technician"],
-  personnel: ["admin", "shop_manager"],
-  parts: ["admin", "shop_manager", "parts_clerk", "lead_technician"],
-  fleet: ALL_ROLES,
-  work_orders: ALL_ROLES,
-  dashboard: ALL_ROLES,
-  reports: ["admin", "shop_manager", "billing_manager", "qcm_inspector"],
-};
+function getAllowedRolesForRequiredPermission(
+  requiredPermission: string,
+): ReadonlyArray<MroRole> | undefined {
+  const normalizedPermission = requiredPermission.includes(".")
+    ? requiredPermission
+    : `${requiredPermission}.view`;
+  const allowedRoles = ALL_ROLES.filter((role) => hasPermission(role, normalizedPermission));
+  return allowedRoles.length > 0 ? allowedRoles : undefined;
+}
 
 function LoadingState() {
   return (
@@ -50,8 +48,9 @@ export function RouteGuard({ requiredPermission, allowedRoles, children }: Route
       return allowedRoles as MroRole[];
     }
 
-    if (requiredPermission && PERMISSION_ROLE_MAP[requiredPermission]) {
-      return PERMISSION_ROLE_MAP[requiredPermission];
+    if (requiredPermission) {
+      const permissionAllowedRoles = getAllowedRolesForRequiredPermission(requiredPermission);
+      if (permissionAllowedRoles) return permissionAllowedRoles;
     }
 
     return getAllowedRolesForPath(location.pathname);
