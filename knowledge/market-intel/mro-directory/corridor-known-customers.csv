@@ -1,17 +1,18 @@
-customer_name,website,source,notes
-Atlantic Aviation,atlanticaviation.com,corridor.aero/customers,Large FBO chain; 100+ locations; Corridor enterprise customer
-Clay Lacy Aviation,claylacy.com,corridor.aero/customers,Premium business aviation operator; Van Nuys CA HQ; CA-based MRO
-Constant Aviation,constantaviation.com,corridor.aero/customers,Major MRO with 30+ locations; Cleveland OH HQ
-Cutter Aviation,cutteraviation.com,corridor.aero/customers,Southwest FBO/MRO chain; Phoenix AZ based
-Eagle Copters,eaglecopters.com,corridor.aero/customers,Helicopter MRO; Calgary Canada HQ
-ExecuJet MRO Services,execujet.com,corridor.aero/customers + case study,Global MRO; Next Gen Service Center case study with Corridor
-Gama Aviation,gamaaviation.com,corridor.aero/customers,Business aviation services; UK/US operations
-Jet Aviation,jetaviation.com,corridor.aero/customers,General Dynamics subsidiary; global FBO/MRO
-Million Air Dallas,millionairdallas.com,corridor.aero/customers + case study,"FBO chain with Corridor; case study on maintenance operations"
-OmniMX,omnimx.com,corridor.aero/customers,MRO services
-PAA (Professional Aviation Associates),gopaa.com,corridor.aero/customers,Aviation parts distributor + repair
-Stevens Aviation,stevensaviation.com,corridor.aero/customers,"Multi-location MRO; Greenville SC + Dayton OH + Centennial CO"
-West Star Aviation,weststaraviation.com,corridor.aero/customers + case study,"Major independent MRO; Grand Junction CO HQ; AI Operations Manager early adopter"
-Wheels Up,wheelsup.com,corridor.aero/customers,"Membership-based private aviation; NYSE: UP"
-ACI Jet,acijet.com,corridor.aero/case-studies,"SoCal FBO/MRO; AI Operations Manager deployment (Oct 2025)"
-WarDaddy Aviation,wardaddyaviation.com,corridor.aero/blog,"Charter + Part 145; chose CORRIDOR for growing operations"
+company_name,city,state,profile,confidence,source,notes
+Atlantic Aviation,,,National FBO chain,high,Third-party listing + AIN,Large enterprise FBO chain; not primary ERP target
+Constant Aviation,Multiple,OH,Full-service MRO,high,AIN press release,AIN explicitly named Corridor; mid-large MRO
+Eagle Copters,Calgary,AB,Helicopter MRO,high,Corridor case study,Canadian helicopter MRO; cross-border
+ExecuJet MRO Services,Multiple,,Business jet MRO,high,Corridor case study,Large enterprise; Dassault/Bombardier focus
+GAMA Aviation,Multiple,,Business aviation services,high,Corridor case study,Large enterprise; global
+Jet Aviation,Multiple,,MRO + FBO,high,Corridor case study,Very large enterprise; not a target
+PAA Professional Aircraft Accessories,Titusville,FL,Component MRO,high,Corridor case study,FL-based component specialist; interesting — smaller shop
+Wheels Up,Multiple,,Charter + MRO,high,Corridor listing,Large enterprise charter+MRO
+Chartright Air Group,Toronto,ON,Charter + MRO,high,Corridor case study,Canadian; enterprise
+Aviation Maintenance Professionals,,,MRO,high,Corridor case study,Independent; unknown size
+Central Romana Corporation,Dominican Republic,DR,Industrial/aviation,high,Corridor case study,International; not primary target
+Victory Lane Aviation,,NC,MRO,high,Corridor case study,NC-based; smaller shop; potential churn target
+WarDaddy Aviation,Peachtree City,GA,MRO,high,Corridor case study,GA-based at KFFC; possible churn target
+Airshare,Multiple,,Charter fleet,medium,Third-party listing,Fractional charter; not typical MRO prospect
+New World Aviation,,,MRO,medium,Third-party listing,Unknown details
+Fly Exclusive,,NC,Charter + MRO,medium,Third-party listing,Growing private aviation company
+Omni Air,,,Charter,medium,URL reference only,Possibly enterprise charter

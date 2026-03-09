@@ -1021,3 +1021,77 @@ All three Wave 6 workers (w6-tulsa-ok, w6-wichita-ks, w6-ny-metro) timed out mid
 - Add EBIS case study companies to master list manually (14 new entities)
 - Website quality audit for 70 shops with has_website=yes
 
+
+## Wave 9 — 2026-03-09
+**Focus:** TN Smyrna cluster + FL Miami enrichment + Corridor/EBIS competitor intelligence
+**Operator:** Autonomous (Opus orchestrator + Sonnet workers)
+
+### Actions Taken
+- Enriched 10 TN Smyrna/Nashville/Chattanooga shops (enrichment-results-tn-smyrna-w9.csv)
+- Enriched 15 FL Miami/Hialeah/Opa Locka shops (enrichment-results-fl-miami-w9.csv)
+- Built competitor customer evidence file (competitor-customer-evidence-w9.md)
+- Updated corridor-known-customers.csv: 17 new Corridor customers found
+- Updated ebis-customer-evidence.csv: 2 additional entries (MyFlight, Eagle Aviation)
+- Marked 8 master list records with confirmed_corridor status
+
+### Tennessee Cluster — Key Findings
+All 10 shops are independent SMBs with no MRO software mentions:
+
+**Top TN ERP + Website Targets:**
+- **Hollingshead Aviation Services** (KMQY Smyrna) — FBO + Part 145, ~10-30 employees, co-located with Contour Aviation at key MRO airport
+- **Tennessee Aircraft Services** (family-owned since 1974, Cirrus/Cessna specialist) — strong ERP fit for established shop
+- **Horizon Avionics** (TYS Knoxville, 30+ years, AEA member) — established avionics shop
+- **Chattanooga Aero Service** — Contact: Terry Romito (tromito@chattaero.com), 1-4 employees, small but reachable
+- **Thom Duncan Avionics** (founded 2018, actively online, owner's name known)
+
+**Excluded from targets:**
+- Contour Aviation (Corporate Flight Management Inc) — 900+ employees, enterprise airline + MRO
+- AMI Aviation Services — AeroMech Inc subsidiary, not independent
+
+### Florida Miami Cluster — Key Findings
+All 15 shops are independent SMBs:
+
+**Top FL ERP Prospects (medium-size):**
+- **Next MRO** (Miami Gardens) — landing gear specialist, 40K sq ft hangar, 5,000+ components, FAA Open-Class license → strong ERP need
+- **NAS MRO** (Hialeah) — broad component MRO (engine mounts, fan blades, wire harnesses, radomes), Boeing/Airbus/CFM fleet → medium size
+- **F&E Aircraft Maintenance** (Miami) — line maintenance at MIA + 6 airports, 201-500 employees → too large/enterprise
+
+**Top FL Website Build Prospects:**
+- **HML Aviation** (Opa Locka) — landing gear MRO, zero web presence
+- **Conosur Aviation** (Doral) — flight instrument repair, zero web presence, ~6 employees
+
+### Competitor Intelligence — Wave 9
+
+**Corridor (17 confirmed customers):**
+- Mostly enterprise: Atlantic Aviation, ExecuJet, GAMA Aviation, Jet Aviation, Wheels Up, Chartright
+- **Potential churn targets (smaller Corridor shops):** Victory Lane Aviation (NC), WarDaddy Aviation (Peachtree City GA/KFFC), PAA Professional Aircraft Accessories (Titusville FL), Aviation Maintenance Professionals (unknown)
+- NO evidence of shops churning FROM Corridor publicly
+- Constant Aviation (OH) explicitly confirmed via AIN press release
+
+**EBIS (now 21 confirmed customers):**
+- Added: MyFlight (EBIS case study), Eagle Aviation (company page listing)
+- EBIS case studies show 3 shops explicitly switching FROM unnamed prior systems → validate that Athelon's "migration from paper/spreadsheets" messaging is on target
+- EBIS self-described as better for smaller shops (Capterra) → Athelon can win mid-market
+
+### Corridor vs EBIS Intelligence Summary
+| Dimension | Corridor | EBIS/Veryon |
+|-----------|---------|-------------|
+| Confirmed customers found | 17 | 21 |
+| Typical size | Enterprise/chain | 4-30 employees |
+| Churn signal | None found publicly | Post-acquisition uncertainty |
+| Best Athelon attack | Not Corridor shops (too large) | Target EBIS shops for churn |
+| Case study availability | Sparse | Rich (14+ case studies) |
+
+### Database State After Wave 9
+- Master: 2,729 records, 16 states
+- Confirmed EBIS: 21 customers
+- Confirmed Corridor: 17 customers (mostly enterprise)
+- Corridor churn targets (smaller): Victory Lane NC, WarDaddy GA, PAA FL, AMP unknown
+- Total enrichment batches: 16 CSV files
+
+### Next Wave Focus
+- Outreach-ready final slice: Top 25 warm leads with full contact info
+- Score uplift for TN/FL enrichment records in master
+- Additional Corridor smaller-shop evidence (Victory Lane, WarDaddy — look for more)
+- WA state enrichment (Boeing Field cluster — 97 records unenriched)
+
