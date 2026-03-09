@@ -23,7 +23,8 @@ OUT_COLS = [
     "website_fit_score","website_fit_rationale",
     "erp_fit_score","erp_fit_rationale",
     "corridor_ebis_likelihood","cross_sell_score",
-    "data_source","last_updated"
+    "data_source","last_updated",
+    "is_enterprise","multi_location_group","domain_normalized"
 ]
 
 TODAY = date.today().isoformat()
@@ -169,6 +170,9 @@ def transform_faa_row(faa_row, state_code):
         "cross_sell_score": cross,
         "data_source": f"faa-facility-{state_code.lower()}",
         "last_updated": TODAY,
+        "is_enterprise": "no",
+        "multi_location_group": "",
+        "domain_normalized": "",
     })
     
     return rec

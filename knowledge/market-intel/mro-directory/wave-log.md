@@ -362,3 +362,94 @@ No direct evidence found in this wave. Shops in this batch are predominantly sma
 - Target Platinum Sky Maintenance (Fort Lauderdale) and other confirmed-EBIS shops as priority ERP outreach
 - Begin NV enrichment (Las Vegas business aviation cluster)
 
+
+---
+
+## Wave 4 — 2026-03-09 (08:30 UTC)
+
+**Focus:** 4-state expansion (TN/NV/CT/WA) + South FL deep-dive + EBIS cross-referencing + metro cluster analysis + pipeline hardening  
+**Operator:** Autonomous (Opus orchestrator + 3 Sonnet workers)
+
+### Actions Taken
+
+1. **Expanded to 4 new states** — Extracted TN (65), NV (28), CT (80), WA (97) from FAA directory. Also extracted CO (74) which was missing from raw files. Master list: 2,114 → **2,412 records across 12 states**.
+
+2. **Fixed data pipeline** — Previous waves had a schema mismatch (missing `is_enterprise`, `multi_location_group`, `domain_normalized` columns). Built `rebuild_master.py` — a single-command full rebuild of the master list from all state raw files + all enrichment results + EBIS/Corridor flags + enterprise detection. Deterministic and repeatable.
+
+3. **EBIS customer cross-referencing** — Integrated all 19 known EBIS customers into rebuild pipeline with automatic flagging. 4 EBIS customers matched to master list records by name+state. 9 Corridor customers flagged.
+
+4. **South Florida deep-dive (Sonnet worker)** — Enriched 20 shops in the densest US metro cluster:
+   - **Boca Aircraft Maintenance** — 80 employees, 2 locations (BCT + OPF), EASA cert, 24/7 AOG. Top ERP prospect.
+   - **Banyan Air Service** — 1M+ sq ft FXE complex, award-winning FBO+MRO. Large operation, possible enterprise ERP.
+   - **Platinum Sky Maintenance** — EBIS confirmed, AOG specialist, Wix-era website → website redesign + ERP churn target.
+   - **Premier Aircraft Service** — small piston MRO at FXE, good website but ERP opportunity.
+   - **Palm Beach Avionics** — 40+ years, AEA member, good site, ERP target.
+   - 7 shops with NO website: Helicraft, American Aero FTL, Air One Aviation, Avionic Specialists, Tiger Air Service, Lauderdale Aircraft Services, Executive Turbine Aviation.
+   - Jet Aviation Miami flagged as enterprise (General Dynamics subsidiary).
+
+5. **NV/TN partial enrichment** — NV/TN worker timed out but confirmed:
+   - Apex Aviation (Henderson NV): EBIS confirmed, dual-location, strong churn target
+   - Worldwide Jet Charter (Henderson NV): professional charter+MRO, medium operation
+
+6. **Metro cluster analysis** — Built `metro_clusters.py` generating detailed cluster analysis:
+   - 20 metro areas mapped with shop counts, website coverage, tier distribution
+   - Top 10 metro outreach mini-lists generated as CSV files in `metro-outreach/` directory
+   - **South Florida: 328 SMB shops** (324 no-website) — dominant cluster
+   - **LA Basin: 155 shops**, DFW: 134, Phoenix: 101, Wichita: 57, Seattle: 49
+   - 1,090 shops in non-metro areas (rural/small city targets)
+
+7. **Updated enrichment backlog** — 18 prioritized tasks for waves 5-6.
+
+### Wave 4 Data Quality Summary
+
+| Metric | Wave 3 | Wave 4 | Change |
+|--------|--------|--------|--------|
+| Total records | 2,114 | 2,412 | +298 |
+| States covered | 8 | 12 | +4 (TN, NV, CT, WA + CO fixed) |
+| SMB targets | 2,019 | 2,317 | +298 |
+| Enterprise flagged | 95 | 94 | ~same |
+| With website | 36 | 38 | +2 (FL South enrichment) |
+| Enriched profiles | 120 | 143 | +23 |
+| EBIS customers in master | 0 | 4 | +4 |
+| Corridor customers in master | 7 | 9 | +2 |
+| Metro clusters mapped | 20 | 20 | — (now with mini-lists) |
+| Metro outreach CSVs | 0 | 10 | +10 |
+
+### Key New Opportunities
+
+**South FL High-Value Targets:**
+- Boca Aircraft Maintenance — 80 employees, multi-location, EASA cert. Top ERP prospect ($$$).
+- Platinum Sky Maintenance — confirmed EBIS user, AOG specialist, website needs upgrade. Dual opportunity.
+- Premier Aircraft Service — small piston MRO at FXE Hangar 15, good ERP fit.
+- 7 no-website shops in FXE/PBI/OPF corridor — website redesign package opportunity.
+
+**EBIS Churn Intelligence:**
+- Apex Aviation (Henderson NV) confirmed on EBIS customer page + case study. Dual NV/CA locations.
+- All 19 EBIS customers now programmatically flagged in pipeline for automatic detection.
+
+**Metro Cluster Selling Strategy:**
+- South Florida road trip: 328 targets, could pitch 10-20 website packages in one visit.
+- Wichita concentrated cluster: 57 shops all reachable, all no-website — aviation heritage city.
+- Nashville emerging: 17 shops, growing business aviation market.
+
+### Scripts Created/Updated
+
+- `rebuild_master.py` — Full pipeline rebuild from raw state files + enrichment + flags (NEW)
+- `metro_clusters.py` — Metro area classification + mini-list generation (NEW)
+- `extract_state.py` — Fixed schema to include enterprise/multi-location/domain columns
+
+### Remaining Gaps
+
+- CT/WA enrichment worker timed out — no enrichment data for these states yet
+- NV/TN enrichment minimal (only 3 shops profiled from partial worker output)
+- FL South enrichment covers 20 of 328 metro shops — need many more passes
+- Houston cluster (43 shops) completely unenriched
+- Phoenix cluster (101 shops) unenriched
+- OK, NY, NC, IL states not yet extracted
+- No employee count data for unenriched shops
+- Enrichment-to-master merge rate low (~38 of 143 enriched profiles matched by cert_no or name)
+
+### Next Wave Focus
+
+- **Wave 5:** Re-run CT/WA enrichment (timed out); extract OK/NY/NC/IL states; Houston cluster enrichment (20 shops); Phoenix enrichment (20 shops); improve enrichment matching (fuzzy name matching); begin outreach template creation
+
