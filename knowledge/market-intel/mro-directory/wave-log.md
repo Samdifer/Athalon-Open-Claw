@@ -194,3 +194,118 @@ No direct evidence found in this wave. Shops in this batch are predominantly sma
 - Begin AZ enrichment (Scottsdale/Phoenix Deer Valley cluster)
 - Target Corridor customer evidence search (web scraping for software mentions)
 
+
+---
+
+## Wave 3 — 2026-03-09 (08:00 UTC)
+
+**Focus:** Multi-state expansion (CA/OH/KS) + data quality pass + EBIS customer mapping + competitive intelligence + metro cluster analysis  
+**Operator:** Autonomous (Opus orchestrator + 3 Sonnet workers)
+
+### Actions Taken
+
+1. **Merged Wave 2 enrichment** — Ran merge_enrichment.py to integrate 60 TX/FL/CO enrichment records into master list with updated scores. 28 records updated.
+
+2. **Expanded to 3 new states** — Extracted CA (520), OH (131), KS (95) from FAA directory using extract_state.py. Master list: 1,368 → 2,114 records across 8 states.
+
+3. **Data quality pass** — Created and ran dedupe_and_quality.py:
+   - Zero cert_no duplicates (extract script already handles this)
+   - Flagged 95 enterprise/OEM entities for outreach exclusion
+   - Identified 76 multi-location entity groups (195 records)
+   - Normalized state codes, zip codes, and website domains
+   - Flagged Elevate MRO as "self" (our own company)
+   - Fixed Gogo Business Aviation duplicate name normalization
+   - Recalculated confidence scores based on data completeness
+
+4. **EBIS customer evidence (Sonnet worker)** — Found 19 confirmed EBIS users via ebiscloud.com case studies and customer pages:
+   - 15 high-confidence, 3 medium, 1 low
+   - Key targets in our states: Salty Pelican (TX), Plane Place Aviation (TX), Basin Aviation (TX), Platinum Sky Maintenance (FL), My Jet DOM (GA), Midwest Corporate Air (OH), Clemens Aviation (KS), OCR Aviation (CA), Apex Aviation (NV)
+   - Most are exactly Athelon's sweet spot: 5-20 employee independent shops
+   - **These shops are in the 4-16 month Veryon acquisition churn window — prime poach targets**
+
+5. **California enrichment (Sonnet worker)** — Researched 20 CA shops:
+   - Van Nuys corridor: Thornton Aviation (multi-site medium), RTS Aircraft Services (basic site), SoCal Jets (minimal site), Clay Lacy (large/enterprise)
+   - Found mix of independent SMBs and larger operations
+   - CA has strong website redesign opportunity (many basic/outdated sites)
+
+6. **Ohio/Kansas enrichment (Sonnet worker)** — Researched 20 OH/KS shops:
+   - Ohio: Spirit Aeronautics (Columbus), Signature Engines (Cincinnati, outdated site), First Flight Aviation (Dayton, medium), CAM (Cleveland)
+   - Kansas: Tech-Aire Instruments (Wichita, very poor site), Midwest Malibu Center (poor site), Global Aviation Tech (medium, growing), Bevan Aviation (rebranded)
+   - KS/OH shops are more specialized and frequently have outdated/poor websites — strong dual opportunity
+
+7. **Competitive intelligence deep dive** — Researched Smart145, Quantum MX, Quantum Control, Total FBO:
+   - Smart145: cloud-first SMB competitor, newer, limited US presence
+   - Quantum MX: established since 2013 for GA, may lack business jet depth
+   - Key insight from Reddit: market has "limited software choices" — VP Product at Veryon himself said this
+
+8. **Metro cluster analysis** — Identified 20 metropolitan clusters for geographic selling:
+   - South Florida: 251 SMB shops (238 reachable, 247 no-website)
+   - DFW Metroplex: 124 SMB shops (122 reachable)
+   - Los Angeles Basin: 100 SMB shops (99 reachable)
+   - Phoenix Metro: 89 SMB shops
+   - Wichita: 50 SMB shops (all reachable, all no-website)
+   - Created metro-clusters.csv with priority rankings
+
+9. **Rebuilt tiered outreach lists** — Now filtering enterprise entities and self:
+   - Top 50 website targets (CO/TX heavy due to enrichment depth)
+   - Top 50 ERP targets
+   - Top 25 cross-sell opportunities
+   - 1,983 no-website priority records
+   - Created new cross-sell-top25.csv
+
+### Wave 3 Data Quality Summary
+
+| Metric | Wave 2 | Wave 3 | Change |
+|--------|--------|--------|--------|
+| Total records | 1,368 | 2,114 | +746 |
+| States covered | 5 | 8 | +3 (CA, OH, KS) |
+| SMB targets | ~1,300 | 2,019 | +719 |
+| Enterprise flagged | 79 | 95 | +16 |
+| With website | 36 | 36 | — (new states unenriched) |
+| EBIS customers identified | 0 | 19 | +19 |
+| Metro clusters mapped | 0 | 20 | +20 |
+| Enriched shop profiles | 60 | 120 | +60 |
+
+### Key New Opportunities
+
+**EBIS Churn Targets (highest priority):**
+- Salty Pelican Aviation (New Braunfels, TX) — 11 employees, Cirrus specialist
+- Plane Place Aviation (Dallas, TX) — in DFW cluster
+- Basin Aviation (Midland, TX) — West Texas
+- Platinum Sky Maintenance (Fort Lauderdale, FL) — South FL cluster
+- Midwest Corporate Air (Bellefontaine, OH) — near Dayton
+- Clemens Aviation (Benton, KS) — near Wichita cluster
+- My Jet DOM (McDonough, GA) — Atlanta metro, 6 employees
+- OCR Aviation (Long Beach, CA) — 60,000 sq ft, business aviation
+- Apex Aviation (Henderson, NV) — multi-location, turbine specialist
+
+**Website Redesign Standouts:**
+- Tech-Aire Instruments (Wichita, KS) — very outdated HTML site, FAA/EASA approved
+- Midwest Malibu Center (Hutchinson, KS) — extremely basic site, niche PA-46 specialist
+- Columbus Aero Service (Columbus, OH) — basic Wix-style, Beechcraft specialist
+- SoCal Jets (Van Nuys, CA) — minimal single-page feel
+- Signature Engines (Cincinnati, OH) — outdated, ships worldwide
+
+**Cluster Selling Hotspots:**
+- South Florida: 251 SMB shops — could sell 5-10 website packages in one metro trip
+- Wichita: 50 shops, all reachable, all no-website — aviation heritage city with outdated digital presence
+- DFW: 124 shops including Addison/McKinney specialized cluster
+
+### Scripts Created/Updated
+
+- `dedupe_and_quality.py` — Data quality normalization, enterprise flagging, multi-location tagging
+- `rebuild_tiers.py` — Tier list generator with enterprise exclusion and cross-sell output
+
+### Remaining Gaps
+
+- CA/OH/KS enrichment only covers 20 shops each from 746 new records — need more passes
+- EBIS customer list (19 found) needs cross-referencing against master list cert_nos
+- TN, NV, CT, OK, NY, WA states not yet extracted
+- Airport ICAO mapping still pending for non-CO states
+- No employee count or revenue proxy data yet
+- Tiered lists still CO/TX heavy because enrichment depth there is higher
+
+### Next Wave Focus
+
+- **Wave 4:** Cross-reference EBIS customers into master list with special flags; extract TN/NV/CT states; run 2nd enrichment pass on FL (top 20 Opa Locka/FLL) and CA (next 20 Van Nuys/Burbank); begin airport ICAO mapping for new states; geographic cluster-specific mini-lists for outreach
+

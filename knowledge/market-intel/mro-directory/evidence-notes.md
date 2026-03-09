@@ -269,3 +269,59 @@ Ranked by: repair station density × private jet activity × competitive gap × 
 
 20. **CORRIDOR AI Operations Manager / West Star (Oct 2025)**  
     https://www.corridor.aero/corridor-launches-ai-operations-manager-with-west-star-aviation/
+
+---
+
+## Wave 3 — 2026-03-09 (08:00 UTC)
+
+### Competitive Landscape Update
+
+**Smart145** (smart145.com)
+- Cloud-based, all-in-one MRO ERP for repair stations and parts suppliers
+- Designed for SMB Part 145 shops — directly competes with Athelon
+- Accessible from any device, SaaS model
+- Listed on Capterra and Smyte review sites
+- Key selling point: "no desk needed" mobility; lower cost than on-premise
+- **Threat level:** Medium — positioned similarly to Athelon but appears smaller/newer
+
+**Quantum MX** (quantum-mx.com)  
+- From FLY Online Tools; focused on general aviation maintenance
+- Trusted since 2013 — established player
+- Designed specifically for "MRO facility, A&P shop, and Part 145 repair station"
+- Mentioned on Reddit by actual repair station users
+- Subscription-based
+- **Threat level:** Medium — established in GA segment, may not scale to business jet MROs
+
+**Quantum Control** (componentcontrol.com)
+- Different product from Quantum MX — enterprise-grade ERP
+- Top-selling for "Aircraft MRO, Parts Distribution, Manufacturing and Logistics"
+- Includes StockMarket.aero parts listing integration
+- **Threat level:** Low for SMB targets — focused on larger operations
+
+**Total FBO (TFBO)**
+- Mentioned on Reddit as Part 145 software option
+- Tracks parts, work orders, billings
+- FBO-centric — good for combined FBO + repair station operations
+- **Threat level:** Low-medium — niche FBO market
+
+**Veryon/EBIS Update (16 months post-acquisition)**
+- Acquisition closed Nov 3, 2025
+- Veryon positioning EBIS as complementary to Veryon Tracking
+- Integration with GSE (Ground Support Equipment) software
+- "MROs have limited software choices today" — SVP Product Kris Volrath
+- Expected migration/integration disruption period: now in months 4-16 (peak churn window)
+- EBIS + Veryon Tracking integration may lock in some customers but alienate others who prefer standalone
+
+### Competitive Summary for Athelon Positioning
+
+| Competitor | Target Market | Pricing Model | Key Weakness (Athelon Advantage) |
+|-----------|--------------|---------------|------|
+| Corridor/CAMP | Enterprise chains (500+ customers) | Enterprise licensing | Overkill for small independents |
+| Veryon/EBIS | Mid-to-large MROs | Subscription + migration | Post-acquisition disruption; forced bundling |
+| Smart145 | SMB repair stations | SaaS | Newer, less proven; limited US presence |
+| Quantum MX | GA maintenance shops | Subscription | GA-focused; may lack business jet depth |
+| Quantum Control | Large MRO/Distribution | Enterprise | Too complex for small shops |
+| Total FBO | FBO + repair stations | Subscription | FBO-centric; limited pure 145 features |
+
+**Athelon's sweet spot:** Independent Part 145 shops with 5-50 employees doing business jet/turboprop maintenance. Too small for Corridor, too sophisticated for spreadsheets, and currently experiencing EBIS uncertainty.
+

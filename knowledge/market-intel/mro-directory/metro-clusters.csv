@@ -1,0 +1,21 @@
+metro_area,total_smb,reachable,no_website,pct_no_website,outreach_priority
+Atlanta Metro,32,31,32,100%,high
+Cincinnati/NKY,12,12,12,100%,medium
+Columbus OH,8,8,8,100%,low
+DFW Metroplex,124,122,117,94%,high
+Dayton OH,9,9,9,100%,low
+Denver/Front Range,40,27,29,72%,high
+Ft Lauderdale/Palm Beach,53,52,52,98%,high
+Houston Metro,35,34,35,100%,high
+Jacksonville,14,14,14,100%,medium
+Los Angeles Basin,100,99,100,100%,high
+Orlando Metro,29,28,29,100%,high
+Phoenix Metro,88,86,88,100%,high
+Sacramento,9,9,9,100%,low
+San Antonio,24,24,24,100%,high
+San Diego,26,26,26,100%,high
+San Francisco Bay,18,18,18,100%,medium
+South Florida (Miami/Doral/Hialeah),251,238,247,98%,high
+Tampa Bay,14,14,14,100%,medium
+Tucson,22,22,22,100%,high
+Wichita,50,50,50,100%,high
