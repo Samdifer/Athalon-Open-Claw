@@ -28,6 +28,78 @@
 - **Tier B** (good but needs QA): 31 records with partial contact
 - **Tier C** (needs research): 28 records with no contact channels
 
+---
+
+## Wave 2 — 2026-03-09 (07:30 UTC)
+
+**Focus:** Multi-state expansion + web enrichment + competitive intelligence  
+**Operator:** Autonomous (Opus orchestrator + 3 Sonnet workers)
+
+### Actions Taken
+
+1. **National FAA directory extraction** — Leveraged existing full FAA facility download (5,038 records across all states) to extract Part 145 records for TX (396), FL (641), AZ (162), GA (123). Master list expanded from 71 → 1,393 records.
+
+2. **Generalized pipeline script** — Created `extract_state.py` that can pull any state from FAA data, apply scoring heuristics, and merge into master list. Reproducible for future state expansion.
+
+3. **Web enrichment (3 concurrent Sonnet workers):**
+   - **TX worker:** Researched top 20 TX shops — found websites for 15/20 (75% discovery rate). Notable finds: L2 Aviation (medium, professional site), Aerobrigham (large, 60k sqft helicopter MRO), Excel Aviation (Dassault/Bombardier service center).
+   - **FL worker:** Researched top 20 FL shops — found websites for 6/20 (30% discovery rate). Florida has many more micro-operations without web presence. Notable: Kaman Aerospace (large defense MRO), AMETEK/Avtech (professional component MRO), AVI NDT (strong NDT specialist).
+   - **CO worker:** Researching 20 priority CO shops (pending at wave close)
+
+4. **Corridor customer flagging** — Identified 18 known Corridor customer locations in our database from verified public data (corridor.aero/customers page + case studies). Flagged as `corridor-verified` in master list. Key finding: Corridor has 16 named customers including West Star Aviation (CO), Stevens Aviation (CO/GA), Cutter Aviation (CO/TX/AZ), Million Air (TX).
+
+5. **Competitive intelligence update:**
+   - Confirmed Veryon acquired EBIS from Tronair (Nov 3, 2025) — creates 12-24 month churn window
+   - Corridor launched AI Operations Manager (Oct 2025) with West Star Aviation and ACI Jet
+   - Identified Smart145 and QuantumMX as additional competitors in SMB MRO software
+   - CORRIDOR is a CAMP Systems product line (part of Hearst)
+
+6. **Enterprise exclusion analysis** — Identified 79 OEM/enterprise entities (Boeing, Airbus, GE, P&W, etc.) that should be excluded from SMB outreach. Remaining SMB target universe: 1,314 shops.
+
+7. **Enrichment merge + rescore** — Merged TX and FL enrichment data back into master list with updated website-fit and ERP-fit scores based on discovered profile data. 25 records enriched with new scoring.
+
+8. **Updated enrichment backlog** — 15 prioritized tasks for waves 3-5 including EBIS customer mapping, CAMP Systems usage mapping, and CA/TN/NV expansion.
+
+### Data Quality
+
+- **Source:** FAA facility download (all US) + web search enrichment
+- **Geographic scope:** CO (71) + TX (396) + FL (641) + AZ (162) + GA (123) = **5 states**
+- **Total records:** 1,393 Part 145 repair stations
+- **Tier A** (phone + email): 1,210 records (86.9%)
+- **Tier B** (partial contact): 127 records (9.1%)
+- **Tier C** (needs research): 56 records (4.0%)
+- **With website:** 32 records (2.3% — enrichment ongoing)
+- **Corridor-verified:** 18 records flagged
+- **Enterprise/OEM excluded:** 79 records identified
+
+### Key Findings
+
+- **Website redesign opportunity is massive:** 1,361 of 1,393 shops have no known website. Even after enrichment, ~95% need web presence help.
+- **Florida is the densest market** (641 shops) but has many micro-operations — need to tier by reachability.
+- **Texas has the highest website discovery rate** (75%) — these are more established, web-accessible businesses. Strong website redesign market.
+- **Top TX website targets:** Thrust Avionics (Addison, no site), San Antonio Avionics (no site), Galaxy Aviation (Frisco, no site), Hill Country Helicopters (no site)
+- **Top ERP targets:** Aerobrigham (TX, large helicopter MRO), Excel Aviation (TX, Dassault/Bombardier center), L2 Aviation (TX, medium avionics), US Aviation Group (TX, FBO + Part 145)
+- **Cross-sell hotspots:** DFW Metroplex (Addison, McKinney, Roanoke cluster), South Florida (Miami/Doral/Miramar cluster)
+
+### Scripts Created/Updated
+
+- `simulation/athelon/scripts/market-intel/extract_state.py` — State extraction + scoring + master merge
+- `simulation/athelon/scripts/market-intel/update_corridor_flags.py` — Flag known Corridor customers
+- `simulation/athelon/scripts/market-intel/merge_enrichment.py` — Merge web discovery enrichment into master
+
+### Remaining Gaps
+
+- CO worker enrichment still pending (will auto-merge when complete)
+- Only 60 of 1,393 records have web-enriched profiles (need many more enrichment passes)
+- No EBIS customer mapping yet (Wave 3 priority)
+- No airport ICAO mapping for new states (Wave 3)
+- CA, TN, NV, KS, WA, OH not yet extracted (Waves 3-5)
+- CAMP Systems usage data not mapped (critical for competitive positioning)
+
+### Next Wave Focus
+
+- **Wave 3:** Merge CO enrichment results + run enrichment on AZ/GA top targets + begin EBIS customer identification + airport ICAO mapping + extract CA/TN/NV states
+
 ### Key Gaps Identified
 
 - Colorado-only — need national expansion
