@@ -669,3 +669,43 @@ No direct evidence found in this wave. Shops in this batch are predominantly sma
 
 ### Next Wave Focus
 - **Wave 7:** Merge Tulsa/NY/Wichita enrichment; extract AL/NE/ID states for EBIS customer matching; FL 2nd enrichment pass (next 20 Opa Locka shops); begin outreach template drafting; CAMP Systems mapping; job posting analysis for growth signals
+
+## Wave 5 — 2026-03-09
+**Focus:** Phoenix metro deep-dive (20 shops)
+**Operator:** Autonomous (Opus orchestrator + Sonnet workers)
+
+### Actions Taken
+- Enriched 20 Phoenix metro Part 145 shops across KSDL/KDVT/KFFZ/KCHD/KGYR
+- Saved enrichment-results-az-phoenix.csv (21 rows)
+
+### Notable Finds
+- **Executive Aircraft Maintenance (Scottsdale)** — wfs=85, no website, medium shop, Class III Part 145. Top Phoenix website build prospect.
+- **KBM Aviation (Goodyear)** — wfs=80, no website. 
+- **Heliponents (Falcon Field/Mesa)** — erp=70, component specialist, established shop.
+- **SawyerMX (Scottsdale, KSDL)** — erp=65, general-mro at busiest bizav airport in US, Sawyer Aviation Group affiliate.
+- **Air Transport Components (Gilbert)** — wfs=75 (no website), erp=65, component specialist.
+- **Jet MX (Goodyear, KGYR)** — erp=65, well-maintained site, medium general-mro.
+- Zero software mentions found publicly across all 20 shops — typical SMB profile.
+
+---
+
+## Wave 6 — 2026-03-09
+**Focus:** Tulsa/OK, Wichita/KS, NY Metro enrichment
+**Status: BLOCKED — all 3 workers timed out before writing CSV output**
+
+### Blocker
+All three Wave 6 workers (w6-tulsa-ok, w6-wichita-ks, w6-ny-metro) timed out mid-research before writing their enrichment CSVs. This is a recurring pattern when workers do extensive web searching before writing output.
+
+**Mitigation applied:** 
+- state-ok-raw.csv preserved (126 OK shops from FAA bulk data with default scoring)
+- Future worker instructions must write CSV first with placeholder data, then enrich in-place
+
+### Partial Win
+- OK raw data: 126 Part 145 stations in Oklahoma with contact data and default scores now in mro-directory
+- Tulsa (KTUL) and Oklahoma City (KOKC) are confirmed high-density MRO clusters from prior research
+
+### Next Wave Fix
+- Workers will write skeleton CSV immediately, then fill in enrichment
+- Consider shorter-scope tasks (10 shops max per worker) to avoid timeout
+- Wichita, NY Metro, Tulsa remain on enrichment backlog
+
