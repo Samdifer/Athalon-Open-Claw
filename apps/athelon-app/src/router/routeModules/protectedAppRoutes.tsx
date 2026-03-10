@@ -219,8 +219,6 @@ export function protectedAppRoutes() {
   return (
     <Route key="app" element={<ProtectedRoute />}>
       <Route element={<ProtectedAppContext />}>
-        <Route path="/onboarding" element={<OnboardingPage />} />
-
         <Route element={<OnboardingGate />}>
           <Route
             element={(
@@ -396,6 +394,8 @@ export function protectedAppRoutes() {
             />
             <Route path="/settings/capabilities" element={<CapabilitiesListPage />} />
             <Route path="/settings/adsb" element={<AdsbSettingsPage />} />
+            <Route path="/settings/new-organization" element={<OnboardingPage />} />
+            <Route path="/onboarding" element={<OnboardingPage />} />
             <Route path="/not-found" element={<AppNotFoundPage />} />
 
             <Route path="*" element={<AppNotFoundPage />} />

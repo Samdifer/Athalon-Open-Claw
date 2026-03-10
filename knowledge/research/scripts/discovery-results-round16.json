@@ -1,0 +1,23 @@
+[
+  {
+    "entityId": "7SJA",
+    "dataset": "part135",
+    "website": "https://www.swiftaircraftmanagement.com",
+    "confidence": "high",
+    "source": "Swift Aircraft Management official site is swiftaircraftmanagement.com"
+  },
+  {
+    "entityId": "XSFA",
+    "dataset": "part135",
+    "website": "https://www.safarihelicopters.com",
+    "confidence": "medium",
+    "source": "Current operator listings identify Safari Aviation website as safarihelicopters.com"
+  },
+  {
+    "entityId": "V9SA",
+    "dataset": "part135",
+    "website": "https://www.scottairllc.com",
+    "confidence": "high",
+    "source": "Scott Air official site is scottairllc.com"
+  }
+]

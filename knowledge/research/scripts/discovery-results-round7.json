@@ -1,0 +1,79 @@
+[
+  {
+    "entityId": "QZJA",
+    "dataset": "part135",
+    "website": "https://axisjet.com",
+    "confidence": "high",
+    "source": "Axis Jet brochure states charter flights are operated by Eldorado Air LLC (QZJA305L); current public site is axisjet.com"
+  },
+  {
+    "entityId": "TY2A",
+    "dataset": "part135",
+    "website": "https://www.firstavgroup.com",
+    "confidence": "high",
+    "source": "First AV Group official site lists FAA certified air carrier certificate TY2A148K"
+  },
+  {
+    "entityId": "2FLA",
+    "dataset": "part135",
+    "website": "https://www.flaviation.com",
+    "confidence": "high",
+    "source": "FL Aviation official site identifies the operator as FL Aviation Corp"
+  },
+  {
+    "entityId": "2FPA",
+    "dataset": "part135",
+    "website": "https://www.flagshipprivateair.com",
+    "confidence": "high",
+    "source": "Flagship Private Air official site is flagshipprivateair.com"
+  },
+  {
+    "entityId": "FL1A",
+    "dataset": "part135",
+    "website": "https://www.flightlevelservices.com",
+    "confidence": "high",
+    "source": "Flight Level Services official site is flightlevelservices.com"
+  },
+  {
+    "entityId": "3SVA",
+    "dataset": "part135",
+    "website": "https://securityaviation.biz",
+    "confidence": "high",
+    "source": "Security Aviation site and JSfirm identify Fly 4 You Inc DBA Security Aviation; current site is securityaviation.biz"
+  },
+  {
+    "entityId": "F27A",
+    "dataset": "part135",
+    "website": "https://www.flyjetaccess.com",
+    "confidence": "high",
+    "source": "MapQuest listing identifies First Wing Management LLC website as flyjetaccess.com"
+  },
+  {
+    "entityId": "7LCA",
+    "dataset": "part135",
+    "website": "https://www.fliteaccess.com",
+    "confidence": "high",
+    "source": "Pilot Career Center and multiple current directory listings identify FliteAccess LLC website as fliteaccess.com"
+  },
+  {
+    "entityId": "ZC6A",
+    "dataset": "part135",
+    "website": "https://airfuga.com",
+    "confidence": "high",
+    "source": "Fuga Inc official site is airfuga.com"
+  },
+  {
+    "entityId": "1GMA",
+    "dataset": "part135",
+    "website": "https://helijetusa.com",
+    "confidence": "high",
+    "source": "HeliJet Solutions contact page states Global Jet Management Inc DBA HeliJet Solutions operates under certificate 1GMA067M"
+  },
+  {
+    "entityId": "W30A",
+    "dataset": "part135",
+    "website": "https://globaljetcare.com",
+    "confidence": "high",
+    "source": "Current company listings and operator profiles identify Global Jetcare Inc website as globaljetcare.com"
+  }
+]

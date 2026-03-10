@@ -4938,6 +4938,31 @@ export default defineSchema({
     .index("by_technician", ["technicianId"])
     .index("by_org", ["organizationId"]),
 
+  // ─── Task Assignment Dependencies ──────────────────────────────────────────
+  // Links between task assignments within a work order to enforce sequencing.
+  // Supports all four standard Gantt dependency types (FS/SS/FF/SF).
+  // Used by the WO Execution Gantt for dependency arrow rendering and
+  // scheduling constraint enforcement.
+  // ──────────────────────────────────────────────────────────────────────────
+  taskAssignmentDependencies: defineTable({
+    workOrderId: v.id("workOrders"),
+    organizationId: v.string(),
+    predecessorId: v.id("taskAssignments"),
+    successorId: v.id("taskAssignments"),
+    type: v.union(
+      v.literal("FS"), // Finish-to-Start (default, most common)
+      v.literal("SS"), // Start-to-Start
+      v.literal("FF"), // Finish-to-Finish
+      v.literal("SF"), // Start-to-Finish (rare)
+    ),
+    lagMinutes: v.optional(v.number()), // delay between linked tasks (negative = lead)
+    createdAt: v.number(),
+  })
+    .index("by_workOrder", ["workOrderId"])
+    .index("by_org", ["organizationId", "workOrderId"])
+    .index("by_predecessor", ["predecessorId"])
+    .index("by_successor", ["successorId"]),
+
   // ═══════════════════════════════════════════════════════════════════════════
   // LOTS / BATCH TRACKING  (Inventory System v10)
   //
@@ -5917,4 +5942,20 @@ export default defineSchema({
     .index("by_task_card", ["taskCardId", "createdAt"])
     .index("by_task_card_step", ["taskCardStepId", "createdAt"])
     .index("by_work_order", ["workOrderId", "createdAt"]),
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // PROSPECT NOTES
+  // Chronological activity/notes log per prospect. Append-only.
+  // ═══════════════════════════════════════════════════════════════════════════
+  prospectNotes: defineTable({
+    prospectEntityId: v.string(),
+    organizationId: v.id("organizations"),
+    campaignKey: v.string(),
+    content: v.string(),
+    createdByUserId: v.optional(v.string()),
+    createdByName: v.optional(v.string()),
+    createdAt: v.number(),
+  })
+    .index("by_prospect", ["prospectEntityId"])
+    .index("by_org_prospect", ["organizationId", "prospectEntityId"]),
 });

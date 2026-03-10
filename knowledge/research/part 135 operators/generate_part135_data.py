@@ -193,6 +193,7 @@ def build_records(operators):
             "hasTurbine": has_turbine,
             "cfrBasis": sorted(op["cfrBasis"]),
             "outreachTier": assign_outreach_tier(fleet_size, has_turbine),
+            "website": None,
         })
 
     return records
@@ -280,6 +281,7 @@ def emit_typescript(records, pack_meta):
     lines.append('  hasTurbine: boolean;')
     lines.append('  cfrBasis: string[];')
     lines.append('  outreachTier: "A" | "B" | "C";')
+    lines.append('  website: string | null;')
     lines.append("};")
     lines.append("")
 

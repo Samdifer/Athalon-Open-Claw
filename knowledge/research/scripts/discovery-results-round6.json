@@ -1,0 +1,100 @@
+[
+  {
+    "entityId": "UMZA",
+    "dataset": "part135",
+    "website": "https://airmadura.com",
+    "confidence": "medium",
+    "source": "Public operator listings identify Air Madura LLC website as airmadura.com"
+  },
+  {
+    "entityId": "XGKA",
+    "dataset": "part135",
+    "website": "https://www.alpineflyers.com",
+    "confidence": "high",
+    "source": "Alpine Aviation official site is alpineflyers.com"
+  },
+  {
+    "entityId": "YJVA",
+    "dataset": "part135",
+    "website": "https://cameraworkinc.com",
+    "confidence": "high",
+    "source": "Camera Work Inc official site is cameraworkinc.com"
+  },
+  {
+    "entityId": "5CLA",
+    "dataset": "part135",
+    "website": "https://flycoastalair.com",
+    "confidence": "high",
+    "source": "Coastal Air official site is flycoastalair.com"
+  },
+  {
+    "entityId": "E2HA",
+    "dataset": "part135",
+    "website": "https://www.executiveair.net",
+    "confidence": "high",
+    "source": "Executive Aviation Corporation public listings identify executiveair.net as the company website"
+  },
+  {
+    "entityId": "1X3A",
+    "dataset": "part135",
+    "website": "https://expressjetcharter.com",
+    "confidence": "high",
+    "source": "Express Aviation Charter Management official site is expressjetcharter.com"
+  },
+  {
+    "entityId": "P7EA",
+    "dataset": "part135",
+    "website": "https://flyeagleair.net",
+    "confidence": "high",
+    "source": "Eagle Air official site is flyeagleair.net"
+  },
+  {
+    "entityId": "EFVA",
+    "dataset": "part135",
+    "website": "https://www.ecfs.aero",
+    "confidence": "high",
+    "source": "East Coast Flight Services official site is ecfs.aero"
+  },
+  {
+    "entityId": "5EWA",
+    "dataset": "part135",
+    "website": "https://eastwesthelicopter.com",
+    "confidence": "high",
+    "source": "East West Helicopter official site is eastwesthelicopter.com"
+  },
+  {
+    "entityId": "AOBA",
+    "dataset": "part135",
+    "website": "https://eastwayaviation.net",
+    "confidence": "high",
+    "source": "Eastway Aviation official site is eastwayaviation.net"
+  },
+  {
+    "entityId": "IF1A",
+    "dataset": "part135",
+    "website": "https://elitejets.com",
+    "confidence": "high",
+    "source": "Elite Jets Charter official site is elitejets.com"
+  },
+  {
+    "entityId": "STZA",
+    "dataset": "part135",
+    "website": "https://www.fsairservice.com",
+    "confidence": "high",
+    "source": "F S Air Service official site is fsairservice.com"
+  },
+  {
+    "entityId": "4AZA",
+    "dataset": "part135",
+    "website": "https://www.fenixaircharter.com",
+    "confidence": "high",
+    "source": "Fenix Air Charter official site is fenixaircharter.com"
+  },
+  {
+    "entityId": "FAVA",
+    "dataset": "part135",
+    "website": "https://www.firmfoundationaviation.com",
+    "confidence": "high",
+    "source": "Firm Foundation Aviation official site is firmfoundationaviation.com"
+  }
+]

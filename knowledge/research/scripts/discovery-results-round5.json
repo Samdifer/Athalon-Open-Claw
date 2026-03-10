@@ -1,0 +1,128 @@
+[
+  {
+    "entityId": "A2BA",
+    "dataset": "part135",
+    "website": "https://www.abflightservices.com",
+    "confidence": "high",
+    "source": "A B Flight Services official site is abflightservices.com"
+  },
+  {
+    "entityId": "3KPC",
+    "dataset": "part135",
+    "website": "https://www.helicoptercharteralaska.com",
+    "confidence": "high",
+    "source": "Advanced Placement Aviation official site is helicoptercharteralaska.com"
+  },
+  {
+    "entityId": "O09A",
+    "dataset": "part135",
+    "website": "https://www.flyaqs.com",
+    "confidence": "high",
+    "source": "Aerocapital Flight Services operates under AirQuest; official site is flyaqs.com"
+  },
+  {
+    "entityId": "8ALA",
+    "dataset": "part135",
+    "website": "https://www.airliftinternationalinc.com",
+    "confidence": "high",
+    "source": "Air Lift International official site is airliftinternationalinc.com"
+  },
+  {
+    "entityId": "N3BA",
+    "dataset": "part135",
+    "website": "https://aerocharter.com",
+    "confidence": "high",
+    "source": "Aero Charter and Transport official site is aerocharter.com"
+  },
+  {
+    "entityId": "L16A",
+    "dataset": "part135",
+    "website": "https://www.carisairservices.com",
+    "confidence": "high",
+    "source": "Caris Air Services official site is carisairservices.com"
+  },
+  {
+    "entityId": "XCGA",
+    "dataset": "part135",
+    "website": "https://corpair.com",
+    "confidence": "high",
+    "source": "Corporate Air LLC official site is corpair.com"
+  },
+  {
+    "entityId": "C0LA",
+    "dataset": "part135",
+    "website": "https://www.catreno.com",
+    "confidence": "high",
+    "source": "Corporate Air Travel official site is catreno.com"
+  },
+  {
+    "entityId": "8DCA",
+    "dataset": "part135",
+    "website": "https://dctair.com",
+    "confidence": "high",
+    "source": "DCT Air official site is dctair.com"
+  },
+  {
+    "entityId": "4DKA",
+    "dataset": "part135",
+    "website": "https://www.dakotarotors.com",
+    "confidence": "high",
+    "source": "Dakota Rotors official site is dakotarotors.com"
+  },
+  {
+    "entityId": "DV7A",
+    "dataset": "part135",
+    "website": "https://www.davisair.com",
+    "confidence": "high",
+    "source": "DavisAir official site is davisair.com"
+  },
+  {
+    "entityId": "8DOC",
+    "dataset": "part135",
+    "website": "https://deckloadaviation.com",
+    "confidence": "high",
+    "source": "Deckload Aviation official site is deckloadaviation.com"
+  },
+  {
+    "entityId": "ODAA",
+    "dataset": "part135",
+    "website": "https://www.flydominion.com",
+    "confidence": "high",
+    "source": "Dominion Aviation Services official site is flydominion.com"
+  },
+  {
+    "entityId": "1EAA",
+    "dataset": "part135",
+    "website": "https://www.easternairexpress.com",
+    "confidence": "high",
+    "source": "Eastern Air Express official site is easternairexpress.com"
+  },
+  {
+    "entityId": "1EMA",
+    "dataset": "part135",
+    "website": "https://elitemedair.com",
+    "confidence": "high",
+    "source": "Elite Medical Air Transport official site is elitemedair.com"
+  },
+  {
+    "entityId": "GFVA",
+    "dataset": "part135",
+    "website": "https://www.empireair.net",
+    "confidence": "high",
+    "source": "EmpireAir official site is empireair.net"
+  },
+  {
+    "entityId": "EHYA",
+    "dataset": "part135",
+    "website": "https://englishairservice.com",
+    "confidence": "high",
+    "source": "English Air Service official site is englishairservice.com"
+  },
+  {
+    "entityId": "EVXA",
+    "dataset": "part135",
+    "website": "https://executiveair.net",
+    "confidence": "high",
+    "source": "Executive Air Services official site is executiveair.net"
+  }
+]

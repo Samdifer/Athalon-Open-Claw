@@ -18,6 +18,12 @@ export type Part135OperatorRecord = {
   hasTurbine: boolean;
   cfrBasis: string[];
   outreachTier: "A" | "B" | "C";
+  website: string | null;
+  // Enrichment fields (populated for Denver FSDO operators)
+  city?: string | null;
+  state?: string | null;
+  phone?: string | null;
+  email?: string | null;
 };
 
 export const part135Operators: Part135OperatorRecord[] = 
@@ -43,7 +49,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.247jet.com"
   },
   {
     "entityId": "26NA",
@@ -66,7 +73,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://skystreamjet.com"
   },
   {
     "entityId": "DDDA",
@@ -87,7 +95,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "SKOC",
@@ -108,7 +117,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "FMAA",
@@ -148,7 +158,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://40-mileair.com"
   },
   {
     "entityId": "5S9A",
@@ -174,7 +185,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://5starhelicoptertours.com"
   },
   {
     "entityId": "LDUA",
@@ -195,7 +207,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "5KTA",
@@ -216,7 +229,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "A2BA",
@@ -238,7 +252,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.abflightservices.com"
   },
   {
     "entityId": "APUA",
@@ -271,7 +286,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://aphelicopters.com"
   },
   {
     "entityId": "JKNA",
@@ -292,7 +308,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "FAUA",
@@ -331,7 +348,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.aokjets.com"
   },
   {
     "entityId": "CXVA",
@@ -355,7 +373,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.logan.org/services/emergency-services/a-l-e-r-t-program/"
   },
   {
     "entityId": "B5ZA",
@@ -384,7 +403,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.abjets.com"
   },
   {
     "entityId": "8HUA",
@@ -405,7 +425,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "I5VA",
@@ -437,7 +458,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://acaviation.net"
   },
   {
     "entityId": "6KDA",
@@ -466,7 +488,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.acadianseaplanes.com"
   },
   {
     "entityId": "1N1A",
@@ -487,7 +510,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "8ACA",
@@ -512,7 +536,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://accentairways.com"
   },
   {
     "entityId": "V6NA",
@@ -546,7 +571,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.hopajetworldwide.com"
   },
   {
     "entityId": "7ATA",
@@ -571,7 +597,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "http://www.atscharter.com"
   },
   {
     "entityId": "KCKA",
@@ -592,7 +619,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "1JCA",
@@ -624,7 +652,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.phenixjet.com"
   },
   {
     "entityId": "I5JA",
@@ -659,7 +688,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://trinityjet.com"
   },
   {
     "entityId": "X5EA",
@@ -684,7 +714,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.myelitejet.com"
   },
   {
     "entityId": "19AA",
@@ -728,7 +759,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://flyadvancedair.com"
   },
   {
     "entityId": "3KPC",
@@ -755,7 +787,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.helicoptercharteralaska.com"
   },
   {
     "entityId": "AA3A",
@@ -776,7 +809,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "AERA",
@@ -797,7 +831,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "5V4A",
@@ -818,7 +853,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "3N3A",
@@ -839,7 +875,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "QRKA",
@@ -860,7 +897,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "Q6JA",
@@ -881,7 +919,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "4U8A",
@@ -904,7 +943,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "WY1A",
@@ -942,7 +982,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://flyadvanced.com"
   },
   {
     "entityId": "GKDA",
@@ -963,7 +1004,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "O3TA",
@@ -991,7 +1033,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://aerotechservices.com"
   },
   {
     "entityId": "O09A",
@@ -1015,7 +1058,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.flyaqs.com"
   },
   {
     "entityId": "AHPA",
@@ -1036,7 +1080,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "F09A",
@@ -1059,7 +1104,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.aeromedevac.com"
   },
   {
     "entityId": "SAOA",
@@ -1084,7 +1130,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://aeryaviation.com"
   },
   {
     "entityId": "OXKA",
@@ -1108,7 +1155,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "X2RA",
@@ -1129,7 +1177,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "WD6A",
@@ -1150,7 +1199,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "DATA",
@@ -1203,7 +1253,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.aircargocarriers.com"
   },
   {
     "entityId": "8ALA",
@@ -1226,7 +1277,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.airliftinternationalinc.com"
   },
   {
     "entityId": "2MZC",
@@ -1247,7 +1299,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "UMZA",
@@ -1269,7 +1322,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://airmadura.com"
   },
   {
     "entityId": "XMEA",
@@ -1294,7 +1348,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://airmed.us"
   },
   {
     "entityId": "8AMA",
@@ -1315,7 +1370,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "5NEA",
@@ -1340,7 +1396,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://airnewengland.com"
   },
   {
     "entityId": "Q94A",
@@ -1362,7 +1419,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "24RA",
@@ -1387,7 +1445,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "Y4KA",
@@ -1415,7 +1474,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://airstat.net"
   },
   {
     "entityId": "Y5TA",
@@ -1440,7 +1500,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://flyairtransit.com"
   },
   {
     "entityId": "1E5A",
@@ -1461,7 +1522,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "1R4A",
@@ -1484,7 +1546,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.airaaviation.com"
   },
   {
     "entityId": "4KFA",
@@ -1505,7 +1568,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "70RA",
@@ -1526,7 +1590,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "3AGC",
@@ -1547,7 +1612,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "9WCA",
@@ -1577,7 +1643,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.airchartersworldwide.com"
   },
   {
     "entityId": "A59A",
@@ -1604,7 +1671,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://aircraftcharterservices.com"
   },
   {
     "entityId": "3CMA",
@@ -1643,7 +1711,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://aircraftmgt.com"
   },
   {
     "entityId": "AMSA",
@@ -1664,7 +1733,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "6BBA",
@@ -1685,7 +1755,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "MDGA",
@@ -1718,7 +1789,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.airmed.com"
   },
   {
     "entityId": "6R1A",
@@ -1741,7 +1813,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.aironehelicopters.com"
   },
   {
     "entityId": "3A1A",
@@ -1764,7 +1837,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.airresourcegroup.com"
   },
   {
     "entityId": "YHAA",
@@ -1794,7 +1868,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.airportsint.com"
   },
   {
     "entityId": "71AA",
@@ -1821,7 +1896,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.alanteair.com"
   },
   {
     "entityId": "JSFA",
@@ -1842,7 +1918,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "5H2C",
@@ -1863,7 +1940,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "YADA",
@@ -1904,7 +1982,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.aceaircargo.com"
   },
   {
     "entityId": "4FEA",
@@ -1925,7 +2004,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "LS4C",
@@ -1946,7 +2026,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "K1IC",
@@ -1969,7 +2050,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "1XLA",
@@ -1992,7 +2074,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "K3OC",
@@ -2013,7 +2096,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "2TWC",
@@ -2034,7 +2118,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "META",
@@ -2061,7 +2146,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://alaskaskyways.com"
   },
   {
     "entityId": "4U5C",
@@ -2084,7 +2170,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "392C",
@@ -2105,7 +2192,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "BENA",
@@ -2126,7 +2214,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "2ZGA",
@@ -2148,7 +2237,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "6LLA",
@@ -2171,7 +2261,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.alliantaviation.com"
   },
   {
     "entityId": "MKLA",
@@ -2194,7 +2285,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "1LHA",
@@ -2215,7 +2307,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "2BBC",
@@ -2236,7 +2329,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "6A4A",
@@ -2257,7 +2351,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "4ZDA",
@@ -2296,7 +2391,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.flyalphaair.com"
   },
   {
     "entityId": "YDAA",
@@ -2337,7 +2433,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://alpineairalaska.com"
   },
   {
     "entityId": "3AVA",
@@ -2360,7 +2457,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "4MZA",
@@ -2404,7 +2502,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.amazon.com"
   },
   {
     "entityId": "ABDA",
@@ -2425,7 +2524,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "6A9A",
@@ -2446,7 +2546,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "17HA",
@@ -2467,7 +2568,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "CZIA",
@@ -2496,7 +2598,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://analarcorp.com"
   },
   {
     "entityId": "NA8C",
@@ -2517,7 +2620,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "L98A",
@@ -2538,7 +2642,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "958A",
@@ -2559,7 +2664,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "1EQA",
@@ -2580,7 +2686,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "9XPA",
@@ -2601,7 +2708,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "AXRA",
@@ -2622,7 +2730,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "G7UC",
@@ -2643,7 +2752,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "4AKC",
@@ -2667,7 +2777,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "8HKA",
@@ -2693,7 +2804,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.flyarh.com"
   },
   {
     "entityId": "CAXA",
@@ -2720,7 +2832,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.arishelicopters.com"
   },
   {
     "entityId": "9L1A",
@@ -2741,7 +2854,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "Z1RA",
@@ -2763,7 +2877,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "ANEA",
@@ -2785,7 +2900,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "AO0A",
@@ -2808,7 +2924,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "6ACA",
@@ -2829,7 +2946,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "4R7A",
@@ -2850,7 +2968,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "U7GC",
@@ -2871,7 +2990,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "Z1YA",
@@ -2894,7 +3014,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://atdflightsystems.com"
   },
   {
     "entityId": "G41A",
@@ -2942,7 +3063,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://atijet.com"
   },
   {
     "entityId": "WNHA",
@@ -2971,7 +3093,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": null
   },
   {
     "entityId": "EOGA",
@@ -2994,7 +3117,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "8LHA",
@@ -3015,7 +3139,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "BSBA",
@@ -3039,7 +3164,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://augustaaviation.com"
   },
   {
     "entityId": "UY8A",
@@ -3066,7 +3192,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.austin-aviation.com"
   },
   {
     "entityId": "4C9A",
@@ -3087,7 +3214,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "8AOA",
@@ -3108,7 +3236,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "1VLA",
@@ -3129,7 +3258,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "AVEA",
@@ -3150,7 +3280,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "2MKA",
@@ -3171,7 +3302,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "7AMA",
@@ -3195,7 +3327,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.avera.org/services/emergency-trauma/careflight"
   },
   {
     "entityId": "4OIA",
@@ -3216,7 +3349,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "V7PA",
@@ -3248,7 +3382,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://aviationcharters.com"
   },
   {
     "entityId": "W9BA",
@@ -3284,7 +3419,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.acijet.com"
   },
   {
     "entityId": "8VSA",
@@ -3305,7 +3441,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "3A7A",
@@ -3326,7 +3463,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "9CSA",
@@ -3347,7 +3485,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "6VIA",
@@ -3370,7 +3509,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "6XMA",
@@ -3395,7 +3535,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.axiomaviationgroup.com"
   },
   {
     "entityId": "AXMA",
@@ -3416,7 +3557,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "AZHA",
@@ -3437,7 +3579,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "1AZA",
@@ -3471,7 +3614,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://aztecairways.com"
   },
   {
     "entityId": "BGJA",
@@ -3505,7 +3649,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://aberdeenflyingservice.com"
   },
   {
     "entityId": "8WBA",
@@ -3528,7 +3673,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "OVFA",
@@ -3549,7 +3695,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "O57A",
@@ -3571,7 +3718,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "http://www.accessaircharters.com"
   },
   {
     "entityId": "1YFA",
@@ -3592,7 +3740,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "QXNA",
@@ -3613,7 +3762,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "O4LC",
@@ -3634,7 +3784,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "GNVA",
@@ -3657,7 +3808,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "V2FA",
@@ -3680,7 +3832,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://advfs.com"
   },
   {
     "entityId": "AWDA",
@@ -3701,7 +3854,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "GFKA",
@@ -3724,7 +3878,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "VNLA",
@@ -3750,7 +3905,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.aerialpatrol.com"
   },
   {
     "entityId": "O9IA",
@@ -3806,7 +3962,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.aeroair.com"
   },
   {
     "entityId": "DGCA",
@@ -3841,7 +3998,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://aerocharter.com"
   },
   {
     "entityId": "N3BA",
@@ -3865,7 +4023,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://aerocharter.com"
   },
   {
     "entityId": "3SEA",
@@ -3890,7 +4049,12 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": "https://www.aeroseat.com",
+    "city": "Sterling",
+    "state": "CO",
+    "phone": "970-522-1941",
+    "email": "patrick@aeroapplicators.com"
   },
   {
     "entityId": "GB9A",
@@ -3916,7 +4080,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://aerotechteam.com"
   },
   {
     "entityId": "DQBA",
@@ -3937,7 +4102,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "L99A",
@@ -3959,7 +4125,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://aerodynamicjets.com"
   },
   {
     "entityId": "TVDA",
@@ -3980,7 +4147,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "U4CA",
@@ -4001,7 +4169,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "AOFA",
@@ -4022,7 +4191,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "GQRA",
@@ -4055,7 +4225,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.flyair7.com"
   },
   {
     "entityId": "ZE5A",
@@ -4078,7 +4249,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.charterairkc.com"
   },
   {
     "entityId": "8NIA",
@@ -4099,7 +4271,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "LDMA",
@@ -4120,7 +4293,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "MHNA",
@@ -4171,7 +4345,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://air.center"
   },
   {
     "entityId": "X31A",
@@ -4192,7 +4367,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "E8BA",
@@ -4213,7 +4389,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "UOIA",
@@ -4251,7 +4428,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.aircharterpr.com"
   },
   {
     "entityId": "FKJA",
@@ -4272,7 +4450,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "DIPA",
@@ -4295,7 +4474,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "EDAA",
@@ -4316,7 +4496,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "EVCA",
@@ -4523,7 +4704,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.lifeteam.net"
   },
   {
     "entityId": "YAXA",
@@ -4547,7 +4729,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://airexcursions.com"
   },
   {
     "entityId": "CSSA",
@@ -4568,7 +4751,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "AFWA",
@@ -4590,7 +4774,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "IEEA",
@@ -4611,7 +4796,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "J72A",
@@ -4639,7 +4825,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "http://www.airgato.com"
   },
   {
     "entityId": "EKBA",
@@ -4660,7 +4847,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "I9LA",
@@ -4682,7 +4870,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "QMLA",
@@ -5084,7 +5273,12 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.airmethods.com",
+    "city": "Greenwood Village",
+    "state": "CO",
+    "phone": "303-792-7400",
+    "email": "CustomerCare@AirMethods.com"
   },
   {
     "entityId": "CZQA",
@@ -5105,7 +5299,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "N28A",
@@ -5126,7 +5321,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "HEBA",
@@ -5151,7 +5347,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "WIPA",
@@ -5178,7 +5375,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://arhi.com"
   },
   {
     "entityId": "K55A",
@@ -5224,7 +5422,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.alerionaviation.com"
   },
   {
     "entityId": "QVHA",
@@ -5250,7 +5449,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://airshasta.com"
   },
   {
     "entityId": "14TA",
@@ -5274,7 +5474,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "FDIA",
@@ -5303,7 +5504,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://flyairtrek.com"
   },
   {
     "entityId": "ZFDA",
@@ -5328,7 +5530,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "L41A",
@@ -5354,7 +5557,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://airdialog.com"
   },
   {
     "entityId": "CQXA",
@@ -5379,7 +5583,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "http://www.airflairinc.com"
   },
   {
     "entityId": "2NEA",
@@ -5420,7 +5625,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://airnet.com"
   },
   {
     "entityId": "Q3EA",
@@ -5441,7 +5647,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "IXGA",
@@ -5465,7 +5672,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://airstarcharter.com"
   },
   {
     "entityId": "1R7A",
@@ -5488,7 +5696,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.airtahoe.com"
   },
   {
     "entityId": "3M3A",
@@ -5518,7 +5727,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://airborneaviationtours.com"
   },
   {
     "entityId": "PQGA",
@@ -5539,7 +5749,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "1BMA",
@@ -5561,7 +5772,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.airbrock.com"
   },
   {
     "entityId": "VMIA",
@@ -5584,7 +5796,12 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": "http://aircamhelicopters.com",
+    "city": "Englewood",
+    "state": "CO",
+    "phone": "303-799-0079",
+    "email": "draymond@aircamhelicopters.com"
   },
   {
     "entityId": "JJWA",
@@ -5611,7 +5828,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.aircoastal.com"
   },
   {
     "entityId": "4EMA",
@@ -5651,7 +5869,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://aemaviation.com"
   },
   {
     "entityId": "XGCA",
@@ -5698,7 +5917,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://jetasg.com"
   },
   {
     "entityId": "1AGA",
@@ -5723,7 +5943,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://flyairgate.com"
   },
   {
     "entityId": "Y7FA",
@@ -5744,7 +5965,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "APCA",
@@ -5769,7 +5991,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://airpacairlines.com"
   },
   {
     "entityId": "K92A",
@@ -5790,7 +6013,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "XW9A",
@@ -5816,7 +6040,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.airwesthelicopters.com"
   },
   {
     "entityId": "X6WA",
@@ -5841,7 +6066,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://airwest.com"
   },
   {
     "entityId": "K45A",
@@ -5875,7 +6101,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.aagjet.com"
   },
   {
     "entityId": "MROA",
@@ -5900,7 +6127,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "8AHA",
@@ -5923,7 +6151,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "3KCA",
@@ -5944,7 +6173,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "UB8C",
@@ -5965,7 +6195,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "LCWC",
@@ -6001,7 +6232,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://alaskawestair.com"
   },
   {
     "entityId": "WU5C",
@@ -6027,7 +6259,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://alaskawilderness.com"
   },
   {
     "entityId": "FWHC",
@@ -6048,7 +6281,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "VJBA",
@@ -6069,7 +6303,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "X33A",
@@ -6096,7 +6331,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://alexairinc.com"
   },
   {
     "entityId": "9J7A",
@@ -6117,7 +6353,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "A3VA",
@@ -6142,7 +6379,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.alphathreeaviation.com"
   },
   {
     "entityId": "TIMA",
@@ -6232,7 +6470,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.flyalpine.com"
   },
   {
     "entityId": "XGKA",
@@ -6257,7 +6496,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.alpineflyers.com"
   },
   {
     "entityId": "Y9NA",
@@ -6286,7 +6526,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.flyaltius.com"
   },
   {
     "entityId": "FXSC",
@@ -6307,7 +6548,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "UUKA",
@@ -6340,7 +6582,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.americanaircharter.com"
   },
   {
     "entityId": "8USA",
@@ -6364,7 +6607,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://americanjetcharter.com"
   },
   {
     "entityId": "TLSA",
@@ -6391,7 +6635,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://americanjetcharter.com"
   },
   {
     "entityId": "A8JA",
@@ -6427,7 +6672,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.iflyaji.com"
   },
   {
     "entityId": "VMNA",
@@ -6450,7 +6696,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "AYKA",
@@ -6473,7 +6720,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "JIKA",
@@ -6622,7 +6870,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://w3.ameriflight.com"
   },
   {
     "entityId": "HAEA",
@@ -6653,7 +6902,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.ameristarjet.com"
   },
   {
     "entityId": "X9YA",
@@ -6678,7 +6928,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "http://ameritexjet.com"
   },
   {
     "entityId": "D4NA",
@@ -6703,7 +6954,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "9FKA",
@@ -6724,7 +6976,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "1A5A",
@@ -6747,7 +7000,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "5XPA",
@@ -6771,7 +7025,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://apexheli.com"
   },
   {
     "entityId": "K58C",
@@ -6792,7 +7047,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "P1JC",
@@ -6813,7 +7069,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "MH9A",
@@ -6839,7 +7096,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.arishelicopters.com"
   },
   {
     "entityId": "A6ZA",
@@ -6865,7 +7123,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.arizonaheli.com"
   },
   {
     "entityId": "OW6A",
@@ -6891,7 +7150,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://arrowwestaviation.com"
   },
   {
     "entityId": "3KSC",
@@ -6916,7 +7176,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "IGAA",
@@ -6961,7 +7222,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.aspenhelo.com"
   },
   {
     "entityId": "AYPA",
@@ -6989,7 +7251,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://aag.aero"
   },
   {
     "entityId": "JOPA",
@@ -7010,7 +7273,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "V6HA",
@@ -7034,7 +7298,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.atlantaaircharter.com"
   },
   {
     "entityId": "XAUA",
@@ -7055,7 +7320,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "RIGA",
@@ -7076,7 +7342,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "40MA",
@@ -7097,7 +7364,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "KS1A",
@@ -7119,7 +7387,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "GLRA",
@@ -7141,7 +7410,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://flyaurora.com"
   },
   {
     "entityId": "810A",
@@ -7162,7 +7432,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "9LVA",
@@ -7195,7 +7466,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.avalair.com"
   },
   {
     "entityId": "GAYA",
@@ -7226,7 +7498,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://avcenter.com"
   },
   {
     "entityId": "ZDVA",
@@ -7268,7 +7541,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.aviationadvisor.com"
   },
   {
     "entityId": "ABOA",
@@ -7303,7 +7577,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.aviationcharter.com"
   },
   {
     "entityId": "8W0A",
@@ -7324,7 +7599,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "VE6A",
@@ -7345,7 +7621,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "XYXC",
@@ -7366,7 +7643,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "R73A",
@@ -7389,7 +7667,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "UABA",
@@ -7412,7 +7691,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "UFVA",
@@ -7433,7 +7713,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "E85A",
@@ -7454,7 +7735,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "2BZA",
@@ -7483,7 +7765,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.corporatejets.com"
   },
   {
     "entityId": "ZWBA",
@@ -7512,7 +7795,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.b2wjets.com"
   },
   {
     "entityId": "K3QA",
@@ -7533,7 +7817,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "3BCA",
@@ -7556,7 +7841,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "QBHA",
@@ -7577,7 +7863,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "E2KC",
@@ -7599,7 +7886,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "7BAA",
@@ -7635,7 +7923,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.baker-aviation.com"
   },
   {
     "entityId": "W3LC",
@@ -7660,7 +7949,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "6BKA",
@@ -7681,7 +7971,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "B43A",
@@ -7702,7 +7993,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "B95A",
@@ -7723,7 +8015,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "BCAA",
@@ -7744,7 +8037,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "ZXSC",
@@ -7769,7 +8063,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "CHOA",
@@ -7790,7 +8085,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "Q9LA",
@@ -7811,7 +8107,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "58AA",
@@ -7832,7 +8129,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "HKGA",
@@ -7876,7 +8174,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.berryaviation.com"
   },
   {
     "entityId": "8G1C",
@@ -7897,7 +8196,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "BBLA",
@@ -7923,7 +8223,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://miajetscharters.com"
   },
   {
     "entityId": "8BOA",
@@ -7944,7 +8245,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "BWAC",
@@ -7965,7 +8267,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "BVZC",
@@ -7988,7 +8291,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "8BVA",
@@ -8009,7 +8313,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "BFSA",
@@ -8030,7 +8335,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "BDJA",
@@ -8051,7 +8357,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "4BHA",
@@ -8077,7 +8384,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.blackhillshelicopters.com"
   },
   {
     "entityId": "U54A",
@@ -8101,7 +8409,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.blueaviation.com"
   },
   {
     "entityId": "YUZA",
@@ -8122,7 +8431,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "9BEA",
@@ -8144,7 +8454,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "2BHA",
@@ -8165,7 +8476,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "2BLA",
@@ -8186,7 +8498,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "FISA",
@@ -8211,7 +8524,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://bohlke.com"
   },
   {
     "entityId": "FDYA",
@@ -8232,7 +8546,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "6BEA",
@@ -8253,7 +8568,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "EFLA",
@@ -8274,7 +8590,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "BRNA",
@@ -8302,7 +8619,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "http://brainerdhelicopters.net"
   },
   {
     "entityId": "BV0A",
@@ -8330,7 +8648,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.brimaviation.com"
   },
   {
     "entityId": "B9BC",
@@ -8352,7 +8671,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "GOWA",
@@ -8378,7 +8698,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.btraircharter.com"
   },
   {
     "entityId": "BMTA",
@@ -8399,7 +8720,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "3B0A",
@@ -8424,7 +8746,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.bunaircorp.com"
   },
   {
     "entityId": "Q0BC",
@@ -8445,7 +8768,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "B9VC",
@@ -8466,7 +8790,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "BQTA",
@@ -8487,7 +8812,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "DUFA",
@@ -8515,7 +8841,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://businessaviationcourier.com"
   },
   {
     "entityId": "U48A",
@@ -8538,7 +8865,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://businessjetmanagers.com"
   },
   {
     "entityId": "YBBA",
@@ -8568,7 +8896,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.butleraviation.com"
   },
   {
     "entityId": "EFSA",
@@ -8590,7 +8919,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "YQPA",
@@ -8612,7 +8942,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "BKAA",
@@ -8638,7 +8969,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.bankair.com"
   },
   {
     "entityId": "845A",
@@ -8659,7 +8991,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "DEMA",
@@ -8717,7 +9050,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://baron-aviation.com"
   },
   {
     "entityId": "GYWA",
@@ -8746,7 +9080,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.basinaviation.com"
   },
   {
     "entityId": "SRVA",
@@ -8767,7 +9102,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "BVPA",
@@ -8788,7 +9124,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "EPQA",
@@ -8811,7 +9148,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "BEMA",
@@ -8872,7 +9210,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://bemidjiaviation.com"
   },
   {
     "entityId": "FXTA",
@@ -8940,7 +9279,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.beringair.com"
   },
   {
     "entityId": "BPGA",
@@ -8961,7 +9301,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "5BYA",
@@ -8983,7 +9324,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "J1JA",
@@ -9008,7 +9350,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.betterlivingaviation.com"
   },
   {
     "entityId": "IKDC",
@@ -9029,7 +9372,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "BIGA",
@@ -9063,7 +9407,12 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.bighornairways.com",
+    "city": "Sheridan",
+    "state": "WY",
+    "phone": null,
+    "email": "frontdesk@bighornairways.com"
   },
   {
     "entityId": "B15A",
@@ -9086,7 +9435,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://billingsflyingservice.com"
   },
   {
     "entityId": "R6DA",
@@ -9112,7 +9462,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://bismarckairmedical.com"
   },
   {
     "entityId": "BQOA",
@@ -9134,7 +9485,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "http://www.blattiaviation.com"
   },
   {
     "entityId": "BIOA",
@@ -9155,7 +9507,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "O6WA",
@@ -9178,7 +9531,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "BVAA",
@@ -9199,7 +9553,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "J7BA",
@@ -9231,7 +9586,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://flybode.com"
   },
   {
     "entityId": "BA1A",
@@ -9252,7 +9608,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "OBGA",
@@ -9276,7 +9633,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://flyboomerang.com"
   },
   {
     "entityId": "7WGA",
@@ -9297,7 +9655,12 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": "https://www.booneaviation.com",
+    "city": "Broomfield",
+    "state": "CO",
+    "phone": "720-320-1627",
+    "email": "John@booneaviation.com"
   },
   {
     "entityId": "2B5A",
@@ -9336,7 +9699,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.boutiqueair.com"
   },
   {
     "entityId": "EQWA",
@@ -9363,7 +9727,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.branchriverair.com"
   },
   {
     "entityId": "F6HA",
@@ -9384,7 +9749,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "BZYA",
@@ -9410,7 +9776,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.brazosvalleyair.com"
   },
   {
     "entityId": "B5PC",
@@ -9431,7 +9798,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "AKXA",
@@ -9452,7 +9820,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "3LJA",
@@ -9473,7 +9842,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "4GIA",
@@ -9503,7 +9873,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.bridgeraerospace.com"
   },
   {
     "entityId": "ALGA",
@@ -9524,7 +9895,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "X9ZC",
@@ -9545,7 +9917,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "B1EA",
@@ -9566,7 +9939,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "3CRA",
@@ -9587,7 +9961,12 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": "https://flyaspenair.com",
+    "city": "Aspen",
+    "state": "CO",
+    "phone": "970-948-6609",
+    "email": "Flights@aspenoneways.com"
   },
   {
     "entityId": "5BMA",
@@ -9619,7 +9998,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://ozaircharter.com"
   },
   {
     "entityId": "P6KC",
@@ -9641,7 +10021,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "1BUC",
@@ -9662,7 +10043,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "BMRA",
@@ -9687,7 +10069,12 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://businessaviators.com",
+    "city": "Casper",
+    "state": "WY",
+    "phone": "307-473-5633",
+    "email": null
   },
   {
     "entityId": "ZLWA",
@@ -9724,7 +10111,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.businessjet.com"
   },
   {
     "entityId": "GCVA",
@@ -9747,7 +10135,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "9BZA",
@@ -9776,7 +10165,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.buzzairlines.com"
   },
   {
     "entityId": "BOEA",
@@ -9799,7 +10189,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://byerlyaviation.com"
   },
   {
     "entityId": "B3GA",
@@ -9820,7 +10211,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "9UPA",
@@ -9842,7 +10234,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "5PGA",
@@ -9883,7 +10276,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://paragonairways.com"
   },
   {
     "entityId": "8C4A",
@@ -9906,7 +10300,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "http://cadreaviationservices.com"
   },
   {
     "entityId": "6JNA",
@@ -9927,7 +10322,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "YJVA",
@@ -9953,7 +10349,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://cameraworkinc.com"
   },
   {
     "entityId": "L7LA",
@@ -9975,7 +10372,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "CEPA",
@@ -10001,7 +10399,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.mustangaviation.aero"
   },
   {
     "entityId": "CJCA",
@@ -10022,7 +10421,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "X9XA",
@@ -10059,7 +10459,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://capitaljetcharter.com"
   },
   {
     "entityId": "CJLA",
@@ -10081,7 +10482,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://capitaljets.com"
   },
   {
     "entityId": "F5JA",
@@ -10102,7 +10504,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "ZZ8A",
@@ -10123,7 +10526,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "54NA",
@@ -10147,7 +10551,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "L16A",
@@ -10170,7 +10575,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.carisairservices.com"
   },
   {
     "entityId": "6CIA",
@@ -10194,7 +10600,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://carrierairways.com"
   },
   {
     "entityId": "CTXA",
@@ -10215,7 +10622,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "EWCA",
@@ -10242,7 +10650,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://causeyaviation.com"
   },
   {
     "entityId": "1UCA",
@@ -10266,7 +10675,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.causeyaviationunmanned.com"
   },
   {
     "entityId": "U7VA",
@@ -10287,7 +10697,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "64MA",
@@ -10335,7 +10746,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.precisionacm.com"
   },
   {
     "entityId": "CRHA",
@@ -10356,7 +10768,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "E3MA",
@@ -10403,7 +10816,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.statmedevac.com"
   },
   {
     "entityId": "HBKA",
@@ -10428,7 +10842,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://flycfm.com"
   },
   {
     "entityId": "71CA",
@@ -10449,7 +10864,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "JLZA",
@@ -10472,7 +10888,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "674A",
@@ -10497,7 +10914,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.chairmanaviation.com"
   },
   {
     "entityId": "6C8A",
@@ -10518,7 +10936,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "3YCA",
@@ -10542,7 +10961,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://flycharmcity.com"
   },
   {
     "entityId": "88CA",
@@ -10565,7 +10985,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "CWCA",
@@ -10586,7 +11007,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "GOXA",
@@ -10607,7 +11029,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "9CCA",
@@ -10641,7 +11064,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.cherrycapflight.com"
   },
   {
     "entityId": "4CZA",
@@ -10663,7 +11087,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "AC2A",
@@ -10698,7 +11123,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.chevron.com"
   },
   {
     "entityId": "4CIA",
@@ -10721,7 +11147,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://choiceairways.net"
   },
   {
     "entityId": "PLCA",
@@ -10748,7 +11175,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://choiceaviation.com"
   },
   {
     "entityId": "VPEA",
@@ -10792,7 +11220,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.choiceaviation.com"
   },
   {
     "entityId": "3C5A",
@@ -10813,7 +11242,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "CBAA",
@@ -10834,7 +11264,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "9CWA",
@@ -10856,7 +11287,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://citywingspr.com"
   },
   {
     "entityId": "CKZC",
@@ -10877,7 +11309,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "Z5VA",
@@ -10898,7 +11331,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "Q6VA",
@@ -10931,7 +11365,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "http://classicaviationservices.net"
   },
   {
     "entityId": "8CLA",
@@ -10955,7 +11390,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.classicjetcenter.com"
   },
   {
     "entityId": "CLVA",
@@ -10976,7 +11412,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "CBVA",
@@ -10997,7 +11434,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "LAMA",
@@ -11026,7 +11464,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.clearwaterair.com"
   },
   {
     "entityId": "CATA",
@@ -11048,7 +11487,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "9C8A",
@@ -11071,7 +11511,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "2CJA",
@@ -11110,7 +11551,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://clubjet.com"
   },
   {
     "entityId": "CYAA",
@@ -11131,7 +11573,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "C33A",
@@ -11157,7 +11600,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.coastalhelicopters.net"
   },
   {
     "entityId": "7KAA",
@@ -11182,7 +11626,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.aerospacenext.com"
   },
   {
     "entityId": "JOWA",
@@ -11207,7 +11652,12 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://coloradobyair.com",
+    "city": "Salida",
+    "state": "CO",
+    "phone": "719-626-7144",
+    "email": "info@coloradobyair.com"
   },
   {
     "entityId": "PD4A",
@@ -11228,7 +11678,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "LZUA",
@@ -11249,7 +11700,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "6CHA",
@@ -11272,7 +11724,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://completeheli.com"
   },
   {
     "entityId": "Q9UA",
@@ -11295,7 +11748,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": "https://conquestaircargo.com"
   },
   {
     "entityId": "ON2A",
@@ -11318,7 +11772,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.contrailinc.com"
   },
   {
     "entityId": "EAXA",
@@ -11349,7 +11804,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.coppervalleyairservice.com"
   },
   {
     "entityId": "8ZMA",
@@ -11375,7 +11831,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.corsairaviation.com"
   },
   {
     "entityId": "CVLA",
@@ -11396,7 +11853,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "CVKC",
@@ -11417,7 +11875,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "JNBA",
@@ -11445,7 +11904,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://courtneyaviation.com"
   },
   {
     "entityId": "2CPA",
@@ -11468,7 +11928,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "http://coveaviation.com"
   },
   {
     "entityId": "TRKA",
@@ -11494,7 +11955,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://craigaircenter.com"
   },
   {
     "entityId": "8P1A",
@@ -11516,7 +11978,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://jettaircraft.com"
   },
   {
     "entityId": "QXQA",
@@ -11538,7 +12001,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.flycare.com"
   },
   {
     "entityId": "1T7A",
@@ -11559,7 +12023,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "37CA",
@@ -11594,7 +12059,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://lifelinkiii.com"
   },
   {
     "entityId": "SBAA",
@@ -11644,7 +12110,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://csaair.com"
   },
   {
     "entityId": "GRTA",
@@ -11683,7 +12150,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.csiaviation.com"
   },
   {
     "entityId": "X7PA",
@@ -11714,7 +12182,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.ctpaviation.com"
   },
   {
     "entityId": "FTTA",
@@ -11740,7 +12209,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://curriersflyingservice.com"
   },
   {
     "entityId": "JXKA",
@@ -11769,7 +12239,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.cal-ore.com"
   },
   {
     "entityId": "ACUA",
@@ -11790,7 +12261,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "41BA",
@@ -11811,7 +12283,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "E1RC",
@@ -11832,7 +12305,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "YMHA",
@@ -11856,7 +12330,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.capitalcityjet.com"
   },
   {
     "entityId": "4OJA",
@@ -11893,7 +12368,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://capitolhelicopters.com"
   },
   {
     "entityId": "NXTA",
@@ -11924,7 +12400,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://careflite.org"
   },
   {
     "entityId": "I26A",
@@ -11945,7 +12422,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "ATKA",
@@ -11966,7 +12444,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "XRRA",
@@ -11996,7 +12475,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://carveraero.com"
   },
   {
     "entityId": "CSJA",
@@ -12037,7 +12517,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.castleair.com"
   },
   {
     "entityId": "C40A",
@@ -12060,7 +12541,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://flycatalina.com"
   },
   {
     "entityId": "HZZA",
@@ -12082,7 +12564,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://catalinaflyingboats.org"
   },
   {
     "entityId": "H4FA",
@@ -12103,7 +12586,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "W5SA",
@@ -12125,7 +12609,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://centerra-group.com"
   },
   {
     "entityId": "ZJWA",
@@ -12178,7 +12663,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://centralairsouthwest.com"
   },
   {
     "entityId": "AZWA",
@@ -12207,7 +12693,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://jetcaa.com"
   },
   {
     "entityId": "C9PA",
@@ -12228,7 +12715,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "JOLA",
@@ -12253,7 +12741,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://centralcopters.com"
   },
   {
     "entityId": "CCJA",
@@ -12283,7 +12772,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.centurionfs.com"
   },
   {
     "entityId": "LDIA",
@@ -12321,7 +12811,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://centuryaviation.us"
   },
   {
     "entityId": "DDEA",
@@ -12342,7 +12833,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "ZH9A",
@@ -12366,7 +12858,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://chantillyair.com"
   },
   {
     "entityId": "CQVA",
@@ -12395,7 +12888,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://northiowaair.com"
   },
   {
     "entityId": "ACOA",
@@ -12416,7 +12910,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "AJXA",
@@ -12446,7 +12941,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://flyca.co"
   },
   {
     "entityId": "C0QA",
@@ -12467,7 +12963,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "J53A",
@@ -12498,7 +12995,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://flycjt.com"
   },
   {
     "entityId": "L39A",
@@ -12519,7 +13017,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "PELA",
@@ -12543,7 +13042,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://chemairhelicopters.com"
   },
   {
     "entityId": "C5HA",
@@ -12565,7 +13065,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.cherokeehelicopter.com"
   },
   {
     "entityId": "CYHA",
@@ -12586,7 +13087,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "X42A",
@@ -12610,7 +13112,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "5CDA",
@@ -12631,7 +13134,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "AAUA",
@@ -12659,7 +13163,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.chrysleraviation.com"
   },
   {
     "entityId": "O2GA",
@@ -12712,7 +13217,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://flyairshare.com"
   },
   {
     "entityId": "RTEA",
@@ -12739,7 +13245,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.flycitizenair.com"
   },
   {
     "entityId": "DCQA",
@@ -12760,7 +13267,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "GJOA",
@@ -12783,7 +13291,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "JAPA",
@@ -12836,7 +13345,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "http://www.classicairmedical.com"
   },
   {
     "entityId": "BKEA",
@@ -12936,7 +13446,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.claylacy.com"
   },
   {
     "entityId": "7OKA",
@@ -12975,7 +13486,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.clemensaviation.com"
   },
   {
     "entityId": "R0NA",
@@ -12996,7 +13508,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "F9AA",
@@ -13021,7 +13534,12 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://flycloudpeak.com",
+    "city": "Sheridan",
+    "state": "WY",
+    "phone": "303-597-8667",
+    "email": "charter@maunahele.com"
   },
   {
     "entityId": "CFTA",
@@ -13042,7 +13560,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "H2MA",
@@ -13067,7 +13586,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "FHGA",
@@ -13090,7 +13610,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "5CLA",
@@ -13115,7 +13636,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://flycoastalair.com"
   },
   {
     "entityId": "XCHA",
@@ -13151,7 +13673,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.coastalhelicopters.net"
   },
   {
     "entityId": "9COA",
@@ -13172,7 +13695,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "1CHA",
@@ -13198,7 +13722,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://coastalhelicopters.com"
   },
   {
     "entityId": "M5KA",
@@ -13219,7 +13744,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "4YTA",
@@ -13240,7 +13766,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "6CBA",
@@ -13323,7 +13850,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.cobaltair.com"
   },
   {
     "entityId": "BOOA",
@@ -13347,7 +13875,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.cobbaviationservices.com"
   },
   {
     "entityId": "IEYA",
@@ -13370,7 +13899,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.colemanjet.com"
   },
   {
     "entityId": "CCHA",
@@ -13393,7 +13923,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "8C0A",
@@ -13414,7 +13945,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "CHIA",
@@ -13451,7 +13983,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://colheli.com"
   },
   {
     "entityId": "VXWA",
@@ -13472,7 +14005,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "JTAA",
@@ -13509,7 +14043,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://chiaviation.com"
   },
   {
     "entityId": "XCQA",
@@ -13530,7 +14065,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "88OA",
@@ -13551,7 +14087,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "6COA",
@@ -13572,7 +14109,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "CJOA",
@@ -13593,7 +14131,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "ORDA",
@@ -13614,7 +14153,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "HSYA",
@@ -13679,7 +14219,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.corporateair.net"
   },
   {
     "entityId": "C5GA",
@@ -13703,7 +14244,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://corporateaircharters.com"
   },
   {
     "entityId": "XCGA",
@@ -13728,7 +14270,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://corpair.com"
   },
   {
     "entityId": "C0LA",
@@ -13754,7 +14297,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.catreno.com"
   },
   {
     "entityId": "UVCA",
@@ -13776,7 +14320,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://corporateaircraftstl.com"
   },
   {
     "entityId": "DJXA",
@@ -13815,7 +14360,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://corporateeagle.com"
   },
   {
     "entityId": "FJTA",
@@ -13880,7 +14426,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.contouraviation.com"
   },
   {
     "entityId": "BTAA",
@@ -13905,7 +14452,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://corporateflight.com/"
   },
   {
     "entityId": "YCOA",
@@ -13927,7 +14475,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.corporatejet.com"
   },
   {
     "entityId": "VJTA",
@@ -13948,7 +14497,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "CLDA",
@@ -13971,7 +14521,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "BJGA",
@@ -13994,7 +14545,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "CY6A",
@@ -14021,7 +14573,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://flycoyote.com"
   },
   {
     "entityId": "6TXA",
@@ -14046,7 +14599,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://craftcharter.com"
   },
   {
     "entityId": "VDQC",
@@ -14067,7 +14621,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "CAVA",
@@ -14089,7 +14644,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.xwind.us"
   },
   {
     "entityId": "3CKA",
@@ -14110,7 +14666,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "DRUA",
@@ -14131,7 +14688,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "FOGA",
@@ -14155,7 +14713,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "TLOA",
@@ -14180,7 +14739,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.flycrystalair.com"
   },
   {
     "entityId": "EKGA",
@@ -14218,7 +14778,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://cutteraviation.com"
   },
   {
     "entityId": "2P9A",
@@ -14239,7 +14800,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "5DAA",
@@ -14260,7 +14822,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "DEJA",
@@ -14288,7 +14851,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.dhhelicopterinc.com"
   },
   {
     "entityId": "DOZA",
@@ -14309,7 +14873,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "E46A",
@@ -14330,7 +14895,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "DOKA",
@@ -14358,7 +14924,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.daleaviation.com"
   },
   {
     "entityId": "EQRC",
@@ -14379,7 +14946,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "3D9A",
@@ -14400,7 +14968,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "3DDA",
@@ -14421,7 +14990,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "DS0A",
@@ -14442,7 +15012,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "8DCA",
@@ -14466,7 +15037,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://dctair.com"
   },
   {
     "entityId": "DHNC",
@@ -14489,7 +15061,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "SQHA",
@@ -14511,7 +15084,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "4DPA",
@@ -14579,7 +15153,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.jsx.com"
   },
   {
     "entityId": "J95A",
@@ -14605,7 +15180,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.denainaair.com"
   },
   {
     "entityId": "DLIA",
@@ -14638,7 +15214,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://denaliair.com"
   },
   {
     "entityId": "D08C",
@@ -14661,7 +15238,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "2R0A",
@@ -14682,7 +15260,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "3D3C",
@@ -14703,7 +15282,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "D6JA",
@@ -14726,7 +15306,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://flydjc.com"
   },
   {
     "entityId": "DKBA",
@@ -14747,7 +15328,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "F2PA",
@@ -14779,7 +15361,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://goldaviation.com"
   },
   {
     "entityId": "1DVA",
@@ -14800,7 +15383,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "D0JA",
@@ -14824,7 +15408,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://doratojets.com"
   },
   {
     "entityId": "82MA",
@@ -14845,7 +15430,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "DS1A",
@@ -14866,7 +15452,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "4DFA",
@@ -14887,7 +15474,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "DROA",
@@ -14919,7 +15507,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.droneup.com"
   },
   {
     "entityId": "4DUA",
@@ -14942,7 +15531,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "NBFA",
@@ -14967,7 +15557,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.dynamicaviation.com"
   },
   {
     "entityId": "8DYA",
@@ -14989,7 +15580,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "4DKA",
@@ -15013,7 +15605,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.dakotarotors.com"
   },
   {
     "entityId": "HSXA",
@@ -15036,7 +15629,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "6JPA",
@@ -15076,7 +15670,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.davincijets.com"
   },
   {
     "entityId": "D03A",
@@ -15097,7 +15692,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "DV7A",
@@ -15129,7 +15725,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.davisair.com"
   },
   {
     "entityId": "7DTA",
@@ -15150,7 +15747,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "8DOC",
@@ -15179,7 +15777,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://deckloadaviation.com"
   },
   {
     "entityId": "FUUA",
@@ -15200,7 +15799,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "D72A",
@@ -15221,7 +15821,12 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null,
+    "city": "Denver",
+    "state": "CO",
+    "phone": null,
+    "email": null
   },
   {
     "entityId": "U7ZA",
@@ -15242,7 +15847,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "D7TA",
@@ -15267,7 +15873,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://desertairalaska.com"
   },
   {
     "entityId": "1DJA",
@@ -15290,7 +15897,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://desertjet.com"
   },
   {
     "entityId": "D0DA",
@@ -15317,7 +15925,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.diamondaviation.biz"
   },
   {
     "entityId": "5DIA",
@@ -15338,7 +15947,12 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": "http://directcharter.co",
+    "city": "Broomfield",
+    "state": "CO",
+    "phone": "920-884-3018",
+    "email": null
   },
   {
     "entityId": "DXAA",
@@ -15359,7 +15973,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "ODAA",
@@ -15393,7 +16008,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.flydominion.com"
   },
   {
     "entityId": "FGBA",
@@ -15422,7 +16038,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://dondavisaviation.com"
   },
   {
     "entityId": "DDAA",
@@ -15448,7 +16065,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.flydoubleday.com"
   },
   {
     "entityId": "5DLA",
@@ -15487,7 +16105,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.dreamlineaviation.com"
   },
   {
     "entityId": "SVTA",
@@ -15520,7 +16139,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.dupageaerospace.com"
   },
   {
     "entityId": "JGVA",
@@ -15545,7 +16165,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.duncanaviation.aero"
   },
   {
     "entityId": "DAQA",
@@ -15568,7 +16189,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "EG6A",
@@ -15593,7 +16215,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "3ERA",
@@ -15614,7 +16237,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "2EEA",
@@ -15635,7 +16259,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "3ESA",
@@ -15656,7 +16281,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "7ETA",
@@ -15677,7 +16303,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "1EAA",
@@ -15703,7 +16330,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.easternairexpress.com"
   },
   {
     "entityId": "9EOA",
@@ -15724,7 +16352,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "EWFA",
@@ -15745,7 +16374,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "HRPA",
@@ -15773,7 +16403,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.egliair.com"
   },
   {
     "entityId": "3EVC",
@@ -15794,7 +16425,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "9QXA",
@@ -15815,7 +16447,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "EFTA",
@@ -15843,7 +16476,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://omegaairrefueling.com"
   },
   {
     "entityId": "2ETA",
@@ -15864,7 +16498,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "GC9A",
@@ -15885,7 +16520,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "1EMA",
@@ -15913,7 +16549,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://elitemedair.com"
   },
   {
     "entityId": "ERLA",
@@ -15934,7 +16571,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "K2ZA",
@@ -15970,7 +16608,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://bakeraircraft.com"
   },
   {
     "entityId": "ELXA",
@@ -15991,7 +16630,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "CFXA",
@@ -16012,7 +16652,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "GFVA",
@@ -16038,7 +16679,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.empireair.net"
   },
   {
     "entityId": "3N0A",
@@ -16066,7 +16708,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.encorejet.us"
   },
   {
     "entityId": "EHYA",
@@ -16096,7 +16739,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://englishairservice.com"
   },
   {
     "entityId": "61MA",
@@ -16117,7 +16761,12 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null,
+    "city": "Rock Springs",
+    "state": "WY",
+    "phone": null,
+    "email": null
   },
   {
     "entityId": "3NVA",
@@ -16143,7 +16792,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://envoljets.com"
   },
   {
     "entityId": "ESMA",
@@ -16168,7 +16818,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://aerocenters.com/pdk-atlanta-ga"
   },
   {
     "entityId": "GHIA",
@@ -16196,7 +16847,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.erinair.com"
   },
   {
     "entityId": "3EJA",
@@ -16317,7 +16969,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.flyexclusive.com"
   },
   {
     "entityId": "EXFA",
@@ -16344,7 +16997,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.execuflight.com"
   },
   {
     "entityId": "FOMA",
@@ -16380,7 +17034,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://flyfairwind.com"
   },
   {
     "entityId": "EVXA",
@@ -16409,7 +17064,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://executiveair.net"
   },
   {
     "entityId": "E2HA",
@@ -16441,7 +17097,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.executiveair.net"
   },
   {
     "entityId": "189A",
@@ -16462,7 +17119,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "EV4A",
@@ -16483,7 +17141,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "U81A",
@@ -16504,7 +17163,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "1XOA",
@@ -16525,7 +17185,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "TY1A",
@@ -16546,7 +17207,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "2EXA",
@@ -16568,7 +17230,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "1X3A",
@@ -16595,7 +17258,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://expressjetcharter.com"
   },
   {
     "entityId": "X80A",
@@ -16618,7 +17282,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "EAJA",
@@ -16639,7 +17304,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "P7EA",
@@ -16662,7 +17328,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://flyeagleair.net"
   },
   {
     "entityId": "FEHA",
@@ -16683,7 +17350,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "IOAA",
@@ -16704,7 +17372,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "7EMA",
@@ -16735,7 +17404,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.flyeaglemed.com"
   },
   {
     "entityId": "E4HA",
@@ -16760,7 +17430,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "EFVA",
@@ -16787,7 +17458,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.ecfs.aero"
   },
   {
     "entityId": "CDNA",
@@ -16815,7 +17487,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.eastcoastjets.com"
   },
   {
     "entityId": "Y6EA",
@@ -16836,7 +17509,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "5EWA",
@@ -16863,7 +17537,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://eastwesthelicopter.com"
   },
   {
     "entityId": "71MA",
@@ -16884,7 +17559,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "AOBA",
@@ -16908,7 +17584,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://eastwayaviation.net"
   },
   {
     "entityId": "EN0C",
@@ -16932,7 +17609,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "GRXA",
@@ -16953,7 +17631,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "GQDC",
@@ -16974,7 +17653,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "QZJA",
@@ -17007,7 +17687,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://axisjet.com"
   },
   {
     "entityId": "B8MA",
@@ -17036,7 +17717,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://elevatejet.com"
   },
   {
     "entityId": "E0YA",
@@ -17097,7 +17779,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.eliteair.com"
   },
   {
     "entityId": "1EBA",
@@ -17118,7 +17801,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "XLQA",
@@ -17139,7 +17823,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "IF1A",
@@ -17165,7 +17850,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://elitejets.com"
   },
   {
     "entityId": "EY6C",
@@ -17189,7 +17875,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "COEA",
@@ -17250,7 +17937,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "121/135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.empireairlines.com"
   },
   {
     "entityId": "NTQA",
@@ -17272,7 +17960,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.enloe.org"
   },
   {
     "entityId": "9EPA",
@@ -17293,7 +17982,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "BP5A",
@@ -17314,7 +18004,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "EPIA",
@@ -17335,7 +18026,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "1EPA",
@@ -17356,7 +18048,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "J0FA",
@@ -17377,7 +18070,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "U0GA",
@@ -17466,7 +18160,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.erahelicopters.com"
   },
   {
     "entityId": "9EKA",
@@ -17487,7 +18182,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "EW7A",
@@ -17508,7 +18204,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "X1AA",
@@ -17537,7 +18234,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://exec1aviation.com"
   },
   {
     "entityId": "EFUA",
@@ -17564,7 +18262,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://execairmontana.com"
   },
   {
     "entityId": "EV7A",
@@ -17589,7 +18288,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.execujetcharter.com"
   },
   {
     "entityId": "J1AA",
@@ -17611,7 +18311,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "CTYA",
@@ -17652,7 +18353,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://executive-air.com"
   },
   {
     "entityId": "ECJA",
@@ -17673,7 +18375,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "EV6A",
@@ -17694,7 +18397,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "7RRA",
@@ -17715,7 +18419,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "X3XA",
@@ -17736,7 +18441,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "TCHA",
@@ -17757,7 +18463,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "E07A",
@@ -17833,7 +18540,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://flyairshare.com"
   },
   {
     "entityId": "AOQA",
@@ -17878,7 +18586,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.fly-efi.com"
   },
   {
     "entityId": "9XHA",
@@ -17899,7 +18608,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "EH5A",
@@ -17922,7 +18632,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "CWQA",
@@ -18128,7 +18839,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.executivejetmanagement.com"
   },
   {
     "entityId": "STZA",
@@ -18152,7 +18864,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.fsairservice.com"
   },
   {
     "entityId": "7FCA",
@@ -18173,7 +18886,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "4DXA",
@@ -18194,7 +18908,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "F0JC",
@@ -18217,7 +18932,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "4AZA",
@@ -18245,7 +18961,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.fenixaircharter.com"
   },
   {
     "entityId": "2FEA",
@@ -18268,7 +18985,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "YEOC",
@@ -18289,7 +19007,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "FAVA",
@@ -18314,7 +19033,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.firmfoundationaviation.com"
   },
   {
     "entityId": "TY2A",
@@ -18350,7 +19070,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.firstavgroup.com"
   },
   {
     "entityId": "1T5A",
@@ -18373,7 +19094,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "2FLA",
@@ -18397,7 +19119,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.flaviation.com"
   },
   {
     "entityId": "2FPA",
@@ -18420,7 +19143,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.flagshipprivateair.com"
   },
   {
     "entityId": "6FMA",
@@ -18441,7 +19165,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "FL1A",
@@ -18463,7 +19188,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.flightlevelservices.com"
   },
   {
     "entityId": "6FRA",
@@ -18484,7 +19210,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "BR8C",
@@ -18505,7 +19232,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "5FGA",
@@ -18537,7 +19265,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://flightgest.com"
   },
   {
     "entityId": "3FFA",
@@ -18562,7 +19291,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://flightlinefirst.com"
   },
   {
     "entityId": "1FCA",
@@ -18583,7 +19313,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "1FJA",
@@ -18604,7 +19335,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "FJ7A",
@@ -18627,7 +19359,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.floridajet.com"
   },
   {
     "entityId": "3SVA",
@@ -18656,7 +19389,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://securityaviation.biz"
   },
   {
     "entityId": "A3WC",
@@ -18683,7 +19417,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.flydenali.com"
   },
   {
     "entityId": "13HA",
@@ -18709,7 +19444,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://flyhangar13.com"
   },
   {
     "entityId": "GSHA",
@@ -18730,7 +19466,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "SIAC",
@@ -18751,7 +19488,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "4F1A",
@@ -18775,7 +19513,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://flydreams.us"
   },
   {
     "entityId": "Z3OA",
@@ -18806,7 +19545,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://flyusa.com"
   },
   {
     "entityId": "9FXA",
@@ -18840,7 +19580,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://foxairalaska.com"
   },
   {
     "entityId": "7FEA",
@@ -18861,7 +19602,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "9F3A",
@@ -18882,7 +19624,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "9FHA",
@@ -18907,7 +19650,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.freshairaviation.net"
   },
   {
     "entityId": "BPMC",
@@ -18932,7 +19676,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://fwadventures.net"
   },
   {
     "entityId": "3FCC",
@@ -18953,7 +19698,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "X0FA",
@@ -18974,7 +19720,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": "https://www.falconaviation.com"
   },
   {
     "entityId": "O2VA",
@@ -18995,7 +19742,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "F52C",
@@ -19016,7 +19764,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "CTUA",
@@ -19041,7 +19790,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.fargojet.com"
   },
   {
     "entityId": "JSDA",
@@ -19073,7 +19823,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "http://firehawkhelicopters.com"
   },
   {
     "entityId": "F27A",
@@ -19099,7 +19850,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.flyjetaccess.com"
   },
   {
     "entityId": "F89A",
@@ -19120,7 +19872,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "J7SA",
@@ -19448,7 +20201,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://flexjet.com"
   },
   {
     "entityId": "CUEA",
@@ -19469,7 +20223,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "DJFA",
@@ -19493,7 +20248,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "http://www.flightoptions.com"
   },
   {
     "entityId": "RU3A",
@@ -19550,7 +20306,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.faa.gov/about/office_org/headquarters_offices/ato/service_units/flight_program_operations"
   },
   {
     "entityId": "A8OA",
@@ -19587,7 +20344,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.flightworks.com"
   },
   {
     "entityId": "3D1A",
@@ -19608,7 +20366,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "7LCA",
@@ -19638,7 +20397,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.fliteaccess.com"
   },
   {
     "entityId": "F33A",
@@ -19662,7 +20422,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "P3EA",
@@ -19690,7 +20451,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://floridaaircargo.com"
   },
   {
     "entityId": "3GJA",
@@ -19739,7 +20501,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://flyalliance.com"
   },
   {
     "entityId": "FLCA",
@@ -19761,7 +20524,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "E58A",
@@ -19794,7 +20558,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.flycarolina.com"
   },
   {
     "entityId": "2QTA",
@@ -19815,7 +20580,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "FH0A",
@@ -19841,7 +20607,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.flyingaair.com"
   },
   {
     "entityId": "YZ7A",
@@ -19862,7 +20629,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "4FDA",
@@ -19884,7 +20652,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "BGSA",
@@ -19905,7 +20674,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": "https://www.flyfreedom.com"
   },
   {
     "entityId": "FHTA",
@@ -19929,7 +20699,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://freemanholdingsgroup.com"
   },
   {
     "entityId": "KCQA",
@@ -19978,7 +20749,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.fre-ace.com"
   },
   {
     "entityId": "ZC6A",
@@ -20007,7 +20779,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://airfuga.com"
   },
   {
     "entityId": "GZXA",
@@ -20028,7 +20801,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "2M5A",
@@ -20049,7 +20823,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "XGNA",
@@ -20088,7 +20863,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://gtair.net"
   },
   {
     "entityId": "G0CA",
@@ -20109,7 +20885,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "3G3A",
@@ -20130,7 +20907,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "GB0A",
@@ -20151,7 +20929,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "3GMA",
@@ -20181,7 +20960,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.geisinger.org"
   },
   {
     "entityId": "GC2A",
@@ -20208,7 +20988,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://georgiacarolinaair.com"
   },
   {
     "entityId": "G44A",
@@ -20232,7 +21013,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "M20A",
@@ -20253,7 +21035,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "G7FA",
@@ -20282,7 +21065,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://flygfk.com"
   },
   {
     "entityId": "ISWC",
@@ -20303,7 +21087,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "KKJA",
@@ -20329,7 +21114,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.globalaircharters.com"
   },
   {
     "entityId": "1GMA",
@@ -20352,7 +21138,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://helijetusa.com"
   },
   {
     "entityId": "W30A",
@@ -20380,7 +21167,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://globaljetcare.com"
   },
   {
     "entityId": "8GXA",
@@ -20403,7 +21191,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://globalxair.com"
   },
   {
     "entityId": "1G1A",
@@ -20424,7 +21213,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "GOYA",
@@ -20445,7 +21235,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "GFMA",
@@ -20466,7 +21257,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "GMTC",
@@ -20487,7 +21279,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "3GYC",
@@ -20508,7 +21301,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "Y7GA",
@@ -20534,7 +21328,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://goldenstateair.com"
   },
   {
     "entityId": "GSAA",
@@ -20555,7 +21350,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "GWIA",
@@ -20576,7 +21372,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "ENHA",
@@ -20657,7 +21454,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.flygrant.com"
   },
   {
     "entityId": "G7HA",
@@ -20683,7 +21481,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://grasshopperaviation.com"
   },
   {
     "entityId": "6GFA",
@@ -20718,7 +21517,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.greatflight.com"
   },
   {
     "entityId": "6GPA",
@@ -20739,7 +21539,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "GHYA",
@@ -20760,7 +21561,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "G31A",
@@ -20782,7 +21584,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "7GYA",
@@ -20816,7 +21619,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://goflygryphon.com"
   },
   {
     "entityId": "6T1A",
@@ -20841,7 +21645,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://quikcharter.com"
   },
   {
     "entityId": "GH4A",
@@ -20875,7 +21680,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://guardianhelicoptersusa.com"
   },
   {
     "entityId": "U3XA",
@@ -20896,7 +21702,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "G04A",
@@ -20917,7 +21724,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "5GTA",
@@ -20940,7 +21748,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "YGJA",
@@ -20968,7 +21777,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://garyjetcenter.com"
   },
   {
     "entityId": "7GCA",
@@ -20989,7 +21799,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "GAJA",
@@ -21025,7 +21836,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://gemairflights.com"
   },
   {
     "entityId": "GBBA",
@@ -21046,7 +21858,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "RLJA",
@@ -21067,7 +21880,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "HGZA",
@@ -21090,7 +21904,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "MFGA",
@@ -21111,7 +21926,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "M4RA",
@@ -21133,7 +21949,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "GV5A",
@@ -21156,7 +21973,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "G8LA",
@@ -21177,7 +21995,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "G73A",
@@ -21202,7 +22021,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://flyglobalnow.com"
   },
   {
     "entityId": "9CVA",
@@ -21223,7 +22043,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "G0DA",
@@ -21251,7 +22072,12 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.goflyga.com",
+    "city": "Fort Morgan",
+    "state": "CO",
+    "phone": null,
+    "email": null
   },
   {
     "entityId": "G6UA",
@@ -21282,7 +22108,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://goldeneagleoutfitters.com"
   },
   {
     "entityId": "3GWA",
@@ -21314,7 +22141,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.goflyhouse.com"
   },
   {
     "entityId": "OBRA",
@@ -21335,7 +22163,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "AZOA",
@@ -21363,7 +22192,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.grandaire.com"
   },
   {
     "entityId": "GCNA",
@@ -21401,7 +22231,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.grandcanyonairlines.com"
   },
   {
     "entityId": "G9AA",
@@ -21422,7 +22253,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "N2UA",
@@ -21480,7 +22312,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.cirrusav.com"
   },
   {
     "entityId": "IKJA",
@@ -21501,7 +22334,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "DSFA",
@@ -21537,7 +22371,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://flygriffing.com"
   },
   {
     "entityId": "G1IA",
@@ -21629,7 +22464,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.guardianflight.com"
   },
   {
     "entityId": "2G7A",
@@ -21657,7 +22493,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://guidanceair.com"
   },
   {
     "entityId": "FBVA",
@@ -21687,7 +22524,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://gulfatlanticairways.com"
   },
   {
     "entityId": "GWLA",
@@ -21708,7 +22546,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "7H5A",
@@ -21729,7 +22568,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "H7FA",
@@ -21754,7 +22594,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://haloflight.org"
   },
   {
     "entityId": "G58A",
@@ -21775,7 +22616,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "9HNA",
@@ -21796,7 +22638,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "Q5UA",
@@ -21819,7 +22662,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "G6FA",
@@ -21840,7 +22684,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "1HRA",
@@ -21864,7 +22709,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "3H5A",
@@ -21887,7 +22733,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.haskinaviation.com"
   },
   {
     "entityId": "HXFA",
@@ -21908,7 +22755,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "T5HA",
@@ -21929,7 +22777,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "4HYA",
@@ -21954,7 +22803,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://haynesaviation.com"
   },
   {
     "entityId": "HC7A",
@@ -21979,7 +22829,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.hcdpbc.org"
   },
   {
     "entityId": "1EKA",
@@ -22000,7 +22851,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "X1YA",
@@ -22028,7 +22880,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.heli-1.com"
   },
   {
     "entityId": "1TQC",
@@ -22053,7 +22906,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "NDBA",
@@ -22079,7 +22933,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://helicopterapplicators.com"
   },
   {
     "entityId": "4HSA",
@@ -22100,7 +22955,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "14SA",
@@ -22121,7 +22977,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "Q2HA",
@@ -22157,7 +23014,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.heliflite.com"
   },
   {
     "entityId": "8PQA",
@@ -22178,7 +23036,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "2H1A",
@@ -22199,7 +23058,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "54FA",
@@ -22220,7 +23080,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "HPHA",
@@ -22241,7 +23102,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "MYZA",
@@ -22264,7 +23126,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://highrizeaviation.com"
   },
   {
     "entityId": "71HC",
@@ -22285,7 +23148,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "GHZA",
@@ -22306,7 +23170,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "OHMA",
@@ -22334,7 +23199,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.hmchelicopterservices.com"
   },
   {
     "entityId": "Q6HA",
@@ -22357,7 +23223,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.hmsaviation.com"
   },
   {
     "entityId": "HH7A",
@@ -22378,7 +23245,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "FKMA",
@@ -22399,7 +23267,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "1HSA",
@@ -22422,7 +23291,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "H3AA",
@@ -22443,7 +23313,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "2HXA",
@@ -22468,7 +23339,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "JJEC",
@@ -22489,7 +23361,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "AVBA",
@@ -22510,7 +23383,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "WK0A",
@@ -22531,7 +23405,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "HZNA",
@@ -22555,7 +23430,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://huttaviation.net"
   },
   {
     "entityId": "H4RA",
@@ -22576,7 +23452,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "LFBA",
@@ -22597,7 +23474,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "19MA",
@@ -22623,7 +23501,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://flyhangar7.com"
   },
   {
     "entityId": "1T2A",
@@ -22644,7 +23523,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "P18A",
@@ -22665,7 +23545,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "5WZA",
@@ -22687,7 +23568,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "6MIA",
@@ -22708,7 +23590,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "H5FA",
@@ -22729,7 +23612,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "1MNA",
@@ -22759,7 +23643,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://hawaiipacificaviation.com"
   },
   {
     "entityId": "7P4A",
@@ -22781,7 +23666,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://hawaiianglobetrotter.com"
   },
   {
     "entityId": "H7OA",
@@ -22802,7 +23688,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "AZNA",
@@ -22824,7 +23711,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://heartlandaviation.com"
   },
   {
     "entityId": "H4QA",
@@ -22851,7 +23739,12 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://heliqwest.com",
+    "city": "Broomfield",
+    "state": "CO",
+    "phone": "303-469-2932",
+    "email": "info@heliqwest.com"
   },
   {
     "entityId": "ZS0A",
@@ -22874,7 +23767,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "1N7A",
@@ -22897,7 +23791,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.helicosonoma.com"
   },
   {
     "entityId": "HCMA",
@@ -22941,7 +23836,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.bluehawaiian.com"
   },
   {
     "entityId": "H2EA",
@@ -22962,7 +23858,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "H11A",
@@ -23009,7 +23906,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.helicopterexpress.com"
   },
   {
     "entityId": "H44A",
@@ -23036,7 +23934,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://heliny.com"
   },
   {
     "entityId": "O8UA",
@@ -23059,7 +23958,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "DDZA",
@@ -23091,7 +23991,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://flyhelicoptersinc.com"
   },
   {
     "entityId": "H9XA",
@@ -23112,7 +24013,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "H4TA",
@@ -23146,7 +24048,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "http://www.helimotion.com"
   },
   {
     "entityId": "H0CA",
@@ -23180,7 +24083,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://helinet.com"
   },
   {
     "entityId": "9HSA",
@@ -23207,7 +24111,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://heliservice-usa.com"
   },
   {
     "entityId": "JMXA",
@@ -23252,7 +24157,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://helistream.com"
   },
   {
     "entityId": "7EVA",
@@ -23280,7 +24186,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.helius.aero"
   },
   {
     "entityId": "H8VA",
@@ -23301,7 +24208,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "RW8A",
@@ -23330,7 +24238,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.heloair.com"
   },
   {
     "entityId": "GCMA",
@@ -23353,7 +24262,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "http://hendersonaviationco.com"
   },
   {
     "entityId": "5JHA",
@@ -23390,7 +24300,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://heraflight.com"
   },
   {
     "entityId": "H5HA",
@@ -23411,7 +24322,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "H4AC",
@@ -23434,7 +24346,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "8HTA",
@@ -23457,7 +24370,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://hessjet.com"
   },
   {
     "entityId": "VKDA",
@@ -23480,7 +24394,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "2H2A",
@@ -23501,7 +24416,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "ZKTC",
@@ -23522,7 +24438,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "91HA",
@@ -23543,7 +24460,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "H8TA",
@@ -23566,7 +24484,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://hightailaircharter.com"
   },
   {
     "entityId": "GFLA",
@@ -23598,7 +24517,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.hillcrestaircraft.com"
   },
   {
     "entityId": "LJEA",
@@ -23629,7 +24549,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.hillsboroaviation.com"
   },
   {
     "entityId": "5GJA",
@@ -23650,7 +24571,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "H43A",
@@ -23685,7 +24607,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://holmanaviation.com"
   },
   {
     "entityId": "ENEA",
@@ -23706,7 +24629,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "V56A",
@@ -23727,7 +24651,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "HR9A",
@@ -23748,7 +24673,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "HZXA",
@@ -23769,7 +24695,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "YVRA",
@@ -23802,7 +24729,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://jetdirect.com"
   },
   {
     "entityId": "EYAA",
@@ -23829,7 +24757,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://hughesflyingservice.com"
   },
   {
     "entityId": "HYIA",
@@ -23948,7 +24877,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.capeair.com"
   },
   {
     "entityId": "OZCA",
@@ -23980,7 +24910,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://ibcairways.com"
   },
   {
     "entityId": "4LOC",
@@ -24001,7 +24932,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "9IHA",
@@ -24022,7 +24954,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "3IIC",
@@ -24043,7 +24976,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "3IAA",
@@ -24064,7 +24998,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "DJSA",
@@ -24092,7 +25027,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.iflgroup.com"
   },
   {
     "entityId": "I7LA",
@@ -24128,7 +25064,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://intermountainhealthcare.org/services/air-medical-transport"
   },
   {
     "entityId": "EONA",
@@ -24160,7 +25097,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "http://www.iliamnaair.com"
   },
   {
     "entityId": "ILCA",
@@ -24181,7 +25119,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "IATA",
@@ -24202,7 +25141,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "4IHA",
@@ -24223,7 +25163,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "6GTA",
@@ -24244,7 +25185,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "454A",
@@ -24302,7 +25244,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.apollomedflight.com"
   },
   {
     "entityId": "4JLA",
@@ -24323,7 +25266,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "NTNA",
@@ -24344,7 +25288,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "41HA",
@@ -24366,7 +25311,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "4INA",
@@ -24389,7 +25335,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.flywithiac.com"
   },
   {
     "entityId": "5IIA",
@@ -24410,7 +25357,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "IAGA",
@@ -24431,7 +25379,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "1ICA",
@@ -24452,7 +25401,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "4IEA",
@@ -24473,7 +25423,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "ISCA",
@@ -24500,7 +25451,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://islandaircharters.com"
   },
   {
     "entityId": "7IXA",
@@ -24522,7 +25474,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "IQJA",
@@ -24549,7 +25502,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.islandair.com"
   },
   {
     "entityId": "7ILA",
@@ -24570,7 +25524,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "ITXA",
@@ -24591,7 +25546,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "GAKA",
@@ -24618,7 +25574,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.idahohelicopters.com"
   },
   {
     "entityId": "BLUA",
@@ -24641,7 +25598,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.iacharter.com"
   },
   {
     "entityId": "3IVA",
@@ -24664,7 +25622,12 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": "https://flywithia.com",
+    "city": "Englewood",
+    "state": "CO",
+    "phone": "303-858-1600",
+    "email": "fly@flywithia.com"
   },
   {
     "entityId": "I0LA",
@@ -24689,7 +25652,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.inflightstl.com"
   },
   {
     "entityId": "I7HA",
@@ -24710,7 +25674,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "1N6A",
@@ -24731,7 +25696,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "I4FA",
@@ -24762,7 +25728,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.ifrcharter.com"
   },
   {
     "entityId": "IK9A",
@@ -24785,7 +25752,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "IYUA",
@@ -24811,7 +25779,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://jets.com"
   },
   {
     "entityId": "CJPA",
@@ -24849,7 +25818,12 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://internationaljet.com",
+    "city": "Centennial",
+    "state": "CO",
+    "phone": "303-790-0414",
+    "email": "adam@internationaljet.com"
   },
   {
     "entityId": "UIJA",
@@ -24878,7 +25852,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.ijcharter.com"
   },
   {
     "entityId": "FHSA",
@@ -24903,7 +25878,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.islagrandeflying.com"
   },
   {
     "entityId": "I9BA",
@@ -24929,7 +25905,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.islandbirds.com"
   },
   {
     "entityId": "ISHA",
@@ -24956,7 +25933,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.iexhelicopters.com"
   },
   {
     "entityId": "ILDA",
@@ -24979,7 +25957,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://islandhelicopters.com"
   },
   {
     "entityId": "IW7A",
@@ -25001,7 +25980,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "M7JA",
@@ -25022,7 +26002,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "HVUA",
@@ -25050,7 +26031,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.jandmalaskaairtours.com"
   },
   {
     "entityId": "JBTC",
@@ -25071,7 +26053,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "FSNA",
@@ -25094,7 +26077,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "JC9A",
@@ -25115,7 +26099,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "NXYA",
@@ -25136,7 +26121,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "8JNA",
@@ -25157,7 +26143,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "7JTA",
@@ -25180,7 +26167,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.flyjatoaviation.com"
   },
   {
     "entityId": "2JJA",
@@ -25210,7 +26198,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.flyjaxjets.com"
   },
   {
     "entityId": "3JZA",
@@ -25231,7 +26220,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "4J8A",
@@ -25252,7 +26242,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "3JMA",
@@ -25288,7 +26279,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.jetexcellence.com"
   },
   {
     "entityId": "JAIA",
@@ -25315,7 +26307,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://jetamericainc.com"
   },
   {
     "entityId": "J7XA",
@@ -25336,7 +26329,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "J5XA",
@@ -25365,7 +26359,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://jetmethods.com"
   },
   {
     "entityId": "9JXA",
@@ -25390,7 +26385,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://flyjetservices.com"
   },
   {
     "entityId": "1KJA",
@@ -25413,7 +26409,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.jetthere.com"
   },
   {
     "entityId": "4JUA",
@@ -25435,7 +26432,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "http://jetupaviation.com"
   },
   {
     "entityId": "XQJA",
@@ -25460,7 +26458,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.flysvgair.com"
   },
   {
     "entityId": "6JXA",
@@ -25483,7 +26482,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.jetex.com"
   },
   {
     "entityId": "J38A",
@@ -25504,7 +26504,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "JIBA",
@@ -25525,7 +26526,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "JL0A",
@@ -25552,7 +26554,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.flyjla.com"
   },
   {
     "entityId": "JBEA",
@@ -25573,7 +26576,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "FTYA",
@@ -25610,7 +26614,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.jbihelicopters.com"
   },
   {
     "entityId": "S2TC",
@@ -25633,7 +26638,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "UJ8A",
@@ -25676,7 +26682,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://journeyflight.com"
   },
   {
     "entityId": "3JPA",
@@ -25701,7 +26708,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.alaskaairservice.com"
   },
   {
     "entityId": "DCGA",
@@ -25728,7 +26736,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://helicopters-kauai.com"
   },
   {
     "entityId": "15JA",
@@ -25749,7 +26758,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "YJXA",
@@ -25770,7 +26780,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "FKEA",
@@ -25798,7 +26809,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.jet1charter.com"
   },
   {
     "entityId": "1JAA",
@@ -25851,7 +26863,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.flyjetaccess.com"
   },
   {
     "entityId": "TFUA",
@@ -25872,7 +26885,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "JAFA",
@@ -25903,7 +26917,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://jetairinc.com"
   },
   {
     "entityId": "CWUA",
@@ -25924,7 +26939,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "JKXA",
@@ -25945,7 +26961,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "KKVA",
@@ -26039,7 +27056,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.jetaviation.com"
   },
   {
     "entityId": "LBWA",
@@ -26060,7 +27078,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "9JLA",
@@ -26200,7 +27219,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.jetlinx.com"
   },
   {
     "entityId": "ZP7A",
@@ -26238,7 +27258,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.jetlogistics.us"
   },
   {
     "entityId": "L4OA",
@@ -26265,7 +27286,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.jetout.com"
   },
   {
     "entityId": "JOZA",
@@ -26288,7 +27310,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "U5QA",
@@ -26396,7 +27419,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.vistaamerica.com"
   },
   {
     "entityId": "N9VA",
@@ -26428,7 +27452,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.jrah.aero"
   },
   {
     "entityId": "CVDA",
@@ -26457,7 +27482,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.jetsplus.com"
   },
   {
     "entityId": "6JBA",
@@ -26478,7 +27504,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "6JGA",
@@ -26499,7 +27526,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "ZJ6A",
@@ -26533,7 +27561,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.justiceair.com"
   },
   {
     "entityId": "KISA",
@@ -26554,7 +27583,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "5KDA",
@@ -26575,7 +27605,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "K2DA",
@@ -26596,7 +27627,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "7KRA",
@@ -26627,7 +27659,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.kandrair.com"
   },
   {
     "entityId": "K99A",
@@ -26653,7 +27686,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.kbayair.com"
   },
   {
     "entityId": "YKBA",
@@ -26676,7 +27710,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "KCAA",
@@ -26698,7 +27733,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "XAKC",
@@ -26721,7 +27757,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "ENFA",
@@ -26757,7 +27794,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://katmaiair.com"
   },
   {
     "entityId": "3KVA",
@@ -26778,7 +27816,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "B9HA",
@@ -26802,7 +27841,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "7KEA",
@@ -26830,7 +27870,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://kenmoreair.com"
   },
   {
     "entityId": "KC7A",
@@ -26851,7 +27892,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "K90A",
@@ -26872,7 +27914,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "KQAC",
@@ -26900,7 +27943,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://kingairinc.net"
   },
   {
     "entityId": "K70A",
@@ -26921,7 +27965,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "KT1A",
@@ -26942,7 +27987,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "LDQA",
@@ -26963,7 +28009,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "DCUA",
@@ -26996,7 +28043,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.flykmr.com"
   },
   {
     "entityId": "2KHA",
@@ -27017,7 +28065,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "3KUA",
@@ -27050,7 +28099,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.kouryprivatejetcharter.com"
   },
   {
     "entityId": "5JKA",
@@ -27071,7 +28121,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "BJHA",
@@ -27092,7 +28143,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "COZA",
@@ -27115,7 +28167,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "121/135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "P9KA",
@@ -27152,7 +28205,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.flyalaskaseaplanes.com"
   },
   {
     "entityId": "KC8A",
@@ -27216,7 +28270,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.kalittacharters.com"
   },
   {
     "entityId": "K2AA",
@@ -27244,7 +28299,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://kamakaair.com"
   },
   {
     "entityId": "AMYA",
@@ -27276,7 +28332,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://kcaviation.com"
   },
   {
     "entityId": "S31A",
@@ -27297,7 +28354,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "5KRC",
@@ -27318,7 +28376,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "ELYA",
@@ -27345,7 +28404,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.kenaiaviation.com"
   },
   {
     "entityId": "GJRA",
@@ -27384,7 +28444,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.kenmoreairharbor.com"
   },
   {
     "entityId": "4JWC",
@@ -27407,7 +28468,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "KKIA",
@@ -27434,7 +28496,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.kyairmotive.net"
   },
   {
     "entityId": "K0SA",
@@ -27455,7 +28518,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "5KIA",
@@ -27476,7 +28540,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "KY7A",
@@ -27521,7 +28586,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "121/135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.keylimeair.com"
   },
   {
     "entityId": "K6XA",
@@ -27546,7 +28612,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.keywestexecutiveaircharter.com"
   },
   {
     "entityId": "A85A",
@@ -27567,7 +28634,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "AODA",
@@ -27594,7 +28662,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.kingfisherairservices.com"
   },
   {
     "entityId": "K0EC",
@@ -27618,7 +28687,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "K69A",
@@ -27639,7 +28709,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "3KOC",
@@ -27660,7 +28731,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "K51A",
@@ -27684,7 +28756,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "http://www.kolobair.com"
   },
   {
     "entityId": "YKUA",
@@ -27705,7 +28778,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "ZESA",
@@ -27750,7 +28824,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.ljaviation.com"
   },
   {
     "entityId": "QPOA",
@@ -27779,7 +28854,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://lakeandpenair.com"
   },
   {
     "entityId": "HXXC",
@@ -27826,7 +28902,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.lakeclarkair.com"
   },
   {
     "entityId": "5LHA",
@@ -27853,7 +28930,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.lakesuperiorhelicopters.com"
   },
   {
     "entityId": "BLMA",
@@ -27874,7 +28952,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "4LAC",
@@ -27899,7 +28978,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "L67A",
@@ -27926,7 +29006,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.lanierflightcenter.com"
   },
   {
     "entityId": "2PIA",
@@ -27969,7 +29050,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://l33jets.com"
   },
   {
     "entityId": "LHLA",
@@ -27990,7 +29072,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "L9QA",
@@ -28024,7 +29107,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://flyleadingedge.com"
   },
   {
     "entityId": "BSQA",
@@ -28050,7 +29134,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": null
   },
   {
     "entityId": "2LAA",
@@ -28078,7 +29163,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.legacyaviationsd.com"
   },
   {
     "entityId": "W4WC",
@@ -28101,7 +29187,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "LGAA",
@@ -28128,7 +29215,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://letsgoair.com"
   },
   {
     "entityId": "6LPA",
@@ -28149,7 +29237,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "LDJA",
@@ -28184,7 +29273,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.libertyjet.com"
   },
   {
     "entityId": "8LFA",
@@ -28270,7 +29360,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.lifeflight.org"
   },
   {
     "entityId": "5L0A",
@@ -28298,7 +29389,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://lifeflightmaine.org/lifeflight-aviation-services"
   },
   {
     "entityId": "GTSA",
@@ -28323,7 +29415,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "L87A",
@@ -28350,7 +29443,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://limoprivatejets.com"
   },
   {
     "entityId": "HCVA",
@@ -28371,7 +29465,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "3LMA",
@@ -28396,7 +29491,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.lohmanhelicopter.com"
   },
   {
     "entityId": "JKIA",
@@ -28421,7 +29517,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.rangerair.com"
   },
   {
     "entityId": "L62A",
@@ -28450,7 +29547,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.longhornhelicopters.com"
   },
   {
     "entityId": "5BHA",
@@ -28471,7 +29569,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "ETEA",
@@ -28494,7 +29593,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "1LXA",
@@ -28519,7 +29619,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "8LJA",
@@ -28540,7 +29641,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "1LNA",
@@ -28562,7 +29664,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "LAVA",
@@ -28583,7 +29686,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "4LCA",
@@ -28604,7 +29708,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "1OHA",
@@ -28625,7 +29730,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "BPYA",
@@ -28646,7 +29752,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "3LKA",
@@ -28670,7 +29777,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "9MNA",
@@ -28695,7 +29803,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.lasvegasaircharters.com"
   },
   {
     "entityId": "LXGA",
@@ -28718,7 +29827,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.leadingedgeair.com"
   },
   {
     "entityId": "LE7A",
@@ -28741,7 +29851,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://flyleadingedge.com"
   },
   {
     "entityId": "BJLC",
@@ -28762,7 +29873,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "YLIA",
@@ -28783,7 +29895,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "FWJC",
@@ -28807,7 +29920,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "TVTA",
@@ -28834,7 +29948,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://legendsairways.com"
   },
   {
     "entityId": "RHAA",
@@ -28857,7 +29972,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://letsjett.com"
   },
   {
     "entityId": "P6VA",
@@ -28881,7 +29997,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.libertyjet.com"
   },
   {
     "entityId": "4LSA",
@@ -28904,7 +30021,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": null
   },
   {
     "entityId": "MBPC",
@@ -28929,7 +30047,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "L15A",
@@ -28950,7 +30069,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "LS1A",
@@ -28981,7 +30101,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://lonestaraviators.com"
   },
   {
     "entityId": "LOYA",
@@ -29005,7 +30126,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.loydsaviation.com"
   },
   {
     "entityId": "L3UA",
@@ -29028,7 +30150,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "LQYA",
@@ -29065,7 +30188,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.lyddonaero.com"
   },
   {
     "entityId": "HSRA",
@@ -29096,7 +30220,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.lynchflyingservice.com"
   },
   {
     "entityId": "FVJA",
@@ -29128,7 +30253,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://lyonaviation.com"
   },
   {
     "entityId": "MY9A",
@@ -29149,7 +30275,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "MY5A",
@@ -29188,7 +30315,12 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.mandn.aero",
+    "city": "Englewood",
+    "state": "CO",
+    "phone": "720-356-4830",
+    "email": "charter@mandn.aero"
   },
   {
     "entityId": "MQAA",
@@ -29212,7 +30344,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": null
   },
   {
     "entityId": "XMBA",
@@ -29233,7 +30366,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "62MA",
@@ -29263,7 +30397,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.mnaviation.com"
   },
   {
     "entityId": "T0KC",
@@ -29284,7 +30419,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "MNLA",
@@ -29305,7 +30441,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "FSEA",
@@ -29335,7 +30472,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://mainecharter.com"
   },
   {
     "entityId": "BFYA",
@@ -29362,7 +30500,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.maineinstrumentflight.com"
   },
   {
     "entityId": "8BCA",
@@ -29383,7 +30522,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "38MA",
@@ -29404,7 +30544,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "HVEA",
@@ -29427,7 +30568,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "M0IA",
@@ -29454,7 +30596,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.marcair.com"
   },
   {
     "entityId": "1XMA",
@@ -29477,7 +30620,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "Q2KA",
@@ -29536,7 +30680,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.maverickhelicopter.com"
   },
   {
     "entityId": "M7KA",
@@ -29595,7 +30740,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.maverickhelicopter.com"
   },
   {
     "entityId": "KEVA",
@@ -29616,7 +30762,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "CIEA",
@@ -29648,7 +30795,12 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://mayoaviation.com",
+    "city": "Englewood",
+    "state": "CO",
+    "phone": "303-792-4000",
+    "email": "quotes@mayoaviation.com"
   },
   {
     "entityId": "15MA",
@@ -29675,7 +30827,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.mayoclinic.org"
   },
   {
     "entityId": "MGWA",
@@ -29696,7 +30849,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "9MPA",
@@ -29717,7 +30871,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "HYCA",
@@ -29740,7 +30895,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "Y6WA",
@@ -29777,7 +30933,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://medwayair.com"
   },
   {
     "entityId": "CKPA",
@@ -29798,7 +30955,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "EQKC",
@@ -29822,7 +30980,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "2MEA",
@@ -29843,7 +31002,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "MNGA",
@@ -29864,7 +31024,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "M2QA",
@@ -29885,7 +31046,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "6MFA",
@@ -29909,7 +31071,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "M85A",
@@ -29936,7 +31099,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://meregrass.com"
   },
   {
     "entityId": "HDNA",
@@ -30145,7 +31309,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.metroaviation.com"
   },
   {
     "entityId": "1MIA",
@@ -30170,7 +31335,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "J81A",
@@ -30196,7 +31362,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://midsouthjets.com"
   },
   {
     "entityId": "YYMA",
@@ -30231,7 +31398,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.midwestaeroclub.org"
   },
   {
     "entityId": "SOWA",
@@ -30265,7 +31433,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.charter-first.com"
   },
   {
     "entityId": "MEAA",
@@ -30286,7 +31455,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "MLJA",
@@ -30308,7 +31478,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "7FYC",
@@ -30329,7 +31500,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "2WMA",
@@ -30358,7 +31530,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://mindwindercharters.com"
   },
   {
     "entityId": "W9RA",
@@ -30381,7 +31554,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "8MYA",
@@ -30404,7 +31578,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "C5JA",
@@ -30425,7 +31600,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "CUXA",
@@ -30462,7 +31638,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://modestojet.com"
   },
   {
     "entityId": "GHEA",
@@ -30485,7 +31662,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "MOMA",
@@ -30508,7 +31686,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "4MSA",
@@ -30534,7 +31713,12 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.moseraviation.com",
+    "city": "Englewood",
+    "state": "CO",
+    "phone": "303-662-1845",
+    "email": "charter@moseraviation.com"
   },
   {
     "entityId": "MNIA",
@@ -30555,7 +31739,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "9MTA",
@@ -30576,7 +31761,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "CLRA",
@@ -30597,7 +31783,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "7MNA",
@@ -30621,7 +31808,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.mbrhelicopters.com"
   },
   {
     "entityId": "M5WA",
@@ -30643,7 +31831,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.mwheli.com"
   },
   {
     "entityId": "CDHA",
@@ -30669,7 +31858,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://moyeraviation.com"
   },
   {
     "entityId": "2M7A",
@@ -30693,7 +31883,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.hirejet.com"
   },
   {
     "entityId": "Q6WA",
@@ -30714,7 +31905,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "3RJA",
@@ -30742,7 +31934,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.mtjaviation.com"
   },
   {
     "entityId": "UXLC",
@@ -30763,7 +31956,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "7MYA",
@@ -30787,7 +31981,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "DRFA",
@@ -30817,7 +32012,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://machoneaircharters.com"
   },
   {
     "entityId": "UZCA",
@@ -30838,7 +32034,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "W39A",
@@ -30862,7 +32059,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://flymeva.com"
   },
   {
     "entityId": "MAKA",
@@ -30884,7 +32082,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.makleeair.com"
   },
   {
     "entityId": "Q3SA",
@@ -30909,7 +32108,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://maloneaircharter.com"
   },
   {
     "entityId": "DDWA",
@@ -30930,7 +32130,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "1M8C",
@@ -30951,7 +32152,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "ENRA",
@@ -30992,7 +32194,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://maritimehelicopters.com"
   },
   {
     "entityId": "MXIA",
@@ -31017,7 +32220,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://flymartinair.com"
   },
   {
     "entityId": "MT9A",
@@ -31060,7 +32264,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.martinaire.com"
   },
   {
     "entityId": "2FHA",
@@ -31081,7 +32286,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "X0IA",
@@ -31110,7 +32316,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.maxaircharter.com"
   },
   {
     "entityId": "MAXA",
@@ -31144,7 +32351,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.maxaircharter.com"
   },
   {
     "entityId": "M2LA",
@@ -31165,7 +32373,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "HLFA",
@@ -31187,7 +32396,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "X30A",
@@ -31208,7 +32418,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "F81A",
@@ -31238,7 +32449,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://mcleanaviation.com"
   },
   {
     "entityId": "BUBA",
@@ -31261,7 +32473,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.mcmahon-airborne.com"
   },
   {
     "entityId": "MCCA",
@@ -31292,7 +32505,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://mcneelycharter.com"
   },
   {
     "entityId": "ECLA",
@@ -31320,7 +32534,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://mcflymec.com"
   },
   {
     "entityId": "IFOA",
@@ -31341,7 +32556,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "MFUA",
@@ -31364,7 +32580,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://medflightair.com"
   },
   {
     "entityId": "M3XA",
@@ -31535,7 +32752,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.med-trans.net"
   },
   {
     "entityId": "4BBA",
@@ -31556,7 +32774,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "GVNA",
@@ -31582,7 +32801,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://memorialhermann.org/services/specialties/trauma/life-flight"
   },
   {
     "entityId": "M27A",
@@ -31603,7 +32823,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "2NSA",
@@ -31626,7 +32847,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "M7FA",
@@ -31650,7 +32872,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.mercyflight.org"
   },
   {
     "entityId": "GCSA",
@@ -31677,7 +32900,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.mercyflights.com"
   },
   {
     "entityId": "K1RA",
@@ -31698,7 +32922,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "1M5A",
@@ -31719,7 +32944,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "6MJA",
@@ -31740,7 +32966,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "MFWA",
@@ -31761,7 +32988,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "MM9A",
@@ -31782,7 +33010,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "1QUA",
@@ -31806,7 +33035,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.midpacificair.com"
   },
   {
     "entityId": "FGQA",
@@ -31836,7 +33066,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://midamericajet.com"
   },
   {
     "entityId": "MKTA",
@@ -31864,7 +33095,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "http://www.middleforkair.com"
   },
   {
     "entityId": "IYMA",
@@ -31890,7 +33122,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.midlandaircraft.com"
   },
   {
     "entityId": "3R3C",
@@ -31913,7 +33146,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "7MTA",
@@ -31934,7 +33168,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "UQMA",
@@ -31964,7 +33199,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://midwestflyingservice.com"
   },
   {
     "entityId": "JTKA",
@@ -31986,7 +33222,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "YWJA",
@@ -32017,7 +33254,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://reynoldsjet.com"
   },
   {
     "entityId": "HBSA",
@@ -32038,7 +33276,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "MINA",
@@ -32072,7 +33311,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.minutemanjets.com"
   },
   {
     "entityId": "K4DA",
@@ -32112,7 +33352,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.mvjet.com"
   },
   {
     "entityId": "Y4FA",
@@ -32136,7 +33377,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "3MMA",
@@ -32157,7 +33399,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "4MCA",
@@ -32179,7 +33422,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.msairexpress.com"
   },
   {
     "entityId": "EKTA",
@@ -32205,7 +33449,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://mistyfjordsair.com"
   },
   {
     "entityId": "CYVA",
@@ -32226,7 +33471,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "MN9A",
@@ -32249,7 +33495,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.montanaaircraft.com"
   },
   {
     "entityId": "K7MA",
@@ -32278,7 +33525,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.montereyjetcenter.com"
   },
   {
     "entityId": "AZSA",
@@ -32299,7 +33547,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "DVGA",
@@ -32322,7 +33571,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "MTNA",
@@ -32397,7 +33647,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "121/135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://mtaircargo.com"
   },
   {
     "entityId": "MHHA",
@@ -32420,7 +33671,12 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "http://mtairheli.com",
+    "city": "Los Lunas",
+    "state": "NM",
+    "phone": "505-865-7500",
+    "email": "info@mtnairheli.com"
   },
   {
     "entityId": "F22A",
@@ -32443,7 +33699,12 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.mountainairmedical.com",
+    "city": "Jackson",
+    "state": "WY",
+    "phone": "307-337-0570",
+    "email": null
   },
   {
     "entityId": "XMNA",
@@ -32469,7 +33730,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.flyspecialops.com"
   },
   {
     "entityId": "OUFA",
@@ -32490,7 +33752,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "6DWA",
@@ -32517,7 +33780,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": null
   },
   {
     "entityId": "B9RA",
@@ -32538,7 +33802,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "T26C",
@@ -32559,7 +33824,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "NYGA",
@@ -32580,7 +33846,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "5NMC",
@@ -32601,7 +33868,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "N5CA",
@@ -32629,7 +33897,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://makersair.com"
   },
   {
     "entityId": "NZYC",
@@ -32650,7 +33919,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "N47A",
@@ -32675,7 +33945,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.flyneat.com"
   },
   {
     "entityId": "4N3A",
@@ -32696,7 +33967,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "6BMA",
@@ -32724,7 +33996,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.bostonmedflight.org"
   },
   {
     "entityId": "N38A",
@@ -32749,7 +34022,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://newworldaviation.com"
   },
   {
     "entityId": "1NJA",
@@ -32770,7 +34044,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "4NSA",
@@ -32822,7 +34097,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.nicholasair.com"
   },
   {
     "entityId": "4NFA",
@@ -32843,7 +34119,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "S6GA",
@@ -32873,7 +34150,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://northmemorial.com/specialty/air-care"
   },
   {
     "entityId": "NPHA",
@@ -32896,7 +34174,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "N62A",
@@ -32923,7 +34202,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://northstaraeroservices.com"
   },
   {
     "entityId": "713A",
@@ -32948,7 +34228,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.northwindaviation.com"
   },
   {
     "entityId": "EBMA",
@@ -32972,7 +34253,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.northernairtransport.com"
   },
   {
     "entityId": "N0QA",
@@ -32993,7 +34275,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "NP6A",
@@ -33015,7 +34298,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://nphak.com"
   },
   {
     "entityId": "5NWA",
@@ -33036,7 +34320,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "NTWA",
@@ -33062,7 +34347,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://nwhelicopters.com"
   },
   {
     "entityId": "2NVA",
@@ -33093,7 +34379,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.novictorheli.com"
   },
   {
     "entityId": "2NUC",
@@ -33114,7 +34401,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "NA6A",
@@ -33135,7 +34423,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "7WWA",
@@ -33156,7 +34445,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "N3NC",
@@ -33177,7 +34467,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "N6VA",
@@ -33198,7 +34489,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "NI6A",
@@ -33220,7 +34512,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "DXTA",
@@ -33906,7 +35199,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.netjets.com"
   },
   {
     "entityId": "NEAA",
@@ -33936,7 +35230,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://newenglandairlines.com"
   },
   {
     "entityId": "NY9A",
@@ -33959,7 +35254,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "3NXA",
@@ -33985,7 +35281,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.flynexgen.com"
   },
   {
     "entityId": "Z7VA",
@@ -34012,7 +35309,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://nexgenflightsolutions.com"
   },
   {
     "entityId": "N52A",
@@ -34033,7 +35331,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "NUIA",
@@ -34054,7 +35353,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "N72A",
@@ -34075,7 +35375,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "NRDA",
@@ -34096,7 +35397,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "NOGA",
@@ -34117,7 +35419,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "YNOA",
@@ -34143,7 +35446,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://naac.com"
   },
   {
     "entityId": "ORMA",
@@ -34164,7 +35468,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "JVWA",
@@ -34191,7 +35496,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.flyncatoday.com"
   },
   {
     "entityId": "N4CA",
@@ -34216,7 +35522,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.northcountryaviation.net"
   },
   {
     "entityId": "DIXA",
@@ -34245,7 +35552,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.flynda.com"
   },
   {
     "entityId": "1NRC",
@@ -34273,7 +35581,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://alaskanorthriverair.com"
   },
   {
     "entityId": "NUTA",
@@ -34294,7 +35603,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "N5QA",
@@ -34315,7 +35625,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "FMMA",
@@ -34338,7 +35649,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "http://www.nemtstatair.com"
   },
   {
     "entityId": "AOYA",
@@ -34382,7 +35694,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://neajets.com"
   },
   {
     "entityId": "NR9A",
@@ -34405,7 +35718,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "NTFA",
@@ -34442,7 +35756,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.northernillinoisflightcenter.com"
   },
   {
     "entityId": "T6FA",
@@ -34502,7 +35817,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://northernjet.com"
   },
   {
     "entityId": "J1OC",
@@ -34523,7 +35839,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "N5JA",
@@ -34555,7 +35872,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://northstartrekking.com"
   },
   {
     "entityId": "NW9A",
@@ -34580,7 +35898,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://northwestflyers.com"
   },
   {
     "entityId": "QNWA",
@@ -34607,7 +35926,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://northwindak.com"
   },
   {
     "entityId": "YNQA",
@@ -34630,7 +35950,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "THNA",
@@ -34651,7 +35972,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "9OCA",
@@ -34672,7 +35994,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "1FHA",
@@ -34695,7 +36018,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "8IJA",
@@ -34716,7 +36040,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "OIBA",
@@ -34737,7 +36062,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "O2MA",
@@ -34770,7 +36096,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://flyomni.com"
   },
   {
     "entityId": "11OA",
@@ -34791,7 +36118,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "ONYC",
@@ -34812,7 +36140,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "OQ9A",
@@ -34839,7 +36168,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.oregonsunstoneaviation.com"
   },
   {
     "entityId": "O9FA",
@@ -34864,7 +36194,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://orionflightservices.com"
   },
   {
     "entityId": "O84A",
@@ -34890,7 +36221,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.osfhealthcare.org/services/medical-professionals/ems/life-flight"
   },
   {
     "entityId": "O3SC",
@@ -34915,7 +36247,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "3OTC",
@@ -34936,7 +36269,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "OTTA",
@@ -34961,7 +36295,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.flyotter.com"
   },
   {
     "entityId": "O6BA",
@@ -34987,7 +36322,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.flyobx.com"
   },
   {
     "entityId": "OV0A",
@@ -35008,7 +36344,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "8OYA",
@@ -35037,7 +36374,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.flyodysseyair.com"
   },
   {
     "entityId": "ON0A",
@@ -35058,7 +36396,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "GB7A",
@@ -35079,7 +36418,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "A6YA",
@@ -35102,7 +36442,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://flyonyxair.com"
   },
   {
     "entityId": "O7ZA",
@@ -35127,7 +36468,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.flyoptimalaviation.com"
   },
   {
     "entityId": "DNSA",
@@ -35148,7 +36490,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "QGXA",
@@ -35169,7 +36512,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "1OBA",
@@ -35197,7 +36541,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://orbicair.com"
   },
   {
     "entityId": "6ORA",
@@ -35219,7 +36564,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "O6IA",
@@ -35240,7 +36586,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "8SCA",
@@ -35261,7 +36608,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "OEYA",
@@ -35288,7 +36636,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.owyheeair.com"
   },
   {
     "entityId": "PNOA",
@@ -35309,7 +36658,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "AWTA",
@@ -35356,7 +36706,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.pjhelicopters.com"
   },
   {
     "entityId": "QF0A",
@@ -35380,7 +36731,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.pacificaircharters.com"
   },
   {
     "entityId": "PLAA",
@@ -35401,7 +36753,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "VPOA",
@@ -35439,7 +36792,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.sierrawestairlines.com"
   },
   {
     "entityId": "PBVA",
@@ -35466,7 +36820,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.pantherhelicopters.com"
   },
   {
     "entityId": "PG9A",
@@ -35535,7 +36890,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.papillon.com"
   },
   {
     "entityId": "86PA",
@@ -35560,7 +36916,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "8PLA",
@@ -35581,7 +36938,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "PJ3A",
@@ -35603,7 +36961,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://paradisejets.com"
   },
   {
     "entityId": "9HYA",
@@ -35626,7 +36985,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.paratusair.com"
   },
   {
     "entityId": "4P1A",
@@ -35652,7 +37012,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": null
   },
   {
     "entityId": "L5YA",
@@ -35699,7 +37060,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://pacificcoastjet.com"
   },
   {
     "entityId": "9F5A",
@@ -35722,7 +37084,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "9OMA",
@@ -35743,7 +37106,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "HEEA",
@@ -35829,7 +37193,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://phihelico.com"
   },
   {
     "entityId": "VE7A",
@@ -35969,7 +37334,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.phiairmedical.com"
   },
   {
     "entityId": "ESPA",
@@ -36020,7 +37386,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://phoenixair.com"
   },
   {
     "entityId": "6PIA",
@@ -36041,7 +37408,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "PTHA",
@@ -36062,7 +37430,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "8HPA",
@@ -36083,7 +37452,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "Z7UA",
@@ -36108,7 +37478,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": null
   },
   {
     "entityId": "R56A",
@@ -36139,7 +37510,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://planetravelair.com"
   },
   {
     "entityId": "7P9A",
@@ -36184,7 +37556,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.flyplanet9.com"
   },
   {
     "entityId": "9DPA",
@@ -36209,7 +37582,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "Q5IA",
@@ -36232,7 +37606,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "2PPA",
@@ -36259,7 +37634,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.point2pointair.com"
   },
   {
     "entityId": "UPXC",
@@ -36295,7 +37671,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.polluxaviation.net"
   },
   {
     "entityId": "1POA",
@@ -36316,7 +37693,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "7PTA",
@@ -36337,7 +37715,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "POXA",
@@ -36360,7 +37739,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.precisionaviation.net"
   },
   {
     "entityId": "PPOC",
@@ -36383,7 +37763,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "QJOA",
@@ -36415,7 +37796,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://premieraircharter.com"
   },
   {
     "entityId": "8JMA",
@@ -36436,7 +37818,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "IRYA",
@@ -36457,7 +37840,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "PRAA",
@@ -36480,7 +37864,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://premiumaircharter.com"
   },
   {
     "entityId": "9PVA",
@@ -36519,7 +37904,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.presidential-aviation.com"
   },
   {
     "entityId": "P44A",
@@ -36543,7 +37929,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "OEJA",
@@ -36583,7 +37970,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.privatejetsinc.com"
   },
   {
     "entityId": "ZKFA",
@@ -36610,7 +37998,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://proairways.com"
   },
   {
     "entityId": "9R0A",
@@ -36633,7 +38022,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://proavcharters.com"
   },
   {
     "entityId": "1P0A",
@@ -36654,7 +38044,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "U8FA",
@@ -36682,7 +38073,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.proflitealaska.com"
   },
   {
     "entityId": "9R6A",
@@ -36706,7 +38098,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "YGZC",
@@ -36730,7 +38123,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "5JGA",
@@ -36751,7 +38145,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "9PQA",
@@ -36775,7 +38170,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "5PIA",
@@ -36796,7 +38192,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "9PCA",
@@ -36817,7 +38214,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "IICA",
@@ -36838,7 +38236,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "PCPA",
@@ -36859,7 +38258,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "CVUA",
@@ -36883,7 +38283,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://pmapacific.org"
   },
   {
     "entityId": "T72A",
@@ -36926,7 +38327,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://yutebethel.com"
   },
   {
     "entityId": "VYXA",
@@ -36958,7 +38360,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.panaviaairtaxi.com"
   },
   {
     "entityId": "FOVA",
@@ -36981,7 +38384,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "9PMA",
@@ -37043,7 +38447,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.paradigmjet.com"
   },
   {
     "entityId": "17MA",
@@ -37078,7 +38483,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.paragonaviationgroup.com"
   },
   {
     "entityId": "P39A",
@@ -37099,7 +38505,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "P3TA",
@@ -37145,7 +38552,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.pathfinderaviation.com"
   },
   {
     "entityId": "PVCA",
@@ -37166,7 +38574,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "BPZA",
@@ -37187,7 +38596,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "E0XA",
@@ -37226,7 +38636,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.pegjet.com"
   },
   {
     "entityId": "2P6A",
@@ -37247,7 +38658,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "UG8A",
@@ -37281,7 +38693,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.pentastaraviation.com"
   },
   {
     "entityId": "CKGA",
@@ -37304,7 +38717,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "http://www.peregrineaircharter.com"
   },
   {
     "entityId": "PF1A",
@@ -37325,7 +38739,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "Y2HA",
@@ -37353,7 +38768,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://physiciansair.com"
   },
   {
     "entityId": "3PBA",
@@ -37374,7 +38790,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "I8PA",
@@ -37410,7 +38827,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.pinnacleaviation.com"
   },
   {
     "entityId": "PJMC",
@@ -37431,7 +38849,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "5RWA",
@@ -37454,7 +38873,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://planesmart.com"
   },
   {
     "entityId": "DPUA",
@@ -37490,7 +38910,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.planemasters.com"
   },
   {
     "entityId": "V9QA",
@@ -37513,7 +38934,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.planetairpr.com"
   },
   {
     "entityId": "2PSA",
@@ -37538,7 +38960,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.polarisaviation.com"
   },
   {
     "entityId": "EHSA",
@@ -37575,7 +38998,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://ponderosaaviation.com"
   },
   {
     "entityId": "1PWA",
@@ -37596,7 +39020,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "EMQC",
@@ -37619,7 +39044,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "NKVA",
@@ -37652,7 +39078,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.flyprecision.com"
   },
   {
     "entityId": "2RPA",
@@ -37686,7 +39113,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.premierair.net"
   },
   {
     "entityId": "CMWA",
@@ -37712,7 +39140,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.premierjets.com"
   },
   {
     "entityId": "P0TA",
@@ -37736,7 +39165,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "PRIA",
@@ -37793,7 +39223,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.priesterav.com"
   },
   {
     "entityId": "I93A",
@@ -37814,7 +39245,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "DBGA",
@@ -37853,7 +39285,12 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://primejet.com",
+    "city": "Englewood",
+    "state": "CO",
+    "phone": "303-792-2374",
+    "email": "charter@primejets.com"
   },
   {
     "entityId": "P91A",
@@ -37878,7 +39315,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://flypac.net"
   },
   {
     "entityId": "WLJA",
@@ -37902,7 +39340,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://prismjet.net"
   },
   {
     "entityId": "3PVA",
@@ -37930,7 +39369,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://pfajets.com"
   },
   {
     "entityId": "W1XA",
@@ -37966,7 +39406,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "http://procargoconsulting.com"
   },
   {
     "entityId": "F8BA",
@@ -37989,7 +39430,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.propilot.aero"
   },
   {
     "entityId": "4GOA",
@@ -38014,7 +39456,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.qavvikair.com"
   },
   {
     "entityId": "JJ8A",
@@ -38035,7 +39478,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "Q5QA",
@@ -38075,7 +39519,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.questdiagnostics.com"
   },
   {
     "entityId": "QOFA",
@@ -38106,7 +39551,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "http://www.quicksilverair.com"
   },
   {
     "entityId": "AKCA",
@@ -38129,7 +39575,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": null
   },
   {
     "entityId": "4RBA",
@@ -38155,7 +39602,12 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.rfsaviation.com",
+    "city": "Englewood",
+    "state": "CO",
+    "phone": "303-949-0058",
+    "email": null
   },
   {
     "entityId": "7RJA",
@@ -38182,7 +39634,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://flyrai.com"
   },
   {
     "entityId": "9RRA",
@@ -38210,7 +39663,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://rainbowriveraviation.com"
   },
   {
     "entityId": "J6UA",
@@ -38233,7 +39687,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "3RAA",
@@ -38272,7 +39727,12 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://rampartaviation.com",
+    "city": "Colorado Springs",
+    "state": "CO",
+    "phone": "719-309-0430",
+    "email": null
   },
   {
     "entityId": "J26A",
@@ -38293,7 +39753,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "6RWA",
@@ -38314,7 +39775,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "JBZA",
@@ -38400,7 +39862,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.reachair.com"
   },
   {
     "entityId": "R3WA",
@@ -38423,7 +39886,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.redwingav.com"
   },
   {
     "entityId": "RDCA",
@@ -38444,7 +39908,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "4RHA",
@@ -38465,7 +39930,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "V99A",
@@ -38489,7 +39955,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "2YFA",
@@ -38511,7 +39978,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "RJCA",
@@ -38538,7 +40006,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://reliancejets.com"
   },
   {
     "entityId": "R59A",
@@ -38574,7 +40043,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://renfrosalaskanadventures.com"
   },
   {
     "entityId": "6RNA",
@@ -38603,7 +40073,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.renniaaviation.com"
   },
   {
     "entityId": "RSNA",
@@ -38624,7 +40095,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "O2JA",
@@ -38655,7 +40127,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.flyreva.com"
   },
   {
     "entityId": "5IDA",
@@ -38678,7 +40151,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.flyridgeline.com"
   },
   {
     "entityId": "8RCA",
@@ -38700,7 +40174,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "R5VA",
@@ -38725,7 +40200,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": null
   },
   {
     "entityId": "R0GA",
@@ -38746,7 +40222,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "ROCA",
@@ -38767,7 +40244,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "9ROC",
@@ -38788,7 +40266,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "CUCA",
@@ -38816,7 +40295,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://rogershelicopters.com"
   },
   {
     "entityId": "RATC",
@@ -38837,7 +40317,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "6R0A",
@@ -38858,7 +40339,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "YTRA",
@@ -38916,7 +40398,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://rlcllc.com"
   },
   {
     "entityId": "R28A",
@@ -38941,7 +40424,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://royaleairservice.com"
   },
   {
     "entityId": "GQVA",
@@ -38982,7 +40466,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://millionairdallas.com"
   },
   {
     "entityId": "S2KA",
@@ -39012,7 +40497,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://skywardaviation.com"
   },
   {
     "entityId": "R01A",
@@ -39042,7 +40528,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.rugbyaviation.com"
   },
   {
     "entityId": "RURA",
@@ -39063,7 +40550,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "5RUA",
@@ -39084,7 +40572,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "ERHA",
@@ -39133,7 +40622,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://flyrusts.com"
   },
   {
     "entityId": "V8XA",
@@ -39164,7 +40654,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://rvrair.com"
   },
   {
     "entityId": "UATA",
@@ -39212,7 +40703,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://ryanalaska.com"
   },
   {
     "entityId": "R5WA",
@@ -39234,7 +40726,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "RNZA",
@@ -39255,7 +40748,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "6ADA",
@@ -39276,7 +40770,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "IKLA",
@@ -39299,7 +40794,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "6RRA",
@@ -39320,7 +40816,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "MNVA",
@@ -39352,7 +40849,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://reddingjet.com"
   },
   {
     "entityId": "AUMA",
@@ -39381,7 +40879,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.reddingairservice.com"
   },
   {
     "entityId": "RI9A",
@@ -39417,7 +40916,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.flyadq.com"
   },
   {
     "entityId": "FZPA",
@@ -39441,7 +40941,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.reederflying.com"
   },
   {
     "entityId": "R71A",
@@ -39467,7 +40968,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://regencyair.com"
   },
   {
     "entityId": "QREA",
@@ -39496,7 +40998,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.flyreliant.com"
   },
   {
     "entityId": "R1OA",
@@ -39517,7 +41020,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "13RA",
@@ -39538,7 +41042,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "FLHA",
@@ -39559,7 +41064,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "HTKA",
@@ -39590,7 +41096,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://richlandaviation.com"
   },
   {
     "entityId": "BQVA",
@@ -39616,7 +41123,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://richmorflightschool.com"
   },
   {
     "entityId": "IVIA",
@@ -39637,7 +41145,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "R4CA",
@@ -39660,7 +41169,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://ricoaviation.com"
   },
   {
     "entityId": "3RLA",
@@ -39685,7 +41195,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "1R8A",
@@ -39714,7 +41225,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.rightbrotheraviation.com"
   },
   {
     "entityId": "R6FA",
@@ -39735,7 +41247,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "R96A",
@@ -39756,7 +41269,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "BUHA",
@@ -39829,7 +41343,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://royalair.com"
   },
   {
     "entityId": "4RPA",
@@ -39850,7 +41365,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "UGIA",
@@ -39871,7 +41387,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "9BNA",
@@ -39892,7 +41409,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "6NKA",
@@ -39913,7 +41431,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "1XSA",
@@ -39943,7 +41462,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.saiflight.com"
   },
   {
     "entityId": "SR9A",
@@ -39964,7 +41484,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "FUPA",
@@ -39985,7 +41506,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "XU5A",
@@ -40009,7 +41531,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.sanfordhealth.org/medical-services/emergency-medicine/airmed"
   },
   {
     "entityId": "SVBA",
@@ -40036,7 +41559,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.sanfordhealth.org"
   },
   {
     "entityId": "N88A",
@@ -40057,7 +41581,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "6SGA",
@@ -40078,7 +41603,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "7S1A",
@@ -40101,7 +41627,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "STAA",
@@ -40122,7 +41649,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "2MDA",
@@ -40152,7 +41680,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.sawtoothflying.com"
   },
   {
     "entityId": "G13A",
@@ -40197,7 +41726,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.scaviation.net"
   },
   {
     "entityId": "S6DA",
@@ -40222,7 +41752,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.sraviation.com"
   },
   {
     "entityId": "891A",
@@ -40247,7 +41778,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.seatoskyair.ca"
   },
   {
     "entityId": "939A",
@@ -40272,7 +41804,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "S64A",
@@ -40297,7 +41830,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.semtribe.com/services/aviation-department"
   },
   {
     "entityId": "8CNA",
@@ -40318,7 +41852,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "SMAC",
@@ -40339,7 +41874,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "EMWC",
@@ -40362,7 +41898,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "SHRA",
@@ -40383,7 +41920,12 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": "https://www.sheridanpilots307.com",
+    "city": "Sheridan",
+    "state": "WY",
+    "phone": "307-365-2626",
+    "email": "Info@SheridanPilots307.com"
   },
   {
     "entityId": "JLTA",
@@ -40412,7 +41954,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://shorthillsaviation.com"
   },
   {
     "entityId": "6SUA",
@@ -40435,7 +41978,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "4MNA",
@@ -40468,7 +42012,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.mountainlion.aero"
   },
   {
     "entityId": "FTDA",
@@ -40489,7 +42034,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "UQ8A",
@@ -40511,7 +42057,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "3SFC",
@@ -40536,7 +42083,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "SFYA",
@@ -40557,7 +42105,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "S4HA",
@@ -40578,7 +42127,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "74MA",
@@ -40599,7 +42149,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "7KPA",
@@ -40622,7 +42173,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://skypartnersgroup.com"
   },
   {
     "entityId": "5SKA",
@@ -40643,7 +42195,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "57SA",
@@ -40664,7 +42217,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "IUKA",
@@ -40685,7 +42239,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "5BJA",
@@ -40706,7 +42261,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "5KEA",
@@ -40731,7 +42287,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://skydanceairinc.com"
   },
   {
     "entityId": "5K1A",
@@ -40752,7 +42309,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "1SYA",
@@ -40773,7 +42331,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "9VUA",
@@ -40794,7 +42353,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "9SMA",
@@ -40815,7 +42375,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "7S2A",
@@ -40836,7 +42397,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "S2LA",
@@ -40859,7 +42421,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "4S1A",
@@ -40884,7 +42447,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.skytechinc.com"
   },
   {
     "entityId": "S8YA",
@@ -40905,7 +42469,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "SKCA",
@@ -40926,7 +42491,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "FXCA",
@@ -40952,7 +42518,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": null
   },
   {
     "entityId": "GIQA",
@@ -40977,7 +42544,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "3SOC",
@@ -40998,7 +42566,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "5O4A",
@@ -41019,7 +42588,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "5SNA",
@@ -41040,7 +42610,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "2SYA",
@@ -41077,7 +42648,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.soloyhelicopters.com"
   },
   {
     "entityId": "CECA",
@@ -41098,7 +42670,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "SN6C",
@@ -41121,7 +42694,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "9S7A",
@@ -41142,7 +42716,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "141A",
@@ -41217,7 +42792,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.iflysouthern.com"
   },
   {
     "entityId": "HDCA",
@@ -41242,7 +42818,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://southernhelicopters.com"
   },
   {
     "entityId": "1IHA",
@@ -41263,7 +42840,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "SSCA",
@@ -41292,7 +42870,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.southernseaplane.com"
   },
   {
     "entityId": "SW2A",
@@ -41315,7 +42894,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.flysouthernwings.com"
   },
   {
     "entityId": "6ESA",
@@ -41336,7 +42916,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "SPOA",
@@ -41359,7 +42940,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://spaviation.net"
   },
   {
     "entityId": "U8ZA",
@@ -41380,7 +42962,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "ZUGA",
@@ -41407,7 +42990,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://specializedheli.com"
   },
   {
     "entityId": "ERGA",
@@ -41434,7 +43018,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.spernakair.com"
   },
   {
     "entityId": "J4HC",
@@ -41463,7 +43048,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://alaskasport.com"
   },
   {
     "entityId": "1SMA",
@@ -41497,7 +43083,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.starmarianasair.com"
   },
   {
     "entityId": "SBBA",
@@ -41518,7 +43105,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "8SMA",
@@ -41548,7 +43136,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://flyairsmart.com"
   },
   {
     "entityId": "1S3A",
@@ -41569,7 +43158,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "SLAA",
@@ -41593,7 +43183,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "9DGC",
@@ -41614,7 +43205,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "JTEC",
@@ -41637,7 +43229,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "YYOA",
@@ -41658,7 +43251,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "6GVA",
@@ -41679,7 +43273,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "VSUA",
@@ -41700,7 +43295,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "SHSA",
@@ -41722,7 +43318,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://superiorhelicopter.com"
   },
   {
     "entityId": "4SWA",
@@ -41751,7 +43348,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.sweetaviation.com"
   },
   {
     "entityId": "7SJA",
@@ -41784,7 +43382,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.swiftaircraftmanagement.com"
   },
   {
     "entityId": "1KEC",
@@ -41809,7 +43408,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": null
   },
   {
     "entityId": "8SGA",
@@ -41830,7 +43430,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "4SZA",
@@ -41854,7 +43455,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://szaboaerospace.com"
   },
   {
     "entityId": "SXAA",
@@ -41884,7 +43486,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.sacexechelicopters.com"
   },
   {
     "entityId": "XSFA",
@@ -41907,7 +43510,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.safarihelicopters.com"
   },
   {
     "entityId": "S2SA",
@@ -41929,7 +43533,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "ZSDA",
@@ -41950,7 +43555,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "HLRA",
@@ -41971,7 +43577,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "O2QA",
@@ -41992,7 +43599,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "1SPA",
@@ -42013,7 +43621,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "SVGA",
@@ -42034,7 +43643,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "LVKA",
@@ -42059,7 +43669,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "R0RC",
@@ -42080,7 +43691,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "V9SA",
@@ -42107,7 +43719,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.scottairllc.com"
   },
   {
     "entityId": "K95A",
@@ -42164,7 +43777,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.silverair.com"
   },
   {
     "entityId": "SHKC",
@@ -42185,7 +43799,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "GJYA",
@@ -42210,7 +43825,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "K5WA",
@@ -42237,7 +43853,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.seawindaviation.com"
   },
   {
     "entityId": "VWKA",
@@ -42258,7 +43875,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "VQ8A",
@@ -42292,7 +43910,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "http://secureaircharter.net"
   },
   {
     "entityId": "SFOA",
@@ -42317,7 +43936,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://senecaflight.com"
   },
   {
     "entityId": "D4HA",
@@ -42338,7 +43958,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "GNLA",
@@ -42363,7 +43984,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.7bar.com"
   },
   {
     "entityId": "Y7TA",
@@ -42384,7 +44006,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "2JCA",
@@ -42407,7 +44030,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "QS9A",
@@ -42430,7 +44054,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "4TDA",
@@ -42451,7 +44076,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "IVSA",
@@ -42479,7 +44105,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://corporatehelicopters.com"
   },
   {
     "entityId": "FRIA",
@@ -42507,7 +44134,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.shorelineaviation.net"
   },
   {
     "entityId": "SILA",
@@ -42528,7 +44156,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "YQSA",
@@ -42577,7 +44206,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://silverhawkaviation.com"
   },
   {
     "entityId": "S5KA",
@@ -42602,7 +44232,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://sisqaviation.com"
   },
   {
     "entityId": "S1ZA",
@@ -42625,7 +44256,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "K6NA",
@@ -42648,7 +44280,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://skynightllc.com"
   },
   {
     "entityId": "1KSA",
@@ -42676,7 +44309,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.privaira.com"
   },
   {
     "entityId": "YQKA",
@@ -42726,7 +44360,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://flyskyquest.com"
   },
   {
     "entityId": "6DFA",
@@ -42755,7 +44390,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://flyskylife.com"
   },
   {
     "entityId": "4RUA",
@@ -42776,7 +44412,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "KNIA",
@@ -42820,7 +44457,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.skyshare.com"
   },
   {
     "entityId": "2DMA",
@@ -42845,7 +44483,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.skyskopes.com"
   },
   {
     "entityId": "Z4TA",
@@ -42868,7 +44507,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.skysouth.com"
   },
   {
     "entityId": "J6BA",
@@ -42906,7 +44546,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.skywestcharter.com"
   },
   {
     "entityId": "AAWA",
@@ -42927,7 +44568,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "5KSA",
@@ -42948,7 +44590,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "SKQA",
@@ -42969,7 +44612,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "I5MA",
@@ -42990,7 +44634,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "B90A",
@@ -43023,7 +44668,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://flyskyway.com"
   },
   {
     "entityId": "SY0A",
@@ -43044,7 +44690,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "REAA",
@@ -43066,7 +44713,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "QYEA",
@@ -43087,7 +44735,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "X53A",
@@ -43118,7 +44767,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://smokeybayair.com"
   },
   {
     "entityId": "4SSA",
@@ -43139,7 +44789,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "E0GA",
@@ -43160,7 +44811,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "11SA",
@@ -43190,7 +44842,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://solutionsair.com"
   },
   {
     "entityId": "5OKA",
@@ -43228,7 +44881,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://flysoulbird.com"
   },
   {
     "entityId": "SQDA",
@@ -43255,7 +44909,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://brooksrange.com"
   },
   {
     "entityId": "GNBA",
@@ -43292,7 +44947,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://southaeroinc.com"
   },
   {
     "entityId": "Y9BA",
@@ -43314,7 +44970,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "UOSA",
@@ -43337,7 +44994,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.southcoasthelicopters.com"
   },
   {
     "entityId": "FF5A",
@@ -43358,7 +45016,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "4S5C",
@@ -43379,7 +45038,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "DXGA",
@@ -43406,7 +45066,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.zanesvilleaviation.com"
   },
   {
     "entityId": "365A",
@@ -43430,7 +45091,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://southernskyaviation.com"
   },
   {
     "entityId": "B2LA",
@@ -43455,7 +45117,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.swaircraftcharter.com"
   },
   {
     "entityId": "OH6A",
@@ -43476,7 +45139,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "Z3SA",
@@ -43510,7 +45174,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.flyssc.com"
   },
   {
     "entityId": "9S5A",
@@ -43533,7 +45198,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "BTEA",
@@ -43560,7 +45226,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.spectrumhealth.org"
   },
   {
     "entityId": "EE0A",
@@ -43584,7 +45251,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.flyspeedaviation.com"
   },
   {
     "entityId": "XPTA",
@@ -43605,7 +45273,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "SHCA",
@@ -43626,7 +45295,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "3SRA",
@@ -43663,7 +45333,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://spiritjets.com"
   },
   {
     "entityId": "95HA",
@@ -43688,7 +45359,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.springairflights.com"
   },
   {
     "entityId": "ISPA",
@@ -43712,7 +45384,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://springfieldair.net"
   },
   {
     "entityId": "V8ZA",
@@ -43747,7 +45420,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://spuraviationservices.com"
   },
   {
     "entityId": "DFJA",
@@ -43768,7 +45442,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "T8VA",
@@ -43804,7 +45479,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.starfliteaviation.com"
   },
   {
     "entityId": "J8GA",
@@ -43836,7 +45512,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://starjetinc.com"
   },
   {
     "entityId": "ISYA",
@@ -43862,7 +45539,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://starkairways.com"
   },
   {
     "entityId": "E8DC",
@@ -43883,7 +45561,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "S3SA",
@@ -43908,7 +45587,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://flysterlingair.com"
   },
   {
     "entityId": "DBCA",
@@ -43960,7 +45640,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.sterlingaviation.com"
   },
   {
     "entityId": "YSDA",
@@ -43985,7 +45666,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": null
   },
   {
     "entityId": "WQEA",
@@ -44006,7 +45688,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "XYLA",
@@ -44027,7 +45710,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "XS8A",
@@ -44049,7 +45733,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "JDWA",
@@ -44074,7 +45759,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.subair.com"
   },
   {
     "entityId": "704A",
@@ -44099,7 +45785,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://summit-aviation.com"
   },
   {
     "entityId": "5SUA",
@@ -44140,7 +45827,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://summit-aviation.com"
   },
   {
     "entityId": "M55A",
@@ -44161,7 +45849,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "BHHA",
@@ -44189,7 +45878,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://summithelicopters.com"
   },
   {
     "entityId": "S6NA",
@@ -44225,7 +45915,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.sunairjets.com"
   },
   {
     "entityId": "ZBJA",
@@ -44246,7 +45937,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "9SZA",
@@ -44270,7 +45962,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.sundancehelicopters.com"
   },
   {
     "entityId": "C8QA",
@@ -44291,7 +45984,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "SVVA",
@@ -44314,7 +46008,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": "https://www.wrangell.com/organization/sunrise-aviation"
   },
   {
     "entityId": "7SSA",
@@ -44506,7 +46201,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.sunsetaviation.net"
   },
   {
     "entityId": "SSHA",
@@ -44540,7 +46236,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.sunshinehelicopters.com"
   },
   {
     "entityId": "9SUA",
@@ -44563,7 +46260,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.superior.flights"
   },
   {
     "entityId": "U5OA",
@@ -44624,7 +46322,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.stajets.com"
   },
   {
     "entityId": "BTZA",
@@ -44645,7 +46344,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "7ALA",
@@ -44666,7 +46366,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "1SDA",
@@ -44691,7 +46392,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "LFKA",
@@ -44714,7 +46416,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "LSSA",
@@ -44742,7 +46445,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": null
   },
   {
     "entityId": "W7OA",
@@ -44763,7 +46467,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "TEOA",
@@ -44784,7 +46489,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "N9NA",
@@ -44808,7 +46514,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": null
   },
   {
     "entityId": "9T9A",
@@ -44832,7 +46539,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": null
   },
   {
     "entityId": "THTA",
@@ -44853,7 +46561,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "XORA",
@@ -44874,7 +46583,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "TL7C",
@@ -44907,7 +46617,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.talkeetnaair.com"
   },
   {
     "entityId": "OZTA",
@@ -44962,7 +46673,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://talonairjets.com"
   },
   {
     "entityId": "3TBA",
@@ -44984,7 +46696,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://tampabayaircharter.com"
   },
   {
     "entityId": "6TFA",
@@ -45005,7 +46718,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "7NXA",
@@ -45029,7 +46743,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://tenaxaerospace.com"
   },
   {
     "entityId": "OLJA",
@@ -45055,7 +46770,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": null
   },
   {
     "entityId": "4T3A",
@@ -45089,7 +46805,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.zenflight.com"
   },
   {
     "entityId": "TBDA",
@@ -45110,7 +46827,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "TIAA",
@@ -45131,7 +46849,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "T52C",
@@ -45156,7 +46875,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://tikchiklodge.com"
   },
   {
     "entityId": "T7IA",
@@ -45177,7 +46897,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "5DDA",
@@ -45198,7 +46919,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "1TWA",
@@ -45221,7 +46943,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.tomwoodaviation.com"
   },
   {
     "entityId": "3T9A",
@@ -45244,7 +46967,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "O4VA",
@@ -45274,7 +46998,12 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.transaeroheli.com",
+    "city": "Loveland",
+    "state": "CO",
+    "phone": "307-778-5777",
+    "email": "info@transaeroheli.com"
   },
   {
     "entityId": "QPLA",
@@ -45295,7 +47024,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "EBFA",
@@ -45318,7 +47048,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://transnorthaviation.com"
   },
   {
     "entityId": "DVYA",
@@ -45350,7 +47081,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.transexec.com"
   },
   {
     "entityId": "6TNA",
@@ -45373,7 +47105,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.trendaviation.com"
   },
   {
     "entityId": "1TBA",
@@ -45404,7 +47137,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://tridentaircraft.com"
   },
   {
     "entityId": "5TNA",
@@ -45431,7 +47165,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://tritonairways.com"
   },
   {
     "entityId": "Z9YA",
@@ -45461,7 +47196,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://flytropic.com"
   },
   {
     "entityId": "5TRA",
@@ -45495,7 +47231,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://trueaviation.com"
   },
   {
     "entityId": "8TNC",
@@ -45518,7 +47255,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "9CKC",
@@ -45543,7 +47281,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://tryggair.com"
   },
   {
     "entityId": "AHZA",
@@ -45568,7 +47307,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://flytryp.com"
   },
   {
     "entityId": "2TKA",
@@ -45589,7 +47329,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "5TQA",
@@ -45610,7 +47351,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "FZRA",
@@ -45644,7 +47386,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.turboairboi.com"
   },
   {
     "entityId": "TO1A",
@@ -45665,7 +47408,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "TWBC",
@@ -45686,7 +47430,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "BCRA",
@@ -45708,7 +47453,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "T04A",
@@ -45731,7 +47477,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.talkeetnaaeroservice.com"
   },
   {
     "entityId": "ITDC",
@@ -45758,7 +47505,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.talonair.com"
   },
   {
     "entityId": "TAJA",
@@ -45779,7 +47527,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "LOMA",
@@ -45818,7 +47567,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.schubachaviation.com"
   },
   {
     "entityId": "FXGA",
@@ -45851,7 +47601,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "121/135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://evertsair.com"
   },
   {
     "entityId": "BJYA",
@@ -45877,7 +47628,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://flytac.com"
   },
   {
     "entityId": "BN5A",
@@ -45913,7 +47665,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.tavaero.com"
   },
   {
     "entityId": "QTLA",
@@ -45934,7 +47687,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "J03C",
@@ -45955,7 +47709,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "G67A",
@@ -45976,7 +47731,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "HXSA",
@@ -46044,7 +47800,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://temscoair.com"
   },
   {
     "entityId": "OH7A",
@@ -46067,7 +47824,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "CNQA",
@@ -46088,7 +47846,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "BONA",
@@ -46121,7 +47880,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://flightstar.com"
   },
   {
     "entityId": "2HQA",
@@ -46149,7 +47909,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://theheliteam.com"
   },
   {
     "entityId": "UWUA",
@@ -46175,7 +47936,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.whitewindco.com"
   },
   {
     "entityId": "TZDA",
@@ -46196,7 +47958,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "KBAA",
@@ -46251,7 +48014,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://flythrive.com"
   },
   {
     "entityId": "T4BA",
@@ -46274,7 +48038,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://thunderbirdairways.com"
   },
   {
     "entityId": "2TRA",
@@ -46300,7 +48065,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.thunderunaviation.com"
   },
   {
     "entityId": "166A",
@@ -46323,7 +48089,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "B8BC",
@@ -46350,7 +48117,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://tikchikairventures.com"
   },
   {
     "entityId": "TLLA",
@@ -46376,7 +48144,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.timberlandhelicopters.com"
   },
   {
     "entityId": "MPRC",
@@ -46405,7 +48174,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://togoaviation.com"
   },
   {
     "entityId": "Z8KC",
@@ -46430,7 +48200,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.tokairservice.com"
   },
   {
     "entityId": "T1NA",
@@ -46451,7 +48222,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "17TA",
@@ -46472,7 +48244,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "TWYA",
@@ -46522,7 +48295,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.flytradewind.com"
   },
   {
     "entityId": "I9WA",
@@ -46548,7 +48322,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://tradewindcharter.net"
   },
   {
     "entityId": "YGOA",
@@ -46579,7 +48354,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.trailridgeair.com"
   },
   {
     "entityId": "TXHA",
@@ -46607,7 +48383,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://transairhawaii.com"
   },
   {
     "entityId": "6TSA",
@@ -46630,7 +48407,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://transnorthaviation.com"
   },
   {
     "entityId": "TN8A",
@@ -46664,7 +48442,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://transnorthern.com"
   },
   {
     "entityId": "CFKA",
@@ -46686,7 +48465,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "KNEA",
@@ -46707,7 +48487,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "ESEA",
@@ -46728,7 +48509,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "JCNA",
@@ -46749,7 +48531,12 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": "https://travelaireservices.com",
+    "city": "Pueblo",
+    "state": "CO",
+    "phone": "800-645-3987",
+    "email": "Info@TravelAireServices.com"
   },
   {
     "entityId": "LEUA",
@@ -46772,7 +48559,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "9CTA",
@@ -46793,7 +48581,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "YIKA",
@@ -46814,7 +48603,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "HVJA",
@@ -46843,7 +48633,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.trego-dugan.com"
   },
   {
     "entityId": "AHTA",
@@ -46876,7 +48667,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.tristatejetcharter.com"
   },
   {
     "entityId": "MKHA",
@@ -46897,7 +48689,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "91TA",
@@ -46922,7 +48715,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "70TA",
@@ -46946,7 +48740,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://flytritonair.com"
   },
   {
     "entityId": "T4CA",
@@ -46978,7 +48773,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.tropicaircharters.com"
   },
   {
     "entityId": "11FA",
@@ -46999,7 +48795,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "EBTA",
@@ -47020,7 +48817,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "P4HA",
@@ -47043,7 +48841,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.turnkeyjet.com"
   },
   {
     "entityId": "2UHA",
@@ -47064,7 +48863,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "UINA",
@@ -47085,7 +48885,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "XUOA",
@@ -47110,7 +48911,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "Y8BA",
@@ -47131,7 +48933,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "8B9A",
@@ -47154,7 +48957,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.puertoricoaircharters.com"
   },
   {
     "entityId": "1UPA",
@@ -47178,7 +48982,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.ups.com"
   },
   {
     "entityId": "3URC",
@@ -47199,7 +49004,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "USXA",
@@ -47223,7 +49029,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://ushelicopters.com"
   },
   {
     "entityId": "Y2PA",
@@ -47249,7 +49056,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "121/135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://usajet.aero"
   },
   {
     "entityId": "4USA",
@@ -47271,7 +49079,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://discoveryjets.com"
   },
   {
     "entityId": "417A",
@@ -47292,7 +49101,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "5U5A",
@@ -47318,7 +49128,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://aero.com"
   },
   {
     "entityId": "USRA",
@@ -47339,7 +49150,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "UA7A",
@@ -47362,7 +49174,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": null
   },
   {
     "entityId": "DTHA",
@@ -47391,7 +49204,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.ultimatejetcharters.com"
   },
   {
     "entityId": "U9LA",
@@ -47412,7 +49226,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "XH7A",
@@ -47435,7 +49250,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://flyunbridled.com"
   },
   {
     "entityId": "USNA",
@@ -47456,7 +49272,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "UVRA",
@@ -47477,7 +49294,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "UNVA",
@@ -47498,7 +49316,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "QOQA",
@@ -47519,7 +49338,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "1V2C",
@@ -47540,7 +49360,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "4VLA",
@@ -47561,7 +49382,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "VLHA",
@@ -47586,7 +49408,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.valleyhelicopterservice.com"
   },
   {
     "entityId": "2VNA",
@@ -47607,7 +49430,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "VWGA",
@@ -47628,7 +49452,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "V5PC",
@@ -47653,7 +49478,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "V9VC",
@@ -47676,7 +49502,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "A9JA",
@@ -47702,7 +49529,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.venturejets.com"
   },
   {
     "entityId": "6VNA",
@@ -47723,7 +49551,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "VSNA",
@@ -47748,7 +49577,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://verijet.com"
   },
   {
     "entityId": "V5QA",
@@ -47769,7 +49599,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "5VLA",
@@ -47790,7 +49621,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "3VSA",
@@ -47821,7 +49653,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://vertical-solutions-aero.com"
   },
   {
     "entityId": "1VEA",
@@ -47844,7 +49677,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "3VKC",
@@ -47866,7 +49700,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "2VKA",
@@ -47915,7 +49750,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "http://www.vikingaviation1.com"
   },
   {
     "entityId": "7VIA",
@@ -47937,7 +49773,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "VM1A",
@@ -47958,7 +49795,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "VDAA",
@@ -47979,7 +49817,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "V0JA",
@@ -48000,7 +49839,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "V88A",
@@ -48021,7 +49861,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "9EFA",
@@ -48042,7 +49883,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "VL8A",
@@ -48065,7 +49907,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.valleyairserviceinc.com"
   },
   {
     "entityId": "VNBA",
@@ -48086,7 +49929,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "LB9A",
@@ -48109,7 +49953,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.lhjets.com"
   },
   {
     "entityId": "APMA",
@@ -48144,7 +49989,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://venturajet.com"
   },
   {
     "entityId": "VUGA",
@@ -48180,7 +50026,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.venture-aviation.com"
   },
   {
     "entityId": "TQ0A",
@@ -48211,7 +50058,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.taquanair.com"
   },
   {
     "entityId": "V79A",
@@ -48233,7 +50081,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "3VGA",
@@ -48259,7 +50108,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://vertigoflyer.com"
   },
   {
     "entityId": "VLIA",
@@ -48295,7 +50145,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.viequesairlink.com"
   },
   {
     "entityId": "4JJA",
@@ -48316,7 +50167,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "VC9C",
@@ -48339,7 +50191,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.volusiasheriff.gov"
   },
   {
     "entityId": "W7ZA",
@@ -48360,7 +50213,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "WACA",
@@ -48381,7 +50235,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "4WKA",
@@ -48402,7 +50257,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "U64A",
@@ -48425,7 +50281,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "9WRA",
@@ -48446,7 +50303,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "WJEA",
@@ -48470,7 +50328,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.flywejet.com"
   },
   {
     "entityId": "AWHA",
@@ -48523,7 +50382,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.westair.net"
   },
   {
     "entityId": "2WEA",
@@ -48544,7 +50404,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "W10A",
@@ -48567,7 +50428,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "TGVA",
@@ -48588,7 +50450,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "1CCA",
@@ -48613,7 +50476,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.whitehorsejet.com"
   },
   {
     "entityId": "WCPA",
@@ -48634,7 +50498,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "EMKC",
@@ -48656,7 +50521,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "6WSA",
@@ -48677,7 +50543,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "3WLA",
@@ -48700,7 +50567,12 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null,
+    "city": "Dubois",
+    "state": "WY",
+    "phone": "307-761-2828",
+    "email": null
   },
   {
     "entityId": "WRHA",
@@ -48721,7 +50593,12 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null,
+    "city": "Bondurant",
+    "state": "WY",
+    "phone": "307-360-8850",
+    "email": "info@windriverair.com"
   },
   {
     "entityId": "11WA",
@@ -48742,7 +50619,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "WNDA",
@@ -48774,7 +50652,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.windstaraviation.com"
   },
   {
     "entityId": "WUYA",
@@ -48795,7 +50674,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "6OOA",
@@ -48816,7 +50696,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "W1ZA",
@@ -48844,7 +50725,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://wingsair.net"
   },
   {
     "entityId": "7WCA",
@@ -48872,7 +50754,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.wingtipcorporation.com"
   },
   {
     "entityId": "3ATA",
@@ -48893,7 +50776,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "10FA",
@@ -48914,7 +50798,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "8WMA",
@@ -48935,7 +50820,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "7WVA",
@@ -48958,7 +50844,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "W50A",
@@ -48991,7 +50878,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://worldwide-aircraft.com"
   },
   {
     "entityId": "W3HA",
@@ -49015,7 +50903,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "http://www.wwheli.com"
   },
   {
     "entityId": "WM9C",
@@ -49046,7 +50935,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.wrangellmountainair.com"
   },
   {
     "entityId": "BDEA",
@@ -49069,7 +50959,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "6WZA",
@@ -49096,7 +50987,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.wmaviation.com"
   },
   {
     "entityId": "WVBA",
@@ -49131,7 +51023,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.warbelows.com"
   },
   {
     "entityId": "HXRA",
@@ -49167,7 +51060,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.wardair.com"
   },
   {
     "entityId": "O59A",
@@ -49195,7 +51089,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.flypenobscot.com"
   },
   {
     "entityId": "JZQA",
@@ -49216,7 +51111,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "BWCA",
@@ -49237,7 +51133,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "NT2A",
@@ -49258,7 +51155,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "WTWA",
@@ -49279,7 +51177,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "GSPA",
@@ -49313,7 +51212,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.wcas.aero"
   },
   {
     "entityId": "HUFA",
@@ -49338,7 +51238,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://westisleair.com"
   },
   {
     "entityId": "W6JA",
@@ -49372,7 +51273,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://westernaircharter.com"
   },
   {
     "entityId": "WUXA",
@@ -49408,7 +51310,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.westair.com"
   },
   {
     "entityId": "K4SA",
@@ -49431,7 +51334,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "D9SA",
@@ -49452,7 +51356,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "2OMA",
@@ -49473,7 +51378,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "WIWA",
@@ -49505,7 +51411,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.westwindairservice.com"
   },
   {
     "entityId": "IAVA",
@@ -49549,7 +51456,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://westwindhelicopters.com"
   },
   {
     "entityId": "VQMA",
@@ -49579,7 +51487,12 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://wheelsup.com",
+    "city": "New York",
+    "state": "NY",
+    "phone": null,
+    "email": "info@wheelsup.com"
   },
   {
     "entityId": "CVGA",
@@ -49712,7 +51625,12 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://wheelsup.com",
+    "city": "New York",
+    "state": "NY",
+    "phone": null,
+    "email": "info@wheelsup.com"
   },
   {
     "entityId": "R93A",
@@ -49735,7 +51653,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "W7VA",
@@ -49756,7 +51675,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "WH6A",
@@ -49777,7 +51697,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "6RXA",
@@ -49798,7 +51719,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "3WBA",
@@ -49819,7 +51741,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "EMVC",
@@ -49840,7 +51763,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "8WWA",
@@ -49875,7 +51799,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://winaviation.com"
   },
   {
     "entityId": "IZWA",
@@ -49896,7 +51821,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "WVXA",
@@ -49922,7 +51848,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.windwardaviation.com"
   },
   {
     "entityId": "ZRGA",
@@ -49943,7 +51870,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "Y9PA",
@@ -49997,7 +51925,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.wingaviation.com"
   },
   {
     "entityId": "W4GC",
@@ -50018,7 +51947,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "W9SA",
@@ -50039,7 +51969,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "KJLA",
@@ -50064,7 +51995,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://wingsairways.com"
   },
   {
     "entityId": "DBKA",
@@ -50106,7 +52038,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://www.wisconsinaviation.com"
   },
   {
     "entityId": "W3AC",
@@ -50127,7 +52060,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "3WUC",
@@ -50150,7 +52084,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "WCEA",
@@ -50185,7 +52120,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://worldclassjets.net"
   },
   {
     "entityId": "WWQA",
@@ -50226,7 +52162,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://worldwidejet.com"
   },
   {
     "entityId": "HYTA",
@@ -50275,7 +52212,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "A"
+    "outreachTier": "A",
+    "website": "https://wrightairservice.com"
   },
   {
     "entityId": "XYIA",
@@ -50296,7 +52234,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "X9KA",
@@ -50322,7 +52261,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.xceljet.com"
   },
   {
     "entityId": "1LIA",
@@ -50343,7 +52283,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "3XPA",
@@ -50364,7 +52305,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "5YWA",
@@ -50387,7 +52329,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "YUKC",
@@ -50412,7 +52355,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "http://yukonhelicopters.net"
   },
   {
     "entityId": "YUEC",
@@ -50433,7 +52377,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "LGCA",
@@ -50455,7 +52400,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "Z6ZA",
@@ -50476,7 +52422,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "2ZHA",
@@ -50497,7 +52444,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "Z6VA",
@@ -50527,7 +52475,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://zipaviation.com"
   },
   {
     "entityId": "1ZIA",
@@ -50561,7 +52510,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.zipline.com"
   },
   {
     "entityId": "AAXA",
@@ -50582,7 +52532,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "2IVA",
@@ -50603,7 +52554,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "C"
+    "outreachTier": "C",
+    "website": null
   },
   {
     "entityId": "16AA",
@@ -50625,7 +52577,8 @@ export const part135Operators: Part135OperatorRecord[] =
     "cfrBasis": [
       "135"
     ],
-    "outreachTier": "B"
+    "outreachTier": "B",
+    "website": "https://www.nextair135.com"
   }
 ];
 
@@ -50735,5 +52688,12 @@ export const part135ResearchPack =
   "dataUpdateNote": "This dataset was last published by the FAA on 3/1/2025. The FAA 2026 operator list has not yet been released. Update this file when the FAA publishes updated data.",
   "documentationRefs": [
     "knowledge/research/part 135 operators/Part_135_Operators_and_Aircraft_5.xlsx"
-  ]
+  ],
+  "denverFsdoEnrichment": {
+    "totalOperators": 30,
+    "withEmail": 21,
+    "withPhone": 24,
+    "withCity": 28,
+    "enrichedAt": "2026-03-10"
+  }
 } as const;

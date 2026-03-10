@@ -1,0 +1,100 @@
+[
+  {
+    "entityId": "XQJA",
+    "dataset": "part135",
+    "website": "https://www.flysvgair.com",
+    "confidence": "high",
+    "source": "Jet-A LLC public operator listings identify flysvgair.com as the current website"
+  },
+  {
+    "entityId": "7KRA",
+    "dataset": "part135",
+    "website": "https://www.kandrair.com",
+    "confidence": "high",
+    "source": "K and R Aviation official site is kandrair.com"
+  },
+  {
+    "entityId": "KQAC",
+    "dataset": "part135",
+    "website": "https://kingairinc.net",
+    "confidence": "high",
+    "source": "King Air Inc official site is kingairinc.net"
+  },
+  {
+    "entityId": "AMYA",
+    "dataset": "part135",
+    "website": "https://kcaviation.com",
+    "confidence": "high",
+    "source": "Kansas City Aviation Center official site is kcaviation.com"
+  },
+  {
+    "entityId": "K6XA",
+    "dataset": "part135",
+    "website": "https://www.keywestexecutiveaircharter.com",
+    "confidence": "high",
+    "source": "Key West Executive Air Charter official site is keywestexecutiveaircharter.com"
+  },
+  {
+    "entityId": "LGAA",
+    "dataset": "part135",
+    "website": "https://letsgoair.com",
+    "confidence": "high",
+    "source": "Lets Go Air official site is letsgoair.com"
+  },
+  {
+    "entityId": "L87A",
+    "dataset": "part135",
+    "website": "https://limoprivatejets.com",
+    "confidence": "medium",
+    "source": "Current company listings identify LIMA NY CORP website as limoprivatejets.com"
+  },
+  {
+    "entityId": "JKIA",
+    "dataset": "part135",
+    "website": "https://www.rangerair.com",
+    "confidence": "high",
+    "source": "Longhorn Gator LLC public operator listings identify rangerair.com as the current site"
+  },
+  {
+    "entityId": "9MNA",
+    "dataset": "part135",
+    "website": "https://www.lasvegasaircharters.com",
+    "confidence": "medium",
+    "source": "Current business listings identify Las Vegas Air Charters website as lasvegasaircharters.com"
+  },
+  {
+    "entityId": "LXGA",
+    "dataset": "part135",
+    "website": "https://www.leadingedgeair.com",
+    "confidence": "high",
+    "source": "Leading Edge Aviation Services official site is leadingedgeair.com"
+  },
+  {
+    "entityId": "P6VA",
+    "dataset": "part135",
+    "website": "https://www.libertyjet.com",
+    "confidence": "medium",
+    "source": "Current charter listings identify Liberty Aviation Charter website as libertyjet.com"
+  },
+  {
+    "entityId": "LOYA",
+    "dataset": "part135",
+    "website": "https://www.loydsaviation.com",
+    "confidence": "high",
+    "source": "Loyd's Aviation official site is loydsaviation.com"
+  },
+  {
+    "entityId": "HSRA",
+    "dataset": "part135",
+    "website": "https://www.lynchflyingservice.com",
+    "confidence": "high",
+    "source": "Lynch Flying Service official site is lynchflyingservice.com"
+  },
+  {
+    "entityId": "FSEA",
+    "dataset": "part135",
+    "website": "https://mainecharter.com",
+    "confidence": "high",
+    "source": "Maine Aviation Aircraft Charter official site is mainecharter.com"
+  }
+]

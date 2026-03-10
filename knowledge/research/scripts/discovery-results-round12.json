@@ -1,0 +1,72 @@
+[
+  {
+    "entityId": "BFYA",
+    "dataset": "part135",
+    "website": "https://www.maineinstrumentflight.com",
+    "confidence": "high",
+    "source": "Maine Instrument Flight official site is maineinstrumentflight.com"
+  },
+  {
+    "entityId": "YYMA",
+    "dataset": "part135",
+    "website": "https://www.midwestaeroclub.org",
+    "confidence": "high",
+    "source": "Midwest Aero Club official site is midwestaeroclub.org"
+  },
+  {
+    "entityId": "2WMA",
+    "dataset": "part135",
+    "website": "https://mindwindercharters.com",
+    "confidence": "high",
+    "source": "Mindwinder Charters official site is mindwindercharters.com"
+  },
+  {
+    "entityId": "2M7A",
+    "dataset": "part135",
+    "website": "https://www.hirejet.com",
+    "confidence": "medium",
+    "source": "Current operator listings identify MRIS LLC website as hirejet.com"
+  },
+  {
+    "entityId": "W39A",
+    "dataset": "part135",
+    "website": "https://flymeva.com",
+    "confidence": "high",
+    "source": "Maine Aviation Management official site is flymeva.com"
+  },
+  {
+    "entityId": "MAKA",
+    "dataset": "part135",
+    "website": "https://www.makleeair.com",
+    "confidence": "high",
+    "source": "Maklee Air official site is makleeair.com"
+  },
+  {
+    "entityId": "X0IA",
+    "dataset": "part135",
+    "website": "https://www.maxaircharter.com",
+    "confidence": "high",
+    "source": "Maxair Charter official site is maxaircharter.com"
+  },
+  {
+    "entityId": "F81A",
+    "dataset": "part135",
+    "website": "https://mcleanaviation.com",
+    "confidence": "high",
+    "source": "McLean Aviation Services official site is mcleanaviation.com"
+  },
+  {
+    "entityId": "ECLA",
+    "dataset": "part135",
+    "website": "https://mcflymec.com",
+    "confidence": "high",
+    "source": "McPhillips Flying Service official site is mcflymec.com"
+  },
+  {
+    "entityId": "1QUA",
+    "dataset": "part135",
+    "website": "https://www.midpacificair.com",
+    "confidence": "high",
+    "source": "Mid-Pacific Air Service official site is midpacificair.com"
+  }
+]

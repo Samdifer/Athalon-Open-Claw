@@ -402,3 +402,61 @@ export const promoteProspectToCustomer = mutation({
     };
   },
 });
+
+export const listProspectNotes = query({
+  args: {
+    organizationId: v.id("organizations"),
+    prospectEntityId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    await requireAuth(ctx);
+    const notes = await ctx.db
+      .query("prospectNotes")
+      .withIndex("by_org_prospect", (q: any) =>
+        q
+          .eq("organizationId", args.organizationId)
+          .eq("prospectEntityId", args.prospectEntityId),
+      )
+      .collect();
+    return notes.sort((a: any, b: any) => b.createdAt - a.createdAt);
+  },
+});
+
+export const addProspectNote = mutation({
+  args: {
+    organizationId: v.id("organizations"),
+    prospectEntityId: v.string(),
+    campaignKey: v.string(),
+    content: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const { userId, name } = await requireAuth(ctx);
+    await requireOrgMembership(ctx, userId, args.organizationId);
+
+    const content = args.content.trim();
+    if (!content) throw new Error("Note content is required.");
+
+    const now = Date.now();
+    const noteId = await ctx.db.insert("prospectNotes", {
+      prospectEntityId: args.prospectEntityId,
+      organizationId: args.organizationId,
+      campaignKey: args.campaignKey,
+      content,
+      createdByUserId: userId,
+      createdByName: name,
+      createdAt: now,
+    });
+
+    await ctx.db.insert("auditLog", {
+      organizationId: args.organizationId,
+      eventType: "record_created",
+      tableName: "prospectNotes",
+      recordId: noteId,
+      userId,
+      notes: `Prospect note added for entity ${args.prospectEntityId}.`,
+      timestamp: now,
+    });
+
+    return noteId;
+  },
+});

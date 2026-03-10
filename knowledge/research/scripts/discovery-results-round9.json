@@ -1,0 +1,93 @@
+[
+  {
+    "entityId": "ZWBA",
+    "dataset": "part135",
+    "website": "https://www.b2wjets.com",
+    "confidence": "high",
+    "source": "Pilot Career Center identifies B 2 W Corporation website as b2wjets.com"
+  },
+  {
+    "entityId": "EFTA",
+    "dataset": "part135",
+    "website": "https://omegaairrefueling.com",
+    "confidence": "high",
+    "source": "Omega Air Refueling identifies Elevage Flight Travel LLC as the operating certificate holder"
+  },
+  {
+    "entityId": "5FGA",
+    "dataset": "part135",
+    "website": "https://flightgest.com",
+    "confidence": "high",
+    "source": "FlightGest Aviation official site is flightgest.com"
+  },
+  {
+    "entityId": "BPMC",
+    "dataset": "part135",
+    "website": "https://fwadventures.net",
+    "confidence": "high",
+    "source": "Fresh Water Adventures official site is fwadventures.net"
+  },
+  {
+    "entityId": "FH0A",
+    "dataset": "part135",
+    "website": "https://www.flyingaair.com",
+    "confidence": "high",
+    "source": "Flying A Flight Service official site is flyingaair.com"
+  },
+  {
+    "entityId": "XGNA",
+    "dataset": "part135",
+    "website": "https://gtair.net",
+    "confidence": "high",
+    "source": "G T A Air official site is gtair.net"
+  },
+  {
+    "entityId": "GC2A",
+    "dataset": "part135",
+    "website": "https://georgiacarolinaair.com",
+    "confidence": "high",
+    "source": "Georgia Carolina Air official site is georgiacarolinaair.com"
+  },
+  {
+    "entityId": "G7HA",
+    "dataset": "part135",
+    "website": "https://grasshopperaviation.com",
+    "confidence": "high",
+    "source": "Grasshopper Aviation official site is grasshopperaviation.com"
+  },
+  {
+    "entityId": "7GYA",
+    "dataset": "part135",
+    "website": "https://goflygryphon.com",
+    "confidence": "high",
+    "source": "Gryphon Air official site is goflygryphon.com"
+  },
+  {
+    "entityId": "3H5A",
+    "dataset": "part135",
+    "website": "https://www.haskinaviation.com",
+    "confidence": "high",
+    "source": "Haskin Aviation official site is haskinaviation.com"
+  },
+  {
+    "entityId": "4HYA",
+    "dataset": "part135",
+    "website": "https://haynesaviation.com",
+    "confidence": "medium",
+    "source": "Current business listings identify Haynes Aviation website as haynesaviation.com"
+  },
+  {
+    "entityId": "Q6HA",
+    "dataset": "part135",
+    "website": "https://www.hmsaviation.com",
+    "confidence": "medium",
+    "source": "Current business listings identify HMS Holdings website as hmsaviation.com"
+  },
+  {
+    "entityId": "1MNA",
+    "dataset": "part135",
+    "website": "https://hawaiipacificaviation.com",
+    "confidence": "high",
+    "source": "Hawaii Pacific Aviation official site is hawaiipacificaviation.com"
+  }
+]

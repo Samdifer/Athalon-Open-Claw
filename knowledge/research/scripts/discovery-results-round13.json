@@ -1,0 +1,79 @@
+[
+  {
+    "entityId": "DRFA",
+    "dataset": "part135",
+    "website": "https://machoneaircharters.com",
+    "confidence": "high",
+    "source": "Mach One Air Charters official site is machoneaircharters.com"
+  },
+  {
+    "entityId": "FGQA",
+    "dataset": "part135",
+    "website": "https://midamericajet.com",
+    "confidence": "high",
+    "source": "MidAmericaJet official site is midamericajet.com"
+  },
+  {
+    "entityId": "MINA",
+    "dataset": "part135",
+    "website": "https://www.minutemanjets.com",
+    "confidence": "high",
+    "source": "Minuteman Aviation official site is minutemanjets.com"
+  },
+  {
+    "entityId": "4MCA",
+    "dataset": "part135",
+    "website": "https://www.msairexpress.com",
+    "confidence": "medium",
+    "source": "Current business listings identify Mississippi Air Express website as msairexpress.com"
+  },
+  {
+    "entityId": "MN9A",
+    "dataset": "part135",
+    "website": "https://www.montanaaircraft.com",
+    "confidence": "high",
+    "source": "Montana Aircraft official site is montanaaircraft.com"
+  },
+  {
+    "entityId": "K7MA",
+    "dataset": "part135",
+    "website": "https://www.montereyjetcenter.com",
+    "confidence": "high",
+    "source": "Monterey Pacific Executive Charter operates via Monterey Jet Center; official site is montereyjetcenter.com"
+  },
+  {
+    "entityId": "F22A",
+    "dataset": "part135",
+    "website": "https://www.mountainairmedical.com",
+    "confidence": "high",
+    "source": "Mountain Air Medical official site is mountainairmedical.com"
+  },
+  {
+    "entityId": "XMNA",
+    "dataset": "part135",
+    "website": "https://www.flyspecialops.com",
+    "confidence": "medium",
+    "source": "Current operator listings identify Mountain Aviation Enterprises website as flyspecialops.com"
+  },
+  {
+    "entityId": "N47A",
+    "dataset": "part135",
+    "website": "https://www.flyneat.com",
+    "confidence": "high",
+    "source": "New England Air Transport official site is flyneat.com"
+  },
+  {
+    "entityId": "N62A",
+    "dataset": "part135",
+    "website": "https://northstaraeroservices.com",
+    "confidence": "high",
+    "source": "North Star Aero Services official site is northstaraeroservices.com"
+  },
+  {
+    "entityId": "EBMA",
+    "dataset": "part135",
+    "website": "https://www.northernairtransport.com",
+    "confidence": "high",
+    "source": "Northern Air Transport official site is northernairtransport.com"
+  }
+]

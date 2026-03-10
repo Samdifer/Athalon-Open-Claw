@@ -1,0 +1,86 @@
+[
+  {
+    "entityId": "7P4A",
+    "dataset": "part135",
+    "website": "https://hawaiianglobetrotter.com",
+    "confidence": "medium",
+    "source": "Current business listings identify Hawaiian Globetrotter website as hawaiianglobetrotter.com"
+  },
+  {
+    "entityId": "7EVA",
+    "dataset": "part135",
+    "website": "https://www.helius.aero",
+    "confidence": "high",
+    "source": "Helius official site is helius.aero"
+  },
+  {
+    "entityId": "H8TA",
+    "dataset": "part135",
+    "website": "https://hightailaircharter.com",
+    "confidence": "high",
+    "source": "Hightail Air Charter official site is hightailaircharter.com"
+  },
+  {
+    "entityId": "I0LA",
+    "dataset": "part135",
+    "website": "https://www.inflightstl.com",
+    "confidence": "medium",
+    "source": "Current company listings identify Inflight Corporation website as inflightstl.com"
+  },
+  {
+    "entityId": "IYUA",
+    "dataset": "part135",
+    "website": "https://jets.com",
+    "confidence": "high",
+    "source": "Public operator info identifies International Group LLC website as jets.com"
+  },
+  {
+    "entityId": "HVUA",
+    "dataset": "part135",
+    "website": "https://www.jandmalaskaairtours.com",
+    "confidence": "high",
+    "source": "J and M Alaska Air Tours official site is jandmalaskaairtours.com"
+  },
+  {
+    "entityId": "1KJA",
+    "dataset": "part135",
+    "website": "https://www.jetthere.com",
+    "confidence": "high",
+    "source": "Jet There official site is jetthere.com"
+  },
+  {
+    "entityId": "3JPA",
+    "dataset": "part135",
+    "website": "https://www.alaskaairservice.com",
+    "confidence": "high",
+    "source": "Junipogo LLC public listings identify Alaska Air Service site as alaskaairservice.com"
+  },
+  {
+    "entityId": "FKEA",
+    "dataset": "part135",
+    "website": "https://www.jet1charter.com",
+    "confidence": "high",
+    "source": "Jet 1 Charter official site is jet1charter.com"
+  },
+  {
+    "entityId": "L4OA",
+    "dataset": "part135",
+    "website": "https://www.jetout.com",
+    "confidence": "high",
+    "source": "Jet OUT official site is jetout.com"
+  },
+  {
+    "entityId": "CVDA",
+    "dataset": "part135",
+    "website": "https://www.jetsplus.com",
+    "confidence": "high",
+    "source": "JetsPlus official site is jetsplus.com"
+  },
+  {
+    "entityId": "K99A",
+    "dataset": "part135",
+    "website": "https://www.kbayair.com",
+    "confidence": "high",
+    "source": "K Bay Air official site is kbayair.com"
+  }
+]

@@ -1,0 +1,51 @@
+[
+  {
+    "entityId": "2G7A",
+    "dataset": "part135",
+    "website": "https://guidanceair.com",
+    "confidence": "high",
+    "source": "Guidance Air tour page states flights are operated by Guidance Air Service LLC under certificate 2G7A680N"
+  },
+  {
+    "entityId": "G0DA",
+    "dataset": "part135",
+    "website": "https://www.goflyga.com",
+    "confidence": "high",
+    "source": "Buzzfile lists Gold Aero official website as goflyga.com"
+  },
+  {
+    "entityId": "G73A",
+    "dataset": "part135",
+    "website": "https://flyglobalnow.com",
+    "confidence": "high",
+    "source": "Pilot Career Center and current operator listings identify Global Aviation Inc website as flyglobalnow.com"
+  },
+  {
+    "entityId": "3GWA",
+    "dataset": "part135",
+    "website": "https://www.goflyhouse.com",
+    "confidence": "high",
+    "source": "FlyHouse terms identify Golden West Airlines LLC dba FlyHouse"
+  },
+  {
+    "entityId": "HZNA",
+    "dataset": "part135",
+    "website": "https://huttaviation.net",
+    "confidence": "high",
+    "source": "Hutt Aviation official site is huttaviation.net"
+  },
+  {
+    "entityId": "9FHA",
+    "dataset": "part135",
+    "website": "https://www.freshairaviation.net",
+    "confidence": "high",
+    "source": "Fresh Air Aviation official site is freshairaviation.net"
+  },
+  {
+    "entityId": "6T1A",
+    "dataset": "part135",
+    "website": "https://quikcharter.com",
+    "confidence": "medium",
+    "source": "Current business listings identify GTW Aviation LLC private charter site as quikcharter.com"
+  }
+]

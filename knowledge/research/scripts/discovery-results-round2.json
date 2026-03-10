@@ -1,0 +1,261 @@
+[
+  {
+    "entityId": "I5JA",
+    "dataset": "part135",
+    "website": "https://trinityjet.com",
+    "confidence": "high",
+    "source": "Argus lists Addison Jet Management Inc DBA Trinity Private Jet Charter; official Trinity site is trinityjet.com"
+  },
+  {
+    "entityId": "WY1A",
+    "dataset": "part135",
+    "website": "https://flyadvanced.com",
+    "confidence": "high",
+    "source": "PRNewswire states Aero Ways Inc became flyADVANCED; official current operator site is flyadvanced.com"
+  },
+  {
+    "entityId": "W9BA",
+    "dataset": "part135",
+    "website": "https://www.acijet.com",
+    "confidence": "high",
+    "source": "Aviation Consultants Inc operates as ACI Jet; official site is acijet.com"
+  },
+  {
+    "entityId": "ZLWA",
+    "dataset": "part135",
+    "website": "https://www.businessjet.com",
+    "confidence": "high",
+    "source": "Business Jet Services official Dallas Love Field site is businessjet.com"
+  },
+  {
+    "entityId": "VPEA",
+    "dataset": "part135",
+    "website": "https://www.choiceaviation.com",
+    "confidence": "high",
+    "source": "Choice Aviation official site is choiceaviation.com"
+  },
+  {
+    "entityId": "37CA",
+    "dataset": "part135",
+    "website": "https://lifelinkiii.com",
+    "confidence": "high",
+    "source": "Critical Care Services operates as Life Link III; official site is lifelinkiii.com"
+  },
+  {
+    "entityId": "4DPA",
+    "dataset": "part135",
+    "website": "https://www.jsx.com",
+    "confidence": "high",
+    "source": "FAA and JSX materials identify Delux Public Charter LLC dba JSX Air; official site is jsx.com"
+  },
+  {
+    "entityId": "U0GA",
+    "dataset": "part135",
+    "website": "https://www.erahelicopters.com",
+    "confidence": "medium",
+    "source": "Era Helicopters is presented under erahelicopters.com in current directory listings and historical company materials"
+  },
+  {
+    "entityId": "E07A",
+    "dataset": "part135",
+    "website": "https://flyairshare.com",
+    "confidence": "high",
+    "source": "Airshare states all flights are operated by Executive Flight Services LLC dba Airshare"
+  },
+  {
+    "entityId": "RU3A",
+    "dataset": "part135",
+    "website": "https://www.faa.gov/about/office_org/headquarters_offices/ato/service_units/flight_program_operations",
+    "confidence": "high",
+    "source": "FAA Flight Program Operations official page"
+  },
+  {
+    "entityId": "6GFA",
+    "dataset": "part135",
+    "website": "https://www.greatflight.com",
+    "confidence": "high",
+    "source": "Great Flight private jet charter official site is greatflight.com"
+  },
+  {
+    "entityId": "N2UA",
+    "dataset": "part135",
+    "website": "https://www.cirrusav.com",
+    "confidence": "high",
+    "source": "Great Western Air LLC does business as Cirrus Aviation Services; official site is cirrusav.com"
+  },
+  {
+    "entityId": "U5QA",
+    "dataset": "part135",
+    "website": "https://www.vistaamerica.com",
+    "confidence": "high",
+    "source": "Argus lists Jet Select LLC under Vista America and links to vistaamerica.com"
+  },
+  {
+    "entityId": "K2ZA",
+    "dataset": "part135",
+    "website": "https://bakeraircraft.com",
+    "confidence": "high",
+    "source": "Elkhorn Aviation Inc operates as Baker Aircraft; business listings identify bakeraircraft.com as the company website"
+  },
+  {
+    "entityId": "FTYA",
+    "dataset": "part135",
+    "website": "https://www.jbihelicopters.com",
+    "confidence": "high",
+    "source": "Joe Brigham Inc official site is jbihelicopters.com"
+  },
+  {
+    "entityId": "ZESA",
+    "dataset": "part135",
+    "website": "https://www.ljaviation.com",
+    "confidence": "high",
+    "source": "L J Associates Inc operates as L.J. Aviation; official site is ljaviation.com"
+  },
+  {
+    "entityId": "MY5A",
+    "dataset": "part135",
+    "website": "https://www.mandn.aero",
+    "confidence": "high",
+    "source": "M & N Equipment LLC operates as M&N Aviation; official site is mandn.aero"
+  },
+  {
+    "entityId": "Q2KA",
+    "dataset": "part135",
+    "website": "https://www.maverickhelicopter.com",
+    "confidence": "high",
+    "source": "Maverick Airstar is presented under Maverick Helicopters; official site is maverickhelicopter.com"
+  },
+  {
+    "entityId": "SOWA",
+    "dataset": "part135",
+    "website": "https://www.charter-first.com",
+    "confidence": "high",
+    "source": "Minnesota DOT commercial operators list shows Midwest Aviation Div of Southwest Aviation Inc website as charter-first.com"
+  },
+  {
+    "entityId": "RI9A",
+    "dataset": "part135",
+    "website": "https://www.flyadq.com",
+    "confidence": "high",
+    "source": "DOT carrier list identifies Redemption Inc dba Island Air Service; official site is flyadq.com"
+  },
+  {
+    "entityId": "4T3A",
+    "dataset": "part135",
+    "website": "https://www.zenflight.com",
+    "confidence": "high",
+    "source": "WYVERN and FAA references tie Thro Aviation Inc to Zenflight; official site is zenflight.com"
+  },
+  {
+    "entityId": "5PGA",
+    "dataset": "part135",
+    "website": "https://paragonairways.com",
+    "confidence": "high",
+    "source": "Government contract and operator listings identify C.C. Calzone LLC dba Paragon Airways; official site is paragonairways.com"
+  },
+  {
+    "entityId": "64MA",
+    "dataset": "part135",
+    "website": "https://www.precisionacm.com",
+    "confidence": "high",
+    "source": "Precision Aircraft Management states its air carrier is certificate 64MA; official site is precisionacm.com"
+  },
+  {
+    "entityId": "O2GA",
+    "dataset": "part135",
+    "website": "https://flyairshare.com",
+    "confidence": "medium",
+    "source": "Circadian Aviation was acquired and integrated into Airshare's charter platform; current public-facing site is flyairshare.com"
+  },
+  {
+    "entityId": "JAPA",
+    "dataset": "part135",
+    "website": "http://www.classicairmedical.com",
+    "confidence": "high",
+    "source": "Classic Helicopter Group operates under the Classic Air Medical brand; current listings point to classicairmedical.com"
+  },
+  {
+    "entityId": "7OKA",
+    "dataset": "part135",
+    "website": "https://www.clemensaviation.com",
+    "confidence": "high",
+    "source": "Clemens Aviation official site is clemensaviation.com"
+  },
+  {
+    "entityId": "FOMA",
+    "dataset": "part135",
+    "website": "https://flyfairwind.com",
+    "confidence": "high",
+    "source": "Executive Air Charter of Boca Raton operates as Fair Wind Air Charter; official site is flyfairwind.com"
+  },
+  {
+    "entityId": "3JMA",
+    "dataset": "part135",
+    "website": "https://www.jetexcellence.com",
+    "confidence": "high",
+    "source": "Jet Excellence states it traces its roots to JEM Air Holdings dba BellAir; current official site is jetexcellence.com"
+  },
+  {
+    "entityId": "P9KA",
+    "dataset": "part135",
+    "website": "https://www.flyalaskaseaplanes.com",
+    "confidence": "high",
+    "source": "Alaska Seaplanes states flights are operated by Kalinin Aviation LLC dba Alaska Seaplanes; official site is flyalaskaseaplanes.com"
+  },
+  {
+    "entityId": "NKVA",
+    "dataset": "part135",
+    "website": "https://www.flyprecision.com",
+    "confidence": "high",
+    "source": "Fly Precision lists air carrier NKVA853G on its official site"
+  },
+  {
+    "entityId": "LOMA",
+    "dataset": "part135",
+    "website": "https://www.schubachaviation.com",
+    "confidence": "high",
+    "source": "Tango Air Inc operates as Schubach Aviation; official site is schubachaviation.com"
+  },
+  {
+    "entityId": "F2PA",
+    "dataset": "part135",
+    "website": "https://goldaviation.com",
+    "confidence": "high",
+    "source": "Gold Aviation states certified Dolphin Atlantic Inc operates aircraft for its commercial use; current official site is goldaviation.com"
+  },
+  {
+    "entityId": "2VKA",
+    "dataset": "part135",
+    "website": "http://www.vikingaviation1.com",
+    "confidence": "medium",
+    "source": "Arkansas exporter directory lists Viking Aviation LLC aerial tours website as vikingaviation1.com"
+  },
+  {
+    "entityId": "DBCA",
+    "dataset": "part135",
+    "website": "https://www.sterlingaviation.com",
+    "confidence": "medium",
+    "source": "Multiple operator profiles identify Sterling Aviation LLC's official website as sterlingaviation.com"
+  },
+  {
+    "entityId": "M7KA",
+    "dataset": "part135",
+    "website": "https://www.maverickhelicopter.com",
+    "confidence": "high",
+    "source": "Current company and mapping listings identify Maverick Helicopters Inc official website as maverickhelicopter.com"
+  },
+  {
+    "entityId": "62MA",
+    "dataset": "part135",
+    "website": "https://www.mnaviation.com",
+    "confidence": "high",
+    "source": "NBAA and carrier profiles list M&N Aviation Inc official website as mnaviation.com"
+  },
+  {
+    "entityId": "454A",
+    "dataset": "part135",
+    "website": "https://www.apollomedflight.com",
+    "confidence": "high",
+    "source": "Current legal and accident records identify Integra Aviation LLC dba Apollo MedFlight; official site is apollomedflight.com"
+  }
+]

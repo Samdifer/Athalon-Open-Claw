@@ -1,0 +1,107 @@
+[
+  {
+    "entityId": "6LLA",
+    "dataset": "part135",
+    "website": "https://www.alliantaviation.com",
+    "confidence": "high",
+    "source": "Alliant Aviation official site is alliantaviation.com"
+  },
+  {
+    "entityId": "VNLA",
+    "dataset": "part135",
+    "website": "https://www.aerialpatrol.com",
+    "confidence": "high",
+    "source": "Aerial Patrol official site is aerialpatrol.com"
+  },
+  {
+    "entityId": "ZE5A",
+    "dataset": "part135",
+    "website": "https://www.charterairkc.com",
+    "confidence": "high",
+    "source": "Air Associates Charter official site is charterairkc.com"
+  },
+  {
+    "entityId": "1BMA",
+    "dataset": "part135",
+    "website": "https://www.airbrock.com",
+    "confidence": "high",
+    "source": "Airbrock official site is airbrock.com"
+  },
+  {
+    "entityId": "1CHA",
+    "dataset": "part135",
+    "website": "https://coastalhelicopters.com",
+    "confidence": "high",
+    "source": "Coastal Helicopters official site is coastalhelicopters.com"
+  },
+  {
+    "entityId": "BOOA",
+    "dataset": "part135",
+    "website": "https://www.cobbaviationservices.com",
+    "confidence": "high",
+    "source": "Cobb Aviation Services official site is cobbaviationservices.com"
+  },
+  {
+    "entityId": "IEYA",
+    "dataset": "part135",
+    "website": "https://www.colemanjet.com",
+    "confidence": "high",
+    "source": "Coleman Jet official site is colemanjet.com"
+  },
+  {
+    "entityId": "C5GA",
+    "dataset": "part135",
+    "website": "https://corporateaircharters.com",
+    "confidence": "high",
+    "source": "Corporate Air Charters official site is corporateaircharters.com"
+  },
+  {
+    "entityId": "YCOA",
+    "dataset": "part135",
+    "website": "https://www.corporatejet.com",
+    "confidence": "high",
+    "source": "Corporate Jet LLC official site is corporatejet.com"
+  },
+  {
+    "entityId": "6TXA",
+    "dataset": "part135",
+    "website": "https://craftcharter.com",
+    "confidence": "high",
+    "source": "Craft Charter official site is craftcharter.com"
+  },
+  {
+    "entityId": "DEJA",
+    "dataset": "part135",
+    "website": "https://www.dhhelicopterinc.com",
+    "confidence": "high",
+    "source": "D H Helicopter official site is dhhelicopterinc.com"
+  },
+  {
+    "entityId": "DOKA",
+    "dataset": "part135",
+    "website": "https://www.daleaviation.com",
+    "confidence": "high",
+    "source": "Dale Aviation official site is daleaviation.com"
+  },
+  {
+    "entityId": "D6JA",
+    "dataset": "part135",
+    "website": "https://flydjc.com",
+    "confidence": "high",
+    "source": "Direct Jet Charter official site is flydjc.com"
+  },
+  {
+    "entityId": "HBKA",
+    "dataset": "part135",
+    "website": "https://flycfm.com",
+    "confidence": "high",
+    "source": "Central Flight Management official site is flycfm.com"
+  },
+  {
+    "entityId": "F9AA",
+    "dataset": "part135",
+    "website": "https://flycloudpeak.com",
+    "confidence": "high",
+    "source": "Cloud Peak official site is flycloudpeak.com"
+  }
+]

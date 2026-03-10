@@ -71,16 +71,20 @@ async function resolvePreferredTechnician(
       preferredClerkOrganizationId,
       preferredOrganizationName,
     );
-    if (!selectedOrg) return null;
-
-    const scoped = technicians.filter(
-      (tech: any) => tech.organizationId === selectedOrg._id,
-    );
-    const scopedTech = pickLatestTechnician(scoped);
-    if (scopedTech) {
-      return { tech: scopedTech, org: selectedOrg };
+    if (selectedOrg) {
+      const scoped = technicians.filter(
+        (tech: any) => tech.organizationId === selectedOrg._id,
+      );
+      const scopedTech = pickLatestTechnician(scoped);
+      if (scopedTech) {
+        return { tech: scopedTech, org: selectedOrg };
+      }
+      // Clerk org is mapped but user isn't linked — return null so caller
+      // can emit "awaiting_profile_link".
+      return null;
     }
-    return null;
+    // Clerk org not mapped to any Athelon org — fall through to general
+    // technician lookup so existing users aren't trapped on onboarding.
   }
 
   const enriched = (
@@ -384,21 +388,47 @@ export const bootstrapOrganizationAndAdmin = mutation({
     state: v.string(),
     country: v.string(),
     timezone: v.string(),
+    clerkOrganizationId: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const identity = await requireAuth(ctx);
 
-    // Idempotent by Clerk user ID.
-    const existingTech = await ctx.db
-      .query("technicians")
-      .withIndex("by_user", (q) => q.eq("userId", identity.subject))
-      .first();
-
-    if (existingTech) {
-      return {
-        organizationId: existingTech.organizationId,
-        technicianId: existingTech._id,
-      };
+    // Idempotent — scoped by Clerk org when provided, otherwise by user.
+    if (args.clerkOrganizationId) {
+      // Check if this Clerk org already has an Athelon org.
+      const existingOrg = await ctx.db
+        .query("organizations")
+        .withIndex("by_clerk_organization", (q) =>
+          q.eq("clerkOrganizationId", args.clerkOrganizationId),
+        )
+        .first();
+      if (existingOrg) {
+        const existingTechs = await ctx.db
+          .query("technicians")
+          .withIndex("by_user", (q) => q.eq("userId", identity.subject))
+          .collect();
+        const matchingTech = existingTechs.find(
+          (t) => t.organizationId === existingOrg._id,
+        );
+        if (matchingTech) {
+          return {
+            organizationId: existingOrg._id,
+            technicianId: matchingTech._id,
+          };
+        }
+      }
+    } else {
+      // No Clerk org — first-time user idempotency: return existing if any.
+      const existingTech = await ctx.db
+        .query("technicians")
+        .withIndex("by_user", (q) => q.eq("userId", identity.subject))
+        .first();
+      if (existingTech) {
+        return {
+          organizationId: existingTech.organizationId,
+          technicianId: existingTech._id,
+        };
+      }
     }
 
     const organizationName = args.organizationName.trim();
@@ -435,6 +465,7 @@ export const bootstrapOrganizationAndAdmin = mutation({
       active: true,
       createdAt: now,
       updatedAt: now,
+      ...(args.clerkOrganizationId ? { clerkOrganizationId: args.clerkOrganizationId } : {}),
     });
 
     const techId = await ctx.db.insert("technicians", {

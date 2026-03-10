@@ -1,0 +1,44 @@
+[
+  {
+    "entityId": "T04A",
+    "dataset": "part135",
+    "website": "https://www.talkeetnaaeroservice.com",
+    "confidence": "high",
+    "source": "Talkeetna Aero Service official site is talkeetnaaeroservice.com"
+  },
+  {
+    "entityId": "6TSA",
+    "dataset": "part135",
+    "website": "https://transnorthaviation.com",
+    "confidence": "high",
+    "source": "Trans Northern Airways current public site is transnorthaviation.com"
+  },
+  {
+    "entityId": "8B9A",
+    "dataset": "part135",
+    "website": "https://www.puertoricoaircharters.com",
+    "confidence": "medium",
+    "source": "Current charter listings identify Up in the Air LLC website as puertoricoaircharters.com"
+  },
+  {
+    "entityId": "VLHA",
+    "dataset": "part135",
+    "website": "https://www.valleyhelicopterservice.com",
+    "confidence": "high",
+    "source": "Valley Helicopter Service official site is valleyhelicopterservice.com"
+  },
+  {
+    "entityId": "3VSA",
+    "dataset": "part135",
+    "website": "https://vertical-solutions-aero.com",
+    "confidence": "high",
+    "source": "Vertical Solutions official site is vertical-solutions-aero.com"
+  },
+  {
+    "entityId": "1CCA",
+    "dataset": "part135",
+    "website": "https://www.whitehorsejet.com",
+    "confidence": "high",
+    "source": "White Horse Worldwide official site is whitehorsejet.com"
+  }
+]

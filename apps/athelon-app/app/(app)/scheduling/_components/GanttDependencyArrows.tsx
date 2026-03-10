@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPES
@@ -28,6 +28,7 @@ interface GanttDependencyArrowsProps {
   containerWidth: number;
   containerHeight: number;
   criticalTaskIds?: Set<string>;
+  onDependencyClick?: (dependencyId: string) => void;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -84,7 +85,10 @@ export function GanttDependencyArrows({
   containerWidth,
   containerHeight,
   criticalTaskIds,
+  onDependencyClick,
 }: GanttDependencyArrowsProps) {
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
+
   const paths = useMemo(() => {
     return dependencies
       .map((dep) => {
@@ -140,21 +144,41 @@ export function GanttDependencyArrows({
           <path d="M 0 0 L 8 3 L 0 6 Z" fill="#ef4444" />
         </marker>
       </defs>
-      {paths.map((p) => (
-        <g key={p.id}>
-          <path d={p.d} fill="none" stroke="transparent" strokeWidth={12} className="pointer-events-auto" />
-          <path
-            d={p.d}
-            fill="none"
-            stroke={p.isCritical ? "#ef4444" : undefined}
-            className={p.isCritical ? "" : "stroke-muted-foreground/50"}
-            strokeWidth={p.isCritical ? 2 : 1.5}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            markerEnd={p.isCritical ? "url(#gantt-arrow-critical)" : "url(#gantt-arrow)"}
-          />
-        </g>
-      ))}
+      {paths.map((p) => {
+        const isHovered = hoveredId === p.id;
+        return (
+          <g key={p.id}>
+            {/* Wide invisible hit target for click/hover */}
+            <path
+              d={p.d}
+              fill="none"
+              stroke="transparent"
+              strokeWidth={12}
+              className="pointer-events-auto cursor-pointer"
+              onClick={(e) => {
+                if (onDependencyClick) {
+                  e.stopPropagation();
+                  onDependencyClick(p.id);
+                }
+              }}
+              onPointerEnter={() => setHoveredId(p.id)}
+              onPointerLeave={() => setHoveredId((prev) => (prev === p.id ? null : prev))}
+            />
+            {/* Visible connector path */}
+            <path
+              d={p.d}
+              fill="none"
+              stroke={p.isCritical ? "#ef4444" : isHovered ? "#60a5fa" : undefined}
+              className={p.isCritical || isHovered ? "" : "stroke-muted-foreground/50"}
+              strokeWidth={p.isCritical ? 2 : isHovered ? 2.5 : 1.5}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              markerEnd={p.isCritical ? "url(#gantt-arrow-critical)" : "url(#gantt-arrow)"}
+              style={{ pointerEvents: "none" }}
+            />
+          </g>
+        );
+      })}
     </svg>
   );
 }

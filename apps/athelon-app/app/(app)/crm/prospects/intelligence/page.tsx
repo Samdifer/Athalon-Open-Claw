@@ -1,6 +1,6 @@
 "use client";
 
-import { useDeferredValue, useEffect, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import type { ComponentType } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { useMutation, useQuery } from "convex/react";
@@ -33,6 +33,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -581,6 +582,13 @@ export default function CrmProspectIntelligencePage() {
   ) as ProspectAssessment[] | undefined;
   const upsertAssessment = useMutation(api.crmProspects.upsertCampaignAssessment);
   const promoteProspect = useMutation(api.crmProspects.promoteProspectToCustomer);
+  const prospectNotes = useQuery(
+    api.crmProspects.listProspectNotes,
+    orgId && prospectId
+      ? { organizationId: orgId as Id<"organizations">, prospectEntityId: prospectId }
+      : "skip",
+  );
+  const addProspectNote = useMutation(api.crmProspects.addProspectNote);
 
   const [campaignName, setCampaignName] = useState(DEFAULT_CAMPAIGN);
   const [campaignFit, setCampaignFit] = useState<CampaignFit>("unknown");
@@ -591,6 +599,8 @@ export default function CrmProspectIntelligencePage() {
   const [nextStep, setNextStep] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [isPromoting, setIsPromoting] = useState(false);
+  const [newNoteContent, setNewNoteContent] = useState("");
+  const [isAddingNote, setIsAddingNote] = useState(false);
 
   const search = searchParams.get("q") ?? "";
   const viewMode = readViewMode(searchParams.get("view"));
@@ -606,9 +616,12 @@ export default function CrmProspectIntelligencePage() {
   const campaignAssessments = allAssessments.filter(
     (assessment) => assessment.campaignKey === currentCampaignKey,
   );
-  const assessmentMap = new Map(
-    campaignAssessments.map((assessment) => [assessment.prospectEntityId, assessment]),
-  );
+  const assessmentMap = useMemo(() => {
+    const forCampaign = allAssessments.filter(
+      (a) => a.campaignKey === currentCampaignKey,
+    );
+    return new Map(forCampaign.map((a) => [a.prospectEntityId, a]));
+  }, [allAssessments, currentCampaignKey]);
 
   const filteredProspects = coloradoPart145Research
     .filter((prospect) => {
@@ -679,7 +692,7 @@ export default function CrmProspectIntelligencePage() {
     setContactStrategy(selectedAssessment?.contactStrategy ?? "");
     setNotes(selectedAssessment?.notes ?? "");
     setNextStep(selectedAssessment?.nextStep ?? "");
-  }, [selectedAssessment, selectedProspect]);
+  }, [selectedProspect?.entityId, selectedAssessment?._id, selectedAssessment?.updatedAt]);
 
   if (!orgId || !isLoaded || assessments === undefined) {
     return <ProspectListSkeleton />;
@@ -715,6 +728,30 @@ export default function CrmProspectIntelligencePage() {
       next.set(name, value);
     }
     setSearchParams(next, { replace: true });
+  }
+
+  async function handleAddNote() {
+    if (!selectedProspect || !orgId) return;
+    const content = newNoteContent.trim();
+    if (!content) return;
+
+    setIsAddingNote(true);
+    try {
+      await addProspectNote({
+        organizationId: orgId as Id<"organizations">,
+        prospectEntityId: selectedProspect.entityId,
+        campaignKey: currentCampaignKey,
+        content,
+      });
+      setNewNoteContent("");
+      toast.success("Note added.");
+    } catch (error) {
+      toast.error("Failed to add note.", {
+        description: error instanceof Error ? error.message : "Unknown error",
+      });
+    } finally {
+      setIsAddingNote(false);
+    }
   }
 
   async function handleSaveAssessment() {
@@ -887,7 +924,126 @@ export default function CrmProspectIntelligencePage() {
           />
         </div>
 
-        <div className="grid gap-5 xl:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.9fr)]">
+        {/* Action bar */}
+        <div className="flex flex-wrap items-end gap-3 rounded-lg border border-border/60 bg-muted/20 px-4 py-3">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="ghost" size="sm" className="h-7 gap-1 px-2 text-xs">
+                <span className="text-muted-foreground">Campaign:</span>
+                <span className="font-medium">{effectiveCampaignName}</span>
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-64 p-3">
+              <Label htmlFor="campaign-name-bar" className="text-xs">Campaign name</Label>
+              <Input
+                id="campaign-name-bar"
+                value={campaignName}
+                onChange={(e) => setCampaignName(e.target.value)}
+                placeholder={DEFAULT_CAMPAIGN}
+                className="mt-1.5 h-8 text-sm"
+              />
+              <p className="mt-1.5 text-xs text-muted-foreground">
+                Last reviewed {formatTimestamp(selectedAssessment?.updatedAt)}
+                {selectedAssessment?.reviewedByName ? ` by ${selectedAssessment.reviewedByName}` : ""}
+              </p>
+            </PopoverContent>
+          </Popover>
+
+          <div className="h-5 w-px bg-border" />
+
+          <div className="flex items-center gap-1.5">
+            <Label className="text-xs whitespace-nowrap">Fit</Label>
+            <Select value={campaignFit} onValueChange={(v) => setCampaignFit(v as CampaignFit)}>
+              <SelectTrigger className="h-8 w-[120px] text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="high">High fit</SelectItem>
+                <SelectItem value="medium">Medium fit</SelectItem>
+                <SelectItem value="low">Low fit</SelectItem>
+                <SelectItem value="unknown">Unknown fit</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex items-center gap-1.5">
+            <Label className="text-xs whitespace-nowrap">Status</Label>
+            <Select value={qualificationStatus} onValueChange={(v) => setQualificationStatus(v as QualificationStatus)}>
+              <SelectTrigger className="h-8 w-[140px] text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="unreviewed">Unreviewed</SelectItem>
+                <SelectItem value="qualified">Qualified</SelectItem>
+                <SelectItem value="nurture">Nurture</SelectItem>
+                <SelectItem value="research">Needs research</SelectItem>
+                <SelectItem value="disqualified">Disqualified</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex items-center gap-1.5">
+            <Label className="text-xs whitespace-nowrap" htmlFor="fit-score-bar">Score</Label>
+            <Input
+              id="fit-score-bar"
+              value={fitScore}
+              onChange={(e) => setFitScore(e.target.value)}
+              inputMode="numeric"
+              placeholder="1–5"
+              className="h-8 w-16 text-xs"
+            />
+          </div>
+
+          <div className="flex items-center gap-1.5">
+            <Label className="text-xs whitespace-nowrap">Strategy</Label>
+            <Select value={contactStrategy} onValueChange={(v) => setContactStrategy(v as ContactStrategy)}>
+              <SelectTrigger className="h-8 w-[140px] text-xs">
+                <SelectValue placeholder="Select" />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.entries(CONTACT_STRATEGY_LABELS).map(([value, label]) => (
+                  <SelectItem key={value} value={value}>{label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex items-center gap-1.5">
+            <Label className="text-xs whitespace-nowrap" htmlFor="next-step-bar">Next step</Label>
+            <Input
+              id="next-step-bar"
+              value={nextStep}
+              onChange={(e) => setNextStep(e.target.value)}
+              placeholder="Call DOM..."
+              className="h-8 w-48 text-xs"
+            />
+          </div>
+
+          <div className="ml-auto flex items-center gap-2">
+            {selectedAssessment?.promotedCustomerId ? (
+              <Button asChild variant="outline" size="sm" className="h-8 gap-1 text-xs text-emerald-700 dark:text-emerald-300 border-emerald-500/40">
+                <Link to={`/crm/accounts/${selectedAssessment.promotedCustomerId}`}>
+                  <BadgeCheck className="h-3.5 w-3.5" />
+                  In CRM
+                </Link>
+              </Button>
+            ) : null}
+            <Button size="sm" className="h-8 text-xs" onClick={handleSaveAssessment} disabled={isSaving}>
+              {isSaving ? "Saving..." : "Save"}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 text-xs"
+              onClick={handlePromoteProspect}
+              disabled={isPromoting || qualificationStatus !== "qualified"}
+            >
+              {isPromoting ? "Promoting..." : "Promote to CRM"}
+            </Button>
+          </div>
+        </div>
+
+        <div>
           <Card className="border-border/60">
             <CardHeader className="space-y-4">
               <div className="flex flex-wrap items-start justify-between gap-3">
@@ -1013,159 +1169,22 @@ export default function CrmProspectIntelligencePage() {
                   </p>
                 </div>
               </div>
-            </CardContent>
-          </Card>
 
-          <Card className="border-border/60 xl:sticky xl:top-4 self-start">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base">Campaign assignment</CardTitle>
-              <p className="text-sm text-muted-foreground">
-                Assign this prospect to a campaign, set qualification status, and promote it into
-                CRM when it is ready.
-              </p>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-1.5">
-                <Label htmlFor="campaign-name-detail">Campaign name</Label>
-                <Input
-                  id="campaign-name-detail"
-                  value={campaignName}
-                  onChange={(event) => setCampaignName(event.target.value)}
-                  placeholder={DEFAULT_CAMPAIGN}
+              <div className="space-y-1.5 pt-1">
+                <Label htmlFor="assessment-notes-inline" className="text-xs text-muted-foreground uppercase tracking-wide">
+                  Sales assessment notes
+                </Label>
+                <Textarea
+                  id="assessment-notes-inline"
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="Capture pain signals, fit gaps, warm intro paths..."
+                  className="min-h-[100px] text-sm"
                 />
               </div>
-
-              <div className="rounded-lg border border-border/60 bg-muted/20 p-3 text-sm">
-                <p className="font-medium">Active campaign</p>
-                <p className="mt-1 text-muted-foreground">{effectiveCampaignName}</p>
-                <p className="mt-2 text-xs text-muted-foreground">
-                  Last reviewed {formatTimestamp(selectedAssessment?.updatedAt)}
-                  {selectedAssessment?.reviewedByName ? ` by ${selectedAssessment.reviewedByName}` : ""}
-                </p>
-              </div>
-
-              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
-                <div className="space-y-1.5">
-                  <Label>Campaign fit</Label>
-                  <Select value={campaignFit} onValueChange={(value) => setCampaignFit(value as CampaignFit)}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="high">High fit</SelectItem>
-                      <SelectItem value="medium">Medium fit</SelectItem>
-                      <SelectItem value="low">Low fit</SelectItem>
-                      <SelectItem value="unknown">Unknown fit</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label>Qualification status</Label>
-                  <Select
-                    value={qualificationStatus}
-                    onValueChange={(value) => setQualificationStatus(value as QualificationStatus)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="unreviewed">Unreviewed</SelectItem>
-                      <SelectItem value="qualified">Qualified</SelectItem>
-                      <SelectItem value="nurture">Nurture</SelectItem>
-                      <SelectItem value="research">Needs research</SelectItem>
-                      <SelectItem value="disqualified">Disqualified</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label htmlFor="fit-score">Fit score (1-5)</Label>
-                  <Input
-                    id="fit-score"
-                    value={fitScore}
-                    onChange={(event) => setFitScore(event.target.value)}
-                    inputMode="numeric"
-                    placeholder="4"
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label>Contact strategy</Label>
-                  <Select
-                    value={contactStrategy}
-                    onValueChange={(value) => setContactStrategy(value as ContactStrategy)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select strategy" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Object.entries(CONTACT_STRATEGY_LABELS).map(([value, label]) => (
-                        <SelectItem key={value} value={value}>
-                          {label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="flex flex-wrap gap-2">
-                <Button onClick={handleSaveAssessment} disabled={isSaving}>
-                  {isSaving ? "Saving..." : "Save assignment"}
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={handlePromoteProspect}
-                  disabled={isPromoting || qualificationStatus !== "qualified"}
-                >
-                  {isPromoting ? "Promoting..." : "Promote to CRM account"}
-                </Button>
-              </div>
-
-              {selectedAssessment?.promotedCustomerId ? (
-                <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3 text-sm">
-                  <div className="flex flex-wrap items-center gap-2 text-emerald-700 dark:text-emerald-300">
-                    <BadgeCheck className="h-4 w-4" />
-                    Linked to CRM account on {formatTimestamp(selectedAssessment.promotedAt)}
-                  </div>
-                  <Button asChild variant="outline" size="sm" className="mt-3">
-                    <Link to={`/crm/accounts/${selectedAssessment.promotedCustomerId}`}>
-                      Open CRM account
-                    </Link>
-                  </Button>
-                </div>
-              ) : null}
             </CardContent>
           </Card>
         </div>
-
-        <Card className="border-border/60">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">Campaign notes</CardTitle>
-          </CardHeader>
-          <CardContent className="grid gap-4 xl:grid-cols-[minmax(0,0.75fr)_minmax(0,1.25fr)]">
-            <div className="space-y-1.5">
-              <Label htmlFor="next-step">Next step</Label>
-              <Input
-                id="next-step"
-                value={nextStep}
-                onChange={(event) => setNextStep(event.target.value)}
-                placeholder="Call DOM and confirm current tooling/process"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="assessment-notes">Sales assessment notes</Label>
-              <Textarea
-                id="assessment-notes"
-                value={notes}
-                onChange={(event) => setNotes(event.target.value)}
-                placeholder="Capture pain signals, fit gaps, warm intro paths, and why this shop does or does not belong in the current campaign."
-                className="min-h-[160px]"
-              />
-            </div>
-          </CardContent>
-        </Card>
 
         <div className="grid gap-5 lg:grid-cols-2">
           <Card className="border-border/60">
@@ -1208,6 +1227,55 @@ export default function CrmProspectIntelligencePage() {
                 <p className="rounded-lg border border-border/60 bg-muted/20 p-3 text-muted-foreground">
                   Website, phone, email, and operating scope are all present in the current pack.
                 </p>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="border-border/60">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">Prospect notes</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex gap-2">
+                <Input
+                  value={newNoteContent}
+                  onChange={(e) => setNewNoteContent(e.target.value)}
+                  placeholder="Add a note about this prospect..."
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      void handleAddNote();
+                    }
+                  }}
+                  className="flex-1"
+                />
+                <Button size="sm" onClick={handleAddNote} disabled={isAddingNote || !newNoteContent.trim()}>
+                  {isAddingNote ? "Adding..." : "Add"}
+                </Button>
+              </div>
+
+              {prospectNotes === undefined ? (
+                <div className="space-y-2">
+                  <Skeleton className="h-12 w-full" />
+                  <Skeleton className="h-12 w-full" />
+                </div>
+              ) : prospectNotes.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  No notes yet for this prospect.
+                </p>
+              ) : (
+                <div className="max-h-64 space-y-3 overflow-y-auto">
+                  {prospectNotes.map((note) => (
+                    <div key={note._id} className="rounded-lg border border-border/60 p-3 text-sm">
+                      <p className="whitespace-pre-wrap">{note.content}</p>
+                      <p className="mt-1.5 text-xs text-muted-foreground">
+                        {note.createdByName ?? "Unknown"}
+                        {" · "}
+                        {formatTimestamp(note.createdAt)}
+                      </p>
+                    </div>
+                  ))}
+                </div>
               )}
             </CardContent>
           </Card>

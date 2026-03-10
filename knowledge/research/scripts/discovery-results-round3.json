@@ -1,0 +1,163 @@
+[
+  {
+    "entityId": "I5VA",
+    "dataset": "part135",
+    "website": "https://acaviation.net",
+    "confidence": "high",
+    "source": "AC Aviation Services official site is acaviation.net"
+  },
+  {
+    "entityId": "XMEA",
+    "dataset": "part135",
+    "website": "https://airmed.us",
+    "confidence": "high",
+    "source": "Air Med Services official site is airmed.us"
+  },
+  {
+    "entityId": "A59A",
+    "dataset": "part135",
+    "website": "https://aircraftcharterservices.com",
+    "confidence": "high",
+    "source": "Aircraft Charter Services Inc official site is aircraftcharterservices.com"
+  },
+  {
+    "entityId": "YHAA",
+    "dataset": "part135",
+    "website": "https://www.airportsint.com",
+    "confidence": "medium",
+    "source": "Public operator listings tie Airway Air Charter Inc to Airports International; current site is airportsint.com"
+  },
+  {
+    "entityId": "META",
+    "dataset": "part135",
+    "website": "https://alaskaskyways.com",
+    "confidence": "high",
+    "source": "Alaska Skyways official site is alaskaskyways.com"
+  },
+  {
+    "entityId": "UY8A",
+    "dataset": "part135",
+    "website": "https://www.austin-aviation.com",
+    "confidence": "high",
+    "source": "Austin Aviation official site is austin-aviation.com"
+  },
+  {
+    "entityId": "V2FA",
+    "dataset": "part135",
+    "website": "https://advfs.com",
+    "confidence": "high",
+    "source": "Advantage Flight Solutions official site is advfs.com"
+  },
+  {
+    "entityId": "UOIA",
+    "dataset": "part135",
+    "website": "https://www.aircharterpr.com",
+    "confidence": "high",
+    "source": "Air Charter Inc official site is aircharterpr.com"
+  },
+  {
+    "entityId": "X33A",
+    "dataset": "part135",
+    "website": "https://alexairinc.com",
+    "confidence": "high",
+    "source": "Alexair Inc official site is alexairinc.com"
+  },
+  {
+    "entityId": "8USA",
+    "dataset": "part135",
+    "website": "https://americanjetcharter.com",
+    "confidence": "high",
+    "source": "American Aviation Inc operates under American Jet Charter; official site is americanjetcharter.com"
+  },
+  {
+    "entityId": "A6ZA",
+    "dataset": "part135",
+    "website": "https://www.arizonaheli.com",
+    "confidence": "high",
+    "source": "Arizona Heliservices official site is arizonaheli.com"
+  },
+  {
+    "entityId": "OW6A",
+    "dataset": "part135",
+    "website": "https://arrowwestaviation.com",
+    "confidence": "high",
+    "source": "Arrow West Aviation official site is arrowwestaviation.com"
+  },
+  {
+    "entityId": "AYPA",
+    "dataset": "part135",
+    "website": "https://aag.aero",
+    "confidence": "high",
+    "source": "Associated Aircraft Group official site is aag.aero"
+  },
+  {
+    "entityId": "2BZA",
+    "dataset": "part135",
+    "website": "https://www.corporatejets.com",
+    "confidence": "high",
+    "source": "B & F Aviation Inc operates as Corporate Jets; official site is corporatejets.com"
+  },
+  {
+    "entityId": "U54A",
+    "dataset": "part135",
+    "website": "https://www.blueaviation.com",
+    "confidence": "high",
+    "source": "Blue Aviation official site is blueaviation.com"
+  },
+  {
+    "entityId": "DUFA",
+    "dataset": "part135",
+    "website": "https://businessaviationcourier.com",
+    "confidence": "high",
+    "source": "Business Aviation Courier official site is businessaviationcourier.com"
+  },
+  {
+    "entityId": "YBBA",
+    "dataset": "part135",
+    "website": "https://www.butleraviation.com",
+    "confidence": "high",
+    "source": "Butler Aviation official site is butleraviation.com"
+  },
+  {
+    "entityId": "6CIA",
+    "dataset": "part135",
+    "website": "https://carrierairways.com",
+    "confidence": "high",
+    "source": "Carrier Airways official site is carrierairways.com"
+  },
+  {
+    "entityId": "9CCA",
+    "dataset": "part135",
+    "website": "https://www.cherrycapflight.com",
+    "confidence": "high",
+    "source": "Cherry Capital Flight official site is cherrycapflight.com"
+  },
+  {
+    "entityId": "AC2A",
+    "dataset": "part135",
+    "website": "https://www.chevron.com",
+    "confidence": "high",
+    "source": "Chevron USA Production Company official corporate site is chevron.com"
+  },
+  {
+    "entityId": "9CWA",
+    "dataset": "part135",
+    "website": "https://citywingspr.com",
+    "confidence": "high",
+    "source": "City Wings official site is citywingspr.com"
+  },
+  {
+    "entityId": "6CHA",
+    "dataset": "part135",
+    "website": "https://completeheli.com",
+    "confidence": "high",
+    "source": "Complete Helicopters official site is completeheli.com"
+  },
+  {
+    "entityId": "QXQA",
+    "dataset": "part135",
+    "website": "https://www.flycare.com",
+    "confidence": "high",
+    "source": "Critical Air Response Enterprises official site is flycare.com"
+  }
+]

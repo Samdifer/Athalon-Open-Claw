@@ -74,8 +74,21 @@ function CollapsibleSection({
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function DashboardPage() {
-  const [showWelcome, setShowWelcome] = useState(true);
   const { orgId, org } = useCurrentOrg();
+
+  // Show welcome modal once per org (persisted in localStorage).
+  const welcomeKey = orgId ? `athelon:welcome-seen:${orgId}` : null;
+  const [showWelcome, setShowWelcome] = useState(() => {
+    if (!welcomeKey) return false;
+    return localStorage.getItem(welcomeKey) !== "true";
+  });
+
+  const handleCloseWelcome = () => {
+    setShowWelcome(false);
+    if (welcomeKey) {
+      localStorage.setItem(welcomeKey, "true");
+    }
+  };
 
   // Shared queries — lifted here so both LiveKPICards and LiveActiveWorkOrders
   // receive the same data without duplicate subscriptions.
@@ -141,7 +154,10 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-4">
-      <WelcomeModal open={showWelcome} onClose={() => setShowWelcome(false)} />
+      <WelcomeModal
+        open={showWelcome}
+        onClose={handleCloseWelcome}
+      />
 
       {/* ─── Page Header ─────────────────────────────────────────────── */}
       <div className="flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between">

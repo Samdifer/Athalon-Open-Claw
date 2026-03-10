@@ -1836,17 +1836,6 @@ export const updateScheduleFields = mutation({
         throw new Error("commitmentChangeReason is required when changing committed RTS date.");
       }
 
-      const postInspectionStatuses = new Set([
-        "pending_inspection",
-        "pending_signoff",
-        "open_discrepancies",
-        "ready_for_rts",
-      ]);
-      if (!postInspectionStatuses.has(wo.status ?? "")) {
-        throw new Error(
-          `RTS commitment date can only be changed in post-inspection states. Current status: ${wo.status}.`,
-        );
-      }
     }
 
     const updates: {

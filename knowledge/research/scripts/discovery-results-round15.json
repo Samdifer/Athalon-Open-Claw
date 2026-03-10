@@ -1,0 +1,30 @@
+[
+  {
+    "entityId": "F8BA",
+    "dataset": "part135",
+    "website": "https://www.propilot.aero",
+    "confidence": "high",
+    "source": "Propilot official site is propilot.aero"
+  },
+  {
+    "entityId": "R28A",
+    "dataset": "part135",
+    "website": "https://royaleairservice.com",
+    "confidence": "high",
+    "source": "Royale Air Service official site is royaleairservice.com"
+  },
+  {
+    "entityId": "R01A",
+    "dataset": "part135",
+    "website": "https://www.rugbyaviation.com",
+    "confidence": "high",
+    "source": "Rugby Aviation official site is rugbyaviation.com"
+  },
+  {
+    "entityId": "SPOA",
+    "dataset": "part135",
+    "website": "https://spaviation.net",
+    "confidence": "medium",
+    "source": "Current operator listings identify SP Aviation website as spaviation.net"
+  }
+]

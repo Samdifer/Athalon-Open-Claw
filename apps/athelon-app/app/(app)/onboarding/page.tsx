@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Building2, Link2 } from "lucide-react";
+import { ArrowLeft, Building2 } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { Link } from "react-router-dom";
 
 const AVIATION_TIMEZONES = [
   { value: "America/New_York", label: "Eastern (ET) - America/New_York" },
@@ -35,11 +36,8 @@ export default function OnboardingPage() {
   const navigate = useNavigate();
   const { user } = useUser();
   const { organization } = useOrganization();
-  const { bootstrapStatus, org } = useCurrentOrg();
+  const { org } = useCurrentOrg();
   const bootstrap = useMutation(api.onboarding.bootstrapOrganizationAndAdmin);
-  const linkToSelectedOrganization = useMutation(
-    api.onboarding.linkUserToSelectedOrganization,
-  );
 
   const [organizationName, setOrganizationName] = useState("");
   const [legalName, setLegalName] = useState("");
@@ -48,8 +46,6 @@ export default function OnboardingPage() {
   const [country, setCountry] = useState("US");
   const [timezone, setTimezone] = useState("America/Denver");
   const [submitting, setSubmitting] = useState(false);
-  const [linkingSelectedOrganization, setLinkingSelectedOrganization] =
-    useState(false);
 
   const legalNameFallback = useMemo(
     () =>
@@ -75,110 +71,48 @@ export default function OnboardingPage() {
         state: state.trim(),
         country: country.trim(),
         timezone,
+        clerkOrganizationId: organization?.id,
       });
-      toast.success("Organization setup complete.");
-      navigate("/dashboard", { replace: true });
+      toast.success("Organization created successfully.");
+      navigate("/dashboard?setup=complete", { replace: true });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to complete setup.");
+      toast.error(err instanceof Error ? err.message : "Failed to create organization.");
     } finally {
       setSubmitting(false);
     }
   }
 
-  async function handleLinkSelectedOrganization() {
-    if (!organization) {
-      toast.error("Select an organization in Clerk first.");
-      return;
-    }
-
-    setLinkingSelectedOrganization(true);
-    try {
-      const result = await linkToSelectedOrganization({
-        preferredClerkOrganizationId: organization.id,
-        preferredOrganizationName: organization.name,
-        legalName: (legalName.trim() || legalNameFallback).trim(),
-      });
-      if (result.awaitingProfileLink) {
-        toast.success(`Joined ${organization.name}. Your admin still needs to link your personnel profile.`);
-        navigate("/onboarding", { replace: true });
-      } else {
-        toast.success(`Linked to ${organization.name}.`);
-        navigate("/dashboard", { replace: true });
-      }
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to link account.");
-    } finally {
-      setLinkingSelectedOrganization(false);
-    }
-  }
-
-  if (bootstrapStatus === "awaiting_profile_link") {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <Card className="w-full max-w-lg border-border/60">
-          <CardHeader>
-            <CardTitle className="text-xl flex items-center gap-2">
-              <Link2 className="w-5 h-5" />
-              Waiting For Profile Link
-            </CardTitle>
-            <CardDescription>
-              Your organization account has been joined, but an administrator still needs to map it to your personnel profile before internal pages unlock.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="rounded-md border border-border/60 bg-muted/30 p-4 space-y-2">
-              <p className="text-sm font-medium text-foreground">
-                Organization: {organization?.name ?? org?.name ?? "Selected organization"}
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Ask an administrator to open Settings &gt; Users, link your account to an existing personnel profile, and assign your access role.
-              </p>
-            </div>
-            <Button className="w-full" variant="secondary" onClick={() => window.location.reload()}>
-              Refresh Status
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <Card className="w-full max-w-lg border-border/60">
+    <div className="space-y-4">
+      <Button
+        variant="ghost"
+        size="sm"
+        className="text-muted-foreground"
+        asChild
+      >
+        <Link to="/settings/shop">
+          <ArrowLeft className="w-4 h-4 mr-1.5" />
+          Back to Settings
+        </Link>
+      </Button>
+
+      <Card className="max-w-lg border-border/60">
         <CardHeader>
           <CardTitle className="text-xl flex items-center gap-2">
             <Building2 className="w-5 h-5" />
-            Complete Setup
+            New Organization
           </CardTitle>
           <CardDescription>
-            Finish your organization setup to unlock all app pages.
+            Create a new organization to manage a separate repair station.
+            {org?.name && (
+              <span className="block mt-1 text-xs">
+                You are currently in <strong>{org.name}</strong>.
+              </span>
+            )}
           </CardDescription>
         </CardHeader>
 
         <CardContent>
-          {organization && (
-            <div className="mb-4 rounded-md border border-border/60 bg-muted/30 p-3 space-y-2">
-              <p className="text-sm font-medium text-foreground">
-                Join selected organization: {organization.name}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                Use this if the organization already has seeded data.
-              </p>
-              <Button
-                type="button"
-                variant="secondary"
-                className="w-full"
-                disabled={submitting || linkingSelectedOrganization}
-                onClick={handleLinkSelectedOrganization}
-              >
-                {linkingSelectedOrganization
-                  ? "Linking account..."
-                  : "Join Selected Organization"}
-              </Button>
-            </div>
-          )}
-
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
               <Label htmlFor="organizationName">Organization Name *</Label>
@@ -247,7 +181,7 @@ export default function OnboardingPage() {
             </div>
 
             <Button type="submit" className="w-full" disabled={submitting}>
-              {submitting ? "Completing setup..." : "Complete Setup"}
+              {submitting ? "Creating organization..." : "Create Organization"}
             </Button>
           </form>
         </CardContent>

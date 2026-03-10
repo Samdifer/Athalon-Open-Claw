@@ -1,0 +1,51 @@
+[
+  {
+    "entityId": "713A",
+    "dataset": "part135",
+    "website": "https://www.northwindaviation.com",
+    "confidence": "high",
+    "source": "North Wind Aviation official site is northwindaviation.com"
+  },
+  {
+    "entityId": "2NVA",
+    "dataset": "part135",
+    "website": "https://www.novictorheli.com",
+    "confidence": "high",
+    "source": "Novictor Aviation official site is novictorheli.com"
+  },
+  {
+    "entityId": "NEAA",
+    "dataset": "part135",
+    "website": "https://newenglandairlines.com",
+    "confidence": "high",
+    "source": "New England Airlines official site is newenglandairlines.com"
+  },
+  {
+    "entityId": "NTFA",
+    "dataset": "part135",
+    "website": "https://www.northernillinoisflightcenter.com",
+    "confidence": "high",
+    "source": "Northern Illinois Flight Center official site is northernillinoisflightcenter.com"
+  },
+  {
+    "entityId": "ZKFA",
+    "dataset": "part135",
+    "website": "https://proairways.com",
+    "confidence": "high",
+    "source": "Pro Airways official site is proairways.com"
+  },
+  {
+    "entityId": "VYXA",
+    "dataset": "part135",
+    "website": "https://www.panaviaairtaxi.com",
+    "confidence": "high",
+    "source": "Panavia Air Taxi official site is panaviaairtaxi.com"
+  },
+  {
+    "entityId": "17MA",
+    "dataset": "part135",
+    "website": "https://www.paragonaviationgroup.com",
+    "confidence": "medium",
+    "source": "Current operator listings identify Paragon Aviation Logistics website as paragonaviationgroup.com"
+  }
+]
