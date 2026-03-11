@@ -16,7 +16,7 @@ export default function SignUpPage() {
           FAA Part 145 Maintenance Management
         </p>
       </div>
-      <SignUp />
+      <SignUp forceRedirectUrl="/dashboard" />
     </div>
   );
 }

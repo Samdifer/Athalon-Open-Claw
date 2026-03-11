@@ -59,7 +59,7 @@ export default defineConfig({
         // Keep large vendor chunks (e.g. react-pdf) eligible for precache.
         maximumFileSizeToCacheInBytes: 3_000_000,
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
-        globIgnores: ["**/faaAirports-*.js"],
+        globIgnores: ["**/faaAirports-*.js", "**/nationalPart145-*.js", "**/data-national-part145-*.js"],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/.*\.convex\.cloud\/.*$/i,
@@ -106,6 +106,7 @@ export default defineConfig({
           if (id.includes('node_modules/recharts') || id.includes('node_modules/d3-')) return 'vendor-charts';
           if (id.includes('node_modules/@radix-ui') || id.includes('node_modules/radix-ui')) return 'vendor-radix';
           if (id.includes('node_modules/html5-qrcode')) return 'vendor-scanner';
+          if (id.includes('src/shared/data/nationalPart145')) return 'data-national-part145';
         },
       },
     },

@@ -48,6 +48,8 @@ import {
   coloradoPart145ResearchPack,
 } from "@/src/shared/data/coloradoPart145Research";
 import type { ColoradoProspectRecord } from "@/src/shared/data/coloradoPart145Research";
+import type { NationalProspectRecord } from "@/src/shared/data/nationalPart145";
+import { getAllNationalRecords, getNationalStates } from "@/src/shared/data/nationalPart145Index";
 import { AirportRepairServiceBadge } from "@/app/(app)/crm/_components/AirportRepairServiceBadge";
 
 type CampaignFit = "high" | "medium" | "low" | "unknown";
@@ -69,7 +71,10 @@ type AssessmentStatusFilter = QualificationStatus | "all";
 type OutreachTierFilter = "all" | "A" | "B" | "C";
 type ManualReviewFilter = "all" | "manual_review" | "ready_for_outreach";
 type ContactFilter = "all" | "full" | "good" | "partial" | "none";
+type SourceFilter = "all" | "enriched" | "national";
 type ProspectViewMode = "tiles" | "list" | "expanded";
+
+type UnifiedProspect = ColoradoProspectRecord & { _source: "enriched" | "national" };
 
 type ProspectAssessment = {
   _id: string;
@@ -89,8 +94,62 @@ type ProspectAssessment = {
   updatedAt: number;
 };
 
-const DEFAULT_CAMPAIGN = "Colorado Part 145 Outreach";
+const DEFAULT_CAMPAIGN = "Part 145 Outreach";
 const VIEW_MODES: ProspectViewMode[] = ["tiles", "list", "expanded"];
+const PAGE_SIZE = 50;
+
+function adaptNationalToUnified(r: NationalProspectRecord): UnifiedProspect {
+  return {
+    entityId: r.entityId,
+    legalName: r.legalName,
+    dbaName: r.dbaName,
+    street: r.street,
+    city: r.city,
+    state: r.state,
+    zip: r.zip,
+    phone: r.phone,
+    email: r.email,
+    website: null,
+    certNo: r.certNo,
+    part145Indicator: "yes",
+    certificateHints: r.dsgnCode,
+    shopSizeClass: "unknown",
+    aircraftWorkedOn: [],
+    airportProximityProfile: "unknown",
+    airportDistanceBand: "unknown",
+    nearestAirportName: null,
+    nearestAirportIcao: null,
+    observabilityScore: null,
+    observabilityScoreMethod: null,
+    profileArchetype: null,
+    overallConfidence: null,
+    identityAmbiguityFlag: false,
+    provenanceLegalName: null,
+    provenancePart145: null,
+    provenanceShopSizeClass: null,
+    provenanceAircraftWorkedOn: null,
+    provenanceAirportProximityProfile: null,
+    provenanceObservabilityScore: null,
+    sourceRefs: ["FAA AVInfo Registry"],
+    selectedSource: "faa-csv",
+    selectedSourcePrecedence: "faa-csv",
+    selectedSourceRank: null,
+    selectedRound: "national",
+    certValidationStatus: null,
+    directVerificationStatus: null,
+    confidenceLabel: "faa-registry",
+    contactCompleteness: r.contactCompleteness,
+    hasPhone: r.hasPhone,
+    hasEmail: r.hasEmail,
+    hasWebsite: false,
+    manualReviewFlag: false,
+    manualReviewReason: null,
+    provenanceSelectedSource: null,
+    provenancePrecedenceRule: null,
+    outreachTier: "C",
+    _source: "national",
+  };
+}
 
 const TIER_STYLES: Record<string, string> = {
   A: "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-300",
@@ -218,6 +277,10 @@ function readContactFilter(value: string | null): ContactFilter {
     : "all";
 }
 
+function readSourceFilter(value: string | null): SourceFilter {
+  return value === "enriched" || value === "national" ? value : "all";
+}
+
 function normalizeWebsiteUrl(value: string | null) {
   if (!value) return null;
   return /^https?:\/\//i.test(value) ? value : `https://${value}`;
@@ -275,7 +338,7 @@ function ProspectListSkeleton() {
 }
 
 function ProspectStateBadges(props: {
-  prospect: ColoradoProspectRecord;
+  prospect: UnifiedProspect;
   assessment?: ProspectAssessment;
   campaignFit?: CampaignFit;
 }) {
@@ -300,7 +363,7 @@ function ProspectStateBadges(props: {
 }
 
 function ProspectSignalStrip(props: {
-  prospect: ColoradoProspectRecord;
+  prospect: UnifiedProspect;
   assessment?: ProspectAssessment;
 }) {
   const { prospect, assessment } = props;
@@ -329,7 +392,7 @@ function ProspectSignalStrip(props: {
   );
 }
 
-function ProspectContactAvailability(props: { prospect: ColoradoProspectRecord }) {
+function ProspectContactAvailability(props: { prospect: UnifiedProspect }) {
   const { prospect } = props;
 
   return (
@@ -351,7 +414,7 @@ function ProspectContactAvailability(props: { prospect: ColoradoProspectRecord }
 }
 
 function ProspectPrimaryActions(props: {
-  prospect: ColoradoProspectRecord;
+  prospect: UnifiedProspect;
   detailHref: string;
   compact?: boolean;
 }) {
@@ -376,7 +439,7 @@ function ProspectPrimaryActions(props: {
 }
 
 function ProspectTileCard(props: {
-  prospect: ColoradoProspectRecord;
+  prospect: UnifiedProspect;
   assessment?: ProspectAssessment;
   detailHref: string;
 }) {
@@ -387,7 +450,14 @@ function ProspectTileCard(props: {
       <CardContent className="flex h-full flex-col gap-4 p-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-base font-semibold leading-tight">{prospect.legalName}</p>
+            <div className="flex items-center gap-2">
+              <p className="text-base font-semibold leading-tight">{prospect.legalName}</p>
+              {prospect._source === "enriched" ? (
+                <Badge variant="outline" className="border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-300 text-[10px] px-1.5 py-0">
+                  Enriched
+                </Badge>
+              ) : null}
+            </div>
             <p className="mt-1 text-sm text-muted-foreground">
               {prospect.certNo ?? "No cert"} · {prospect.city}, {prospect.state}
             </p>
@@ -398,11 +468,17 @@ function ProspectTileCard(props: {
           <ProspectStateBadges prospect={prospect} assessment={assessment} />
         </div>
 
-        <ProspectSignalStrip prospect={prospect} assessment={assessment} />
+        {prospect._source === "enriched" ? (
+          <ProspectSignalStrip prospect={prospect} assessment={assessment} />
+        ) : null}
 
         <div className="flex flex-wrap items-center gap-2">
-          <Badge variant="secondary">{humanize(prospect.shopSizeClass)}</Badge>
-          <Badge variant="secondary">{humanize(prospect.airportDistanceBand)}</Badge>
+          {prospect._source === "enriched" ? (
+            <>
+              <Badge variant="secondary">{humanize(prospect.shopSizeClass)}</Badge>
+              <Badge variant="secondary">{humanize(prospect.airportDistanceBand)}</Badge>
+            </>
+          ) : null}
           <Badge variant="secondary">{humanize(prospect.contactCompleteness)}</Badge>
           {prospect.manualReviewFlag ? (
             <Badge variant="outline" className="border-red-500/30 bg-red-500/10 text-red-600 dark:text-red-300">
@@ -429,7 +505,7 @@ function ProspectTileCard(props: {
 }
 
 function ProspectListRow(props: {
-  prospect: ColoradoProspectRecord;
+  prospect: UnifiedProspect;
   assessment?: ProspectAssessment;
   detailHref: string;
 }) {
@@ -440,21 +516,32 @@ function ProspectListRow(props: {
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="min-w-0 space-y-3">
           <div>
-            <p className="text-sm font-semibold leading-tight">{prospect.legalName}</p>
+            <div className="flex items-center gap-2">
+              <p className="text-sm font-semibold leading-tight">{prospect.legalName}</p>
+              {prospect._source === "enriched" ? (
+                <Badge variant="outline" className="border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-300 text-[10px] px-1.5 py-0">
+                  Enriched
+                </Badge>
+              ) : null}
+            </div>
             <p className="mt-1 text-xs text-muted-foreground">
               {prospect.certNo ?? "No cert"} · {prospect.city}, {prospect.state}
               {prospect.nearestAirportIcao ? ` · ${prospect.nearestAirportIcao}` : ""}
             </p>
           </div>
           <ProspectStateBadges prospect={prospect} assessment={assessment} />
-          <ProspectSignalStrip prospect={prospect} assessment={assessment} />
+          {prospect._source === "enriched" ? (
+            <ProspectSignalStrip prospect={prospect} assessment={assessment} />
+          ) : null}
         </div>
 
         <div className="space-y-3 lg:min-w-[320px] lg:text-right">
           <ProspectContactAvailability prospect={prospect} />
           <div className="flex flex-wrap gap-2 lg:justify-end">
             <Badge variant="secondary">{humanize(prospect.contactCompleteness)}</Badge>
-            <Badge variant="secondary">{humanize(prospect.shopSizeClass)}</Badge>
+            {prospect._source === "enriched" ? (
+              <Badge variant="secondary">{humanize(prospect.shopSizeClass)}</Badge>
+            ) : null}
             {prospect.manualReviewFlag ? (
               <Badge variant="outline" className="border-red-500/30 bg-red-500/10 text-red-600 dark:text-red-300">
                 Manual review
@@ -471,7 +558,7 @@ function ProspectListRow(props: {
 }
 
 function ProspectExpandedCard(props: {
-  prospect: ColoradoProspectRecord;
+  prospect: UnifiedProspect;
   assessment?: ProspectAssessment;
   detailHref: string;
 }) {
@@ -576,6 +663,42 @@ export default function CrmProspectIntelligencePage() {
   const { orgId, isLoaded } = useCurrentOrg();
   const { prospectId } = useParams<{ prospectId: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
+
+  // Async national data loading
+  const [nationalRecords, setNationalRecords] = useState<NationalProspectRecord[] | null>(null);
+  const [availableStates, setAvailableStates] = useState<string[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      const [records, states] = await Promise.all([
+        getAllNationalRecords(),
+        getNationalStates(),
+      ]);
+      if (!cancelled) {
+        setNationalRecords(records);
+        setAvailableStates(states);
+      }
+    }
+    void load();
+    return () => { cancelled = true; };
+  }, []);
+
+  // Merge Colorado enriched + national records (Colorado takes precedence)
+  const allProspects = useMemo<UnifiedProspect[]>(() => {
+    const enrichedMap = new Map<string, UnifiedProspect>();
+    for (const r of coloradoPart145Research) {
+      enrichedMap.set(r.entityId, { ...r, _source: "enriched" as const });
+    }
+    if (!nationalRecords) return Array.from(enrichedMap.values());
+    for (const r of nationalRecords) {
+      if (!enrichedMap.has(r.entityId)) {
+        enrichedMap.set(r.entityId, adaptNationalToUnified(r));
+      }
+    }
+    return Array.from(enrichedMap.values());
+  }, [nationalRecords]);
+
   const assessments = useQuery(
     api.crmProspects.listCampaignAssessments,
     orgId ? { organizationId: orgId as Id<"organizations"> } : "skip",
@@ -601,6 +724,7 @@ export default function CrmProspectIntelligencePage() {
   const [isPromoting, setIsPromoting] = useState(false);
   const [newNoteContent, setNewNoteContent] = useState("");
   const [isAddingNote, setIsAddingNote] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   const search = searchParams.get("q") ?? "";
   const viewMode = readViewMode(searchParams.get("view"));
@@ -608,6 +732,8 @@ export default function CrmProspectIntelligencePage() {
   const assessmentFilter = readAssessmentFilter(searchParams.get("assessment"));
   const manualReviewFilter = readManualReviewFilter(searchParams.get("review"));
   const contactFilter = readContactFilter(searchParams.get("contact"));
+  const sourceFilter = readSourceFilter(searchParams.get("source"));
+  const stateFilter = searchParams.get("state") ?? "all";
 
   const deferredSearch = useDeferredValue(search);
   const effectiveCampaignName = campaignName.trim() || DEFAULT_CAMPAIGN;
@@ -623,62 +749,80 @@ export default function CrmProspectIntelligencePage() {
     return new Map(forCampaign.map((a) => [a.prospectEntityId, a]));
   }, [allAssessments, currentCampaignKey]);
 
-  const filteredProspects = coloradoPart145Research
-    .filter((prospect) => {
-      const assessment = assessmentMap.get(prospect.entityId);
-      const effectiveStatus = assessment?.qualificationStatus ?? "unreviewed";
-      const query = deferredSearch.trim().toLowerCase();
+  const filteredProspects = useMemo(() => {
+    return allProspects
+      .filter((prospect) => {
+        const assessment = assessmentMap.get(prospect.entityId);
+        const effectiveStatus = assessment?.qualificationStatus ?? "unreviewed";
+        const query = deferredSearch.trim().toLowerCase();
 
-      if (query) {
-        const searchBlob = [
-          prospect.legalName,
-          prospect.dbaName,
-          prospect.city,
-          prospect.certNo,
-          prospect.nearestAirportIcao,
-          prospect.nearestAirportName,
-          prospect.profileArchetype,
-        ]
-          .filter(Boolean)
-          .join(" ")
-          .toLowerCase();
-        if (!searchBlob.includes(query)) return false;
-      }
+        if (query) {
+          const searchBlob = [
+            prospect.legalName,
+            prospect.dbaName,
+            prospect.city,
+            prospect.certNo,
+            prospect.state,
+            prospect.nearestAirportIcao,
+            prospect.nearestAirportName,
+            prospect.profileArchetype,
+          ]
+            .filter(Boolean)
+            .join(" ")
+            .toLowerCase();
+          if (!searchBlob.includes(query)) return false;
+        }
 
-      if (outreachTierFilter !== "all" && prospect.outreachTier !== outreachTierFilter) {
-        return false;
-      }
-      if (assessmentFilter !== "all" && effectiveStatus !== assessmentFilter) {
-        return false;
-      }
-      if (
-        manualReviewFilter === "manual_review" &&
-        !prospect.manualReviewFlag
-      ) {
-        return false;
-      }
-      if (
-        manualReviewFilter === "ready_for_outreach" &&
-        prospect.manualReviewFlag
-      ) {
-        return false;
-      }
-      if (contactFilter !== "all" && prospect.contactCompleteness !== contactFilter) {
-        return false;
-      }
+        if (sourceFilter !== "all" && prospect._source !== sourceFilter) return false;
+        if (stateFilter !== "all" && prospect.state !== stateFilter) return false;
+        if (outreachTierFilter !== "all" && prospect.outreachTier !== outreachTierFilter) {
+          return false;
+        }
+        if (assessmentFilter !== "all" && effectiveStatus !== assessmentFilter) {
+          return false;
+        }
+        if (
+          manualReviewFilter === "manual_review" &&
+          !prospect.manualReviewFlag
+        ) {
+          return false;
+        }
+        if (
+          manualReviewFilter === "ready_for_outreach" &&
+          prospect.manualReviewFlag
+        ) {
+          return false;
+        }
+        if (contactFilter !== "all" && prospect.contactCompleteness !== contactFilter) {
+          return false;
+        }
 
-      return true;
-    })
-    .sort((a, b) => {
-      const tierWeight = { A: 0, B: 1, C: 2 } as const;
-      const tierDelta = tierWeight[a.outreachTier as keyof typeof tierWeight]
-        - tierWeight[b.outreachTier as keyof typeof tierWeight];
-      if (tierDelta !== 0) return tierDelta;
-      return (b.overallConfidence ?? 0) - (a.overallConfidence ?? 0);
-    });
+        return true;
+      })
+      .sort((a, b) => {
+        // Enriched records first, then by tier, then by confidence
+        if (a._source !== b._source) return a._source === "enriched" ? -1 : 1;
+        const tierWeight = { A: 0, B: 1, C: 2 } as const;
+        const tierDelta = tierWeight[a.outreachTier as keyof typeof tierWeight]
+          - tierWeight[b.outreachTier as keyof typeof tierWeight];
+        if (tierDelta !== 0) return tierDelta;
+        if (a.overallConfidence !== null || b.overallConfidence !== null) {
+          return (b.overallConfidence ?? 0) - (a.overallConfidence ?? 0);
+        }
+        return a.legalName.localeCompare(b.legalName);
+      });
+  }, [allProspects, deferredSearch, sourceFilter, stateFilter, outreachTierFilter, assessmentFilter, manualReviewFilter, contactFilter, assessmentMap]);
+
+  // Reset visible count when filters change
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [deferredSearch, sourceFilter, stateFilter, outreachTierFilter, assessmentFilter, manualReviewFilter, contactFilter]);
+
+  const visibleProspects = filteredProspects.slice(0, visibleCount);
+  const hasMore = visibleCount < filteredProspects.length;
 
   const selectedProspect = prospectId
-    ? coloradoPart145Research.find((prospect) => prospect.entityId === prospectId)
+    ? allProspects.find((prospect) => prospect.entityId === prospectId)
     : undefined;
   const selectedAssessment = selectedProspect
     ? assessmentMap.get(selectedProspect.entityId)
@@ -694,13 +838,15 @@ export default function CrmProspectIntelligencePage() {
     setNextStep(selectedAssessment?.nextStep ?? "");
   }, [selectedProspect?.entityId, selectedAssessment?._id, selectedAssessment?.updatedAt]);
 
-  if (!orgId || !isLoaded || assessments === undefined) {
+  if (!orgId || !isLoaded || assessments === undefined || nationalRecords === null) {
     return <ProspectListSkeleton />;
   }
 
+  const totalProspects = allProspects.length;
+  const enrichedCount = allProspects.filter((p) => p._source === "enriched").length;
   const assessedCount = campaignAssessments.length;
   const coveragePercent = Math.round(
-    (assessedCount / coloradoPart145ResearchPack.totalProspects) * 100,
+    (assessedCount / totalProspects) * 100,
   );
   const qualifiedCount = campaignAssessments.filter(
     (assessment) => assessment.qualificationStatus === "qualified",
@@ -1381,31 +1527,38 @@ export default function CrmProspectIntelligencePage() {
             Prospect Intelligence
           </h1>
           <p className="mt-0.5 max-w-3xl text-sm text-muted-foreground">
-            Browse the full Colorado Part 145 research pack as tiles, a compact list, or expanded
+            {totalProspects.toLocaleString()} FAA Part 145 repair stations across {availableStates.length} states,
+            including {enrichedCount} Colorado enriched research records. Browse as tiles, a compact list, or expanded
             briefs. Open any prospect into a full-page intelligence workspace to assign campaigns,
             review evidence, and act on contact data.
           </p>
         </div>
         <Badge variant="outline" className="border-blue-500/30 bg-blue-500/10 text-blue-600 dark:text-blue-300">
-          Research pack · {coloradoPart145ResearchPack.totalProspects} prospects
+          {totalProspects.toLocaleString()} prospects · {enrichedCount} enriched
         </Badge>
       </div>
 
       <div className="grid gap-3 md:grid-cols-5">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground">Tier A / Ready Now</CardTitle>
+            <CardTitle className="text-sm text-muted-foreground">Total Stations</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-semibold">{coloradoPart145ResearchPack.outreachTiers.A}</p>
+            <p className="text-2xl font-semibold">{totalProspects.toLocaleString()}</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {availableStates.length} states
+            </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground">Manual Review Queue</CardTitle>
+            <CardTitle className="text-sm text-muted-foreground">Enriched Research</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-semibold">{coloradoPart145ResearchPack.manualReviewQueue}</p>
+            <p className="text-2xl font-semibold">{enrichedCount}</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Tier A: {coloradoPart145ResearchPack.outreachTiers.A}
+            </p>
           </CardContent>
         </Card>
         <Card>
@@ -1416,7 +1569,7 @@ export default function CrmProspectIntelligencePage() {
             <p className="text-2xl font-semibold">{coveragePercent}%</p>
             <Progress value={coveragePercent} className="h-2" />
             <p className="text-xs text-muted-foreground">
-              {assessedCount} of {coloradoPart145ResearchPack.totalProspects} reviewed
+              {assessedCount} of {totalProspects.toLocaleString()} reviewed
             </p>
           </CardContent>
         </Card>
@@ -1433,15 +1586,13 @@ export default function CrmProspectIntelligencePage() {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground">Source Mix</CardTitle>
+            <CardTitle className="text-sm text-muted-foreground">Top States</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm font-medium">
-              team-g {coloradoPart145ResearchPack.selectedSourceDistribution["team-g"]}
-            </p>
-            <p className="text-sm text-muted-foreground">
-              team-h {coloradoPart145ResearchPack.selectedSourceDistribution["team-h"]}
-            </p>
+            {availableStates.slice(0, 3).map((st) => {
+              const count = allProspects.filter((p) => p.state === st).length;
+              return <p key={st} className="text-sm text-muted-foreground">{st}: {count}</p>;
+            })}
           </CardContent>
         </Card>
       </div>
@@ -1494,7 +1645,7 @@ export default function CrmProspectIntelligencePage() {
                   <Filter className="h-4 w-4 text-muted-foreground" />
                   Lead Queue
                 </CardTitle>
-                <Badge variant="outline">{filteredProspects.length} visible</Badge>
+                <Badge variant="outline">{filteredProspects.length.toLocaleString()} visible</Badge>
               </div>
               <p className="text-sm text-muted-foreground">
                 Open any prospect to work it in a full-page intelligence brief with a dedicated back path.
@@ -1522,28 +1673,42 @@ export default function CrmProspectIntelligencePage() {
         </CardHeader>
 
         <CardContent className="space-y-4">
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
-            <div className="relative md:col-span-2 xl:col-span-2">
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+            <div className="relative md:col-span-2 xl:col-span-1">
               <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
               <Input
                 value={search}
                 onChange={(event) => updateQueryParam("q", event.target.value || null)}
-                placeholder="Search shop, cert, city, airport..."
+                placeholder="Search shop, cert, city, state..."
                 className="h-9 pl-8"
               />
             </div>
             <Select
-              value={outreachTierFilter}
-              onValueChange={(value) => updateQueryParam("tier", value === "all" ? null : value)}
+              value={stateFilter}
+              onValueChange={(value) => updateQueryParam("state", value === "all" ? null : value)}
             >
               <SelectTrigger className="h-9">
-                <SelectValue placeholder="Outreach tier" />
+                <SelectValue placeholder="State" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All tiers</SelectItem>
-                <SelectItem value="A">Tier A</SelectItem>
-                <SelectItem value="B">Tier B</SelectItem>
-                <SelectItem value="C">Tier C</SelectItem>
+                <SelectItem value="all">All states ({totalProspects.toLocaleString()})</SelectItem>
+                {availableStates.map((st) => {
+                  const count = allProspects.filter((p) => p.state === st).length;
+                  return <SelectItem key={st} value={st}>{st} ({count})</SelectItem>;
+                })}
+              </SelectContent>
+            </Select>
+            <Select
+              value={sourceFilter}
+              onValueChange={(value) => updateQueryParam("source", value === "all" ? null : value)}
+            >
+              <SelectTrigger className="h-9">
+                <SelectValue placeholder="Data source" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All sources</SelectItem>
+                <SelectItem value="enriched">Enriched research ({enrichedCount})</SelectItem>
+                <SelectItem value="national">FAA registry only</SelectItem>
               </SelectContent>
             </Select>
             <Select
@@ -1562,23 +1727,23 @@ export default function CrmProspectIntelligencePage() {
                 <SelectItem value="disqualified">Disqualified</SelectItem>
               </SelectContent>
             </Select>
-            <Select
-              value={manualReviewFilter}
-              onValueChange={(value) => updateQueryParam("review", value === "all" ? null : value)}
-            >
-              <SelectTrigger className="h-9">
-                <SelectValue placeholder="Review state" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All review states</SelectItem>
-                <SelectItem value="manual_review">Manual review only</SelectItem>
-                <SelectItem value="ready_for_outreach">Ready for outreach</SelectItem>
-              </SelectContent>
-            </Select>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs font-medium text-muted-foreground">Contact completeness</span>
+          <div className="flex flex-wrap items-center gap-3">
+            <Select
+              value={outreachTierFilter}
+              onValueChange={(value) => updateQueryParam("tier", value === "all" ? null : value)}
+            >
+              <SelectTrigger className="h-8 w-[140px]">
+                <SelectValue placeholder="Outreach tier" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All tiers</SelectItem>
+                <SelectItem value="A">Tier A</SelectItem>
+                <SelectItem value="B">Tier B</SelectItem>
+                <SelectItem value="C">Tier C</SelectItem>
+              </SelectContent>
+            </Select>
             <Select
               value={contactFilter}
               onValueChange={(value) => updateQueryParam("contact", value === "all" ? null : value)}
@@ -1594,6 +1759,19 @@ export default function CrmProspectIntelligencePage() {
                 <SelectItem value="none">None</SelectItem>
               </SelectContent>
             </Select>
+            <Select
+              value={manualReviewFilter}
+              onValueChange={(value) => updateQueryParam("review", value === "all" ? null : value)}
+            >
+              <SelectTrigger className="h-8 w-[200px]">
+                <SelectValue placeholder="Review state" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All review states</SelectItem>
+                <SelectItem value="manual_review">Manual review only</SelectItem>
+                <SelectItem value="ready_for_outreach">Ready for outreach</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           {filteredProspects.length === 0 ? (
@@ -1601,38 +1779,65 @@ export default function CrmProspectIntelligencePage() {
               No prospects match the current filters.
             </div>
           ) : viewMode === "tiles" ? (
-            <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
-              {filteredProspects.map((prospect) => (
-                <ProspectTileCard
-                  key={prospect.entityId}
-                  prospect={prospect}
-                  assessment={assessmentMap.get(prospect.entityId)}
-                  detailHref={buildProspectHref(prospect.entityId)}
-                />
-              ))}
-            </div>
+            <>
+              <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
+                {visibleProspects.map((prospect) => (
+                  <ProspectTileCard
+                    key={prospect.entityId}
+                    prospect={prospect}
+                    assessment={assessmentMap.get(prospect.entityId)}
+                    detailHref={buildProspectHref(prospect.entityId)}
+                  />
+                ))}
+              </div>
+              {hasMore ? (
+                <div className="flex justify-center pt-2">
+                  <Button variant="outline" onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}>
+                    Load more ({(filteredProspects.length - visibleCount).toLocaleString()} remaining)
+                  </Button>
+                </div>
+              ) : null}
+            </>
           ) : viewMode === "list" ? (
-            <div className="space-y-3">
-              {filteredProspects.map((prospect) => (
-                <ProspectListRow
-                  key={prospect.entityId}
-                  prospect={prospect}
-                  assessment={assessmentMap.get(prospect.entityId)}
-                  detailHref={buildProspectHref(prospect.entityId)}
-                />
-              ))}
-            </div>
+            <>
+              <div className="space-y-3">
+                {visibleProspects.map((prospect) => (
+                  <ProspectListRow
+                    key={prospect.entityId}
+                    prospect={prospect}
+                    assessment={assessmentMap.get(prospect.entityId)}
+                    detailHref={buildProspectHref(prospect.entityId)}
+                  />
+                ))}
+              </div>
+              {hasMore ? (
+                <div className="flex justify-center pt-2">
+                  <Button variant="outline" onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}>
+                    Load more ({(filteredProspects.length - visibleCount).toLocaleString()} remaining)
+                  </Button>
+                </div>
+              ) : null}
+            </>
           ) : (
-            <div className="space-y-4">
-              {filteredProspects.map((prospect) => (
-                <ProspectExpandedCard
-                  key={prospect.entityId}
-                  prospect={prospect}
-                  assessment={assessmentMap.get(prospect.entityId)}
-                  detailHref={buildProspectHref(prospect.entityId)}
-                />
-              ))}
-            </div>
+            <>
+              <div className="space-y-4">
+                {visibleProspects.map((prospect) => (
+                  <ProspectExpandedCard
+                    key={prospect.entityId}
+                    prospect={prospect}
+                    assessment={assessmentMap.get(prospect.entityId)}
+                    detailHref={buildProspectHref(prospect.entityId)}
+                  />
+                ))}
+              </div>
+              {hasMore ? (
+                <div className="flex justify-center pt-2">
+                  <Button variant="outline" onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}>
+                    Load more ({(filteredProspects.length - visibleCount).toLocaleString()} remaining)
+                  </Button>
+                </div>
+              ) : null}
+            </>
           )}
         </CardContent>
       </Card>

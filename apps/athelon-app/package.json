@@ -22,6 +22,7 @@
     "test:e2e:wave:scheduler-stories": "pnpm run seed:e2e:scheduler-stories && pnpm exec playwright test tests/e2e/wave8-scheduler-seeded-user-stories.spec.ts tests/e2e/wave8-quote-conversion-regression.spec.ts tests/e2e/wave8-quote-labor-kits-user-stories.spec.ts --project=chromium-authenticated",
     "test:e2e:wave:gate": "pnpm exec playwright test tests/e2e/wave-first-user-bootstrap.spec.ts tests/e2e/wave-empty-org-internal-routes.spec.ts tests/e2e/wave-seeded-internal-routes.spec.ts tests/e2e/wave-empty-state-cta.spec.ts tests/e2e/wave-noop-action-regression.spec.ts --project=chromium-authenticated",
     "qa:first-user-gate": "pnpm run typecheck && pnpm run test:e2e:wave:gate",
+    "data:parse-national-part145": "node scripts/generate-national-part145.mjs",
     "spec:export:derived": "node scripts/export-feature-spec-derived.mjs",
     "agentic:reviewer:quick": "node scripts/agentic/reviewer.mjs propose --mode quick",
     "agentic:reviewer:deep": "node scripts/agentic/reviewer.mjs propose --mode deep",

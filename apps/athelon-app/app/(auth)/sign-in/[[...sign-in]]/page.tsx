@@ -23,7 +23,7 @@ export default function SignInPage() {
           </Link>
         </p>
       </div>
-      <SignIn />
+      <SignIn forceRedirectUrl="/dashboard" />
     </div>
   );
 }

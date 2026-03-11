@@ -534,7 +534,7 @@ export function AppSidebar() {
         <SidebarMenu>
           <SidebarMenuItem>
             <OrganizationSwitcher
-              hidePersonal={false}
+              hidePersonal={true}
               afterSelectOrganizationUrl="/dashboard"
               appearance={{
                 elements: {
@@ -542,6 +542,8 @@ export function AppSidebar() {
                     "peer/menu-button ring-sidebar-ring hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 flex h-10 w-full items-center gap-2.5 rounded-md px-2 text-left text-xs group-data-[collapsible=icon]:size-8 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-2",
                   organizationSwitcherTriggerIcon:
                     "w-3.5 h-3.5 text-muted-foreground group-data-[collapsible=icon]:hidden",
+                  organizationSwitcherPopoverActionButton__createOrganization:
+                    "hidden",
                 },
               }}
             />

@@ -589,17 +589,8 @@ export function WOExecutionGantt({ workOrderId }: Props) {
     return "valid";
   }, [linkDrag, hoveredEndpoint, wouldCreateCycle]);
 
-  // ─── Loading ──────────────────────────────────────────────────────────
-
-  if (!assignments || !taskCards || !technicians) {
-    return (
-      <div className="flex items-center justify-center h-64 text-muted-foreground">
-        Loading execution data…
-      </div>
-    );
-  }
-
   // ─── Selected dependency popover position ─────────────────────────────
+  // Must be above the loading early-return to maintain consistent hook order.
 
   const selectedDep = selectedDepId
     ? (dependencies ?? []).find((d) => d._id === selectedDepId)
@@ -620,6 +611,16 @@ export function WOExecutionGantt({ workOrderId }: Props) {
       y: (pred.top + pred.height / 2 + succ.top + succ.height / 2) / 2,
     };
   }, [selectedDep, taskPositions]);
+
+  // ─── Loading ──────────────────────────────────────────────────────────
+
+  if (!assignments || !taskCards || !technicians) {
+    return (
+      <div className="flex items-center justify-center h-64 text-muted-foreground">
+        Loading execution data…
+      </div>
+    );
+  }
 
   // ─── Render ───────────────────────────────────────────────────────────
 

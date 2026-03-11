@@ -1,4 +1,4 @@
-import { Outlet } from "react-router-dom";
+import { Navigate, Outlet } from "react-router-dom";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 
 export function OnboardingGate() {
@@ -13,6 +13,10 @@ export function OnboardingGate() {
         <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
+  }
+
+  if (bootstrapStatus === "needs_bootstrap") {
+    return <Navigate to="/onboarding" replace />;
   }
 
   return <Outlet />;
