@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -17,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Calculator, Save, TrendingUp, TrendingDown } from "lucide-react";
 import { toast } from "sonner";
+import { SchedulingSubNav } from "../_components/SchedulingSubNav";
 
 function money(n: number): string {
   return `$${n.toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
@@ -193,27 +193,7 @@ export default function FinancialPlanningPage() {
 
   return (
     <div className="space-y-5 max-w-5xl">
-      {/* ── Scheduling Sub-Nav ─────────────────────────────────────────── */}
-      <div className="flex items-center gap-1 flex-wrap border-b border-border/30 pb-2">
-        <Button variant="ghost" size="sm" className="text-xs h-7" asChild>
-          <Link to="/scheduling">Gantt Board</Link>
-        </Button>
-        <Button variant="ghost" size="sm" className="text-xs h-7" asChild>
-          <Link to="/scheduling/bays">Bays</Link>
-        </Button>
-        <Button variant="ghost" size="sm" className="text-xs h-7" asChild>
-          <Link to="/scheduling/capacity">Capacity</Link>
-        </Button>
-        <Button variant="ghost" size="sm" className="text-xs h-7" asChild>
-          <Link to="/scheduling/roster">Roster & Teams</Link>
-        </Button>
-        <Button variant="secondary" size="sm" className="text-xs h-7" asChild>
-          <Link to="/scheduling/financial-planning">Financial Planning</Link>
-        </Button>
-        <Button variant="ghost" size="sm" className="text-xs h-7" asChild>
-          <Link to="/scheduling/quotes">Quote Workspace</Link>
-        </Button>
-      </div>
+      <SchedulingSubNav />
 
       <div className="flex items-center justify-between">
         <div>

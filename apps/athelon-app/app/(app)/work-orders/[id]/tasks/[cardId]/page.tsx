@@ -83,6 +83,7 @@ import {
   ActivityTimeline,
   type ActivityTimelineEvent,
 } from "@/app/(app)/work-orders/[id]/_components/ActivityTimeline";
+import { WOBreadcrumb } from "@/app/(app)/work-orders/[id]/_components/WOBreadcrumb";
 import { Separator } from "@/components/ui/separator";
 
 // ─── Compliance types & constants ─────────────────────────────────────────────
@@ -266,6 +267,22 @@ export default function TaskCardPage() {
   const cardId = params.cardId as string;
 
   const { orgId, techId, tech, isLoaded: orgLoaded } = useCurrentOrg();
+
+  const scrollKey = `task-card-scroll-${cardId}`;
+  useEffect(() => {
+    const saved = sessionStorage.getItem(scrollKey);
+    if (saved !== null) {
+      const y = parseInt(saved, 10);
+      if (!Number.isNaN(y)) {
+        requestAnimationFrame(() => { window.scrollTo({ top: y }); });
+      }
+      sessionStorage.removeItem(scrollKey);
+    }
+    return () => {
+      sessionStorage.setItem(scrollKey, String(window.scrollY));
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cardId]);
 
   const [signStepTarget, setSignStepTarget] = useState<{
     stepId: Id<"taskCardSteps">;
@@ -777,8 +794,17 @@ export default function TaskCardPage() {
     };
   });
 
+  const woNumber = workOrderResult?.workOrder?.workOrderNumber ?? workOrderId;
+
   return (
     <div className="max-w-2xl mx-auto space-y-5">
+      {/* Breadcrumb */}
+      <WOBreadcrumb
+        woId={workOrderId}
+        woNumber={woNumber}
+        pageName={taskCard.title}
+      />
+
       {/* Back */}
       <Button
         asChild
@@ -1103,6 +1129,30 @@ export default function TaskCardPage() {
           )}
         </CardContent>
       </Card>
+
+      {allStepsDone && !cardIsComplete && !cardIsVoided && (
+        <div className="rounded-lg border border-green-500/30 bg-green-500/8 p-4 flex items-center gap-3">
+          <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-green-700 dark:text-green-300">
+              All steps complete — sign off this work card
+            </p>
+            <p className="text-xs text-green-600/80 dark:text-green-400/80 mt-0.5">
+              Every step has been completed or marked N/A. Proceed to sign off this work card to finalize the record.
+            </p>
+          </div>
+          {!complianceBlocksSignOff && !vendorServicesBlockSignOff && orgId && techId && (
+            <Button
+              size="sm"
+              className="flex-shrink-0 bg-green-600 hover:bg-green-700 text-white border-0 gap-1.5"
+              onClick={() => setSignCardOpen(true)}
+            >
+              <ShieldCheck className="w-3.5 h-3.5" />
+              Sign Off Card
+            </Button>
+          )}
+        </div>
+      )}
 
       <Card className="border-border/60">
         <CardHeader className="pb-3">

@@ -77,6 +77,7 @@ export interface QuoteBuilderLayoutProps {
   mode: "new" | "detail";
   quoteId?: Id<"quotes">;
   prefillWorkOrderId?: Id<"workOrders">;
+  prefillCustomerId?: string;
   onBack: () => void;
   onQuoteCreated?: (quoteId: Id<"quotes">) => void;
 }
@@ -87,6 +88,7 @@ export function QuoteBuilderLayout({
   mode,
   quoteId,
   prefillWorkOrderId,
+  prefillCustomerId,
   onBack,
   onQuoteCreated,
 }: QuoteBuilderLayoutProps) {
@@ -175,14 +177,18 @@ export function QuoteBuilderLayout({
         })),
       );
       prefilled.current = true;
-    } else if (mode === "new" && prefillWO?.workOrder) {
-      const wo = prefillWO.workOrder;
-      if (wo.customerId) setCustomerId(String(wo.customerId));
-      if (wo.aircraftId) setAircraftId(String(wo.aircraftId));
-      setNotes(`Quote started from ${wo.workOrderNumber}.`);
+    } else if (mode === "new") {
+      if (prefillWO?.workOrder) {
+        const wo = prefillWO.workOrder;
+        if (wo.customerId) setCustomerId(String(wo.customerId));
+        if (wo.aircraftId) setAircraftId(String(wo.aircraftId));
+        setNotes(`Quote started from ${wo.workOrderNumber}.`);
+      } else if (prefillCustomerId) {
+        setCustomerId(prefillCustomerId);
+      }
       prefilled.current = true;
     }
-  }, [mode, existingQuote, prefillWO]);
+  }, [mode, existingQuote, prefillWO, prefillCustomerId]);
 
   // Snapshot initial state for dirty detection
   useEffect(() => {

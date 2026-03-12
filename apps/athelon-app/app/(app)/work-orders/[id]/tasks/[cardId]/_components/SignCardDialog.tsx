@@ -306,6 +306,7 @@ export function SignCardDialog({
               placeholder="4–6 digit PIN"
               maxLength={6}
               inputMode="numeric"
+              pattern="[0-9]*"
               className="h-9 font-mono text-sm bg-muted/30 border-border/60"
               aria-required="true"
             />

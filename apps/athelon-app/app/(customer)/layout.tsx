@@ -14,21 +14,21 @@ export function CustomerLayout() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
+    <div className="min-h-screen flex flex-col bg-muted/30">
       {/* Top Bar */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
+      <header className="bg-card border-b sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <Link to="/portal" className="flex items-center gap-2">
               <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
                 <Plane className="w-5 h-5 text-white" />
               </div>
-              <span className="text-xl font-bold text-gray-900">Athelon</span>
-              <span className="text-sm text-gray-500 hidden sm:inline">Customer Portal</span>
+              <span className="text-xl font-bold text-foreground">Athelon</span>
+              <span className="text-sm text-muted-foreground hidden sm:inline">Customer Portal</span>
             </Link>
 
             <div className="flex items-center gap-4">
-              <span className="text-sm text-gray-600 hidden sm:inline">
+              <span className="text-sm text-muted-foreground hidden sm:inline">
                 {user?.fullName ?? user?.primaryEmailAddress?.emailAddress ?? "Customer"}
               </span>
               <Button variant="ghost" size="sm" onClick={handleSignOut}>
@@ -41,7 +41,7 @@ export function CustomerLayout() {
       </header>
 
       {/* Nav */}
-      <nav className="bg-white border-b border-gray-100">
+      <nav className="bg-card border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex gap-1 overflow-x-auto py-2">
             {[
@@ -50,7 +50,7 @@ export function CustomerLayout() {
               { to: "/portal/quotes", label: "Quotes" },
               { to: "/portal/invoices", label: "Invoices" },
               { to: "/portal/fleet", label: "Fleet" },
-              { to: "/portal/messages", label: "Messages" },
+              { to: "/portal/messages", label: "Support Tickets" },
             ].map((item) => (
               <NavLink
                 key={item.to}
@@ -59,7 +59,7 @@ export function CustomerLayout() {
                   `px-3 py-1.5 text-sm font-medium rounded-md whitespace-nowrap transition-colors ${
                     isActive
                       ? "text-blue-700 bg-blue-100"
-                      : "text-gray-600 hover:text-blue-600 hover:bg-blue-50"
+                      : "text-muted-foreground hover:text-blue-600 hover:bg-blue-50"
                   }`
                 }
               >
@@ -76,10 +76,10 @@ export function CustomerLayout() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-white border-t border-gray-200 py-4">
+      <footer className="bg-card border-t py-4">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <p className="text-sm text-gray-400">
-            Powered by <span className="font-semibold text-gray-500">Athelon</span> — Aviation MRO Platform
+          <p className="text-sm text-muted-foreground">
+            Powered by <span className="font-semibold text-foreground">Athelon</span> — Aviation MRO Platform
           </p>
         </div>
       </footer>

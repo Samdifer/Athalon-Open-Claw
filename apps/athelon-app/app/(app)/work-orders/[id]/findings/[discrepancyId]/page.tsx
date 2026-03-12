@@ -5,9 +5,10 @@ import { useParams, Link } from "react-router-dom";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
+import { useRbac } from "@/hooks/useRbac";
 import type { Id } from "@/convex/_generated/dataModel";
 import { toast } from "sonner";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -15,6 +16,16 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { WorkItemHeader } from "../../_components/WorkItemHeader";
@@ -23,8 +34,16 @@ import {
   ActivityTimeline,
   type ActivityTimelineEvent,
 } from "../../_components/ActivityTimeline";
+import { WOBreadcrumb } from "../../_components/WOBreadcrumb";
 
-// ─── Loading skeleton ─────────────────────────────────────────────────────────
+type DispositionValue = "deferred" | "corrected" | "rejected" | "accepted";
+
+const DISPOSITION_OPTIONS: { value: DispositionValue; label: string }[] = [
+  { value: "corrected", label: "Corrected" },
+  { value: "accepted", label: "Accepted" },
+  { value: "deferred", label: "Deferred" },
+  { value: "rejected", label: "Rejected" },
+];
 
 function DiscrepancyDetailSkeleton() {
   return (
@@ -43,18 +62,27 @@ function DiscrepancyDetailSkeleton() {
   );
 }
 
-// ─── Main page ────────────────────────────────────────────────────────────────
-
 export default function DiscrepancyDetailPage() {
   const params = useParams();
   const workOrderId = params.id as string;
   const discrepancyId = params.discrepancyId as string;
 
   const { orgId, techId, isLoaded: orgLoaded } = useCurrentOrg();
+  const { role } = useRbac();
 
-  const discrepancies = useQuery(
-    api.discrepancies.listDiscrepancies,
-    orgId ? { organizationId: orgId } : "skip",
+  const workOrderData = useQuery(
+    api.workOrders.getWorkOrder,
+    orgId && workOrderId
+      ? { workOrderId: workOrderId as Id<"workOrders">, organizationId: orgId }
+      : "skip",
+  );
+  const woNumber = workOrderData?.workOrder?.workOrderNumber ?? workOrderId;
+
+  const discrepancy = useQuery(
+    api.discrepancies.getDiscrepancy,
+    discrepancyId
+      ? { discrepancyId: discrepancyId as Id<"discrepancies"> }
+      : "skip",
   );
 
   const writeUpEntries = useQuery(
@@ -74,17 +102,18 @@ export default function DiscrepancyDetailPage() {
   );
 
   const addEntryMutation = useMutation(api.workItemEntries.addEntry);
-  const [writeUpSubmitting, setWriteUpSubmitting] = useState(false);
+  const dispositionFindingMutation = useMutation(api.discrepancies.dispositionFinding);
 
-  const isLoading = !orgLoaded || discrepancies === undefined;
+  const [writeUpSubmitting, setWriteUpSubmitting] = useState(false);
+  const [dispositionValue, setDispositionValue] = useState<DispositionValue | "">("");
+  const [dispositionNotes, setDispositionNotes] = useState("");
+  const [dispositionSubmitting, setDispositionSubmitting] = useState(false);
+
+  const isLoading = !orgLoaded || discrepancy === undefined;
 
   if (isLoading) return <DiscrepancyDetailSkeleton />;
 
-  const discrepancy = (discrepancies ?? []).find(
-    (d) => d._id === discrepancyId,
-  );
-
-  if (!discrepancy) {
+  if (discrepancy === null) {
     return (
       <div className="text-center py-20">
         <p className="text-sm text-muted-foreground">Finding not found</p>
@@ -96,6 +125,12 @@ export default function DiscrepancyDetailPage() {
   }
 
   const isDispositioned = discrepancy.status === "dispositioned";
+
+  const canDisposition =
+    role === "qcm_inspector" || role === "shop_manager" || role === "admin";
+
+  const isTechnician =
+    role === "technician" || role === "lead_technician";
 
   async function handleAddEntry(
     entryType: "discrepancy_writeup" | "corrective_action",
@@ -124,6 +159,29 @@ export default function DiscrepancyDetailPage() {
     }
   }
 
+  async function handleDispositionSubmit() {
+    if (!orgId || !dispositionValue) return;
+    setDispositionSubmitting(true);
+    try {
+      await dispositionFindingMutation({
+        discrepancyId: discrepancyId as Id<"discrepancies">,
+        disposition: dispositionValue,
+        notes: dispositionNotes.trim() || undefined,
+        dispositionedBy: role,
+        organizationId: orgId,
+      });
+      toast.success(
+        `Finding dispositioned as "${dispositionValue}".`,
+      );
+      setDispositionValue("");
+      setDispositionNotes("");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Disposition failed");
+    } finally {
+      setDispositionSubmitting(false);
+    }
+  }
+
   const discrepancyEntries = (writeUpEntries ?? [])
     .filter((e) => e.entryType === "discrepancy_writeup")
     .map((e) => ({
@@ -148,7 +206,12 @@ export default function DiscrepancyDetailPage() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-5">
-      {/* Back */}
+      <WOBreadcrumb
+        woId={workOrderId}
+        woNumber={woNumber}
+        pageName={`Finding ${discrepancy.discrepancyNumber}`}
+      />
+
       <Button
         asChild
         variant="ghost"
@@ -161,7 +224,6 @@ export default function DiscrepancyDetailPage() {
         </Link>
       </Button>
 
-      {/* Header — OP-1003 fields */}
       <Card className="border-border/60">
         <CardContent className="p-4">
           <WorkItemHeader
@@ -188,7 +250,24 @@ export default function DiscrepancyDetailPage() {
         </CardContent>
       </Card>
 
-      {/* Discrepancy Write-Up & Corrective Action (stacked vertical) */}
+      {/* QCM action required notice for technicians */}
+      {!isDispositioned && isTechnician && (
+        <Card className="border-amber-500/30 bg-amber-500/5">
+          <CardContent className="p-4 flex items-center gap-2">
+            <ShieldAlert className="w-4 h-4 text-amber-600 dark:text-amber-400 flex-shrink-0" />
+            <p className="text-sm text-amber-700 dark:text-amber-300">
+              QCM Inspector action required
+            </p>
+            <Badge
+              variant="outline"
+              className="ml-auto border-amber-500/40 text-amber-700 dark:text-amber-300 text-xs"
+            >
+              Pending Disposition
+            </Badge>
+          </CardContent>
+        </Card>
+      )}
+
       <Card className="border-border/60">
         <CardHeader className="pb-3">
           <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
@@ -216,6 +295,53 @@ export default function DiscrepancyDetailPage() {
         </CardContent>
       </Card>
 
+      {/* Dispositioning controls — QCM Inspector, Shop Manager, Admin only */}
+      {!isDispositioned && canDisposition && (
+        <Card className="border-border/60">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+              Disposition Finding
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0 space-y-4">
+            <div className="space-y-1.5">
+              <Label>Disposition</Label>
+              <Select
+                value={dispositionValue}
+                onValueChange={(v) => setDispositionValue(v as DispositionValue)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select disposition…" />
+                </SelectTrigger>
+                <SelectContent>
+                  {DISPOSITION_OPTIONS.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Notes (optional)</Label>
+              <Textarea
+                value={dispositionNotes}
+                onChange={(e) => setDispositionNotes(e.target.value)}
+                placeholder="Additional notes or justification…"
+                rows={3}
+              />
+            </div>
+            <Button
+              onClick={handleDispositionSubmit}
+              disabled={!dispositionValue || dispositionSubmitting}
+              size="sm"
+            >
+              Submit Disposition
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
       <Card className="border-border/60">
         <CardHeader className="pb-3">
           <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
@@ -230,7 +356,6 @@ export default function DiscrepancyDetailPage() {
         </CardContent>
       </Card>
 
-      {/* Disposition info (if dispositioned) */}
       {isDispositioned && discrepancy.disposition && (
         <Card className="border-green-500/30 bg-green-500/5">
           <CardContent className="p-4">
@@ -240,6 +365,16 @@ export default function DiscrepancyDetailPage() {
             {discrepancy.correctiveAction && (
               <p className="text-xs text-muted-foreground mt-1">
                 {discrepancy.correctiveAction}
+              </p>
+            )}
+            {discrepancy.dispositionNotes && (
+              <p className="text-xs text-muted-foreground mt-1">
+                {discrepancy.dispositionNotes}
+              </p>
+            )}
+            {discrepancy.dispositionedBy && (
+              <p className="text-xs text-muted-foreground/60 mt-1">
+                By: {discrepancy.dispositionedBy}
               </p>
             )}
           </CardContent>

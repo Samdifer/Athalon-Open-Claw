@@ -91,6 +91,8 @@ export function QuoteWorkspaceShell({
   const searchParamsString = searchParams.toString();
   const selectedWorkOrderIdFromQuery =
     searchParams.get("workOrderId") ?? undefined;
+  const prefillCustomerIdFromQuery =
+    searchParams.get("customerId") ?? undefined;
 
   const [mobileRailOpen, setMobileRailOpen] = useState(false);
   const [workspaceQuoteId, setWorkspaceQuoteId] = useState<
@@ -322,6 +324,7 @@ export function QuoteWorkspaceShell({
         mode="new"
         quoteId={undefined}
         prefillWorkOrderId={selectedWorkOrder?._id}
+        prefillCustomerId={prefillCustomerIdFromQuery}
         onBack={clearSelection}
         onQuoteCreated={handleQuoteCreated}
       />

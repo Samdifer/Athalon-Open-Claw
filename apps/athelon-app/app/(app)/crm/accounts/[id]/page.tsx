@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { useRouter } from "@/hooks/useRouter";
 import { useQuery, useMutation } from "convex/react";
@@ -24,6 +24,9 @@ import {
   MapPin,
   StickyNote,
   Star,
+  Pencil,
+  Check,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -184,6 +187,167 @@ function TypeBadge({ type }: { type: CustomerType }) {
   );
 }
 
+// ─── Inline Edit Field ───────────────────────────────────────────────────────
+
+interface InlineEditFieldProps {
+  value: string;
+  onSave: (value: string) => Promise<void>;
+  placeholder?: string;
+  className?: string;
+  inputClassName?: string;
+  displayClassName?: string;
+}
+
+function InlineEditField({
+  value,
+  onSave,
+  placeholder = "—",
+  className = "",
+  inputClassName = "",
+  displayClassName = "",
+}: InlineEditFieldProps) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(value);
+  const [saving, setSaving] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const startEdit = useCallback(() => {
+    setDraft(value);
+    setEditing(true);
+    setTimeout(() => inputRef.current?.focus(), 0);
+  }, [value]);
+
+  const cancel = useCallback(() => {
+    setDraft(value);
+    setEditing(false);
+  }, [value]);
+
+  const save = useCallback(async () => {
+    const trimmed = draft.trim();
+    if (trimmed === value) {
+      setEditing(false);
+      return;
+    }
+    setSaving(true);
+    try {
+      await onSave(trimmed);
+      setEditing(false);
+    } finally {
+      setSaving(false);
+    }
+  }, [draft, value, onSave]);
+
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        void save();
+      } else if (e.key === "Escape") {
+        cancel();
+      }
+    },
+    [save, cancel],
+  );
+
+  if (editing) {
+    return (
+      <div className={`flex items-center gap-1 ${className}`}>
+        <Input
+          ref={inputRef}
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onBlur={() => void save()}
+          onKeyDown={handleKeyDown}
+          disabled={saving}
+          placeholder={placeholder}
+          className={`h-7 text-sm py-0 px-2 ${inputClassName}`}
+        />
+        <button
+          type="button"
+          onClick={() => void save()}
+          disabled={saving}
+          className="text-muted-foreground hover:text-foreground transition-colors"
+          aria-label="Save"
+        >
+          <Check className="w-3.5 h-3.5" />
+        </button>
+        <button
+          type="button"
+          onClick={cancel}
+          disabled={saving}
+          className="text-muted-foreground hover:text-foreground transition-colors"
+          aria-label="Cancel"
+        >
+          <X className="w-3.5 h-3.5" />
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={startEdit}
+      className={`group flex items-center gap-1.5 text-left hover:opacity-80 transition-opacity ${className}`}
+      aria-label="Click to edit"
+    >
+      <span className={displayClassName || "text-sm text-foreground"}>
+        {value || <span className="text-muted-foreground">{placeholder}</span>}
+      </span>
+      <Pencil className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
+    </button>
+  );
+}
+
+interface InlineTypeSelectProps {
+  value: CustomerType;
+  onSave: (value: CustomerType) => Promise<void>;
+}
+
+function InlineTypeSelect({ value, onSave }: InlineTypeSelectProps) {
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  const handleChange = async (next: string) => {
+    setSaving(true);
+    try {
+      await onSave(next as CustomerType);
+    } finally {
+      setSaving(false);
+      setEditing(false);
+    }
+  };
+
+  if (editing) {
+    return (
+      <Select value={value} onValueChange={(v) => void handleChange(v)}>
+        <SelectTrigger className="h-7 text-xs w-40" disabled={saving}>
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="individual">Individual</SelectItem>
+          <SelectItem value="company">Company</SelectItem>
+          <SelectItem value="charter_operator">Charter Operator</SelectItem>
+          <SelectItem value="flight_school">Flight School</SelectItem>
+          <SelectItem value="government">Government</SelectItem>
+        </SelectContent>
+      </Select>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => setEditing(true)}
+      className="group flex items-center gap-1 hover:opacity-80 transition-opacity"
+      aria-label="Click to change customer type"
+    >
+      <TypeBadge type={value} />
+      <Pencil className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+    </button>
+  );
+}
+
 // ─── Log Interaction Dialog ─────────────────────────────────────────────────
 
 interface LogInteractionDialogProps {
@@ -330,6 +494,46 @@ export default function AccountDetailPage() {
   const [contactDialogOpen, setContactDialogOpen] = useState(false);
   const [interactionDialogOpen, setInteractionDialogOpen] = useState(false);
 
+  const updateCustomer = useMutation(api.billingV4.updateCustomer);
+
+  const handleFieldSave = useCallback(
+    async (field: "name" | "phone" | "email", value: string) => {
+      if (!orgId || !customerId) return;
+      try {
+        await updateCustomer({
+          customerId: customerId as Id<"customers">,
+          organizationId: orgId as Id<"organizations">,
+          [field]: value || undefined,
+        });
+        toast.success("Saved");
+      } catch (err) {
+        toast.error("Failed to save", {
+          description: err instanceof Error ? err.message : "Unknown error",
+        });
+      }
+    },
+    [orgId, customerId, updateCustomer],
+  );
+
+  const handleTypeSave = useCallback(
+    async (value: CustomerType) => {
+      if (!orgId || !customerId) return;
+      try {
+        await updateCustomer({
+          customerId: customerId as Id<"customers">,
+          organizationId: orgId as Id<"organizations">,
+          customerType: value,
+        });
+        toast.success("Saved");
+      } catch (err) {
+        toast.error("Failed to save", {
+          description: err instanceof Error ? err.message : "Unknown error",
+        });
+      }
+    },
+    [orgId, customerId, updateCustomer],
+  );
+
   // ─── Data queries ───────────────────────────────────────────────────────
 
   const accountSummary = useQuery(
@@ -451,48 +655,72 @@ export default function AccountDetailPage() {
             ) : (
               <>
                 <div className="flex items-center gap-2 flex-wrap">
-                  <h1 className="text-lg sm:text-xl font-semibold text-foreground">
-                    {customer?.name}
-                  </h1>
+                  <InlineEditField
+                    value={customer?.name ?? ""}
+                    onSave={(v) => handleFieldSave("name", v)}
+                    placeholder="Customer name"
+                    displayClassName="text-lg sm:text-xl font-semibold text-foreground"
+                  />
                   {customer && (
-                    <TypeBadge type={(customer.customerType as CustomerType) ?? "company"} />
+                    <InlineTypeSelect
+                      value={(customer.customerType as CustomerType) ?? "company"}
+                      onSave={handleTypeSave}
+                    />
                   )}
                   <HealthScoreBadge
                     score={accountSummary?.healthScore?.overallScore ?? null}
                   />
                 </div>
-                {customer?.companyName && (
-                  <p className="text-sm text-muted-foreground mt-0.5">
-                    {customer.companyName}
-                  </p>
-                )}
+                <div className="flex items-center gap-3 mt-0.5 flex-wrap">
+                  {customer?.companyName && (
+                    <p className="text-sm text-muted-foreground">
+                      {customer.companyName}
+                    </p>
+                  )}
+                  <InlineEditField
+                    value={customer?.phone ?? ""}
+                    onSave={(v) => handleFieldSave("phone", v)}
+                    placeholder="Add phone"
+                    displayClassName="text-sm text-muted-foreground"
+                    className="text-sm"
+                  />
+                  <InlineEditField
+                    value={customer?.email ?? ""}
+                    onSave={(v) => handleFieldSave("email", v)}
+                    placeholder="Add email"
+                    displayClassName="text-sm text-muted-foreground"
+                    className="text-sm"
+                  />
+                </div>
               </>
             )}
           </div>
         </div>
 
         {/* Quick actions */}
-        <div className="flex items-center gap-2 flex-wrap ml-11 sm:ml-0">
-          <Button
-            size="sm"
-            variant="default"
-            onClick={() => setInteractionDialogOpen(true)}
+        <div className="flex flex-col items-end gap-2 ml-11 sm:ml-0">
+          <div className="flex items-center gap-2 flex-wrap justify-end">
+            <Button
+              size="sm"
+              variant="default"
+              onClick={() => setInteractionDialogOpen(true)}
+            >
+              <MessageSquare className="w-3.5 h-3.5 mr-1.5" />
+              Log Interaction
+            </Button>
+            <Button size="sm" variant="outline" asChild>
+              <Link to={`/sales/quotes/new?customerId=${customerId}`}>
+                <Receipt className="w-3.5 h-3.5 mr-1.5" />
+                Create Quote
+              </Link>
+            </Button>
+          </div>
+          <Link
+            to={`/billing/customers/${customerId}`}
+            className="text-xs text-muted-foreground hover:text-foreground transition-colors underline-offset-2 hover:underline"
           >
-            <MessageSquare className="w-3.5 h-3.5 mr-1.5" />
-            Log Interaction
-          </Button>
-          <Button size="sm" variant="outline" asChild>
-            <Link to="/sales/quotes/new">
-              <Receipt className="w-3.5 h-3.5 mr-1.5" />
-              Create Quote
-            </Link>
-          </Button>
-          <Button size="sm" variant="outline" asChild>
-            <Link to={`/billing/customers/${customerId}`}>
-              <FileText className="w-3.5 h-3.5 mr-1.5" />
-              Edit in Billing
-            </Link>
-          </Button>
+            View Billing Details
+          </Link>
         </div>
       </div>
 
@@ -502,10 +730,8 @@ export default function AccountDetailPage() {
           <TabsTrigger value="overview" className="text-xs">Overview</TabsTrigger>
           <TabsTrigger value="contacts" className="text-xs">Contacts</TabsTrigger>
           <TabsTrigger value="aircraft" className="text-xs">Aircraft</TabsTrigger>
-          <TabsTrigger value="work-history" className="text-xs">Work History</TabsTrigger>
-          <TabsTrigger value="quotes-invoices" className="text-xs">Quotes & Invoices</TabsTrigger>
+          <TabsTrigger value="transactions" className="text-xs">Transactions</TabsTrigger>
           <TabsTrigger value="interactions" className="text-xs">Interactions</TabsTrigger>
-          <TabsTrigger value="documents" className="text-xs">Documents</TabsTrigger>
         </TabsList>
 
         {/* ─── Overview Tab ─────────────────────────────────────────────── */}
@@ -644,6 +870,24 @@ export default function AccountDetailPage() {
                   })}
                 </div>
               )}
+            </CardContent>
+          </Card>
+
+          <Card className="border-border/60">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                <FileText className="w-4 h-4 text-muted-foreground" />
+                Documents
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0 py-10 text-center">
+              <FileText className="w-8 h-8 text-muted-foreground/40 mx-auto mb-3" />
+              <p className="text-sm font-medium text-muted-foreground">
+                Document management coming soon
+              </p>
+              <p className="text-xs text-muted-foreground/60 mt-1">
+                Attach contracts, certificates, and other documents to this account.
+              </p>
             </CardContent>
           </Card>
         </TabsContent>
@@ -884,8 +1128,8 @@ export default function AccountDetailPage() {
           )}
         </TabsContent>
 
-        {/* ─── Work History Tab ─────────────────────────────────────────── */}
-        <TabsContent value="work-history" className="space-y-5">
+        {/* ─── Transactions Tab (Work History + Quotes & Invoices) ─────── */}
+        <TabsContent value="transactions" className="space-y-5">
           {/* Active Work Orders */}
           <div>
             <h2 className="text-sm font-medium text-foreground mb-3">
@@ -1040,10 +1284,7 @@ export default function AccountDetailPage() {
               </Card>
             )}
           </div>
-        </TabsContent>
 
-        {/* ─── Quotes & Invoices Tab ────────────────────────────────────── */}
-        <TabsContent value="quotes-invoices" className="space-y-5">
           {/* Quotes */}
           <div>
             <h2 className="text-sm font-medium text-foreground mb-3">
@@ -1331,20 +1572,6 @@ export default function AccountDetailPage() {
           )}
         </TabsContent>
 
-        {/* ─── Documents Tab ────────────────────────────────────────────── */}
-        <TabsContent value="documents">
-          <Card className="border-border/60">
-            <CardContent className="py-16 text-center">
-              <FileText className="w-10 h-10 text-muted-foreground/40 mx-auto mb-3" />
-              <p className="text-sm font-medium text-muted-foreground">
-                Document management coming soon
-              </p>
-              <p className="text-xs text-muted-foreground/60 mt-1">
-                Attach contracts, certificates, and other documents to this account.
-              </p>
-            </CardContent>
-          </Card>
-        </TabsContent>
       </Tabs>
 
       {/* Dialogs */}

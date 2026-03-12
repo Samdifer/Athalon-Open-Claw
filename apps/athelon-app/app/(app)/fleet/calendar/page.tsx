@@ -293,8 +293,8 @@ export default function FleetCalendarPage() {
                           })}
                           {dayEvents.length > 3 && (
                             <Link
-                              to="/work-orders"
-                              title={dayEvents.slice(3).map((e) => (e.woNumber ? `${e.tail} — ${e.woNumber}` : e.tail)).join("\n")}
+                              to={`/work-orders?scheduledDate=${dateStr}`}
+                              title={`View all ${dayEvents.length} work orders on ${dateStr}`}
                               className="block text-[10px] text-muted-foreground hover:text-foreground underline underline-offset-2 px-1"
                             >
                               +{dayEvents.length - 3} more

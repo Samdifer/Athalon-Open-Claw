@@ -71,6 +71,7 @@ test.describe("Wave 8: Roster & teams workspace", () => {
   test("team CRUD works for seeded roster workspace", async ({ page }) => {
     await openRosterWorkspace(page);
     await page.getByRole("tab", { name: "Teams" }).click();
+    await page.getByRole("button", { name: "Add Team" }).click();
 
     const teamName = `E2E Team ${Date.now()}`;
     await page.getByTestId("roster-team-name-input").fill(teamName);
@@ -82,13 +83,15 @@ test.describe("Wave 8: Roster & teams workspace", () => {
       .filter({ hasText: teamName })
       .first();
     await expect(teamRow).toBeVisible({ timeout: 15_000 });
-    await teamRow.getByRole("button", { name: "Delete" }).click();
+    await teamRow.locator('button[title="Delete team"]').click();
+    await teamRow.locator('button[title="Confirm delete"]').click();
     await expect(teamRow).toBeHidden({ timeout: 15_000 });
   });
 
   test("shift CRUD works for seeded roster workspace", async ({ page }) => {
     await openRosterWorkspace(page);
     await page.getByRole("tab", { name: "Shifts" }).click();
+    await page.getByRole("button", { name: "Add Shift" }).click();
 
     const shiftName = `E2E Shift ${Date.now()}`;
     await page.getByTestId("roster-shift-name-input").fill(shiftName);
@@ -100,7 +103,8 @@ test.describe("Wave 8: Roster & teams workspace", () => {
       .filter({ hasText: shiftName })
       .first();
     await expect(shiftRow).toBeVisible({ timeout: 15_000 });
-    await shiftRow.getByRole("button", { name: "Delete" }).click();
+    await shiftRow.locator('button[title="Delete shift"]').click();
+    await shiftRow.locator('button[title="Confirm delete"]').click();
     await expect(shiftRow).toBeHidden({ timeout: 15_000 });
   });
 
@@ -120,7 +124,8 @@ test.describe("Wave 8: Roster & teams workspace", () => {
       .filter({ hasText: holidayName })
       .first();
     await expect(holidayRow).toBeVisible({ timeout: 15_000 });
-    await holidayRow.getByRole("button", { name: "Delete" }).click();
+    await holidayRow.locator('button[title="Delete holiday"]').click();
+    await holidayRow.locator('button[title="Confirm delete"]').click();
     await expect(holidayRow).toBeHidden({ timeout: 15_000 });
   });
 

@@ -17,6 +17,7 @@ const CustomerInvoicesPage = lazy(() =>
 );
 const CustomerFleetPage = lazy(() => import("@/app/(customer)/portal/fleet/page"));
 const CustomerMessagesPage = lazy(() => import("@/app/(customer)/portal/messages/page"));
+const PortalNotFoundPage = lazy(() => import("@/app/(customer)/portal/not-found/page"));
 
 export function customerPortalRoutes() {
   return (
@@ -36,7 +37,8 @@ export function customerPortalRoutes() {
           <Route path="/portal/quotes" element={<CustomerQuotesPage />} />
           <Route path="/portal/invoices" element={<CustomerInvoicesPage />} />
           <Route path="/portal/fleet" element={<CustomerFleetPage />} />
-        <Route path="/portal/messages" element={<CustomerMessagesPage />} />
+          <Route path="/portal/messages" element={<CustomerMessagesPage />} />
+          <Route path="/portal/*" element={<PortalNotFoundPage />} />
         </Route>
       </Route>
     </>

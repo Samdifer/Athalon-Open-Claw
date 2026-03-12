@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { ActionableEmptyState } from "@/components/zero-state/ActionableEmptyState";
 import { MissingPrereqBanner } from "@/components/zero-state/MissingPrereqBanner";
 import { usePagePrereqs } from "@/hooks/usePagePrereqs";
+import { SchedulingSubNav } from "../_components/SchedulingSubNav";
 
 const HORIZONS = [30, 60, 90, 180] as const;
 
@@ -155,6 +156,7 @@ export default function SchedulingDueListPage() {
 
   return (
     <div className="space-y-4 pb-6">
+      <SchedulingSubNav />
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center justify-between gap-3 text-lg">

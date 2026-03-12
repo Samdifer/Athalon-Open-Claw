@@ -4,6 +4,8 @@ import { useMemo, useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
+import { usePagePrereqs } from "@/hooks/usePagePrereqs";
+import { MissingPrereqBanner } from "@/components/zero-state/MissingPrereqBanner";
 import { Link } from "react-router-dom";
 import {
   TrendingUp,
@@ -13,6 +15,7 @@ import {
   BarChart2,
   Navigation,
   FileBarChart,
+  Info,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -26,6 +29,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   LineChart,
   Line,
@@ -75,6 +79,11 @@ export default function CashFlowForecastPage() {
   const invoices = useQuery(api.billing.listInvoices, orgId ? { orgId } : "skip");
   const quotes = useQuery(api.billing.listQuotes, orgId ? { orgId } : "skip");
   const purchaseOrders = useQuery(api.billing.listPurchaseOrders, orgId ? { orgId } : "skip");
+
+  const prereq = usePagePrereqs({
+    requiresOrg: true,
+    isDataLoading: !isLoaded || invoices === undefined || quotes === undefined || purchaseOrders === undefined,
+  });
 
   const isLoading = !isLoaded || invoices === undefined || quotes === undefined || purchaseOrders === undefined;
 
@@ -166,7 +175,7 @@ export default function CashFlowForecastPage() {
     Profit: Math.round(r.net),
   }));
 
-  if (isLoading) {
+  if (prereq.state === "loading_context" || prereq.state === "loading_data") {
     return (
       <div className="space-y-5">
         <Skeleton className="h-8 w-64" />
@@ -177,6 +186,10 @@ export default function CashFlowForecastPage() {
         </div>
       </div>
     );
+  }
+
+  if (prereq.state === "missing_context" && prereq.missingKind) {
+    return <MissingPrereqBanner kind={prereq.missingKind} actionLabel="Go to Settings" actionTarget="/settings/shop" />;
   }
 
   return (
@@ -220,6 +233,14 @@ export default function CashFlowForecastPage() {
           ))}
         </div>
       </div>
+
+      {/* ── Methodology Disclaimer ────────────────────────────────────────── */}
+      <Alert className="border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-800/40 dark:bg-amber-900/10 dark:text-amber-400">
+        <Info className="size-4 text-amber-600 dark:text-amber-400" />
+        <AlertDescription className="text-amber-800 dark:text-amber-400">
+          Note: Forecast figures are estimated from the last 3 months of paid invoices and approved quotes. Pipeline revenue is distributed linearly over the horizon with a 15% monthly decay. Results are indicative only and should not be used as a substitute for formal financial planning.
+        </AlertDescription>
+      </Alert>
 
       {/* ── Summary Cards ─────────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">

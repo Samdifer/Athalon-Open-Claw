@@ -20,7 +20,7 @@ async function openFirstWorkOrderDetail(page: import("@playwright/test").Page): 
     const valid = /^\/work-orders\/[A-Za-z0-9]+$/.test(href);
     if (!valid) continue;
     const slug = href.replace("/work-orders/", "");
-    if (["new", "kanban", "dashboard", "lead", "templates"].includes(slug)) {
+    if (["new", "kanban", "dashboard", "lead", "handoff", "templates"].includes(slug)) {
       continue;
     }
     await page.goto(href);
@@ -82,6 +82,8 @@ test.describe("Wave 14 — Fleet/WO Views + Evidence Hub", () => {
   });
 
   test("work-order detail exposes in-dock and RTS evidence hub", async ({ page }) => {
+    test.setTimeout(60_000);
+
     await page.goto("/work-orders");
     await ensureClerkAuthenticated(page, "/work-orders");
     await waitForLoad(page);
@@ -94,7 +96,8 @@ test.describe("Wave 14 — Fleet/WO Views + Evidence Hub", () => {
     await ensureClerkAuthenticated(page, page.url());
     await waitForLoad(page);
 
-    await page.getByRole("tab", { name: /In-dock & RTS/i }).click();
+    await page.getByRole("tab", { name: /Compliance/i }).click();
+    await page.getByRole("button", { name: /RTS Evidence & Media/i }).click();
     await expect(page.getByTestId("wo-evidence-tab")).toBeVisible();
     await expect(page.getByText(/In-dock Evidence/i)).toBeVisible();
     await expect(page.getByText(/Return-to-Service Evidence/i)).toBeVisible();

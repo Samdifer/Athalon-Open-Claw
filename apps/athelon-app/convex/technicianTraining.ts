@@ -10,20 +10,22 @@ import { v } from "convex/values";
 export const listByTechnician = query({
   args: { technicianId: v.id("technicians") },
   handler: async (ctx, args) => {
-    return ctx.db
+    const records = await ctx.db
       .query("technicianTraining")
       .withIndex("by_technician", (q) => q.eq("technicianId", args.technicianId))
       .collect();
+    return records.filter((r) => r.archivedAt === undefined);
   },
 });
 
 export const listByOrg = query({
   args: { organizationId: v.string() },
   handler: async (ctx, args) => {
-    return ctx.db
+    const records = await ctx.db
       .query("technicianTraining")
       .withIndex("by_org", (q) => q.eq("organizationId", args.organizationId))
       .collect();
+    return records.filter((r) => r.archivedAt === undefined);
   },
 });
 
@@ -78,7 +80,7 @@ export const removeTraining = mutation({
   handler: async (ctx, args) => {
     const record = await ctx.db.get(args.trainingId);
     if (!record) throw new Error("Training record not found");
-    await ctx.db.delete(args.trainingId);
+    await ctx.db.patch(args.trainingId, { archivedAt: Date.now() });
   },
 });
 
@@ -97,9 +99,9 @@ export const getActiveTrainingByOrg = query({
       .collect();
 
     const now = Date.now();
-    // Filter to active (non-expired) training only
+    // Filter to active (non-expired, non-archived) training only
     const active = records.filter(
-      (r) => !r.expiresAt || r.expiresAt > now,
+      (r) => r.archivedAt === undefined && (!r.expiresAt || r.expiresAt > now),
     );
 
     // Group by technician

@@ -1966,6 +1966,19 @@ export default function SchedulingPage() {
             <span className="hidden md:inline">Quote Workspace</span>
           </Button>
 
+          {!isFullscreen && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-xs h-7"
+              onClick={() => setFullscreen(true)}
+              data-testid="scheduling-enter-fullscreen"
+            >
+              <Maximize2 className="w-3.5 h-3.5" />
+              <span className="hidden md:inline">Fullscreen</span>
+            </Button>
+          )}
+
           <Button
             variant="outline"
             size="sm"

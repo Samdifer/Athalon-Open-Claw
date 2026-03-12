@@ -1,5 +1,3 @@
-"use client";
-
 import { useMemo, useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -61,9 +59,7 @@ export function PartRequestDialog({
   const [error, setError] = useState<string | null>(null);
   const [mode, setMode] = useState<"search" | "manual">("search");
 
-  // NOTE: api.workOrderParts types resolve after `convex dev` regenerates types
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const requestPart = useMutation((api as any).workOrderParts?.requestPart);
+  const requestPart = useMutation(api.workOrderParts.requestPart);
 
   // Fetch inventory parts for search
   const allParts = useQuery(

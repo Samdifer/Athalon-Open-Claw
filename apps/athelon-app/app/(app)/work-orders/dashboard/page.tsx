@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
+import { WO_STATUS_LABEL, type WoStatus } from "@/lib/mro-constants";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import { formatDate, formatDateUTC } from "@/lib/format";
 import { Button } from "@/components/ui/button";
@@ -219,7 +220,7 @@ export default function WorkOrderDashboardPage() {
                           {row.aircraft}
                         </Badge>
                         <Badge variant="outline" className="text-[10px] border-border/50">
-                          {row.status}
+                          {WO_STATUS_LABEL[row.status as WoStatus] ?? row.status}
                         </Badge>
                       </div>
                       <div className="text-[11px] text-muted-foreground mt-1">

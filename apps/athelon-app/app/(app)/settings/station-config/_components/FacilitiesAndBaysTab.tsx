@@ -43,6 +43,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AVIATION_TIMEZONES } from "@/src/shared/lib/timezones";
 
 type BayType = "hangar" | "ramp" | "paint";
 type BayStatus = "available" | "occupied" | "maintenance";
@@ -53,17 +54,6 @@ const CERT_TYPES = [
   { value: "part_121", label: "Part 121" },
   { value: "part_91", label: "Part 91" },
 ];
-
-const AVIATION_TIMEZONES = [
-  { value: "America/New_York", label: "Eastern (ET) - America/New_York" },
-  { value: "America/Chicago", label: "Central (CT) - America/Chicago" },
-  { value: "America/Denver", label: "Mountain (MT) - America/Denver" },
-  { value: "America/Phoenix", label: "Mountain (no DST) - America/Phoenix" },
-  { value: "America/Los_Angeles", label: "Pacific (PT) - America/Los_Angeles" },
-  { value: "America/Anchorage", label: "Alaska (AKT) - America/Anchorage" },
-  { value: "Pacific/Honolulu", label: "Hawaii (HST) - Pacific/Honolulu" },
-  { value: "UTC", label: "UTC / Zulu" },
-] as const;
 
 const BAY_TYPES: { value: BayType; label: string }[] = [
   { value: "hangar", label: "Hangar" },

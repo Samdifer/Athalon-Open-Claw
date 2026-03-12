@@ -36,6 +36,7 @@ import {
   PartNumberCombobox,
   type PartSelection,
 } from "@/src/shared/components/PartNumberCombobox";
+import { WOBreadcrumb } from "../_components/WOBreadcrumb";
 
 export default function CertificatesPage() {
   const { id } = useParams<{ id: string }>();
@@ -235,6 +236,13 @@ export default function CertificatesPage() {
 
   return (
     <div className="space-y-5">
+      {/* Breadcrumb */}
+      <WOBreadcrumb
+        woId={String(workOrderId)}
+        woNumber={workOrder?.workOrder?.workOrderNumber ?? String(workOrderId)}
+        pageName="Release Certificates"
+      />
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row gap-2 sm:items-start sm:justify-between">
         <div>
@@ -296,7 +304,7 @@ export default function CertificatesPage() {
                 </Button>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
                   <div>
                     <p className="text-muted-foreground">Qty</p>
                     <p className="font-medium">{cert.quantity}</p>
@@ -304,10 +312,6 @@ export default function CertificatesPage() {
                   <div>
                     <p className="text-muted-foreground">Work Performed</p>
                     <p className="font-medium">{cert.workPerformed}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Inspector</p>
-                    <p className="font-medium">{cert.inspectorName}</p>
                   </div>
                   <div>
                     <p className="text-muted-foreground">Date</p>
@@ -320,6 +324,22 @@ export default function CertificatesPage() {
                           intent: the date the FAA/EASA certificate was actually signed). */}
                       {(() => {
                         const d = new Date(cert.signatureDate);
+                        const yyyy = d.getUTCFullYear();
+                        const mm = String(d.getUTCMonth() + 1).padStart(2, "0");
+                        const dd = String(d.getUTCDate()).padStart(2, "0");
+                        return `${yyyy}-${mm}-${dd}`;
+                      })()}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Created By</p>
+                    <p className="font-medium">{cert.inspectorName}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Created At</p>
+                    <p className="font-medium">
+                      {(() => {
+                        const d = new Date(cert.createdAt);
                         const yyyy = d.getUTCFullYear();
                         const mm = String(d.getUTCMonth() + 1).padStart(2, "0");
                         const dd = String(d.getUTCDate()).padStart(2, "0");

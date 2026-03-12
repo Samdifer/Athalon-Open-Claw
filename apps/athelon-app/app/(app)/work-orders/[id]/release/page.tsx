@@ -24,6 +24,16 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Card,
   CardContent,
   CardHeader,
@@ -40,6 +50,7 @@ import {
   WO_STATUS_STYLES,
   type WoStatus,
 } from "@/lib/mro-constants";
+import { WOBreadcrumb } from "../_components/WOBreadcrumb";
 
 // ─── Release confirmation card ────────────────────────────────────────────────
 
@@ -162,6 +173,7 @@ export default function ReleaseAircraftPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [released, setReleased] = useState<ReleaseConfirmation | null>(null);
+  const [showReleaseConfirm, setShowReleaseConfirm] = useState(false);
 
   const isLoading = !isLoaded || data === undefined || readiness === undefined;
 
@@ -169,13 +181,12 @@ export default function ReleaseAircraftPage() {
   // 14 CFR Part 145 requires an authorized RTS record before returning aircraft to customer.
   const isRtsSigned = (readiness as CloseReadinessReport | null)?.isAlreadySigned === true;
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const validateRelease = (): boolean => {
     setError(null);
 
     if (!orgId || !techId) {
       setError("Organization or technician not loaded.");
-      return;
+      return false;
     }
     // BUG-QCM-HUNT-123: parseFloat("123abc") silently accepts malformed input
     // and returns 123 — the same class of bug fixed on the RTS page
@@ -186,11 +197,11 @@ export default function ReleaseAircraftPage() {
     const enteredHours = Number(aircraftTotalTime.trim());
     if (!aircraftTotalTime.trim() || !Number.isFinite(enteredHours)) {
       setError("Aircraft total time at release is required. Enter a valid number.");
-      return;
+      return false;
     }
     if (enteredHours <= 0) {
       setError("Aircraft total time must be greater than zero.");
-      return;
+      return false;
     }
     // BUG-LT-HUNT-044: Guard against impossible logbook entries.
     // If the tech types hours LESS than the current logged airframe time, the
@@ -205,9 +216,21 @@ export default function ReleaseAircraftPage() {
       setError(
         `Aircraft total time cannot decrease. Current logged time is ${currentAirframeHours.toFixed(1)} hrs — entered value must be at or above this.`,
       );
-      return;
+      return false;
     }
+    return true;
+  };
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (validateRelease()) {
+      setShowReleaseConfirm(true);
+    }
+  };
+
+  const handleConfirmedRelease = async () => {
+    if (!orgId || !techId) return;
+    const enteredHours = Number(aircraftTotalTime.trim());
     setSubmitting(true);
     try {
       await releaseAircraft({
@@ -316,6 +339,13 @@ export default function ReleaseAircraftPage() {
 
   return (
     <div className="space-y-5 max-w-2xl">
+      {/* Breadcrumb */}
+      <WOBreadcrumb
+        woId={id}
+        woNumber={wo.workOrderNumber}
+        pageName="Release Aircraft"
+      />
+
       {/* Back */}
       <Button
         asChild
@@ -564,6 +594,26 @@ export default function ReleaseAircraftPage() {
           </Button>
         </div>
       </form>
+
+      <AlertDialog open={showReleaseConfirm} onOpenChange={setShowReleaseConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Release Aircraft to Customer</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to release this aircraft? This action creates an official return-to-service record and cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={submitting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={submitting}
+              onClick={() => { void handleConfirmedRelease(); }}
+            >
+              {submitting ? "Releasing…" : "Confirm Release"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

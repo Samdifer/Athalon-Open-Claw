@@ -20,6 +20,7 @@ import {
   MessageSquare,
   Video,
   Plus,
+  ChevronDown,
 } from "lucide-react";
 import { api } from "@/convex/_generated/api";
 import { HandoffNotesPanel } from "@/components/HandoffNotesPanel";
@@ -40,6 +41,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -89,7 +95,7 @@ type WorkOrderStageFlow = {
   label: string;
   statusMappings: string[];
 };
-type WorkOrderTab = "tasks" | "compliance" | "parts" | "cost" | "evidence" | "documents" | "notes";
+type WorkOrderTab = "tasks" | "compliance" | "parts" | "cost" | "documents";
 type PartsTabView = "list" | "board";
 type PartLifecycleStatus =
   | "requested_not_ordered"
@@ -255,6 +261,7 @@ export default function WorkOrderDetailPage() {
   const [partsRequests, setPartsRequests] = useState<PartsRequestRecord[]>([]);
   const [partsTabView, setPartsTabView] = useState<PartsTabView>("list");
   const [partRequestDialogOpen, setPartRequestDialogOpen] = useState(false);
+  const [notesOpen, setNotesOpen] = useState(false);
 
   const legacyResolution = useQuery(
     api.workOrders.resolveWorkOrderRef,
@@ -920,6 +927,19 @@ export default function WorkOrderDetailPage() {
               />
               <PrintButton />
             </div>
+            {isTerminalStatus ? (
+              <Button variant="outline" disabled className="gap-2 opacity-50">
+                <Plus className="w-4 h-4" />
+                Add Task Card
+              </Button>
+            ) : (
+              <Button variant="outline" asChild className="gap-2">
+                <Link to={`/work-orders/${workOrderId}/tasks/new`}>
+                  <Plus className="w-4 h-4" />
+                  Add Task Card
+                </Link>
+              </Button>
+            )}
             <Button variant="outline" asChild className="gap-2">
               <Link to={`/work-orders/${workOrderId}/execution`}>
                 <Calendar className="w-4 h-4" />
@@ -1038,6 +1058,35 @@ export default function WorkOrderDetailPage() {
         </Card>
       )}
 
+      {/* Green "ready to sign off" banner — shown when all task cards are complete and WO is not yet closed */}
+      {taskCards.length > 0 &&
+        (taskCards as { status: string }[]).every((tc) => tc.status === "complete" || tc.status === "voided") &&
+        !isTerminalStatus && (
+          <div className="rounded-lg border border-green-500/30 bg-green-500/8 p-4 flex flex-col sm:flex-row sm:items-center gap-3">
+            <div className="flex items-center gap-2.5 flex-1 min-w-0">
+              <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0" />
+              <div>
+                <p className="text-sm font-semibold text-green-700 dark:text-green-300">
+                  All work cards complete — ready to sign off
+                </p>
+                <p className="text-xs text-green-600/80 dark:text-green-400/80 mt-0.5">
+                  Every task card has been completed. Proceed to the Return-to-Service authorization to close this work order.
+                </p>
+              </div>
+            </div>
+            <Button
+              asChild
+              size="sm"
+              className="flex-shrink-0 bg-green-600 hover:bg-green-700 text-white border-0 gap-1.5"
+            >
+              <Link to={`/work-orders/${workOrderId}/rts`}>
+                <ShieldCheck className="w-3.5 h-3.5" />
+                Proceed to RTS
+              </Link>
+            </Button>
+          </div>
+        )}
+
       {/* BUG-SM-HUNT-026: Tabs was uncontrolled (defaultValue) while
           handleJumpToFinding + workOrderId reset called setActiveTab expecting
           to programmatically switch the visible tab. Since the component was
@@ -1052,9 +1101,7 @@ export default function WorkOrderDetailPage() {
               { value: "compliance", label: "Compliance", Icon: ShieldCheck, count: null, indicator: complianceIndicator },
               { value: "parts", label: "Parts", Icon: Package, count: partsForThisWorkOrder.length, indicator: null as "red" | "amber" | "green" | null },
               { value: "cost", label: "Cost Estimate", Icon: CheckCircle2, count: null, indicator: null as "red" | "amber" | "green" | null },
-              { value: "evidence", label: "Evidence", Icon: Video, count: null, indicator: null as "red" | "amber" | "green" | null },
               { value: "documents", label: "Documents", Icon: Paperclip, count: null, indicator: null as "red" | "amber" | "green" | null },
-              { value: "notes", label: "Notes & Activity", Icon: FileText, count: workOrderHistory.length + voiceNotes.length, indicator: null as "red" | "amber" | "green" | null },
             ]
           ).map(({ value, label, Icon, count, indicator }) => (
             <TabsTrigger
@@ -1101,8 +1148,26 @@ export default function WorkOrderDetailPage() {
           </div>
         </TabsContent>
 
-        <TabsContent value="compliance" className="mt-0">
+        <TabsContent value="compliance" className="mt-0 space-y-4">
           <WOComplianceTab workOrderId={String(workOrderId)} />
+          <Collapsible>
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" className="w-full flex items-center justify-between h-9 px-3 border border-border/60 rounded-md hover:bg-muted/40">
+                <div className="flex items-center gap-2 text-sm font-medium">
+                  <Video className="w-3.5 h-3.5 text-muted-foreground" />
+                  RTS Evidence &amp; Media
+                </div>
+                <ChevronDown className="w-4 h-4 text-muted-foreground transition-transform duration-200 [[data-state=open]_&]:rotate-180" />
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="mt-2">
+              <InDockRtsEvidenceTab
+                organizationId={orgId}
+                workOrderId={String(workOrderId)}
+                aircraftRegistration={aircraft?.currentRegistration ?? "N-UNKNOWN"}
+              />
+            </CollapsibleContent>
+          </Collapsible>
         </TabsContent>
 
         <TabsContent value="parts" className="mt-0 space-y-3">
@@ -1248,20 +1313,25 @@ export default function WorkOrderDetailPage() {
           <DocumentsPanel workOrderId={String(workOrderId)} />
         </TabsContent>
 
-        <TabsContent value="evidence" className="mt-0">
-          <InDockRtsEvidenceTab
-            organizationId={orgId}
-            workOrderId={String(workOrderId)}
-            aircraftRegistration={aircraft?.currentRegistration ?? "N-UNKNOWN"}
-          />
-        </TabsContent>
+      </Tabs>
 
-        <TabsContent value="notes" className="mt-0">
-          {/* BUG-SM-090 (re-applied): HandoffNotesPanel was rendered OUTSIDE the
-              Tabs component at page bottom, invisible to anyone on the Notes tab.
-              Moved here so shift handoff notes appear first (more time-sensitive
-              than audit history), followed by the audit activity timeline. */}
-          <div className="space-y-4 mb-4">
+      <Collapsible open={notesOpen} onOpenChange={setNotesOpen}>
+        <CollapsibleTrigger asChild>
+          <Button variant="ghost" className="w-full flex items-center justify-between h-9 px-3 border border-border/60 rounded-md hover:bg-muted/40 mt-4">
+            <div className="flex items-center gap-2 text-sm font-medium">
+              <FileText className="w-3.5 h-3.5 text-muted-foreground" />
+              Notes &amp; Activity
+              {(workOrderHistory.length + voiceNotes.length) > 0 && (
+                <Badge variant="secondary" className="h-4 min-w-[16px] px-1 text-[9px] bg-muted-foreground/20 text-muted-foreground">
+                  {workOrderHistory.length + voiceNotes.length}
+                </Badge>
+              )}
+            </div>
+            <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform duration-200 ${notesOpen ? "rotate-180" : ""}`} />
+          </Button>
+        </CollapsibleTrigger>
+        <CollapsibleContent className="mt-2 space-y-4">
+          <div className="space-y-4">
             {taskCards.length > 0 && (
               <>
               <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
@@ -1299,8 +1369,8 @@ export default function WorkOrderDetailPage() {
               />
             </CardContent>
           </Card>
-        </TabsContent>
-      </Tabs>
+        </CollapsibleContent>
+      </Collapsible>
 
       {/* Close Readiness Panel — hidden for terminal-status WOs (BUG-SM-005) */}
       {!isTerminalStatus && (

@@ -89,21 +89,21 @@ export default function CareerProfilePage() {
   );
 
   const certSummary = useMemo(() => {
-    const certNos = new Set<string>();
-    let hasIA = false;
+    const inferredCertNos = new Set<string>();
+    let inferredHasIA = false;
     const ratings = new Set<string>();
     for (const rec of trainingRecords ?? []) {
       const name = rec.courseName.toLowerCase();
-      if (name.includes("a&p") || name.includes("a&p")) {
+      if (name.includes("a&p") || name.includes("airframe") || name.includes("powerplant")) {
         ratings.add("airframe");
         ratings.add("powerplant");
       }
-      if (name.includes("ia") || name.includes("inspection authorization")) hasIA = true;
-      if (rec.certificateNumber) certNos.add(rec.certificateNumber);
+      if (name.includes("ia") || name.includes("inspection authorization")) inferredHasIA = true;
+      if (rec.certificateNumber) inferredCertNos.add(rec.certificateNumber);
     }
     return {
-      numbers: Array.from(certNos),
-      hasIA,
+      inferredNumbers: Array.from(inferredCertNos),
+      inferredHasIA,
       ratings: Array.from(ratings),
     };
   }, [trainingRecords]);
@@ -159,13 +159,17 @@ export default function CareerProfilePage() {
     const ojtCompletionPercent = (jackets ?? []).length
       ? Math.round((completed / (jackets ?? []).length) * 100)
       : 0;
+    const certCount =
+      (technician?.ampCertificateNumber ? 1 : 0) +
+      (technician?.iaCertificateNumber ? 1 : 0) ||
+      certSummary.inferredNumbers.length;
     return {
       totalAircraftTypes: aircraftRows.length,
       totalHours,
-      certificationsHeld: certSummary.numbers.length,
+      certificationsHeld: certCount,
       ojtCompletionPercent,
     };
-  }, [aircraftRows, jackets, certSummary]);
+  }, [aircraftRows, jackets, certSummary, technician]);
 
   if (!technicians || !curricula || !jackets || !trainingRecords) {
     return <Skeleton className="h-72 w-full" />;
@@ -199,24 +203,60 @@ export default function CareerProfilePage() {
               <CardTitle className="text-base">Certifications</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2 text-sm">
-          <p>
-            <span className="text-muted-foreground">A&amp;P Numbers:</span>{" "}
-            {certSummary.numbers.length ? certSummary.numbers.join(", ") : "Not recorded"}
-          </p>
-          <p>
-            <span className="text-muted-foreground">IA Status:</span>{" "}
-            {certSummary.hasIA ? "Active/Recorded" : "No IA record found"}
-          </p>
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-muted-foreground">Ratings Held:</span>
-            {certSummary.ratings.length ? (
-              certSummary.ratings.map((r) => <Badge key={r} variant="outline" className="capitalize">{r}</Badge>)
-            ) : (
-              <span>Not recorded</span>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+              <div className="grid gap-2 sm:grid-cols-2">
+                <div>
+                  <span className="text-muted-foreground">A&amp;P Certificate #:</span>{" "}
+                  {technician.ampCertificateNumber ? (
+                    <span className="font-mono">{technician.ampCertificateNumber}</span>
+                  ) : certSummary.inferredNumbers.length ? (
+                    <>
+                      <span className="font-mono">{certSummary.inferredNumbers.join(", ")}</span>{" "}
+                      <Badge variant="outline" className="text-[10px]">inferred</Badge>
+                    </>
+                  ) : (
+                    <span className="text-muted-foreground">Not recorded</span>
+                  )}
+                </div>
+                <div>
+                  <span className="text-muted-foreground">A&amp;P Expiry:</span>{" "}
+                  {technician.ampExpiry ? (
+                    <span>{new Date(technician.ampExpiry).toLocaleDateString("en-US", { timeZone: "UTC" })}</span>
+                  ) : (
+                    <span className="text-muted-foreground">Not recorded</span>
+                  )}
+                </div>
+                <div>
+                  <span className="text-muted-foreground">IA Certificate #:</span>{" "}
+                  {technician.iaCertificateNumber ? (
+                    <span className="font-mono">{technician.iaCertificateNumber}</span>
+                  ) : certSummary.inferredHasIA ? (
+                    <>
+                      <span>Active/Recorded</span>{" "}
+                      <Badge variant="outline" className="text-[10px]">inferred</Badge>
+                    </>
+                  ) : (
+                    <span className="text-muted-foreground">No IA record found</span>
+                  )}
+                </div>
+                <div>
+                  <span className="text-muted-foreground">IA Expiry:</span>{" "}
+                  {technician.iaExpiry ? (
+                    <span>{new Date(technician.iaExpiry).toLocaleDateString("en-US", { timeZone: "UTC" })}</span>
+                  ) : (
+                    <span className="text-muted-foreground">Not recorded</span>
+                  )}
+                </div>
+              </div>
+              <div className="flex items-center gap-2 flex-wrap pt-1">
+                <span className="text-muted-foreground">Ratings Held:</span>
+                {certSummary.ratings.length ? (
+                  certSummary.ratings.map((r) => <Badge key={r} variant="outline" className="capitalize">{r}</Badge>)
+                ) : (
+                  <span>Not recorded</span>
+                )}
+              </div>
+            </CardContent>
+          </Card>
 
       <Card>
         <CardHeader>
@@ -256,7 +296,7 @@ export default function CareerProfilePage() {
                     {curriculumMap.get(j.curriculumId)?.aircraftType ?? "Unknown Type"} · Status: {j.status.replace("_", " ")}
                   </p>
                 </div>
-                <Link className="text-sm underline underline-offset-2" to={`/personnel/training?techId=${techId}&jacketId=${j._id}`}>
+                <Link className="text-sm underline underline-offset-2" to={`/training/ojt/jackets/${j._id}`}>
                   View Jacket
                 </Link>
               </div>

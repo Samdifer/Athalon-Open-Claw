@@ -15,6 +15,7 @@ import {
   WO_STATUS_STYLES,
   type WoStatus,
 } from "@/lib/mro-constants";
+import { WOBreadcrumb } from "../_components/WOBreadcrumb";
 
 export default function WOExecutionPage() {
   const { id } = useParams<{ id: string }>();
@@ -34,6 +35,13 @@ export default function WOExecutionPage() {
 
   return (
     <div className="space-y-4 p-4">
+      {/* Breadcrumb */}
+      <WOBreadcrumb
+        woId={id}
+        woNumber={workOrder?.workOrderNumber ?? id}
+        pageName="Execution Planning"
+      />
+
       {/* Header */}
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="icon" asChild>

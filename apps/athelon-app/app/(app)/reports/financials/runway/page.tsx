@@ -4,6 +4,8 @@ import { useMemo } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
+import { usePagePrereqs } from "@/hooks/usePagePrereqs";
+import { MissingPrereqBanner } from "@/components/zero-state/MissingPrereqBanner";
 import { Link } from "react-router-dom";
 import {
   Fuel,
@@ -16,11 +18,13 @@ import {
   BarChart2,
   Navigation,
   FileBarChart,
+  Info,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   AreaChart,
   Area,
@@ -68,6 +72,11 @@ export default function BusinessRunwayPage() {
 
   const invoices = useQuery(api.billing.listInvoices, orgId ? { orgId } : "skip");
   const purchaseOrders = useQuery(api.billing.listPurchaseOrders, orgId ? { orgId } : "skip");
+
+  const prereq = usePagePrereqs({
+    requiresOrg: true,
+    isDataLoading: !isLoaded || invoices === undefined || purchaseOrders === undefined,
+  });
 
   const isLoading = !isLoaded || invoices === undefined || purchaseOrders === undefined;
 
@@ -154,7 +163,7 @@ export default function BusinessRunwayPage() {
   const isHealthy = metrics ? metrics.runwayMonths === Infinity || metrics.runwayMonths > 6 : false;
   const isCritical = metrics ? metrics.runwayMonths < 3 && metrics.runwayMonths !== Infinity : false;
 
-  if (isLoading) {
+  if (prereq.state === "loading_context" || prereq.state === "loading_data") {
     return (
       <div className="space-y-5">
         <Skeleton className="h-8 w-64" />
@@ -165,6 +174,10 @@ export default function BusinessRunwayPage() {
         </div>
       </div>
     );
+  }
+
+  if (prereq.state === "missing_context" && prereq.missingKind) {
+    return <MissingPrereqBanner kind={prereq.missingKind} actionLabel="Go to Settings" actionTarget="/settings/shop" />;
   }
 
   return (
@@ -192,6 +205,14 @@ export default function BusinessRunwayPage() {
         <h1 className="text-lg sm:text-xl font-semibold text-foreground">Business Runway</h1>
         <p className="text-sm text-muted-foreground mt-0.5">Burn rate, cash position, and sustainability analysis</p>
       </div>
+
+      {/* ── Disclaimer Banner ─────────────────────────────────────────────── */}
+      <Alert className="border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-800/40 dark:bg-amber-900/10 dark:text-amber-400">
+        <Info className="size-4 text-amber-600 dark:text-amber-400" />
+        <AlertDescription className="text-amber-800 dark:text-amber-400">
+          Note: These projections are based on revenue and direct costs only. Labor costs, overhead, and other indirect expenses are not included in this analysis.
+        </AlertDescription>
+      </Alert>
 
       {/* ── Health Status ─────────────────────────────────────────────────── */}
       {isCritical && (

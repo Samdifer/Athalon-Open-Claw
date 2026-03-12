@@ -4,6 +4,8 @@ import { useMemo, useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
+import { usePagePrereqs } from "@/hooks/usePagePrereqs";
+import { MissingPrereqBanner } from "@/components/zero-state/MissingPrereqBanner";
 import { Link } from "react-router-dom";
 import {
   TrendingUp,
@@ -89,6 +91,11 @@ export default function WOProfitabilityPage() {
   const customers = useQuery(api.customers.listCustomers, orgId ? { orgId } : "skip");
 
   // BUG-BH-014: Wait for customers query too; otherwise table briefly renders as "Unknown" for every row.
+  const prereq = usePagePrereqs({
+    requiresOrg: true,
+    isDataLoading: !isLoaded || invoices === undefined || purchaseOrders === undefined || customers === undefined,
+  });
+
   const isLoading = !isLoaded || invoices === undefined || purchaseOrders === undefined || customers === undefined;
 
   // ── Date range cutoff ──────────────────────────────────────────────────────
@@ -219,7 +226,7 @@ export default function WOProfitabilityPage() {
       .slice(0, 8);
   }, [woRows]);
 
-  if (isLoading) {
+  if (prereq.state === "loading_context" || prereq.state === "loading_data") {
     return (
       <div className="space-y-5">
         <Skeleton className="h-8 w-64" />
@@ -230,6 +237,10 @@ export default function WOProfitabilityPage() {
         </div>
       </div>
     );
+  }
+
+  if (prereq.state === "missing_context" && prereq.missingKind) {
+    return <MissingPrereqBanner kind={prereq.missingKind} actionLabel="Go to Settings" actionTarget="/settings/shop" />;
   }
 
   return (

@@ -1,5 +1,6 @@
-import { Navigate, Outlet } from "react-router-dom";
+import { Outlet } from "react-router-dom";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
+import { FirstRunWizard } from "@/components/FirstRunWizard";
 
 export function OnboardingGate() {
   const { isLoaded, bootstrapStatus } = useCurrentOrg();
@@ -16,7 +17,7 @@ export function OnboardingGate() {
   }
 
   if (bootstrapStatus === "needs_bootstrap") {
-    return <Navigate to="/onboarding" replace />;
+    return <FirstRunWizard />;
   }
 
   return <Outlet />;

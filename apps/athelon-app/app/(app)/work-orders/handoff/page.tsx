@@ -79,7 +79,7 @@ export default function ShiftHandoffDashboardPage() {
       <Card>
         <CardContent className="pt-6 grid grid-cols-1 md:grid-cols-4 gap-3">
           <div>
-            <Label htmlFor="handoff-report-date" className="text-xs">Report Date (UTC)</Label>
+            <Label htmlFor="handoff-report-date" className="text-xs">Report Date</Label>
             <Input
               id="handoff-report-date"
               type="date"
@@ -172,7 +172,7 @@ export default function ShiftHandoffDashboardPage() {
                 <div className="flex items-center gap-2 flex-wrap text-xs">
                   <Badge variant="outline">{row.shift}</Badge>
                   {row.unresolved && <Badge className="bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">Unresolved</Badge>}
-                  <span className="text-muted-foreground">{new Date(row.createdAt).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "UTC" })}Z</span>
+                  <span className="text-muted-foreground">{new Date(row.createdAt).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", hour12: false })}</span>
                   <span className="text-muted-foreground">•</span>
                   <span>{row.technicianName}</span>
                   <span className="text-muted-foreground">• {row.teamName}</span>

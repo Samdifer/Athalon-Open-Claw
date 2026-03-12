@@ -64,6 +64,10 @@ type PersonnelProfile = {
   role?: string;
   userId?: string;
   accessAuthorizations?: string[];
+  ampCertificateNumber?: string;
+  iaCertificateNumber?: string;
+  ampExpiry?: number;
+  iaExpiry?: number;
 };
 
 interface PersonnelRosterTabProps {
@@ -92,6 +96,10 @@ type ProfileDraft = {
   employeeId: string;
   email: string;
   phone: string;
+  ampCertificateNumber: string;
+  iaCertificateNumber: string;
+  ampExpiry: string;
+  iaExpiry: string;
 };
 
 const EMPTY_PROFILE_DRAFT: ProfileDraft = {
@@ -99,6 +107,10 @@ const EMPTY_PROFILE_DRAFT: ProfileDraft = {
   employeeId: "",
   email: "",
   phone: "",
+  ampCertificateNumber: "",
+  iaCertificateNumber: "",
+  ampExpiry: "",
+  iaExpiry: "",
 };
 
 function getProfileStatusClass(status: PersonnelProfile["status"]) {
@@ -111,12 +123,27 @@ function getProfileStatusClass(status: PersonnelProfile["status"]) {
   return "bg-red-500/15 text-red-600 dark:text-red-400 border-red-500/30";
 }
 
+function tsToDateInput(ts: number | undefined): string {
+  if (!ts) return "";
+  return new Date(ts).toISOString().slice(0, 10);
+}
+
+function dateInputToTs(value: string): number | undefined {
+  if (!value) return undefined;
+  const parsed = Date.parse(value);
+  return Number.isNaN(parsed) ? undefined : parsed;
+}
+
 function buildDraftFromProfile(profile: PersonnelProfile): ProfileDraft {
   return {
     legalName: profile.legalName,
     employeeId: profile.employeeId ?? "",
     email: profile.email ?? "",
     phone: profile.phone ?? "",
+    ampCertificateNumber: profile.ampCertificateNumber ?? "",
+    iaCertificateNumber: profile.iaCertificateNumber ?? "",
+    ampExpiry: tsToDateInput(profile.ampExpiry),
+    iaExpiry: tsToDateInput(profile.iaExpiry),
   };
 }
 
@@ -259,6 +286,10 @@ export function PersonnelRosterTab({
           employeeId: profileDraft.employeeId.trim() || null,
           email: profileDraft.email.trim() || null,
           phone: profileDraft.phone.trim() || null,
+          ampCertificateNumber: profileDraft.ampCertificateNumber.trim() || null,
+          iaCertificateNumber: profileDraft.iaCertificateNumber.trim() || null,
+          ampExpiry: dateInputToTs(profileDraft.ampExpiry) ?? null,
+          iaExpiry: dateInputToTs(profileDraft.iaExpiry) ?? null,
         });
         toast.success(`Updated profile for ${legalName}`);
       }
@@ -487,6 +518,9 @@ export function PersonnelRosterTab({
           {filtered.map((profile) => {
             const hasExpiringCert = expiringTechIds.has(profile._id);
             const certInfo = expiringCertMap.get(profile._id);
+            const hasMissingCerts =
+              isTechnicalRole(profile.role) &&
+              (!profile.ampCertificateNumber || !profile.iaCertificateNumber);
             const isCritical =
               certInfo?.daysUntilExpiry !== null &&
               certInfo?.daysUntilExpiry !== undefined &&
@@ -541,6 +575,14 @@ export function PersonnelRosterTab({
                             >
                               <ShieldCheck className="w-3 h-3 mr-1" />
                               {ACCESS_AUTHORIZATION_LABELS.rii}
+                            </Badge>
+                          )}
+                          {hasMissingCerts && (
+                            <Badge
+                              variant="outline"
+                              className="text-[10px] border border-orange-500/30 bg-orange-500/10 text-orange-600 dark:text-orange-400"
+                            >
+                              Incomplete Profile
                             </Badge>
                           )}
                         </div>
@@ -955,6 +997,66 @@ export function PersonnelRosterTab({
                   }))
                 }
                 placeholder="taylor@repairstation.com"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="profile-amp-cert">A&amp;P Certificate #</Label>
+              <Input
+                id="profile-amp-cert"
+                value={profileDraft.ampCertificateNumber}
+                onChange={(event) =>
+                  setProfileDraft((previous) => ({
+                    ...previous,
+                    ampCertificateNumber: event.target.value,
+                  }))
+                }
+                placeholder="e.g. 4135901"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="profile-amp-expiry">A&amp;P Expiry</Label>
+              <Input
+                id="profile-amp-expiry"
+                type="date"
+                value={profileDraft.ampExpiry}
+                onChange={(event) =>
+                  setProfileDraft((previous) => ({
+                    ...previous,
+                    ampExpiry: event.target.value,
+                  }))
+                }
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="profile-ia-cert">IA Certificate #</Label>
+              <Input
+                id="profile-ia-cert"
+                value={profileDraft.iaCertificateNumber}
+                onChange={(event) =>
+                  setProfileDraft((previous) => ({
+                    ...previous,
+                    iaCertificateNumber: event.target.value,
+                  }))
+                }
+                placeholder="e.g. IA-7291"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="profile-ia-expiry">IA Expiry</Label>
+              <Input
+                id="profile-ia-expiry"
+                type="date"
+                value={profileDraft.iaExpiry}
+                onChange={(event) =>
+                  setProfileDraft((previous) => ({
+                    ...previous,
+                    iaExpiry: event.target.value,
+                  }))
+                }
               />
             </div>
           </div>

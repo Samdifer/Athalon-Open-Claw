@@ -4,7 +4,14 @@ import { api } from "@/convex/_generated/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Check, X } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { ArrowLeft, Check, X, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { usePortalCustomerId } from "@/hooks/usePortalCustomerId";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -18,12 +25,39 @@ const STATUS_COLORS: Record<string, string> = {
   CONVERTED: "bg-purple-100 text-purple-700",
 };
 
+const ALL_STATUSES = ["ALL", "SENT", "APPROVED", "DECLINED", "CONVERTED"] as const;
+type StatusFilter = (typeof ALL_STATUSES)[number];
+
 function QuoteDetail({
   quote,
   customerId,
   onBack,
 }: {
-  quote: any;
+  quote: Record<string, unknown> & {
+    _id: Id<"quotes">;
+    quoteNumber: string;
+    status: string;
+    aircraftRegistration: string;
+    createdAt: number;
+    expiresAt?: number;
+    laborTotal: number;
+    partsTotal: number;
+    tax: number;
+    total: number;
+    lineItems: Array<{
+      _id: Id<"quoteLineItems">;
+      description: string;
+      type: string;
+      qty: number;
+      unitPrice: number;
+      total: number;
+      discrepancyId?: string;
+      discrepancyNumber?: string;
+      customerDecision?: string;
+      decisionHistory?: Array<{ decision: string; actorName?: string; decidedAt: number }>;
+    }>;
+    departments?: unknown[];
+  };
   customerId: Id<"customers">;
   onBack: () => void;
 }) {
@@ -43,8 +77,8 @@ function QuoteDetail({
       await approveQuote({ customerId, quoteId: quote._id });
       toast.success("Quote approved successfully.");
       onBack();
-    } catch (e: any) {
-      toast.error(e.message ?? "Failed to approve quote.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to approve quote.");
     } finally {
       setIsApproving(false);
     }
@@ -61,8 +95,8 @@ function QuoteDetail({
       await declineQuote({ customerId, quoteId: quote._id, declineReason: declineReason.trim() });
       toast.success("Quote declined.");
       onBack();
-    } catch (e: any) {
-      toast.error(e.message ?? "Failed to decline quote.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to decline quote.");
     } finally {
       setIsDeclining(false);
     }
@@ -81,8 +115,8 @@ function QuoteDetail({
         decision,
       });
       toast.success(`Line item ${decision}.`);
-    } catch (e: any) {
-      toast.error(e.message ?? "Failed to update line item.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to update line item.");
     } finally {
       setLineItemPendingId(null);
     }
@@ -105,9 +139,28 @@ function QuoteDetail({
                 document={(
                   <QuotePDF
                     orgName="Athelon MRO"
-                    quote={quote}
-                    lineItems={quote.lineItems ?? []}
-                    departments={quote.departments ?? []}
+                    quote={{
+                      quoteNumber: quote.quoteNumber,
+                      createdAt: quote.createdAt,
+                      expiresAt: quote.expiresAt,
+                      status: quote.status,
+                      subtotal: quote.laborTotal + quote.partsTotal,
+                      tax: quote.taxTotal as number,
+                      total: quote.grandTotal as number,
+                    }}
+                    lineItems={(quote.lineItems ?? []).map((li) => ({
+                      _id: li._id,
+                      description: li.description,
+                      qty: li.qty,
+                      unitPrice: li.unitPrice,
+                      total: li.total,
+                      departmentSection: undefined,
+                      customerDecision: li.customerDecision as import("@/components/pdf/QuotePDF").QuotePDFLineItem["customerDecision"],
+                    }))}
+                    departments={((quote.departments ?? []) as Array<Record<string, unknown>>).map((d) => ({
+                      _id: String(d._id ?? ""),
+                      sectionName: String(d.sectionName ?? ""),
+                    }))}
                     customer={null}
                   />
                 )}
@@ -115,29 +168,29 @@ function QuoteDetail({
               <Badge className={STATUS_COLORS[quote.status] ?? ""}>{quote.status}</Badge>
             </div>
           </div>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-muted-foreground">
             {quote.aircraftRegistration} · Created {new Date(quote.createdAt).toLocaleDateString()}
           </p>
         </CardHeader>
 
         <CardContent className="space-y-4">
           <div>
-            <p className="text-sm font-medium text-gray-700 mb-2">Line Items</p>
+            <p className="text-sm font-medium text-foreground mb-2">Line Items</p>
             <div className="border rounded-lg overflow-hidden">
               <table className="w-full text-sm">
-                <thead className="bg-gray-50">
+                <thead className="bg-muted">
                   <tr>
-                    <th className="text-left p-2 font-medium text-gray-600">Description</th>
-                    <th className="text-right p-2 font-medium text-gray-600">Qty</th>
-                    <th className="text-right p-2 font-medium text-gray-600">Unit Price</th>
-                    <th className="text-right p-2 font-medium text-gray-600">Total</th>
-                    {quote.status === "SENT" && quote.lineItems.some((li: any) => li.discrepancyId) && (
-                      <th className="text-center p-2 font-medium text-gray-600">Decision</th>
+                    <th className="text-left p-2 font-medium text-muted-foreground">Description</th>
+                    <th className="text-right p-2 font-medium text-muted-foreground">Qty</th>
+                    <th className="text-right p-2 font-medium text-muted-foreground">Unit Price</th>
+                    <th className="text-right p-2 font-medium text-muted-foreground">Total</th>
+                    {quote.status === "SENT" && quote.lineItems.some((li) => li.discrepancyId) && (
+                      <th className="text-center p-2 font-medium text-muted-foreground">Decision</th>
                     )}
                   </tr>
                 </thead>
                 <tbody>
-                  {quote.lineItems.map((li: any) => (
+                  {quote.lineItems.map((li) => (
                     <tr key={li._id} className="border-t">
                       <td className="p-2">
                         <div>
@@ -157,8 +210,8 @@ function QuoteDetail({
                           )}
                           {Array.isArray(li.decisionHistory) && li.decisionHistory.length > 0 && (
                             <div className="mt-1 space-y-0.5">
-                              {li.decisionHistory.slice(0, 2).map((event: any, idx: number) => (
-                                <p key={idx} className="text-[11px] text-gray-500">
+                              {li.decisionHistory.slice(0, 2).map((event, idx) => (
+                                <p key={idx} className="text-[11px] text-muted-foreground">
                                   {event.decision} · {event.actorName ?? "Unknown"} · {new Date(event.decidedAt).toLocaleString()}
                                 </p>
                               ))}
@@ -209,17 +262,17 @@ function QuoteDetail({
             </div>
           </div>
 
-          <div className="bg-gray-50 rounded-lg p-4 space-y-1 text-sm">
+          <div className="bg-muted rounded-lg p-4 space-y-1 text-sm">
             <div className="flex justify-between">
-              <span className="text-gray-500">Labor</span>
+              <span className="text-muted-foreground">Labor</span>
               <span>${quote.laborTotal.toFixed(2)}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-500">Parts</span>
+              <span className="text-muted-foreground">Parts</span>
               <span>${quote.partsTotal.toFixed(2)}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-500">Tax</span>
+              <span className="text-muted-foreground">Tax</span>
               <span>${quote.tax.toFixed(2)}</span>
             </div>
             <div className="flex justify-between font-bold text-base pt-2 border-t">
@@ -251,7 +304,7 @@ function QuoteDetail({
               ) : (
                 <div className="space-y-2">
                   <textarea
-                    className="w-full border rounded-lg p-2 text-sm"
+                    className="w-full border rounded-lg p-2 text-sm bg-background text-foreground"
                     placeholder="Reason for declining..."
                     value={declineReason}
                     onChange={(e) => setDeclineReason(e.target.value)}
@@ -278,7 +331,7 @@ function QuoteDetail({
           )}
 
           {quote.expiresAt && (
-            <p className="text-xs text-gray-400 text-center">
+            <p className="text-xs text-muted-foreground text-center">
               Expires {new Date(quote.expiresAt).toLocaleDateString()}
             </p>
           )}
@@ -291,16 +344,38 @@ function QuoteDetail({
 export default function CustomerQuotesPage() {
   const customerId = usePortalCustomerId();
   const [selectedQuoteId, setSelectedQuoteId] = useState<Id<"quotes"> | null>(null);
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
 
   const quotes = useQuery(api.customerPortal.listCustomerQuotes, customerId ? { customerId } : "skip");
 
   const selectedQuote = useMemo(
-    () => quotes?.find((q: any) => q._id === selectedQuoteId) ?? null,
+    () => quotes?.find((q) => q._id === selectedQuoteId) ?? null,
     [quotes, selectedQuoteId],
   );
 
+  const pendingQuotes = useMemo(
+    () => quotes?.filter((q) => q.status === "SENT") ?? [],
+    [quotes],
+  );
+
+  const filteredQuotes = useMemo(() => {
+    if (!quotes) return [];
+    if (statusFilter === "ALL") return quotes;
+    return quotes.filter((q) => q.status === statusFilter);
+  }, [quotes, statusFilter]);
+
   if (!customerId) {
-    return <p className="text-center text-gray-500 py-16">No customer account linked.</p>;
+    return (
+      <div className="flex flex-col items-center justify-center py-16 gap-4 text-center px-4">
+        <AlertCircle className="w-10 h-10 text-muted-foreground" />
+        <div>
+          <p className="font-semibold text-foreground text-lg">No customer account linked</p>
+          <p className="text-muted-foreground mt-1 max-w-md">
+            Your account is not linked to a customer profile. Contact your MRO provider to set up your portal access.
+          </p>
+        </div>
+      </div>
+    );
   }
 
   if (selectedQuote) {
@@ -323,17 +398,57 @@ export default function CustomerQuotesPage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-bold text-gray-900">Quotes</h1>
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <h1 className="text-2xl font-bold text-foreground">Quotes</h1>
+        <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as StatusFilter)}>
+          <SelectTrigger className="w-40">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="ALL">All statuses</SelectItem>
+            <SelectItem value="SENT">Pending Approval</SelectItem>
+            <SelectItem value="APPROVED">Approved</SelectItem>
+            <SelectItem value="DECLINED">Declined</SelectItem>
+            <SelectItem value="CONVERTED">Converted</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
-      {quotes.length === 0 ? (
+      {pendingQuotes.length > 0 && statusFilter === "ALL" && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
+          <p className="text-sm font-semibold text-amber-800 mb-2">
+            {pendingQuotes.length} quote{pendingQuotes.length > 1 ? "s" : ""} pending your approval
+          </p>
+          <div className="space-y-2">
+            {pendingQuotes.map((quote) => (
+              <button
+                key={quote._id}
+                type="button"
+                className="w-full text-left rounded-md border border-amber-200 bg-white px-3 py-2 text-sm hover:bg-amber-50 transition-colors"
+                onClick={() => setSelectedQuoteId(quote._id)}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-semibold">{quote.quoteNumber}</span>
+                  <span className="text-muted-foreground">${(quote.total as number).toFixed(2)}</span>
+                </div>
+                <p className="text-muted-foreground text-xs mt-0.5">{quote.aircraftRegistration as string}</p>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {filteredQuotes.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center">
-            <p className="text-gray-500">No quotes found.</p>
+            <p className="text-muted-foreground">
+              {statusFilter === "ALL" ? "No quotes found." : `No ${statusFilter.toLowerCase()} quotes.`}
+            </p>
           </CardContent>
         </Card>
       ) : (
         <div className="space-y-3">
-          {quotes.map((quote: any) => (
+          {filteredQuotes.map((quote) => (
             <Card
               key={quote._id}
               className="hover:shadow-md transition-shadow cursor-pointer"
@@ -346,9 +461,9 @@ export default function CustomerQuotesPage() {
                       <p className="font-semibold text-sm">{quote.quoteNumber}</p>
                       <Badge className={STATUS_COLORS[quote.status] ?? ""}>{quote.status}</Badge>
                     </div>
-                    <p className="text-sm text-gray-500 mt-1">{quote.aircraftRegistration}</p>
-                    <p className="text-xs text-gray-400">
-                      {new Date(quote.createdAt).toLocaleDateString()} · ${quote.total.toFixed(2)}
+                    <p className="text-sm text-muted-foreground mt-1">{quote.aircraftRegistration as string}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(quote.createdAt).toLocaleDateString()} · ${(quote.total as number).toFixed(2)}
                     </p>
                   </div>
                   {quote.status === "SENT" && (

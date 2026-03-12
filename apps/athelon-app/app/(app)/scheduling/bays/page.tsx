@@ -30,6 +30,7 @@ import { Plus, Warehouse, PlaneTakeoff, Wrench, X, Loader2 } from "lucide-react"
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import { ActionableEmptyState } from "@/components/zero-state/ActionableEmptyState";
+import { SchedulingSubNav } from "../_components/SchedulingSubNav";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPES
@@ -342,27 +343,7 @@ export default function BaysPage() {
 
   return (
     <div className="space-y-6">
-      {/* ── Scheduling Sub-Nav ─────────────────────────────────────────── */}
-      <div className="flex items-center gap-1 flex-wrap border-b border-border/30 pb-2 -mt-1">
-        <Button variant="ghost" size="sm" className="text-xs h-7" asChild>
-          <Link to="/scheduling">Gantt Board</Link>
-        </Button>
-        <Button variant="secondary" size="sm" className="text-xs h-7" asChild>
-          <Link to="/scheduling/bays">Bays</Link>
-        </Button>
-        <Button variant="ghost" size="sm" className="text-xs h-7" asChild>
-          <Link to="/scheduling/capacity">Capacity</Link>
-        </Button>
-        <Button variant="ghost" size="sm" className="text-xs h-7" asChild>
-          <Link to="/scheduling/roster">Roster & Teams</Link>
-        </Button>
-        <Button variant="ghost" size="sm" className="text-xs h-7" asChild>
-          <Link to="/scheduling/financial-planning">Financial Planning</Link>
-        </Button>
-        <Button variant="ghost" size="sm" className="text-xs h-7" asChild>
-          <Link to="/scheduling/quotes">Quote Workspace</Link>
-        </Button>
-      </div>
+      <SchedulingSubNav />
 
       {/* Header */}
       <div className="flex items-start justify-between gap-3">

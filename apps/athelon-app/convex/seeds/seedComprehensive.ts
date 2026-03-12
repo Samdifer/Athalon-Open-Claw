@@ -12,6 +12,10 @@
 import { mutation, query } from "../_generated/server";
 import type { Id } from "../_generated/dataModel";
 import { v } from "convex/values";
+import { seedWave1and2 } from "./_wave1_wave2";
+import { seedWave3, seedWave4 } from "./_wave3_wave4";
+import { seedWave5, seedWave6 } from "./_wave5_wave6";
+import { seedWave7, seedWave8 } from "./_wave7_wave8";
 
 // ─── Time constants ──────────────────────────────────────────────────────────
 const DAY = 86_400_000;
@@ -891,6 +895,7 @@ export const seedComprehensive = mutation({
     const closedWOIds: Id<"workOrders">[] = [];
     let authEventCounter = 0;
     let mainRecSeqByAircraft: Record<number, number> = {};
+    const maintenanceRecordIdsList: Id<"maintenanceRecords">[] = [];
     let inspRecSeqByAircraft: Record<number, number> = {};
 
     // Helper: create pre-consumed auth event
@@ -1092,6 +1097,8 @@ export const seedComprehensive = mutation({
         discrepanciesCorrected: discrepancyIds,
         createdAt: closedAt - HOUR,
       });
+
+      maintenanceRecordIdsList.push(mrId);
 
       // Inspection Record (for inspection-type WOs)
       let inspectionRecordId: Id<"inspectionRecords"> | undefined;
@@ -1499,7 +1506,7 @@ export const seedComprehensive = mutation({
                 complianceDate: M2,
                 aircraftHoursAtCompliance: ac.tt - 30,
                 technicianId: techMap["CAMG-005"],
-                maintenanceRecordId: closedWOIds[0] as unknown as Id<"maintenanceRecords">, // placeholder
+                maintenanceRecordId: maintenanceRecordIdsList[0],
                 complianceMethodUsed: "Inspection per AD requirements",
               }]
             : [],
@@ -1717,6 +1724,37 @@ export const seedComprehensive = mutation({
     }
 
     // ══════════════════════════════════════════════════════════════════════
+    // Extended seed waves (95+ additional tables)
+    // ══════════════════════════════════════════════════════════════════════
+    const seedIds = {
+      orgId,
+      clerkUserId: args.clerkUserId,
+      now,
+      DAY,
+      HOUR,
+      MINUTE,
+      techMap,
+      certNumbers,
+      customerIds,
+      aircraftIds,
+      vendorIds,
+      hangarBayIds,
+      partIds,
+      closedWOIds,
+      activeWOIds,
+      locationMap,
+      aircraftTotalTimes: AIRCRAFT_SEED.map((a) => a.tt),
+    };
+
+    await seedWave1and2(ctx, seedIds);
+    await seedWave3(ctx, seedIds);
+    await seedWave4(ctx, seedIds);
+    await seedWave5(ctx, seedIds);
+    await seedWave6(ctx, seedIds);
+    await seedWave7(ctx, seedIds);
+    await seedWave8(ctx, seedIds);
+
+    // ══════════════════════════════════════════════════════════════════════
     // Return summary
     // ══════════════════════════════════════════════════════════════════════
     return {
@@ -1760,6 +1798,7 @@ export const verifySeedComprehensive = query({
 
     const counts: Record<string, number> = {};
     const tables = [
+      // Original seed tables
       "organizations", "shopLocations", "technicians", "certificates",
       "customers", "aircraft", "engines", "propellers", "vendors",
       "hangarBays", "testEquipment", "parts", "workOrders", "taskCards",
@@ -1768,6 +1807,38 @@ export const verifySeedComprehensive = query({
       "scheduleAssignments", "quotes", "quoteLineItems", "invoices",
       "invoiceLineItems", "payments", "airworthinessDirectives", "adCompliance",
       "notifications", "trainingRecords", "toolRecords", "rotables", "loanerItems",
+      // Wave 1-2: WO operational depth & completion records
+      "workOrderParts", "taskAssignments", "carryForwardItems", "turnoverReports",
+      "leadAssignments", "workItemEntries", "eightOneThirtyRecords",
+      "releaseCertificates", "conformityInspections", "inductionRecords",
+      // Wave 3: Quoting & billing
+      "pricingRules", "taxRates", "pricingProfiles", "creditMemos",
+      "customerTaxExemptions", "recurringBillingTemplates", "customerDeposits",
+      "orgCounters", "quoteDepartments", "quoteTemplates", "shopSettings",
+      "orgBillingSettings",
+      // Wave 4: CRM & customer portal
+      "customerNotes", "customerRequests", "crmContacts", "crmInteractions",
+      "crmOpportunities", "crmHealthSnapshots", "prospectNotes",
+      // Wave 5: Parts & inventory
+      "warehouses", "warehouseAreas", "warehouseShelves", "warehouseShelfLocations",
+      "warehouseBins", "lots", "partHistory", "partsRequests", "inventoryCounts",
+      "inventoryCountItems", "warrantyClaims", "coreTracking", "otcSales",
+      "otcSaleItems",
+      // Wave 6: Training & OJT
+      "technicianTraining", "qualificationRequirements", "ojtCurricula",
+      "ojtCurriculumSections", "ojtTasks", "ojtJackets", "ojtStageEvents",
+      "ojtTrainerAuthorizations", "ojtTrainingGoals", "ojtAuthorizations",
+      "ojtEnrollmentRoster", "maintenancePrograms",
+      // Wave 7: Vendor services & templates
+      "vendorServices", "taskCardVendorServices", "routingTemplates", "laborKits",
+      "inspectionTemplates", "evidenceChecklistTemplates",
+      "workOrderEvidenceChecklistItems", "tagCategories", "tags", "subtags",
+      "partTags",
+      // Wave 8: Scheduling & settings
+      "schedulingSettings", "schedulingHolidays", "stationSupportedAircraft",
+      "workOrderStageConfigs", "stationTimelineCursorConfig",
+      "planningFinancialSettings", "planningScenarios", "notificationPreferences",
+      "technicianShifts", "maintenancePredictions",
     ] as const;
 
     for (const table of tables) {

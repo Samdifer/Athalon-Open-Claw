@@ -5,10 +5,12 @@ import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import { usePagePrereqs } from "@/hooks/usePagePrereqs";
+import { useRbac } from "@/hooks/useRbac";
 import { ActionableEmptyState } from "@/components/zero-state/ActionableEmptyState";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ShieldOff } from "lucide-react";
 
 const PARTS_CONTRACT = {
   consumables_hardware: 18,
@@ -46,6 +48,7 @@ function PassBadge({ pass }: { pass: boolean }) {
 
 export default function SeedAuditPage() {
   const { isLoaded } = useCurrentOrg();
+  const { isAdmin } = useRbac();
 
   const coverage = useQuery(api.seedAudit.getRepairStationSeedCoverage, {});
   const gaps = useQuery(api.seedAudit.getSchedulerParityGaps, {});
@@ -54,6 +57,18 @@ export default function SeedAuditPage() {
     requiresOrg: true,
     isDataLoading: !isLoaded || coverage === undefined || gaps === undefined,
   });
+
+  if (isLoaded && !isAdmin) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
+        <ShieldOff className="h-10 w-10 text-muted-foreground" />
+        <h2 className="text-lg font-semibold">Access Denied</h2>
+        <p className="text-sm text-muted-foreground max-w-sm">
+          The Seed Audit page is restricted to administrators. Contact your shop admin if you need access.
+        </p>
+      </div>
+    );
+  }
 
   const openGaps = useMemo(
     () => (gaps ?? []).filter((gap) => (gap.status ?? "open") !== "resolved"),

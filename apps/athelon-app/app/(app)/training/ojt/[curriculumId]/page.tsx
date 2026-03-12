@@ -22,6 +22,16 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -62,6 +72,8 @@ export default function OjtCurriculumDetailPage() {
   const [editingSection, setEditingSection] = useState<Section | null>(null);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [taskSectionId, setTaskSectionId] = useState<Id<"ojtCurriculumSections"> | null>(null);
+  const [deleteSectionTarget, setDeleteSectionTarget] = useState<Section | null>(null);
+  const [deleteTaskTarget, setDeleteTaskTarget] = useState<Task | null>(null);
 
   const [sectionName, setSectionName] = useState("");
   const [sectionDescription, setSectionDescription] = useState("");
@@ -235,14 +247,7 @@ export default function OjtCurriculumDetailPage() {
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={async () => {
-                        try {
-                          await deleteSection({ id: section._id });
-                          toast.success("Section deleted");
-                        } catch (error) {
-                          toast.error(error instanceof Error ? error.message : "Failed to delete section");
-                        }
-                      }}
+                      onClick={() => setDeleteSectionTarget(section)}
                     ><Trash2 className="h-4 w-4" /></Button>
                     <Button size="sm" onClick={() => {
                       setTaskSectionId(section._id);
@@ -288,14 +293,7 @@ export default function OjtCurriculumDetailPage() {
                             setApprovedDataRef(task.approvedDataRef ?? "");
                             setShowTaskDialog(true);
                           }}><Pencil className="h-4 w-4" /></Button>
-                          <Button size="sm" variant="outline" onClick={async () => {
-                            try {
-                              await deleteTask({ id: task._id });
-                              toast.success("Task deleted");
-                            } catch (error) {
-                              toast.error(error instanceof Error ? error.message : "Failed to delete task");
-                            }
-                          }}><Trash2 className="h-4 w-4" /></Button>
+                          <Button size="sm" variant="outline" onClick={() => setDeleteTaskTarget(task)}><Trash2 className="h-4 w-4" /></Button>
                         </div>
                       </div>
                     </div>
@@ -366,6 +364,64 @@ export default function OjtCurriculumDetailPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={deleteSectionTarget !== null} onOpenChange={(open) => { if (!open) setDeleteSectionTarget(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Section</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete the section &ldquo;{deleteSectionTarget?.name}&rdquo;? All tasks within this section will also be deleted. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                if (!deleteSectionTarget) return;
+                try {
+                  await deleteSection({ id: deleteSectionTarget._id });
+                  toast.success("Section deleted");
+                } catch (error) {
+                  toast.error(error instanceof Error ? error.message : "Failed to delete section");
+                } finally {
+                  setDeleteSectionTarget(null);
+                }
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={deleteTaskTarget !== null} onOpenChange={(open) => { if (!open) setDeleteTaskTarget(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Task</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete the task &ldquo;{deleteTaskTarget?.description}&rdquo;? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                if (!deleteTaskTarget) return;
+                try {
+                  await deleteTask({ id: deleteTaskTarget._id });
+                  toast.success("Task deleted");
+                } catch (error) {
+                  toast.error(error instanceof Error ? error.message : "Failed to delete task");
+                } finally {
+                  setDeleteTaskTarget(null);
+                }
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

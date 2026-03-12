@@ -13,6 +13,7 @@ import {
   TrendingUp,
   Filter,
   Lock,
+  Clock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -35,8 +36,8 @@ function MyWorkSkeleton() {
         <Skeleton className="h-6 w-28" />
         <Skeleton className="h-4 w-48" />
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        {Array.from({ length: 3 }).map((_, i) => (
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+        {Array.from({ length: 4 }).map((_, i) => (
           <Skeleton key={i} className="h-20 rounded-lg" />
         ))}
       </div>
@@ -129,6 +130,9 @@ export default function MyWorkPage() {
   });
 
   const inProgressCount = cards.filter((c) => c.status === "in_progress").length;
+  const overdueCount = cards.filter(
+    (c) => c.scheduleRisk === "overdue" && c.status !== "complete" && c.status !== "voided",
+  ).length;
   // Only count pending steps on active cards (exclude voided/complete)
   const totalPendingSteps = cards
     .filter((c) => c.status !== "voided" && c.status !== "complete")
@@ -167,7 +171,7 @@ export default function MyWorkPage() {
       </div>
 
       {/* Summary stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
         <Card className="border-border/60">
           <CardContent className="p-4">
             <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide mb-1">
@@ -198,6 +202,21 @@ export default function MyWorkPage() {
             </p>
             <p className="text-xs text-muted-foreground mt-0.5">
               steps remaining
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className={`border-border/60 ${overdueCount > 0 ? "border-red-500/30" : ""}`}>
+          <CardContent className="p-4">
+            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide mb-1 flex items-center gap-1">
+              <Clock className="w-3 h-3 flex-shrink-0" />
+              Overdue
+            </p>
+            <p className={`text-2xl font-bold ${overdueCount > 0 ? "text-red-600 dark:text-red-400" : "text-foreground"}`}>
+              {overdueCount}
+            </p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              past due date
             </p>
           </CardContent>
         </Card>

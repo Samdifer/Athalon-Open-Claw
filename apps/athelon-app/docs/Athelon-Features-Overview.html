@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Athelon — MRO Platform Features Overview</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+  :root {
+    --brand: #1e3a5f;
+    --brand-light: #2d5a8e;
+    --accent: #e8913a;
+    --accent-light: #f4a94d;
+    --bg: #ffffff;
+    --text: #1a1a2e;
+    --muted: #64748b;
+    --card-bg: #f8fafc;
+    --border: #e2e8f0;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  @page {
+    size: letter;
+    margin: 0.4in 0.5in;
+  }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    color: var(--text);
+    background: var(--bg);
+    line-height: 1.4;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 0 16px;
+    border-bottom: 3px solid var(--brand);
+    margin-bottom: 16px;
+  }
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .logo-mark {
+    width: 48px;
+    height: 48px;
+    background: var(--brand);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .logo-mark svg { width: 28px; height: 28px; }
+  .brand-name {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--brand);
+    letter-spacing: -0.5px;
+  }
+  .brand-tag {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--muted);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-top: 1px;
+  }
+  .header-right {
+    text-align: right;
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    background: linear-gradient(135deg, var(--brand) 0%, var(--brand-light) 100%);
+    color: white;
+    padding: 18px 24px;
+    border-radius: 10px;
+    margin-bottom: 16px;
+  }
+  .hero h2 {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .hero p {
+    font-size: 11.5px;
+    line-height: 1.55;
+    opacity: 0.92;
+    max-width: 680px;
+  }
+  .hero-stats {
+    display: flex;
+    gap: 28px;
+    margin-top: 12px;
+  }
+  .hero-stat {
+    text-align: center;
+  }
+  .hero-stat .num {
+    font-size: 22px;
+    font-weight: 800;
+  }
+  .hero-stat .label {
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    opacity: 0.8;
+  }
+
+  /* ── GRID ── */
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .feature-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    position: relative;
+    overflow: hidden;
+  }
+  .feature-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 3px;
+    height: 100%;
+    background: var(--brand);
+    border-radius: 8px 0 0 8px;
+  }
+  .feature-card.accent::before {
+    background: var(--accent);
+  }
+  .card-header {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin-bottom: 5px;
+  }
+  .card-icon {
+    width: 22px;
+    height: 22px;
+    background: var(--brand);
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .feature-card.accent .card-icon {
+    background: var(--accent);
+  }
+  .card-icon svg {
+    width: 13px;
+    height: 13px;
+    stroke: white;
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .card-title {
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--brand);
+  }
+  .feature-card.accent .card-title {
+    color: #b5700e;
+  }
+  .card-body {
+    font-size: 9.5px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+  .card-body ul {
+    list-style: none;
+    padding: 0;
+  }
+  .card-body li {
+    padding-left: 10px;
+    position: relative;
+    margin-bottom: 1px;
+  }
+  .card-body li::before {
+    content: '\2022';
+    position: absolute;
+    left: 0;
+    color: var(--brand);
+    font-weight: bold;
+  }
+  .feature-card.accent .card-body li::before {
+    color: var(--accent);
+  }
+
+  /* ── BOTTOM BAR ── */
+  .bottom-bar {
+    display: flex;
+    align-items: stretch;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .bottom-card {
+    flex: 1;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+  }
+  .bottom-card h4 {
+    font-size: 10.5px;
+    font-weight: 700;
+    color: var(--brand);
+    margin-bottom: 5px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+  .bottom-card p, .bottom-card li {
+    font-size: 9.5px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+  .bottom-card ul {
+    list-style: none;
+    padding: 0;
+  }
+  .bottom-card li {
+    padding-left: 10px;
+    position: relative;
+    margin-bottom: 1px;
+  }
+  .bottom-card li::before {
+    content: '\2713';
+    position: absolute;
+    left: 0;
+    color: var(--brand);
+    font-weight: bold;
+    font-size: 9px;
+  }
+
+  /* ── PAGE 2 ── */
+  .page-break {
+    page-break-before: always;
+    padding-top: 8px;
+  }
+  .page2-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--border);
+    margin-bottom: 16px;
+  }
+  .page2-header .brand-name {
+    font-size: 18px;
+  }
+  .page2-header .page-label {
+    font-size: 10px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .section-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--brand);
+    margin-bottom: 10px;
+    padding-bottom: 4px;
+    border-bottom: 2px solid var(--accent);
+    display: inline-block;
+  }
+
+  .portal-section {
+    background: linear-gradient(135deg, #fef7ee 0%, #fff5eb 100%);
+    border: 1px solid #f0d4a8;
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin-bottom: 16px;
+  }
+  .portal-section h3 {
+    font-size: 13px;
+    font-weight: 700;
+    color: #92600a;
+    margin-bottom: 8px;
+  }
+  .portal-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+  .portal-item {
+    background: white;
+    border-radius: 6px;
+    padding: 10px 12px;
+    border: 1px solid #f0d4a8;
+  }
+  .portal-item h5 {
+    font-size: 10.5px;
+    font-weight: 700;
+    color: #92600a;
+    margin-bottom: 3px;
+  }
+  .portal-item p {
+    font-size: 9px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  .differentiators {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .diff-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+  }
+  .diff-card h4 {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--brand);
+    margin-bottom: 4px;
+  }
+  .diff-card p {
+    font-size: 9.5px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  .role-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .role-pill {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 10px;
+    text-align: center;
+  }
+  .role-pill .role-name {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--brand);
+  }
+  .role-pill .role-desc {
+    font-size: 8.5px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  /* ── FOOTER ── */
+  .footer {
+    border-top: 2px solid var(--brand);
+    padding-top: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: auto;
+  }
+  .footer-left {
+    font-size: 10px;
+    color: var(--muted);
+  }
+  .footer-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 10px;
+    color: var(--muted);
+  }
+  .footer-cta {
+    background: var(--brand);
+    color: white;
+    padding: 6px 16px;
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 600;
+    text-decoration: none;
+  }
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════ PAGE 1 ════════════════════════ -->
+
+<div class="header">
+  <div class="header-left">
+    <div class="logo-mark">
+      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+      </svg>
+    </div>
+    <div>
+      <div class="brand-name">Athelon</div>
+      <div class="brand-tag">FAA Part 145 MRO Platform</div>
+    </div>
+  </div>
+  <div class="header-right">
+    Features Overview<br>
+    Cloud-Native Aircraft Maintenance Software
+  </div>
+</div>
+
+<div class="hero">
+  <h2>The Complete Operating System for Your Repair Station</h2>
+  <p>Athelon replaces fragmented spreadsheets, legacy software, and paper logs with a single, modern platform purpose-built for FAA Part 145 repair stations. From intake to release, every workflow is connected, compliant, and visible in real time.</p>
+  <div class="hero-stats">
+    <div class="hero-stat"><div class="num">130+</div><div class="label">Feature Screens</div></div>
+    <div class="hero-stat"><div class="num">8</div><div class="label">Role-Based Views</div></div>
+    <div class="hero-stat"><div class="num">14</div><div class="label">Core Modules</div></div>
+    <div class="hero-stat"><div class="num">100%</div><div class="label">Cloud-Native</div></div>
+  </div>
+</div>
+
+<div class="features-grid">
+
+  <!-- Card 1: Work Orders -->
+  <div class="feature-card">
+    <div class="card-header">
+      <div class="card-icon">
+        <svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 14l2 2 4-4"/></svg>
+      </div>
+      <div class="card-title">Work Order Management</div>
+    </div>
+    <div class="card-body">
+      <ul>
+        <li>Full lifecycle: intake to RTS release</li>
+        <li>Task cards with sign-off & step tracking</li>
+        <li>Kanban, dashboard & Gantt views</li>
+        <li>Shift handoff with real-time context</li>
+        <li>Document attachments & audit trail</li>
+        <li>Lead workspace for supervisors</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Card 2: Scheduling -->
+  <div class="feature-card">
+    <div class="card-header">
+      <div class="card-icon">
+        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      </div>
+      <div class="card-title">Scheduling & Capacity</div>
+    </div>
+    <div class="card-body">
+      <ul>
+        <li>Drag-and-drop Gantt scheduling</li>
+        <li>Bay assignment & capacity planning</li>
+        <li>Due-list workbench with smart filters</li>
+        <li>Roster & team management</li>
+        <li>AI-assisted schedule optimization</li>
+        <li>Quote workspace with labor estimates</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Card 3: Fleet -->
+  <div class="feature-card">
+    <div class="card-header">
+      <div class="card-icon">
+        <svg viewBox="0 0 24 24"><path d="M17.8 19.2L16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg>
+      </div>
+      <div class="card-title">Fleet Tracking</div>
+    </div>
+    <div class="card-body">
+      <ul>
+        <li>Aircraft profiles with full maintenance history</li>
+        <li>Maintenance program tracking</li>
+        <li>Life-limited parts (LLP) monitoring</li>
+        <li>Predictive maintenance forecasting</li>
+        <li>ADS-B real-time position tracking</li>
+        <li>Fleet calendar & upcoming events</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Card 4: Compliance -->
+  <div class="feature-card accent">
+    <div class="card-header">
+      <div class="card-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
+      </div>
+      <div class="card-title">FAA Compliance Engine</div>
+    </div>
+    <div class="card-body">
+      <ul>
+        <li>AD/SB tracking & applicability analysis</li>
+        <li>Audit readiness dashboard & scoring</li>
+        <li>QCM review workflows with approvals</li>
+        <li>Diamond Award progress tracking</li>
+        <li>Per-task & per-WO compliance items</li>
+        <li>Complete audit trail for every action</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Card 5: Parts & Inventory -->
+  <div class="feature-card">
+    <div class="card-header">
+      <div class="card-icon">
+        <svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+      </div>
+      <div class="card-title">Parts & Inventory</div>
+    </div>
+    <div class="card-body">
+      <ul>
+        <li>Warehouse locations & bin management</li>
+        <li>Receiving inspection & PO receiving</li>
+        <li>Part requests tied to work orders</li>
+        <li>Rotables, loaners & core tracking</li>
+        <li>Lots & batches with full traceability</li>
+        <li>Tool crib, shipping & inventory counts</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Card 6: Billing & Finance -->
+  <div class="feature-card">
+    <div class="card-header">
+      <div class="card-icon">
+        <svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+      </div>
+      <div class="card-title">Billing & Finance</div>
+    </div>
+    <div class="card-body">
+      <ul>
+        <li>Invoicing, credit memos & deposits</li>
+        <li>AR dashboard with aging analysis</li>
+        <li>Time clock & labor approval workflows</li>
+        <li>Purchase orders & counter sales (OTC)</li>
+        <li>Labor kits, pricing & warranty claims</li>
+        <li>QuickBooks integration</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Card 7: CRM & Sales -->
+  <div class="feature-card">
+    <div class="card-header">
+      <div class="card-icon">
+        <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+      </div>
+      <div class="card-title">CRM & Sales Pipeline</div>
+    </div>
+    <div class="card-body">
+      <ul>
+        <li>Account management & contact tracking</li>
+        <li>Visual sales pipeline with deal stages</li>
+        <li>Prospect intelligence (Part 145 & 135)</li>
+        <li>Interaction history & communication log</li>
+        <li>Sales ops dashboard & analytics</li>
+        <li>Sales training & quota tracking</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Card 8: Personnel & Training -->
+  <div class="feature-card">
+    <div class="card-header">
+      <div class="card-icon">
+        <svg viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 6 3 6 3s3 0 6-3v-5"/></svg>
+      </div>
+      <div class="card-title">Personnel & Training</div>
+    </div>
+    <div class="card-body">
+      <ul>
+        <li>Technician roster with certifications</li>
+        <li>Career progression tracking</li>
+        <li>OJT curriculum management</li>
+        <li>Training analytics & compliance</li>
+        <li>Time management & attendance</li>
+        <li>Role-based access for every screen</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Card 9: Reports & Analytics -->
+  <div class="feature-card accent">
+    <div class="card-header">
+      <div class="card-icon">
+        <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      </div>
+      <div class="card-title">Reports & Analytics</div>
+    </div>
+    <div class="card-body">
+      <ul>
+        <li>Financial reports & revenue analysis</li>
+        <li>Cash runway & profitability forecasts</li>
+        <li>Inventory valuation & turnover</li>
+        <li>Shop throughput & efficiency metrics</li>
+        <li>Custom date ranges & export options</li>
+        <li>Role-filtered executive dashboards</li>
+      </ul>
+    </div>
+  </div>
+
+</div>
+
+<div class="bottom-bar">
+  <div class="bottom-card">
+    <h4>Findings & Discrepancies</h4>
+    <ul>
+      <li>Unified squawk & finding management</li>
+      <li>System/origin classification filters</li>
+      <li>Direct linkage to work order tasks</li>
+      <li>Inspection item & RTS flagging</li>
+    </ul>
+  </div>
+  <div class="bottom-card">
+    <h4>Vendor Management</h4>
+    <ul>
+      <li>Vendor directory with service catalog</li>
+      <li>Service provider & supplier types</li>
+      <li>Task-level vendor service assignments</li>
+      <li>Vendor performance visibility</li>
+    </ul>
+  </div>
+  <div class="bottom-card">
+    <h4>Settings & Configuration</h4>
+    <ul>
+      <li>Multi-location station configuration</li>
+      <li>Capabilities list management (OpSpecs)</li>
+      <li>Routing templates for task flows</li>
+      <li>User management & notification prefs</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ════════════════════════ PAGE 2 ════════════════════════ -->
+
+<div class="page-break">
+  <div class="page2-header">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div class="logo-mark" style="width:32px;height:32px;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;">
+          <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+        </svg>
+      </div>
+      <div class="brand-name">Athelon</div>
+    </div>
+    <div class="page-label">Platform Capabilities &mdash; Continued</div>
+  </div>
+</div>
+
+<div class="portal-section">
+  <h3>Customer Portal &mdash; Self-Service for Your Clients</h3>
+  <p style="font-size:10px;color:#92600a;margin-bottom:10px;opacity:0.85;">Give your customers 24/7 visibility into their aircraft maintenance without a single phone call or email.</p>
+  <div class="portal-grid">
+    <div class="portal-item">
+      <h5>Fleet Overview</h5>
+      <p>Customers see their aircraft, current status, and maintenance history in one place.</p>
+    </div>
+    <div class="portal-item">
+      <h5>Work Order Tracking</h5>
+      <p>Real-time progress on active work orders with task-level status updates.</p>
+    </div>
+    <div class="portal-item">
+      <h5>Quotes & Approvals</h5>
+      <p>Review, approve, or request changes to quotes directly from the portal.</p>
+    </div>
+    <div class="portal-item">
+      <h5>Invoice History</h5>
+      <p>Access and download invoices, payment history, and account statements.</p>
+    </div>
+    <div class="portal-item">
+      <h5>Messaging</h5>
+      <p>Threaded communication with your shop team, tied to specific work orders.</p>
+    </div>
+    <div class="portal-item">
+      <h5>Branded Experience</h5>
+      <p>Your logo, your colors &mdash; the portal reflects your repair station&rsquo;s identity.</p>
+    </div>
+  </div>
+</div>
+
+<div class="section-title">What Sets Athelon Apart</div>
+<div class="differentiators">
+  <div class="diff-card">
+    <h4>Built for Part 145 From Day One</h4>
+    <p>Not adapted from generic shop software. Every workflow, field, and approval chain is modeled after real FAA Part 145 repair station operations &mdash; from RTS release to AD compliance.</p>
+  </div>
+  <div class="diff-card">
+    <h4>Real-Time, Cloud-Native Architecture</h4>
+    <p>No overnight syncs. No local installs. Every change propagates instantly across all users. Your team in the hangar and your customer across the country see the same live data.</p>
+  </div>
+  <div class="diff-card">
+    <h4>Role-Based Access for Every Seat</h4>
+    <p>Eight distinct MRO roles &mdash; from admin to read-only &mdash; each with precisely scoped access. Technicians see their tasks. Inspectors see their queues. Managers see everything.</p>
+  </div>
+  <div class="diff-card">
+    <h4>Scheduling Intelligence</h4>
+    <p>AI-powered constraint optimization considers bay availability, technician skills, part lead times, and customer priorities to recommend optimal schedules with full human-in-the-loop control.</p>
+  </div>
+</div>
+
+<div class="section-title">Role-Based Access Control</div>
+<div class="role-grid">
+  <div class="role-pill">
+    <div class="role-name">Admin</div>
+    <div class="role-desc">Full platform access</div>
+  </div>
+  <div class="role-pill">
+    <div class="role-name">Shop Manager</div>
+    <div class="role-desc">Operations & scheduling</div>
+  </div>
+  <div class="role-pill">
+    <div class="role-name">QCM Inspector</div>
+    <div class="role-desc">Compliance & sign-offs</div>
+  </div>
+  <div class="role-pill">
+    <div class="role-name">Billing Manager</div>
+    <div class="role-desc">Finance & invoicing</div>
+  </div>
+  <div class="role-pill">
+    <div class="role-name">Lead Technician</div>
+    <div class="role-desc">Team & task oversight</div>
+  </div>
+  <div class="role-pill">
+    <div class="role-name">Technician</div>
+    <div class="role-desc">Task execution & time</div>
+  </div>
+  <div class="role-pill">
+    <div class="role-name">Parts Clerk</div>
+    <div class="role-desc">Inventory & receiving</div>
+  </div>
+  <div class="role-pill">
+    <div class="role-name">Read Only</div>
+    <div class="role-desc">View-only auditor access</div>
+  </div>
+</div>
+
+<div style="background:var(--card-bg);border:1px solid var(--border);border-radius:8px;padding:14px 20px;margin-bottom:16px;">
+  <div style="display:flex;align-items:flex-start;gap:20px;">
+    <div style="flex:1;">
+      <h4 style="font-size:11px;font-weight:700;color:var(--brand);margin-bottom:6px;">Technical Foundation</h4>
+      <div style="font-size:9.5px;color:var(--muted);line-height:1.6;columns:2;column-gap:20px;">
+        <div style="break-inside:avoid;margin-bottom:2px;">&bull; Real-time database with instant sync</div>
+        <div style="break-inside:avoid;margin-bottom:2px;">&bull; Enterprise SSO & multi-org support</div>
+        <div style="break-inside:avoid;margin-bottom:2px;">&bull; Multi-location station management</div>
+        <div style="break-inside:avoid;margin-bottom:2px;">&bull; QuickBooks accounting integration</div>
+        <div style="break-inside:avoid;margin-bottom:2px;">&bull; ADS-B flight tracking integration</div>
+        <div style="break-inside:avoid;margin-bottom:2px;">&bull; Secure document storage & attachments</div>
+        <div style="break-inside:avoid;margin-bottom:2px;">&bull; Responsive design for shop floor tablets</div>
+        <div style="break-inside:avoid;margin-bottom:2px;">&bull; Zero-install browser-based access</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="footer">
+  <div class="footer-left">
+    &copy; 2026 Athelon. All rights reserved. &nbsp;|&nbsp; Purpose-built for FAA Part 145 repair stations.
+  </div>
+  <div class="footer-right">
+    <span>athelon.io</span>
+    <span class="footer-cta">Request a Demo</span>
+  </div>
+</div>
+
+</body>
+</html>

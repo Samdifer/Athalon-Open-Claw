@@ -23,11 +23,17 @@ import {
   Ban,
   CheckCircle2,
   Clock,
+  GitBranch,
   ShieldAlert,
   SlidersHorizontal,
 } from "lucide-react";
 import type { TATEstimate } from "./TATEstimateBadge";
 import type { SkillGap } from "./SkillWarningBadge";
+import {
+  computeCriticalPath,
+  type CPMItem,
+} from "@/src/shared/lib/scheduling-engine/critical-path";
+import type { MRODependency } from "@/src/shared/lib/scheduling-engine/types";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPES
@@ -227,6 +233,7 @@ export const GanttBoard = memo(function GanttBoard({
 
   const [viewMode, setViewMode] = useState<ViewMode>("day");
   const [showConflicts, setShowConflicts] = useState(true);
+  const [showCriticalPath, setShowCriticalPath] = useState(false);
   const [blockedActionBanner, setBlockedActionBanner] = useState<string | null>(null);
   const [timelineScrollTop, setTimelineScrollTop] = useState(0);
   const [timelineViewportHeight, setTimelineViewportHeight] = useState(0);
@@ -353,6 +360,35 @@ export const GanttBoard = memo(function GanttBoard({
     () => new Map(workOrders.map((wo) => [wo._id, wo])),
     [workOrders],
   );
+
+  // ── Critical path computation (CPM) ──────────────────────────────────
+  const criticalWoIds = useMemo(() => {
+    if (!showCriticalPath || scheduledProjects.length === 0) return new Set<string>();
+
+    // Build CPM items from scheduled WOs
+    const cpmItems: CPMItem[] = scheduledProjects
+      .filter((p) => !["cancelled", "voided"].includes(p.workOrderStatus))
+      .map((p) => ({
+        id: p.workOrderId,
+        startDate: p.scheduledStartDate,
+        dueDate: p.promisedDeliveryDate,
+        priority: p.priority as "aog" | "urgent" | "routine",
+      }));
+
+    if (cpmItems.length === 0) return new Set<string>();
+
+    // No WO-level dependencies yet (Phase 2); CPM will identify items with
+    // zero/negative float (i.e., due date <= start + duration)
+    const deps: MRODependency[] = [];
+
+    try {
+      const result = computeCriticalPath(cpmItems, deps);
+      return result.criticalItemIds;
+    } catch {
+      // CPM may throw on degenerate inputs; degrade gracefully
+      return new Set<string>();
+    }
+  }, [showCriticalPath, scheduledProjects]);
 
   // ── Row model ──────────────────────────────────────────────────────────
   const scheduledByBayId = useMemo(() => {
@@ -848,6 +884,25 @@ export const GanttBoard = memo(function GanttBoard({
           </button>
         )}
 
+        {/* Critical Path toggle */}
+        <button
+          className={`flex items-center gap-1.5 text-xs font-medium rounded-md px-2.5 py-1.5 border transition-colors ${
+            showCriticalPath
+              ? "text-rose-700 dark:text-rose-400 bg-rose-100 dark:bg-rose-950/50 border-rose-300 dark:border-rose-800"
+              : "text-muted-foreground bg-muted/30 border-border/50 hover:bg-muted/50"
+          }`}
+          onClick={() => setShowCriticalPath(!showCriticalPath)}
+          title="Highlight work orders on the critical path (zero float)"
+        >
+          <GitBranch className="w-3.5 h-3.5" />
+          Critical Path
+          {showCriticalPath && criticalWoIds.size > 0 && (
+            <span className="flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-white text-[10px] font-bold">
+              {criticalWoIds.size}
+            </span>
+          )}
+        </button>
+
         {/* Conflict toggle */}
         {conflicts && conflicts.length > 0 && (
           <button
@@ -1242,9 +1297,10 @@ export const GanttBoard = memo(function GanttBoard({
                   const barWidth = Math.max(cellWidth, (endDayIdx - startDayIdx) * cellWidth);
                   const barTop = (ROW_HEIGHT - BAR_HEIGHT) / 2;
                   const isConflict = conflictWoIds.has(wo.workOrderId);
-                  const isMagicSelected = selectedMagicWorkOrderIds.includes(wo.workOrderId);
-                  const interactionPaused = isEditMode || magicSelectionMode;
                   const mapped = workOrderMap.get(wo.workOrderId);
+                  const resolvedWorkOrderId = String(mapped?._id ?? wo.workOrderId);
+                  const isMagicSelected = selectedMagicWorkOrderIds.includes(resolvedWorkOrderId);
+                  const interactionPaused = isEditMode || magicSelectionMode;
                   const dayEffortMap = new Map<number, number>(
                     (wo.dailyEffort ?? []).map((row) => [row.dayOffset, row.effortHours]),
                   );
@@ -1257,9 +1313,12 @@ export const GanttBoard = memo(function GanttBoard({
                       nonWorkDaySet.has(offset) ? 0 : Math.max(0, dayEffortMap.get(offset) ?? 0),
                     ),
                   );
+                  const isCritical = showCriticalPath && criticalWoIds.has(wo.workOrderId);
                   const colorClass = isConflict
                     ? "bg-red-500/70 border-2 border-red-400 text-white ring-2 ring-red-400/50"
-                    : getBarColor(
+                    : isCritical
+                      ? "bg-rose-600/80 border-2 border-rose-400 text-white ring-1 ring-rose-400/60"
+                      : getBarColor(
                         mapped ?? {
                           _id: wo.workOrderId,
                           workOrderNumber: wo.workOrderNumber,
@@ -1303,19 +1362,19 @@ export const GanttBoard = memo(function GanttBoard({
                         touchAction: "none",
                       }}
                       onPointerDown={(e) => {
-                        if (interactionPaused) {
+                        if (magicSelectionMode) {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          onToggleMagicWorkOrder?.(resolvedWorkOrderId);
+                          return;
+                        }
+                        if (isEditMode) {
                           notifyBlockedAction(
-                            "Drag/resize is currently blocked. Exit edit or board-selection mode first.",
+                            "Drag/resize is currently blocked. Exit edit mode first.",
                           );
                           return;
                         }
                         handlePointerDown(e, wo, "move");
-                      }}
-                      onClick={(e) => {
-                        if (!magicSelectionMode) return;
-                        e.preventDefault();
-                        e.stopPropagation();
-                        onToggleMagicWorkOrder?.(wo.workOrderId);
                       }}
                       onDoubleClick={() => {
                         if (interactionPaused || magicSelectionMode) {
@@ -1324,7 +1383,7 @@ export const GanttBoard = memo(function GanttBoard({
                           );
                           return;
                         }
-                        navigate(`/work-orders/${wo.workOrderId}`);
+                        navigate(`/work-orders/${resolvedWorkOrderId}`);
                       }}
                       title={`${wo.workOrderNumber} — ${wo.aircraft?.currentRegistration ?? ""} — ${wo.description}${wo.quoteNumber ? ` — ${wo.quoteNumber}` : ""}`}
                       data-testid={`gantt-bar-${wo.assignmentId}`}

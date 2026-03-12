@@ -131,14 +131,14 @@ test.describe("Work Order Lifecycle Guard (WRL)", () => {
 
     await addTaskLink.click();
     const taskCreateFormVisible = await page
-      .getByRole("heading", { name: /New Task Card/i })
+      .getByRole("heading", { name: /New (Task|Work) Card/i })
       .isVisible({ timeout: 5_000 })
       .catch(() => false);
     if (taskCreateFormVisible) {
       await expect(page.locator("label:has-text('Step description')").first()).toBeVisible();
       await expect(page.getByRole("button", { name: /Create Task Card/i })).toBeVisible();
     } else {
-      await expect(page.getByText(/Cannot add task cards/i)).toBeVisible();
+      await expect(page.getByText(/Cannot add (task|work) cards?/i)).toBeVisible();
     }
 
     await page.goto(`/work-orders/${workOrderId}/records`, {

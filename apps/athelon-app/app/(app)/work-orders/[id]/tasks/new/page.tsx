@@ -42,6 +42,7 @@ import {
 } from "@/components/ui/dialog";
 import { TaskCardForm, type TaskType, type AircraftSystem } from "./_components/TaskCardForm";
 import { StepBuilder, type StepDraft } from "./_components/StepBuilder";
+import { WOBreadcrumb } from "../../_components/WOBreadcrumb";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -416,6 +417,13 @@ export default function NewTaskCardPage() {
   return (
     <>
       <form onSubmit={handleSubmit} className="max-w-2xl mx-auto space-y-6">
+        {/* Breadcrumb */}
+        <WOBreadcrumb
+          woId={workOrderId}
+          woNumber={woData.workOrderNumber}
+          pageName="New Work Card"
+        />
+
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center gap-3">
           <Button asChild variant="ghost" size="sm" className="h-8 gap-1.5 text-xs">

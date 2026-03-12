@@ -871,6 +871,58 @@ export const listTaxRates = query({
   },
 });
 
+export const updateTaxRate = mutation({
+  args: {
+    taxRateId: v.id("taxRates"),
+    orgId: v.id("organizations"),
+    name: v.optional(v.string()),
+    rate: v.optional(v.number()),
+    appliesTo: v.optional(v.union(v.literal("parts"), v.literal("labor"), v.literal("all"))),
+    isDefault: v.optional(v.boolean()),
+    active: v.optional(v.boolean()),
+  },
+  handler: async (ctx, args) => {
+    await requireAuth(ctx);
+    const now = Date.now();
+    const taxRate = await ctx.db.get(args.taxRateId);
+    if (!taxRate) throw new Error(`Tax rate ${args.taxRateId} not found.`);
+    if (taxRate.orgId !== args.orgId) throw new Error("Tax rate does not belong to this organization.");
+
+    if (args.isDefault) {
+      const existing = await ctx.db
+        .query("taxRates")
+        .withIndex("by_org", (q) => q.eq("orgId", args.orgId))
+        .collect();
+      for (const tr of existing.filter((t) => t.isDefault && t._id !== args.taxRateId)) {
+        await ctx.db.patch(tr._id, { isDefault: false, updatedAt: now });
+      }
+    }
+
+    const patch: Record<string, string | number | boolean> = { updatedAt: now };
+    if (args.name !== undefined) patch.name = args.name.trim();
+    if (args.rate !== undefined) patch.rate = args.rate;
+    if (args.appliesTo !== undefined) patch.appliesTo = args.appliesTo;
+    if (args.isDefault !== undefined) patch.isDefault = args.isDefault;
+    if (args.active !== undefined) patch.active = args.active;
+
+    await ctx.db.patch(args.taxRateId, patch);
+  },
+});
+
+export const deleteTaxRate = mutation({
+  args: {
+    taxRateId: v.id("taxRates"),
+    orgId: v.id("organizations"),
+  },
+  handler: async (ctx, args) => {
+    await requireAuth(ctx);
+    const taxRate = await ctx.db.get(args.taxRateId);
+    if (!taxRate) throw new Error(`Tax rate ${args.taxRateId} not found.`);
+    if (taxRate.orgId !== args.orgId) throw new Error("Tax rate does not belong to this organization.");
+    await ctx.db.delete(args.taxRateId);
+  },
+});
+
 export const computeTaxForInvoice = query({
   args: { orgId: v.id("organizations"), invoiceId: v.id("invoices") },
   handler: async (ctx, args) => {

@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { usePortalCustomerId } from "@/hooks/usePortalCustomerId";
-import { ChevronDown, ChevronUp, Plane, Wrench } from "lucide-react";
+import { AlertCircle, ChevronDown, ChevronUp, Plane, Wrench } from "lucide-react";
 import type { Id } from "@/convex/_generated/dataModel";
 
 const STATUS_COLORS: Record<string, string> = {
@@ -29,9 +29,15 @@ export default function CustomerFleetPage() {
 
   if (!customerId) {
     return (
-      <p className="text-center text-gray-500 py-16">
-        No customer account linked.
-      </p>
+      <div className="flex flex-col items-center justify-center py-16 gap-4 text-center px-4">
+        <AlertCircle className="w-10 h-10 text-muted-foreground" />
+        <div>
+          <p className="font-semibold text-foreground text-lg">No customer account linked</p>
+          <p className="text-muted-foreground mt-1 max-w-md">
+            Your account is not linked to a customer profile. Contact your MRO provider to set up your portal access.
+          </p>
+        </div>
+      </div>
     );
   }
 
@@ -64,8 +70,8 @@ export default function CustomerFleetPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">My Fleet</h1>
-          <p className="text-gray-500 mt-1">
+          <h1 className="text-2xl font-bold text-foreground">My Fleet</h1>
+          <p className="text-muted-foreground mt-1">
             {aircraft.length} aircraft on file
           </p>
         </div>
@@ -74,8 +80,8 @@ export default function CustomerFleetPage() {
       {aircraft.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center">
-            <Plane className="w-8 h-8 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-500">No aircraft on file.</p>
+            <Plane className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
+            <p className="text-muted-foreground">No aircraft on file.</p>
           </CardContent>
         </Card>
       ) : (
@@ -106,17 +112,17 @@ export default function CustomerFleetPage() {
                           </Badge>
                         )}
                       </div>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-muted-foreground">
                         {ac.make} {ac.model}
                       </p>
                       {ac.year && (
-                        <p className="text-xs text-gray-400">
+                        <p className="text-xs text-muted-foreground">
                           {ac.year as number}
                         </p>
                       )}
                     </div>
                     <Badge
-                      className={`${STATUS_COLORS[ac.status] ?? "bg-gray-100 text-gray-500"} border-0`}
+                      className={`${STATUS_COLORS[ac.status] ?? "bg-muted text-muted-foreground"} border-0`}
                     >
                       {ac.status.replace(/_/g, " ")}
                     </Badge>
@@ -124,18 +130,18 @@ export default function CustomerFleetPage() {
 
                   <div className="grid grid-cols-2 gap-3 text-sm">
                     <div>
-                      <p className="text-gray-500">Serial Number</p>
+                      <p className="text-muted-foreground">Serial Number</p>
                       <p className="font-medium">{ac.serialNumber}</p>
                     </div>
                     <div>
-                      <p className="text-gray-500">Total Time</p>
+                      <p className="text-muted-foreground">Total Time</p>
                       <p className="font-medium">
                         {ac.totalTimeAirframeHours?.toLocaleString() ?? "—"}{" "}
                         hrs
                       </p>
                     </div>
                     <div>
-                      <p className="text-gray-500">Last Service</p>
+                      <p className="text-muted-foreground">Last Service</p>
                       <p className="font-medium">
                         {ac.lastServiceDate
                           ? new Date(ac.lastServiceDate).toLocaleDateString()
@@ -143,7 +149,7 @@ export default function CustomerFleetPage() {
                       </p>
                     </div>
                     <div>
-                      <p className="text-gray-500">Active WOs</p>
+                      <p className="text-muted-foreground">Active WOs</p>
                       <p className="font-medium">{ac.activeWorkOrders}</p>
                     </div>
                   </div>
@@ -154,7 +160,7 @@ export default function CustomerFleetPage() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="w-full justify-between text-xs text-gray-500"
+                        className="w-full justify-between text-xs text-muted-foreground"
                         onClick={() => toggleExpand(ac._id)}
                       >
                         Work Order History ({acWos.length})
@@ -167,7 +173,7 @@ export default function CustomerFleetPage() {
                       {isOpen && (
                         <div className="mt-2 space-y-2">
                           {acWos.length === 0 ? (
-                            <p className="text-xs text-gray-400 text-center py-2">
+                            <p className="text-xs text-muted-foreground text-center py-2">
                               No work orders.
                             </p>
                           ) : (
@@ -180,20 +186,20 @@ export default function CustomerFleetPage() {
                             }) => (
                               <div
                                 key={wo._id}
-                                className="flex items-center justify-between p-2 bg-gray-50 rounded text-xs"
+                                className="flex items-center justify-between p-2 bg-muted/50 rounded text-xs"
                               >
                                 <div>
                                   <span className="font-mono font-semibold">
                                     {wo.workOrderNumber}
                                   </span>
                                   {wo.description && (
-                                    <p className="text-gray-500 mt-0.5 line-clamp-1">
+                                    <p className="text-muted-foreground mt-0.5 line-clamp-1">
                                       {wo.description}
                                     </p>
                                   )}
                                 </div>
                                 <div className="flex items-center gap-2">
-                                  <span className="text-gray-400">
+                                  <span className="text-muted-foreground">
                                     {new Date(wo.openedAt).toLocaleDateString()}
                                   </span>
                                   <Badge

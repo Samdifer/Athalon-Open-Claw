@@ -1,22 +1,30 @@
 // lib/scheduling/magicSchedule.ts
-// Magic Scheduler — Wave 3 upgrade.
+// Magic Scheduler — Optimization Phase 1 upgrade (FFD).
 //
-// Features:
-//   1. Load-leveling across bays using real tech capacity data
-//   2. Per-tech efficiency multipliers applied to duration estimates
-//   3. Priority-weighted WO sorting (AOG > urgent > routine)
-//   4. Training constraint validation when assigning techs to tasks
+// Upgrade from greedy first-fit to priority-tiered First Fit Decreasing:
+//   1. Group WOs by priority tier (AOG → urgent → routine → deferred)
+//   2. Within each tier, sort by duration descending (largest first = tighter packing)
+//   3. Score ALL compatible bays per WO: earliest_start + late_penalty + load_balance_factor
+//   4. Pick best-scoring bay (not just first available)
+//
+// Backward compatible — same interface as Wave 3 version.
 
 export type MagicJobInput = {
   woId: string;
   estimatedDurationDays: number;
-  priority?: "aog" | "urgent" | "routine";
+  priority?: "aog" | "urgent" | "routine" | "deferred";
   requiredTraining?: string[];
+  /** Optional due date (epoch ms) — used for late-penalty scoring */
+  dueDate?: number;
+  /** Optional TAT estimate in days — used as duration fallback when estimatedDurationDays is 0 */
+  tatEstimateDays?: number;
 };
 
 export type MagicBayInput = {
   bayId: string;
   bookings: { startDate: number; endDate: number }[];
+  /** Optional bay capabilities for matching (e.g. ["ndt", "paint", "turbine"]) */
+  capabilities?: string[];
 };
 
 export type TechCapacity = {
@@ -33,26 +41,38 @@ export type MagicAssignment = {
   startDate: number;
   endDate: number;
   trainingWarnings?: string[];
+  /** Composite score used for bay selection (lower = better) — exposed for transparency */
+  bayScore?: number;
 };
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-const PRIORITY_WEIGHT: Record<string, number> = {
+const PRIORITY_TIER: Record<string, number> = {
   aog: 0,
   urgent: 1,
   routine: 2,
+  deferred: 3,
 };
 
 /**
- * Sort jobs by priority weighting (AOG first, then urgent, then routine).
- * Within the same priority, original order is preserved.
+ * FFD sort: group by priority tier, then within each tier sort by duration
+ * descending (largest jobs first for tighter bin packing).
  */
-function sortByPriority(jobs: MagicJobInput[]): MagicJobInput[] {
-  return [...jobs].sort(
-    (a, b) =>
-      (PRIORITY_WEIGHT[a.priority ?? "routine"] ?? 2) -
-      (PRIORITY_WEIGHT[b.priority ?? "routine"] ?? 2),
-  );
+function sortFFD(jobs: MagicJobInput[]): MagicJobInput[] {
+  return [...jobs].sort((a, b) => {
+    const tierA = PRIORITY_TIER[a.priority ?? "routine"] ?? 2;
+    const tierB = PRIORITY_TIER[b.priority ?? "routine"] ?? 2;
+    if (tierA !== tierB) return tierA - tierB;
+    // Within same tier: largest duration first (FFD)
+    return resolveJobDuration(b) - resolveJobDuration(a);
+  });
+}
+
+/** Resolve effective duration for a job, using TAT estimate as fallback */
+function resolveJobDuration(job: MagicJobInput): number {
+  if (job.estimatedDurationDays > 0) return job.estimatedDurationDays;
+  if (job.tatEstimateDays && job.tatEstimateDays > 0) return job.tatEstimateDays;
+  return 1; // minimum 1 day
 }
 
 /**
@@ -89,39 +109,74 @@ function effectiveDuration(
 }
 
 /**
- * Find the bay with the lowest total load (sum of booked days).
- * This implements load-leveling across bays.
+ * Find the earliest non-conflicting start date for a given duration in a bay.
  */
-function findLeastLoadedBay(
-  bays: MagicBayInput[],
-  bayBookings: Map<string, { startDate: number; endDate: number }[]>,
-): string | null {
-  let minLoad = Infinity;
-  let bestBayId: string | null = null;
-  for (const bay of bays) {
-    const bookings = bayBookings.get(bay.bayId) ?? [];
-    const totalDays = bookings.reduce(
-      (sum, b) => sum + (b.endDate - b.startDate) / DAY_MS,
-      0,
-    );
-    if (totalDays < minLoad) {
-      minLoad = totalDays;
-      bestBayId = bay.bayId;
-    }
+function findEarliestSlot(
+  bookings: { startDate: number; endDate: number }[],
+  todayMs: number,
+  durationMs: number,
+): number {
+  let candidateStart = todayMs;
+  for (const booking of bookings) {
+    if (candidateStart + durationMs <= booking.startDate) break;
+    if (candidateStart < booking.endDate) candidateStart = booking.endDate;
   }
-  return bestBayId;
+  return candidateStart;
 }
 
 /**
- * MBP-0114: Enhanced auto-schedule algorithm.
+ * Compute total booked days for a bay (used in load-balance scoring).
+ */
+function bayTotalLoad(bookings: { startDate: number; endDate: number }[]): number {
+  return bookings.reduce((sum, b) => sum + (b.endDate - b.startDate) / DAY_MS, 0);
+}
+
+/**
+ * Composite bay scoring function. Lower score = better bay choice.
  *
- * When autoMode is true, applies greedy scheduling:
- *   1. Sort by priority (AOG > urgent > routine)
- *   2. Assign to first available bay+tech combo
- *   3. Respect training constraints (prefer bays where qualified techs are available)
- *   4. Respect bay capacity (no double-booking)
+ * Score = (earliest_start_penalty * 0.40)     — prefer bays where WO can start sooner
+ *       + (late_penalty * 0.35)               — penalize bays where WO would finish after due date
+ *       + (load_balance_factor * 0.25)         — prefer less-loaded bays
+ */
+function scoreBay(
+  earliestStartMs: number,
+  durationMs: number,
+  todayMs: number,
+  totalLoadDays: number,
+  maxLoadDays: number,
+  dueDate?: number,
+): number {
+  // Normalize start delay to 0-1 range (0 = starts today, 1 = starts 90+ days out)
+  const startDelayDays = Math.max(0, (earliestStartMs - todayMs) / DAY_MS);
+  const startPenalty = Math.min(1, startDelayDays / 90);
+
+  // Late penalty: 0 if finishes before due date, scales up to 1 based on how late
+  let latePenalty = 0;
+  if (dueDate) {
+    const finishMs = earliestStartMs + durationMs;
+    const daysLate = (finishMs - dueDate) / DAY_MS;
+    latePenalty = daysLate > 0 ? Math.min(1, daysLate / 30) : 0;
+  }
+
+  // Load balance: ratio of this bay's load to max bay load (0 = empty, 1 = most loaded)
+  const loadRatio = maxLoadDays > 0 ? totalLoadDays / maxLoadDays : 0;
+
+  return startPenalty * 0.40 + latePenalty * 0.35 + loadRatio * 0.25;
+}
+
+/**
+ * Priority-tiered First Fit Decreasing auto-scheduler.
  *
- * When autoMode is false (default), preserves caller's ordering.
+ * When autoMode is true, applies FFD scheduling:
+ *   1. Group by priority tier (AOG → urgent → routine → deferred)
+ *   2. Within each tier, sort by duration descending (FFD for tighter packing)
+ *   3. Score ALL bays per WO using composite function
+ *   4. Pick best-scoring bay
+ *   5. Respect training constraints
+ *   6. Respect bay capacity (no double-booking)
+ *
+ * When autoMode is false (default), preserves caller's ordering but still
+ * uses composite bay scoring instead of simple first-fit.
  */
 export function magicSchedule(
   orderedJobs: MagicJobInput[],
@@ -131,11 +186,8 @@ export function magicSchedule(
 ): MagicAssignment[] {
   if (orderedJobs.length === 0 || bays.length === 0) return [];
 
-  // MBP-0114: In auto mode, sort by priority for greedy scheduling.
-  // Otherwise respect the caller's explicit order.
-  const sortedJobs = options?.autoMode
-    ? sortByPriority(orderedJobs)
-    : orderedJobs;
+  // In auto mode, apply FFD sort. Otherwise respect caller's ordering.
+  const sortedJobs = options?.autoMode ? sortFFD(orderedJobs) : orderedJobs;
 
   const bayBookings = new Map<string, { startDate: number; endDate: number }[]>();
   for (const bay of bays) {
@@ -152,10 +204,13 @@ export function magicSchedule(
   const out: MagicAssignment[] = [];
 
   for (const job of sortedJobs) {
+    // Resolve base duration with TAT fallback
+    const baseDays = resolveJobDuration(job);
+
     // Apply efficiency multiplier to duration
     const durationDays = techPool
-      ? effectiveDuration(job.estimatedDurationDays, techPool)
-      : Math.max(1, job.estimatedDurationDays);
+      ? effectiveDuration(baseDays, techPool)
+      : baseDays;
     const durationMs = durationDays * DAY_MS;
 
     // Validate training constraints
@@ -163,50 +218,41 @@ export function magicSchedule(
       ? validateTraining(job.requiredTraining, techPool)
       : [];
 
-    // MBP-0114: Find best bay using enhanced greedy algorithm:
-    // 1. Prefer bays where qualified techs are available (training match)
-    // 2. Load-level across bays (least-loaded first)
-    // 3. Find earliest non-conflicting slot
+    // Compute max load across all bays (for load-balance normalization)
+    let maxLoadDays = 0;
+    for (const bay of bays) {
+      const load = bayTotalLoad(bayBookings.get(bay.bayId) ?? []);
+      if (load > maxLoadDays) maxLoadDays = load;
+    }
+
+    // Score ALL bays and pick the best one
     let selectedBayId: string | null = null;
     let selectedStart = Infinity;
+    let bestScore = Infinity;
 
-    // Score bays: training-qualified bays get priority, then by load
-    const sortedBays = [...bays].sort((a, b) => {
-      // Training affinity: prefer bays where we have qualified techs
-      if (options?.autoMode && techPool && job.requiredTraining && job.requiredTraining.length > 0) {
-        const aHasQualified = techPool.some((t) =>
-          job.requiredTraining!.every((req) => t.training.includes(req)),
-        );
-        const bHasQualified = techPool.some((t) =>
-          job.requiredTraining!.every((req) => t.training.includes(req)),
-        );
-        if (aHasQualified && !bHasQualified) return -1;
-        if (!aHasQualified && bHasQualified) return 1;
-      }
-
-      const aLoad = (bayBookings.get(a.bayId) ?? []).reduce(
-        (sum, bk) => sum + (bk.endDate - bk.startDate),
-        0,
-      );
-      const bLoad = (bayBookings.get(b.bayId) ?? []).reduce(
-        (sum, bk) => sum + (bk.endDate - bk.startDate),
-        0,
-      );
-      return aLoad - bLoad;
-    });
-
-    for (const bay of sortedBays) {
+    for (const bay of bays) {
       const bookings = bayBookings.get(bay.bayId) ?? [];
-      let candidateStart = todayMs;
+      const earliestStart = findEarliestSlot(bookings, todayMs, durationMs);
+      const loadDays = bayTotalLoad(bookings);
 
-      for (const booking of bookings) {
-        if (candidateStart + durationMs <= booking.startDate) break;
-        if (candidateStart < booking.endDate) candidateStart = booking.endDate;
+      // Training affinity bonus: if bay scheduling requires qualified techs,
+      // add a penalty if no qualified techs exist
+      let trainingPenalty = 0;
+      if (options?.autoMode && techPool && job.requiredTraining && job.requiredTraining.length > 0) {
+        const hasQualified = techPool.some((t) =>
+          job.requiredTraining!.every((req) => t.training.includes(req)),
+        );
+        if (!hasQualified) trainingPenalty = 0.5;
       }
 
-      if (candidateStart < selectedStart) {
-        selectedStart = candidateStart;
+      const score =
+        scoreBay(earliestStart, durationMs, todayMs, loadDays, maxLoadDays, job.dueDate) +
+        trainingPenalty;
+
+      if (score < bestScore) {
+        bestScore = score;
         selectedBayId = bay.bayId;
+        selectedStart = earliestStart;
       }
     }
 
@@ -218,6 +264,7 @@ export function magicSchedule(
       bayId: selectedBayId,
       startDate: selectedStart,
       endDate,
+      bayScore: Math.round(bestScore * 1000) / 1000,
     };
     if (trainingWarnings.length > 0) {
       assignment.trainingWarnings = trainingWarnings;

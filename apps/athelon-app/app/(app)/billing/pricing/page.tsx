@@ -81,8 +81,20 @@ export default function PricingPage() {
   );
 
   const createProfile = useMutation(api.pricing.createPricingProfile);
+  const createRule = useMutation(api.pricing.createPricingRule);
 
   const [profileDialog, setProfileDialog] = useState(false);
+  const [ruleDialog, setRuleDialog] = useState(false);
+  const [ruleType, setRuleType] = useState<RuleType>("cost_plus");
+  const [ruleAppliesTo, setRuleAppliesTo] = useState<AppliesToType>("labor");
+  const [ruleMarkup, setRuleMarkup] = useState("");
+  const [ruleListPrice, setRuleListPrice] = useState("");
+  const [ruleDiscount, setRuleDiscount] = useState("");
+  const [ruleFlatRate, setRuleFlatRate] = useState("");
+  const [rulePriority, setRulePriority] = useState("10");
+  const [ruleEffective, setRuleEffective] = useState(
+    new Date().toISOString().split("T")[0],
+  );
   const [profileName, setProfileName] = useState("");
   const [profileCustomerId, setProfileCustomerId] = useState<string>("");
   const [profileLaborRate, setProfileLaborRate] = useState("");
@@ -96,6 +108,46 @@ export default function PricingPage() {
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const handleCreateRule = async () => {
+    if (!orgId) return;
+    if (!ruleEffective) { setError("Effective date is required."); return; }
+    const priority = parseInt(rulePriority, 10);
+    if (isNaN(priority) || priority < 0) { setError("Priority must be a non-negative number."); return; }
+
+    const args: Parameters<typeof createRule>[0] = {
+      orgId,
+      ruleType,
+      appliesTo: ruleAppliesTo,
+      effectiveDate: new Date(ruleEffective).getTime(),
+      priority,
+    };
+
+    if (ruleType === "cost_plus") {
+      if (!ruleMarkup) { setError("Markup % is required for cost plus rules."); return; }
+      args.markupPercent = parseFloat(ruleMarkup);
+    } else if (ruleType === "list_minus") {
+      if (!ruleListPrice || !ruleDiscount) { setError("List price and discount % are required for list minus rules."); return; }
+      args.listPrice = parseFloat(ruleListPrice);
+      args.discountPercent = parseFloat(ruleDiscount);
+    } else if (ruleType === "flat_rate") {
+      if (!ruleFlatRate) { setError("Flat rate is required."); return; }
+      args.flatRate = parseFloat(ruleFlatRate);
+    }
+
+    setSubmitting(true); setError(null);
+    try {
+      await createRule(args);
+      toast.success("Pricing rule created.");
+      setRuleDialog(false);
+      setRuleType("cost_plus"); setRuleAppliesTo("labor"); setRuleMarkup("");
+      setRuleListPrice(""); setRuleDiscount(""); setRuleFlatRate(""); setRulePriority("10");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to create rule.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const isLoading = !isLoaded || profiles === undefined || rules === undefined;
 
@@ -224,15 +276,22 @@ export default function PricingPage() {
 
       {/* Pricing Rules */}
       <Card className="border-border/60">
-        <CardHeader className="pb-3">
+        <CardHeader className="pb-3 flex-row items-center justify-between">
           <CardTitle className="text-sm font-medium">Pricing Rules</CardTitle>
+          <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => { setError(null); setRuleDialog(true); }}>
+            <Plus className="w-3 h-3" />
+            New Rule
+          </Button>
         </CardHeader>
         <CardContent className="p-0">
           {(rules ?? []).length === 0 ? (
             <div className="py-10 text-center">
               <Tag className="w-7 h-7 text-muted-foreground/40 mx-auto mb-2" />
               <p className="text-sm text-muted-foreground">No pricing rules configured.</p>
-              <p className="text-xs text-muted-foreground/60 mt-1">Pricing rules are created via the Convex backend or API.</p>
+              <Button size="sm" variant="outline" className="mt-3" onClick={() => { setError(null); setRuleDialog(true); }}>
+                <Plus className="w-3 h-3 mr-1" />
+                New Rule
+              </Button>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -271,6 +330,90 @@ export default function PricingPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* New Rule Dialog */}
+      <Dialog open={ruleDialog} onOpenChange={setRuleDialog}>
+        <DialogContent className="max-w-[95vw] sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>New Pricing Rule</DialogTitle>
+            <DialogDescription>Define how pricing is calculated for labor, parts, or external services.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs">Rule Type *</Label>
+                <Select value={ruleType} onValueChange={(v) => setRuleType(v as RuleType)}>
+                  <SelectTrigger className="h-9 text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="cost_plus">Cost Plus</SelectItem>
+                    <SelectItem value="list_minus">List Minus</SelectItem>
+                    <SelectItem value="flat_rate">Flat Rate</SelectItem>
+                    <SelectItem value="quantity_tier">Quantity Tier</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Applies To *</Label>
+                <Select value={ruleAppliesTo} onValueChange={(v) => setRuleAppliesTo(v as AppliesToType)}>
+                  <SelectTrigger className="h-9 text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="labor">Labor</SelectItem>
+                    <SelectItem value="part">Part</SelectItem>
+                    <SelectItem value="external_service">External Service</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            {ruleType === "cost_plus" && (
+              <div className="space-y-1.5">
+                <Label className="text-xs">Markup % *</Label>
+                <Input value={ruleMarkup} onChange={(e) => setRuleMarkup(e.target.value)} type="number" min="0" step="0.1" className="h-9 text-sm" placeholder="e.g. 20" />
+              </div>
+            )}
+            {ruleType === "list_minus" && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label className="text-xs">List Price *</Label>
+                  <Input value={ruleListPrice} onChange={(e) => setRuleListPrice(e.target.value)} type="number" min="0" step="0.01" className="h-9 text-sm" placeholder="e.g. 500.00" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Discount % *</Label>
+                  <Input value={ruleDiscount} onChange={(e) => setRuleDiscount(e.target.value)} type="number" min="0" step="0.1" className="h-9 text-sm" placeholder="e.g. 15" />
+                </div>
+              </div>
+            )}
+            {ruleType === "flat_rate" && (
+              <div className="space-y-1.5">
+                <Label className="text-xs">Flat Rate ($) *</Label>
+                <Input value={ruleFlatRate} onChange={(e) => setRuleFlatRate(e.target.value)} type="number" min="0" step="0.01" className="h-9 text-sm" placeholder="e.g. 250.00" />
+              </div>
+            )}
+            {ruleType === "quantity_tier" && (
+              <p className="text-xs text-muted-foreground">Quantity tier rules require tier break configuration via the backend API.</p>
+            )}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs">Effective Date *</Label>
+                <Input type="date" value={ruleEffective} onChange={(e) => setRuleEffective(e.target.value)} className="h-9 text-sm" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Priority</Label>
+                <Input value={rulePriority} onChange={(e) => setRulePriority(e.target.value)} type="number" min="0" step="1" className="h-9 text-sm" placeholder="10" />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" size="sm" onClick={() => setRuleDialog(false)}>Cancel</Button>
+            <Button size="sm" onClick={handleCreateRule} disabled={submitting || ruleType === "quantity_tier"}>
+              {submitting ? "Creating..." : "Create Rule"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* New Profile Dialog */}
       <Dialog open={profileDialog} onOpenChange={setProfileDialog}>

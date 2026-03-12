@@ -1018,6 +1018,61 @@ export const listDiscrepancies = query({
 // customer approves/denies the recommended work.
 // ─────────────────────────────────────────────────────────────────────────────
 
+export const dispositionFinding = mutation({
+  args: {
+    discrepancyId: v.id("discrepancies"),
+    disposition: v.union(
+      v.literal("deferred"),
+      v.literal("corrected"),
+      v.literal("rejected"),
+      v.literal("accepted"),
+    ),
+    notes: v.optional(v.string()),
+    dispositionedBy: v.string(),
+    organizationId: v.id("organizations"),
+  },
+  handler: async (ctx, args): Promise<void> => {
+    const now = Date.now();
+    await requireAuth(ctx);
+
+    const discrepancy = await ctx.db.get(args.discrepancyId);
+    if (!discrepancy) {
+      throw new Error(`Discrepancy ${args.discrepancyId} not found.`);
+    }
+    if (discrepancy.organizationId !== args.organizationId) {
+      throw new Error(
+        `Discrepancy ${args.discrepancyId} does not belong to organization ${args.organizationId}.`,
+      );
+    }
+
+    if (!args.dispositionedBy.trim()) {
+      throw new Error("dispositionedBy must be a non-empty string.");
+    }
+
+    await ctx.db.patch(args.discrepancyId, {
+      status: "dispositioned",
+      disposition: args.disposition === "deferred" ? "deferred_grounded"
+        : args.disposition === "corrected" ? "corrected"
+        : args.disposition === "rejected" ? "no_fault_found"
+        : "corrected",
+      dispositionedBy: args.dispositionedBy.trim(),
+      dispositionedAt: now,
+      ...(args.notes ? { dispositionNotes: args.notes.trim() } : {}),
+      updatedAt: now,
+    });
+  },
+});
+
+export const getDiscrepancy = query({
+  args: {
+    discrepancyId: v.id("discrepancies"),
+  },
+  handler: async (ctx, args) => {
+    await requireAuth(ctx);
+    return await ctx.db.get(args.discrepancyId);
+  },
+});
+
 export const updateDiscrepancyApproval = mutation({
   args: {
     discrepancyId: v.id("discrepancies"),

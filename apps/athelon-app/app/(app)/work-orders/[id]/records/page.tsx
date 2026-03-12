@@ -41,6 +41,7 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import { CreateRecordForm } from "./_components/CreateRecordForm";
+import { WOBreadcrumb } from "../_components/WOBreadcrumb";
 
 function inspectionBadge(type?: string) {
   if (!type) return null;
@@ -184,6 +185,13 @@ export default function MaintenanceRecordsPage() {
 
   return (
     <div className="space-y-5">
+      {/* Breadcrumb */}
+      <WOBreadcrumb
+        woId={String(workOrderId)}
+        woNumber={report.workOrderNumber}
+        pageName="Maintenance Records"
+      />
+
       {/* Back */}
       <Button
         asChild

@@ -374,8 +374,14 @@ export function SchedulingCommandCenterDialog({
                       {editing ? (
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                           <div>
-                            <Label className="text-[11px]">Start Hour</Label>
+                            <Label
+                              htmlFor={`tech-start-hour-${technician.technicianId}`}
+                              className="text-[11px]"
+                            >
+                              Start Hour
+                            </Label>
                             <Input
+                              id={`tech-start-hour-${technician.technicianId}`}
                               type="number"
                               min={0}
                               max={23}
@@ -384,8 +390,14 @@ export function SchedulingCommandCenterDialog({
                             />
                           </div>
                           <div>
-                            <Label className="text-[11px]">End Hour</Label>
+                            <Label
+                              htmlFor={`tech-end-hour-${technician.technicianId}`}
+                              className="text-[11px]"
+                            >
+                              End Hour
+                            </Label>
                             <Input
+                              id={`tech-end-hour-${technician.technicianId}`}
                               type="number"
                               min={1}
                               max={24}
@@ -394,8 +406,14 @@ export function SchedulingCommandCenterDialog({
                             />
                           </div>
                           <div>
-                            <Label className="text-[11px]">Efficiency</Label>
+                            <Label
+                              htmlFor={`tech-efficiency-${technician.technicianId}`}
+                              className="text-[11px]"
+                            >
+                              Efficiency
+                            </Label>
                             <Input
+                              id={`tech-efficiency-${technician.technicianId}`}
                               type="number"
                               min={0.1}
                               max={2}

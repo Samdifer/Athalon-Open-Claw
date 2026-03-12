@@ -41,7 +41,7 @@ type CustomerType =
   | "flight_school"
   | "government";
 
-type HealthFilter = "all" | "excellent" | "good" | "at_risk";
+type HealthFilter = "all" | "excellent" | "good" | "at_risk" | "critical";
 type StatusFilter = "active" | "inactive" | "all";
 type SortOption = "name" | "revenue" | "health" | "last_contact";
 
@@ -145,7 +145,9 @@ export default function AccountsDirectoryPage() {
           case "good":
             return score >= 50 && score < 75;
           case "at_risk":
-            return score < 50;
+            return score >= 25 && score < 50;
+          case "critical":
+            return score < 25;
           default:
             return true;
         }
@@ -242,9 +244,10 @@ export default function AccountsDirectoryPage() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Scores</SelectItem>
-            <SelectItem value="excellent">Excellent (75+)</SelectItem>
+            <SelectItem value="excellent">Excellent (75-100)</SelectItem>
             <SelectItem value="good">Good (50-74)</SelectItem>
-            <SelectItem value="at_risk">At Risk (&lt;50)</SelectItem>
+            <SelectItem value="at_risk">At Risk (25-49)</SelectItem>
+            <SelectItem value="critical">Critical (0-24)</SelectItem>
           </SelectContent>
         </Select>
 

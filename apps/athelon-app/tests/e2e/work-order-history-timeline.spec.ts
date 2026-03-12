@@ -114,7 +114,12 @@ async function createDraftWorkOrder(
 }
 
 async function openNotesAndActivityTab(page: Page) {
-  await page.getByRole("tab", { name: /Notes & Activity/i }).click();
+  const legacyTab = page.getByRole("tab", { name: /Notes & Activity/i });
+  if (await legacyTab.isVisible().catch(() => false)) {
+    await legacyTab.click();
+  } else {
+    await page.getByRole("button", { name: /Notes & Activity/i }).click();
+  }
   await expect(page.getByText(/Work Order Activity/i)).toBeVisible({
     timeout: 10_000,
   });

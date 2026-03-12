@@ -8,6 +8,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   AlertTriangle,
@@ -40,9 +47,19 @@ const STATUS_TABS = [
 
 type StatusFilter = (typeof STATUS_TABS)[number]["value"];
 
+type SeverityFilter = "all" | "critical" | "major" | "minor";
+
+const SEVERITY_FILTER_OPTIONS: { value: SeverityFilter; label: string }[] = [
+  { value: "all", label: "All Severities" },
+  { value: "critical", label: "Critical" },
+  { value: "major", label: "Major" },
+  { value: "minor", label: "Minor" },
+];
+
 export default function FindingsPage() {
   const { orgId, isLoaded } = useCurrentOrg();
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [severityFilter, setSeverityFilter] = useState<SeverityFilter>("all");
   const [search, setSearch] = useState("");
   const [dispositionTarget, setDispositionTarget] = useState<{
     id: Id<"discrepancies">;
@@ -81,6 +98,22 @@ export default function FindingsPage() {
       );
     }
 
+    // Severity filter
+    if (severityFilter !== "all") {
+      items = items.filter((d) => {
+        if (severityFilter === "critical") {
+          return d.severity === "critical" || d.discrepancyType === "mandatory";
+        }
+        if (severityFilter === "major") {
+          return d.severity === "major" || d.discrepancyType === "recommended";
+        }
+        if (severityFilter === "minor") {
+          return d.severity === "minor" || d.discrepancyType === "customer_information";
+        }
+        return true;
+      });
+    }
+
     // Search
     if (search.trim()) {
       const q = search.toLowerCase();
@@ -93,7 +126,7 @@ export default function FindingsPage() {
     }
 
     return items.sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0));
-  }, [discrepancies, statusFilter, search]);
+  }, [discrepancies, statusFilter, severityFilter, search]);
 
   // Summary counts
   const totalOpen = useMemo(
@@ -251,7 +284,7 @@ export default function FindingsPage() {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center flex-wrap">
         <Tabs
           value={statusFilter}
           onValueChange={(v) => setStatusFilter(v as StatusFilter)}
@@ -264,6 +297,21 @@ export default function FindingsPage() {
             ))}
           </TabsList>
         </Tabs>
+        <Select
+          value={severityFilter}
+          onValueChange={(v) => setSeverityFilter(v as SeverityFilter)}
+        >
+          <SelectTrigger className="w-40 h-9 text-sm">
+            <SelectValue placeholder="Severity…" />
+          </SelectTrigger>
+          <SelectContent>
+            {SEVERITY_FILTER_OPTIONS.map((opt) => (
+              <SelectItem key={opt.value} value={opt.value}>
+                {opt.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input

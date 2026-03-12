@@ -31,6 +31,9 @@ import {
   BarChart3,
   Target,
   Warehouse,
+  AlertTriangle,
+  Bell,
+  Mail,
 } from "lucide-react";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import {
@@ -112,7 +115,7 @@ const mainNav: NavEntry[] = [
     ],
   },
   {
-    title: "Lead Center",
+    title: "Lead Center (Overview)",
     href: "/lead",
     icon: Shield,
     section: "work-orders",
@@ -136,7 +139,7 @@ const mainNav: NavEntry[] = [
     icon: ClipboardList,
     section: "work-orders",
     children: [
-      { title: "Lead Workspace", href: "/work-orders/lead" },
+      { title: "Lead Workspace (WO-Focused)", href: "/work-orders/lead" },
       { title: "Shift Handoff", href: "/work-orders/handoff" },
       { title: "Dashboard", href: "/work-orders/dashboard" },
       { title: "Kanban", href: "/work-orders/kanban" },
@@ -151,6 +154,8 @@ const mainNav: NavEntry[] = [
       { title: "Due-List Workbench", href: "/scheduling/due-list" },
       { title: "Roster & Teams", href: "/scheduling/roster" },
       { title: "Quote Workspace", href: "/scheduling/quotes" },
+      { title: "Bays", href: "/scheduling/bays" },
+      { title: "Capacity", href: "/scheduling/capacity" },
       { title: "Seed Audit", href: "/scheduling/seed-audit" },
     ],
   },
@@ -183,11 +188,8 @@ const mainNav: NavEntry[] = [
     children: [
       { title: "Dashboard", href: "/sales/dashboard", icon: LayoutDashboard },
       { title: "Sales Ops", href: "/sales/ops", icon: BarChart3 },
-      { title: "Prospect Intelligence", href: "/crm/prospects/intelligence", icon: Target },
-      { title: "Part 135 Operators", href: "/crm/prospects/part135", icon: PlaneTakeoff },
       { title: "Quotes", href: "/sales/quotes", icon: ReceiptText },
       { title: "Training", href: "/sales/training", icon: GraduationCap },
-      { title: "CRM Pipeline", href: "/crm/pipeline", icon: TrendingUp },
     ],
   },
   {
@@ -225,13 +227,12 @@ const mainNav: NavEntry[] = [
     children: [
       { title: "Dashboard", href: "/crm/dashboard", icon: LayoutDashboard },
       { title: "Accounts", href: "/crm/accounts", icon: Users },
-      { title: "Prospect Intelligence", href: "/crm/prospects/intelligence", icon: Target },
-      { title: "Part 135 Operators", href: "/crm/prospects/part135", icon: PlaneTakeoff },
+      { title: "Prospect Intel: MRO Shops (Pt 145)", href: "/crm/prospects/intelligence", icon: Target },
+      { title: "Prospect Intel: Air Operators (Pt 135)", href: "/crm/prospects/part135", icon: PlaneTakeoff },
       { title: "Contacts", href: "/crm/contacts", icon: Contact2 },
       { title: "Interactions", href: "/crm/interactions", icon: MessageSquare },
       { title: "Sales Pipeline", href: "/crm/pipeline", icon: TrendingUp },
       { title: "Analytics", href: "/crm/analytics", icon: BarChart3 },
-      { title: "Sales Training", href: "/sales/training", icon: GraduationCap },
     ],
   },
   {
@@ -240,6 +241,7 @@ const mainNav: NavEntry[] = [
     icon: ShieldCheck,
     section: "compliance",
     children: [
+      { title: "Findings", href: "/findings", icon: AlertTriangle },
       { title: "Audit Readiness", href: "/compliance/audit-readiness", icon: ClipboardCheck },
       { title: "Diamond Award", href: "/compliance/diamond-award", icon: Trophy },
       { title: "AD/SB Tracking", href: "/compliance/ad-sb" },
@@ -287,12 +289,15 @@ const bottomNav: NavEntry[] = [
     icon: Settings,
     section: "settings",
     children: [
+      { title: "Users", href: "/settings/users", icon: Users },
       { title: "Station Config", href: "/settings/station-config" },
       { title: "Capabilities List", href: "/settings/capabilities", icon: Award },
       { title: "Routing Templates", href: "/settings/routing-templates" },
       { title: "Import Data", href: "/settings/import" },
       { title: "QuickBooks", href: "/settings/quickbooks" },
       { title: "Locations", href: "/settings/locations" },
+      { title: "Notifications", href: "/settings/notifications", icon: Bell },
+      { title: "Email Log", href: "/settings/email-log", icon: Mail },
     ],
   },
 ];

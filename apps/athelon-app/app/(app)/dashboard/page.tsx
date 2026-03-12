@@ -33,6 +33,7 @@ import { TATChart } from "./_components/TATChart";
 import { TechUtilizationChart } from "./_components/TechUtilizationChart";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { WelcomeModal } from "./_components/WelcomeModal";
+import { SetupChecklist } from "./_components/SetupChecklist";
 
 // ─── Collapsible Section ─────────────────────────────────────────────────────
 
@@ -179,6 +180,9 @@ export default function DashboardPage() {
           </Link>
         </Button>
       </div>
+
+      {/* ─── Setup Checklist (hidden once all items complete) ────────── */}
+      <SetupChecklist />
 
       {/* ─── Command Center (KPIs + Attention + Capacity + Personnel) ─ */}
       <CommandCenter

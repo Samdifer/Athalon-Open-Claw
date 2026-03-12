@@ -5,7 +5,7 @@ import { useParams } from "react-router-dom";
 import { useRouter } from "@/hooks/useRouter";
 import { useSearchParams } from "react-router-dom";
 import { Link } from "react-router-dom";
-import { useMutation } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -26,6 +26,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
+import { WOBreadcrumb } from "../_components/WOBreadcrumb";
 
 // ─── Countdown timer hook ────────────────────────────────────────────────────
 
@@ -71,6 +72,14 @@ export default function SignaturePage() {
   const intendedTable = searchParams.get("intendedTable") ?? "workOrders";
 
   const { orgId, techId, tech, isLoaded: orgLoaded } = useCurrentOrg();
+
+  const workOrderData = useQuery(
+    api.workOrders.getWorkOrder,
+    orgId && workOrderId
+      ? { workOrderId: workOrderId as Id<"workOrders">, organizationId: orgId }
+      : "skip",
+  );
+  const woNumber = workOrderData?.workOrder?.workOrderNumber ?? workOrderId;
 
   // Auth event state
   const [pin, setPin] = useState("");
@@ -167,6 +176,13 @@ export default function SignaturePage() {
 
   return (
     <div className="max-w-md mx-auto space-y-5 pt-2">
+      {/* Breadcrumb */}
+      <WOBreadcrumb
+        woId={workOrderId}
+        woNumber={woNumber}
+        pageName="Re-Authentication"
+      />
+
       {/* Back */}
       {/* BUG-QCM-C14: Back button was hardcoded to /work-orders/${workOrderId}.
           When accessed from the RTS page (?returnTo=/work-orders/${id}/rts),
@@ -408,6 +424,7 @@ export default function SignaturePage() {
                   placeholder="4–6 digit PIN"
                   maxLength={6}
                   inputMode="numeric"
+                  pattern="[0-9]*"
                   autoFocus
                   required
                   className="h-10 font-mono text-lg tracking-widest text-center bg-muted/30 border-border/60"

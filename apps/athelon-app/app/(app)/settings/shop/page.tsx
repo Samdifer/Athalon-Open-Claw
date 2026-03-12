@@ -11,14 +11,11 @@ import {
   Building2,
   Clock,
   Palette,
-  Upload,
   ExternalLink,
   Save,
   Phone,
   Mail,
   MapPin,
-  Smartphone,
-  LayoutGrid,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -36,28 +33,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ActionableEmptyState } from "@/components/zero-state/ActionableEmptyState";
-
-// Common IANA timezones for aviation/MRO shops in North America
-const AVIATION_TIMEZONES = [
-  { value: "America/New_York",    label: "Eastern (ET) — America/New_York" },
-  { value: "America/Detroit",     label: "Eastern (ET) — America/Detroit" },
-  { value: "America/Indiana/Indianapolis", label: "Eastern (ET) — America/Indianapolis" },
-  { value: "America/Chicago",     label: "Central (CT) — America/Chicago" },
-  { value: "America/Menominee",   label: "Central (CT) — America/Menominee" },
-  { value: "America/Denver",      label: "Mountain (MT) — America/Denver" },
-  { value: "America/Phoenix",     label: "Mountain (no DST) — America/Phoenix" },
-  { value: "America/Boise",       label: "Mountain (MT) — America/Boise" },
-  { value: "America/Los_Angeles", label: "Pacific (PT) — America/Los_Angeles" },
-  { value: "America/Anchorage",   label: "Alaska (AKT) — America/Anchorage" },
-  { value: "America/Juneau",      label: "Alaska (AKT) — America/Juneau" },
-  { value: "Pacific/Honolulu",    label: "Hawaii (HST) — Pacific/Honolulu" },
-  { value: "America/Puerto_Rico", label: "Atlantic (AST) — America/Puerto_Rico" },
-  { value: "America/Toronto",     label: "Eastern (ET) — America/Toronto" },
-  { value: "America/Winnipeg",    label: "Central (CT) — America/Winnipeg" },
-  { value: "America/Edmonton",    label: "Mountain (MT) — America/Edmonton" },
-  { value: "America/Vancouver",   label: "Pacific (PT) — America/Vancouver" },
-  { value: "UTC",                 label: "UTC / Zulu" },
-] as const;
+import { AVIATION_TIMEZONES } from "@/src/shared/lib/timezones";
 
 export default function ShopSettingsPage() {
   const { orgId, isLoaded } = useCurrentOrg();
@@ -376,22 +352,15 @@ export default function ShopSettingsPage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 gap-3 text-xs">
-            {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"].map((day) => (
-              <div key={day} className="flex items-center justify-between py-1.5 border-b border-border/40 last:border-0">
-                <span className="text-muted-foreground">{day}</span>
-                <span className="font-medium">7:00 AM – 5:00 PM</span>
-              </div>
-            ))}
-            {["Saturday", "Sunday"].map((day) => (
-              <div key={day} className="flex items-center justify-between py-1.5 border-b border-border/40 last:border-0">
-                <span className="text-muted-foreground">{day}</span>
-                <span className="text-muted-foreground">Closed</span>
-              </div>
-            ))}
-          </div>
-          <p className="text-[10px] text-muted-foreground/60 mt-3">
-            Operating hours are for display purposes. Edit via schedule management.
+          <p className="text-xs text-muted-foreground">
+            Operating hours are managed in{" "}
+            <Link
+              to="/settings/station-config?tab=scheduling"
+              className="underline underline-offset-2 hover:text-foreground transition-colors"
+            >
+              Station Config → Scheduling
+            </Link>
+            .
           </p>
         </CardContent>
       </Card>
@@ -407,31 +376,10 @@ export default function ShopSettingsPage() {
             Company logo and brand colors for invoices, quotes, and certificates
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-1.5">
-            <Label className="text-xs">Company Logo</Label>
-            <div className="border border-dashed border-border rounded-md p-6 flex flex-col items-center gap-2 text-muted-foreground">
-              <Upload className="w-5 h-5" />
-              <p className="text-xs">Drag & drop or click to upload</p>
-              <p className="text-[10px] text-muted-foreground/60">PNG, SVG, or JPEG — max 2MB</p>
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <Label className="text-xs">Primary Color</Label>
-              <div className="flex gap-2 items-center">
-                <div className="w-6 h-6 rounded border bg-primary" />
-                <Input defaultValue="#1a1a2e" className="h-8 text-xs font-mono flex-1" readOnly />
-              </div>
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs">Accent Color</Label>
-              <div className="flex gap-2 items-center">
-                <div className="w-6 h-6 rounded border bg-blue-500" />
-                <Input defaultValue="#3b82f6" className="h-8 text-xs font-mono flex-1" readOnly />
-              </div>
-            </div>
-          </div>
+        <CardContent>
+          <p className="text-xs text-muted-foreground">
+            Logo upload and brand color customization coming soon.
+          </p>
         </CardContent>
       </Card>
 
@@ -450,61 +398,6 @@ export default function ShopSettingsPage() {
               </Link>
             </Button>
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Demo Apps */}
-      <Card className="border-border/60">
-        <CardHeader>
-          <CardTitle className="text-sm flex items-center gap-2">
-            <Palette className="w-4 h-4 text-muted-foreground" />
-            Demo Apps
-          </CardTitle>
-          <CardDescription className="text-xs">
-            Preview alternative UI skins of the Athalon platform
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <a
-            href="http://localhost:3002"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-3 p-3 rounded-lg border border-border/60 hover:bg-muted/50 transition-colors group"
-          >
-            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center">
-              <Smartphone className="w-5 h-5 text-white" />
-            </div>
-            <div className="flex-1">
-              <div className="text-sm font-medium flex items-center gap-1.5">
-                iOS Demo
-                <ExternalLink className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-              </div>
-              <div className="text-xs text-muted-foreground">
-                Native iOS design language — tab bar, grouped lists, large titles
-              </div>
-            </div>
-            <span className="text-[10px] text-muted-foreground font-mono">:3002</span>
-          </a>
-          <a
-            href="http://localhost:3001"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-3 p-3 rounded-lg border border-border/60 hover:bg-muted/50 transition-colors group"
-          >
-            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-violet-500 to-purple-400 flex items-center justify-center">
-              <LayoutGrid className="w-5 h-5 text-white" />
-            </div>
-            <div className="flex-1">
-              <div className="text-sm font-medium flex items-center gap-1.5">
-                Bento Demo
-                <ExternalLink className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-              </div>
-              <div className="text-xs text-muted-foreground">
-                Apple-inspired bento grid — glassmorphism, activity rings, animated dock
-              </div>
-            </div>
-            <span className="text-[10px] text-muted-foreground font-mono">:3001</span>
-          </a>
         </CardContent>
       </Card>
 

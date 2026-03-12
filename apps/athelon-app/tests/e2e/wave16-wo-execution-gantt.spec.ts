@@ -152,7 +152,7 @@ test.describe("Wave 16: WO Execution Gantt — Page Load", () => {
   test("back link returns to work order detail page", async ({ page }) => {
     await waitForGanttHydration(page);
 
-    const backLink = page.locator(`a[href="/work-orders/${woId}"]`);
+    const backLink = page.locator(`a[href="/work-orders/${woId}"]`).first();
     await expect(backLink).toBeVisible({ timeout: 10_000 });
     await backLink.click();
 

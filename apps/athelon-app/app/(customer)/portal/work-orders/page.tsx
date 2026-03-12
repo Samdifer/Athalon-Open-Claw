@@ -4,7 +4,7 @@ import { api } from "@/convex/_generated/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Activity, ArrowLeft, ChevronRight } from "lucide-react";
+import { Activity, AlertCircle, ArrowLeft, ChevronRight } from "lucide-react";
 import { DownloadPDFButton } from "@/src/shared/components/pdf/DownloadPDFButton";
 import { RtsDocumentPDF } from "@/src/shared/components/pdf/RtsDocumentPDF";
 import { usePortalCustomerId } from "@/hooks/usePortalCustomerId";
@@ -24,7 +24,7 @@ const STATUS_COLORS: Record<string, string> = {
   pending_parts: "bg-orange-100 text-orange-700",
   on_hold: "bg-red-100 text-red-700",
   closed: "bg-green-100 text-green-700",
-  voided: "bg-gray-100 text-gray-700",
+  voided: "bg-muted text-muted-foreground",
 };
 
 function StatusTimeline({ customerFacingStatus }: { customerFacingStatus?: string }) {
@@ -45,17 +45,17 @@ function StatusTimeline({ customerFacingStatus }: { customerFacingStatus?: strin
                     ? "bg-green-500 text-white"
                     : isCurrent
                       ? "bg-blue-500 text-white"
-                      : "bg-gray-200 text-gray-500"
+                      : "bg-muted text-muted-foreground"
                 }`}
               >
                 {isCompleted ? "✓" : idx + 1}
               </div>
-              <span className="text-[10px] text-gray-500 mt-1 text-center leading-tight">
+              <span className="text-[10px] text-muted-foreground mt-1 text-center leading-tight">
                 {step.label}
               </span>
             </div>
             {idx < STATUS_STEPS.length - 1 && (
-              <div className={`h-0.5 flex-1 min-w-2 ${isCompleted ? "bg-green-400" : "bg-gray-200"}`} />
+              <div className={`h-0.5 flex-1 min-w-2 ${isCompleted ? "bg-green-400" : "bg-muted"}`} />
             )}
           </div>
         );
@@ -120,12 +120,12 @@ function WorkOrderDetail({ woId, customerId, onBack }: {
                   )}
                 />
               )}
-              <Badge className={STATUS_COLORS[detail.status] ?? "bg-gray-100 text-gray-700"}>
+              <Badge className={STATUS_COLORS[detail.status] ?? "bg-muted text-muted-foreground"}>
                 {detail.status.replace(/_/g, " ")}
               </Badge>
             </div>
           </div>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-muted-foreground">
             {detail.aircraftRegistration} — {detail.aircraftMake} {detail.aircraftModel}
           </p>
         </CardHeader>
@@ -134,37 +134,37 @@ function WorkOrderDetail({ woId, customerId, onBack }: {
 
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
-              <p className="text-gray-500">Type</p>
+              <p className="text-muted-foreground">Type</p>
               <p className="font-medium">{detail.workOrderType.replace(/_/g, " ")}</p>
             </div>
             <div>
-              <p className="text-gray-500">Priority</p>
+              <p className="text-muted-foreground">Priority</p>
               <p className="font-medium capitalize">{detail.priority}</p>
             </div>
             <div>
-              <p className="text-gray-500">Opened</p>
+              <p className="text-muted-foreground">Opened</p>
               <p className="font-medium">{new Date(detail.openedAt).toLocaleDateString()}</p>
             </div>
             {detail.targetCompletionDate && (
               <div>
-                <p className="text-gray-500">Est. Completion</p>
+                <p className="text-muted-foreground">Est. Completion</p>
                 <p className="font-medium">{new Date(detail.targetCompletionDate).toLocaleDateString()}</p>
               </div>
             )}
           </div>
 
           <div>
-            <p className="text-gray-500 text-sm mb-1">Description</p>
+            <p className="text-muted-foreground text-sm mb-1">Description</p>
             <p className="text-sm">{detail.description}</p>
           </div>
 
           {/* Overall Progress */}
           <div>
             <div className="flex items-center justify-between mb-1">
-              <p className="text-sm font-medium text-gray-700">Overall Progress</p>
+              <p className="text-sm font-medium text-foreground">Overall Progress</p>
               <p className="text-sm font-bold text-blue-600">{detail.progressPercent}%</p>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-3">
+            <div className="w-full bg-muted rounded-full h-3">
               <div
                 className="bg-blue-500 h-3 rounded-full transition-all"
                 style={{ width: `${detail.progressPercent}%` }}
@@ -175,22 +175,22 @@ function WorkOrderDetail({ woId, customerId, onBack }: {
           {/* Work Cards */}
           {detail.taskSummaries.length > 0 && (
             <div>
-              <p className="text-sm font-medium text-gray-700 mb-2">Task Progress</p>
+              <p className="text-sm font-medium text-foreground mb-2">Task Progress</p>
               <div className="space-y-2">
                 {detail.taskSummaries.map((task) => (
-                  <div key={task._id} className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg">
+                  <div key={task._id} className="flex items-center gap-3 p-2 bg-muted/50 rounded-lg">
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">{task.title}</p>
-                      <p className="text-xs text-gray-500">{task.taskCardNumber}</p>
+                      <p className="text-xs text-muted-foreground">{task.taskCardNumber}</p>
                     </div>
                     <div className="flex items-center gap-2">
-                      <div className="w-16 bg-gray-200 rounded-full h-2">
+                      <div className="w-16 bg-muted rounded-full h-2">
                         <div
                           className="bg-green-500 h-2 rounded-full"
                           style={{ width: `${task.progressPercent}%` }}
                         />
                       </div>
-                      <span className="text-xs font-medium text-gray-600 w-8 text-right">
+                      <span className="text-xs font-medium text-muted-foreground w-8 text-right">
                         {task.progressPercent}%
                       </span>
                     </div>
@@ -201,25 +201,25 @@ function WorkOrderDetail({ woId, customerId, onBack }: {
           )}
 
           <div>
-            <p className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-              <Activity className="w-4 h-4 text-gray-500" />
+            <p className="text-sm font-medium text-foreground mb-2 flex items-center gap-2">
+              <Activity className="w-4 h-4 text-muted-foreground" />
               Timeline
             </p>
             {!timeline ? (
-              <p className="text-sm text-gray-500">Loading timeline...</p>
+              <p className="text-sm text-muted-foreground">Loading timeline...</p>
             ) : timeline.length === 0 ? (
-              <p className="text-sm text-gray-500">No timeline events yet.</p>
+              <p className="text-sm text-muted-foreground">No timeline events yet.</p>
             ) : (
               <div className="space-y-2">
                 {timeline.map((event: any) => (
-                  <div key={event._id} className="p-2 rounded-lg border bg-white">
+                  <div key={event._id} className="p-2 rounded-lg border bg-card">
                     <div className="flex items-center justify-between gap-3">
-                      <p className="text-sm font-medium text-gray-800">{event.title}</p>
-                      <p className="text-xs text-gray-400 whitespace-nowrap">
+                      <p className="text-sm font-medium text-foreground">{event.title}</p>
+                      <p className="text-xs text-muted-foreground whitespace-nowrap">
                         {new Date(event.timestamp).toLocaleString()}
                       </p>
                     </div>
-                    <p className="text-xs text-gray-500 mt-0.5">{event.description}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{event.description}</p>
                   </div>
                 ))}
               </div>
@@ -240,7 +240,17 @@ export default function CustomerWorkOrdersPage() {
   );
 
   if (!customerId) {
-    return <p className="text-center text-gray-500 py-16">No customer account linked.</p>;
+    return (
+      <div className="flex flex-col items-center justify-center py-16 gap-4 text-center px-4">
+        <AlertCircle className="w-10 h-10 text-muted-foreground" />
+        <div>
+          <p className="font-semibold text-foreground text-lg">No customer account linked</p>
+          <p className="text-muted-foreground mt-1 max-w-md">
+            Your account is not linked to a customer profile. Contact your MRO provider to set up your portal access.
+          </p>
+        </div>
+      </div>
+    );
   }
 
   if (selectedWo) {
@@ -257,12 +267,12 @@ export default function CustomerWorkOrdersPage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-bold text-gray-900">Work Orders</h1>
+      <h1 className="text-2xl font-bold text-foreground">Work Orders</h1>
 
       {workOrders.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center">
-            <p className="text-gray-500">No work orders found.</p>
+            <p className="text-muted-foreground">No work orders found.</p>
           </CardContent>
         </Card>
       ) : (
@@ -279,19 +289,19 @@ export default function CustomerWorkOrdersPage() {
                     <div className="flex items-center gap-2 flex-wrap">
                       <p className="font-semibold text-sm">{wo.workOrderNumber}</p>
                       {wo.hasRts && <Badge className="bg-green-100 text-green-700">RTS available</Badge>}
-                      <Badge className={STATUS_COLORS[wo.status] ?? "bg-gray-100 text-gray-700"} variant="outline">
+                      <Badge className={STATUS_COLORS[wo.status] ?? "bg-muted text-muted-foreground"} variant="outline">
                         {wo.status.replace(/_/g, " ")}
                       </Badge>
                     </div>
-                    <p className="text-sm text-gray-500 mt-1">
+                    <p className="text-sm text-muted-foreground mt-1">
                       {wo.aircraftRegistration} — {wo.aircraftMake} {wo.aircraftModel}
                     </p>
-                    <p className="text-xs text-gray-400 mt-0.5">
+                    <p className="text-xs text-muted-foreground mt-0.5">
                       Opened {new Date(wo.openedAt).toLocaleDateString()}
                       {wo.targetCompletionDate && ` · Est. ${new Date(wo.targetCompletionDate).toLocaleDateString()}`}
                     </p>
                   </div>
-                  <ChevronRight className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                  <ChevronRight className="w-5 h-5 text-muted-foreground flex-shrink-0" />
                 </div>
                 <StatusTimeline customerFacingStatus={wo.customerFacingStatus} />
               </CardContent>

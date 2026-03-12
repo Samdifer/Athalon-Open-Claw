@@ -55,8 +55,10 @@ async function checkPrimaryActionNoop(
   route: InternalRoute,
 ): Promise<boolean> {
   const action = page.getByTestId("empty-state-primary-action").first();
+  const main = page.locator("main").first();
   const beforeUrl = page.url();
   const beforeToastCount = await page.locator("[data-sonner-toast]").count();
+  const beforeMainText = await main.innerText().catch(() => "");
 
   await action.click({ timeout: 5_000 });
   await page.waitForTimeout(1200);
@@ -68,6 +70,7 @@ async function checkPrimaryActionNoop(
     .isVisible()
     .catch(() => false);
   const afterToastCount = await page.locator("[data-sonner-toast]").count();
+  const afterMainText = await main.innerText().catch(() => "");
 
   if (afterUrl !== beforeUrl) {
     // Return to route to keep audit non-mutating for later checks.
@@ -77,6 +80,9 @@ async function checkPrimaryActionNoop(
 
   if (dialogVisible) return false;
   if (afterToastCount > beforeToastCount) return false;
+  if (afterMainText.replace(/\s+/g, " ").trim() !== beforeMainText.replace(/\s+/g, " ").trim()) {
+    return false;
+  }
   return true;
 }
 

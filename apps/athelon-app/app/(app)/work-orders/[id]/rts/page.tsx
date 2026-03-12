@@ -27,6 +27,7 @@ import { DownloadPDFButton } from "@/src/shared/components/pdf/DownloadPDFButton
 import { RtsDocumentPDF } from "@/src/shared/components/pdf/RtsDocumentPDF";
 import { PrintButton } from "@/src/shared/components/PrintButton";
 import { ActionableEmptyState } from "@/components/zero-state/ActionableEmptyState";
+import { WOBreadcrumb } from "../_components/WOBreadcrumb";
 
 export default function RtsPage() {
   const params = useParams<{ id: string }>();
@@ -327,6 +328,13 @@ export default function RtsPage() {
 
   return (
     <div className="space-y-5">
+      {/* Breadcrumb */}
+      <WOBreadcrumb
+        woId={String(workOrderId)}
+        woNumber={report.workOrderNumber}
+        pageName="Return to Service"
+      />
+
       {/* Back */}
       <Button
         asChild
@@ -418,6 +426,34 @@ export default function RtsPage() {
             </div>
           </CardContent>
         </Card>
+      )}
+
+      {/* All preconditions pass — prominent CTA to proceed */}
+      {allPass && !isSubmitting && (
+        <div className="rounded-lg border border-green-500/30 bg-green-500/8 p-4 flex flex-col sm:flex-row sm:items-center gap-3">
+          <div className="flex items-center gap-2.5 flex-1 min-w-0">
+            <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0" />
+            <div>
+              <p className="text-sm font-semibold text-green-700 dark:text-green-300">
+                All checklist items passed
+              </p>
+              <p className="text-xs text-green-600/80 dark:text-green-400/80 mt-0.5">
+                Complete authorization below, or proceed directly to the release page once authorized.
+              </p>
+            </div>
+          </div>
+          <Button
+            asChild
+            size="sm"
+            variant="outline"
+            className="flex-shrink-0 border-green-500/40 text-green-700 dark:text-green-300 hover:bg-green-500/10 gap-1.5"
+          >
+            <Link to={`/work-orders/${workOrderId}/release`}>
+              <ShieldCheck className="w-3.5 h-3.5" />
+              Proceed to Release
+            </Link>
+          </Button>
+        </div>
       )}
 
       {/* Authorize Button */}

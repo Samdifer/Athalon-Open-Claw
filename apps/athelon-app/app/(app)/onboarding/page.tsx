@@ -20,17 +20,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
-
-const AVIATION_TIMEZONES = [
-  { value: "America/New_York", label: "Eastern (ET) - America/New_York" },
-  { value: "America/Chicago", label: "Central (CT) - America/Chicago" },
-  { value: "America/Denver", label: "Mountain (MT) - America/Denver" },
-  { value: "America/Phoenix", label: "Mountain (no DST) - America/Phoenix" },
-  { value: "America/Los_Angeles", label: "Pacific (PT) - America/Los_Angeles" },
-  { value: "America/Anchorage", label: "Alaska (AKT) - America/Anchorage" },
-  { value: "Pacific/Honolulu", label: "Hawaii (HST) - Pacific/Honolulu" },
-  { value: "UTC", label: "UTC / Zulu" },
-] as const;
+import { AVIATION_TIMEZONES } from "@/src/shared/lib/timezones";
 
 export default function OnboardingPage() {
   const navigate = useNavigate();
@@ -84,17 +74,19 @@ export default function OnboardingPage() {
 
   return (
     <div className="space-y-4">
-      <Button
-        variant="ghost"
-        size="sm"
-        className="text-muted-foreground"
-        asChild
-      >
-        <Link to="/settings/shop">
-          <ArrowLeft className="w-4 h-4 mr-1.5" />
-          Back to Settings
-        </Link>
-      </Button>
+      {org && (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-muted-foreground"
+          asChild
+        >
+          <Link to="/settings/shop">
+            <ArrowLeft className="w-4 h-4 mr-1.5" />
+            Back to Settings
+          </Link>
+        </Button>
+      )}
 
       <Card className="max-w-lg border-border/60">
         <CardHeader>

@@ -445,6 +445,10 @@ export default defineSchema({
       v.union(v.literal("manual"), v.literal("import"), v.literal("api")),
     ),
 
+    // v12: Utilization rates for projections (Optimization Phase 1)
+    averageDailyHours: v.optional(v.number()),
+    averageDailyCycles: v.optional(v.number()),
+
     createdAt: v.number(),
     updatedAt: v.number(),
     createdByOrganizationId: v.optional(v.id("organizations")),
@@ -761,6 +765,11 @@ export default defineSchema({
     // Stored as SHA-256 hex digest. Set via setPin mutation.
     // When set, createSignatureAuthEvent verifies the PIN against this hash.
     pinHash: v.optional(v.string()),
+
+    ampCertificateNumber: v.optional(v.string()),
+    iaCertificateNumber: v.optional(v.string()),
+    ampExpiry: v.optional(v.number()),
+    iaExpiry: v.optional(v.number()),
 
     createdAt: v.number(),
     updatedAt: v.number(),
@@ -1420,6 +1429,7 @@ export default defineSchema({
     // INVARIANT: foundAtAircraftHours >= 0.
 
     dispositionedByTechnicianId: v.optional(v.id("technicians")),
+    dispositionedBy: v.optional(v.string()),
     dispositionedAt: v.optional(v.number()),
     dispositionedCertificateNumber: v.optional(v.string()), // v2 (Marcus 4.5)
 
@@ -1630,6 +1640,10 @@ export default defineSchema({
     // Denormalized counters — maintained by completeStep mutation
     // v5: Estimated hours (GAP-08)
     estimatedHours: v.optional(v.number()),
+
+    // v12: PERT 3-point estimation bounds (Optimization Phase 1)
+    estimatedHoursOptimistic: v.optional(v.number()),
+    estimatedHoursPessimistic: v.optional(v.number()),
 
     // v5: Dedicated signature fields (GAP-22 — replaces notes-based sign-off)
     // Performing technician sign-off
@@ -2488,6 +2502,9 @@ export default defineSchema({
 
     notes: v.optional(v.string()),
 
+    // v12: Typical lead time for scheduling awareness (Optimization Phase 1)
+    typicalLeadTimeDays: v.optional(v.number()),
+
     // v9: Reorder alerts (Phase 9 polish)
     minStockLevel: v.optional(v.number()),
     reorderPoint: v.optional(v.number()),
@@ -3055,6 +3072,10 @@ export default defineSchema({
     approvedAt: v.optional(v.number()),            // Unix ms
 
     notes: v.optional(v.string()),
+
+    // v12: Default lead time for scheduling awareness (Optimization Phase 1)
+    defaultLeadTimeDays: v.optional(v.number()),
+
     createdAt: v.number(),
     updatedAt: v.number(),
   })
@@ -4163,6 +4184,11 @@ export default defineSchema({
     ),
     currentAircraftId: v.optional(v.id("aircraft")),
     currentWorkOrderId: v.optional(v.id("workOrders")),
+
+    // v12: Bay specialization capabilities (Optimization Phase 1)
+    // Used by scheduler to match WOs requiring specific bay types (ndt, paint, turbine, etc.)
+    capabilities: v.optional(v.array(v.string())),
+
     displayOrder: v.optional(v.number()),
     createdAt: v.number(),
     updatedAt: v.number(),
@@ -4209,6 +4235,7 @@ export default defineSchema({
     expiresAt: v.optional(v.number()), // Unix ms — undefined = never expires
     certificateRef: v.optional(v.string()), // Certificate/document reference
     createdAt: v.number(),
+    archivedAt: v.optional(v.number()), // Unix ms — set on soft-delete, never physically removed
   })
     .index("by_technician", ["technicianId"])
     .index("by_org", ["organizationId"]),
@@ -5958,4 +5985,56 @@ export default defineSchema({
   })
     .index("by_prospect", ["prospectEntityId"])
     .index("by_org_prospect", ["organizationId", "prospectEntityId"]),
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // PARTS REQUESTS
+  //
+  // Lightweight parts request records created by technicians during work order
+  // execution. A simplified request lifecycle separate from the full
+  // workOrderParts procurement flow — captures initial need before a PO exists.
+  // ═══════════════════════════════════════════════════════════════════════════
+  partsRequests: defineTable({
+    organizationId: v.string(),
+    workOrderId: v.id("workOrders"),
+    taskCardId: v.optional(v.id("taskCards")),
+    technicianId: v.optional(v.id("technicians")),
+    requestedBy: v.string(),
+    requestedAt: v.number(),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("ordered"),
+      v.literal("received"),
+      v.literal("cancelled"),
+    ),
+    partNumber: v.string(),
+    quantity: v.number(),
+    notes: v.optional(v.string()),
+  })
+    .index("by_org", ["organizationId"])
+    .index("by_workOrder", ["workOrderId"]),
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ROUTING TEMPLATES
+  //
+  // Standard work order task sequences used to pre-populate task cards when
+  // opening a new work order. Templates are per-organization and versioned via
+  // isActive flag.
+  // ═══════════════════════════════════════════════════════════════════════════
+  routingTemplates: defineTable({
+    organizationId: v.string(),
+    name: v.string(),
+    description: v.optional(v.string()),
+    steps: v.array(
+      v.object({
+        name: v.string(),
+        description: v.optional(v.string()),
+        estimatedHours: v.number(),
+      }),
+    ),
+    createdBy: v.string(),
+    isActive: v.boolean(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_org", ["organizationId"]),
 });

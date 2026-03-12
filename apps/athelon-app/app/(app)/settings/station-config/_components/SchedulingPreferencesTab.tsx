@@ -25,6 +25,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 
 import { CURSOR_COLORS, CURSOR_PRESETS } from "./CursorPresets";
+import { AVIATION_TIMEZONES } from "@/src/shared/lib/timezones";
 
 type OperatingDay = {
   dayOfWeek: number; // 0=Mon..6=Sun
@@ -50,17 +51,6 @@ type TimelineCursor = {
   colorClass: string;
   enabled: boolean;
 };
-
-const AVIATION_TIMEZONES = [
-  { value: "America/New_York", label: "Eastern (ET)" },
-  { value: "America/Chicago", label: "Central (CT)" },
-  { value: "America/Denver", label: "Mountain (MT)" },
-  { value: "America/Phoenix", label: "Mountain (no DST)" },
-  { value: "America/Los_Angeles", label: "Pacific (PT)" },
-  { value: "America/Anchorage", label: "Alaska (AKT)" },
-  { value: "Pacific/Honolulu", label: "Hawaii (HST)" },
-  { value: "UTC", label: "UTC / Zulu" },
-];
 
 const SHIFT_DAY_OPTIONS = [
   { value: 0, label: "Sun" },
@@ -474,8 +464,8 @@ export default function SchedulingPreferencesTab() {
 
                 <div className="flex items-center gap-2">
                   <Switch
-                    checked={!day.isOpen}
-                    onCheckedChange={(checked) => updateDay(idx, { isOpen: !checked })}
+                    checked={day.isOpen}
+                    onCheckedChange={(checked) => updateDay(idx, { isOpen: checked })}
                   />
                   <span className="text-xs text-muted-foreground w-10">
                     {day.isOpen ? "Open" : "Closed"}

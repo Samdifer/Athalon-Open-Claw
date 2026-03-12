@@ -4,16 +4,32 @@ import { api } from "@/convex/_generated/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { AlertCircle, ArrowLeft } from "lucide-react";
 import { DownloadPDFButton } from "@/src/shared/components/pdf/DownloadPDFButton";
 import { InvoicePDF } from "@/src/shared/components/pdf/InvoicePDF";
 import { usePortalCustomerId } from "@/hooks/usePortalCustomerId";
 
 const STATUS_COLORS: Record<string, string> = {
+  DRAFT: "bg-muted text-muted-foreground",
   SENT: "bg-blue-100 text-blue-700",
   PARTIAL: "bg-amber-100 text-amber-700",
   PAID: "bg-green-100 text-green-700",
-  VOID: "bg-gray-100 text-gray-500",
+  VOID: "bg-muted text-muted-foreground",
+};
+
+const STATUS_LABELS: Record<string, string> = {
+  DRAFT: "Draft",
+  SENT: "Sent",
+  PARTIAL: "Partial",
+  PAID: "Paid",
+  VOID: "Void",
+};
+
+const PAYMENT_STATUS_LABELS: Record<string, string> = {
+  paid: "Paid",
+  partially_paid: "Partially paid",
+  unpaid: "Unpaid",
+  overdue: "Overdue",
 };
 
 const PAYMENT_STATUS_BADGE: Record<string, string> = {
@@ -49,14 +65,14 @@ function InvoiceDetail({ invoice, onBack }: { invoice: any; onBack: () => void }
               />
               {invoice.isOverdue && <Badge className="bg-red-100 text-red-700">Overdue</Badge>}
               <Badge className={PAYMENT_STATUS_BADGE[invoice.paymentStatus] ?? "bg-slate-100 text-slate-700"}>
-                {invoice.paymentStatus?.replace(/_/g, " ") ?? "unpaid"}
+                {PAYMENT_STATUS_LABELS[invoice.paymentStatus] ?? "Unpaid"}
               </Badge>
               <Badge className={STATUS_COLORS[invoice.status] ?? ""}>
-                {invoice.status}
+                {STATUS_LABELS[invoice.status] ?? invoice.status}
               </Badge>
             </div>
           </div>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-muted-foreground">
             Created {new Date(invoice.createdAt).toLocaleDateString()}
             {invoice.dueDate && ` · Due ${new Date(invoice.dueDate).toLocaleDateString()}`}
           </p>
@@ -65,12 +81,12 @@ function InvoiceDetail({ invoice, onBack }: { invoice: any; onBack: () => void }
           {/* Line Items */}
           <div className="border rounded-lg overflow-hidden">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50">
+              <thead className="bg-muted">
                 <tr>
-                  <th className="text-left p-2 font-medium text-gray-600">Description</th>
-                  <th className="text-right p-2 font-medium text-gray-600">Qty</th>
-                  <th className="text-right p-2 font-medium text-gray-600">Unit Price</th>
-                  <th className="text-right p-2 font-medium text-gray-600">Total</th>
+                  <th className="text-left p-2 font-medium text-muted-foreground">Description</th>
+                  <th className="text-right p-2 font-medium text-muted-foreground">Qty</th>
+                  <th className="text-right p-2 font-medium text-muted-foreground">Unit Price</th>
+                  <th className="text-right p-2 font-medium text-muted-foreground">Total</th>
                 </tr>
               </thead>
               <tbody>
@@ -90,17 +106,17 @@ function InvoiceDetail({ invoice, onBack }: { invoice: any; onBack: () => void }
           </div>
 
           {/* Totals */}
-          <div className="bg-gray-50 rounded-lg p-4 space-y-1 text-sm">
+          <div className="bg-muted rounded-lg p-4 space-y-1 text-sm">
             <div className="flex justify-between">
-              <span className="text-gray-500">Labor</span>
+              <span className="text-muted-foreground">Labor</span>
               <span>${invoice.laborTotal.toFixed(2)}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-500">Parts</span>
+              <span className="text-muted-foreground">Parts</span>
               <span>${invoice.partsTotal.toFixed(2)}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-500">Tax</span>
+              <span className="text-muted-foreground">Tax</span>
               <span>${invoice.tax.toFixed(2)}</span>
             </div>
             <div className="flex justify-between font-bold pt-2 border-t">
@@ -122,7 +138,7 @@ function InvoiceDetail({ invoice, onBack }: { invoice: any; onBack: () => void }
           {/* Payment History */}
           {invoice.payments.length > 0 && (
             <div>
-              <p className="text-sm font-medium text-gray-700 mb-2">Payment History</p>
+              <p className="text-sm font-medium text-foreground mb-2">Payment History</p>
               <div className="space-y-2">
                 {invoice.payments.map((payment: any, idx: number) => (
                   <div key={idx} className="flex items-center justify-between p-2 bg-green-50 rounded-lg text-sm">
@@ -133,7 +149,7 @@ function InvoiceDetail({ invoice, onBack }: { invoice: any; onBack: () => void }
                         {payment.referenceNumber && ` · Ref: ${payment.referenceNumber}`}
                       </p>
                     </div>
-                    <p className="text-xs text-gray-500">{new Date(payment.recordedAt).toLocaleDateString()}</p>
+                    <p className="text-xs text-muted-foreground">{new Date(payment.recordedAt).toLocaleDateString()}</p>
                   </div>
                 ))}
               </div>
@@ -141,7 +157,7 @@ function InvoiceDetail({ invoice, onBack }: { invoice: any; onBack: () => void }
           )}
 
           {invoice.paymentTerms && (
-            <p className="text-xs text-gray-400 text-center">Payment Terms: {invoice.paymentTerms}</p>
+            <p className="text-xs text-muted-foreground text-center">Payment Terms: {invoice.paymentTerms}</p>
           )}
         </CardContent>
       </Card>
@@ -158,7 +174,17 @@ export default function CustomerInvoicesPage() {
   );
 
   if (!customerId) {
-    return <p className="text-center text-gray-500 py-16">No customer account linked.</p>;
+    return (
+      <div className="flex flex-col items-center justify-center py-16 gap-4 text-center px-4">
+        <AlertCircle className="w-10 h-10 text-muted-foreground" />
+        <div>
+          <p className="font-semibold text-foreground text-lg">No customer account linked</p>
+          <p className="text-muted-foreground mt-1 max-w-md">
+            Your account is not linked to a customer profile. Contact your MRO provider to set up your portal access.
+          </p>
+        </div>
+      </div>
+    );
   }
 
   if (selectedInvoice) {
@@ -175,12 +201,12 @@ export default function CustomerInvoicesPage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-bold text-gray-900">Invoices</h1>
+      <h1 className="text-2xl font-bold text-foreground">Invoices</h1>
 
       {invoices.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center">
-            <p className="text-gray-500">No invoices found.</p>
+            <p className="text-muted-foreground">No invoices found.</p>
           </CardContent>
         </Card>
       ) : (
@@ -198,13 +224,13 @@ export default function CustomerInvoicesPage() {
                       <p className="font-semibold text-sm">{inv.invoiceNumber}</p>
                       {inv.isOverdue && <Badge className="bg-red-100 text-red-700">Overdue</Badge>}
                       <Badge className={PAYMENT_STATUS_BADGE[inv.paymentStatus] ?? "bg-slate-100 text-slate-700"}>
-                        {inv.paymentStatus?.replace(/_/g, " ") ?? "unpaid"}
+                        {PAYMENT_STATUS_LABELS[inv.paymentStatus] ?? "Unpaid"}
                       </Badge>
                       <Badge className={STATUS_COLORS[inv.status] ?? ""}>
-                        {inv.status}
+                        {STATUS_LABELS[inv.status] ?? inv.status}
                       </Badge>
                     </div>
-                    <p className="text-xs text-gray-400 mt-1">
+                    <p className="text-xs text-muted-foreground mt-1">
                       {new Date(inv.createdAt).toLocaleDateString()}
                       {inv.dueDate && ` · Due ${new Date(inv.dueDate).toLocaleDateString()}`}
                     </p>

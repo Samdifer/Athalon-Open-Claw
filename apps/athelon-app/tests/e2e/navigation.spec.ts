@@ -6,10 +6,17 @@ test.describe("Navigation", () => {
     await page.goto("/dashboard");
     await ensureClerkAuthenticated(page, "/dashboard");
 
-    await page.getByRole("button", { name: /open search palette/i }).click();
-    await expect(page.getByRole("dialog")).toBeVisible({ timeout: 10_000 });
+    const welcomeEnter = page.getByRole("button", { name: /^enter$/i });
+    await welcomeEnter.click({ timeout: 5_000 }).catch(() => null);
+    await expect(welcomeEnter).toBeHidden({ timeout: 5_000 }).catch(() => null);
 
-    await page.getByRole("option", { name: "N192AK Cessna 172S" }).click();
+    await page.getByRole("button", { name: /open search palette/i }).click();
+    const commandInput = page.getByPlaceholder(
+      "Search work orders, aircraft, parts...",
+    );
+    await expect(commandInput).toBeVisible({ timeout: 10_000 });
+    await commandInput.fill("Cessna 172S");
+    await page.keyboard.press("Enter");
     await expect(page).toHaveURL(/\/fleet\/N192AK$/);
   });
 });

@@ -255,6 +255,10 @@ export const updateProfile = mutation({
     employeeId: v.optional(v.union(v.string(), v.null())),
     email: v.optional(v.union(v.string(), v.null())),
     phone: v.optional(v.union(v.string(), v.null())),
+    ampCertificateNumber: v.optional(v.union(v.string(), v.null())),
+    iaCertificateNumber: v.optional(v.union(v.string(), v.null())),
+    ampExpiry: v.optional(v.union(v.number(), v.null())),
+    iaExpiry: v.optional(v.union(v.number(), v.null())),
   },
   handler: async (ctx, args) => {
     const technician = await ctx.db.get(args.technicianId);
@@ -280,11 +284,27 @@ export const updateProfile = mutation({
     });
 
     const previous = buildProfileSnapshot(technician);
+
+    const ampCertificateNumber =
+      args.ampCertificateNumber === null
+        ? undefined
+        : (args.ampCertificateNumber?.trim() || undefined);
+    const iaCertificateNumber =
+      args.iaCertificateNumber === null
+        ? undefined
+        : (args.iaCertificateNumber?.trim() || undefined);
+    const ampExpiry = args.ampExpiry === null ? undefined : args.ampExpiry;
+    const iaExpiry = args.iaExpiry === null ? undefined : args.iaExpiry;
+
     const next = {
       legalName,
       employeeId,
       email: normalizeEmail(args.email ?? undefined),
       phone: trimOptional(args.phone ?? undefined),
+      ampCertificateNumber,
+      iaCertificateNumber,
+      ampExpiry,
+      iaExpiry,
       updatedAt: Date.now(),
     };
 

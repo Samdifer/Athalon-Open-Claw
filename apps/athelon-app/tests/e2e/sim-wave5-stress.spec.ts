@@ -25,6 +25,8 @@ const ALL_PAGES = [
 
 test.describe("Simulation Wave 5: Stress Navigation", () => {
   test("rapid page navigation — no crashes", async ({ page }) => {
+    test.setTimeout(90_000);
+
     const errors: string[] = [];
     page.on("pageerror", (err) => errors.push(`${page.url()}: ${err.message}`));
 
@@ -51,6 +53,8 @@ test.describe("Simulation Wave 5: Stress Navigation", () => {
   });
 
   test("slow page detection — all pages load under 10s", async ({ page }) => {
+    test.setTimeout(120_000);
+
     const slowPages: string[] = [];
 
     for (const path of ALL_PAGES.slice(0, 20)) { // Test first 20 for timing

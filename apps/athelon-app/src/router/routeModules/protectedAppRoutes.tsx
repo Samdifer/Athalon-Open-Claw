@@ -83,6 +83,8 @@ const PersonnelTimeManagementPage = lazy(
   () => import("@/app/(app)/personnel/time-management/page"),
 );
 const TrainingPage = lazy(() => import("@/app/(app)/personnel/training/page"));
+const TrainingAnalyticsPage = lazy(() => import("@/app/(app)/personnel/training/analytics/page"));
+const CareerProfilePage = lazy(() => import("@/app/(app)/personnel/[techId]/career/page"));
 const TechnicianTrainingPage = lazy(() => import("@/app/(app)/personnel/[id]/training/page"));
 const OjtDashboardPage = lazy(() => import("@/app/(app)/training/ojt/page"));
 const OjtCurriculumDetailPage = lazy(() => import("@/app/(app)/training/ojt/[curriculumId]/page"));
@@ -155,6 +157,7 @@ const SeedAuditPage = lazy(() => import("@/app/(app)/scheduling/seed-audit/page"
 const DueListWorkbenchPage = lazy(() => import("@/app/(app)/scheduling/due-list/page"));
 
 const ReportsPage = lazy(() => import("@/app/(app)/reports/page"));
+const PlatformFeaturesPage = lazy(() => import("@/app/(app)/reports/platform/page"));
 const InventoryReportsPage = lazy(() => import("@/app/(app)/reports/inventory/page"));
 const FinancialDashboardPage = lazy(() => import("@/app/(app)/reports/financials/page"));
 const FinancialForecastPage = lazy(
@@ -280,6 +283,8 @@ export function protectedAppRoutes() {
             <Route path="/personnel" element={<PersonnelPage />} />
             <Route path="/personnel/time-management" element={<PersonnelTimeManagementPage />} />
             <Route path="/personnel/training" element={<TrainingPage />} />
+            <Route path="/personnel/training/analytics" element={<TrainingAnalyticsPage />} />
+            <Route path="/personnel/:techId/career" element={<CareerProfilePage />} />
             <Route path="/personnel/:id/training" element={<TechnicianTrainingPage />} />
             <Route path="/training/ojt" element={<OjtDashboardPage />} />
             <Route path="/training/ojt/:curriculumId" element={<OjtCurriculumDetailPage />} />
@@ -366,6 +371,7 @@ export function protectedAppRoutes() {
             <Route path="/scheduling/seed-audit" element={<SeedAuditPage />} />
 
             <Route path="/reports" element={<ReportsPage />} />
+            <Route path="/reports/platform" element={<PlatformFeaturesPage />} />
             <Route path="/reports/inventory" element={<InventoryReportsPage />} />
             <Route path="/reports/financials" element={<FinancialDashboardPage />} />
             <Route path="/reports/financials/forecast" element={<FinancialForecastPage />} />

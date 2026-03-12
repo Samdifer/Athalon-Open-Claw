@@ -60,6 +60,14 @@ const STATUS_STYLES: Record<string, string> = {
   VOID: "bg-red-500/15 text-red-600 dark:text-red-400 border-red-500/30",
 };
 
+const STATUS_LABELS: Record<string, string> = {
+  DRAFT: "Draft",
+  SENT: "Sent",
+  PARTIAL: "Partial",
+  PAID: "Paid",
+  VOID: "Void",
+};
+
 const PAYMENT_METHODS: { value: PaymentMethod; label: string }[] = [
   { value: "cash", label: "Cash" },
   { value: "check", label: "Check" },
@@ -102,7 +110,7 @@ function OverdueBadge() {
       aria-label="Invoice overdue"
     >
       <span className="w-1.5 h-1.5 rounded-full bg-red-400 inline-block" />
-      OVERDUE
+      Overdue
     </Badge>
   );
 }
@@ -788,7 +796,7 @@ export default function InvoicesPage() {
                               variant="outline"
                               className={`text-[10px] font-medium border ${STATUS_STYLES[inv.status] ?? ""}`}
                             >
-                              {inv.status}
+                              {STATUS_LABELS[inv.status] ?? inv.status}
                             </Badge>
                             {overdue && <OverdueBadge />}
                             {aging !== null && aging > 30 && <AgingBadge days={aging} />}

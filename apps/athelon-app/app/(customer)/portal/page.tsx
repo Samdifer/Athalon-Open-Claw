@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
+  AlertCircle,
   Wrench,
   FileText,
   Receipt,
@@ -28,13 +29,14 @@ export default function CustomerDashboardPage() {
 
   if (!customerId) {
     return (
-      <div className="text-center py-16">
-        <h2 className="text-xl font-semibold text-gray-700">
-          No customer account linked
-        </h2>
-        <p className="text-gray-500 mt-2">
-          Please contact your service provider to set up portal access.
-        </p>
+      <div className="flex flex-col items-center justify-center py-16 gap-4 text-center px-4">
+        <AlertCircle className="w-10 h-10 text-muted-foreground" />
+        <div>
+          <p className="font-semibold text-foreground text-lg">No customer account linked</p>
+          <p className="text-muted-foreground mt-1 max-w-md">
+            Your account is not linked to a customer profile. Contact your MRO provider to set up your portal access.
+          </p>
+        </div>
       </div>
     );
   }
@@ -86,10 +88,10 @@ export default function CustomerDashboardPage() {
     <div className="space-y-6">
       {/* Welcome */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">
+        <h1 className="text-2xl font-bold text-foreground">
           Welcome, {dashboard.customer.companyName ?? dashboard.customer.name}
         </h1>
-        <p className="text-gray-500 mt-1">
+        <p className="text-muted-foreground mt-1">
           Here's an overview of your account.
         </p>
       </div>
@@ -102,10 +104,10 @@ export default function CustomerDashboardPage() {
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-500">
+                    <p className="text-sm font-medium text-muted-foreground">
                       {card.title}
                     </p>
-                    <p className="text-3xl font-bold text-gray-900 mt-1">
+                    <p className="text-3xl font-bold text-foreground mt-1">
                       {card.value}
                     </p>
                   </div>
@@ -152,29 +154,29 @@ export default function CustomerDashboardPage() {
         <Card>
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
-              <Activity className="w-5 h-5 text-gray-500" />
+              <Activity className="w-5 h-5 text-muted-foreground" />
               Recent Activity
             </CardTitle>
           </CardHeader>
           <CardContent>
             {dashboard.recentActivity.length === 0 ? (
-              <p className="text-gray-500 text-sm">No recent activity.</p>
+              <p className="text-muted-foreground text-sm">No recent activity.</p>
             ) : (
               <div className="relative">
-                <div className="absolute left-4 top-0 bottom-0 w-px bg-gray-200" />
+                <div className="absolute left-4 top-0 bottom-0 w-px bg-border" />
                 <div className="space-y-4">
                   {dashboard.recentActivity.map(
                     (activity: { type: string; description: string; timestamp: number; recordId: string }, idx: number) => (
                       <div key={idx} className="flex items-start gap-3 relative">
-                        <div className="w-8 h-8 bg-white border-2 border-gray-200 rounded-full flex items-center justify-center flex-shrink-0 z-10">
-                          <Clock className="w-3.5 h-3.5 text-gray-400" />
+                        <div className="w-8 h-8 bg-card border-2 border-border rounded-full flex items-center justify-center flex-shrink-0 z-10">
+                          <Clock className="w-3.5 h-3.5 text-muted-foreground" />
                         </div>
                         <div className="flex-1 min-w-0 pt-0.5">
-                          <p className="text-sm text-gray-700">
+                          <p className="text-sm text-foreground">
                             {activity.description}
                           </p>
                           <div className="flex items-center gap-2 mt-1">
-                            <p className="text-xs text-gray-400">
+                            <p className="text-xs text-muted-foreground">
                               {new Date(activity.timestamp).toLocaleString()}
                             </p>
                             <Badge
@@ -201,7 +203,7 @@ export default function CustomerDashboardPage() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle className="text-lg flex items-center gap-2">
-                <Plane className="w-5 h-5 text-gray-500" />
+                <Plane className="w-5 h-5 text-muted-foreground" />
                 Fleet Status
               </CardTitle>
               <Link to="/portal/fleet">
@@ -213,7 +215,7 @@ export default function CustomerDashboardPage() {
           </CardHeader>
           <CardContent>
             {!fleet || fleet.length === 0 ? (
-              <p className="text-gray-500 text-sm">No aircraft on file.</p>
+              <p className="text-muted-foreground text-sm">No aircraft on file.</p>
             ) : (
               <div className="space-y-3">
                 {fleet.slice(0, 5).map((ac) => (
@@ -222,14 +224,14 @@ export default function CustomerDashboardPage() {
                     className={`flex items-center justify-between p-3 rounded-lg border ${
                       ac.activeWorkOrders > 0
                         ? "border-blue-200 bg-blue-50/50"
-                        : "border-gray-100"
+                        : "border-border"
                     }`}
                   >
                     <div>
-                      <p className="font-semibold text-gray-900">
+                      <p className="font-semibold text-foreground">
                         {ac.currentRegistration}
                       </p>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-muted-foreground">
                         {ac.make} {ac.model}
                       </p>
                     </div>
@@ -271,15 +273,15 @@ export default function CustomerDashboardPage() {
           { to: "/portal/quotes", label: "View Quotes", icon: FileText },
           { to: "/portal/invoices", label: "View Invoices", icon: Receipt },
           { to: "/portal/fleet", label: "My Fleet", icon: Plane },
-          { to: "/portal/messages", label: "Messages", icon: Activity },
+          { to: "/portal/messages", label: "Support Tickets", icon: Activity },
         ].map((link) => (
           <Link
             key={link.to}
             to={link.to}
-            className="flex flex-col items-center gap-2 p-4 bg-white rounded-lg border hover:shadow-md transition-shadow text-center"
+            className="flex flex-col items-center gap-2 p-4 bg-card rounded-lg border hover:shadow-md transition-shadow text-center"
           >
-            <link.icon className="w-5 h-5 text-gray-600" />
-            <span className="text-sm font-medium text-gray-700">
+            <link.icon className="w-5 h-5 text-muted-foreground" />
+            <span className="text-sm font-medium text-foreground">
               {link.label}
             </span>
           </Link>

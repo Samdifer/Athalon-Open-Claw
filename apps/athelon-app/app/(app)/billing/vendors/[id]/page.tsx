@@ -59,16 +59,6 @@ type ServiceType =
   | "repair" | "overhaul" | "test" | "calibration" | "inspection"
   | "fabrication" | "cleaning" | "plating" | "painting" | "ndt" | "other";
 
-type VendorService = {
-  id: string;
-  serviceName: string;
-  serviceType: ServiceType;
-  description?: string;
-  estimatedCost?: number;
-  certificationRequired?: string;
-  isActive: boolean;
-};
-
 const SERVICE_TYPE_OPTIONS: { value: ServiceType; label: string }[] = [
   { value: "repair", label: "Repair" },
   { value: "overhaul", label: "Overhaul" },
@@ -105,25 +95,6 @@ function getServiceTypeBadgeClass(serviceType: ServiceType): string {
   }
 }
 
-const initialDemoServices: VendorService[] = [
-  {
-    id: "vs-1",
-    serviceName: "Fluorescent Penetrant Inspection (FPI)",
-    serviceType: "ndt",
-    description: "Level II FPI per NAS 410 on ferrous and non-ferrous components",
-    estimatedCost: 275,
-    certificationRequired: "NAS 410 Level II",
-    isActive: true,
-  },
-  {
-    id: "vs-2",
-    serviceName: "Brake Assembly Overhaul",
-    serviceType: "overhaul",
-    description: "Cleveland and Goodyear main gear brake assemblies",
-    estimatedCost: 450,
-    isActive: true,
-  },
-];
 
 export default function VendorDetailPage() {
   const params = useParams();
@@ -141,6 +112,14 @@ export default function VendorDetailPage() {
     orgId ? { orgId, vendorId } : "skip",
   );
 
+  const vendorServices = useQuery(
+    api.vendors.listVendorServices,
+    vendorId ? { vendorId } : "skip",
+  );
+
+  const createVendorService = useMutation(api.vendors.createVendorService);
+  const updateVendorService = useMutation(api.vendors.updateVendorService);
+
   const setVendorApproved = useMutation(api.vendors.setVendorApprovedStatus);
   const updateVendorCert = useMutation(api.vendors.updateVendorCert);
 
@@ -151,8 +130,6 @@ export default function VendorDetailPage() {
   const [newCertNumber, setNewCertNumber] = useState("");
   const [newCertExpiry, setNewCertExpiry] = useState("");
 
-  // Services tab state
-  const [services, setServices] = useState<VendorService[]>(initialDemoServices);
   const [showAddService, setShowAddService] = useState(false);
   const [newServiceName, setNewServiceName] = useState("");
   const [newServiceType, setNewServiceType] = useState<ServiceType>("repair");
@@ -169,28 +146,36 @@ export default function VendorDetailPage() {
     setShowAddService(false);
   };
 
-  const handleAddService = () => {
-    if (!newServiceName.trim()) return;
-    const service: VendorService = {
-      id: `vs-${Date.now()}`,
-      serviceName: newServiceName.trim(),
-      serviceType: newServiceType,
-      description: newServiceDescription.trim() || undefined,
-      estimatedCost: newServiceCost ? parseFloat(newServiceCost) : undefined,
-      certificationRequired: newServiceCert.trim() || undefined,
-      isActive: true,
-    };
-    setServices((prev) => [...prev, service]);
-    resetServiceForm();
+  const handleAddService = async () => {
+    if (!orgId || !newServiceName.trim()) return;
+    setActionLoading("add_service");
+    try {
+      await createVendorService({
+        vendorId,
+        orgId,
+        serviceName: newServiceName.trim(),
+        serviceType: newServiceType,
+        description: newServiceDescription.trim() || undefined,
+        estimatedCost: newServiceCost ? parseFloat(newServiceCost) : undefined,
+        certificationRequired: newServiceCert.trim() || undefined,
+      });
+      resetServiceForm();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to add service.");
+    } finally {
+      setActionLoading(null);
+    }
   };
 
-  const handleDeactivateService = (serviceId: string) => {
-    setServices((prev) =>
-      prev.map((s) => (s.id === serviceId ? { ...s, isActive: !s.isActive } : s)),
-    );
+  const handleDeactivateService = async (serviceId: Id<"vendorServices">) => {
+    try {
+      await updateVendorService({ serviceId, isActive: false });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to update service.");
+    }
   };
 
-  const isLoading = !isLoaded || vendor === undefined;
+  const isLoading = !isLoaded || vendor === undefined || vendorServices === undefined;
 
   const certExpired = vendor?.certExpiry ? vendor.certExpiry < Date.now() : false;
   const certExpiringSoon = !certExpired && vendor?.certExpiry
@@ -312,9 +297,9 @@ export default function VendorDetailPage() {
           <TabsTrigger value="overview" className="h-7 px-3 text-xs data-[state=active]:bg-background">Overview</TabsTrigger>
           <TabsTrigger value="services" className="h-7 px-3 text-xs data-[state=active]:bg-background">
             Services
-            {services.filter((s) => s.isActive).length > 0 && (
+            {(vendorServices ?? []).length > 0 && (
               <Badge variant="secondary" className="ml-1.5 h-4 min-w-[16px] px-1 text-[9px] bg-primary/15 text-primary">
-                {services.filter((s) => s.isActive).length}
+                {(vendorServices ?? []).length}
               </Badge>
             )}
           </TabsTrigger>
@@ -525,14 +510,16 @@ export default function VendorDetailPage() {
                 </div>
                 <div className="flex gap-2 justify-end pt-1">
                   <Button variant="outline" size="sm" onClick={resetServiceForm} className="h-7 text-xs">Cancel</Button>
-                  <Button size="sm" onClick={handleAddService} disabled={!newServiceName.trim()} className="h-7 text-xs">Save Service</Button>
+                  <Button size="sm" onClick={handleAddService} disabled={!newServiceName.trim() || actionLoading === "add_service"} className="h-7 text-xs">
+                    {actionLoading === "add_service" ? "Saving..." : "Save Service"}
+                  </Button>
                 </div>
               </CardContent>
             </Card>
           )}
 
           {/* Services List */}
-          {services.length === 0 ? (
+          {(vendorServices ?? []).length === 0 ? (
             <Card className="border-border/60">
               <CardContent className="py-12 text-center">
                 <Wrench className="w-6 h-6 text-muted-foreground/40 mx-auto mb-2" />
@@ -543,14 +530,14 @@ export default function VendorDetailPage() {
             </Card>
           ) : (
             <div className="space-y-2">
-              {services.map((service) => (
-                <Card key={service.id} className={`border-border/60 ${!service.isActive ? "opacity-50" : ""}`}>
+              {(vendorServices ?? []).map((service) => (
+                <Card key={service._id} className="border-border/60">
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap mb-1">
                           <span className="text-sm font-medium text-foreground">{service.serviceName}</span>
-                          <Badge variant="outline" className={`text-[10px] ${getServiceTypeBadgeClass(service.serviceType)}`}>
+                          <Badge variant="outline" className={`text-[10px] ${getServiceTypeBadgeClass(service.serviceType as ServiceType)}`}>
                             {SERVICE_TYPE_OPTIONS.find((o) => o.value === service.serviceType)?.label ?? service.serviceType}
                           </Badge>
                           {service.certificationRequired && (
@@ -561,11 +548,6 @@ export default function VendorDetailPage() {
                           {service.estimatedCost !== undefined && (
                             <span className="text-xs text-muted-foreground">${service.estimatedCost.toFixed(2)}</span>
                           )}
-                          {!service.isActive && (
-                            <Badge variant="outline" className="text-[10px] bg-muted text-muted-foreground border-muted-foreground/30">
-                              Inactive
-                            </Badge>
-                          )}
                         </div>
                         {service.description && (
                           <p className="text-xs text-muted-foreground">{service.description}</p>
@@ -574,10 +556,10 @@ export default function VendorDetailPage() {
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => handleDeactivateService(service.id)}
+                        onClick={() => handleDeactivateService(service._id)}
                         className="h-7 text-xs flex-shrink-0"
                       >
-                        {service.isActive ? "Deactivate" : "Activate"}
+                        Deactivate
                       </Button>
                     </div>
                   </CardContent>

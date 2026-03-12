@@ -1,161 +1,108 @@
-"use client";
-
+import { useState } from "react";
+import { useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
+import { toast } from "sonner";
 import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
-export type RoutingTrainingType =
-  | "airframe"
-  | "powerplant"
-  | "inspection"
-  | "ndt"
-  | "borescope";
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const _api = api as any;
 
-export interface RoutingTemplateTaskCard {
-  id: string;
-  title: string;
-  estimatedHours: number;
-  requiredTraining: RoutingTrainingType[];
-  standardMinutes: number;
-}
-
-export interface RoutingTemplate {
-  id: string;
+export interface ConvexRoutingTemplate {
+  _id: Id<"routingTemplates">;
+  _creationTime: number;
+  organizationId: string;
   name: string;
-  aircraftType: string;
-  inspectionType: string;
-  taskCards: RoutingTemplateTaskCard[];
+  description?: string;
+  steps: Array<{ name: string; description?: string; estimatedHours: number }>;
+  createdBy: string;
+  isActive: boolean;
+  createdAt: number;
   updatedAt: number;
 }
 
-const STORAGE_PREFIX = "athelon:routing-templates";
-
-const TRAINING_OPTIONS: Array<{ value: RoutingTrainingType; label: string }> = [
-  { value: "airframe", label: "Airframe" },
-  { value: "powerplant", label: "Powerplant" },
-  { value: "inspection", label: "IA Inspection" },
-  { value: "ndt", label: "NDT" },
-  { value: "borescope", label: "Borescope" },
-];
-
-function defaultTaskCard(): RoutingTemplateTaskCard {
-  return {
-    id: `card-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-    title: "",
-    estimatedHours: 1,
-    requiredTraining: [],
-    standardMinutes: 60,
-  };
-}
-
-export function routingTemplatesStorageKey(orgId: string): string {
-  return `${STORAGE_PREFIX}:${orgId}`;
-}
-
-export function loadRoutingTemplatesFromStorage(orgId?: string): RoutingTemplate[] {
-  if (!orgId || typeof window === "undefined") return [];
-  try {
-    const raw = window.localStorage.getItem(routingTemplatesStorageKey(orgId));
-    if (!raw) return [];
-    const parsed = JSON.parse(raw) as RoutingTemplate[];
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
-
-export function persistRoutingTemplatesToStorage(
-  orgId: string | undefined,
-  templates: RoutingTemplate[],
-): void {
-  if (!orgId || typeof window === "undefined") return;
-  window.localStorage.setItem(
-    routingTemplatesStorageKey(orgId),
-    JSON.stringify(templates),
-  );
-}
-
 interface TemplateBuilderProps {
-  orgId?: string;
-  selectedTemplateId: string | null;
-  templates: RoutingTemplate[];
-  onTemplatesChange: (next: RoutingTemplate[]) => void;
+  selectedTemplate: ConvexRoutingTemplate | null;
 }
 
-export function TemplateBuilder({
-  orgId,
-  selectedTemplateId,
-  templates,
-  onTemplatesChange,
-}: TemplateBuilderProps) {
-  const selectedTemplate = templates.find((template) => template.id === selectedTemplateId) ?? null;
+export function TemplateBuilder({ selectedTemplate }: TemplateBuilderProps) {
+  const updateTemplate = useMutation(_api.routingTemplates.updateTemplate) as (args: {
+    templateId: Id<"routingTemplates">;
+    steps: Array<{ name: string; description?: string; estimatedHours: number }>;
+  }) => Promise<void>;
 
-  function commit(next: RoutingTemplate[]) {
-    onTemplatesChange(next);
-    persistRoutingTemplatesToStorage(orgId, next);
+  const [pendingSteps, setPendingSteps] = useState<
+    Array<{ name: string; description?: string; estimatedHours: number }>
+  >([]);
+  const [editingId, setEditingId] = useState<Id<"routingTemplates"> | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  const activeTemplate = selectedTemplate;
+  const isEditing = activeTemplate?._id === editingId;
+  const displaySteps = isEditing ? pendingSteps : (activeTemplate?.steps ?? []);
+
+  function startEditing() {
+    if (!activeTemplate) return;
+    setPendingSteps(activeTemplate.steps.map((s) => ({ ...s })));
+    setEditingId(activeTemplate._id);
   }
 
-  function patchSelectedTemplate(patch: (template: RoutingTemplate) => RoutingTemplate) {
-    if (!selectedTemplate) return;
-    const now = Date.now();
-    const next = templates.map((template) =>
-      template.id === selectedTemplate.id
-        ? {
-            ...patch(template),
-            updatedAt: now,
-          }
-        : template,
-    );
-    commit(next);
+  function cancelEditing() {
+    setEditingId(null);
+    setPendingSteps([]);
   }
 
-  function patchTaskCard(
-    taskCardId: string,
-    patch: (taskCard: RoutingTemplateTaskCard) => RoutingTemplateTaskCard,
-  ) {
-    patchSelectedTemplate((template) => ({
-      ...template,
-      taskCards: template.taskCards.map((taskCard) =>
-        taskCard.id === taskCardId ? patch(taskCard) : taskCard,
-      ),
-    }));
+  async function saveSteps() {
+    if (!activeTemplate) return;
+    setSaving(true);
+    try {
+      await updateTemplate({ templateId: activeTemplate._id, steps: pendingSteps });
+      toast.success("Template steps saved.");
+      setEditingId(null);
+      setPendingSteps([]);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to save template.");
+    } finally {
+      setSaving(false);
+    }
   }
 
-  function moveTaskCard(taskCardId: string, direction: "up" | "down") {
-    patchSelectedTemplate((template) => {
-      const index = template.taskCards.findIndex((taskCard) => taskCard.id === taskCardId);
-      if (index < 0) return template;
+  function addStep() {
+    setPendingSteps((prev) => [
+      ...prev,
+      { name: "", description: undefined, estimatedHours: 1 },
+    ]);
+  }
 
+  function removeStep(index: number) {
+    setPendingSteps((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  function moveStep(index: number, direction: "up" | "down") {
+    setPendingSteps((prev) => {
       const swapIndex = direction === "up" ? index - 1 : index + 1;
-      if (swapIndex < 0 || swapIndex >= template.taskCards.length) return template;
-
-      const reordered = [...template.taskCards];
-      [reordered[index], reordered[swapIndex]] = [reordered[swapIndex], reordered[index]];
-      return {
-        ...template,
-        taskCards: reordered,
-      };
+      if (swapIndex < 0 || swapIndex >= prev.length) return prev;
+      const next = [...prev];
+      [next[index], next[swapIndex]] = [next[swapIndex], next[index]];
+      return next;
     });
   }
 
-  function toggleTraining(taskCardId: string, value: RoutingTrainingType) {
-    patchTaskCard(taskCardId, (taskCard) => {
-      const hasValue = taskCard.requiredTraining.includes(value);
-      return {
-        ...taskCard,
-        requiredTraining: hasValue
-          ? taskCard.requiredTraining.filter((item) => item !== value)
-          : [...taskCard.requiredTraining, value],
-      };
-    });
+  function patchStep(
+    index: number,
+    patch: Partial<{ name: string; description: string; estimatedHours: number }>,
+  ) {
+    setPendingSteps((prev) =>
+      prev.map((step, i) => (i === index ? { ...step, ...patch } : step)),
+    );
   }
 
-  if (!selectedTemplate) {
+  if (!activeTemplate) {
     return (
       <Card className="border-border/60">
         <CardHeader>
@@ -173,107 +120,94 @@ export function TemplateBuilder({
   return (
     <Card className="border-border/60">
       <CardHeader className="pb-3">
-        <CardTitle className="text-base">Template Builder</CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-base">Template Builder</CardTitle>
+          {!isEditing ? (
+            <Button type="button" size="sm" variant="outline" className="h-8" onClick={startEditing}>
+              Edit Steps
+            </Button>
+          ) : (
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                className="h-8"
+                onClick={cancelEditing}
+                disabled={saving}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                className="h-8"
+                onClick={saveSteps}
+                disabled={saving}
+              >
+                {saving ? "Saving…" : "Save"}
+              </Button>
+            </div>
+          )}
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="grid gap-3 md:grid-cols-3">
+        <div className="grid gap-3 md:grid-cols-2">
           <div className="space-y-1.5">
             <Label className="text-xs">Template Name</Label>
-            <Input
-              value={selectedTemplate.name}
-              onChange={(event) => {
-                const value = event.target.value;
-                patchSelectedTemplate((template) => ({
-                  ...template,
-                  name: value,
-                }));
-              }}
-              placeholder="Annual Cessna 172"
-              className="h-8 text-sm"
-            />
+            <p className="text-sm font-medium">{activeTemplate.name || "Untitled template"}</p>
           </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs">Aircraft Type Applicability</Label>
-            <Input
-              value={selectedTemplate.aircraftType}
-              onChange={(event) => {
-                const value = event.target.value;
-                patchSelectedTemplate((template) => ({
-                  ...template,
-                  aircraftType: value,
-                }));
-              }}
-              placeholder="C172, PA-28"
-              className="h-8 text-sm"
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs">Inspection Type</Label>
-            <Input
-              value={selectedTemplate.inspectionType}
-              onChange={(event) => {
-                const value = event.target.value;
-                patchSelectedTemplate((template) => ({
-                  ...template,
-                  inspectionType: value,
-                }));
-              }}
-              placeholder="100-hour"
-              className="h-8 text-sm"
-            />
-          </div>
+          {activeTemplate.description && (
+            <div className="space-y-1.5">
+              <Label className="text-xs">Description</Label>
+              <p className="text-sm text-muted-foreground">{activeTemplate.description}</p>
+            </div>
+          )}
         </div>
 
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm font-medium">Work Cards</p>
+            <p className="text-sm font-medium">Steps</p>
             <p className="text-xs text-muted-foreground">
-              Ordered sequence used during work order creation.
+              Ordered sequence applied during work order creation.
             </p>
           </div>
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            className="h-8 gap-1"
-            onClick={() => {
-              patchSelectedTemplate((template) => ({
-                ...template,
-                taskCards: [...template.taskCards, defaultTaskCard()],
-              }));
-            }}
-          >
-            <Plus className="h-3.5 w-3.5" />
-            Add Card
-          </Button>
+          {isEditing && (
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="h-8 gap-1"
+              onClick={addStep}
+            >
+              <Plus className="h-3.5 w-3.5" />
+              Add Step
+            </Button>
+          )}
         </div>
 
         <div className="space-y-2">
-          {selectedTemplate.taskCards.length === 0 ? (
+          {displaySteps.length === 0 ? (
             <p className="text-xs text-muted-foreground italic">
-              No work cards in this template yet.
+              No steps in this template yet.{isEditing ? " Add a step above." : " Click Edit Steps to begin."}
             </p>
           ) : (
-            selectedTemplate.taskCards.map((taskCard, index) => {
-              const selectedTrainingLabels = TRAINING_OPTIONS
-                .filter((option) => taskCard.requiredTraining.includes(option.value))
-                .map((option) => option.label);
-
-              return (
-                <div key={taskCard.id} className="rounded-md border border-border/60 p-3 space-y-3">
-                  <div className="flex items-center justify-between gap-2">
-                    <Badge variant="outline" className="text-[10px]">
-                      Card {index + 1}
-                    </Badge>
+            displaySteps.map((step, index) => (
+              <div key={index} className="rounded-md border border-border/60 p-3 space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <Badge variant="outline" className="text-[10px]">
+                    Step {index + 1}
+                  </Badge>
+                  {isEditing && (
                     <div className="flex items-center gap-1">
                       <Button
                         type="button"
                         size="icon"
                         variant="ghost"
                         className="h-7 w-7"
-                        onClick={() => moveTaskCard(taskCard.id, "up")}
+                        onClick={() => moveStep(index, "up")}
                         disabled={index === 0}
-                        aria-label={`Move card ${index + 1} up`}
+                        aria-label={`Move step ${index + 1} up`}
                       >
                         <ArrowUp className="h-3.5 w-3.5" />
                       </Button>
@@ -282,9 +216,9 @@ export function TemplateBuilder({
                         size="icon"
                         variant="ghost"
                         className="h-7 w-7"
-                        onClick={() => moveTaskCard(taskCard.id, "down")}
-                        disabled={index === selectedTemplate.taskCards.length - 1}
-                        aria-label={`Move card ${index + 1} down`}
+                        onClick={() => moveStep(index, "down")}
+                        disabled={index === displaySteps.length - 1}
+                        aria-label={`Move step ${index + 1} down`}
                       >
                         <ArrowDown className="h-3.5 w-3.5" />
                       </Button>
@@ -293,104 +227,64 @@ export function TemplateBuilder({
                         size="icon"
                         variant="ghost"
                         className="h-7 w-7 text-muted-foreground hover:text-red-500"
-                        onClick={() => {
-                          patchSelectedTemplate((template) => ({
-                            ...template,
-                            taskCards: template.taskCards.filter((item) => item.id !== taskCard.id),
-                          }));
-                        }}
-                        aria-label={`Remove card ${index + 1}`}
+                        onClick={() => removeStep(index)}
+                        aria-label={`Remove step ${index + 1}`}
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>
                     </div>
-                  </div>
+                  )}
+                </div>
 
-                  <div className="grid gap-2 md:grid-cols-[2fr_1fr_1.2fr_1fr]">
+                {isEditing ? (
+                  <div className="grid gap-2 md:grid-cols-[2fr_1fr]">
                     <div className="space-y-1">
-                      <Label className="text-[11px]">Title</Label>
+                      <Label className="text-[11px]">Step Name</Label>
                       <Input
-                        value={taskCard.title}
-                        onChange={(event) => {
-                          const value = event.target.value;
-                          patchTaskCard(taskCard.id, (current) => ({
-                            ...current,
-                            title: value,
-                          }));
-                        }}
+                        value={step.name}
+                        onChange={(e) => patchStep(index, { name: e.target.value })}
                         placeholder="Inspect magnetos"
                         className="h-8 text-sm"
                       />
                     </div>
-
                     <div className="space-y-1">
                       <Label className="text-[11px]">Est. Hours</Label>
                       <Input
                         type="number"
                         min={0}
                         step={0.1}
-                        value={taskCard.estimatedHours}
-                        onChange={(event) => {
-                          const parsed = Number(event.target.value);
-                          patchTaskCard(taskCard.id, (current) => ({
-                            ...current,
+                        value={step.estimatedHours}
+                        onChange={(e) => {
+                          const parsed = Number(e.target.value);
+                          patchStep(index, {
                             estimatedHours: Number.isFinite(parsed) ? Math.max(0, parsed) : 0,
-                          }));
+                          });
                         }}
                         className="h-8 text-sm"
                       />
                     </div>
-
-                    <div className="space-y-1">
-                      <Label className="text-[11px]">Required Training</Label>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button type="button" variant="outline" className="h-8 w-full justify-start text-xs">
-                            {selectedTrainingLabels.length > 0
-                              ? selectedTrainingLabels.join(", ")
-                              : "Select training"}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-56 p-2" align="start">
-                          <div className="space-y-1">
-                            {TRAINING_OPTIONS.map((option) => (
-                              <label
-                                key={option.value}
-                                className="flex items-center gap-2 rounded px-2 py-1.5 text-xs hover:bg-muted/50"
-                              >
-                                <Checkbox
-                                  checked={taskCard.requiredTraining.includes(option.value)}
-                                  onCheckedChange={() => toggleTraining(taskCard.id, option.value)}
-                                />
-                                <span>{option.label}</span>
-                              </label>
-                            ))}
-                          </div>
-                        </PopoverContent>
-                      </Popover>
-                    </div>
-
-                    <div className="space-y-1">
-                      <Label className="text-[11px]">Standard Minutes</Label>
+                    <div className="space-y-1 md:col-span-2">
+                      <Label className="text-[11px]">Description (optional)</Label>
                       <Input
-                        type="number"
-                        min={0}
-                        step={1}
-                        value={taskCard.standardMinutes}
-                        onChange={(event) => {
-                          const parsed = Number(event.target.value);
-                          patchTaskCard(taskCard.id, (current) => ({
-                            ...current,
-                            standardMinutes: Number.isFinite(parsed) ? Math.max(0, Math.round(parsed)) : 0,
-                          }));
-                        }}
+                        value={step.description ?? ""}
+                        onChange={(e) =>
+                          patchStep(index, { description: e.target.value || undefined })
+                        }
+                        placeholder="Additional details"
                         className="h-8 text-sm"
                       />
                     </div>
                   </div>
-                </div>
-              );
-            })
+                ) : (
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-sm">{step.name || "Unnamed step"}</p>
+                    <span className="text-xs text-muted-foreground whitespace-nowrap">
+                      {step.estimatedHours}h
+                    </span>
+                  </div>
+                )}
+              </div>
+            ))
           )}
         </div>
       </CardContent>

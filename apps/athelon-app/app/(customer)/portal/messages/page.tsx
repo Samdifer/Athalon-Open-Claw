@@ -16,6 +16,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { AlertCircle, CheckCircle2 } from "lucide-react";
+import type { Id } from "@/convex/_generated/dataModel";
 
 const STATUS_BADGES: Record<string, string> = {
   new: "bg-blue-100 text-blue-700",
@@ -42,6 +44,7 @@ export default function CustomerMessagesPage() {
   const [priority, setPriority] = useState<"low" | "normal" | "high">("normal");
   const [workOrderId, setWorkOrderId] = useState<string>("none");
   const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
 
   const woOptions = useMemo(
     () => (workOrders ?? []).slice(0, 50).map((wo) => ({ value: String(wo._id), label: `${wo.workOrderNumber} · ${wo.aircraftRegistration}` })),
@@ -49,7 +52,17 @@ export default function CustomerMessagesPage() {
   );
 
   if (!customerId) {
-    return <p className="text-center text-gray-500 py-16">No customer account linked.</p>;
+    return (
+      <div className="flex flex-col items-center justify-center py-16 gap-4 text-center px-4">
+        <AlertCircle className="w-10 h-10 text-muted-foreground" />
+        <div>
+          <p className="font-semibold text-foreground text-lg">No customer account linked</p>
+          <p className="text-muted-foreground mt-1 max-w-md">
+            Your account is not linked to a customer profile. Contact your MRO provider to set up your portal access.
+          </p>
+        </div>
+      </div>
+    );
   }
 
   async function handleSubmit() {
@@ -68,16 +81,17 @@ export default function CustomerMessagesPage() {
         message,
         category,
         priority,
-        workOrderId: workOrderId !== "none" ? (workOrderId as any) : undefined,
+        workOrderId: workOrderId !== "none" ? (workOrderId as Id<"workOrders">) : undefined,
       });
-      toast.success("Your request has been sent to the shop.");
+      setSubmitted(true);
       setSubject("");
       setMessage("");
       setCategory("general");
       setPriority("normal");
       setWorkOrderId("none");
+      setTimeout(() => setSubmitted(false), 6000);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to submit request.");
+      toast.error(error instanceof Error ? error.message : "Failed to submit ticket.");
     } finally {
       setSubmitting(false);
     }
@@ -85,17 +99,29 @@ export default function CustomerMessagesPage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-bold text-gray-900">Messages & Requests</h1>
+      <h1 className="text-2xl font-bold text-foreground">Support Tickets</h1>
+
+      {submitted && (
+        <div className="flex items-start gap-3 rounded-lg border border-green-200 bg-green-50 p-4">
+          <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+          <div>
+            <p className="font-medium text-green-800">Ticket submitted successfully</p>
+            <p className="text-sm text-green-700 mt-0.5">
+              Your request has been sent to the shop. We will review it and respond as soon as possible.
+            </p>
+          </div>
+        </div>
+      )}
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Send a request to the shop</CardTitle>
+          <CardTitle className="text-base">Submit a new support ticket</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label>Category</Label>
-              <Select value={category} onValueChange={(v) => setCategory(v as any)}>
+              <Select value={category} onValueChange={(v) => setCategory(v as typeof category)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="general">General</SelectItem>
@@ -109,7 +135,7 @@ export default function CustomerMessagesPage() {
             </div>
             <div className="space-y-1.5">
               <Label>Priority</Label>
-              <Select value={priority} onValueChange={(v) => setPriority(v as any)}>
+              <Select value={priority} onValueChange={(v) => setPriority(v as typeof priority)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="low">Low</SelectItem>
@@ -150,7 +176,7 @@ export default function CustomerMessagesPage() {
 
           <div className="flex justify-end">
             <Button onClick={handleSubmit} disabled={submitting}>
-              {submitting ? "Sending..." : "Send Request"}
+              {submitting ? "Submitting..." : "Submit Ticket"}
             </Button>
           </div>
         </CardContent>
@@ -158,13 +184,13 @@ export default function CustomerMessagesPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Recent requests</CardTitle>
+          <CardTitle className="text-base">Recent tickets</CardTitle>
         </CardHeader>
         <CardContent>
           {!requests ? (
-            <p className="text-sm text-gray-500">Loading...</p>
+            <p className="text-sm text-muted-foreground">Loading...</p>
           ) : requests.length === 0 ? (
-            <p className="text-sm text-gray-500">No requests yet.</p>
+            <p className="text-sm text-muted-foreground">No tickets yet.</p>
           ) : (
             <div className="space-y-2">
               {requests.map((req) => (
@@ -175,10 +201,10 @@ export default function CustomerMessagesPage() {
                       {req.status.replace(/_/g, " ")}
                     </Badge>
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-muted-foreground mt-1">
                     {new Date(req.createdAt).toLocaleString()} · {req.category.replace(/_/g, " ")} · {req.priority}
                   </p>
-                  <p className="text-sm text-gray-700 mt-2 whitespace-pre-wrap">{req.message}</p>
+                  <p className="text-sm text-foreground mt-2 whitespace-pre-wrap">{req.message}</p>
                   {req.internalResponse ? (
                     <div className="mt-2 rounded bg-green-50 border border-green-100 p-2">
                       <p className="text-xs font-medium text-green-700">Shop response</p>

@@ -894,7 +894,7 @@ export const seedSchedulerStories = mutation({
       workOrderNumber: UNSCHEDULED_WO_NUMBER,
       aircraftId: unscheduledAircraftId,
       description: "Unscheduled WO candidate for magic scheduler user story.",
-      status: "draft",
+      status: "open",
       priority: "routine",
       scheduledStartDate: undefined,
       promisedDeliveryDate: undefined,
@@ -1142,6 +1142,45 @@ export const seedSchedulerStories = mutation({
 
     const primaryLocationId = primaryLocation._id;
     const primaryLocationCode = primaryLocation.code || "MAIN";
+    const e2eBays = (await ctx.db
+      .query("hangarBays")
+      .withIndex("by_org", (q) => q.eq("organizationId", orgId))
+      .collect()).filter((bay) => desiredBays.some((desired) => desired.name === bay.name));
+    const e2eBayIds = e2eBays.map((bay) => bay._id);
+
+    if (e2eBayIds.length > 0) {
+      const supportedPilatus = await ctx.db
+        .query("stationSupportedAircraft")
+        .withIndex("by_org_location_make_model", (q) =>
+          q
+            .eq("organizationId", orgId)
+            .eq("shopLocationId", undefined)
+            .eq("make", "Pilatus")
+            .eq("model", "PC-12/47E"),
+        )
+        .first();
+
+      const supportPatch = {
+        category: "turboprop" as const,
+        compatibleBayIds: e2eBayIds,
+        updatedAt: now,
+        updatedByUserId: args.clerkUserId,
+      };
+
+      if (supportedPilatus) {
+        await ctx.db.patch(supportedPilatus._id, supportPatch);
+      } else {
+        await ctx.db.insert("stationSupportedAircraft", {
+          organizationId: orgId,
+          shopLocationId: undefined,
+          make: "Pilatus",
+          model: "PC-12/47E",
+          ...supportPatch,
+          createdAt: now,
+          createdByUserId: args.clerkUserId,
+        });
+      }
+    }
 
     async function ensureTechnician(params: {
       legalName: string;
