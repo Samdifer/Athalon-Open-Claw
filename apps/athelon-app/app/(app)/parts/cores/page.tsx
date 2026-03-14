@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import { usePagePrereqs } from "@/hooks/usePagePrereqs";
+import { DocumentAttachmentPanel } from "@/app/(app)/work-orders/[id]/_components/DocumentAttachmentPanel";
 import { toast } from "sonner";
 import {
   RotateCcw,
@@ -374,6 +375,7 @@ export default function CoresPage() {
   const [tab, setTab] = useState<CoreStatus | "all">("all");
   const [createOpen, setCreateOpen] = useState(false);
   const [selectedCore, setSelectedCore] = useState<Id<"coreTracking"> | null>(null);
+  const [expandedCoreId, setExpandedCoreId] = useState<Id<"coreTracking"> | null>(null);
 
   const cores = useQuery(
     api.cores.listCores,
@@ -503,20 +505,37 @@ export default function CoresPage() {
           </TableHeader>
           <TableBody>
             {coreRows.map((core) => (
-              <TableRow key={core._id} className="cursor-pointer hover:bg-muted/50"
-                onClick={() => setSelectedCore(core._id)}>
-                <TableCell className="font-mono text-sm">{core.coreNumber}</TableCell>
-                <TableCell className="font-mono text-sm">{core.partNumber}</TableCell>
-                <TableCell>
-                  <Badge variant="outline" className={STATUS_STYLES[core.status]}>
-                    {statusLabel(core.status)}
-                  </Badge>
-                </TableCell>
-                <TableCell className="max-w-[200px] truncate">{core.description}</TableCell>
-                <TableCell className="text-right">{formatCurrency(core.coreValue)}</TableCell>
-                <TableCell className="text-right">{core.creditAmount !== undefined ? formatCurrency(core.creditAmount) : "—"}</TableCell>
-                <TableCell>{core.returnDueDate ? formatDate(core.returnDueDate) : "—"}</TableCell>
-              </TableRow>
+              <React.Fragment key={core._id}>
+                <TableRow className="cursor-pointer hover:bg-muted/50"
+                  onClick={() => setExpandedCoreId(expandedCoreId === core._id ? null : core._id)}
+                  onDoubleClick={() => setSelectedCore(core._id)}>
+                  <TableCell className="font-mono text-sm">{core.coreNumber}</TableCell>
+                  <TableCell className="font-mono text-sm">{core.partNumber}</TableCell>
+                  <TableCell>
+                    <Badge variant="outline" className={STATUS_STYLES[core.status]}>
+                      {statusLabel(core.status)}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="max-w-[200px] truncate">{core.description}</TableCell>
+                  <TableCell className="text-right">{formatCurrency(core.coreValue)}</TableCell>
+                  <TableCell className="text-right">{core.creditAmount !== undefined ? formatCurrency(core.creditAmount) : "—"}</TableCell>
+                  <TableCell>{core.returnDueDate ? formatDate(core.returnDueDate) : "—"}</TableCell>
+                </TableRow>
+                {expandedCoreId === core._id && orgId && (
+                  <TableRow>
+                    <TableCell colSpan={7} className="bg-muted/10 p-4">
+                      <p className="text-xs font-medium text-muted-foreground mb-2">Condition Photos & Documents</p>
+                      <DocumentAttachmentPanel
+                        organizationId={orgId}
+                        attachedToTable="coreTracking"
+                        attachedToId={String(core._id)}
+                        allowedTypes={["photo", "other"]}
+                        canDelete
+                      />
+                    </TableCell>
+                  </TableRow>
+                )}
+              </React.Fragment>
             ))}
           </TableBody>
         </Table>

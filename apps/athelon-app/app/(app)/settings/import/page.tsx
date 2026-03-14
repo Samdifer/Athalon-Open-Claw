@@ -6,7 +6,8 @@ import { api } from "@/convex/_generated/api";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import { usePagePrereqs } from "@/hooks/usePagePrereqs";
 import { toast } from "sonner";
-import { Upload, FileSpreadsheet, CheckCircle2, Download } from "lucide-react";
+import { Upload, FileSpreadsheet, CheckCircle2, Download, ArrowRight } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -382,6 +383,23 @@ export default function ImportPage() {
         <FileSpreadsheet className="w-5 h-5 text-primary" />
         <h1 className="text-lg font-semibold">Bulk CSV Import</h1>
       </div>
+
+      {/* Cross-link to full-featured Parts Bulk Upload */}
+      <Card className="border-primary/20 bg-primary/5">
+        <CardContent className="py-3 flex items-center gap-3">
+          <Upload className="h-4 w-4 text-primary shrink-0" />
+          <div className="flex-1 text-sm">
+            <span className="font-medium">Need duplicate detection, validation, and per-row issue tracking for parts?</span>
+            <span className="text-muted-foreground ml-1">Use the full Parts Bulk Upload instead.</span>
+          </div>
+          <Link
+            to="/parts/upload"
+            className="flex items-center gap-1 text-sm text-primary hover:underline shrink-0 font-medium"
+          >
+            Parts → Bulk Upload <ArrowRight className="h-3 w-3" />
+          </Link>
+        </CardContent>
+      </Card>
 
       <Card className="border-border/60">
         <CardHeader className="pb-3">

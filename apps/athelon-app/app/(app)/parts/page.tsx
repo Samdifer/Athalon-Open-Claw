@@ -585,6 +585,7 @@ function PartDetailSheet({ part, organizationId, onClose }: PartDetailSheetProps
                   {CATEGORY_LABEL[part.partCategory] ?? part.partCategory}
                 </Badge>,
               )}
+              {!part.isSerialized && row("Qty on Hand", String(part.quantityOnHand ?? part.quantity ?? 1))}
               {part.lotNumber && row("Lot Number", <span className="font-mono">{part.lotNumber}</span>)}
               {row("Bin Location", <PartLocationCell binLocationId={part.binLocationId ? String(part.binLocationId) : undefined} legacyBinLocation={part.binLocation} />)}
               {part.unitCost != null && row(
@@ -1141,126 +1142,125 @@ export default function PartsPage() {
         </Card>
       )}
 
-      {/* Tabs + Search */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-        <Tabs
-          value={activeTab}
-          onValueChange={(v) => setActiveTab(v as LocationFilter)}
-          className="w-full sm:w-auto"
-        >
-          <TabsList className="h-8 bg-muted/40 p-0.5 flex-wrap">
-            {(
-              [
-                ["all", "All"],
-                ["inventory", "In Stock"],
-                ["pending_inspection", "Pending"],
-                ["installed", "Installed"],
-                ["quarantine", "Quarantine"],
-                ["removed_pending_disposition", "Disposition"],
-                ["low_stock", "Low Stock"],
-                ["kanban", "Kanban"],
-                ["inventory_master", "Inventory Master"],
-                ["parts_requests", "Parts Requests"],
-              ] as const
-            ).map(([tab, label]) => (
-              <TabsTrigger
-                key={tab}
-                value={tab}
-                className="h-7 px-3 text-xs data-[state=active]:bg-background data-[state=active]:text-foreground"
-              >
-                {label}
-                {!isLoading && counts[tab] > 0 && (
-                  <Badge
-                    variant="secondary"
-                    className={`ml-1.5 h-4 min-w-[16px] px-1 text-[9px] ${
-                      activeTab === tab
-                        ? "bg-primary/15 text-primary"
-                        : "bg-muted-foreground/20 text-muted-foreground"
-                    }`}
-                  >
-                    {counts[tab]}
-                  </Badge>
-                )}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </Tabs>
+      {/* Tabs */}
+      <Tabs
+        value={activeTab}
+        onValueChange={(v) => setActiveTab(v as LocationFilter)}
+        className="w-full"
+      >
+        <TabsList className="h-auto bg-muted/40 p-0.5 flex-wrap gap-0.5">
+          {(
+            [
+              ["all", "All"],
+              ["inventory", "In Stock"],
+              ["pending_inspection", "Pending"],
+              ["installed", "Installed"],
+              ["quarantine", "Quarantine"],
+              ["removed_pending_disposition", "Disposition"],
+              ["low_stock", "Low Stock"],
+              ["kanban", "Kanban"],
+              ["inventory_master", "Inventory Master"],
+              ["parts_requests", "Parts Requests"],
+            ] as const
+          ).map(([tab, label]) => (
+            <TabsTrigger
+              key={tab}
+              value={tab}
+              className="h-7 px-3 text-xs data-[state=active]:bg-background data-[state=active]:text-foreground"
+            >
+              {label}
+              {!isLoading && counts[tab] > 0 && (
+                <Badge
+                  variant="secondary"
+                  className={`ml-1.5 h-4 min-w-[16px] px-1 text-[9px] ${
+                    activeTab === tab
+                      ? "bg-primary/15 text-primary"
+                      : "bg-muted-foreground/20 text-muted-foreground"
+                  }`}
+                >
+                  {counts[tab]}
+                </Badge>
+              )}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+      </Tabs>
 
-        <div className="flex items-center gap-2 ml-auto">
-          {/* View toggle */}
-          <div className="flex items-center gap-0.5 border border-border/60 rounded-md p-0.5">
-            <Button
-              variant={viewMode === "cards" ? "default" : "ghost"}
-              size="icon"
-              className="h-7 w-7"
-              onClick={() => setViewMode("cards")}
-              title="Card view"
-            >
-              <LayoutList className="w-3.5 h-3.5" />
-            </Button>
-            <Button
-              variant={viewMode === "tiles" ? "default" : "ghost"}
-              size="icon"
-              className="h-7 w-7"
-              onClick={() => setViewMode("tiles")}
-              title="Tile view"
-            >
-              <Grid3X3 className="w-3.5 h-3.5" />
-            </Button>
-            <Button
-              variant={viewMode === "list" ? "default" : "ghost"}
-              size="icon"
-              className="h-7 w-7"
-              onClick={() => setViewMode("list")}
-              title="Compact list"
-            >
-              <Rows3 className="w-3.5 h-3.5" />
-            </Button>
-          </div>
-          {/* Category filter — Phase 8 */}
-          <Select value={categoryFilter} onValueChange={(v) => setCategoryFilter(v as PartCategory)}>
-            <SelectTrigger className="h-8 w-[130px] text-xs bg-muted/30 border-border/60">
-              <SelectValue placeholder="Category" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Categories</SelectItem>
-              <SelectItem value="consumable">Consumable</SelectItem>
-              <SelectItem value="standard">Standard</SelectItem>
-              <SelectItem value="rotable">Rotable</SelectItem>
-              <SelectItem value="expendable">Expendable</SelectItem>
-              <SelectItem value="repairable">Repairable</SelectItem>
-            </SelectContent>
-          </Select>
-          <TagFilterDropdown onFilterChange={setTagFilter} />
-          <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
-            <Input
-              placeholder="Search P/N, name, S/N, lot, bin…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="h-8 pl-8 pr-3 text-xs w-56 bg-muted/30 border-border/60"
-            />
-          </div>
+      {/* Search + Filters */}
+      <div className="flex items-center gap-2 flex-wrap">
+        {/* View toggle */}
+        <div className="flex items-center gap-0.5 border border-border/60 rounded-md p-0.5">
           <Button
-            variant="outline"
-            size="sm"
-            className="h-8 gap-1.5 text-xs border-border/60"
-            onClick={() => setScannerOpen(true)}
+            variant={viewMode === "cards" ? "default" : "ghost"}
+            size="icon"
+            className="h-7 w-7"
+            onClick={() => setViewMode("cards")}
+            title="Card view"
           >
-            <ScanLine className="w-3.5 h-3.5" />
-            Scan
+            <LayoutList className="w-3.5 h-3.5" />
           </Button>
           <Button
-            variant="outline"
-            size="sm"
-            className="h-8 gap-1.5 text-xs border-border/60"
-            title="Scan a part's QR code to search for it"
-            onClick={() => setQrScannerOpen(true)}
+            variant={viewMode === "tiles" ? "default" : "ghost"}
+            size="icon"
+            className="h-7 w-7"
+            onClick={() => setViewMode("tiles")}
+            title="Tile view"
           >
-            <QrCode className="w-3.5 h-3.5" />
-            QR
+            <Grid3X3 className="w-3.5 h-3.5" />
+          </Button>
+          <Button
+            variant={viewMode === "list" ? "default" : "ghost"}
+            size="icon"
+            className="h-7 w-7"
+            onClick={() => setViewMode("list")}
+            title="Compact list"
+          >
+            <Rows3 className="w-3.5 h-3.5" />
           </Button>
         </div>
+        {/* Category filter */}
+        <Select value={categoryFilter} onValueChange={(v) => setCategoryFilter(v as PartCategory)}>
+          <SelectTrigger className="h-8 w-[130px] text-xs bg-muted/30 border-border/60">
+            <SelectValue placeholder="Category" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Categories</SelectItem>
+            <SelectItem value="consumable">Consumable</SelectItem>
+            <SelectItem value="standard">Standard</SelectItem>
+            <SelectItem value="rotable">Rotable</SelectItem>
+            <SelectItem value="expendable">Expendable</SelectItem>
+            <SelectItem value="repairable">Repairable</SelectItem>
+          </SelectContent>
+        </Select>
+        <TagFilterDropdown onFilterChange={setTagFilter} />
+        <div className="relative flex-1 min-w-[180px] max-w-[280px]">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
+          <Input
+            placeholder="Search P/N, name, S/N, lot, bin…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="h-8 pl-8 pr-3 text-xs bg-muted/30 border-border/60"
+          />
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-8 gap-1.5 text-xs border-border/60"
+          onClick={() => setScannerOpen(true)}
+        >
+          <ScanLine className="w-3.5 h-3.5" />
+          Scan
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-8 gap-1.5 text-xs border-border/60"
+          title="Scan a part's QR code to search for it"
+          onClick={() => setQrScannerOpen(true)}
+        >
+          <QrCode className="w-3.5 h-3.5" />
+          QR
+        </Button>
       </div>
 
       {/* Pending Inspection table (dedicated view when that tab is active) */}
@@ -1285,6 +1285,7 @@ export default function PartsPage() {
                     <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Part Number</th>
                     <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Name</th>
                     <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Serial Number</th>
+                    <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Qty</th>
                     <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Condition</th>
                     <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Received Date</th>
                     <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Received via WO</th>
@@ -1298,6 +1299,9 @@ export default function PartsPage() {
                       <td className="px-4 py-3 text-xs text-foreground">{part.partName}</td>
                       <td className="px-4 py-3 font-mono text-xs text-muted-foreground">
                         {part.serialNumber ?? <span className="text-muted-foreground/40">—</span>}
+                      </td>
+                      <td className="px-4 py-3 text-xs text-foreground">
+                        {part.isSerialized ? "1" : String(part.quantityOnHand ?? part.quantity ?? 1)}
                       </td>
                       <td className="px-4 py-3">
                         <Badge
@@ -1450,54 +1454,17 @@ export default function PartsPage() {
                     <CardContent className="p-4">
                       <div className="flex items-start gap-4">
                         <div className="pt-0.5">{getLocationIcon(part.location)}</div>
-                        <div className="flex-1 min-w-0">
-                          {/* Row 1: P/N + condition + location + reserved badge */}
-                          <div className="flex items-center gap-2 mb-1 flex-wrap">
-                            <span className="font-mono text-sm font-semibold text-foreground">
+                        <div className="flex-1 min-w-0 space-y-1">
+                          {/* Row 1: P/N + S/N */}
+                          <div className="flex items-baseline gap-2">
+                            <span className="font-mono text-sm font-semibold text-foreground shrink-0">
                               {part.partNumber}
                             </span>
                             {part.serialNumber && (
-                              <span className="font-mono text-xs text-muted-foreground">
+                              <span className="font-mono text-xs text-muted-foreground shrink-0">
                                 S/N {part.serialNumber}
                               </span>
                             )}
-                            <Badge
-                              variant="outline"
-                              className={`text-[10px] border font-medium ${getConditionStyles(part.condition)}`}
-                            >
-                              {CONDITION_LABEL[part.condition] ?? part.condition}
-                            </Badge>
-                            <PartStatusBadge status={part.location} />
-                            {isLifeLimited && (
-                              <Badge className="text-[10px] bg-purple-500/15 text-purple-600 dark:text-purple-400 border border-purple-500/30">
-                                Life Limited
-                              </Badge>
-                            )}
-                            {isQuarantine && (
-                              <Badge className="text-[10px] bg-orange-500/15 text-orange-600 dark:text-orange-400 border border-orange-500/30">
-                                ⚠ Quarantine
-                              </Badge>
-                            )}
-                            {isInventory && part.reorderPoint != null && (part.quantityOnHand ?? part.quantity ?? 0) <= part.reorderPoint && (
-                              <Badge className="text-[10px] bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
-                                ⚠ Low Stock
-                              </Badge>
-                            )}
-                            {isReserved && (
-                              <Badge className="text-[10px] bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/30 flex items-center gap-1">
-                                <Lock className="w-2.5 h-2.5" />
-                                Reserved
-                              </Badge>
-                            )}
-                            {part.partCategory && (
-                              <Badge
-                                variant="outline"
-                                className={`text-[10px] border font-medium ${CATEGORY_STYLES[part.partCategory] ?? "bg-muted text-muted-foreground"}`}
-                              >
-                                {CATEGORY_LABEL[part.partCategory] ?? part.partCategory}
-                              </Badge>
-                            )}
-                            <PartTagBadges partId={String(part._id)} maxVisible={2} />
                           </div>
 
                           {/* Row 2: Name */}
@@ -1505,61 +1472,110 @@ export default function PartsPage() {
                             {part.partName}
                           </p>
 
-                          {/* Row 3: Additional info */}
-                          <div className="flex items-center gap-3 mt-1 flex-wrap">
-                            {/* Quantity — only shown for non-serialized bulk parts in inventory */}
-                            {!part.isSerialized && isInventory && (part.quantityOnHand != null || part.quantity != null) && (
-                              <span className={`text-[11px] font-medium ${
-                                part.reorderPoint != null && (part.quantityOnHand ?? part.quantity ?? 0) <= part.reorderPoint
-                                  ? "text-amber-600 dark:text-amber-400"
-                                  : "text-foreground"
-                              }`}>
-                                Qty: {part.quantityOnHand ?? part.quantity}
-                              </span>
+                          {/* Row 3: Badges — condition, status, alerts */}
+                          <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
+                            <Badge
+                              variant="outline"
+                              className={`text-[10px] leading-tight border font-medium ${getConditionStyles(part.condition)}`}
+                            >
+                              {CONDITION_LABEL[part.condition] ?? part.condition}
+                            </Badge>
+                            <PartStatusBadge status={part.location} />
+                            {part.partCategory && (
+                              <Badge
+                                variant="outline"
+                                className={`text-[10px] leading-tight border font-medium ${CATEGORY_STYLES[part.partCategory] ?? "bg-muted text-muted-foreground"}`}
+                              >
+                                {CATEGORY_LABEL[part.partCategory] ?? part.partCategory}
+                              </Badge>
                             )}
-                            {part.supplier && (
-                              <span className="text-[11px] text-muted-foreground">
-                                Supplier: {part.supplier}
-                              </span>
+                            {isLifeLimited && (
+                              <Badge className="text-[10px] leading-tight bg-purple-500/15 text-purple-600 dark:text-purple-400 border border-purple-500/30">
+                                Life Limited
+                              </Badge>
                             )}
-                            {part.isOwnerSupplied && (
-                              <span className="text-[11px] text-sky-600 dark:text-sky-400">
-                                Owner-Supplied
-                              </span>
+                            {isQuarantine && (
+                              <Badge className="text-[10px] leading-tight bg-orange-500/15 text-orange-600 dark:text-orange-400 border border-orange-500/30">
+                                Quarantine
+                              </Badge>
                             )}
-                            {part.receivingDate && (
-                              <span className="text-[11px] text-muted-foreground">
-                                Received{" "}
-                                {new Date(part.receivingDate).toLocaleDateString(
-                                  "en-US",
-                                  { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" },
-                                )}
-                              </span>
+                            {isInventory && part.reorderPoint != null && (part.quantityOnHand ?? part.quantity ?? 0) <= part.reorderPoint && (
+                              <Badge className="text-[10px] leading-tight bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
+                                Low Stock
+                              </Badge>
                             )}
-                            {part.isLifeLimited && part.lifeLimitHours && (
-                              <span className="text-[11px] text-purple-600 dark:text-purple-400">
-                                Life limit: {part.lifeLimitHours} hrs
-                              </span>
+                            {isReserved && (
+                              <Badge className="text-[10px] leading-tight bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/30 flex items-center gap-1">
+                                <Lock className="w-2.5 h-2.5" />
+                                Reserved
+                              </Badge>
                             )}
-                            {part.lotNumber && (
-                              <span className="text-[11px] text-muted-foreground">
-                                Lot: <span className="font-mono">{part.lotNumber}</span>
-                              </span>
-                            )}
-                            {(part.binLocationId || part.binLocation) && (
-                              <span className="text-[11px] text-muted-foreground">
-                                <PartLocationCell
-                                  binLocationId={part.binLocationId ? String(part.binLocationId) : undefined}
-                                  legacyBinLocation={part.binLocation}
-                                />
-                              </span>
-                            )}
-                            {canViewCost && part.unitCost != null && (
-                              <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
-                                ${part.unitCost.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                              </span>
-                            )}
+                            <PartTagBadges partId={String(part._id)} maxVisible={2} />
                           </div>
+
+                          {/* Row 4: Metadata — dot-separated for readability */}
+                          {(() => {
+                            const items: ReactNode[] = [];
+                            if (!part.isSerialized && (part.quantityOnHand != null || part.quantity != null)) {
+                              items.push(
+                                <span key="qty" className={`font-medium ${
+                                  part.reorderPoint != null && (part.quantityOnHand ?? part.quantity ?? 0) <= part.reorderPoint
+                                    ? "text-amber-600 dark:text-amber-400"
+                                    : "text-foreground"
+                                }`}>
+                                  Qty: {part.quantityOnHand ?? part.quantity}
+                                </span>
+                              );
+                            }
+                            if (part.supplier) {
+                              items.push(<span key="supplier">Supplier: {part.supplier}</span>);
+                            }
+                            if (part.isOwnerSupplied) {
+                              items.push(<span key="owner" className="text-sky-600 dark:text-sky-400">Owner-Supplied</span>);
+                            }
+                            if (part.receivingDate) {
+                              items.push(
+                                <span key="received">
+                                  Received{" "}
+                                  {new Date(part.receivingDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" })}
+                                </span>
+                              );
+                            }
+                            if (part.isLifeLimited && part.lifeLimitHours) {
+                              items.push(<span key="life" className="text-purple-600 dark:text-purple-400">Life limit: {part.lifeLimitHours} hrs</span>);
+                            }
+                            if (part.lotNumber) {
+                              items.push(<span key="lot">Lot: <span className="font-mono">{part.lotNumber}</span></span>);
+                            }
+                            if (part.binLocationId || part.binLocation) {
+                              items.push(
+                                <span key="bin">
+                                  <PartLocationCell
+                                    binLocationId={part.binLocationId ? String(part.binLocationId) : undefined}
+                                    legacyBinLocation={part.binLocation}
+                                  />
+                                </span>
+                              );
+                            }
+                            if (canViewCost && part.unitCost != null) {
+                              items.push(
+                                <span key="cost" className="text-emerald-600 dark:text-emerald-400 font-medium">
+                                  ${part.unitCost.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                </span>
+                              );
+                            }
+                            if (items.length === 0) return null;
+                            return (
+                              <p className="text-[11px] text-muted-foreground truncate">
+                                {items.map((item, i) => (
+                                  <span key={i}>
+                                    {i > 0 && <span className="mx-1.5 text-muted-foreground/40">·</span>}
+                                    {item}
+                                  </span>
+                                ))}
+                              </p>
+                            );
+                          })()}
                         </div>
 
                         {/* Actions */}

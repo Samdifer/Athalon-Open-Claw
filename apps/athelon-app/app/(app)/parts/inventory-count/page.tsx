@@ -5,6 +5,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import { usePagePrereqs } from "@/hooks/usePagePrereqs";
+import { DocumentAttachmentPanel } from "@/app/(app)/work-orders/[id]/_components/DocumentAttachmentPanel";
 import type { Id } from "@/convex/_generated/dataModel";
 import {
   Plus,
@@ -485,6 +486,19 @@ export default function InventoryCountPage() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        {orgId && (
+          <div className="pt-4 border-t border-border/40">
+            <p className="text-xs font-medium text-muted-foreground mb-2">Count Evidence Photos</p>
+            <DocumentAttachmentPanel
+              organizationId={orgId as Id<"organizations">}
+              attachedToTable="inventoryCounts"
+              attachedToId={String(selectedCountId)}
+              allowedTypes={["photo", "other"]}
+              canDelete
+            />
+          </div>
+        )}
 
       </div>
     );

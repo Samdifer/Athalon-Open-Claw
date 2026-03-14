@@ -1,9 +1,11 @@
-import { Suspense } from "react";
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Suspense, lazy } from "react";
+import { Route, Routes } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
 import { authRoutes } from "@/src/router/routeModules/authRoutes";
 import { customerPortalRoutes } from "@/src/router/routeModules/customerPortalRoutes";
 import { protectedAppRoutes } from "@/src/router/routeModules/protectedAppRoutes";
+
+const LandingPage = lazy(() => import("@/app/(public)/landing/page"));
 
 function LoadingFallback() {
   return (
@@ -21,7 +23,7 @@ export default function AppRouter() {
   return (
     <Suspense fallback={<LoadingFallback />}>
       <Routes>
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        <Route path="/" element={<LandingPage />} />
         {authRoutes()}
         {customerPortalRoutes()}
         {protectedAppRoutes()}

@@ -86,7 +86,6 @@ export function PartsTileView({
           isOwnerSupplied: part.isOwnerSupplied,
         });
         const qty = part.quantityOnHand ?? part.quantity;
-        const isInventory = part.location === "inventory";
 
         return (
           <Card
@@ -123,7 +122,7 @@ export function PartsTileView({
               </p>
               <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
                 <PartStatusBadge status={part.location} />
-                {!part.isSerialized && isInventory && qty != null && (
+                {!part.isSerialized && qty != null && (
                   <span className="text-[10px] font-medium text-foreground">
                     Qty: {qty}
                   </span>

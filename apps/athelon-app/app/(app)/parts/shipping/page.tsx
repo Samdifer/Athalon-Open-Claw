@@ -7,6 +7,7 @@ import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import { usePagePrereqs } from "@/hooks/usePagePrereqs";
+import { DocumentAttachmentPanel } from "@/app/(app)/work-orders/[id]/_components/DocumentAttachmentPanel";
 import {
   Plus, Search, ChevronDown, ChevronRight, Truck, Package, AlertTriangle, Trash2, Loader2,
 } from "lucide-react";
@@ -500,6 +501,17 @@ function ShipmentDetails({ shipmentId, orgId }: { shipmentId: Id<"shipments">; o
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <div className="mt-4 pt-4 border-t border-border/40">
+        <p className="text-xs font-medium text-muted-foreground mb-2">Packaging Photos & Documents</p>
+        <DocumentAttachmentPanel
+          organizationId={orgId}
+          attachedToTable="shipments"
+          attachedToId={String(shipmentId)}
+          allowedTypes={["photo", "other"]}
+          canDelete
+        />
+      </div>
     </div>
   );
 }

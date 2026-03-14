@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { toast } from "sonner";
-import { Camera, CheckCircle2, ClipboardCheck, XCircle } from "lucide-react";
+import { CheckCircle2, ClipboardCheck, XCircle } from "lucide-react";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -28,6 +28,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { ConformityDocumentPanel } from "@/app/(app)/parts/_components/ConformityDocumentPanel";
 
 type VisualCondition = "acceptable" | "damaged" | "rejected";
 type Decision = "accepted" | "rejected" | "accepted_with_deviation";
@@ -81,20 +82,10 @@ export function ReceivingInspection() {
     return `${y}-${m}-${day}`;
   });
   const [notes, setNotes] = useState("");
-  const [conformityDocumentIdsRaw, setConformityDocumentIdsRaw] = useState("");
   const [log, setLog] = useState<LogItem[]>([]);
   const [saving, setSaving] = useState(false);
 
   const quantityMatches = Number(expectedQty || 0) === Number(receivedQty || 0);
-
-  const conformityDocumentIds = useMemo(
-    () =>
-      conformityDocumentIdsRaw
-        .split(",")
-        .map((token) => token.trim())
-        .filter((token) => token.length > 0) as Id<"documents">[],
-    [conformityDocumentIdsRaw],
-  );
 
   const checklistPass =
     visualCondition === "acceptable" &&
@@ -137,7 +128,6 @@ export function ReceivingInspection() {
       return `${y}-${m}-${day}`;
     })());
     setNotes("");
-    setConformityDocumentIdsRaw("");
   }
 
   async function submitDecision(decision: Decision) {
@@ -179,7 +169,7 @@ export function ReceivingInspection() {
         rejectionReason: isRejected
           ? notes.trim() || "Rejected during receiving inspection"
           : undefined,
-        conformityDocumentIds: conformityDocumentIds.length > 0 ? conformityDocumentIds : undefined,
+        conformityDocumentIds: undefined,
       });
 
       setLog((prev) => [
@@ -285,7 +275,7 @@ export function ReceivingInspection() {
       </div>
 
       <Dialog open={!!selectedPart} onOpenChange={(open) => !open && !saving && resetDialogState()}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Receiving Inspection Checklist</DialogTitle>
             <DialogDescription>
@@ -335,17 +325,6 @@ export function ReceivingInspection() {
               </div>
             </div>
 
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="h-8 text-xs"
-              onClick={() => toast.info("Photo documentation coming soon")}
-            >
-              <Camera className="w-3.5 h-3.5 mr-1" />
-              Add photo (coming soon)
-            </Button>
-
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <Label className="text-xs">Inspector name</Label>
@@ -362,15 +341,17 @@ export function ReceivingInspection() {
               <Input value={notes} onChange={(e) => setNotes(e.target.value)} className="h-8 text-xs" placeholder="Add details or rejection reason" />
             </div>
 
-            <div>
-              <Label className="text-xs">Conformity document IDs</Label>
-              <Input
-                value={conformityDocumentIdsRaw}
-                onChange={(e) => setConformityDocumentIdsRaw(e.target.value)}
-                className="h-8 text-xs"
-                placeholder="Optional: comma-separated Convex document IDs"
-              />
-            </div>
+            {selectedPart && orgId && (
+              <div className="border-t border-border/40 pt-3">
+                <Label className="text-xs mb-2 block">Photos & Conformity Documents</Label>
+                <div className="max-h-56 overflow-y-auto">
+                  <ConformityDocumentPanel
+                    organizationId={orgId}
+                    partId={selectedPart._id}
+                  />
+                </div>
+              </div>
+            )}
 
             <div className="text-[11px] text-muted-foreground">
               Checklist status: {checklistPass ? "Pass" : "Requires attention"}

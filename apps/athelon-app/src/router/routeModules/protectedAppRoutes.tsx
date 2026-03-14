@@ -76,6 +76,9 @@ const WarehouseLocationsPage = lazy(
   () => import("@/app/(app)/parts/warehouse/page"),
 );
 const PartsTagsPage = lazy(() => import("@/app/(app)/parts/tags/page"));
+const PartsUploadPage = lazy(() => import("@/app/(app)/parts/upload/page"));
+const PartsUploadIssuesPage = lazy(() => import("@/app/(app)/parts/upload/issues/page"));
+const DocumentScanPage = lazy(() => import("@/app/(app)/parts/scan/page"));
 
 const FindingsPage = lazy(() => import("@/app/(app)/findings/page"));
 const PersonnelPage = lazy(() => import("@/app/(app)/personnel/page"));
@@ -277,6 +280,9 @@ export function protectedAppRoutes() {
             <Route path="/parts/receiving/po" element={<POReceivingPage />} />
             <Route path="/parts/warehouse" element={<WarehouseLocationsPage />} />
             <Route path="/parts/tags" element={<PartsTagsPage />} />
+            <Route path="/parts/upload" element={<PartsUploadPage />} />
+            <Route path="/parts/upload/issues" element={<PartsUploadIssuesPage />} />
+            <Route path="/parts/scan" element={<DocumentScanPage />} />
 
             <Route path="/findings" element={<FindingsPage />} />
             <Route path="/squawks" element={<Navigate to="/findings" replace />} />

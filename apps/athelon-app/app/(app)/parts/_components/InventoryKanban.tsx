@@ -19,6 +19,7 @@ type PartItem = {
   location: string;
   quantity?: number;
   quantityOnHand?: number;
+  isSerialized?: boolean;
   supplier?: string;
   reservedForWorkOrderId?: string;
   serialNumber?: string;
@@ -171,7 +172,7 @@ export function InventoryKanban({ parts }: { parts: PartItem[] }) {
                           <ChevronDown className={`w-3.5 h-3.5 text-muted-foreground transition-transform ${isOpen ? "rotate-180" : ""}`} />
                         </div>
                         <p className="text-[11px] text-foreground truncate">{part.partName}</p>
-                        <p className="text-[11px] text-muted-foreground">Qty: {qty}</p>
+                        {!part.isSerialized && <p className="text-[11px] text-muted-foreground">Qty: {qty}</p>}
                         <div className="mt-1 flex items-center gap-1.5 flex-wrap">
                           <Badge variant="outline" className={`text-[9px] border ${CONDITION_STYLES[part.condition] ?? "bg-muted text-muted-foreground"}`}>
                             {part.condition}

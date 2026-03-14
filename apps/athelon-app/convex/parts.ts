@@ -44,7 +44,7 @@
 // 14 CFR 43.9(a)(1) — approved data reference in maintenance records
 // FAA Order 8120.11 — suspected unapproved parts reporting
 
-import { mutation, query } from "./_generated/server";
+import { mutation, query, internalMutation } from "./_generated/server";
 import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import { internal } from "./_generated/api";
@@ -239,6 +239,8 @@ export const receivePart = mutation({
 
     // v11: Relational warehouse location
     binLocationId: v.optional(v.id("warehouseBins")),
+
+    quantityOnHand: v.optional(v.number()),
   },
 
   handler: async (ctx, args): Promise<{ partId: Id<"parts">; eightOneThirtyId?: Id<"eightOneThirtyRecords"> }> => {
@@ -451,6 +453,7 @@ export const receivePart = mutation({
       isOwnerSupplied: args.isOwnerSupplied,
       notes: args.notes,
       binLocationId: args.binLocationId,
+      quantityOnHand: args.quantityOnHand ?? 1,
       createdAt: now,
       updatedAt: now,
     });
@@ -1377,5 +1380,114 @@ export const createPart = mutation({
     });
 
     return ids;
+  },
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MUTATION: patchPartFromExtraction
+//
+// Applies approved extracted fields to an existing part record.
+// Used by the Document Intelligence feature after the user reviews and
+// approves individual field changes from OCR extraction results.
+//
+// Only patches fields included in the args — undefined fields are not touched.
+// Links the extraction job to the part for audit trail.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const patchPartFromExtraction = mutation({
+  args: {
+    organizationId: v.id("organizations"),
+    partId: v.id("parts"),
+    extractionJobId: v.optional(v.id("documentExtractionJobs")),
+
+    // All patchable fields are optional
+    partNumber: v.optional(v.string()),
+    partName: v.optional(v.string()),
+    description: v.optional(v.string()),
+    serialNumber: v.optional(v.string()),
+    partCategory: v.optional(
+      v.union(
+        v.literal("consumable"),
+        v.literal("standard"),
+        v.literal("rotable"),
+        v.literal("expendable"),
+        v.literal("repairable"),
+      ),
+    ),
+    condition: v.optional(partConditionValidator),
+    supplier: v.optional(v.string()),
+    purchaseOrderNumber: v.optional(v.string()),
+    isLifeLimited: v.optional(v.boolean()),
+    lifeLimitHours: v.optional(v.number()),
+    lifeLimitCycles: v.optional(v.number()),
+    hoursAccumulatedBeforeInstall: v.optional(v.number()),
+    cyclesAccumulatedBeforeInstall: v.optional(v.number()),
+    hasShelfLifeLimit: v.optional(v.boolean()),
+    shelfLifeLimitDate: v.optional(v.number()),
+    unitCost: v.optional(v.number()),
+    lotNumber: v.optional(v.string()),
+    batchNumber: v.optional(v.string()),
+    quantityOnHand: v.optional(v.number()),
+    notes: v.optional(v.string()),
+  },
+
+  handler: async (ctx, args): Promise<{ updated: boolean }> => {
+    const callerUserId = await requireAuth(ctx);
+    const now = Date.now();
+
+    // Verify part exists and belongs to org
+    const part = await ctx.db.get(args.partId);
+    if (!part) {
+      throw new Error(`Part ${args.partId} not found.`);
+    }
+    if (part.organizationId !== args.organizationId) {
+      throw new Error("ACCESS_DENIED: part does not belong to this organization.");
+    }
+
+    // Build patch object from provided fields only
+    const patch: Record<string, unknown> = {};
+    const patchableKeys = [
+      "partNumber", "partName", "description", "serialNumber",
+      "partCategory", "condition", "supplier", "purchaseOrderNumber",
+      "isLifeLimited", "lifeLimitHours", "lifeLimitCycles",
+      "hoursAccumulatedBeforeInstall", "cyclesAccumulatedBeforeInstall",
+      "hasShelfLifeLimit", "shelfLifeLimitDate",
+      "unitCost", "lotNumber", "batchNumber", "quantityOnHand", "notes",
+    ] as const;
+
+    for (const key of patchableKeys) {
+      if (args[key] !== undefined) {
+        patch[key] = args[key];
+      }
+    }
+
+    if (Object.keys(patch).length === 0) {
+      return { updated: false };
+    }
+
+    patch.updatedAt = now;
+    await ctx.db.patch(args.partId, patch);
+
+    // Link extraction job to part for audit trail
+    if (args.extractionJobId) {
+      await ctx.runMutation(internal.documentExtractionJobs.linkExtractionToPart, {
+        jobId: args.extractionJobId,
+        partId: args.partId,
+      });
+    }
+
+    // Audit log
+    const fieldCount = Object.keys(patch).filter((k) => k !== "updatedAt").length;
+    await ctx.db.insert("auditLog", {
+      organizationId: args.organizationId,
+      eventType: "record_updated",
+      tableName: "parts",
+      recordId: args.partId,
+      userId: callerUserId,
+      timestamp: now,
+      notes: `Document Intelligence: ${fieldCount} field(s) updated from extraction`,
+    });
+
+    return { updated: true };
   },
 });

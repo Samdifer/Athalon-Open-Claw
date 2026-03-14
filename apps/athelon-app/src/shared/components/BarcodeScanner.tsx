@@ -43,10 +43,16 @@ export function BarcodeScanner({ open, onClose, onScan, title = "Scan Barcode" }
     if (!open) return;
 
     let cancelled = false;
-    const scanner = new Html5Qrcode(containerId);
-    scannerRef.current = scanner;
 
     const startScanning = async () => {
+      // Wait for the DOM element to be available (Dialog may not have mounted yet)
+      if (!document.getElementById(containerId)) {
+        return;
+      }
+
+      const scanner = new Html5Qrcode(containerId);
+      scannerRef.current = scanner;
+
       try {
         await scanner.start(
           { facingMode: "environment" },
@@ -85,8 +91,16 @@ export function BarcodeScanner({ open, onClose, onScan, title = "Scan Barcode" }
       }
     };
 
-    // Small delay to let DOM mount
-    const timer = setTimeout(startScanning, 100);
+    // Delay to let Dialog DOM mount; retry once if element isn't ready
+    const timer = setTimeout(() => {
+      if (cancelled) return;
+      if (!document.getElementById(containerId)) {
+        // Retry after another frame if Dialog hasn't mounted yet
+        setTimeout(() => { if (!cancelled) startScanning(); }, 200);
+      } else {
+        startScanning();
+      }
+    }, 150);
 
     return () => {
       cancelled = true;

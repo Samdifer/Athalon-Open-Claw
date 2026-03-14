@@ -6037,4 +6037,96 @@ export default defineSchema({
     updatedAt: v.number(),
   })
     .index("by_org", ["organizationId"]),
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // PARTS BULK UPLOAD
+  //
+  // Tracks multi-row CSV/spreadsheet upload sessions for parts inventory.
+  // Each batch records overall status and per-row issues for review/resolution.
+  // ═══════════════════════════════════════════════════════════════════════════
+  partUploadBatches: defineTable({
+    organizationId: v.id("organizations"),
+    createdByUserId: v.string(),
+    createdByTechnicianId: v.id("technicians"),
+    batchLabel: v.string(),
+    fileName: v.string(),
+    totalRows: v.number(),
+    successCount: v.number(),
+    errorCount: v.number(),
+    warningCount: v.number(),
+    status: v.union(
+      v.literal("processing"),
+      v.literal("complete"),
+      v.literal("partial"),
+      v.literal("failed"),
+    ),
+    completedAt: v.optional(v.number()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_org", ["organizationId"])
+    .index("by_org_status", ["organizationId", "status"]),
+
+  partUploadIssues: defineTable({
+    organizationId: v.id("organizations"),
+    batchId: v.id("partUploadBatches"),
+    rowIndex: v.number(),
+    partNumber: v.string(),
+    partName: v.optional(v.string()),
+    issueType: v.union(
+      v.literal("missing_optional_field"),
+      v.literal("duplicate_detected"),
+      v.literal("near_match_detected"),
+      v.literal("validation_warning"),
+      v.literal("create_error"),
+    ),
+    severity: v.union(
+      v.literal("warning"),
+      v.literal("error"),
+    ),
+    fieldName: v.optional(v.string()),
+    message: v.string(),
+    rawRowJson: v.string(),
+    resolvedAt: v.optional(v.number()),
+    resolvedByUserId: v.optional(v.string()),
+    resolvedPartId: v.optional(v.id("parts")),
+    resolution: v.optional(v.union(
+      v.literal("skipped"),
+      v.literal("created"),
+      v.literal("quantity_updated"),
+      v.literal("inline_edited_and_created"),
+    )),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_batch", ["batchId"])
+    .index("by_org", ["organizationId"])
+    .index("by_org_unresolved", ["organizationId", "resolvedAt"])
+    .index("by_batch_severity", ["batchId", "severity"]),
+
+  // ─── DOCUMENT EXTRACTION JOBS (Document Intelligence) ───────────────────────
+  // Audit trail for OCR/Vision extraction sessions.
+  // Each record tracks a single document extraction attempt and its result.
+  documentExtractionJobs: defineTable({
+    organizationId: v.id("organizations"),
+    documentId: v.optional(v.id("documents")),
+    storageId: v.id("_storage"),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("processing"),
+      v.literal("completed"),
+      v.literal("failed"),
+    ),
+    extractedDataJson: v.optional(v.string()),
+    errorMessage: v.optional(v.string()),
+    pagesProcessed: v.optional(v.number()),
+    documentTypeDetected: v.optional(v.string()),
+    triggeredByUserId: v.string(),
+    startedAt: v.number(),
+    completedAt: v.optional(v.number()),
+    linkedPartId: v.optional(v.id("parts")),
+  })
+    .index("by_org", ["organizationId"])
+    .index("by_document", ["documentId"])
+    .index("by_part", ["linkedPartId"]),
 });

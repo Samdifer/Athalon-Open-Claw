@@ -35,6 +35,7 @@ import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { toast } from "sonner";
 import { BinLocationPicker } from "@/app/(app)/parts/_components/BinLocationPicker";
+import { ConformityDocumentPanel } from "@/app/(app)/parts/_components/ConformityDocumentPanel";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -99,6 +100,7 @@ export default function NewPartPage() {
   const [description, setDescription] = useState("");
   const [serialNumber, setSerialNumber] = useState("");
   const [isSerialized, setIsSerialized] = useState(false);
+  const [quantity, setQuantity] = useState(1);
   const [condition, setCondition] = useState<PartCondition>("new");
   const [supplier, setSupplier] = useState("");
   const [purchaseOrderNumber, setPurchaseOrderNumber] = useState("");
@@ -161,6 +163,7 @@ export default function NewPartPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [createdPartId, setCreatedPartId] = useState<Id<"parts"> | undefined>(undefined);
 
   function hasCertData() {
     return certFormNumber.trim() !== "" || certApprovalNumber.trim() !== "";
@@ -254,7 +257,7 @@ export default function NewPartPage() {
           }
         : undefined;
 
-      await receivePart({
+      const result = await receivePart({
         organizationId: orgIdTyped,
         partNumber: partNumber.trim(),
         partName: partName.trim(),
@@ -282,7 +285,11 @@ export default function NewPartPage() {
         eightOneThirtyData,
         notes: notes.trim() || undefined,
         binLocationId,
+        quantityOnHand: isSerialized ? 1 : quantity,
       });
+      if (result?.partId) {
+        setCreatedPartId(result.partId);
+      }
 
       toast.success(
         hasCertData()
@@ -297,6 +304,7 @@ export default function NewPartPage() {
       setDescription("");
       setSerialNumber("");
       setIsSerialized(false);
+      setQuantity(1);
       setCondition("new");
       setSupplier("");
       setPurchaseOrderNumber("");
@@ -357,32 +365,50 @@ export default function NewPartPage() {
 
       {/* Success Banner */}
       {success && (
-        <div className="flex items-center gap-3 p-4 rounded-lg bg-green-500/10 border border-green-500/20">
-          <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0" />
-          <div>
-            <p className="text-sm font-medium text-green-600 dark:text-green-400">
-              Part record created — pending inspection
-            </p>
-            <p className="text-[11px] text-green-400/70 mt-0.5">
-              Part will appear in the receiving inspection queue.
-            </p>
+        <div className="space-y-4">
+          <div className="flex items-center gap-3 p-4 rounded-lg bg-green-500/10 border border-green-500/20">
+            <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0" />
+            <div>
+              <p className="text-sm font-medium text-green-600 dark:text-green-400">
+                Part record created — pending inspection
+              </p>
+              <p className="text-[11px] text-green-400/70 mt-0.5">
+                {createdPartId
+                  ? "Attach conformity documents and photos below, then continue."
+                  : "Part will appear in the receiving inspection queue."}
+              </p>
+            </div>
+            <div className="flex gap-2 ml-auto">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-green-400 h-7 text-xs"
+                onClick={() => { setSuccess(false); setCreatedPartId(undefined); }}
+              >
+                Receive another
+              </Button>
+              <Button asChild variant="ghost" size="sm" className="text-green-400 h-7 text-xs">
+                <Link to="/parts/receiving">Receiving Queue</Link>
+              </Button>
+              <Button asChild variant="ghost" size="sm" className="text-green-400 h-7 text-xs">
+                <Link to="/parts">View Inventory</Link>
+              </Button>
+            </div>
           </div>
-          <div className="flex gap-2 ml-auto">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-green-400 h-7 text-xs"
-              onClick={() => setSuccess(false)}
-            >
-              Receive another
-            </Button>
-            <Button asChild variant="ghost" size="sm" className="text-green-400 h-7 text-xs">
-              <Link to="/parts/receiving">Receiving Queue</Link>
-            </Button>
-            <Button asChild variant="ghost" size="sm" className="text-green-400 h-7 text-xs">
-              <Link to="/parts">View Inventory</Link>
-            </Button>
-          </div>
+
+          {createdPartId && orgId && (
+            <Card className="border-border/60">
+              <CardContent className="p-4">
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+                  Attach Conformity Documents & Photos
+                </p>
+                <ConformityDocumentPanel
+                  organizationId={orgId as Id<"organizations">}
+                  partId={createdPartId}
+                />
+              </CardContent>
+            </Card>
+          )}
         </div>
       )}
 
@@ -488,7 +514,10 @@ export default function NewPartPage() {
                 <Checkbox
                   id="is-serialized"
                   checked={isSerialized}
-                  onCheckedChange={(checked) => setIsSerialized(!!checked)}
+                  onCheckedChange={(checked) => {
+                    setIsSerialized(!!checked);
+                    if (checked) setQuantity(1);
+                  }}
                   disabled={isSubmitting}
                 />
                 <Label htmlFor="is-serialized" className="text-xs font-medium cursor-pointer">Serialized Part</Label>
@@ -515,6 +544,23 @@ export default function NewPartPage() {
                   onChange={(e) => setSerialNumber(e.target.value)}
                   placeholder="e.g. AB-12345"
                   className="font-mono text-sm h-9 bg-muted/30"
+                  disabled={isSubmitting}
+                />
+              </div>
+            )}
+
+            {!isSerialized && (
+              <div className="space-y-1.5 max-w-[160px]">
+                <Label htmlFor="quantity" className="text-xs font-medium">
+                  Quantity
+                </Label>
+                <Input
+                  id="quantity"
+                  type="number"
+                  min={1}
+                  value={quantity}
+                  onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value, 10) || 1))}
+                  className="text-sm h-9 bg-muted/30"
                   disabled={isSubmitting}
                 />
               </div>
