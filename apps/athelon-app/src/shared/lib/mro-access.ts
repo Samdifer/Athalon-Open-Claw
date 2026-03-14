@@ -1,7 +1,7 @@
 import {
   ROLE_SECTION_ACCESS,
   type AccessSection,
-} from "@/lib/access-policy";
+} from "./access-policy";
 
 export const MRO_ROLES = [
   "admin",

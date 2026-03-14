@@ -35,7 +35,9 @@ import {
   Loader2,
   ShieldCheck,
   Link2,
+  ScanLine,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -380,6 +382,7 @@ function UploadAndLinkForm({
           ref={fileInputRef}
           type="file"
           accept=".pdf,.jpg,.jpeg,.png,.gif,.tiff,.doc,.docx,.xls,.xlsx,.txt"
+          capture="environment"
           onChange={handleFileChange}
           disabled={isUploading}
           className="hidden"
@@ -529,21 +532,33 @@ export function ConformityDocumentPanel({
             </Badge>
           )}
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-7 text-xs border-border/60 gap-1.5"
-          onClick={() => setShowUploadForm((v) => !v)}
-        >
-          {showUploadForm ? (
-            "Cancel"
-          ) : (
-            <>
-              <Upload className="w-3 h-3" />
-              Attach
-            </>
-          )}
-        </Button>
+        <div className="flex items-center gap-1.5">
+          <Link to="/parts/scan">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7 text-xs border-border/60 gap-1.5"
+            >
+              <ScanLine className="w-3 h-3" />
+              Scan & Extract
+            </Button>
+          </Link>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 text-xs border-border/60 gap-1.5"
+            onClick={() => setShowUploadForm((v) => !v)}
+          >
+            {showUploadForm ? (
+              "Cancel"
+            ) : (
+              <>
+                <Upload className="w-3 h-3" />
+                Attach
+              </>
+            )}
+          </Button>
+        </div>
       </div>
 
       {/* Document List */}

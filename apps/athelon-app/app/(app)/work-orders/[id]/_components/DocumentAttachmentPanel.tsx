@@ -367,6 +367,7 @@ function UploadForm({
           ref={fileInputRef}
           type="file"
           accept=".pdf,.jpg,.jpeg,.png,.gif,.tiff,.doc,.docx,.xls,.xlsx,.txt"
+          capture="environment"
           onChange={handleFileChange}
           disabled={isUploading}
           className="hidden"

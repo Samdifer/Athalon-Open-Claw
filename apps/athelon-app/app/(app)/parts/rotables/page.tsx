@@ -7,6 +7,7 @@ import type { Id } from "@/convex/_generated/dataModel";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import { usePagePrereqs } from "@/hooks/usePagePrereqs";
 import { useSelectedLocation } from "@/components/LocationSwitcher";
+import { DocumentAttachmentPanel } from "@/app/(app)/work-orders/[id]/_components/DocumentAttachmentPanel";
 import {
   Plus, Search, ChevronDown, ChevronRight, DollarSign, Loader2,
 } from "lucide-react";
@@ -545,7 +546,19 @@ export default function RotablesPage() {
                     </div>
                   </div>
                   {isExpanded && orgId && (
-                    <RotableHistory rotableId={rotable._id} orgId={orgId} />
+                    <>
+                      <RotableHistory rotableId={rotable._id} orgId={orgId} />
+                      <div className="mt-4 pt-4 border-t border-border/40">
+                        <p className="text-xs font-medium text-muted-foreground mb-2">Trace Documents & Photos</p>
+                        <DocumentAttachmentPanel
+                          organizationId={orgId}
+                          attachedToTable="rotables"
+                          attachedToId={String(rotable._id)}
+                          allowedTypes={["photo", "parts_8130", "other"]}
+                          canDelete
+                        />
+                      </div>
+                    </>
                   )}
                 </CardContent>
               </Card>

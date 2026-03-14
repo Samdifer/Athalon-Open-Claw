@@ -22,9 +22,34 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   PartNumberCombobox,
   type PartSelection,
 } from "@/src/shared/components/PartNumberCombobox";
+
+type VendorType =
+  | "parts_supplier"
+  | "contract_maintenance"
+  | "calibration_lab"
+  | "DER"
+  | "consumables_supplier"
+  | "service_provider"
+  | "other";
+
+const VENDOR_TYPES: { value: VendorType; label: string }[] = [
+  { value: "parts_supplier", label: "Parts Supplier" },
+  { value: "contract_maintenance", label: "Contract Maintenance" },
+  { value: "calibration_lab", label: "Calibration Lab" },
+  { value: "DER", label: "DER (Designated Engineering Rep)" },
+  { value: "consumables_supplier", label: "Consumables Supplier" },
+  { value: "service_provider", label: "Service Provider" },
+  { value: "other", label: "Other" },
+];
 
 interface DraftLineItem {
   id: string;
@@ -46,21 +71,95 @@ export default function NewPOPage() {
   const router = useRouter();
   const { orgId, techId, isLoaded } = useCurrentOrg();
 
-  const vendors = useQuery(
+  const approvedVendors = useQuery(
     api.vendors.listVendors,
     orgId ? { orgId, isApproved: true } : "skip",
   );
 
+  // Also fetch all vendors so newly created (unapproved) vendors appear in the dropdown
+  const allVendors = useQuery(
+    api.vendors.listVendors,
+    orgId ? { orgId } : "skip",
+  );
+
   const createPO = useMutation(api.billing.createPurchaseOrder);
   const addPOLineItem = useMutation(api.billing.addPOLineItem);
+  const createVendor = useMutation(api.vendors.createVendor);
 
   const [vendorId, setVendorId] = useState<string>("");
+
+  // Merge: approved vendors + any newly created vendor that isn't yet approved
+  const vendors = (() => {
+    if (!approvedVendors) return undefined;
+    const approved = [...approvedVendors];
+    if (vendorId && !approved.some((v) => v._id === vendorId) && allVendors) {
+      const newlyCreated = allVendors.find((v) => v._id === vendorId);
+      if (newlyCreated) approved.push(newlyCreated);
+    }
+    return approved;
+  })();
   const [notes, setNotes] = useState("");
   const [lineItems, setLineItems] = useState<DraftLineItem[]>([
     { id: crypto.randomUUID(), partSelection: null, description: "", qty: "1", unitPrice: "0" },
   ]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // New vendor dialog state
+  const [showNewVendor, setShowNewVendor] = useState(false);
+  const [newVendorName, setNewVendorName] = useState("");
+  const [newVendorType, setNewVendorType] = useState<VendorType>("parts_supplier");
+  const [newVendorAddress, setNewVendorAddress] = useState("");
+  const [newVendorContactName, setNewVendorContactName] = useState("");
+  const [newVendorContactEmail, setNewVendorContactEmail] = useState("");
+  const [newVendorContactPhone, setNewVendorContactPhone] = useState("");
+  const [newVendorCertNumber, setNewVendorCertNumber] = useState("");
+  const [newVendorCertExpiry, setNewVendorCertExpiry] = useState("");
+  const [newVendorNotes, setNewVendorNotes] = useState("");
+  const [creatingVendor, setCreatingVendor] = useState(false);
+  const [newVendorError, setNewVendorError] = useState<string | null>(null);
+
+  const resetNewVendorForm = useCallback(() => {
+    setNewVendorName("");
+    setNewVendorType("parts_supplier");
+    setNewVendorAddress("");
+    setNewVendorContactName("");
+    setNewVendorContactEmail("");
+    setNewVendorContactPhone("");
+    setNewVendorCertNumber("");
+    setNewVendorCertExpiry("");
+    setNewVendorNotes("");
+    setNewVendorError(null);
+  }, []);
+
+  const handleCreateVendor = async () => {
+    setNewVendorError(null);
+    if (!orgId) { setNewVendorError("Organization not loaded."); return; }
+    if (!newVendorName.trim()) { setNewVendorError("Vendor name is required."); return; }
+
+    setCreatingVendor(true);
+    try {
+      const newId = await createVendor({
+        orgId,
+        name: newVendorName.trim(),
+        type: newVendorType,
+        address: newVendorAddress.trim() || undefined,
+        contactName: newVendorContactName.trim() || undefined,
+        contactEmail: newVendorContactEmail.trim() || undefined,
+        contactPhone: newVendorContactPhone.trim() || undefined,
+        certNumber: newVendorCertNumber.trim() || undefined,
+        certExpiry: newVendorCertExpiry ? new Date(newVendorCertExpiry).getTime() : undefined,
+        notes: newVendorNotes.trim() || undefined,
+      });
+      setVendorId(newId);
+      setShowNewVendor(false);
+      resetNewVendorForm();
+    } catch (err) {
+      setNewVendorError(err instanceof Error ? err.message : "Failed to create vendor.");
+    } finally {
+      setCreatingVendor(false);
+    }
+  };
 
   const isLoading = !isLoaded || vendors === undefined;
 
@@ -165,7 +264,7 @@ export default function NewPOPage() {
       {(vendors ?? []).length === 0 && !isLoading && (
         <div className="flex items-center gap-2 p-3 rounded-md bg-amber-500/10 border border-amber-500/30 text-sm text-amber-600 dark:text-amber-400">
           <AlertCircle className="w-4 h-4 flex-shrink-0" />
-          No approved vendors found. Approve a vendor before creating a PO.
+          No approved vendors found. You can add a new vendor using the dropdown above.
         </div>
       )}
 
@@ -176,16 +275,37 @@ export default function NewPOPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-1.5">
-              <Label className="text-xs font-medium">Approved Vendor *</Label>
-              <Select value={vendorId} onValueChange={setVendorId}>
+              <Label className="text-xs font-medium">Vendor *</Label>
+              <Select
+                value={vendorId}
+                onValueChange={(val) => {
+                  if (val === "__new__") {
+                    setShowNewVendor(true);
+                  } else {
+                    setVendorId(val);
+                  }
+                }}
+              >
                 <SelectTrigger className="h-9 text-sm border-border/60">
                   <SelectValue placeholder="Select vendor" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="__new__" className="text-primary font-medium">
+                    <span className="flex items-center gap-1.5">
+                      <Plus className="w-3.5 h-3.5" />
+                      Add New Vendor
+                    </span>
+                  </SelectItem>
+                  {(vendors ?? []).length > 0 && (
+                    <div className="my-1 border-t border-border/40" />
+                  )}
                   {(vendors ?? []).map((v) => (
                     <SelectItem key={v._id} value={v._id}>
                       {v.name}
-                      <span className="text-xs text-muted-foreground ml-2 capitalize">({v.type.replace("_", " ")})</span>
+                      <span className="text-xs text-muted-foreground ml-2 capitalize">
+                        ({v.type.replace("_", " ")})
+                        {!v.isApproved && " — pending approval"}
+                      </span>
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -304,12 +424,109 @@ export default function NewPOPage() {
           </div>
           <div className="flex gap-2">
             <Button type="button" variant="outline" size="sm" onClick={() => router.back()}>Cancel</Button>
-            <Button type="submit" size="sm" disabled={submitting || (vendors ?? []).length === 0}>
+            <Button type="submit" size="sm" disabled={submitting || !vendorId}>
               {submitting ? "Creating..." : "Create PO"}
             </Button>
           </div>
         </div>
       </form>
+
+      {/* ── New Vendor Dialog ────────────────────────────────────────────── */}
+      <Dialog open={showNewVendor} onOpenChange={(open) => { if (!open) { setShowNewVendor(false); resetNewVendorForm(); } }}>
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-base font-semibold">Add New Vendor</DialogTitle>
+            <p className="text-xs text-muted-foreground mt-1">New vendors start unapproved — approve after review</p>
+          </DialogHeader>
+
+          {newVendorError && (
+            <div className="flex items-center gap-2 p-2.5 rounded-md bg-red-500/10 border border-red-500/30 text-xs text-red-600 dark:text-red-400">
+              <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+              {newVendorError}
+            </div>
+          )}
+
+          <div className="space-y-4 pt-1">
+            {/* Vendor Information */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium">Vendor Name *</Label>
+                <Input
+                  value={newVendorName}
+                  onChange={(e) => setNewVendorName(e.target.value)}
+                  placeholder="e.g. Aviall Services"
+                  className="h-9 text-sm border-border/60"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium">Type *</Label>
+                <Select value={newVendorType} onValueChange={(v) => setNewVendorType(v as VendorType)}>
+                  <SelectTrigger className="h-9 text-sm border-border/60">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {VENDOR_TYPES.map((t) => (
+                      <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium">Address</Label>
+              <Textarea
+                value={newVendorAddress}
+                onChange={(e) => setNewVendorAddress(e.target.value)}
+                placeholder="Street, City, State, ZIP"
+                className="text-sm border-border/60 resize-none h-14"
+              />
+            </div>
+
+            {/* Contact Information */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium">Contact Name</Label>
+                <Input value={newVendorContactName} onChange={(e) => setNewVendorContactName(e.target.value)} className="h-9 text-sm border-border/60" placeholder="John Smith" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium">Email</Label>
+                <Input value={newVendorContactEmail} onChange={(e) => setNewVendorContactEmail(e.target.value)} type="email" className="h-9 text-sm border-border/60" placeholder="vendor@example.com" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium">Phone</Label>
+                <Input value={newVendorContactPhone} onChange={(e) => setNewVendorContactPhone(e.target.value)} type="tel" className="h-9 text-sm border-border/60" placeholder="555-000-0000" />
+              </div>
+            </div>
+
+            {/* Certification */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium">Cert / License Number</Label>
+                <Input value={newVendorCertNumber} onChange={(e) => setNewVendorCertNumber(e.target.value)} className="h-9 text-sm border-border/60" placeholder="FAA cert / Part 145 #" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium">Cert Expiry Date</Label>
+                <Input type="date" value={newVendorCertExpiry} onChange={(e) => setNewVendorCertExpiry(e.target.value)} className="h-9 text-sm border-border/60" />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium">Notes</Label>
+              <Textarea value={newVendorNotes} onChange={(e) => setNewVendorNotes(e.target.value)} className="text-sm border-border/60 resize-none h-14" placeholder="Additional notes..." />
+            </div>
+          </div>
+
+          <div className="flex gap-2 justify-end pt-2">
+            <Button type="button" variant="outline" size="sm" onClick={() => { setShowNewVendor(false); resetNewVendorForm(); }}>
+              Cancel
+            </Button>
+            <Button type="button" size="sm" disabled={creatingVendor || !newVendorName.trim()} onClick={handleCreateVendor}>
+              {creatingVendor ? "Creating..." : "Create & Select Vendor"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

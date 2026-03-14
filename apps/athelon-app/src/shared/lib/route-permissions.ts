@@ -2,7 +2,7 @@ import { matchPath } from "react-router-dom";
 import {
   ALL_ACCESS_ROLES,
   ROUTE_ACCESS_RULES,
-} from "@/lib/access-policy";
+} from "./access-policy";
 import { type MroRole } from "@/lib/mro-constants";
 
 export const ALL_ROLES: ReadonlyArray<MroRole> = [...ALL_ACCESS_ROLES];

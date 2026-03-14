@@ -34,12 +34,15 @@ import {
   AlertTriangle,
   Bell,
   Mail,
+  Upload,
+  AlertCircle,
+  ScanLine,
 } from "lucide-react";
 import { useCurrentOrg } from "@/hooks/useCurrentOrg";
 import {
   ROLE_SECTION_ACCESS,
   type AccessSection,
-} from "@/lib/access-policy";
+} from "../lib/access-policy";
 import {
   ROLE_BADGE_STYLES,
   ROLE_LABELS,
@@ -178,6 +181,9 @@ const mainNav: NavEntry[] = [
       { title: "Warehouse Locations", href: "/parts/warehouse", icon: Warehouse },
       { title: "Tags", href: "/parts/tags" },
       { title: "Alerts", href: "/parts/alerts" },
+      { title: "Bulk Upload", href: "/parts/upload", icon: Upload },
+      { title: "Document Scan", href: "/parts/scan", icon: ScanLine },
+      { title: "Import Issues", href: "/parts/upload/issues", icon: AlertCircle },
     ],
   },
   {

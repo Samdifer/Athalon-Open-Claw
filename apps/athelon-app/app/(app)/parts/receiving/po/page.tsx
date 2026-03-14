@@ -45,6 +45,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { formatDate, formatCurrency } from "@/lib/format";
+import { ConformityDocumentPanel } from "@/app/(app)/parts/_components/ConformityDocumentPanel";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -77,7 +83,6 @@ interface LineItemReceivingData {
   lifeLimitCycles: string;
   binLocation: string;
   notes: string;
-  conformityDocumentIdsRaw: string;
   // Track if user wants to receive this item
   isSelected: boolean;
 }
@@ -117,13 +122,6 @@ function parseDateInputToUtcMs(dateInput: string): number | undefined {
   const [y, m, d] = dateInput.split("-").map(Number);
   if (!Number.isFinite(y) || !Number.isFinite(m) || !Number.isFinite(d)) return undefined;
   return Date.UTC(y, m - 1, d);
-}
-
-function parseDocumentIdList(raw: string): string[] {
-  return raw
-    .split(",")
-    .map((token) => token.trim())
-    .filter((token) => token.length > 0);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -672,18 +670,6 @@ function Step2EnterData({
                     </div>
                   </div>
 
-                  {/* Row 6: Conformity Evidence */}
-                  <div className="space-y-1.5">
-                    <Label className="text-xs">Conformity Document IDs</Label>
-                    <Input
-                      value={item.conformityDocumentIdsRaw}
-                      onChange={(e) =>
-                        onUpdateLineItem(index, { conformityDocumentIdsRaw: e.target.value })
-                      }
-                      placeholder="Optional: comma-separated Convex document IDs"
-                      className="h-8 text-sm"
-                    />
-                  </div>
                 </CardContent>
               )}
             </Card>
@@ -857,12 +843,6 @@ function Step3Review({
                     {item.notes}
                   </div>
                 )}
-                {item.conformityDocumentIdsRaw && (
-                  <div className="col-span-2 sm:col-span-4">
-                    <span className="font-medium text-foreground">Conformity Docs:</span>{" "}
-                    {parseDocumentIdList(item.conformityDocumentIdsRaw).length}
-                  </div>
-                )}
               </div>
             </CardContent>
           </Card>
@@ -892,48 +872,86 @@ function Step4Success({
   poNumber,
   totalPartsCreated,
   totalLineItems,
+  createdParts,
+  organizationId,
   onReset,
 }: {
   poNumber: string;
   totalPartsCreated: number;
   totalLineItems: number;
+  createdParts: Array<{ partIds: Id<"parts">[]; partNumber: string; partName: string }>;
+  organizationId: Id<"organizations">;
   onReset: () => void;
 }) {
   return (
-    <Card className="border-border/60">
-      <CardContent className="p-8 text-center space-y-4">
-        <div className="w-12 h-12 mx-auto rounded-full bg-green-500/15 flex items-center justify-center">
-          <CheckCircle2 className="w-6 h-6 text-green-600 dark:text-green-400" />
-        </div>
-        <div>
-          <h3 className="text-lg font-semibold">Receiving Complete</h3>
-          <p className="text-sm text-muted-foreground mt-1">
-            {totalPartsCreated} part record{totalPartsCreated !== 1 ? "s" : ""} created
-            from {totalLineItems} line item{totalLineItems !== 1 ? "s" : ""} on{" "}
-            {poNumber}.
-          </p>
-          <p className="text-xs text-muted-foreground mt-2">
-            Parts have been placed in <strong>Pending Inspection</strong> status.
-            Complete receiving inspection before issuing to work orders.
-          </p>
-        </div>
+    <div className="space-y-4">
+      <Card className="border-border/60">
+        <CardContent className="p-8 text-center space-y-4">
+          <div className="w-12 h-12 mx-auto rounded-full bg-green-500/15 flex items-center justify-center">
+            <CheckCircle2 className="w-6 h-6 text-green-600 dark:text-green-400" />
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold">Receiving Complete</h3>
+            <p className="text-sm text-muted-foreground mt-1">
+              {totalPartsCreated} part record{totalPartsCreated !== 1 ? "s" : ""} created
+              from {totalLineItems} line item{totalLineItems !== 1 ? "s" : ""} on{" "}
+              {poNumber}.
+            </p>
+            <p className="text-xs text-muted-foreground mt-2">
+              Parts have been placed in <strong>Pending Inspection</strong> status.
+              Attach conformity documents below, then complete receiving inspection.
+            </p>
+          </div>
 
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-2 pt-2">
-          <Button size="sm" asChild>
-            <Link to="/parts/receiving">
-              Go to Receiving Inspection
-              <ArrowRight className="w-3.5 h-3.5 ml-1" />
-            </Link>
-          </Button>
-          <Button variant="outline" size="sm" onClick={onReset}>
-            Receive More
-          </Button>
-          <Button variant="ghost" size="sm" asChild>
-            <Link to="/billing/purchase-orders">Back to POs</Link>
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-2 pt-2">
+            <Button size="sm" asChild>
+              <Link to="/parts/receiving">
+                Go to Receiving Inspection
+                <ArrowRight className="w-3.5 h-3.5 ml-1" />
+              </Link>
+            </Button>
+            <Button variant="outline" size="sm" onClick={onReset}>
+              Receive More
+            </Button>
+            <Button variant="ghost" size="sm" asChild>
+              <Link to="/billing/purchase-orders">Back to POs</Link>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {createdParts.length > 0 && (
+        <Card className="border-border/60">
+          <CardContent className="p-4 space-y-3">
+            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+              Attach Conformity Documents & Photos
+            </p>
+            {createdParts.map((item, idx) =>
+              item.partIds.map((partId, pIdx) => (
+                <Collapsible key={`${idx}-${pIdx}`} defaultOpen={createdParts.length === 1 && item.partIds.length === 1}>
+                  <CollapsibleTrigger className="flex w-full items-center gap-2 rounded-md border border-border/40 px-3 py-2 text-left hover:bg-muted/30 transition-colors">
+                    <ChevronRight className="w-3.5 h-3.5 text-muted-foreground transition-transform [[data-state=open]>&]:rotate-90" />
+                    <span className="text-xs font-mono font-medium">{item.partNumber}</span>
+                    <span className="text-xs text-muted-foreground truncate">{item.partName}</span>
+                    {item.partIds.length > 1 && (
+                      <Badge variant="secondary" className="ml-auto text-[10px] h-4 px-1">
+                        #{pIdx + 1}
+                      </Badge>
+                    )}
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="pl-6 pt-2">
+                    <ConformityDocumentPanel
+                      organizationId={organizationId}
+                      partId={partId}
+                    />
+                  </CollapsibleContent>
+                </Collapsible>
+              ))
+            )}
+          </CardContent>
+        </Card>
+      )}
+    </div>
   );
 }
 
@@ -955,6 +973,7 @@ export default function POReceivingPage() {
   const [resultPoNumber, setResultPoNumber] = useState("");
   const [resultPartsCreated, setResultPartsCreated] = useState(0);
   const [resultLineItems, setResultLineItems] = useState(0);
+  const [resultCreatedParts, setResultCreatedParts] = useState<Array<{ partIds: Id<"parts">[]; partNumber: string; partName: string }>>([]);
 
   const receiveAgainstPO = useMutation(api.poReceiving.receiveAgainstPO);
 
@@ -992,7 +1011,6 @@ export default function POReceivingPage() {
         lifeLimitCycles: "",
         binLocation: "",
         notes: "",
-        conformityDocumentIdsRaw: "",
         isSelected: true,
       }));
     setLineItemsData(items);
@@ -1042,6 +1060,7 @@ export default function POReceivingPage() {
 
     let totalPartsCreated = 0;
     const poNumber = poDetail?.poNumber ?? "";
+    const allCreatedPartIds: Array<{ partIds: Id<"parts">[]; partNumber: string; partName: string }> = [];
 
     try {
       for (const item of selectedItems) {
@@ -1073,19 +1092,21 @@ export default function POReceivingPage() {
             : undefined,
           binLocation: item.binLocation || undefined,
           notes: item.notes || undefined,
-          conformityDocumentIds: (() => {
-            const ids = parseDocumentIdList(item.conformityDocumentIdsRaw);
-            return ids.length > 0 ? (ids as Id<"documents">[]) : undefined;
-          })(),
           receivedByUserId: user.id,
         });
 
         totalPartsCreated += result.partIds.length;
+        allCreatedPartIds.push({
+          partIds: result.partIds as Id<"parts">[],
+          partNumber: item.partNumber,
+          partName: item.partName,
+        });
       }
 
       setResultPoNumber(poNumber);
       setResultPartsCreated(totalPartsCreated);
       setResultLineItems(selectedItems.length);
+      setResultCreatedParts(allCreatedPartIds);
       setStep(4);
     } catch (err) {
       setError(
@@ -1104,6 +1125,7 @@ export default function POReceivingPage() {
     setResultPoNumber("");
     setResultPartsCreated(0);
     setResultLineItems(0);
+    setResultCreatedParts([]);
   }, []);
 
   if (!isLoaded || !orgId) {
@@ -1179,6 +1201,8 @@ export default function POReceivingPage() {
           poNumber={resultPoNumber}
           totalPartsCreated={resultPartsCreated}
           totalLineItems={resultLineItems}
+          createdParts={resultCreatedParts}
+          organizationId={orgId}
           onReset={handleReset}
         />
       )}

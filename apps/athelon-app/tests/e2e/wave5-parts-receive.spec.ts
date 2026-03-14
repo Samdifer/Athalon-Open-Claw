@@ -1,29 +1,20 @@
 /**
  * wave5-parts-receive.spec.ts
  *
- * AI-020: Interaction tests for the Parts Receive form (/parts/new).
+ * UI coverage for the Parts Receive form (/parts/new).
  *
- * Tests the AI-008 fix — the form now captures FAA 8130-3 cert fields at
- * receive time. Previously it only collected partNumber, partName, qty,
- * supplier. Now it has a collapsible "FAA 8130-3 / Airworthiness Cert"
- * section with 10+ cert fields required by Part 145 receiving inspection.
- *
- * All tests are UI-only (no Convex backend mutation verification).
- * Tests validate:
- * - Required base fields are present
- * - The 8130-3 section toggle exists and is collapsed by default
- * - Toggling open reveals cert fields (form tracking number, approval number,
- *   approving authority, applicant name, status work, authorized signatory)
- * - Validation blocks submission when cert section has partial data
- * - Life-limited and shelf-life sections also toggle correctly
+ * This form is now a single-part receiving workflow. It relies on required
+ * inputs and submit-time validation rather than a disabled submit button, and
+ * its LLP fields are revealed only after the LLP subsection is enabled.
  */
 
 import { test, expect, type Page } from "@playwright/test";
 
 async function gotoPartsNew(page: Page) {
   await page.goto("/parts/new", { waitUntil: "domcontentloaded", timeout: 30_000 });
-  // Wait for the form heading to appear
-  await expect(page.locator("h1, h2, h3").first()).toBeVisible({ timeout: 15_000 });
+  await expect(
+    page.getByRole("heading", { name: /receive part into inventory/i }),
+  ).toBeVisible({ timeout: 15_000 });
 }
 
 // ─── Base Form ───────────────────────────────────────────────────────────────
@@ -31,50 +22,41 @@ async function gotoPartsNew(page: Page) {
 test.describe("Parts Receive Form — Base Fields", () => {
   test("page loads with correct heading", async ({ page }) => {
     await gotoPartsNew(page);
-    const heading = await page.locator("h1, h2, h3").first().textContent();
-    expect(heading?.toLowerCase()).toMatch(/receive|part|new part/i);
+    await expect(
+      page.getByRole("heading", { name: /receive part into inventory/i }),
+    ).toBeVisible();
   });
 
   test("Part Number field is present and required", async ({ page }) => {
     await gotoPartsNew(page);
-    // The label "Part Number" should exist
-    await expect(page.locator("label").filter({ hasText: /Part Number/i })).toBeVisible({
-      timeout: 10_000,
-    });
-    const pnInput = page.locator("input[placeholder*='PN'], input[placeholder*='Part'], input[id*='partNumber'], input[name*='partNumber']").first();
-    // At minimum the Part Number label must be there
-    const partNumberLabel = page.locator("label").filter({ hasText: /Part Number/i }).first();
-    await expect(partNumberLabel).toBeVisible();
+    const partNumberInput = page.getByLabel(/Part Number/i);
+    await expect(partNumberInput).toBeVisible();
+    await expect(partNumberInput).toHaveAttribute("required", "");
   });
 
-  test("Quantity field is present", async ({ page }) => {
+  test("Receiving Date field is present and required", async ({ page }) => {
     await gotoPartsNew(page);
-    await expect(page.locator("label").filter({ hasText: /Quantity|Qty/i }).first()).toBeVisible({
-      timeout: 10_000,
-    });
+    const receivingDateInput = page.getByLabel(/Receiving Date/i);
+    await expect(receivingDateInput).toBeVisible();
+    await expect(receivingDateInput).toHaveAttribute("required", "");
   });
 
   test("Supplier field is present", async ({ page }) => {
     await gotoPartsNew(page);
-    await expect(page.locator("label").filter({ hasText: /Supplier|Vendor/i }).first()).toBeVisible({
-      timeout: 10_000,
-    });
+    await expect(page.getByLabel(/Supplier|Vendor/i)).toBeVisible({ timeout: 10_000 });
   });
 
-  test("Submit is disabled when required fields are empty", async ({ page }) => {
+  test("required fields are declared on the form", async ({ page }) => {
     await gotoPartsNew(page);
-    // Submit/Receive button should exist
-    const submitBtn = page
-      .locator("button[type='submit'], button")
-      .filter({ hasText: /Receive Part|Submit|Save/i })
-      .first();
+    const submitBtn = page.getByRole("button", { name: /receive part/i });
     await expect(submitBtn).toBeVisible({ timeout: 10_000 });
-    await expect(submitBtn).toBeDisabled();
+    await expect(submitBtn).toBeEnabled();
+    await expect(page.getByLabel(/Part Name \/ Description/i)).toHaveAttribute("required", "");
   });
 
   test("Back/Cancel link navigates away from new part form", async ({ page }) => {
     await gotoPartsNew(page);
-    const backLink = page.locator("a").filter({ hasText: /Back|Cancel|Parts/i }).first();
+    const backLink = page.getByRole("link", { name: /parts inventory|cancel/i }).first();
     await expect(backLink).toBeVisible({ timeout: 10_000 });
   });
 });
@@ -84,127 +66,69 @@ test.describe("Parts Receive Form — Base Fields", () => {
 test.describe("Parts Receive Form — 8130-3 Cert Section (AI-008)", () => {
   test("8130-3 cert section toggle button exists", async ({ page }) => {
     await gotoPartsNew(page);
-    // The section is identified by text: "FAA 8130-3" or "Airworthiness"
-    const sectionToggle = page
-      .locator("button, [role='button']")
-      .filter({ hasText: /8130-3|Airworthiness Cert/i })
-      .first();
+    const sectionToggle = page.getByRole("button", {
+      name: /faa form 8130-3|airworthiness approval tag/i,
+    });
     await expect(sectionToggle).toBeVisible({ timeout: 10_000 });
   });
 
   test("8130-3 cert section is collapsed by default", async ({ page }) => {
     await gotoPartsNew(page);
-    // The cert approval number field should NOT be visible when collapsed
-    const approvalField = page
-      .locator("label")
-      .filter({ hasText: /Approval Number|Block 14a/i })
-      .first();
-    // It shouldn't be visible before toggling
-    const isVisible = await approvalField.isVisible().catch(() => false);
-    expect(isVisible).toBe(false);
+    await expect(page.getByLabel(/Block 14a/i)).toBeHidden();
   });
 
   test("toggling cert section reveals 8130-3 fields", async ({ page }) => {
     await gotoPartsNew(page);
-
-    // Click the cert section toggle
     await page
-      .locator("button")
-      .filter({ hasText: /8130-3|Airworthiness Cert/i })
-      .first()
+      .getByRole("button", { name: /faa form 8130-3|airworthiness approval tag/i })
       .click();
 
-    // Fields should now be visible
-    await expect(
-      page.locator("label").filter({ hasText: /Approval Number|Block 14a/i }).first(),
-    ).toBeVisible({ timeout: 5_000 });
-
-    await expect(
-      page.locator("label").filter({ hasText: /Form Tracking Number|Block 3/i }).first(),
-    ).toBeVisible();
+    await expect(page.getByLabel(/Block 14a/i)).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByLabel(/Block 3/i)).toBeVisible();
   });
 
   test("cert section shows Approving Authority field after toggle", async ({ page }) => {
     await gotoPartsNew(page);
     await page
-      .locator("button")
-      .filter({ hasText: /8130-3|Airworthiness Cert/i })
-      .first()
+      .getByRole("button", { name: /faa form 8130-3|airworthiness approval tag/i })
       .click();
-    await expect(
-      page.locator("label").filter({ hasText: /Approving Authority/i }).first(),
-    ).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByLabel(/Approving Authority/i)).toBeVisible({ timeout: 5_000 });
   });
 
   test("cert section shows Applicant/Operator Name field after toggle", async ({ page }) => {
     await gotoPartsNew(page);
     await page
-      .locator("button")
-      .filter({ hasText: /8130-3|Airworthiness Cert/i })
-      .first()
+      .getByRole("button", { name: /faa form 8130-3|airworthiness approval tag/i })
       .click();
-    await expect(
-      page.locator("label").filter({ hasText: /Applicant.*Name|Operator Name/i }).first(),
-    ).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByLabel(/Applicant \/ Operator Name/i)).toBeVisible({
+      timeout: 5_000,
+    });
   });
 
   test("cert section shows Authorized Signatory Name field after toggle", async ({ page }) => {
     await gotoPartsNew(page);
     await page
-      .locator("button")
-      .filter({ hasText: /8130-3|Airworthiness Cert/i })
-      .first()
+      .getByRole("button", { name: /faa form 8130-3|airworthiness approval tag/i })
       .click();
-    await expect(
-      page.locator("label").filter({ hasText: /Authorized Signatory|Signatory Name/i }).first(),
-    ).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByLabel(/Authorized Signatory Name/i)).toBeVisible({
+      timeout: 5_000,
+    });
   });
 
   test("partial cert data triggers validation error on submit", async ({ page }) => {
     await gotoPartsNew(page);
 
-    // Fill minimum required base fields to get past basic validation
-    await page.locator("label").filter({ hasText: /Part Number/i }).first().click();
-    const pnInput = page.locator("input").nth(0);
-    await pnInput.fill("TEST-PN-001");
-
-    // Fill part name
-    const nameInputs = page.locator("input[type='text'], input:not([type])");
-    await nameInputs.nth(1).fill("Test Part Name").catch(() => {});
-
-    // Fill qty
-    await page.locator("input[type='number']").first().fill("1").catch(() => {});
-
-    // Open cert section and fill partial data (only form number, not approval number)
     await page
-      .locator("button")
-      .filter({ hasText: /8130-3|Airworthiness Cert/i })
-      .first()
+      .getByRole("button", { name: /faa form 8130-3|airworthiness approval tag/i })
       .click();
+    await page.getByLabel(/Part Number/i).fill("PW-REC-8130-001");
+    await page.getByLabel(/Part Name \/ Description/i).fill("Playwright Receive Part");
+    await page.getByLabel(/Block 3/i).fill("FORM-2026-001");
+    await page.getByRole("button", { name: /receive part/i }).click();
 
-    // Fill just the form tracking number (cert section partially filled)
-    const certInputs = page.locator("input[placeholder*='8130'], input[placeholder*='FORM']");
-    const hasCertInput = await certInputs.first().isVisible().catch(() => false);
-    if (hasCertInput) {
-      await certInputs.first().fill("FORM-2026-001");
-    }
-
-    // Try submit — should be blocked with an error about 8130-3 fields
-    const submitBtn = page
-      .locator("button")
-      .filter({ hasText: /Receive Part|Submit/i })
-      .first();
-
-    // Enable submit if base fields were filled enough, then try
-    const isEnabled = await submitBtn.isEnabled().catch(() => false);
-    if (isEnabled) {
-      await submitBtn.click();
-      // Should show a validation error about 8130-3 Approval Number
-      await expect(
-        page.locator("p, span, div").filter({ hasText: /8130-3|Approval Number|required/i }).first(),
-      ).toBeVisible({ timeout: 5_000 });
-    }
-    // If submit is disabled, the form is correctly blocking submission
+    await expect(
+      page.getByText(/8130-3 Approval Number \(Block 14a\) is required/i),
+    ).toBeVisible({ timeout: 5_000 });
   });
 });
 
@@ -213,32 +137,24 @@ test.describe("Parts Receive Form — 8130-3 Cert Section (AI-008)", () => {
 test.describe("Parts Receive Form — Life-Limited & Shelf-Life Sections", () => {
   test("life-limited section toggle exists", async ({ page }) => {
     await gotoPartsNew(page);
-    const toggle = page
-      .locator("button")
-      .filter({ hasText: /Life.?Limit|Life Limited/i })
-      .first();
+    const toggle = page.getByRole("button", { name: /life-limited part/i });
     await expect(toggle).toBeVisible({ timeout: 10_000 });
   });
 
   test("shelf-life section toggle exists", async ({ page }) => {
     await gotoPartsNew(page);
-    const toggle = page
-      .locator("button")
-      .filter({ hasText: /Shelf.?Life/i })
-      .first();
+    const toggle = page.getByRole("button", { name: /shelf life \/ expiry/i });
     await expect(toggle).toBeVisible({ timeout: 10_000 });
   });
 
   test("life-limited section reveals cycle/hours fields after toggle", async ({ page }) => {
     await gotoPartsNew(page);
-    const toggle = page
-      .locator("button")
-      .filter({ hasText: /Life.?Limit|Life Limited/i })
-      .first();
+    const toggle = page.getByRole("button", { name: /life-limited part/i });
     await toggle.click();
-    // Should reveal fields like "Total Service Life", "Hours Remaining", etc.
-    await expect(
-      page.locator("label").filter({ hasText: /Total.*Life|Hours.*Remain|Cycles.*Remain|Current.*Hours/i }).first(),
-    ).toBeVisible({ timeout: 5_000 });
+    const llpCheckbox = page.getByRole("checkbox", { name: /This is a life-limited part/i });
+    await llpCheckbox.click();
+    await expect(llpCheckbox).toBeChecked();
+    await expect(page.getByText(/Life Limit \(Hours\)/i)).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByText(/Hours Accumulated \(TSN\/TSO\)/i)).toBeVisible();
   });
 });
